@@ -17,6 +17,7 @@ import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spe
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted.ts';
 import {RGBAImage} from '../util/image.ts';
 import {MessageType} from '../util/actor_messages.ts';
+import {throwIfAborted} from '../util/abort_error.ts';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -55,16 +56,20 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
+        const abortController = tile.abortController;
         try {
-            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
-            delete tile.abortController;
+            const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
+            throwIfAborted(abortController.signal);
+
+            const response = await ImageRequest.getImage(request, abortController, this.map._refreshExpiredTiles);
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 return;
             }
+            if (tile.abortController !== abortController) return;
+            delete tile.abortController;
             if (response?.data) {
                 const img = response.data;
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
@@ -97,10 +102,13 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'loaded';
             }
         } catch (err) {
-            delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-            } else if (err) {
+                return;
+            }
+            if (tile.abortController !== abortController) return;
+            delete tile.abortController;
+            if (err) {
                 tile.state = 'errored';
                 throw err;
             }

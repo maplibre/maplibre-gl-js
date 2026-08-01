@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix an abort not reaching an image or raster tile load that is still awaiting its `transformRequest`, so `ImageSource.updateImage` no longer loses the image it just set, aborted tiles are no longer fetched anyway, and a stale load can no longer write back over the one that replaced it ([#8071](https://github.com/maplibre/maplibre-gl-js/pull/8071)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
 ## 6.1.0

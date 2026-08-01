@@ -5,6 +5,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {type Tile} from '../tile/tile.ts';
 import {getMockDispatcher} from '../util/test/util.ts';
+import {ImageRequest} from '../util/image_request.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
@@ -24,6 +25,24 @@ function createSource(options, transformCallback?) {
     return source;
 }
 
+// Requests that stay in flight until settled by hand; started[n] resolves once the n-th is issued.
+function stubSettlableImageRequests(count: number) {
+    const controllers: AbortController[] = [];
+    const settlers: Array<{resolve: (response: any) => void; reject: (error: Error) => void}> = [];
+    const issued: Array<() => void> = [];
+    const started = Array.from({length: count}, () => new Promise<void>((resolve) => issued.push(resolve)));
+
+    vi.spyOn(ImageRequest, 'getImage').mockImplementation((_request, abortController) => {
+        controllers.push(abortController);
+        issued[controllers.length - 1]?.();
+        return new Promise((resolve, reject) => {
+            settlers.push({resolve, reject});
+        });
+    });
+
+    return {controllers, settlers, started};
+}
+
 describe('RasterDEMTileSource', () => {
     let server: FakeServer;
     beforeEach(() => {
@@ -33,6 +52,7 @@ describe('RasterDEMTileSource', () => {
 
     afterEach(() => {
         server.restore();
+        vi.restoreAllMocks();
     });
 
     test('transforms request for TileJSON URL', () => {
@@ -372,5 +392,93 @@ describe('RasterDEMTileSource', () => {
         server.respond();
         await tilePromise;
         expect(tile.state).toBe('loaded');
+    });
+
+    test('a superseded tile load does not disarm the load that replaced it', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        const {controllers, settlers, started} = stubSettlableImageRequests(2);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const first = source.loadTile(tile);
+        await started[0];
+        const second = source.loadTile(tile); // a reload supersedes the first
+        await started[1];
+
+        settlers[0].resolve({data: {width: 256, height: 256} as ImageBitmap});
+        await first;
+
+        expect(controllers).toHaveLength(2);
+        expect(tile.abortController).toBe(controllers[1]);
+        expect(tile.state).toBe('loading');
+
+        settlers[1].reject(new Error('the current request failed'));
+        await expect(second).rejects.toThrow('the current request failed');
+        expect(tile.state).toBe('errored');
+    });
+
+    test('a superseded tile load that fails does not error the load that replaced it', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        const {controllers, settlers, started} = stubSettlableImageRequests(2);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const first = source.loadTile(tile);
+        await started[0];
+        source.loadTile(tile).catch(() => {}); // the replacement stays in flight
+
+        await started[1];
+
+        settlers[0].reject(new Error('the superseded request failed'));
+
+        await expect(first).resolves.toBeUndefined();
+        expect(tile.abortController).toBe(controllers[1]);
+        expect(tile.state).toBe('loading');
+    });
+
+    test('does not start the request when the tile is aborted during an async transformRequest', async () => {
+        let transformStarted: () => void;
+        const transformCalled = new Promise<void>((resolve) => {
+            transformStarted = resolve;
+        });
+        let releaseTransform: (params: {url: string}) => void;
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']}, (url, type) => {
+            if (type !== 'Tile') return {url};
+            transformStarted();
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async () => {
+            return {data: {width: 256, height: 256} as ImageBitmap};
+        });
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const loadPromise = source.loadTile(tile);
+        await transformCalled; // loadTile is suspended in the transform
+        tile.aborted = true;
+        await source.abortTile(tile); // the abort lands during that suspension
+        releaseTransform({url: 'http://example.com/10/5/5.png'});
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        expect(getImageSpy).not.toHaveBeenCalled();
+        expect(tile.state).toBe('unloaded');
     });
 });
