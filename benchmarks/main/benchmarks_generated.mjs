@@ -60969,7 +60969,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 7a6b985 (local)` : "main 7a6b985";
+const version = new URL(import.meta.url).origin === location.origin ? `main 74590c6 (local)` : "main 74590c6";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
