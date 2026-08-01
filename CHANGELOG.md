@@ -17,7 +17,7 @@
 - Show a grab cursor over draggable markers, including on non-interactive maps ([#8019](https://github.com/maplibre/maplibre-gl-js/issues/8019)) (by [@hugosmoreira](https://github.com/hugosmoreira))
 
 ### 🐞 Bug fixes
-
+- Surface worker script load failures through the map `error` event with the resolved worker URL and bundler migration guidance ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@hugosmoreira](https://github.com/hugosmoreira))
 - Use `role=img` for non-interactive default markers and `role=button` when they become interactive ([#7790](https://github.com/maplibre/maplibre-gl-js/issues/7790)) (by [@cat0825](https://github.com/cat0825))
 - Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
 - Fix renderer crash when `RasterTileSource.setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))

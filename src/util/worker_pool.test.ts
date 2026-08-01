@@ -1,7 +1,11 @@
-import {describe, test, expect} from 'vitest';
+import {afterEach, describe, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
 
 describe('WorkerPool', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     test('acquire', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
@@ -39,5 +43,36 @@ describe('WorkerPool', () => {
         await Promise.resolve();
         expect(workersTerminated).toBe(4);
         expect(pool.workersPromise).toBeFalsy();
+    });
+
+    test('reports a worker failure to current and later consumers', async () => {
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 1});
+        const worker = new EventTarget() as Worker;
+        worker.terminate = vi.fn();
+        vi.spyOn(globalThis, 'Worker').mockImplementation(function() {
+            return worker;
+        });
+
+        let resolveFirstError!: (error: Error) => void;
+        const firstErrorPromise = new Promise<Error>((resolve) => {
+            resolveFirstError = resolve;
+        });
+        const firstErrorHandler = vi.fn((error: Error) => resolveFirstError(error));
+        const pool = new WorkerPool();
+        await pool.acquire('map-1', firstErrorHandler);
+
+        worker.dispatchEvent(new ErrorEvent('error'));
+        const firstError = await firstErrorPromise;
+
+        expect(firstErrorHandler).toHaveBeenCalledWith(firstError);
+
+        let resolveSecondError!: (error: Error) => void;
+        const secondErrorPromise = new Promise<Error>((resolve) => {
+            resolveSecondError = resolve;
+        });
+        const secondErrorHandler = vi.fn((error: Error) => resolveSecondError(error));
+        await pool.acquire('map-2', secondErrorHandler);
+
+        expect(await secondErrorPromise).toBe(firstError);
     });
 });

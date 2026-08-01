@@ -3,6 +3,7 @@ import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
+import type {WorkerErrorHandler} from './web_worker.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
 import {MessageType} from './actor_messages.ts';
 
@@ -16,18 +17,26 @@ export class Dispatcher {
     currentActor: number;
     id: string | number;
     private removed: boolean;
+    private onWorkerError?: WorkerErrorHandler;
 
-    constructor(workerPool: WorkerPool, mapId: string | number) {
+    constructor(workerPool: WorkerPool, mapId: string | number, onWorkerError?: WorkerErrorHandler) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
         this.removed = false;
+        this.onWorkerError = onWorkerError;
         this.actorsPromise = this.initActors(mapId);
     }
 
     private async initActors(mapId: string | number): Promise<Actor[]> {
-        const workers = await this.workerPool.acquire(mapId);
+        let workers;
+        try {
+            workers = await this.workerPool.acquire(mapId, this.onWorkerError);
+        } catch (error) {
+            this.onWorkerError?.(error instanceof Error ? error : new Error(String(error)));
+            throw error;
+        }
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
             const actor = new Actor(worker, mapId);

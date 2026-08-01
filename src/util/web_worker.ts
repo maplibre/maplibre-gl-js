@@ -43,6 +43,44 @@ function createWorker(url: string, asModule: boolean): Worker {
     return new Worker(url);
 }
 
+export type WorkerErrorHandler = (error: Error) => void;
+
+const WORKER_MIGRATION_GUIDE = 'https://maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/';
+
+function resolveWorkerUrl(url: string): string {
+    try {
+        return new URL(url, globalThis.location?.href || import.meta.url).href;
+    } catch {
+        // WORKER_URL is user-configurable. Preserve malformed values for the
+        // diagnostic instead of throwing while handling the worker failure.
+        return url;
+    }
+}
+
+function monitorWorker(worker: Worker, url: string, onError: WorkerErrorHandler): void {
+    let receivedMessage = false;
+    worker.addEventListener('message', () => {
+        receivedMessage = true;
+    }, {once: true});
+
+    worker.addEventListener('error', (event) => {
+        const resolvedUrl = resolveWorkerUrl(url);
+        const details = event.message ? ` (${event.message})` : '';
+        if (!receivedMessage) {
+            onError(new Error(
+                `Failed to load the MapLibre worker script: ${resolvedUrl}${details}\n` +
+                `If you use a bundler, set the worker URL explicitly; see ${WORKER_MIGRATION_GUIDE}`
+            ));
+        } else {
+            onError(new Error(`The MapLibre worker script failed while running: ${resolvedUrl}${details}`));
+        }
+    }, {once: true});
+
+    worker.addEventListener('messageerror', () => {
+        onError(new Error(`Failed to communicate with the MapLibre worker script: ${resolveWorkerUrl(url)}`));
+    }, {once: true});
+}
+
 async function fetchAsBlobUrl(url: string): Promise<string> {
     const response = await fetch(url);
     if (!response.ok) {
@@ -58,18 +96,22 @@ function importAsBlobUrl(url: string): string {
     return URL.createObjectURL(blob);
 }
 
-export async function workerFactory(): Promise<Worker> {
+export async function workerFactory(onError: WorkerErrorHandler): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
     const asModule = url?.endsWith('.cjs') ? false : true;
 
     if (!isCrossOrigin(url)) {
-        return createWorker(url, asModule);
+        const worker = createWorker(url, asModule);
+        monitorWorker(worker, url, onError);
+        return worker;
     }
 
     if (asModule) {
         const blobUrl = importAsBlobUrl(url);
         try {
-            return createWorker(blobUrl, asModule);
+            const worker = createWorker(blobUrl, asModule);
+            monitorWorker(worker, url, onError);
+            return worker;
         } finally {
             URL.revokeObjectURL(blobUrl);
         }
@@ -77,7 +119,9 @@ export async function workerFactory(): Promise<Worker> {
 
     const blobUrl = await fetchAsBlobUrl(url);
     try {
-        return createWorker(blobUrl, asModule);
+        const worker = createWorker(blobUrl, asModule);
+        monitorWorker(worker, url, onError);
+        return worker;
     } finally {
         URL.revokeObjectURL(blobUrl);
     }
