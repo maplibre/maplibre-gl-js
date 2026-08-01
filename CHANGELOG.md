@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix anti-meridian wrapping error for globe and vertical projection ([#7672](https://github.com/maplibre/maplibre-gl-js/issues/7672)) (by [@thomfuhrmann](https://github.com/thomfuhrmann))
 - _...Add new stuff here..._
 
 ## 6.1.0
