@@ -47209,7 +47209,7 @@ var Painter = class Painter {
 		context.setDepthMode(DepthMode.disabled);
 		const stencilRefs = {};
 		for (const tileID of tileIDs) stencilRefs[tileID.key] = this.nextStencilID++;
-		this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+		if (this.style.projection.useSubdivision) this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
 		this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
 		this._tileClippingMaskIDs = stencilRefs;
 	}
@@ -61225,7 +61225,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 71480b6 (local)` : "main 71480b6";
+const version = new URL(import.meta.url).origin === location.origin ? `main c913f4f (local)` : "main c913f4f";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
