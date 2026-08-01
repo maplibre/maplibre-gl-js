@@ -13,7 +13,7 @@ function round(p: Point):GeoJSON.Position {
 describe('roundPolygonCorners', () => {
     const canonical = new CanonicalTileID(10, 500, 300);
 
-    test.each([-5, 0])('returns original polygon reference when distance is %d', (distance) => {
+    test('returns original polygon reference when distance is zero', () => {
         const input = [[
             new Point(0, 0),
             new Point(100, 0),
@@ -22,7 +22,20 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, distance, canonical);
+        const output = roundPolygonCorners(input, 0, canonical);
+        expect(output).toBe(input);
+    });
+
+    test('returns original polygon reference when distance is negative', () => {
+        const input = [[
+            new Point(0, 0),
+            new Point(100, 0),
+            new Point(100, 100),
+            new Point(0, 100),
+            new Point(0, 0)
+        ]];
+
+        const output = roundPolygonCorners(input, -1, canonical);
         expect(output).toBe(input);
     });
 
