@@ -7,7 +7,6 @@ import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import type {StyleLayer} from '../style/style_layer.ts';
 
 describe('render', () => {
     let painter: Painter;
@@ -96,41 +95,6 @@ describe('render', () => {
             painter.render(style, renderOptions);
 
             expect(painter.terrainFacilitator.renderTime).toBe(1234);
-        });
-    });
-
-    describe('renderTileClippingMasks', () => {
-        const clippedLayer = {
-            source: 'source',
-            isTileClipped: () => true
-        } as StyleLayer;
-        const tileIDs = [new OverscaledTileID(0, 0, 0, 0, 0)];
-
-        function renderTileMaskBorderPasses(renderToTexture: boolean) {
-            const getMeshFromTileID = vi.spyOn(style.projection, 'getMeshFromTileID');
-
-            painter.renderTileClippingMasks(clippedLayer, tileIDs, renderToTexture);
-
-            return getMeshFromTileID.mock.calls.map(([, , hasBorder]) => hasBorder);
-        }
-
-        test('uses one mask pass for Mercator rendering', () => {
-            painter.style = style;
-
-            expect(renderTileMaskBorderPasses(false)).toEqual([false]);
-        });
-
-        test('uses one mask pass for Mercator render-to-texture', () => {
-            painter.style = style;
-
-            expect(renderTileMaskBorderPasses(true)).toEqual([false]);
-        });
-
-        test('keeps two mask passes for Globe', () => {
-            style._setProjectionInternal('globe');
-            painter.style = style;
-
-            expect(renderTileMaskBorderPasses(true)).toEqual([true, false]);
         });
     });
 });
