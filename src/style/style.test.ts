@@ -3,7 +3,7 @@ import {Style} from './style.ts';
 import {TileManager} from '../tile/tile_manager.ts';
 import {StyleLayer} from './style_layer.ts';
 import {extend} from '../util/util.ts';
-import {Event} from '../util/evented.ts
+import {Event} from '../util/evented.ts';
 import {type AJAXError} from '../util/ajax.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
