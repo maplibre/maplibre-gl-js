@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add the `fill-extrusion-rounded-corner-distance` layout property, which replaces each fill-extrusion corner with an arc spanning the given distance (in meters) along the adjacent edges. The distance is clamped to 20% of each adjacent edge's length so that short edges don't collapse, and near-straight corners (turns below 5°) are left untouched. Defaults to `0`, which keeps corners sharp ([#7934](https://github.com/maplibre/maplibre-gl-js/issues/7934)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -15,8 +16,6 @@
 - Support `global-state` expressions in `sky.*`, `light.*` and `projection.type` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966), [#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967), [#7968](https://github.com/maplibre/maplibre-gl-js/pull/7968)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Show a grab cursor over draggable markers, including on non-interactive maps ([#8019](https://github.com/maplibre/maplibre-gl-js/issues/8019)) (by [@hugosmoreira](https://github.com/hugosmoreira))
-- Add the `fill-extrusion-rounded-corner-distance` layout property, which replaces each fill-extrusion corner with an arc spanning the given distance (in meters) along the adjacent edges. The distance is clamped to 20% of each adjacent edge's length so that short edges don't collapse, and near-straight corners (turns below 5°) are left untouched. Defaults to `0`, which keeps corners sharp ([#7934](https://github.com/maplibre/maplibre-gl-js/issues/7934)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
