@@ -407,7 +407,7 @@ Math.PI / 180;
 *
 * @returns {vec4} a new 4D vector
 */
-function create() {
+function create$1() {
 	var out = new ARRAY_TYPE(4);
 	if (ARRAY_TYPE != Float32Array) {
 		out[0] = 0;
@@ -434,7 +434,7 @@ function transformMat4(out, a, m) {
 	return out;
 }
 (function() {
-	var vec = create();
+	var vec = create$1();
 	return function(a, stride, offset, count, fn, arg) {
 		var i, l;
 		if (!stride) stride = 4;
@@ -451,6 +451,185 @@ function transformMat4(out, a, m) {
 			a[i + 1] = vec[1];
 			a[i + 2] = vec[2];
 			a[i + 3] = vec[3];
+		}
+		return a;
+	};
+})();
+//#endregion
+//#region node_modules/gl-matrix/esm/vec2.js
+/**
+* 2 Dimensional Vector
+* @module vec2
+*/
+/**
+* Creates a new, empty vec2
+*
+* @returns {vec2} a new 2D vector
+*/
+function create() {
+	var out = new ARRAY_TYPE(2);
+	if (ARRAY_TYPE != Float32Array) {
+		out[0] = 0;
+		out[1] = 0;
+	}
+	return out;
+}
+/**
+* Creates a new vec2 initialized with values from an existing vector
+*
+* @param {ReadonlyVec2} a vector to clone
+* @returns {vec2} a new 2D vector
+*/
+function clone$1(a) {
+	var out = new ARRAY_TYPE(2);
+	out[0] = a[0];
+	out[1] = a[1];
+	return out;
+}
+/**
+* Creates a new vec2 initialized with the given values
+*
+* @param {Number} x X component
+* @param {Number} y Y component
+* @returns {vec2} a new 2D vector
+*/
+function fromValues(x, y) {
+	var out = new ARRAY_TYPE(2);
+	out[0] = x;
+	out[1] = y;
+	return out;
+}
+/**
+* Adds two vec2's
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @returns {vec2} out
+*/
+function add(out, a, b) {
+	out[0] = a[0] + b[0];
+	out[1] = a[1] + b[1];
+	return out;
+}
+/**
+* Subtracts vector b from vector a
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @returns {vec2} out
+*/
+function subtract(out, a, b) {
+	out[0] = a[0] - b[0];
+	out[1] = a[1] - b[1];
+	return out;
+}
+/**
+* Scales a vec2 by a scalar number
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the vector to scale
+* @param {Number} b amount to scale the vector by
+* @returns {vec2} out
+*/
+function scale(out, a, b) {
+	out[0] = a[0] * b;
+	out[1] = a[1] * b;
+	return out;
+}
+/**
+* Adds two vec2's after scaling the second operand by a scalar value
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @param {Number} scale the amount to scale b by before adding
+* @returns {vec2} out
+*/
+function scaleAndAdd(out, a, b, scale) {
+	out[0] = a[0] + b[0] * scale;
+	out[1] = a[1] + b[1] * scale;
+	return out;
+}
+/**
+* Calculates the length of a vec2
+*
+* @param {ReadonlyVec2} a vector to calculate length of
+* @returns {Number} length of a
+*/
+function length(a) {
+	var x = a[0], y = a[1];
+	return Math.sqrt(x * x + y * y);
+}
+/**
+* Normalize a vec2
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a vector to normalize
+* @returns {vec2} out
+*/
+function normalize(out, a) {
+	var x = a[0], y = a[1];
+	var len = x * x + y * y;
+	if (len > 0) len = 1 / Math.sqrt(len);
+	out[0] = a[0] * len;
+	out[1] = a[1] * len;
+	return out;
+}
+/**
+* Calculates the dot product of two vec2's
+*
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @returns {Number} dot product of a and b
+*/
+function dot$1(a, b) {
+	return a[0] * b[0] + a[1] * b[1];
+}
+/**
+* Rotate a 2D vector
+* @param {vec2} out The receiving vec2
+* @param {ReadonlyVec2} a The vec2 point to rotate
+* @param {ReadonlyVec2} b The origin of the rotation
+* @param {Number} rad The angle of rotation in radians
+* @returns {vec2} out
+*/
+function rotate(out, a, b, rad) {
+	var p0 = a[0] - b[0], p1 = a[1] - b[1], sinC = Math.sin(rad), cosC = Math.cos(rad);
+	out[0] = p0 * cosC - p1 * sinC + b[0];
+	out[1] = p0 * sinC + p1 * cosC + b[1];
+	return out;
+}
+/**
+* Get the smallest angle between two 2D vectors
+* @param {ReadonlyVec2} a The first operand
+* @param {ReadonlyVec2} b The second operand
+* @returns {Number} The angle in radians
+*/
+function angle(a, b) {
+	var ax = a[0], ay = a[1], bx = b[0], by = b[1];
+	return Math.abs(Math.atan2(ay * bx - ax * by, ax * bx + ay * by));
+}
+/**
+* Alias for {@link vec2.subtract}
+* @function
+*/
+var sub = subtract;
+(function() {
+	var vec = create();
+	return function(a, stride, offset, count, fn, arg) {
+		var i, l;
+		if (!stride) stride = 2;
+		if (!offset) offset = 0;
+		if (count) l = Math.min(count * stride + offset, a.length);
+		else l = a.length;
+		for (i = offset; i < l; i += stride) {
+			vec[0] = a[i];
+			vec[1] = a[i + 1];
+			fn(vec, vec, arg);
+			a[i] = vec[0];
+			a[i + 1] = vec[1];
 		}
 		return a;
 	};
@@ -16598,6 +16777,340 @@ var VectorTile = class {
 	}
 };
 //#endregion
+//#region src/geo/lng_lat.ts
+const earthRadius = 6371008.8;
+/**
+* A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees.
+* These coordinates are based on the [WGS84 (EPSG:4326) standard](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84).
+*
+* MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match the
+* [GeoJSON specification](https://tools.ietf.org/html/rfc7946).
+*
+* Note that any MapLibre GL JS method that accepts a `LngLat` object as an argument or option
+* can also accept an `Array` of two numbers and will perform an implicit conversion.
+* This flexible type is documented as {@link LngLatLike}.
+*
+* @group Geography and Geometry
+*
+* @example
+* ```ts
+* let ll = new LngLat(-123.9749, 40.7736);
+* ll.lng; // = -123.9749
+* ```
+* @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/)
+*/
+var LngLat = class LngLat {
+	/**
+	* @param lng - Longitude, measured in degrees.
+	* @param lat - Latitude, measured in degrees.
+	*/
+	constructor(lng, lat) {
+		if (isNaN(lng) || isNaN(lat)) throw new Error(`Invalid LngLat object: (${lng}, ${lat})`);
+		this.lng = +lng;
+		this.lat = +lat;
+		if (this.lat > 90 || this.lat < -90) throw new Error("Invalid LngLat latitude value: must be between -90 and 90");
+	}
+	/**
+	* Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
+	*
+	* @returns The wrapped `LngLat` object.
+	* @example
+	* ```ts
+	* let ll = new LngLat(286.0251, 40.7736);
+	* let wrapped = ll.wrap();
+	* wrapped.lng; // = -73.9749
+	* ```
+	*/
+	wrap() {
+		return new LngLat(wrap$1(this.lng, -180, 180), this.lat);
+	}
+	/**
+	* Returns the coordinates represented as an array of two numbers.
+	*
+	* @returns The coordinates represented as an array of longitude and latitude.
+	* @example
+	* ```ts
+	* let ll = new LngLat(-73.9749, 40.7736);
+	* ll.toArray(); // = [-73.9749, 40.7736]
+	* ```
+	*/
+	toArray() {
+		return [this.lng, this.lat];
+	}
+	/**
+	* Returns the coordinates represent as a string.
+	*
+	* @returns The coordinates represented as a string of the format `'LngLat(lng, lat)'`.
+	* @example
+	* ```ts
+	* let ll = new LngLat(-73.9749, 40.7736);
+	* ll.toString(); // = "LngLat(-73.9749, 40.7736)"
+	* ```
+	*/
+	toString() {
+		return `LngLat(${this.lng}, ${this.lat})`;
+	}
+	/**
+	* Returns the approximate distance between a pair of coordinates in meters
+	* Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky and Telescope, vol. 68, no. 2, 1984, p. 159)
+	*
+	* @param lngLat - coordinates to compute the distance to
+	* @returns Distance in meters between the two coordinates.
+	* @example
+	* ```ts
+	* let new_york = new LngLat(-74.0060, 40.7128);
+	* let los_angeles = new LngLat(-118.2437, 34.0522);
+	* new_york.distanceTo(los_angeles); // = 3935751.690893987, "true distance" using a non-spherical approximation is ~3966km
+	* ```
+	*/
+	distanceTo(lngLat) {
+		const rad = Math.PI / 180;
+		const lat1 = this.lat * rad;
+		const lat2 = lngLat.lat * rad;
+		const a = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos((lngLat.lng - this.lng) * rad);
+		return earthRadius * Math.acos(Math.min(a, 1));
+	}
+	/**
+	* Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties
+	* to a `LngLat` object.
+	*
+	* If a `LngLat` object is passed in, the function returns it unchanged.
+	*
+	* @param input - An array of two numbers or object to convert, or a `LngLat` object to return.
+	* @returns A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
+	* @example
+	* ```ts
+	* let arr = [-73.9749, 40.7736];
+	* let ll = LngLat.convert(arr);
+	* ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
+	* ```
+	*/
+	static convert(input) {
+		if (input instanceof LngLat) return input;
+		if (Array.isArray(input) && (input.length === 2 || input.length === 3)) return new LngLat(Number(input[0]), Number(input[1]));
+		if (!Array.isArray(input) && typeof input === "object" && input !== null) return new LngLat(Number("lng" in input ? input.lng : input.lon), Number(input.lat));
+		throw new Error("`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]");
+	}
+};
+//#endregion
+//#region src/geo/mercator_coordinate.ts
+const earthCircumference = 2 * Math.PI * earthRadius;
+function circumferenceAtLatitude(latitude) {
+	return earthCircumference * Math.cos(latitude * Math.PI / 180);
+}
+function mercatorXfromLng(lng) {
+	return (180 + lng) / 360;
+}
+function mercatorYfromLat(lat) {
+	return (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
+}
+function mercatorZfromAltitude(altitude, lat) {
+	return altitude / circumferenceAtLatitude(lat);
+}
+function lngFromMercatorX(x) {
+	return x * 360 - 180;
+}
+function latFromMercatorY(y) {
+	const y2 = 180 - y * 360;
+	return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
+}
+function altitudeFromMercatorZ(z, y) {
+	return z * circumferenceAtLatitude(latFromMercatorY(y));
+}
+/**
+* Determine the Mercator scale factor for a given latitude, see
+* https://en.wikipedia.org/wiki/Mercator_projection#Scale_factor
+*
+* At the equator the scale factor will be 1, which increases at higher latitudes.
+*
+* @param lat - Latitude
+* @returns scale factor
+*/
+function mercatorScale(lat) {
+	return 1 / Math.cos(lat * Math.PI / 180);
+}
+/**
+* A `MercatorCoordinate` object represents a projected three dimensional position.
+*
+* `MercatorCoordinate` uses the web mercator projection ([EPSG:3857](https://epsg.io/3857)) with slightly different units:
+*
+* - the size of 1 unit is the width of the projected world instead of the "mercator meter"
+* - the origin of the coordinate space is at the north-west corner instead of the middle
+*
+* For example, `MercatorCoordinate(0, 0, 0)` is the north-west corner of the mercator world and
+* `MercatorCoordinate(1, 1, 0)` is the south-east corner. If you are familiar with
+* [vector tiles](https://github.com/mapbox/vector-tile-spec) it may be helpful to think
+* of the coordinate space as the `0/0/0` tile with an extent of `1`.
+*
+* The `z` dimension of `MercatorCoordinate` is conformal. A cube in the mercator coordinate space would be rendered as a cube.
+*
+* @group Geography and Geometry
+*
+* @example
+* ```ts
+* let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
+* ```
+* @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/)
+* @see [Add a 3D model using three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+* @see [Add a simple custom layer on a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/)
+*/
+var MercatorCoordinate = class MercatorCoordinate {
+	/**
+	* @param x - The x component of the position.
+	* @param y - The y component of the position.
+	* @param z - The z component of the position.
+	*/
+	constructor(x, y, z = 0) {
+		this.x = +x;
+		this.y = +y;
+		this.z = +z;
+	}
+	/**
+	* Project a `LngLat` to a `MercatorCoordinate`.
+	*
+	* @param lngLatLike - The location to project.
+	* @param altitude - The altitude in meters of the position.
+	* @returns The projected mercator coordinate.
+	* @example
+	* ```ts
+	* let coord = MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
+	* coord; // MercatorCoordinate(0.5, 0.5, 0)
+	* ```
+	*/
+	static fromLngLat(lngLatLike, altitude = 0) {
+		const lngLat = LngLat.convert(lngLatLike);
+		return new MercatorCoordinate(mercatorXfromLng(lngLat.lng), mercatorYfromLat(lngLat.lat), mercatorZfromAltitude(altitude, lngLat.lat));
+	}
+	/**
+	* Returns the `LngLat` for the coordinate.
+	*
+	* @returns The `LngLat` object.
+	* @example
+	* ```ts
+	* let coord = new MercatorCoordinate(0.5, 0.5, 0);
+	* let lngLat = coord.toLngLat(); // LngLat(0, 0)
+	* ```
+	*/
+	toLngLat() {
+		return new LngLat(lngFromMercatorX(this.x), latFromMercatorY(this.y));
+	}
+	/**
+	* Returns the altitude in meters of the coordinate.
+	*
+	* @returns The altitude in meters.
+	* @example
+	* ```ts
+	* let coord = new MercatorCoordinate(0, 0, 0.02);
+	* coord.toAltitude(); // 6914.281956295339
+	* ```
+	*/
+	toAltitude() {
+		return altitudeFromMercatorZ(this.z, this.y);
+	}
+	/**
+	* Returns the distance of 1 meter in `MercatorCoordinate` units at this latitude.
+	*
+	* For coordinates in real world units using meters, this naturally provides the scale
+	* to transform into `MercatorCoordinate`s.
+	*
+	* @returns Distance of 1 meter in `MercatorCoordinate` units.
+	*/
+	meterInMercatorCoordinateUnits() {
+		return 1 / earthCircumference * mercatorScale(latFromMercatorY(this.y));
+	}
+};
+//#endregion
+//#region src/geo/projection/mercator_utils.ts
+/**
+* Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
+* @param inTileX - X coordinate in tile units - range [0..EXTENT].
+* @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+* @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+* @returns Mercator coordinates of the specified point in range [0..1].
+*/
+function tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID) {
+	const scale = 1 / (1 << canonicalTileID.z);
+	return new MercatorCoordinate(inTileX / EXTENT$1 * scale + canonicalTileID.x * scale, inTileY / EXTENT$1 * scale + canonicalTileID.y * scale);
+}
+/**
+* Returns LngLat for given in-tile coordinates and tile ID.
+* @param inTileX - X coordinate in tile units - range [0..EXTENT].
+* @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+* @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+*/
+function tileCoordinatesToLocation(inTileX, inTileY, canonicalTileID) {
+	return tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID).toLngLat();
+}
+//#endregion
+//#region src/data/bucket/round_polygon_corners.ts
+/**
+* Rounds polygon corners by calculating arc points at each corner vertex.
+* @param polygon - Collection of polygon rings (outer ring and hole rings)
+* @param distanceInMeters - Desired corner rounding distance in meters
+* @param canonical - Canonical tile ID used for meter to tile unit conversion
+*/
+function roundPolygonCorners(polygon, distanceInMeters, canonical) {
+	if (distanceInMeters <= 0 || !polygon || polygon.length === 0) return polygon;
+	const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
+	return polygon.map((ring) => roundRing(ring, distanceInTileUnits));
+}
+function getTileUnitsForMeters(distanceInMeters, canonical) {
+	const centerLocation = tileCoordinatesToLocation(EXTENT$1 / 2, EXTENT$1 / 2, canonical);
+	const meterInMercator = MercatorCoordinate.fromLngLat(centerLocation).meterInMercatorCoordinateUnits();
+	const tileUnitsPerMercator = (1 << canonical.z) * EXTENT$1;
+	return distanceInMeters * meterInMercator * tileUnitsPerMercator;
+}
+function roundRing(ring, distanceInTileUnits) {
+	if (!ring || ring.length < 3) return ring;
+	const isClosed = ring[0].x === ring[ring.length - 1].x && ring[0].y === ring[ring.length - 1].y;
+	const vertexCount = isClosed ? ring.length - 1 : ring.length;
+	if (vertexCount < 3) return ring;
+	const vertices = ring.map((p) => fromValues(p.x, p.y));
+	const newRing = [];
+	for (let i = 0; i < vertexCount; i++) {
+		const prev = vertices[(i - 1 + vertexCount) % vertexCount];
+		const current = vertices[i];
+		const next = vertices[(i + 1) % vertexCount];
+		appendRoundCorner(newRing, prev, current, next, distanceInTileUnits);
+	}
+	if (isClosed && newRing.length > 0) newRing.push(clone$1(newRing[0]));
+	return newRing.map((p) => new Point(p[0], p[1]));
+}
+function appendRoundCorner(newRing, prev, current, next, distanceInTileUnits) {
+	const ua = sub(create(), prev, current);
+	const ub = sub(create(), next, current);
+	const lenA = length(ua);
+	const lenB = length(ub);
+	if (lenA < 1e-6 || lenB < 1e-6) {
+		newRing.push(clone$1(current));
+		return;
+	}
+	scale(ua, ua, 1 / lenA);
+	scale(ub, ub, 1 / lenB);
+	const dot = dot$1(ua, ub);
+	if (Math.abs(dot) > Math.cos(5 * Math.PI / 180)) {
+		newRing.push(clone$1(current));
+		return;
+	}
+	const maxEdgeLenPercent = .2;
+	const r = Math.min(distanceInTileUnits, lenA * maxEdgeLenPercent, lenB * maxEdgeLenPercent);
+	const tangentA = scaleAndAdd(create(), current, ua, r);
+	const tangentB = scaleAndAdd(create(), current, ub, r);
+	const bisector = add(create(), ua, ub);
+	normalize(bisector, bisector);
+	const cosHalfTheta = Math.sqrt((1 + dot) / 2);
+	const center = scaleAndAdd(create(), current, bisector, r / cosHalfTheta);
+	const radiusA = sub(create(), tangentA, center);
+	const radiusB = sub(create(), tangentB, center);
+	const sweepAngle = angle(radiusA, radiusB);
+	const direction = Math.sign(radiusA[0] * radiusB[1] - radiusA[1] * radiusB[0]);
+	const numSegments = Math.max(2, Math.ceil(sweepAngle / (Math.PI / 6) - 1e-6));
+	for (let s = 0; s <= numSegments; s++) {
+		const angle = direction * sweepAngle * (s / numSegments);
+		newRing.push(rotate(create(), tangentA, center, angle));
+	}
+}
+//#endregion
 //#region src/data/bucket/fill_extrusion_bucket.ts
 const EARCUT_MAX_RINGS = 500;
 const FACTOR = Math.pow(2, 13);
@@ -16623,15 +17136,18 @@ var FillExtrusionBucket = class {
 		this.features = [];
 		this.hasDependencies = hasPattern("fill-extrusion", this.layers, options);
 		const globalProperties = new EvaluationParameters(this.zoom);
-		const needGeometry = this.layers[0]._featureFilter.needGeometry;
+		const layer = this.layers[0];
+		const roundedCornerDistance = layer.layout.get("fill-extrusion-rounded-corner-distance");
+		const needGeometry = layer._featureFilter.needGeometry;
 		for (const { feature, id, index, sourceLayerIndex } of features) {
 			const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-			if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+			if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+			const rawGeometry = needGeometry ? evaluationFeature.geometry : loadGeometry(feature);
 			const bucketFeature = {
 				id,
 				sourceLayerIndex,
 				index,
-				geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
+				geometry: roundedCornerDistance > 0 ? roundPolygonCorners(rawGeometry, roundedCornerDistance, canonical) : rawGeometry,
 				properties: feature.properties,
 				type: feature.type,
 				patterns: {}
@@ -16675,7 +17191,10 @@ var FillExtrusionBucket = class {
 		this.centroidVertexBuffer.destroy();
 	}
 	addFeature(feature, geometry, index, canonical, imagePositions, subdivisionGranularity) {
-		for (const polygon of classifyRings$1(geometry, EARCUT_MAX_RINGS)) {
+		const layer = this.layers[0];
+		const roundedCornerDistance = layer.layout ? layer.layout.get("fill-extrusion-rounded-corner-distance") : 0;
+		const processedGeometry = roundedCornerDistance > 0 ? roundPolygonCorners(geometry, roundedCornerDistance, canonical) : geometry;
+		for (const polygon of classifyRings$1(processedGeometry, EARCUT_MAX_RINGS)) {
 			const centroid = {
 				x: 0,
 				y: 0,
@@ -28039,249 +28558,6 @@ var GlyphAtlas = class {
 	}
 };
 register("GlyphAtlas", GlyphAtlas);
-//#endregion
-//#region src/geo/lng_lat.ts
-const earthRadius = 6371008.8;
-/**
-* A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees.
-* These coordinates are based on the [WGS84 (EPSG:4326) standard](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84).
-*
-* MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match the
-* [GeoJSON specification](https://tools.ietf.org/html/rfc7946).
-*
-* Note that any MapLibre GL JS method that accepts a `LngLat` object as an argument or option
-* can also accept an `Array` of two numbers and will perform an implicit conversion.
-* This flexible type is documented as {@link LngLatLike}.
-*
-* @group Geography and Geometry
-*
-* @example
-* ```ts
-* let ll = new LngLat(-123.9749, 40.7736);
-* ll.lng; // = -123.9749
-* ```
-* @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/)
-*/
-var LngLat = class LngLat {
-	/**
-	* @param lng - Longitude, measured in degrees.
-	* @param lat - Latitude, measured in degrees.
-	*/
-	constructor(lng, lat) {
-		if (isNaN(lng) || isNaN(lat)) throw new Error(`Invalid LngLat object: (${lng}, ${lat})`);
-		this.lng = +lng;
-		this.lat = +lat;
-		if (this.lat > 90 || this.lat < -90) throw new Error("Invalid LngLat latitude value: must be between -90 and 90");
-	}
-	/**
-	* Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
-	*
-	* @returns The wrapped `LngLat` object.
-	* @example
-	* ```ts
-	* let ll = new LngLat(286.0251, 40.7736);
-	* let wrapped = ll.wrap();
-	* wrapped.lng; // = -73.9749
-	* ```
-	*/
-	wrap() {
-		return new LngLat(wrap$1(this.lng, -180, 180), this.lat);
-	}
-	/**
-	* Returns the coordinates represented as an array of two numbers.
-	*
-	* @returns The coordinates represented as an array of longitude and latitude.
-	* @example
-	* ```ts
-	* let ll = new LngLat(-73.9749, 40.7736);
-	* ll.toArray(); // = [-73.9749, 40.7736]
-	* ```
-	*/
-	toArray() {
-		return [this.lng, this.lat];
-	}
-	/**
-	* Returns the coordinates represent as a string.
-	*
-	* @returns The coordinates represented as a string of the format `'LngLat(lng, lat)'`.
-	* @example
-	* ```ts
-	* let ll = new LngLat(-73.9749, 40.7736);
-	* ll.toString(); // = "LngLat(-73.9749, 40.7736)"
-	* ```
-	*/
-	toString() {
-		return `LngLat(${this.lng}, ${this.lat})`;
-	}
-	/**
-	* Returns the approximate distance between a pair of coordinates in meters
-	* Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky and Telescope, vol. 68, no. 2, 1984, p. 159)
-	*
-	* @param lngLat - coordinates to compute the distance to
-	* @returns Distance in meters between the two coordinates.
-	* @example
-	* ```ts
-	* let new_york = new LngLat(-74.0060, 40.7128);
-	* let los_angeles = new LngLat(-118.2437, 34.0522);
-	* new_york.distanceTo(los_angeles); // = 3935751.690893987, "true distance" using a non-spherical approximation is ~3966km
-	* ```
-	*/
-	distanceTo(lngLat) {
-		const rad = Math.PI / 180;
-		const lat1 = this.lat * rad;
-		const lat2 = lngLat.lat * rad;
-		const a = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos((lngLat.lng - this.lng) * rad);
-		return earthRadius * Math.acos(Math.min(a, 1));
-	}
-	/**
-	* Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties
-	* to a `LngLat` object.
-	*
-	* If a `LngLat` object is passed in, the function returns it unchanged.
-	*
-	* @param input - An array of two numbers or object to convert, or a `LngLat` object to return.
-	* @returns A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
-	* @example
-	* ```ts
-	* let arr = [-73.9749, 40.7736];
-	* let ll = LngLat.convert(arr);
-	* ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
-	* ```
-	*/
-	static convert(input) {
-		if (input instanceof LngLat) return input;
-		if (Array.isArray(input) && (input.length === 2 || input.length === 3)) return new LngLat(Number(input[0]), Number(input[1]));
-		if (!Array.isArray(input) && typeof input === "object" && input !== null) return new LngLat(Number("lng" in input ? input.lng : input.lon), Number(input.lat));
-		throw new Error("`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]");
-	}
-};
-//#endregion
-//#region src/geo/mercator_coordinate.ts
-const earthCircumference = 2 * Math.PI * earthRadius;
-function circumferenceAtLatitude(latitude) {
-	return earthCircumference * Math.cos(latitude * Math.PI / 180);
-}
-function mercatorXfromLng(lng) {
-	return (180 + lng) / 360;
-}
-function mercatorYfromLat(lat) {
-	return (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
-}
-function mercatorZfromAltitude(altitude, lat) {
-	return altitude / circumferenceAtLatitude(lat);
-}
-function lngFromMercatorX(x) {
-	return x * 360 - 180;
-}
-function latFromMercatorY(y) {
-	const y2 = 180 - y * 360;
-	return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
-}
-function altitudeFromMercatorZ(z, y) {
-	return z * circumferenceAtLatitude(latFromMercatorY(y));
-}
-/**
-* Determine the Mercator scale factor for a given latitude, see
-* https://en.wikipedia.org/wiki/Mercator_projection#Scale_factor
-*
-* At the equator the scale factor will be 1, which increases at higher latitudes.
-*
-* @param lat - Latitude
-* @returns scale factor
-*/
-function mercatorScale(lat) {
-	return 1 / Math.cos(lat * Math.PI / 180);
-}
-/**
-* A `MercatorCoordinate` object represents a projected three dimensional position.
-*
-* `MercatorCoordinate` uses the web mercator projection ([EPSG:3857](https://epsg.io/3857)) with slightly different units:
-*
-* - the size of 1 unit is the width of the projected world instead of the "mercator meter"
-* - the origin of the coordinate space is at the north-west corner instead of the middle
-*
-* For example, `MercatorCoordinate(0, 0, 0)` is the north-west corner of the mercator world and
-* `MercatorCoordinate(1, 1, 0)` is the south-east corner. If you are familiar with
-* [vector tiles](https://github.com/mapbox/vector-tile-spec) it may be helpful to think
-* of the coordinate space as the `0/0/0` tile with an extent of `1`.
-*
-* The `z` dimension of `MercatorCoordinate` is conformal. A cube in the mercator coordinate space would be rendered as a cube.
-*
-* @group Geography and Geometry
-*
-* @example
-* ```ts
-* let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
-* ```
-* @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/)
-* @see [Add a 3D model using three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
-* @see [Add a simple custom layer on a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/)
-*/
-var MercatorCoordinate = class MercatorCoordinate {
-	/**
-	* @param x - The x component of the position.
-	* @param y - The y component of the position.
-	* @param z - The z component of the position.
-	*/
-	constructor(x, y, z = 0) {
-		this.x = +x;
-		this.y = +y;
-		this.z = +z;
-	}
-	/**
-	* Project a `LngLat` to a `MercatorCoordinate`.
-	*
-	* @param lngLatLike - The location to project.
-	* @param altitude - The altitude in meters of the position.
-	* @returns The projected mercator coordinate.
-	* @example
-	* ```ts
-	* let coord = MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
-	* coord; // MercatorCoordinate(0.5, 0.5, 0)
-	* ```
-	*/
-	static fromLngLat(lngLatLike, altitude = 0) {
-		const lngLat = LngLat.convert(lngLatLike);
-		return new MercatorCoordinate(mercatorXfromLng(lngLat.lng), mercatorYfromLat(lngLat.lat), mercatorZfromAltitude(altitude, lngLat.lat));
-	}
-	/**
-	* Returns the `LngLat` for the coordinate.
-	*
-	* @returns The `LngLat` object.
-	* @example
-	* ```ts
-	* let coord = new MercatorCoordinate(0.5, 0.5, 0);
-	* let lngLat = coord.toLngLat(); // LngLat(0, 0)
-	* ```
-	*/
-	toLngLat() {
-		return new LngLat(lngFromMercatorX(this.x), latFromMercatorY(this.y));
-	}
-	/**
-	* Returns the altitude in meters of the coordinate.
-	*
-	* @returns The altitude in meters.
-	* @example
-	* ```ts
-	* let coord = new MercatorCoordinate(0, 0, 0.02);
-	* coord.toAltitude(); // 6914.281956295339
-	* ```
-	*/
-	toAltitude() {
-		return altitudeFromMercatorZ(this.z, this.y);
-	}
-	/**
-	* Returns the distance of 1 meter in `MercatorCoordinate` units at this latitude.
-	*
-	* For coordinates in real world units using meters, this naturally provides the scale
-	* to transform into `MercatorCoordinate`s.
-	*
-	* @returns Distance of 1 meter in `MercatorCoordinate` units.
-	*/
-	meterInMercatorCoordinateUnits() {
-		return 1 / earthCircumference * mercatorScale(latFromMercatorY(this.y));
-	}
-};
 //#endregion
 //#region src/util/world_bounds.ts
 /**

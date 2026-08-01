@@ -441,7 +441,7 @@ function invert$1(out, a) {
 * @param {Number} rad the angle to rotate the matrix by
 * @returns {mat2} out
 */
-function rotate(out, a, rad) {
+function rotate$1(out, a, rad) {
 	var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
 	var s = Math.sin(rad);
 	var c = Math.cos(rad);
@@ -585,7 +585,7 @@ function create$5() {
 * @param {ReadonlyMat4} a matrix to clone
 * @returns {mat4} a new 4x4 matrix
 */
-function clone$2(a) {
+function clone$3(a) {
 	var out = new ARRAY_TYPE(16);
 	out[0] = a[0];
 	out[1] = a[1];
@@ -1109,7 +1109,7 @@ function create$4() {
 * @param {ReadonlyVec3} a vector to clone
 * @returns {vec3} a new 3D vector
 */
-function clone$1(a) {
+function clone$2(a) {
 	var out = new ARRAY_TYPE(3);
 	out[0] = a[0];
 	out[1] = a[1];
@@ -1151,7 +1151,7 @@ function fromValues$1(x, y, z) {
 * @param {ReadonlyVec3} b the second operand
 * @returns {vec3} out
 */
-function add(out, a, b) {
+function add$1(out, a, b) {
 	out[0] = a[0] + b[0];
 	out[1] = a[1] + b[1];
 	out[2] = a[2] + b[2];
@@ -1165,7 +1165,7 @@ function add(out, a, b) {
 * @param {ReadonlyVec3} b the second operand
 * @returns {vec3} out
 */
-function subtract(out, a, b) {
+function subtract$1(out, a, b) {
 	out[0] = a[0] - b[0];
 	out[1] = a[1] - b[1];
 	out[2] = a[2] - b[2];
@@ -1194,7 +1194,7 @@ function scale$2(out, a, b) {
 * @param {Number} scale the amount to scale b by before adding
 * @returns {vec3} out
 */
-function scaleAndAdd(out, a, b, scale) {
+function scaleAndAdd$1(out, a, b, scale) {
 	out[0] = a[0] + b[0] * scale;
 	out[1] = a[1] + b[1] * scale;
 	out[2] = a[2] + b[2] * scale;
@@ -1220,7 +1220,7 @@ function negate(out, a) {
 * @param {ReadonlyVec3} a vector to normalize
 * @returns {vec3} out
 */
-function normalize$2(out, a) {
+function normalize$3(out, a) {
 	var x = a[0];
 	var y = a[1];
 	var z = a[2];
@@ -1392,7 +1392,7 @@ function zero$1(out) {
 * Alias for {@link vec3.subtract}
 * @function
 */
-var sub = subtract;
+var sub$1 = subtract$1;
 /**
 * Alias for {@link vec3.length}
 * @function
@@ -1476,7 +1476,7 @@ function scale$1(out, a, b) {
 * @param {ReadonlyVec4} a vector to normalize
 * @returns {vec4} out
 */
-function normalize$1(out, a) {
+function normalize$2(out, a) {
 	var x = a[0];
 	var y = a[1];
 	var z = a[2];
@@ -1714,7 +1714,7 @@ function fromEuler(out, x, y, z) {
 * @returns {quat} out
 * @function
 */
-var normalize = normalize$1;
+var normalize$1 = normalize$2;
 (function() {
 	var tmpvec3 = create$4();
 	var xUnitVec3 = fromValues$1(1, 0, 0);
@@ -1724,7 +1724,7 @@ var normalize = normalize$1;
 		if (dot < -.999999) {
 			cross(tmpvec3, xUnitVec3, a);
 			if (len(tmpvec3) < 1e-6) cross(tmpvec3, yUnitVec3, a);
-			normalize$2(tmpvec3, tmpvec3);
+			normalize$3(tmpvec3, tmpvec3);
 			setAxisAngle(out, tmpvec3, Math.PI);
 			return out;
 		} else if (dot > .999999) {
@@ -1739,7 +1739,7 @@ var normalize = normalize$1;
 			out[1] = tmpvec3[1];
 			out[2] = tmpvec3[2];
 			out[3] = 1 + dot;
-			return normalize(out, out);
+			return normalize$1(out, out);
 		}
 	};
 })();
@@ -1765,7 +1765,7 @@ var normalize = normalize$1;
 		matr[2] = -view[0];
 		matr[5] = -view[1];
 		matr[8] = -view[2];
-		return normalize(out, fromMat3(out, matr));
+		return normalize$1(out, fromMat3(out, matr));
 	};
 })();
 //#endregion
@@ -1788,6 +1788,18 @@ function create$1() {
 	return out;
 }
 /**
+* Creates a new vec2 initialized with values from an existing vector
+*
+* @param {ReadonlyVec2} a vector to clone
+* @returns {vec2} a new 2D vector
+*/
+function clone$1(a) {
+	var out = new ARRAY_TYPE(2);
+	out[0] = a[0];
+	out[1] = a[1];
+	return out;
+}
+/**
 * Creates a new vec2 initialized with the given values
 *
 * @param {Number} x X component
@@ -1801,6 +1813,32 @@ function fromValues(x, y) {
 	return out;
 }
 /**
+* Adds two vec2's
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @returns {vec2} out
+*/
+function add(out, a, b) {
+	out[0] = a[0] + b[0];
+	out[1] = a[1] + b[1];
+	return out;
+}
+/**
+* Subtracts vector b from vector a
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @returns {vec2} out
+*/
+function subtract(out, a, b) {
+	out[0] = a[0] - b[0];
+	out[1] = a[1] - b[1];
+	return out;
+}
+/**
 * Scales a vec2 by a scalar number
 *
 * @param {vec2} out the receiving vector
@@ -1811,6 +1849,20 @@ function fromValues(x, y) {
 function scale(out, a, b) {
 	out[0] = a[0] * b;
 	out[1] = a[1] * b;
+	return out;
+}
+/**
+* Adds two vec2's after scaling the second operand by a scalar value
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a the first operand
+* @param {ReadonlyVec2} b the second operand
+* @param {Number} scale the amount to scale b by before adding
+* @returns {vec2} out
+*/
+function scaleAndAdd(out, a, b, scale) {
+	out[0] = a[0] + b[0] * scale;
+	out[1] = a[1] + b[1] * scale;
 	return out;
 }
 /**
@@ -1832,6 +1884,21 @@ function length(a) {
 function squaredLength(a) {
 	var x = a[0], y = a[1];
 	return x * x + y * y;
+}
+/**
+* Normalize a vec2
+*
+* @param {vec2} out the receiving vector
+* @param {ReadonlyVec2} a vector to normalize
+* @returns {vec2} out
+*/
+function normalize(out, a) {
+	var x = a[0], y = a[1];
+	var len = x * x + y * y;
+	if (len > 0) len = 1 / Math.sqrt(len);
+	out[0] = a[0] * len;
+	out[1] = a[1] * len;
+	return out;
 }
 /**
 * Calculates the dot product of two vec2's
@@ -1861,6 +1928,30 @@ function transformMat4(out, a, m) {
 	return out;
 }
 /**
+* Rotate a 2D vector
+* @param {vec2} out The receiving vec2
+* @param {ReadonlyVec2} a The vec2 point to rotate
+* @param {ReadonlyVec2} b The origin of the rotation
+* @param {Number} rad The angle of rotation in radians
+* @returns {vec2} out
+*/
+function rotate(out, a, b, rad) {
+	var p0 = a[0] - b[0], p1 = a[1] - b[1], sinC = Math.sin(rad), cosC = Math.cos(rad);
+	out[0] = p0 * cosC - p1 * sinC + b[0];
+	out[1] = p0 * sinC + p1 * cosC + b[1];
+	return out;
+}
+/**
+* Get the smallest angle between two 2D vectors
+* @param {ReadonlyVec2} a The first operand
+* @param {ReadonlyVec2} b The second operand
+* @returns {Number} The angle in radians
+*/
+function angle(a, b) {
+	var ax = a[0], ay = a[1], bx = b[0], by = b[1];
+	return Math.abs(Math.atan2(ay * bx - ax * by, ax * bx + ay * by));
+}
+/**
 * Set the components of a vec2 to zero
 *
 * @param {vec2} out the receiving vector
@@ -1871,6 +1962,11 @@ function zero(out) {
 	out[1] = 0;
 	return out;
 }
+/**
+* Alias for {@link vec2.subtract}
+* @function
+*/
+var sub = subtract;
 /**
 * Alias for {@link vec2.squaredLength}
 * @function
@@ -2036,8 +2132,8 @@ function threePlaneIntersection(plane0, plane1, plane2) {
 		plane1[2]
 	]);
 	const sum = scale$2([], cross12, -plane0[3]);
-	add(sum, sum, scale$2([], cross20, -plane1[3]));
-	add(sum, sum, scale$2([], cross01, -plane2[3]));
+	add$1(sum, sum, scale$2([], cross20, -plane1[3]));
+	add$1(sum, sum, scale$2([], cross01, -plane2[3]));
 	scale$2(sum, sum, 1 / det);
 	return sum;
 }
@@ -20576,6 +20672,164 @@ const members$2 = layout$3.members;
 layout$3.size;
 layout$3.alignment;
 //#endregion
+//#region src/geo/projection/mercator_utils.ts
+const maxMercatorHorizonAngle = 89.25;
+/**
+* Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
+* @param inTileX - X coordinate in tile units - range [0..EXTENT].
+* @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+* @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+* @returns Mercator coordinates of the specified point in range [0..1].
+*/
+function tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID) {
+	const scale = 1 / (1 << canonicalTileID.z);
+	return new MercatorCoordinate(inTileX / EXTENT * scale + canonicalTileID.x * scale, inTileY / EXTENT * scale + canonicalTileID.y * scale);
+}
+/**
+* Returns LngLat for given in-tile coordinates and tile ID.
+* @param inTileX - X coordinate in tile units - range [0..EXTENT].
+* @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+* @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+*/
+function tileCoordinatesToLocation(inTileX, inTileY, canonicalTileID) {
+	return tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID).toLngLat();
+}
+/**
+* Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
+* @param worldSize - Mercator world size computed from zoom level and tile size.
+* @param lnglat - The location to convert.
+* @returns Point
+*/
+function projectToWorldCoordinates(worldSize, lnglat) {
+	const lat = clamp$2(lnglat.lat, -85.051129, MAX_VALID_LATITUDE);
+	return new Point(mercatorXfromLng$1(lnglat.lng) * worldSize, mercatorYfromLat$1(lat) * worldSize);
+}
+/**
+* Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
+* @param worldSize - Mercator world size computed from zoom level and tile size.
+* @param point - World coordinate.
+* @returns LngLat
+*/
+function unprojectFromWorldCoordinates(worldSize, point) {
+	return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
+}
+/**
+* Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
+* multiplied by a static factor to simulate the earth-radius.
+* The calculated value is the horizontal line from the camera-height to sea-level.
+* @returns Horizon above center in pixels.
+*/
+function getMercatorHorizon(transform) {
+	return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * .85, Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
+}
+function calculateTileMatrix(unwrappedTileID, worldSize) {
+	const canonical = unwrappedTileID.canonical;
+	const scale = worldSize / zoomScale(canonical.z);
+	const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
+	const worldMatrix = /* @__PURE__ */ new Float64Array(16);
+	identity(worldMatrix);
+	translate$1(worldMatrix, worldMatrix, [
+		unwrappedX * scale,
+		canonical.y * scale,
+		0
+	]);
+	scale$3(worldMatrix, worldMatrix, [
+		scale / EXTENT,
+		scale / EXTENT,
+		1
+	]);
+	return worldMatrix;
+}
+function cameraMercatorCoordinateFromCenterAndRotation(center, elevation, pitch, bearing, distance) {
+	const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
+	const dMercator = distance * mercatorZfromAltitude(1, center.lat);
+	const { x, y, z } = cameraDirectionFromPitchBearing(pitch, bearing);
+	const dxMercator = dMercator * -x;
+	const dyMercator = dMercator * -y;
+	const dzMercator = dMercator * -z;
+	return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
+}
+function cameraDirectionFromPitchBearing(pitch, bearing) {
+	const pitchRadians = degreesToRadians(pitch);
+	const bearingRadians = degreesToRadians(bearing);
+	const z = Math.cos(-pitchRadians);
+	const h = Math.sin(pitchRadians);
+	return {
+		x: h * Math.sin(bearingRadians),
+		y: -h * Math.cos(bearingRadians),
+		z
+	};
+}
+//#endregion
+//#region src/data/bucket/round_polygon_corners.ts
+/**
+* Rounds polygon corners by calculating arc points at each corner vertex.
+* @param polygon - Collection of polygon rings (outer ring and hole rings)
+* @param distanceInMeters - Desired corner rounding distance in meters
+* @param canonical - Canonical tile ID used for meter to tile unit conversion
+*/
+function roundPolygonCorners(polygon, distanceInMeters, canonical) {
+	if (distanceInMeters <= 0 || !polygon || polygon.length === 0) return polygon;
+	const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
+	return polygon.map((ring) => roundRing(ring, distanceInTileUnits));
+}
+function getTileUnitsForMeters(distanceInMeters, canonical) {
+	const centerLocation = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, canonical);
+	const meterInMercator = MercatorCoordinate.fromLngLat(centerLocation).meterInMercatorCoordinateUnits();
+	const tileUnitsPerMercator = (1 << canonical.z) * EXTENT;
+	return distanceInMeters * meterInMercator * tileUnitsPerMercator;
+}
+function roundRing(ring, distanceInTileUnits) {
+	if (!ring || ring.length < 3) return ring;
+	const isClosed = ring[0].x === ring[ring.length - 1].x && ring[0].y === ring[ring.length - 1].y;
+	const vertexCount = isClosed ? ring.length - 1 : ring.length;
+	if (vertexCount < 3) return ring;
+	const vertices = ring.map((p) => fromValues(p.x, p.y));
+	const newRing = [];
+	for (let i = 0; i < vertexCount; i++) {
+		const prev = vertices[(i - 1 + vertexCount) % vertexCount];
+		const current = vertices[i];
+		const next = vertices[(i + 1) % vertexCount];
+		appendRoundCorner(newRing, prev, current, next, distanceInTileUnits);
+	}
+	if (isClosed && newRing.length > 0) newRing.push(clone$1(newRing[0]));
+	return newRing.map((p) => new Point(p[0], p[1]));
+}
+function appendRoundCorner(newRing, prev, current, next, distanceInTileUnits) {
+	const ua = sub(create$1(), prev, current);
+	const ub = sub(create$1(), next, current);
+	const lenA = length(ua);
+	const lenB = length(ub);
+	if (lenA < 1e-6 || lenB < 1e-6) {
+		newRing.push(clone$1(current));
+		return;
+	}
+	scale(ua, ua, 1 / lenA);
+	scale(ub, ub, 1 / lenB);
+	const dot = dot$1(ua, ub);
+	if (Math.abs(dot) > Math.cos(5 * Math.PI / 180)) {
+		newRing.push(clone$1(current));
+		return;
+	}
+	const maxEdgeLenPercent = .2;
+	const r = Math.min(distanceInTileUnits, lenA * maxEdgeLenPercent, lenB * maxEdgeLenPercent);
+	const tangentA = scaleAndAdd(create$1(), current, ua, r);
+	const tangentB = scaleAndAdd(create$1(), current, ub, r);
+	const bisector = add(create$1(), ua, ub);
+	normalize(bisector, bisector);
+	const cosHalfTheta = Math.sqrt((1 + dot) / 2);
+	const center = scaleAndAdd(create$1(), current, bisector, r / cosHalfTheta);
+	const radiusA = sub(create$1(), tangentA, center);
+	const radiusB = sub(create$1(), tangentB, center);
+	const sweepAngle = angle(radiusA, radiusB);
+	const direction = Math.sign(radiusA[0] * radiusB[1] - radiusA[1] * radiusB[0]);
+	const numSegments = Math.max(2, Math.ceil(sweepAngle / (Math.PI / 6) - 1e-6));
+	for (let s = 0; s <= numSegments; s++) {
+		const angle = direction * sweepAngle * (s / numSegments);
+		newRing.push(rotate(create$1(), tangentA, center, angle));
+	}
+}
+//#endregion
 //#region src/data/bucket/fill_extrusion_bucket.ts
 const EARCUT_MAX_RINGS = 500;
 const FACTOR = Math.pow(2, 13);
@@ -20601,15 +20855,18 @@ var FillExtrusionBucket = class {
 		this.features = [];
 		this.hasDependencies = hasPattern("fill-extrusion", this.layers, options);
 		const globalProperties = new EvaluationParameters(this.zoom);
-		const needGeometry = this.layers[0]._featureFilter.needGeometry;
+		const layer = this.layers[0];
+		const roundedCornerDistance = layer.layout.get("fill-extrusion-rounded-corner-distance");
+		const needGeometry = layer._featureFilter.needGeometry;
 		for (const { feature, id, index, sourceLayerIndex } of features) {
 			const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-			if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+			if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+			const rawGeometry = needGeometry ? evaluationFeature.geometry : loadGeometry(feature);
 			const bucketFeature = {
 				id,
 				sourceLayerIndex,
 				index,
-				geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
+				geometry: roundedCornerDistance > 0 ? roundPolygonCorners(rawGeometry, roundedCornerDistance, canonical) : rawGeometry,
 				properties: feature.properties,
 				type: feature.type,
 				patterns: {}
@@ -20653,7 +20910,10 @@ var FillExtrusionBucket = class {
 		this.centroidVertexBuffer.destroy();
 	}
 	addFeature(feature, geometry, index, canonical, imagePositions, subdivisionGranularity) {
-		for (const polygon of classifyRings$1(geometry, EARCUT_MAX_RINGS)) {
+		const layer = this.layers[0];
+		const roundedCornerDistance = layer.layout ? layer.layout.get("fill-extrusion-rounded-corner-distance") : 0;
+		const processedGeometry = roundedCornerDistance > 0 ? roundPolygonCorners(geometry, roundedCornerDistance, canonical) : geometry;
+		for (const polygon of classifyRings$1(processedGeometry, EARCUT_MAX_RINGS)) {
 			const centroid = {
 				x: 0,
 				y: 0,
@@ -32808,86 +33068,6 @@ var SourceFeatureState = class {
 	}
 };
 //#endregion
-//#region src/geo/projection/mercator_utils.ts
-const maxMercatorHorizonAngle = 89.25;
-/**
-* Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
-* @param inTileX - X coordinate in tile units - range [0..EXTENT].
-* @param inTileY - Y coordinate in tile units - range [0..EXTENT].
-* @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
-* @returns Mercator coordinates of the specified point in range [0..1].
-*/
-function tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID) {
-	const scale = 1 / (1 << canonicalTileID.z);
-	return new MercatorCoordinate(inTileX / EXTENT * scale + canonicalTileID.x * scale, inTileY / EXTENT * scale + canonicalTileID.y * scale);
-}
-/**
-* Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
-* @param worldSize - Mercator world size computed from zoom level and tile size.
-* @param lnglat - The location to convert.
-* @returns Point
-*/
-function projectToWorldCoordinates(worldSize, lnglat) {
-	const lat = clamp$2(lnglat.lat, -85.051129, MAX_VALID_LATITUDE);
-	return new Point(mercatorXfromLng$1(lnglat.lng) * worldSize, mercatorYfromLat$1(lat) * worldSize);
-}
-/**
-* Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
-* @param worldSize - Mercator world size computed from zoom level and tile size.
-* @param point - World coordinate.
-* @returns LngLat
-*/
-function unprojectFromWorldCoordinates(worldSize, point) {
-	return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
-}
-/**
-* Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
-* multiplied by a static factor to simulate the earth-radius.
-* The calculated value is the horizontal line from the camera-height to sea-level.
-* @returns Horizon above center in pixels.
-*/
-function getMercatorHorizon(transform) {
-	return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * .85, Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
-}
-function calculateTileMatrix(unwrappedTileID, worldSize) {
-	const canonical = unwrappedTileID.canonical;
-	const scale = worldSize / zoomScale(canonical.z);
-	const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
-	const worldMatrix = /* @__PURE__ */ new Float64Array(16);
-	identity(worldMatrix);
-	translate$1(worldMatrix, worldMatrix, [
-		unwrappedX * scale,
-		canonical.y * scale,
-		0
-	]);
-	scale$3(worldMatrix, worldMatrix, [
-		scale / EXTENT,
-		scale / EXTENT,
-		1
-	]);
-	return worldMatrix;
-}
-function cameraMercatorCoordinateFromCenterAndRotation(center, elevation, pitch, bearing, distance) {
-	const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
-	const dMercator = distance * mercatorZfromAltitude(1, center.lat);
-	const { x, y, z } = cameraDirectionFromPitchBearing(pitch, bearing);
-	const dxMercator = dMercator * -x;
-	const dyMercator = dMercator * -y;
-	const dzMercator = dMercator * -z;
-	return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
-}
-function cameraDirectionFromPitchBearing(pitch, bearing) {
-	const pitchRadians = degreesToRadians(pitch);
-	const bearingRadians = degreesToRadians(bearing);
-	const z = Math.cos(-pitchRadians);
-	const h = Math.sin(pitchRadians);
-	return {
-		x: h * Math.sin(bearingRadians),
-		y: -h * Math.cos(bearingRadians),
-		z
-	};
-}
-//#endregion
 //#region src/geo/projection/covering_tiles.ts
 /**
 * A simple/heuristic function that returns whether the tile is visible under the current transform.
@@ -37859,7 +38039,7 @@ var TransformHelper = class {
 		this._bearingInRadians = b;
 		this._calcMatrices();
 		this._rotationMatrix = create$7();
-		rotate(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
+		rotate$1(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
 	}
 	get rotationMatrix() {
 		return this._rotationMatrix;
@@ -38215,12 +38395,12 @@ var Aabb = class Aabb {
 	constructor(min_, max_) {
 		this.min = min_;
 		this.max = max_;
-		this.center = scale$2([], add([], this.min, this.max), .5);
+		this.center = scale$2([], add$1([], this.min, this.max), .5);
 	}
 	quadrant(index) {
 		const split = [index % 2 === 0, index < 2];
-		const qMin = clone$1(this.min);
-		const qMax = clone$1(this.max);
+		const qMin = clone$2(this.min);
+		const qMax = clone$2(this.max);
 		for (let axis = 0; axis < split.length; axis++) {
 			qMin[axis] = split[axis] ? this.min[axis] : this.center[axis];
 			qMax[axis] = split[axis] ? this.center[axis] : this.max[axis];
@@ -38440,7 +38620,7 @@ var Frustum = class Frustum {
 		const frustumCoords = clipSpaceCorners.map((v) => unprojectClipSpacePoint(v, invProj, worldSize, scale));
 		if (horizonPlane) adjustFarPlaneByHorizonPlane(frustumCoords, frustumPlanePointIndices[0], horizonPlane, flippedNearFar);
 		const frustumPlanes = frustumPlanePointIndices.map((p) => {
-			const n = normalize$2([], cross([], sub([], frustumCoords[p[0]], frustumCoords[p[1]]), sub([], frustumCoords[p[2]], frustumCoords[p[1]])));
+			const n = normalize$3([], cross([], sub$1([], frustumCoords[p[0]], frustumCoords[p[1]]), sub$1([], frustumCoords[p[2]], frustumCoords[p[1]])));
 			const d = -dot$2(n, frustumCoords[p[1]]);
 			return n.concat(d);
 		});
@@ -38485,7 +38665,7 @@ function adjustFarPlaneByHorizonPlane(frustumCoords, nearPlanePointsIndices, hor
 	const cornerRayLengths = [];
 	const cornerRayNormalizedDirections = [];
 	for (let i = 0; i < 4; i++) {
-		const dir = sub([], frustumCoords[i + farPlanePointsOffset], frustumCoords[i + nearPlanePointsOffset]);
+		const dir = sub$1([], frustumCoords[i + farPlanePointsOffset], frustumCoords[i + nearPlanePointsOffset]);
 		const len = length$1(dir);
 		scale$2(dir, dir, 1 / len);
 		cornerRayLengths.push(len);
@@ -38518,15 +38698,15 @@ function adjustFarPlaneByHorizonPlane(frustumCoords, nearPlanePointsIndices, hor
 * @param nearPlanePointsIndices - Which indices in the `frustumCoords` form the near plane.
 */
 function getNormalizedNearPlane(frustumCoords, nearPlanePointsIndices) {
-	const nearPlaneA = sub([], frustumCoords[nearPlanePointsIndices[0]], frustumCoords[nearPlanePointsIndices[1]]);
-	const nearPlaneB = sub([], frustumCoords[nearPlanePointsIndices[2]], frustumCoords[nearPlanePointsIndices[1]]);
+	const nearPlaneA = sub$1([], frustumCoords[nearPlanePointsIndices[0]], frustumCoords[nearPlanePointsIndices[1]]);
+	const nearPlaneB = sub$1([], frustumCoords[nearPlanePointsIndices[2]], frustumCoords[nearPlanePointsIndices[1]]);
 	const nearPlaneNormalized = [
 		0,
 		0,
 		0,
 		0
 	];
-	normalize$2(nearPlaneNormalized, cross([], nearPlaneA, nearPlaneB));
+	normalize$3(nearPlaneNormalized, cross([], nearPlaneA, nearPlaneB));
 	nearPlaneNormalized[3] = -dot$2(nearPlaneNormalized, frustumCoords[nearPlanePointsIndices[0]]);
 	return nearPlaneNormalized;
 }
@@ -38535,11 +38715,11 @@ function getNormalizedNearPlane(frustumCoords, nearPlanePointsIndices) {
 */
 function getIdealNearFarPlaneDistance(horizonPlane, nearPlaneNormalized) {
 	const normalizedHorizonPlane = scale$1([], horizonPlane, 1 / len(horizonPlane));
-	const projectedViewDirection = sub([], nearPlaneNormalized, scale$2([], normalizedHorizonPlane, dot$2(nearPlaneNormalized, normalizedHorizonPlane)));
+	const projectedViewDirection = sub$1([], nearPlaneNormalized, scale$2([], normalizedHorizonPlane, dot$2(nearPlaneNormalized, normalizedHorizonPlane)));
 	const projectedViewLength = len(projectedViewDirection);
 	if (projectedViewLength > 0) {
 		const horizonCircleRadius = Math.sqrt(1 - normalizedHorizonPlane[3] * normalizedHorizonPlane[3]);
-		return pointPlaneSignedDistance(nearPlaneNormalized, add([], scale$2([], normalizedHorizonPlane, -normalizedHorizonPlane[3]), scale$2([], projectedViewDirection, horizonCircleRadius / projectedViewLength)));
+		return pointPlaneSignedDistance(nearPlaneNormalized, add$1([], scale$2([], normalizedHorizonPlane, -normalizedHorizonPlane[3]), scale$2([], projectedViewDirection, horizonCircleRadius / projectedViewLength)));
 	} else return null;
 }
 //#endregion
@@ -38991,7 +39171,7 @@ var MercatorTransform = class MercatorTransform {
 		fastInvertProjMat4(this._invProjMatrix, m);
 		m[8] = -offset.x * 2 / this._helper._width;
 		m[9] = offset.y * 2 / this._helper._height;
-		this._projectionMatrix = clone$2(m);
+		this._projectionMatrix = clone$3(m);
 		scale$3(m, m, [
 			1,
 			-1,
@@ -39159,7 +39339,7 @@ var MercatorTransform = class MercatorTransform {
 		return 1;
 	}
 	transformLightDirection(dir) {
-		return clone$1(dir);
+		return clone$2(dir);
 	}
 	getRayDirectionFromPixel(_p) {
 		throw new Error("Not implemented.");
@@ -39746,9 +39926,9 @@ function horizonPlaneToCenterAndRadius(horizonPlane) {
 */
 function clampToSphere(center, radius, point) {
 	const relativeToCenter = createVec3f64();
-	sub(relativeToCenter, point, center);
+	sub$1(relativeToCenter, point, center);
 	const clamped = createVec3f64();
-	scaleAndAdd(clamped, center, relativeToCenter, radius / len(relativeToCenter));
+	scaleAndAdd$1(clamped, center, relativeToCenter, radius / len(relativeToCenter));
 	return clamped;
 }
 function planetScaleAtLatitude(latitudeDegrees) {
@@ -39961,9 +40141,9 @@ var ConvexVolume = class ConvexVolume {
 		const points = [];
 		for (let i = 0; i < 8; i++) {
 			const p = [...center];
-			add(p, p, scale$2([], axisX, (i >> 0 & 1) === 1 ? 1 : -1));
-			add(p, p, scale$2([], axisY, (i >> 1 & 1) === 1 ? 1 : -1));
-			add(p, p, scale$2([], axisZ, (i >> 2 & 1) === 1 ? 1 : -1));
+			add$1(p, p, scale$2([], axisX, (i >> 0 & 1) === 1 ? 1 : -1));
+			add$1(p, p, scale$2([], axisY, (i >> 1 & 1) === 1 ? 1 : -1));
+			add$1(p, p, scale$2([], axisZ, (i >> 2 & 1) === 1 ? 1 : -1));
 			points.push(p);
 		}
 		return new ConvexVolume(points, [
@@ -40181,13 +40361,13 @@ var GlobeCoveringTilesDetailsProvider = class {
 				1,
 				0
 			], center);
-			normalize$2(centerEast, centerEast);
+			normalize$3(centerEast, centerEast);
 			const north = cross([], center, centerEast);
-			normalize$2(north, north);
+			normalize$3(north, north);
 			const axisEast = cross([], corners[2], corners[1]);
-			normalize$2(axisEast, axisEast);
+			normalize$3(axisEast, axisEast);
 			const axisWest = cross([], corners[0], corners[3]);
-			normalize$2(axisWest, axisWest);
+			normalize$3(axisWest, axisWest);
 			extremesPoints.push(scale$2([], center, maxElevation));
 			if (tileID.y >= (1 << tileID.z) / 2) extremesPoints.push(scale$2([], projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
 			if (tileID.y < (1 << tileID.z) / 2) extremesPoints.push(scale$2([], projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
@@ -40563,8 +40743,8 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 			0
 		];
 		cross(axisDown, axisRight, spherePos);
-		normalize$2(axisRight, axisRight);
-		normalize$2(axisDown, axisDown);
+		normalize$3(axisRight, axisRight);
+		normalize$3(axisDown, axisDown);
 		const transformed = [
 			axisRight[0] * dir[0] + axisDown[0] * dir[1] + spherePos[0] * dir[2],
 			axisRight[1] * dir[0] + axisDown[1] * dir[1] + spherePos[1] * dir[2],
@@ -40575,7 +40755,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 			0,
 			0
 		];
-		normalize$2(normalized, transformed);
+		normalize$3(normalized, transformed);
 		return normalized;
 	}
 	getPixelScale() {
@@ -40620,7 +40800,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		const offset = this.centerOffset;
 		globeMatrix[8] = -offset.x * 2 / this._helper._width;
 		globeMatrix[9] = offset.y * 2 / this._helper._height;
-		this._projectionMatrix = clone$2(globeMatrix);
+		this._projectionMatrix = clone$3(globeMatrix);
 		this._globeProjMatrixInverted = createMat4f64();
 		invert(this._globeProjMatrixInverted, globeMatrix);
 		translate$1(globeMatrix, globeMatrix, [
@@ -40653,7 +40833,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.rollInRadians);
 		rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitchInRadians);
 		rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.bearingInRadians);
-		add(this._cameraPosition, this._cameraPosition, [
+		add$1(this._cameraPosition, this._cameraPosition, [
 			0,
 			0,
 			1
@@ -40661,7 +40841,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		rotateX(this._cameraPosition, this._cameraPosition, zero, -this.center.lat * Math.PI / 180);
 		rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180);
 		this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
-		const matrix = clone$2(this._globeViewProjMatrixF64Inverted);
+		const matrix = clone$3(this._globeViewProjMatrixF64Inverted);
 		scale$3(matrix, matrix, [
 			1,
 			1,
@@ -40880,7 +41060,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		ray[1] = pos[1] - this._cameraPosition[1];
 		ray[2] = pos[2] - this._cameraPosition[2];
 		const rayNormalized = createVec3f64();
-		normalize$2(rayNormalized, ray);
+		normalize$3(rayNormalized, ray);
 		return rayNormalized;
 	}
 	/**
@@ -40919,7 +41099,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		const inner = createVec3f64();
 		const scaledDir = createVec3f64();
 		scale$2(scaledDir, direction, originDotDirection);
-		sub(inner, origin, scaledDir);
+		sub$1(inner, origin, scaledDir);
 		const discriminant = planetRadiusSquared - dot$2(inner, inner);
 		if (discriminant < 0) return null;
 		const c = dot$2(origin, origin) - planetRadiusSquared;
@@ -40945,13 +41125,13 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
 		if (intersection) {
 			const intersectionPoint = createVec3f64();
-			add(intersectionPoint, rayOrigin, [
+			add$1(intersectionPoint, rayOrigin, [
 				rayDirection[0] * intersection.tMin,
 				rayDirection[1] * intersection.tMin,
 				rayDirection[2] * intersection.tMin
 			]);
 			const sphereSurface = createVec3f64();
-			normalize$2(sphereSurface, intersectionPoint);
+			normalize$3(sphereSurface, intersectionPoint);
 			return sphereSurfacePointToCoordinates(sphereSurface);
 		}
 		const horizonPlane = this._cachedClippingPlane;
@@ -40959,20 +41139,20 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		const distanceToIntersection = -pointPlaneSignedDistance(horizonPlane, rayOrigin) / directionDotPlaneXyz;
 		const maxRayLength = 2;
 		const planeIntersection = createVec3f64();
-		if (distanceToIntersection > 0) add(planeIntersection, rayOrigin, [
+		if (distanceToIntersection > 0) add$1(planeIntersection, rayOrigin, [
 			rayDirection[0] * distanceToIntersection,
 			rayDirection[1] * distanceToIntersection,
 			rayDirection[2] * distanceToIntersection
 		]);
 		else {
 			const distantPoint = createVec3f64();
-			add(distantPoint, rayOrigin, [
+			add$1(distantPoint, rayOrigin, [
 				rayDirection[0] * maxRayLength,
 				rayDirection[1] * maxRayLength,
 				rayDirection[2] * maxRayLength
 			]);
 			const distanceFromPlane = pointPlaneSignedDistance(this._cachedClippingPlane, distantPoint);
-			sub(planeIntersection, distantPoint, [
+			sub$1(planeIntersection, distantPoint, [
 				this._cachedClippingPlane[0] * distanceFromPlane,
 				this._cachedClippingPlane[1] * distanceFromPlane,
 				this._cachedClippingPlane[2] * distanceFromPlane
@@ -41417,7 +41597,7 @@ var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
 		const rayOrigin = tr.cameraPosition;
 		const distanceToClosestPoint = dot$2(rayOrigin, rayDirection) * -1;
 		const closestPoint = createVec3f64();
-		add(closestPoint, rayOrigin, [
+		add$1(closestPoint, rayOrigin, [
 			rayDirection[0] * distanceToClosestPoint,
 			rayDirection[1] * distanceToClosestPoint,
 			rayDirection[2] * distanceToClosestPoint
@@ -60965,11 +61145,87 @@ function buildStyle() {
 	};
 }
 //#endregion
+//#region test/bench/benchmarks/round_polygon_corners.ts
+function generateBuildingData() {
+	const features = [];
+	for (let i = 0; i < 500; i++) {
+		const cx = -74.006 + i % 25 * .002;
+		const cy = 40.7128 + Math.floor(i / 25) * .002;
+		const size = 8e-4;
+		const outerRing = [
+			[cx - size, cy - size],
+			[cx + size, cy - size],
+			[cx + size, cy + size],
+			[cx - size, cy + size],
+			[cx - size, cy - size]
+		];
+		const holeRing = [
+			[cx - size * .4, cy - size * .4],
+			[cx + size * .4, cy - size * .4],
+			[cx + size * .4, cy + size * .4],
+			[cx - size * .4, cy + size * .4],
+			[cx - size * .4, cy - size * .4]
+		];
+		features.push({
+			type: "Feature",
+			properties: {},
+			geometry: {
+				type: "Polygon",
+				coordinates: i % 2 === 0 ? [outerRing, holeRing] : [outerRing]
+			}
+		});
+	}
+	return {
+		type: "FeatureCollection",
+		features
+	};
+}
+var RoundPolygonCorners = class extends Benchmark {
+	async setup() {
+		this.sampleData = generateBuildingData();
+		this.map = await createMap({
+			width: 512,
+			height: 512,
+			center: [-74.006, 40.7128],
+			zoom: 15,
+			fadeDuration: 0,
+			style: {
+				version: 8,
+				sources: { buildings: {
+					type: "geojson",
+					data: {
+						type: "FeatureCollection",
+						features: []
+					}
+				} },
+				layers: [{
+					id: "building-extrusion",
+					type: "fill-extrusion",
+					source: "buildings",
+					layout: { "fill-extrusion-rounded-corner-distance": 15 },
+					paint: {
+						"fill-extrusion-color": "#007cbf",
+						"fill-extrusion-height": 15
+					}
+				}]
+			}
+		});
+		if (!this.map.loaded()) await this.map.once("idle");
+	}
+	async bench() {
+		this.map.getSource("buildings").setData(this.sampleData);
+		await this.map.once("idle");
+	}
+	teardown() {
+		this.map.remove();
+	}
+};
+//#endregion
 //#region test/bench/versions/index.ts
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 74590c6 (local)` : "main 74590c6";
+const version = new URL(import.meta.url).origin === location.origin ? `main 71480b6 (local)` : "main 71480b6";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
@@ -61042,6 +61298,7 @@ register("Terrain3DGlobe", new Terrain3DGlobe());
 register("Terrain3DMercator", new Terrain3DMercator());
 register("Terrain2DGlobe", new Terrain2DGlobe());
 register("Terrain2DMercator", new Terrain2DMercator());
+register("RoundPolygonCorners", new RoundPolygonCorners());
 Promise.resolve().then(() => {
 	getGlobalWorkerPool().acquire(-1);
 });
