@@ -1,19 +1,16 @@
 uniform sampler2D u_image;
 uniform float u_opacity;
 
-in vec2 v_pos;
-
 #ifdef LAYER_BLEND
 uniform sampler2D u_backdrop;
+/** Pixel offset of the backdrop copy within the target, as the backdrop only covers the scissor box. */
+uniform vec2 u_backdrop_offset;
 
-// Separable and non-separable blending directly in premultiplied space.
+/** Blending in premultiplied space, for the modes no fixed-function blend function can express. */
 vec4 composite(vec4 src, vec4 dst) {
     vec3 co = vec3(0.0);
 #ifdef LAYER_BLEND_MULTIPLY
     co = (1.0 - dst.a) * src.rgb + (1.0 - src.a) * dst.rgb + src.rgb * dst.rgb;
-#endif
-#ifdef LAYER_BLEND_SCREEN
-    co = src.rgb + dst.rgb - src.rgb * dst.rgb;
 #endif
 #ifdef LAYER_BLEND_OVERLAY
     vec3 cond = step(dst.a, 2.0 * dst.rgb);
@@ -26,7 +23,9 @@ vec4 composite(vec4 src, vec4 dst) {
 #endif
 
 void main() {
-    vec4 src = texture(u_image, v_pos) * u_opacity;
+    // The quad covers the target 1:1 from the viewport origin, so the pixel coordinate is also the texel coordinate.
+    ivec2 texel = ivec2(gl_FragCoord.xy);
+    vec4 src = texelFetch(u_image, texel, 0) * u_opacity;
 
     // Discard empty fragments to optimize fill rate and avoid reading the backdrop
     if (src.a == 0.0) {
@@ -37,11 +36,10 @@ void main() {
     fragColor = vec4(0.0);
 #else
 #ifdef LAYER_BLEND
-    vec4 dst = texture(u_backdrop, v_pos);
+    vec4 dst = texelFetch(u_backdrop, texel - ivec2(u_backdrop_offset), 0);
     fragColor = composite(src, dst);
 #else
     fragColor = src;
 #endif
 #endif
 }
-

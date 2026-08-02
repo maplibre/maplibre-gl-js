@@ -29,7 +29,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         if (painter.renderPass !== 'translucent') return;
         const useTerrain = !!painter.style.map.terrain;
 
-        const results = prepareDrawLayerComposite(painter, layer, coords, useTerrain);
+        const results = prepareDrawLayerComposite(painter, tileManager, layer, coords, useTerrain);
         drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
         drawLayerComposite(painter, layerOpacity, layerBlend, results, layer);
         return;

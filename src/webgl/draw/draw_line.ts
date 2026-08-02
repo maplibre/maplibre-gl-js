@@ -150,7 +150,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const useTerrain = !!painter.style.map.terrain;
     const layerBlend = layer.paint.get('line-layer-blend');
     if (layerOpacity < 1 || layerBlend !== 'normal') {
-        const results = prepareDrawLayerComposite(painter, layer, coords, useTerrain);
+        const results = prepareDrawLayerComposite(painter, tileManager, layer, coords, useTerrain);
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
         drawLayerComposite(painter, layerOpacity, layerBlend, results, layer);
         return;

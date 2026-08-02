@@ -114,7 +114,7 @@ export class Painter {
      * Resized in place to match the target dimensions.
      */
     layerCompositeFbo: Framebuffer | null;
-    /** Copy of the composite target, sampled as the backdrop by non-`normal` `{line,fill}-layer-blend`. */
+    /** Copy of the composite target's scissor box, sampled as the backdrop by shader-evaluated `{line,fill}-layer-blend`. */
     layerCompositeBackdrop: {texture: WebGLTexture; width: number; height: number} | null;
     numSublayers: number;
     depthEpsilon: number;
