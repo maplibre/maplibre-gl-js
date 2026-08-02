@@ -1,11 +1,10 @@
 import {DOM} from '../../util/dom.ts';
-
 import {MapBoxZoomEvent} from '../events.ts';
-import {TransformProvider} from './transform-provider.ts';
 
 import type {Map} from '../map.ts';
+import type {Handler} from '../handler_manager.ts';
+import type {TransformProvider} from './transform-provider.ts';
 import type Point from '@mapbox/point-geometry';
-import {type Handler} from '../handler_manager.ts';
 
 /**
  * Callback for customizing what happens when a box zoom gesture ends.
@@ -46,9 +45,9 @@ export class BoxZoomHandler implements Handler {
     constructor(map: Map, options: {
         clickTolerance: number;
         boxZoom?: boolean | BoxZoomHandlerOptions;
-    }) {
+    }, transformProvider: TransformProvider) {
         this._map = map;
-        this._tr = new TransformProvider(map);
+        this._tr = transformProvider;
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;

@@ -4,7 +4,7 @@ import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventT
 import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
-import {ImageManager} from '../render/image_manager.ts';
+import {ImageManager, type MissingImageRequestHandler} from '../render/image_manager.ts';
 import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
@@ -16,10 +16,10 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
+import {validateStyle, validateStyleAndEmit, validateAndEmit, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
-import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import {derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
@@ -33,15 +33,6 @@ import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
-
-// We're skipping validation errors with the `source.canvas` identifier in order
-// to continue to allow canvas sources to be added at runtime/updated in
-// smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424):
-const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
-    message: string;
-    identifier?: string;
-}> | null) =>
-    _emitValidationErrors(evented, errors?.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
@@ -234,6 +225,7 @@ export class Style extends Evented<MapEventType> {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _imagesListDirty: boolean;
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
@@ -263,6 +255,7 @@ export class Style extends Evented<MapEventType> {
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
+        this.imageManager.setMissingImageResolver(map._missingStyleImageResolver);
         const glyphLang = map._container?.lang || (typeof document !== 'undefined' && document.documentElement?.lang) || undefined;
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, glyphLang);
         this.lineAtlas = new LineAtlas(256, 512);
@@ -306,6 +299,7 @@ export class Style extends Evented<MapEventType> {
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._availableImages = [];
+        this._imagesListDirty = false;
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -475,7 +469,7 @@ export class Style extends Evented<MapEventType> {
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): void {
         let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
-        if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
+        if (options.validate && validateStyleAndEmit(this, nextState)) {
             return;
         }
 
@@ -497,12 +491,13 @@ export class Style extends Evented<MapEventType> {
         this.glyphManager.setURL(nextState.glyphs);
         this._createLayers();
 
-        this.light = new Light(this.stylesheet.light);
+        this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
-        this.sky = new Sky(this.stylesheet.sky);
+        this.sky = new Sky(this.stylesheet.sky, this._globalState);
 
-        this.map.setTerrain(this.stylesheet.terrain ?? null);
+        // The stylesheet's terrain was already validated as part of the style itself.
+        this.map.setTerrain(this.stylesheet.terrain ?? null, {validate: false});
 
         this.fire(new MapStyleDataEvent('data'));
         this.fire(new MapStyleLoadEvent());
@@ -601,8 +596,8 @@ export class Style extends Evented<MapEventType> {
 
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new MapStyleDataEvent('data'));
     }
 
@@ -735,6 +730,11 @@ export class Style extends Evented<MapEventType> {
 
         const changed = this._changed;
         if (changed) {
+            if (this._imagesListDirty) {
+                this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+                this._imagesListDirty = false;
+            }
+
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -871,7 +871,7 @@ export class Style extends Evented<MapEventType> {
         const serializedStyle =  this.serialize();
         nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
         const validate = options.validate ?? true;
-        if (validate && emitValidationErrors(this, validateStyle(nextState))) return false;
+        if (validate && validateStyleAndEmit(this, nextState)) return false;
 
         nextState = clone(nextState);
         nextState.layers = derefLayers(nextState.layers);
@@ -992,6 +992,10 @@ export class Style extends Evented<MapEventType> {
         return this.imageManager.getImage(id);
     }
 
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void {
+        this.imageManager.setMissingImageResolver(resolver);
+    }
+
     removeImage(id: string): void {
         if (!this.getImage(id)) {
             this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
@@ -1004,8 +1008,8 @@ export class Style extends Evented<MapEventType> {
     _afterImageUpdated(id: string): void {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new MapStyleDataEvent('data'));
     }
 
@@ -1026,8 +1030,7 @@ export class Style extends Evented<MapEventType> {
             throw new Error(`The type property must be defined, but only the following properties were given: ${Object.keys(source).join(', ')}.`);
         }
 
-        const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
-        const shouldValidate = builtIns.includes(source.type);
+        const shouldValidate = SPEC_SOURCE_TYPES.has(source.type);
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map?._collectResourceTiming) (source as any).collectResourceTiming = true;
         const tileManager = this.tileManagers[id] = new TileManager(id, source, this.dispatcher);
@@ -1757,7 +1760,7 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        const projectionObjects = createProjectionFromName(name, this.map.transformConstrain);
+        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {
@@ -1765,18 +1768,13 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
-    _validate(validate: Validator, key: string, value: any, props: any, options: {
-        validate?: boolean;
-    } = {}): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
+    _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
+        return validateAndEmit(this, validate, {
             key,
             style: this.serialize(),
             value,
-            styleSpec
-        }, props)));
+            ...props
+        }, options);
     }
 
     _remove(mapRemoved: boolean = true): void {
@@ -1915,8 +1913,7 @@ export class Style extends Evented<MapEventType> {
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
-        // - imageManager.getImages(...) triggers `onstyleimagemissing`
-        // - the user adds "my-image" within the callback
+        // - imageManager.getImages(...) resolves "my-image" with a missing-image resolver
         // - addImage adds "my-image" to this._changedImages
         // - the next frame triggers a reload of this tile even though it already has the latest version
         this._updateTilesForChangedImages();
@@ -2015,8 +2012,8 @@ export class Style extends Evented<MapEventType> {
 
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new MapStyleDataEvent('data'));
     }
 

@@ -1,13 +1,14 @@
 import {DOM} from '../util/dom.ts';
 import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
-import type {PositionAnchor} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
+import Point from '@mapbox/point-geometry';
+
+import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
-import {type Popup, type Offset} from './popup.ts';
+import type {Popup, Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {MapMouseEvent, MapTouchEvent} from './events.ts';
 import type {PointLike} from './camera.ts';
@@ -226,6 +227,7 @@ export class Marker extends Evented<MarkerEventType> {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
+    _roleManaged: boolean;
 
     /**
      * @param options - the options
@@ -240,6 +242,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._clickTolerance = options?.clickTolerance || 0;
         this._subpixelPositioning = options?.subpixelPositioning || false;
         this._isDragging = false;
+        this._roleManaged = false;
         this._state = 'inactive';
         this._rotation = options?.rotation || 0;
         this._rotationAlignment = options?.rotationAlignment || 'auto';
@@ -392,15 +395,11 @@ export class Marker extends Evented<MarkerEventType> {
         this.remove();
         this._map = map;
 
-        if (!this._element.hasAttribute('aria-label')) {
+        if (this._defaultMarker && !this._element.hasAttribute('aria-label')) {
             this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
         }
 
-        // aria-label is set either by user or above default, so set role
-        // since div is interactive and cannot have aria-label without a role
-        if (!this._element.hasAttribute('role')) {
-            this._element.setAttribute('role', 'button');
-        }
+        this._updateAccessibilityRole();
 
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
@@ -552,6 +551,7 @@ export class Marker extends Evented<MarkerEventType> {
             this._element.addEventListener('keypress', this._onKeyPress);
         }
 
+        this._updateAccessibilityRole();
         return this;
     }
 
@@ -635,7 +635,7 @@ export class Marker extends Evented<MarkerEventType> {
 
     _updateOpacity(force: boolean = false): void {
         const terrain = this._map?.terrain;
-        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
@@ -658,8 +658,8 @@ export class Marker extends Evented<MarkerEventType> {
         // Read depth framebuffer, getting position of terrain in line of sight to marker
         const terrainDistance = map.terrain.depthAtPoint(this._pos);
         // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map.transform);
-        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map._camera.transform);
+        const markerDistance = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation);
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
@@ -667,10 +667,10 @@ export class Marker extends Evented<MarkerEventType> {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
+        const metersToCenter = -this._offset.y / map._camera.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
-        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        const markerDistanceCenter = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
 
@@ -687,12 +687,12 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.once('render', this._update);
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';
@@ -856,6 +856,7 @@ export class Marker extends Evented<MarkerEventType> {
      */
     setDraggable(shouldBeDraggable?: boolean): this {
         this._draggable = !!shouldBeDraggable; // convert possible undefined value to false
+        this._element.classList.toggle('maplibregl-marker-draggable', this._draggable);
 
         // handle case where map may not exist yet
         // e.g. when setDraggable is called before addTo
@@ -869,6 +870,7 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
+        this._updateAccessibilityRole();
         return this;
     }
 
@@ -878,6 +880,29 @@ export class Marker extends Evented<MarkerEventType> {
      */
     isDraggable(): boolean {
         return this._draggable;
+    }
+
+    /**
+     * Keep the default marker role aligned with interactivity.
+     * Default markers need a role because `aria-label` is set in {@link Marker.addTo}.
+     * Non-interactive markers use `role=img`; interactive ones (draggable or with a popup) use `role=button`.
+     * Click listeners are application-owned and do not automatically change the role.
+     * Custom marker elements are left alone so applications own their a11y tree.
+     * Explicit roles set by the application are preserved.
+     */
+    _updateAccessibilityRole(): void {
+        if (!this._defaultMarker) {
+            return;
+        }
+
+        // Preserve an explicit role chosen by the application unless we previously managed it.
+        if (this._element.hasAttribute('role') && !this._roleManaged) {
+            return;
+        }
+
+        const role = (this._draggable || !!this._popup) ? 'button' : 'img';
+        this._element.setAttribute('role', role);
+        this._roleManaged = true;
     }
 
     /**

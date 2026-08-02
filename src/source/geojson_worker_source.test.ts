@@ -632,6 +632,7 @@ describe('loadData', () => {
         expect(mockGeoJSONIndex.updateClusterOptions).not.toHaveBeenCalled();
         await expect(worker.loadData({
             type: 'geojson',
+            source: 'source1',
             updateCluster: true,
             geojsonVtOptions: {
                 cluster: true,

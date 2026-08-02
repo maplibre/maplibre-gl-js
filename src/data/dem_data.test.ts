@@ -151,6 +151,30 @@ describe('DEMData.backfillBorder with encoding', () => {
     });
 });
 
+describe('DEMData.sampleBilinear', () => {
+    test('interpolates four neighboring pixels', () => {
+        const elevations = [
+            0, 0, 0, 0,
+            0, 10, 20, 0,
+            0, 30, 40, 0,
+            0, 0, 0, 0
+        ];
+        const pixels = new Uint8Array(elevations.flatMap(elevation => [elevation, 0, 0, 0]));
+        const dem = new DEMData('sample', new RGBAImage({height: 4, width: 4}, pixels), 'custom', 1.0, 0.0, 0.0, 0.0);
+
+        expect(dem.sampleBilinear(0, 0)).toBe(10);
+        expect(dem.sampleBilinear(0.5, 0.5)).toBe(25);
+        expect(dem.sampleBilinear(-0.5, 0.5)).toBe(20);
+        expect(dem.sampleBilinear(1, 1)).toBe(40);
+    });
+
+    test('throws when the bilinear footprint is outside the padded DEM', () => {
+        const dem = new DEMData('sample', createMockImage(2, 2), 'custom', 1.0, 1.0, 1.0, 0.0);
+
+        expect(() => dem.sampleBilinear(2, 0)).toThrow(RangeError);
+    });
+});
+
 function testSerialization(dem0: DEMData, redFactor: number, greenFactor: number, blueFactor: number, baseShift: number) {
     return () => {
         const serialized = serialize(dem0);

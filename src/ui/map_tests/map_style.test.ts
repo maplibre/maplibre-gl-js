@@ -105,41 +105,41 @@ describe('setStyle', () => {
 
     test('style transform overrides unmodified map transform', async () => {
         const map = new Map({container: window.document.createElement('div')});
-        map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
-        map.transform.resize(600, 400, true);
-        expect(map.transform.zoom).toBe(0.6983039737971013);
-        expect(map.transform.unmodified).toBeTruthy();
+        map._camera.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
+        map._camera.transform.resize(600, 400, true);
+        expect(map._camera.transform.zoom).toBe(0.6983039737971013);
+        expect(map._camera.transform.unmodified).toBeTruthy();
         map.setStyle(createStyle());
         await map.once('style.load');
-        expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -73.9749, lat: 40.7736}));
-        expect(fixedNum(map.transform.zoom)).toBe(12.5);
-        expect(fixedNum(map.transform.bearing)).toBe(29);
-        expect(fixedNum(map.transform.pitch)).toBe(50);
+        expect(fixedLngLat(map._camera.transform.center)).toEqual(fixedLngLat({lng: -73.9749, lat: 40.7736}));
+        expect(fixedNum(map._camera.transform.zoom)).toBe(12.5);
+        expect(fixedNum(map._camera.transform.bearing)).toBe(29);
+        expect(fixedNum(map._camera.transform.pitch)).toBe(50);
     });
 
     test('style transform does not override map transform modified via options', async () => {
         const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
-        expect(map.transform.unmodified).toBeFalsy();
+        expect(map._camera.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
         await map.once('style.load');
-        expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
-        expect(fixedNum(map.transform.zoom)).toBe(10);
-        expect(fixedNum(map.transform.bearing)).toBe(0);
-        expect(fixedNum(map.transform.pitch)).toBe(0);
+        expect(fixedLngLat(map._camera.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+        expect(fixedNum(map._camera.transform.zoom)).toBe(10);
+        expect(fixedNum(map._camera.transform.bearing)).toBe(0);
+        expect(fixedNum(map._camera.transform.pitch)).toBe(0);
     });
 
     test('style transform does not override map transform modified via setters', async () => {
         const map = new Map({container: window.document.createElement('div')});
-        expect(map.transform.unmodified).toBeTruthy();
+        expect(map._camera.transform.unmodified).toBeTruthy();
         map.setZoom(10);
         map.setCenter([-77.0186, 38.8888]);
-        expect(map.transform.unmodified).toBeFalsy();
+        expect(map._camera.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
         map.once('style.load');
-        expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
-        expect(fixedNum(map.transform.zoom)).toBe(10);
-        expect(fixedNum(map.transform.bearing)).toBe(0);
-        expect(fixedNum(map.transform.pitch)).toBe(0);
+        expect(fixedLngLat(map._camera.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+        expect(fixedNum(map._camera.transform.zoom)).toBe(10);
+        expect(fixedNum(map._camera.transform.bearing)).toBe(0);
+        expect(fixedNum(map._camera.transform.pitch)).toBe(0);
     });
 
     test('passing null removes style', () => {
@@ -349,7 +349,7 @@ describe('setStyle', () => {
         });
 
         const map = createMap({deleteStyle: true});
-        const initialTransform = map.transform;
+        const initialTransform = map._camera.transform;
         const initialPainterTransform = map.painter.transform;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
@@ -365,7 +365,7 @@ describe('setStyle', () => {
 
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
-        expect(map.transform).toBe(initialTransform);
+        expect(map._camera.transform).toBe(initialTransform);
         expect(map.painter.transform).toBe(initialPainterTransform);
     });
 

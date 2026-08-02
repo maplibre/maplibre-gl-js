@@ -38,6 +38,7 @@ describe.each(distjs)('release file %s', (file) => {
         const j = await getSourceMapForFile(sourceFileURL);
         for (const f of j.sources) {
             expect(f).not.toMatch('[.]test[.]ts$');
+            expect(f).not.toMatch('[.]bench[.]ts$');
             expect(f).not.toMatch('^test');
         }
     });
@@ -63,7 +64,7 @@ describe('main sourcemap', () => {
         // *.mjs.map files should have these files
         const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
-            if (f.endsWith('.test.ts'))
+            if (f.endsWith('.test.ts') || f.endsWith('.bench.ts'))
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;

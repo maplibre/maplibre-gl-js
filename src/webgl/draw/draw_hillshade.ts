@@ -72,7 +72,7 @@ function renderHillshade(
         }
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
 
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());

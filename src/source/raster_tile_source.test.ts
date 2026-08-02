@@ -7,6 +7,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type Tile} from '../tile/tile.ts';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {type MapSourceDataEvent} from '../ui/events.ts';
+import {ImageRequest} from '../util/image_request.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
@@ -30,6 +31,7 @@ describe('RasterTileSource', () => {
     });
 
     afterEach(() => {
+        vi.restoreAllMocks();
         server.restore();
     });
 
@@ -269,12 +271,73 @@ describe('RasterTileSource', () => {
             minzoom: 2,
             maxzoom: 10
         });
+
         expect(source.serialize()).toStrictEqual({
             type: 'raster',
             tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
             minzoom: 2,
             maxzoom: 10
         });
+    });
+
+    test('does not serialize runtime premultiplyAlpha setting', () => {
+        const source = createSource({
+            tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png']
+        });
+        source.setPremultiplyAlpha(false);
+
+        expect(source.serialize()).toStrictEqual({
+            type: 'raster',
+            tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png']
+        });
+    });
+
+    test('setPremultiplyAlpha reloads source content when changed', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const initialDataEvent: MapSourceDataEvent = await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        expect(initialDataEvent.sourceDataChanged).toBe(false);
+
+        const dataEvent = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content' && e.sourceDataChanged === true);
+
+        expect(source.setPremultiplyAlpha(false)).toBe(source);
+
+        await expect(dataEvent).resolves.toBeDefined();
+    });
+
+    test('loadTile uploads raster data without premultiplication after setPremultiplyAlpha(false)', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        source.setPremultiplyAlpha(false);
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        source.map._refreshExpiredTiles = false;
+
+        const image = {width: 256, height: 256} as ImageBitmap;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        const update = vi.fn();
+        source.map.painter = {
+            context: {gl: {}},
+            getTileTexture: () => ({update})
+        } as any;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        await source.loadTile(tile);
+
+        expect(getImageSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.any(AbortController),
+            false,
+            {premultiplyAlpha: 'none'}
+        );
+        expect(update).toHaveBeenCalledWith(image, {useMipmap: true, premultiply: false});
+        expect(tile.state).toBe('loaded');
     });
 
     test('Tile expiry data is set when "Cache-Control" is set but not "Expires"', async () => {
@@ -374,6 +437,55 @@ describe('RasterTileSource', () => {
         await tilePromise;
         expect(tile.state).toBe('loaded');
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('passes a live AbortController to ImageRequest when the tile is aborted during an async transformRequest', async () => {
+        let transformStarted: () => void;
+        const transformCalled = new Promise<void>((resolve) => {
+            transformStarted = resolve;
+        });
+        let releaseTransform: (params: {url: string}) => void;
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, (url, type) => {
+            if (type !== 'Tile') return {url};
+            transformStarted();
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+
+        const image = {width: 256, height: 256} as ImageBitmap;
+        let requestController: AbortController;
+        let tileControllerAtRequestTime: AbortController;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
+            requestController = abortController;
+            tileControllerAtRequestTime = tile.abortController;
+            return {data: image};
+        });
+        source.map.painter = {
+            context: {gl: {}},
+            getTileTexture: () => ({update: vi.fn()})
+        } as any;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const loadPromise = source.loadTile(tile);
+        await transformCalled; // loadTile is suspended in the transform
+        await source.abortTile(tile); // the abort lands during that suspension
+        releaseTransform({url: 'http://example.com/10/5/5.png'});
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        expect(getImageSpy).toHaveBeenCalledTimes(1);
+        // The request must carry the tile's own live controller, so an abort
+        // arriving while it is in flight reaches exactly this request.
+        expect(requestController).toBeInstanceOf(AbortController);
+        expect(requestController).toBe(tileControllerAtRequestTime);
     });
 
     test('does not throw when tile is aborted', async () => {
