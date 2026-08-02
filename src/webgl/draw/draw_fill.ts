@@ -9,7 +9,7 @@ import {
 } from '../program/fill_program.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
-import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
+import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter, RenderOptions} from '../../render/painter.ts';
@@ -24,13 +24,14 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     const layerOpacity = layer.paint.get('fill-layer-opacity');
     if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    if (layerOpacity < 1) {
+    const layerBlend = layer.paint.get('fill-layer-blend');
+    if (layerOpacity < 1 || layerBlend !== 'normal') {
         if (painter.renderPass !== 'translucent') return;
         const useTerrain = !!painter.style.map.terrain;
 
-        const results = prepareDrawLayerOpacity(painter,layer, coords, useTerrain);
+        const results = prepareDrawLayerComposite(painter, layer, coords, useTerrain);
         drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
-        drawLayerOpacity(painter, layerOpacity, results, layer);
+        drawLayerComposite(painter, layerOpacity, layerBlend, results, layer);
         return;
     }
 

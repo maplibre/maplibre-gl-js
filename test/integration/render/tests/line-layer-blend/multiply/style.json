@@ -1,0 +1,69 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 1,
+  "sources": {
+    "satellite": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.satellite.png"
+      ],
+      "maxzoom": 1,
+      "tileSize": 256
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -80,
+                  -50
+                ],
+                [
+                  80,
+                  50
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "satellite",
+      "type": "raster",
+      "source": "satellite",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-color": "#ff5000",
+        "line-width": 40,
+        "line-layer-blend": "multiply"
+      }
+    }
+  ]
+}

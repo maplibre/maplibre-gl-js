@@ -19,7 +19,7 @@ function glslToTs(code: string): string {
         .replace(/\n+/g, '\n') // collapse multi line breaks
         .replace(/\n\s+/g, '\n') // strip indentation
         .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
-        .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
+        .replace(/(?<!\n#[^\n]*)([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks, but not after a preprocessor directive
 
     return `// This file is generated. Edit build/generate-shaders.ts, then run \`npm run codegen\`.
 export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`;

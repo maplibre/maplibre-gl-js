@@ -1,0 +1,95 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 521,
+      "height": 521,
+      "allowed": 0.005
+    }
+  },
+  "center": [
+    11.52517,
+    47.34487
+  ],
+  "zoom": 13,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/number/{z}.png"
+      ],
+      "maxzoom": 17,
+      "tileSize": 256
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    11.51,
+                    47.337
+                  ],
+                  [
+                    11.54,
+                    47.337
+                  ],
+                  [
+                    11.54,
+                    47.357
+                  ],
+                  [
+                    11.51,
+                    47.357
+                  ],
+                  [
+                    11.51,
+                    47.337
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "osm",
+      "paint": {
+        "raster-opacity": 1
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-color": "#ff0000",
+        "fill-layer-blend": "multiply"
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}
