@@ -11,7 +11,7 @@ import {
 import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
+import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -148,11 +148,11 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0 || layerOpacity === 0) return;
 
     const useTerrain = !!painter.style.map.terrain;
-
-    if (layerOpacity < 1) {
-        const results = prepareDrawLayerOpacity(painter, layer, coords, useTerrain);
+    const layerBlend = layer.paint.get('line-layer-blend');
+    if (layerOpacity < 1 || layerBlend !== 'normal') {
+        const results = prepareDrawLayerComposite(painter, tileManager, layer, coords, useTerrain);
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
-        drawLayerOpacity(painter, layerOpacity, results, layer);
+        drawLayerComposite(painter, layerOpacity, layerBlend, results, layer);
         return;
     }
 
