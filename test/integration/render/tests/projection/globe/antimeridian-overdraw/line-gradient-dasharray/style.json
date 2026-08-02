@@ -1,0 +1,78 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Same lines as antimeridian-overdraw/line-gradient, but dashed as well. Dashes must be uniform 50% translucent, never double-blended, and cross the seam without gaps, notches or a phase jump. The dash array is large because line metrics rescale the dash period.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": { "atmosphere-blend": 0.0 },
+  "center": [180, 5],
+  "zoom": 1.8,
+  "projection": { "type": "globe" },
+  "sources": {
+    "lines": {
+      "type": "geojson",
+      "maxzoom": 0,
+      "lineMetrics": true,
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[150, 25], [210, 25]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[180, -25], [180, 45]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[150, -20], [210, 15]]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "lines",
+      "paint": {
+        "line-width": 10,
+        "line-opacity": 0.5,
+        "line-gradient": [
+          "interpolate",
+          ["linear"],
+          ["line-progress"],
+          0, "blue",
+          0.35, "cyan",
+          0.65, "yellow",
+          1, "red"
+        ],
+        "line-dasharray": [40, 20]
+      }
+    }
+  ]
+}

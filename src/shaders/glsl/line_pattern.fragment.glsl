@@ -33,6 +33,8 @@ void main() {
     #pragma maplibre: initialize lowp float blur
     #pragma maplibre: initialize lowp float opacity
 
+    clipAntimeridian();
+
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
     vec2 pattern_tl_b = pattern_to.xy;
