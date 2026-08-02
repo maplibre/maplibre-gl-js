@@ -14,6 +14,8 @@ import {type Painter, type RTTObject} from '../render/painter.ts';
 import {TileManager} from './tile_manager.ts';
 import {Terrain} from '../render/terrain.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 
 const transform = new MercatorTransform();
 
@@ -73,9 +75,11 @@ describe('TerrainTileManager', () => {
 
     test('source tile LOD does not affect internal render-to-texture tiles', () => {
         const testTransform = new MercatorTransform();
-        testTransform.resize(512, 512);
-        testTransform.setZoom(10);
-        testTransform.setPitch(60);
+        testTransform.resize(600, 500);
+        testTransform.setCenter(new LngLat(7.76, 46.34));
+        testTransform.setZoom(22);
+        testTransform.setPitch(69);
+        testTransform.setElevation(1250);
         const tileManager = new TileManager('terrain', {
             type: 'raster-dem',
             tiles: [],
@@ -87,10 +91,13 @@ describe('TerrainTileManager', () => {
         terrain.tileManager.update(testTransform, terrain);
         const defaultTileIds = terrain.tileManager.getRenderableTiles().map((tile) => tile.tileID.key);
 
-        terrain.tileManager.getSource().calculateTileZoom = () => 0;
+        terrain.tileManager.getSource().calculateTileZoom = createCalculateTileZoomFunction(2, 1);
         terrain.tileManager.update(testTransform, terrain);
-        const customSourceLodTileIds = terrain.tileManager.getRenderableTiles().map((tile) => tile.tileID.key);
-        expect(customSourceLodTileIds).toEqual(defaultTileIds);
+        const customLodTileIds = terrain.tileManager.getRenderableTiles().map((tile) => tile.tileID.key);
+
+        expect(defaultTileIds).toHaveLength(44);
+        expect(customLodTileIds).toHaveLength(defaultTileIds.length);
+        expect(customLodTileIds).toEqual(defaultTileIds);
     });
 
     test('getSourceTile', () => {
