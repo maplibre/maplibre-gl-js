@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Interactive layer blending</title>
+    <meta property="og:description" content="Toggle between different blending modes to see how a fill layer composites with the basemap." />
+    <meta property="og:category" content="Layer Styling" />
+    <meta property="og:order" content="5" />
+    <meta property="og:created" content="2026-08-02" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+
+        .map-overlay {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            width: 180px;
+            top: 0;
+            left: 0;
+            padding: 10px;
+            z-index: 1;
+        }
+
+        .map-overlay .map-overlay-inner {
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+            padding: 10px;
+        }
+
+        .map-overlay h2 {
+            font-size: 14px;
+            margin: 0 0 10px;
+            line-height: 1.5;
+        }
+
+        .map-overlay fieldset {
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .map-overlay select {
+            width: 100%;
+        }
+
+        .map-overlay label {
+            display: block;
+            font-weight: bold;
+            margin: 0 0 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="map-overlay top">
+    <div class="map-overlay-inner">
+        <h2>Layer Blending</h2>
+        <fieldset>
+            <label for="blend-mode">Select Blend Mode</label>
+            <select id="blend-mode" name="blend-mode">
+                <option value="normal">normal</option>
+                <option value="multiply">multiply</option>
+                <option value="screen" selected>screen</option>
+                <option value="overlay">overlay</option>
+                <option value="plus">plus</option>
+                <option value="erase">erase</option>
+            </select>
+        </fieldset>
+    </div>
+</div>
+
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/dark',
+        center: [139.755, 35.685],
+        zoom: 12.5,
+        maplibreLogo: true
+    });
+    window.map = map;
+
+    map.on('load', () => {
+        map.addSource('polygon', {
+            type: 'geojson',
+            data: {
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [[[139.73, 35.70], [139.78, 35.70], [139.78, 35.67], [139.73, 35.67], [139.73, 35.70]]]
+                }
+            }
+        });
+
+        // Add fill layer with dynamic blending
+        map.addLayer({
+            id: 'polygon-fill',
+            type: 'fill',
+            source: 'polygon',
+            paint: {
+                'fill-color': '#00f0ff',
+                'fill-opacity': 0.7,
+                'fill-layer-blend': 'screen'
+            }
+        });
+
+        document.getElementById('blend-mode').addEventListener('change', (e) => {
+            map.setPaintProperty('polygon-fill', 'fill-layer-blend', e.target.value);
+        });
+    });
+</script>
+</body>
+</html>
