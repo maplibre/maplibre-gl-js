@@ -14,12 +14,19 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 /** The `{line,fill}-layer-blend` values. */
 export type LayerBlend = 'normal' | 'multiply' | 'screen' | 'overlay' | 'plus' | 'erase';
 
-const blendDefines: Record<Exclude<LayerBlend, 'normal'>, string[]> = {
+const blendDefines: Record<Exclude<LayerBlend, 'normal' | 'plus' | 'erase'>, string[]> = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     screen: ['#define LAYER_BLEND;', '#define LAYER_BLEND_SCREEN;'],
-    overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
-    plus: ['#define LAYER_BLEND;', '#define LAYER_BLEND_PLUS;'],
-    erase: ['#define LAYER_BLEND;', '#define LAYER_BLEND_ERASE;']
+    overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;']
+};
+
+const blendRequiresBackdrop: Record<LayerBlend, boolean> = {
+    normal: false,
+    plus: false,
+    erase: false,
+    multiply: true,
+    screen: true,
+    overlay: true
 };
 
 export type PrepareDrawLayerCompositeResult = {
@@ -139,8 +146,8 @@ function createCompositeTexture(painter: Painter, width: number, height: number)
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     return texture;
 }
@@ -177,7 +184,9 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(bx, by, bw, bh);
 
-    if (blend !== 'normal') {
+    const requiresBackdrop = blendRequiresBackdrop[blend];
+
+    if (requiresBackdrop) {
         context.activeTexture.set(gl.TEXTURE1);
         copyBackdrop(painter, bx, by, bw, bh);
     }
@@ -185,9 +194,17 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, painter.layerCompositeFbo.colorAttachment.get());
 
-    // A blend mode outputs the finished composite, so it overwrites the target instead of blending into it.
-    const colorMode = (blend === 'normal' || painter._showOverdrawInspector) ? painter.colorModeForRenderPass() : ColorMode.unblended;
-    const defines = blend === 'normal' ? [] : blendDefines[blend];
+    let colorMode: Readonly<ColorMode>;
+    if (requiresBackdrop) {
+        colorMode = painter._showOverdrawInspector ? painter.colorModeForRenderPass() : ColorMode.unblended;
+    } else if (blend === 'normal') {
+        colorMode = painter.colorModeForRenderPass();
+    } else if (blend === 'plus') {
+        colorMode = ColorMode.plus;
+    } else { // erase
+        colorMode = ColorMode.erase;
+    }
+    const defines = requiresBackdrop ? blendDefines[blend] : [];
 
     painter.useProgram('layerComposite', null, false, defines).draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, colorMode, CullFaceMode.disabled,

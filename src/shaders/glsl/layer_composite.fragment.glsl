@@ -6,7 +6,7 @@ in vec2 v_pos;
 #ifdef LAYER_BLEND
 uniform sampler2D u_backdrop;
 
-// Separable and non-separable blending directly in premultiplied space, per the W3C spec.
+// Separable and non-separable blending directly in premultiplied space.
 vec4 composite(vec4 src, vec4 dst) {
     vec3 co = vec3(0.0);
 #ifdef LAYER_BLEND_MULTIPLY
@@ -20,12 +20,6 @@ vec4 composite(vec4 src, vec4 dst) {
     vec3 case1 = (1.0 - dst.a) * src.rgb + (1.0 - src.a) * dst.rgb + 2.0 * dst.rgb * src.rgb;
     vec3 case2 = src.rgb + dst.rgb + dst.a * src.rgb + src.a * dst.rgb - vec3(src.a * dst.a) - 2.0 * dst.rgb * src.rgb;
     co = mix(case1, case2, cond);
-#endif
-#ifdef LAYER_BLEND_PLUS
-    return min(src + dst, 1.0);
-#endif
-#ifdef LAYER_BLEND_ERASE
-    return dst * (1.0 - src.a);
 #endif
     return vec4(co, src.a + dst.a * (1.0 - src.a));
 }

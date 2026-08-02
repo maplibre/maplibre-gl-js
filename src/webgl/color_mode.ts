@@ -22,6 +22,8 @@ export class ColorMode {
     static disabled: Readonly<ColorMode>;
     static unblended: Readonly<ColorMode>;
     static alphaBlended: Readonly<ColorMode>;
+    static plus: Readonly<ColorMode>;
+    static erase: Readonly<ColorMode>;
 }
 
 ColorMode.Replace = [ONE, ZERO];
@@ -29,3 +31,5 @@ ColorMode.Replace = [ONE, ZERO];
 ColorMode.disabled = new ColorMode(ColorMode.Replace, Color.transparent, [false, false, false, false]);
 ColorMode.unblended = new ColorMode(ColorMode.Replace, Color.transparent, [true, true, true, true]);
 ColorMode.alphaBlended = new ColorMode([ONE, ONE_MINUS_SRC_ALPHA], Color.transparent, [true, true, true, true]);
+ColorMode.plus = new ColorMode([ONE, ONE], Color.transparent, [true, true, true, true]);
+ColorMode.erase = new ColorMode([ZERO, ONE_MINUS_SRC_ALPHA], Color.transparent, [true, true, true, true]);
