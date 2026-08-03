@@ -24,12 +24,10 @@ test('a custom image is dirty as soon as it is added, and its version moves once
     manager.dispatchRenderCallbacks(['custom']);
     expect(manager.getImage('custom').version).toBe(1);
     expect(manager.updatedImages.custom).toBe(true);
-    // Every atlas dispatches, and the second one must not move the version out from under the
-    // first one's slot.
+    // A second atlas dispatching must not move the version out from under the first one's slot.
     manager.dispatchRenderCallbacks(['custom']);
     expect(manager.getImage('custom').version).toBe(1);
 
-    // Nothing asked for another frame, so the next one leaves the image alone.
     manager.beginFrame();
     manager.dispatchRenderCallbacks(['custom']);
     expect(manager.getImage('custom').version).toBe(1);
@@ -41,7 +39,7 @@ test('a custom image is dirty as soon as it is added, and its version moves once
     expect(manager.getImage('custom').version).toBe(2);
 });
 
-test('a custom image is never asked to fill in `data`', () => {
+test('a custom image is not drawn during dispatch, but in the atlas patch where there is a texture', () => {
     const render = vi.fn();
     const manager = new ImageManager();
     manager.addImage('custom', customImage(render));
@@ -49,7 +47,6 @@ test('a custom image is never asked to fill in `data`', () => {
     manager.beginFrame();
     manager.dispatchRenderCallbacks(['custom']);
 
-    // Drawing happens in the atlas patch, where there is a texture to draw into.
     expect(render).not.toHaveBeenCalled();
 });
 

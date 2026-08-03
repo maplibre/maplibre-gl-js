@@ -110,8 +110,6 @@ test('a CustomStyleImageInterface is told to release its GPU resources on contex
     canvas.dispatchEvent(new window.Event('webglcontextlost'));
     await contextLostPromise;
 
-    // The image has no chance to notice the new context otherwise: it is added back
-    // without a matching `onAdd`.
     expect(userImage.onRemove).toHaveBeenCalled();
 
     const contextRestoredPromise = map.once('webglcontextrestored');
@@ -120,7 +118,6 @@ test('a CustomStyleImageInterface is told to release its GPU resources on contex
 
     expect(map.hasImage('gpu-image')).toBe(true);
     expect(map.getImage('gpu-image').userImage).toBe(userImage);
-    // The atlas textures died with the old context, so the image owes them a fresh paint.
     expect(map.style.imageManager.hasInvalidatedImages()).toBe(true);
 
     map.remove();

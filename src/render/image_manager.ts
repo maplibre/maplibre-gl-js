@@ -129,23 +129,25 @@ export class ImageManager extends Evented {
         return image;
     }
 
+    /**
+     * Add an image the map does not have yet. A custom image starts out owing the map a frame,
+     * since nothing has painted its slot of the atlas yet.
+     */
     addImage(id: string, image: StyleImage): void {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
-            // Nothing has painted its slot yet, so it starts out owing the map a frame.
             if (image.isCustomImage) this.invalidatedImages[id] = true;
         }
     }
 
     /**
      * Take over the images of a manager that is going away, as happens when a lost WebGL
-     * context is restored.
+     * context is restored. The atlas textures died with the old context, so every image that
+     * paints its own slot owes each atlas a fresh paint.
      */
     restoreImages(images: {[_: string]: StyleImage}): void {
         this.images = images;
-        // The atlas textures died with the old context, so every image that paints its own slot
-        // owes each atlas a fresh paint.
         for (const id in images) {
             if (images[id].isCustomImage) this.invalidatedImages[id] = true;
         }
@@ -379,6 +381,12 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
     }
 
+    /**
+     * Give each image named a chance to change before this frame is drawn. A custom image is
+     * not drawn here, where there is no texture to draw into: every atlas holding it compares
+     * its slot against the version, so one bump here is what gets the image drawn into each of
+     * them this frame.
+     */
     dispatchRenderCallbacks(ids: string[]): void {
         for (const id of ids) {
 
@@ -395,8 +403,6 @@ export class ImageManager extends Evented {
             if (image.isCustomImage) {
                 if (!this.invalidatedImages[id]) continue;
                 delete this.invalidatedImages[id];
-                // Every atlas holding this image compares its slot against the version, so one
-                // bump here is what gets the image drawn into each of them this frame.
                 image.version++;
                 this.updatedImages[id] = true;
             } else if (renderStyleImage(image)) {

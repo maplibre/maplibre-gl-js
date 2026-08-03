@@ -63,7 +63,6 @@ test('patchUpdatedImages resets WebGL state between images, so the second never 
     expect(render).toHaveBeenCalledTimes(2);
     expect(context.setDirty).toHaveBeenCalledTimes(2);
 
-    // Nothing left to patch, so nothing to reset.
     atlas.patchUpdatedImages(imageManager, texture);
     expect(context.setDirty).toHaveBeenCalledTimes(2);
 });

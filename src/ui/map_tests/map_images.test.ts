@@ -238,20 +238,26 @@ test('a custom image is handed a callback that asks for it to be drawn again', (
     map.addImage('custom', image);
     expect(onAdd).toHaveBeenCalledWith({map, id: 'custom', invalidate: expect.any(Function)});
 
-    const {invalidate} = onAdd.mock.calls[0][0];
     const triggerRepaint = vi.spyOn(map, 'triggerRepaint');
-    // Adding the image already asked for the first paint, so clear that first.
+    // `addImage` already asked for the first paint.
     map.style.imageManager.invalidatedImages = {};
 
-    invalidate();
+    onAdd.mock.calls[0][0].invalidate();
     expect(map.style.imageManager.hasInvalidatedImages()).toBe(true);
     expect(triggerRepaint).toHaveBeenCalled();
+});
 
-    // A timer that outlives the image cannot bring it back, nor invalidate whatever took its ID.
+test('a callback held past `removeImage` cannot invalidate whatever took the image ID next', () => {
+    const map = createMap();
+    const onAdd = vi.fn();
+    const image: CustomStyleImageInterface = {type: 'custom', width: 1, height: 1, render: vi.fn(), onAdd};
+
+    map.addImage('custom', image);
     map.removeImage('custom');
     map.addImage('custom', {width: 1, height: 1, data: new Uint8Array(4)});
     map.style.imageManager.invalidatedImages = {};
-    invalidate();
+
+    onAdd.mock.calls[0][0].invalidate();
     expect(map.style.imageManager.hasInvalidatedImages()).toBe(false);
 });
 

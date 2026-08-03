@@ -144,6 +144,13 @@ export class ImageAtlas {
         }
     }
 
+    /**
+     * Bring one image's slot of the atlas texture up to date. A custom image paints its slot
+     * with raw WebGL, so like a custom layer it can change GL state behind `Context`'s back,
+     * leaving `Context`'s cache of that state wrong. `setDirty` makes `Context` re-apply state
+     * instead of trusting the cache. It runs per image, not once per batch, because the next
+     * image in the batch may be an ordinary `texture.update` that reads the cache.
+     */
     patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void {
         if (!position || !image) return;
 
@@ -155,11 +162,6 @@ export class ImageAtlas {
         if (isCustomStyleImage(userImage)) {
             const {width, height} = image.data;
             userImage.render({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
-            // `render` draws with raw WebGL, so like a custom layer it can change GL state
-            // behind `Context`'s back, leaving `Context`'s cache of that state wrong.
-            // `setDirty` makes `Context` re-apply state instead of trusting the cache. It runs
-            // per image, not once per batch, because the next image in the batch may be an
-            // ordinary `texture.update` that reads the cache.
             texture.context.setDirty();
         } else {
             texture.update(image.data, undefined, {x, y});

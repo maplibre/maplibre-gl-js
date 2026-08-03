@@ -3209,8 +3209,7 @@ export class Map extends Evented<MapEventType> {
             return {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version};
         } else if (isCustomStyleImage(image)) {
             const {width, height} = image;
-            // The image paints its own slot of the atlas, so these transparent pixels are only
-            // ever used for the one-pixel padding around it.
+            // The image paints its own slot, so these transparent pixels only ever pad it.
             return {
                 data: new RGBAImage({width, height}),
                 pixelRatio,
@@ -4351,8 +4350,7 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        // A custom style image that asked to be drawn again, either from `render` or from a
-        // callback that ran during this frame, is dirty in the same way.
+        // An image that asked to be drawn again is dirty in the same way.
         const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty ||
             Boolean(this.style?.imageManager.hasInvalidatedImages());
         if (somethingDirty || this._repaint) {
