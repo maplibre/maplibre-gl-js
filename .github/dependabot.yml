@@ -26,6 +26,10 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
     cooldown:
       default-days: 3
       # no semver support for github-actions
