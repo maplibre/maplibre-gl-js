@@ -21,7 +21,6 @@ test('patchUpdatedImage uploads the image data', () => {
 
     new ImageAtlas({}, {}).patchUpdatedImage(position, styleImage, texture);
 
-    // The position is padded by one pixel, so the image starts at (5, 9).
     expect(texture.update).toHaveBeenCalledWith(styleImage.data, undefined, {x: 5, y: 9});
     expect(position.version).toBe(1);
     expect(context.gl.copyTexSubImage2D).not.toHaveBeenCalled();
@@ -44,11 +43,9 @@ test('a custom image starts out owing every atlas a paint, whatever version it i
     expect(new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 7} as StyleImage).version).toBe(7);
 });
 
-test('patchUpdatedImages resets WebGL state after every image that painted itself', () => {
+test('patchUpdatedImages resets WebGL state between images, so the second never trusts a cache the first invalidated', () => {
     const {context, texture} = setup({});
     vi.spyOn(context, 'setDirty');
-    // The reset has to land between the two images: the second one trusts the state cache the
-    // first one is free to invalidate.
     let painted = 0;
     const render = vi.fn(() => expect(context.setDirty).toHaveBeenCalledTimes(painted++));
     const atlas = new ImageAtlas({}, {});

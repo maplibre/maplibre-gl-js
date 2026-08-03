@@ -99,13 +99,6 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
 /**
  * Where a {@link CustomStyleImageInterface} writes its pixels. The texture is shared with
  * other images, so only the rectangle described here belongs to this image.
- *
- * This hands over the atlas texture rather than a framebuffer MapLibre owns, so that an image
- * whose pixels already live on the GPU can reach the atlas with a single `copyTexSubImage2D`.
- * Forcing every image through an intermediate render target measured 9x slower for that case,
- * 6.40ms against 0.68ms a frame for 50 256x256 icons on an M4 Max: ANGLE's Metal backend
- * services `copyTexSubImage2D` with a blit encoder, while each offscreen draw costs a
- * render-pass boundary of roughly 60us.
  */
 export type StyleImageRenderTarget = {
     gl: WebGL2RenderingContext;
