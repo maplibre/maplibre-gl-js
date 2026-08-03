@@ -2,6 +2,7 @@ import {type AddProtocolAction, config} from './config.ts';
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 import type {GetResourceResponse, RequestParameters} from './ajax.ts';
+import type {ActorTarget} from './actor.ts';
 
 export interface WorkerGlobalScopeInterface {
     registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;
@@ -43,6 +44,35 @@ function createWorker(url: string, asModule: boolean): Worker {
     return new Worker(url);
 }
 
+/**
+ * Calls `onLoadError` if the worker errors before it has produced a single
+ * message, which is the signature of its script failing to load (wrong URL,
+ * 404, blocked import). Runtime errors of a healthy worker are left alone.
+ */
+export function watchWorkerStartup(worker: ActorTarget, onLoadError: (error: Error) => void): void {
+    if (!worker.addEventListener || !worker.removeEventListener) return;
+    let alive = false;
+    const onMessage = () => {
+        alive = true;
+        cleanup();
+    };
+    const onError = (e: ErrorEvent) => {
+        if (alive) return;
+        cleanup();
+        onLoadError(new Error(
+            `The map's worker script failed to load${e?.message ? ` (${e.message})` : ''}. ` +
+            'Sources that depend on the worker (vector tiles, GeoJSON) cannot be processed and the map may never fire "load". ' +
+            'When bundling or self-hosting, point setWorkerUrl() at a reachable copy of the worker bundle; ' +
+            'see the v5-to-v6 migration guide.'));
+    };
+    const cleanup = () => {
+        worker.removeEventListener('message', onMessage);
+        worker.removeEventListener('error', onError);
+    };
+    worker.addEventListener('message', onMessage);
+    worker.addEventListener('error', onError);
+}
+
 async function fetchAsBlobUrl(url: string): Promise<string> {
     const response = await fetch(url);
     if (!response.ok) {
@@ -63,13 +93,17 @@ export async function workerFactory(): Promise<Worker> {
     const asModule = url?.endsWith('.cjs') ? false : true;
 
     if (!isCrossOrigin(url)) {
-        return createWorker(url, asModule);
+        const worker = createWorker(url, asModule);
+        watchWorkerStartup(worker, (error) => console.error(`MapLibre: ${error.message}`, 'Worker URL:', url));
+        return worker;
     }
 
     if (asModule) {
         const blobUrl = importAsBlobUrl(url);
         try {
-            return createWorker(blobUrl, asModule);
+            const worker = createWorker(blobUrl, asModule);
+            watchWorkerStartup(worker, (error) => console.error(`MapLibre: ${error.message}`, 'Worker URL:', url));
+            return worker;
         } finally {
             URL.revokeObjectURL(blobUrl);
         }
@@ -77,7 +111,9 @@ export async function workerFactory(): Promise<Worker> {
 
     const blobUrl = await fetchAsBlobUrl(url);
     try {
-        return createWorker(blobUrl, asModule);
+        const worker = createWorker(blobUrl, asModule);
+        watchWorkerStartup(worker, (error) => console.error(`MapLibre: ${error.message}`, 'Worker URL:', url));
+        return worker;
     } finally {
         URL.revokeObjectURL(blobUrl);
     }

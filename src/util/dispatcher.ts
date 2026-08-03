@@ -1,5 +1,6 @@
 import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
+import {watchWorkerStartup} from './web_worker.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
@@ -17,12 +18,15 @@ export class Dispatcher {
     id: string | number;
     private removed: boolean;
 
-    constructor(workerPool: WorkerPool, mapId: string | number) {
+    private onWorkerLoadError?: (error: Error) => void;
+
+    constructor(workerPool: WorkerPool, mapId: string | number, onWorkerLoadError?: (error: Error) => void) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
         this.removed = false;
+        this.onWorkerLoadError = onWorkerLoadError;
         this.actorsPromise = this.initActors(mapId);
     }
 
@@ -34,6 +38,11 @@ export class Dispatcher {
             actor.name = `Worker ${i}`;
             return actor;
         });
+        if (this.onWorkerLoadError) {
+            for (const worker of workers) {
+                watchWorkerStartup(worker, this.onWorkerLoadError);
+            }
+        }
         if (!this.actors.length) throw new Error('No actors found');
         return this.actors;
     }

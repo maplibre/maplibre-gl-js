@@ -1,5 +1,5 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
-import {workerFactory} from './web_worker.ts';
+import {watchWorkerStartup, workerFactory} from './web_worker.ts';
 import {config} from './config.ts';
 
 describe('workerFactory', () => {
@@ -122,5 +122,45 @@ describe('workerFactory', () => {
         config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs';
 
         await expect(workerFactory()).rejects.toThrow('Failed to fetch worker script (404)');
+    });
+});
+
+describe('watchWorkerStartup (#8018)', () => {
+    const makeFakeWorker = () => {
+        const listeners: Record<string, Array<(e: any) => void>> = {};
+        return {
+            addEventListener: (type: string, fn: (e: any) => void) => { (listeners[type] ||= []).push(fn); },
+            removeEventListener: (type: string, fn: (e: any) => void) => { listeners[type] = (listeners[type] || []).filter(l => l !== fn); },
+            postMessage: () => {},
+            emit: (type: string, e: any) => { for (const fn of (listeners[type] || []).slice()) fn(e); },
+            listenerCount: (type: string) => (listeners[type] || []).length
+        };
+    };
+
+    test('reports an error that arrives before any message', () => {
+        const worker = makeFakeWorker();
+        const onLoadError = vi.fn();
+        watchWorkerStartup(worker as any, onLoadError);
+        worker.emit('error', {message: 'not found'});
+        expect(onLoadError).toHaveBeenCalledTimes(1);
+        expect(onLoadError.mock.calls[0][0].message).toContain('failed to load');
+        expect(onLoadError.mock.calls[0][0].message).toContain('setWorkerUrl');
+    });
+
+    test('ignores errors after the worker has produced a message', () => {
+        const worker = makeFakeWorker();
+        const onLoadError = vi.fn();
+        watchWorkerStartup(worker as any, onLoadError);
+        worker.emit('message', {});
+        worker.emit('error', {message: 'runtime hiccup'});
+        expect(onLoadError).not.toHaveBeenCalled();
+    });
+
+    test('detaches its listeners after settling', () => {
+        const worker = makeFakeWorker();
+        watchWorkerStartup(worker as any, () => {});
+        worker.emit('message', {});
+        expect(worker.listenerCount('message')).toBe(0);
+        expect(worker.listenerCount('error')).toBe(0);
     });
 });

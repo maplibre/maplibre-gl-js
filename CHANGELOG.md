@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Surface an error (map `error` event and console message) when the worker script fails to load, instead of hanging silently ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
