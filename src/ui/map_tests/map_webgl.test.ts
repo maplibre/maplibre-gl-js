@@ -93,6 +93,37 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
+test('a StyleImageInterface is told to release its GPU resources on context loss, and survives it', async () => {
+    const map = createMap();
+    const canvas = map.getCanvas();
+    await map.once('load');
+
+    const userImage = {
+        width: 2, height: 2, data: new Uint8Array(2 * 2 * 4),
+        render: () => false,
+        renderToTexture: vi.fn(),
+        onRemove: vi.fn()
+    };
+    map.addImage('gpu-image', userImage);
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    // The image has no chance to notice the new context otherwise: it is added back
+    // without a matching `onAdd`.
+    expect(userImage.onRemove).toHaveBeenCalled();
+
+    const contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    expect(map.hasImage('gpu-image')).toBe(true);
+    expect(map.getImage('gpu-image').userImage).toBe(userImage);
+
+    map.remove();
+});
+
 test('WebGL2 context creation error fires ErrorEvent with structured GPUInitializationError', () => {
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2') {

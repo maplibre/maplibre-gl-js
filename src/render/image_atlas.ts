@@ -150,7 +150,17 @@ export class ImageAtlas {
 
         position.version = image.version;
         const [x, y] = position.tl;
-        texture.update(image.data, undefined, {x, y});
+        const {userImage} = image;
+        if (userImage?.renderToTexture) {
+            const {width, height} = image.data;
+            userImage.renderToTexture({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+            // Same contract as a custom layer: the callback may leave any WebGL state behind.
+            // This has to happen before the next image in the batch, which may be an ordinary
+            // upload that would otherwise trust the stale pixel store cache.
+            texture.context.setDirty();
+        } else {
+            texture.update(image.data, undefined, {x, y});
+        }
     }
 
 }

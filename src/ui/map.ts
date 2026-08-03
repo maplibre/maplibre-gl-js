@@ -3957,6 +3957,17 @@ export class Map extends Evented<MapEventType> {
         return this._canvas;
     }
 
+    /**
+     * Returns the largest texture, in pixels on a side, that this device's WebGL
+     * implementation supports. Useful to a {@link StyleImageInterface} that manages its own
+     * textures and needs to know what will fit.
+     *
+     * @returns The value of `MAX_TEXTURE_SIZE`.
+     */
+    getMaxTextureSize(): number {
+        return this.painter.context.maxTextureSize;
+    }
+
     _containerDimensions(): number[] {
         let width = 0;
         let height = 0;

@@ -215,6 +215,12 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
+test('map getMaxTextureSize reports what the WebGL context supports', async () => {
+    const map = createMap();
+    await map.once('load');
+    expect(map.getMaxTextureSize()).toBe(map.painter.context.maxTextureSize);
+});
+
 test('map does not fire `styleimagemissing` for empty icon values', async () => {
     const map = createMap();
 

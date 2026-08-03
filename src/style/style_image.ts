@@ -92,6 +92,24 @@ export type StyleImageMetadata = {
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
+ * Where a {@link StyleImageInterface} writes its pixels when it implements
+ * {@link StyleImageInterface.renderToTexture}. The texture is shared with other images, so
+ * only the rectangle described here belongs to this image.
+ */
+export type StyleImageRenderTarget = {
+    gl: WebGL2RenderingContext;
+    /**
+     * The icon atlas to write into. MapLibre does not bind it for you, so start with
+     * `gl.bindTexture(gl.TEXTURE_2D, texture)` or attach it to your own framebuffer.
+     */
+    texture: WebGLTexture;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+};
+
+/**
  * Interface for dynamically generated style images. This is a specification for
  * implementers to model: it is not an exported method or class.
  *
@@ -144,7 +162,6 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  *  map.addImage('flashing_square', flashingSquare);
  * ```
  */
-
 export interface StyleImageInterface {
     width: number;
     height: number;
@@ -163,6 +180,21 @@ export interface StyleImageInterface {
      */
     render?: () => boolean;
     /**
+     * Optional method that draws the image straight onto the GPU, called instead of uploading
+     * `data`. Implement it to skip the CPU work and the upload that
+     * {@link StyleImageInterface.render} costs, which is worth doing for an image that changes
+     * every frame.
+     *
+     * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
+     * `target.texture`. Drawing outside that rectangle corrupts other images.
+     *
+     * MapLibre restores its own WebGL state afterwards, so bindings, framebuffers and pixel
+     * store settings are yours to change. Images are packed once per rendered tile, so one
+     * change may call this several times with a different `target`. `data` is still uploaded
+     * when those are packed and is what shows until the next change, so keep a still in it.
+     */
+    renderToTexture?: (target: StyleImageRenderTarget) => void;
+    /**
      * Optional method called when the layer has been added to the Map with {@link Map.addImage}.
      *
      * @param map - The Map this custom layer was just added to.
@@ -171,6 +203,10 @@ export interface StyleImageInterface {
     /**
      * Optional method called when the icon is removed from the map with {@link Map.removeImage}.
      * This gives the image a chance to clean up resources and event listeners.
+     *
+     * This also fires when the WebGL context is lost, after which the same image is added
+     * back without a matching `onAdd`. An image holding GPU resources should release them
+     * here and recreate them lazily in {@link StyleImageInterface.renderToTexture}.
      */
     onRemove?: () => void;
 }
@@ -180,7 +216,8 @@ export function renderStyleImage(image: StyleImage): boolean {
     if (userImage?.render) {
         const updated = userImage.render();
         if (updated) {
-            image.data.replace(new Uint8Array(userImage.data.buffer));
+            // A `renderToTexture` image paints its own pixels, so nothing ever reads `data`.
+            if (!userImage.renderToTexture) image.data.replace(new Uint8Array(userImage.data.buffer));
             return true;
         }
     }
