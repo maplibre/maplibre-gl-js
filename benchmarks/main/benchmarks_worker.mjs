@@ -16,7 +16,7 @@ var __copyProps = (to, from, except, desc) => {
 	}
 	return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule || !__hasOwnProp.call(mod, "default") ? __defProp(target, "default", {
 	value: mod,
 	enumerable: true
 }) : target, mod));
@@ -376,13 +376,13 @@ function isOffscreenCanvasDistorted() {
 			const size = 5;
 			const context = new OffscreenCanvas(size, size).getContext("2d", { willReadFrequently: true });
 			if (context) {
-				for (let i = 0; i < size * size; i++) {
+				for (let i = 0; i < 25; i++) {
 					const base = i * 4;
 					context.fillStyle = `rgb(${base},${base + 1},${base + 2})`;
 					context.fillRect(i % size, Math.floor(i / size), 1, 1);
 				}
 				const data = context.getImageData(0, 0, size, size).data;
-				for (let i = 0; i < size * size * 4; i++) if (i % 4 !== 3 && data[i] !== i) {
+				for (let i = 0; i < 100; i++) if (i % 4 !== 3 && data[i] !== i) {
 					offscreenCanvasDistorted = true;
 					break;
 				}
@@ -5118,14 +5118,12 @@ var Padding = class Padding {
 					input[1]
 				];
 				break;
-			case 3:
-				input = [
-					input[0],
-					input[1],
-					input[2],
-					input[1]
-				];
-				break;
+			case 3: input = [
+				input[0],
+				input[1],
+				input[2],
+				input[1]
+			];
 		}
 		return new Padding(input);
 	}
@@ -7121,8 +7119,7 @@ function calculateSignedArea(ring) {
 	return sum;
 }
 const RE = 6378.137;
-const FE = 1 / 298.257223563;
-const E2 = FE * (2 - FE);
+const E2 = .0066943799901413165;
 const RAD = Math.PI / 180;
 var CheapRuler = class {
 	constructor(lat) {
@@ -7131,7 +7128,7 @@ var CheapRuler = class {
 		const w2 = 1 / (1 - E2 * (1 - coslat * coslat));
 		const w = Math.sqrt(w2);
 		this.kx = m * w * coslat;
-		this.ky = m * w * w2 * (1 - E2);
+		this.ky = m * w * w2 * .9933056200098587;
 	}
 	/**
 	* Given two points of the form [longitude, latitude], returns the distance.
@@ -7468,9 +7465,7 @@ function pointToGeometryDistance(ctx, geometries) {
 			case "LineString":
 				dist = Math.min(dist, pointSetToPointSetDistance(pointPosition, false, geometry.coordinates, true, ruler, dist));
 				break;
-			case "Polygon":
-				dist = Math.min(dist, pointsToPolygonDistance(pointPosition, false, geometry.coordinates, ruler, dist));
-				break;
+			case "Polygon": dist = Math.min(dist, pointsToPolygonDistance(pointPosition, false, geometry.coordinates, ruler, dist));
 		}
 		if (dist === 0) return dist;
 	}
@@ -7490,9 +7485,7 @@ function lineStringToGeometryDistance(ctx, geometries) {
 			case "LineString":
 				dist = Math.min(dist, pointSetToPointSetDistance(linePositions, true, geometry.coordinates, true, ruler, dist));
 				break;
-			case "Polygon":
-				dist = Math.min(dist, pointsToPolygonDistance(linePositions, true, geometry.coordinates, ruler, dist));
-				break;
+			case "Polygon": dist = Math.min(dist, pointsToPolygonDistance(linePositions, true, geometry.coordinates, ruler, dist));
 		}
 		if (dist === 0) return dist;
 	}
@@ -7516,9 +7509,7 @@ function polygonToGeometryDistance(ctx, geometries) {
 			case "LineString":
 				dist = Math.min(dist, pointsToPolygonDistance(geometry.coordinates, true, polygon, ruler, dist));
 				break;
-			case "Polygon":
-				dist = Math.min(dist, polygonToPolygonDistance(polygon, geometry.coordinates, ruler, dist));
-				break;
+			case "Polygon": dist = Math.min(dist, polygonToPolygonDistance(polygon, geometry.coordinates, ruler, dist));
 		}
 		if (dist === 0) return dist;
 	}
@@ -8835,12 +8826,10 @@ function findMixedLegacyFilter(filter, path = []) {
 			if (diagnostic) return diagnostic;
 			break;
 		}
-		case "case":
-			for (let i = 1; i < filter.length - 1; i += 2) {
-				const diagnostic = checkChild(i, path, filter);
-				if (diagnostic) return diagnostic;
-			}
-			break;
+		case "case": for (let i = 1; i < filter.length - 1; i += 2) {
+			const diagnostic = checkChild(i, path, filter);
+			if (diagnostic) return diagnostic;
+		}
 	}
 	return null;
 }
@@ -9332,7 +9321,6 @@ function validateNonExpressionFilter(options) {
 			type = getType(value[1]);
 			if (value.length !== 2) errors.push(new ValidationError(key, value, `filter array for "${value[0]}" operator must have 2 elements`));
 			else if (type !== "string") errors.push(new ValidationError(`${key}[1]`, value[1], `string expected, ${type} found`));
-			break;
 	}
 	return errors;
 }
@@ -11354,7 +11342,8 @@ var DataConstantProperty = class {
 			warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
 			return b;
 		}
-		const interpolationFn = interpolateFactory[this.specification.type];
+		const interpolationType = this.specification.type;
+		const interpolationFn = interpolateFactory[interpolationType];
 		if (interpolationFn) return interpolationFn(a, b, t);
 		else return a;
 	}
@@ -11388,7 +11377,8 @@ var DataDrivenProperty = class {
 			warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
 			return b;
 		}
-		const interpolationFn = interpolateFactory[this.specification.type];
+		const interpolationType = this.specification.type;
+		const interpolationFn = interpolateFactory[interpolationType];
 		if (interpolationFn) {
 			const interpolatedValue = interpolationFn(a.value.value, b.value.value, t);
 			return new PossiblyEvaluatedPropertyValue(this, {
@@ -14727,7 +14717,6 @@ var DEMData = class DEMData {
 				this.greenFactor = 25.6;
 				this.blueFactor = .1;
 				this.baseShift = 1e4;
-				break;
 		}
 		for (let x = 0; x < dim; x++) {
 			this.data[this._idx(-1, x)] = this.data[this._idx(0, x)];
@@ -14800,17 +14789,13 @@ var DEMData = class DEMData {
 			case -1:
 				xMin = xMax - 1;
 				break;
-			case 1:
-				xMax = xMin + 1;
-				break;
+			case 1: xMax = xMin + 1;
 		}
 		switch (dy) {
 			case -1:
 				yMin = yMax - 1;
 				break;
-			case 1:
-				yMax = yMin + 1;
-				break;
+			case 1: yMax = yMin + 1;
 		}
 		const ox = -dx * this.dim;
 		const oy = -dy * this.dim;
@@ -15805,7 +15790,7 @@ var Subdivider = class {
 		for (let i = 0; i < flattened.length; i += 2) {
 			const vy = flattened[i + 1];
 			if (vy === -32768) flattened[i + 1] = -32767;
-			if (vy === 32767) flattened[i + 1] = SOUTH_POLE_Y - 1;
+			if (vy === 32767) flattened[i + 1] = 32766;
 		}
 	}
 	/**
@@ -17548,9 +17533,7 @@ function createFeature(id, type, geom, tags) {
 		case "MultiLineString":
 			for (const line of data.geom) calcLineBBox(feature, line.points);
 			break;
-		case "MultiPolygon":
-			for (const polygon of data.geom) calcLineBBox(feature, polygon[0].points);
-			break;
+		case "MultiPolygon": for (const polygon of data.geom) calcLineBBox(feature, polygon[0].points);
 	}
 	return feature;
 }
@@ -18211,7 +18194,7 @@ var KDBush = class KDBush {
 			this.coords = new ArrayType(data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
 			this._pos = 0;
 			this._finished = false;
-			new Uint8Array(data, 0, 2).set([219, (VERSION << 4) + arrayTypeIndex]);
+			new Uint8Array(data, 0, 2).set([219, 16 + arrayTypeIndex]);
 			new Uint16Array(data, 2, 1)[0] = nodeSize;
 			new Uint32Array(data, 4, 1)[0] = numItems;
 		}
@@ -19374,9 +19357,8 @@ const EXTRUDE_SCALE = 63;
 const COS_HALF_SHARP_CORNER = Math.cos(75 / 2 * (Math.PI / 180));
 const SHARP_CORNER_OFFSET = 15;
 const DEG_PER_TRIANGLE = 20;
-const LINE_DISTANCE_BUFFER_BITS = 15;
 const LINE_DISTANCE_SCALE = 1 / 2;
-const MAX_LINE_DISTANCE = Math.pow(2, LINE_DISTANCE_BUFFER_BITS - 1) / LINE_DISTANCE_SCALE;
+const MAX_LINE_DISTANCE = Math.pow(2, 14) / LINE_DISTANCE_SCALE;
 /**
 * @internal
 * Line bucket class
@@ -20537,7 +20519,7 @@ var TaggedString = class TaggedString {
 };
 //#endregion
 //#region node_modules/pbf/index.js
-const SHIFT_LEFT_32 = 65536 * 65536;
+const SHIFT_LEFT_32 = 4294967296;
 const SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
 const TEXT_DECODER_MIN_LENGTH$1 = 12;
 const utf8TextDecoder$1 = typeof TextDecoder === "undefined" ? null : new TextDecoder("utf-8");
@@ -21609,9 +21591,7 @@ function getAnchorAlignment(anchor) {
 			break;
 		case "left":
 		case "top-left":
-		case "bottom-left":
-			horizontalAlign = 0;
-			break;
+		case "bottom-left": horizontalAlign = 0;
 	}
 	switch (anchor) {
 		case "bottom":
@@ -21621,9 +21601,7 @@ function getAnchorAlignment(anchor) {
 			break;
 		case "top":
 		case "top-right":
-		case "top-left":
-			verticalAlign = 0;
-			break;
+		case "top-left": verticalAlign = 0;
 	}
 	return {
 		horizontalAlign,
@@ -21900,6 +21878,8 @@ function fitIconToText(shapedIcon, shapedText, textFit, padding, iconOffset, fon
 		collisionPadding
 	};
 }
+//#endregion
+//#region src/symbol/symbol_size.ts
 const MAX_PACKED_SIZE = 32640;
 function getSizeData(tileZoom, value) {
 	const { expression } = value;
@@ -24258,9 +24238,7 @@ function unpackBlock256(inValues, inPos, out, outPos, bitWidth) {
 		case 16:
 			fastUnpack256_16(inValues, inPos, out, outPos);
 			break;
-		default:
-			fastUnpack256_Generic(inValues, inPos, out, outPos, bitWidth);
-			break;
+		default: fastUnpack256_Generic(inValues, inPos, out, outPos, bitWidth);
 	}
 	return inPos + (bitWidth << 3) | 0;
 }
@@ -24378,9 +24356,7 @@ function decodePageBlocks(inValues, pageStart, inPos, packedEnd, out, outPos, bl
 				for (let i = 0; i < 256; i = i + 1 | 0) out[blockOutPos + i | 0] = inValues[tmpInPos + i | 0] | 0;
 				tmpInPos = tmpInPos + 256 | 0;
 				break;
-			default:
-				tmpInPos = unpackBlock256(inValues, tmpInPos, out, blockOutPos, bitWidth);
-				break;
+			default: tmpInPos = unpackBlock256(inValues, tmpInPos, out, blockOutPos, bitWidth);
 		}
 		if (exceptionCount > 0) bytePosIn = applyBlockExceptions(out, blockOutPos, bitWidth, exceptionCount, byteContainer, byteContainerLen, bytePosIn, workspace, run);
 	}
@@ -24515,7 +24491,6 @@ function fastUnpack32(inValues, inPos, out, outPos, bitWidth) {
 		case 32:
 			for (let i = 0; i < 32; i = i + 1 | 0) out[outPos + i | 0] = inValues[inPos + i | 0] | 0;
 			return;
-		default: break;
 	}
 	const valueMask = MASKS[bitWidth] >>> 0;
 	let inputWordIndex = inPos;
@@ -25216,9 +25191,7 @@ function decodeStreamMetadataInternal(tile, offset) {
 		case PhysicalStreamType.OFFSET:
 			logicalStreamType = { offsetType: OFFSET_TYPE_BY_ID[stream_type & 15] };
 			break;
-		case PhysicalStreamType.LENGTH:
-			logicalStreamType = { lengthType: LENGTH_TYPE_BY_ID[stream_type & 15] };
-			break;
+		case PhysicalStreamType.LENGTH: logicalStreamType = { lengthType: LENGTH_TYPE_BY_ID[stream_type & 15] };
 	}
 	offset.increment();
 	const encodings_header = tile[offset.get()];
@@ -25759,7 +25732,8 @@ function convertGeometryVector(geometryVector) {
 							lineStrings[j] = getLineStringOrRing(vertexBuffer, vertexBufferOffset, numVertices, false);
 							vertexBufferOffset += numVertices * 2;
 						} else {
-							lineStrings[j] = decodeDictionaryEncodedLineStringOrRing(geometryVector.vertexBufferType, vertexBuffer, vertexOffsets, vertexOffsetsOffset, numVertices, false, mortonSettings);
+							const vertices = decodeDictionaryEncodedLineStringOrRing(geometryVector.vertexBufferType, vertexBuffer, vertexOffsets, vertexOffsetsOffset, numVertices, false, mortonSettings);
+							lineStrings[j] = vertices;
 							vertexOffsetsOffset += numVertices;
 						}
 					}
@@ -25996,30 +25970,28 @@ var GpuVector = class {
 					if (geometryOffsets) geometryOffsetsCounter++;
 				}
 				break;
-			case GEOMETRY_TYPE.MULTIPOLYGON:
-				{
-					const numPolygons = geometryOffsets[geometryOffsetsCounter] - geometryOffsets[geometryOffsetsCounter - 1];
-					geometryOffsetsCounter++;
-					const allRings = [];
-					for (let p = 0; p < numPolygons; p++) {
-						const numRings = partOffsets[partOffsetCounter] - partOffsets[partOffsetCounter - 1];
-						partOffsetCounter++;
-						for (let j = 0; j < numRings; j++) {
-							const numVertices = ringOffsets[ringOffsetsCounter] - ringOffsets[ringOffsetsCounter - 1];
-							ringOffsetsCounter++;
-							const ring = [];
-							for (let k = 0; k < numVertices; k++) {
-								const x = this._vertexBuffer[vertexBufferOffset++];
-								const y = this._vertexBuffer[vertexBufferOffset++];
-								ring.push(new Point(x, y));
-							}
-							if (ring.length > 0) ring.push(ring[0]);
-							allRings.push(ring);
+			case GEOMETRY_TYPE.MULTIPOLYGON: {
+				const numPolygons = geometryOffsets[geometryOffsetsCounter] - geometryOffsets[geometryOffsetsCounter - 1];
+				geometryOffsetsCounter++;
+				const allRings = [];
+				for (let p = 0; p < numPolygons; p++) {
+					const numRings = partOffsets[partOffsetCounter] - partOffsets[partOffsetCounter - 1];
+					partOffsetCounter++;
+					for (let j = 0; j < numRings; j++) {
+						const numVertices = ringOffsets[ringOffsetsCounter] - ringOffsets[ringOffsetsCounter - 1];
+						ringOffsetsCounter++;
+						const ring = [];
+						for (let k = 0; k < numVertices; k++) {
+							const x = this._vertexBuffer[vertexBufferOffset++];
+							const y = this._vertexBuffer[vertexBufferOffset++];
+							ring.push(new Point(x, y));
 						}
+						if (ring.length > 0) ring.push(ring[0]);
+						allRings.push(ring);
 					}
-					geometries[i] = allRings;
 				}
-				break;
+				geometries[i] = allRings;
+			}
 		}
 		return geometries;
 	}
@@ -26105,22 +26077,18 @@ function decodeGeometryColumn(tile, numStreams, offset, numFeatures, scalingData
 						case OffsetType.VERTEX:
 							vertexOffsets = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 							break;
-						case OffsetType.INDEX:
-							indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
-							break;
+						case OffsetType.INDEX: indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 					}
 					break;
-				case PhysicalStreamType.DATA:
-					if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-					else {
-						const mortonMetadata = geometryStreamMetadata;
-						mortonSettings = {
-							numBits: mortonMetadata.numBits,
-							coordinateShift: mortonMetadata.coordinateShift
-						};
-						vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-					}
-					break;
+				case PhysicalStreamType.DATA: if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+				else {
+					const mortonMetadata = geometryStreamMetadata;
+					mortonSettings = {
+						numBits: mortonMetadata.numBits,
+						coordinateShift: mortonMetadata.coordinateShift
+					};
+					vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+				}
 			}
 		}
 		if (indexBuffer) {
@@ -26168,22 +26136,18 @@ function decodeGeometryColumn(tile, numStreams, offset, numFeatures, scalingData
 					case OffsetType.VERTEX:
 						vertexOffsets = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 						break;
-					case OffsetType.INDEX:
-						indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
-						break;
+					case OffsetType.INDEX: indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 				}
 				break;
-			case PhysicalStreamType.DATA:
-				if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-				else {
-					const mortonMetadata = geometryStreamMetadata;
-					mortonSettings = {
-						numBits: mortonMetadata.numBits,
-						coordinateShift: mortonMetadata.coordinateShift
-					};
-					vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-				}
-				break;
+			case PhysicalStreamType.DATA: if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+			else {
+				const mortonMetadata = geometryStreamMetadata;
+				mortonSettings = {
+					numBits: mortonMetadata.numBits,
+					coordinateShift: mortonMetadata.coordinateShift
+				};
+				vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+			}
 		}
 	}
 	let geometryOffsets;
@@ -26575,7 +26539,6 @@ function decodeSharedDictionary(data, offset, column, propertyColumnNames) {
 					dictionaryStreamDecoded = true;
 				} else symbolTableBuffer = data.subarray(offset.get(), offset.get() + streamMetadata.byteLength);
 				offset.add(streamMetadata.byteLength);
-				break;
 		}
 	}
 	const childFields = column.complexType.children;
@@ -27675,8 +27638,8 @@ function getIconQuads(shapedIcon, iconRotate, isSDFIcon, hasIconTextFit) {
 	const quads = [];
 	const image = shapedIcon.image;
 	const pixelRatio = image.pixelRatio;
-	const imageWidth = image.paddedRect.w - 2 * border;
-	const imageHeight = image.paddedRect.h - 2 * border;
+	const imageWidth = image.paddedRect.w - 2;
+	const imageHeight = image.paddedRect.h - 2;
 	let icon = {
 		x1: shapedIcon.left,
 		y1: shapedIcon.top,
@@ -28144,9 +28107,7 @@ function evaluateVariableOffset(anchor, offset) {
 			case "bottom":
 				y = -radialOffset + baselineOffset;
 				break;
-			case "top":
-				y = radialOffset - baselineOffset;
-				break;
+			case "top": y = radialOffset - baselineOffset;
 		}
 		switch (anchor) {
 			case "top-right":
@@ -28160,9 +28121,7 @@ function evaluateVariableOffset(anchor, offset) {
 			case "left":
 				x = radialOffset;
 				break;
-			case "right":
-				x = -radialOffset;
-				break;
+			case "right": x = -radialOffset;
 		}
 		return [x, y];
 	}
@@ -28178,9 +28137,7 @@ function evaluateVariableOffset(anchor, offset) {
 				break;
 			case "bottom-right":
 			case "bottom-left":
-			case "bottom":
-				y = -offsetY + baselineOffset;
-				break;
+			case "bottom": y = -offsetY + baselineOffset;
 		}
 		switch (anchor) {
 			case "top-right":
@@ -28190,9 +28147,7 @@ function evaluateVariableOffset(anchor, offset) {
 				break;
 			case "top-left":
 			case "bottom-left":
-			case "left":
-				x = offsetX;
-				break;
+			case "left": x = offsetX;
 		}
 		return [x, y];
 	}
@@ -28523,8 +28478,8 @@ var GlyphAtlas = class {
 				const bin = {
 					x: 0,
 					y: 0,
-					w: src.bitmap.width + 2 * padding,
-					h: src.bitmap.height + 2 * padding
+					w: src.bitmap.width + 2,
+					h: src.bitmap.height + 2
 				};
 				bins.push(bin);
 				stackPositions[id] = {
@@ -29748,9 +29703,7 @@ var Worker = class {
 				case "geojson":
 					this.workerSources[mapId][sourceType][sourceName] = new GeoJSONWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
 					break;
-				default:
-					this.workerSources[mapId][sourceType][sourceName] = new this.externalWorkerSourceTypes[sourceType](actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
-					break;
+				default: this.workerSources[mapId][sourceType][sourceName] = new this.externalWorkerSourceTypes[sourceType](actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
 			}
 		}
 		return this.workerSources[mapId][sourceType][sourceName];

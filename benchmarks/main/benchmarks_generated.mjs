@@ -16,7 +16,7 @@ var __copyProps = (to, from, except, desc) => {
 	}
 	return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule || !__hasOwnProp.call(mod, "default") ? __defProp(target, "default", {
 	value: mod,
 	enumerable: true
 }) : target, mod));
@@ -376,13 +376,13 @@ function isOffscreenCanvasDistorted() {
 			const size = 5;
 			const context = new OffscreenCanvas(size, size).getContext("2d", { willReadFrequently: true });
 			if (context) {
-				for (let i = 0; i < size * size; i++) {
+				for (let i = 0; i < 25; i++) {
 					const base = i * 4;
 					context.fillStyle = `rgb(${base},${base + 1},${base + 2})`;
 					context.fillRect(i % size, Math.floor(i / size), 1, 1);
 				}
 				const data = context.getImageData(0, 0, size, size).data;
-				for (let i = 0; i < size * size * 4; i++) if (i % 4 !== 3 && data[i] !== i) {
+				for (let i = 0; i < 100; i++) if (i % 4 !== 3 && data[i] !== i) {
 					offscreenCanvasDistorted = true;
 					break;
 				}
@@ -7536,14 +7536,12 @@ var Padding = class Padding {
 					input[1]
 				];
 				break;
-			case 3:
-				input = [
-					input[0],
-					input[1],
-					input[2],
-					input[1]
-				];
-				break;
+			case 3: input = [
+				input[0],
+				input[1],
+				input[2],
+				input[1]
+			];
 		}
 		return new Padding(input);
 	}
@@ -9539,8 +9537,7 @@ function calculateSignedArea(ring) {
 	return sum;
 }
 const RE = 6378.137;
-const FE = 1 / 298.257223563;
-const E2 = FE * (2 - FE);
+const E2 = .0066943799901413165;
 const RAD = Math.PI / 180;
 var CheapRuler = class {
 	constructor(lat) {
@@ -9549,7 +9546,7 @@ var CheapRuler = class {
 		const w2 = 1 / (1 - E2 * (1 - coslat * coslat));
 		const w = Math.sqrt(w2);
 		this.kx = m * w * coslat;
-		this.ky = m * w * w2 * (1 - E2);
+		this.ky = m * w * w2 * .9933056200098587;
 	}
 	/**
 	* Given two points of the form [longitude, latitude], returns the distance.
@@ -9886,9 +9883,7 @@ function pointToGeometryDistance(ctx, geometries) {
 			case "LineString":
 				dist = Math.min(dist, pointSetToPointSetDistance(pointPosition, false, geometry.coordinates, true, ruler, dist));
 				break;
-			case "Polygon":
-				dist = Math.min(dist, pointsToPolygonDistance(pointPosition, false, geometry.coordinates, ruler, dist));
-				break;
+			case "Polygon": dist = Math.min(dist, pointsToPolygonDistance(pointPosition, false, geometry.coordinates, ruler, dist));
 		}
 		if (dist === 0) return dist;
 	}
@@ -9908,9 +9903,7 @@ function lineStringToGeometryDistance(ctx, geometries) {
 			case "LineString":
 				dist = Math.min(dist, pointSetToPointSetDistance(linePositions, true, geometry.coordinates, true, ruler, dist));
 				break;
-			case "Polygon":
-				dist = Math.min(dist, pointsToPolygonDistance(linePositions, true, geometry.coordinates, ruler, dist));
-				break;
+			case "Polygon": dist = Math.min(dist, pointsToPolygonDistance(linePositions, true, geometry.coordinates, ruler, dist));
 		}
 		if (dist === 0) return dist;
 	}
@@ -9934,9 +9927,7 @@ function polygonToGeometryDistance(ctx, geometries) {
 			case "LineString":
 				dist = Math.min(dist, pointsToPolygonDistance(geometry.coordinates, true, polygon, ruler, dist));
 				break;
-			case "Polygon":
-				dist = Math.min(dist, polygonToPolygonDistance(polygon, geometry.coordinates, ruler, dist));
-				break;
+			case "Polygon": dist = Math.min(dist, polygonToPolygonDistance(polygon, geometry.coordinates, ruler, dist));
 		}
 		if (dist === 0) return dist;
 	}
@@ -11253,12 +11244,10 @@ function findMixedLegacyFilter(filter, path = []) {
 			if (diagnostic) return diagnostic;
 			break;
 		}
-		case "case":
-			for (let i = 1; i < filter.length - 1; i += 2) {
-				const diagnostic = checkChild(i, path, filter);
-				if (diagnostic) return diagnostic;
-			}
-			break;
+		case "case": for (let i = 1; i < filter.length - 1; i += 2) {
+			const diagnostic = checkChild(i, path, filter);
+			if (diagnostic) return diagnostic;
+		}
 	}
 	return null;
 }
@@ -11952,7 +11941,6 @@ function validateNonExpressionFilter(options) {
 			type = getType(value[1]);
 			if (value.length !== 2) errors.push(new ValidationError(key, value, `filter array for "${value[0]}" operator must have 2 elements`));
 			else if (type !== "string") errors.push(new ValidationError(`${key}[1]`, value[1], `string expected, ${type} found`));
-			break;
 	}
 	return errors;
 }
@@ -13642,7 +13630,7 @@ var features = [
 ];
 //#endregion
 //#region test/bench/lib/benchmark.ts
-const minTimeForMeasurement = .02 * 1e3;
+const minTimeForMeasurement = 20;
 var Benchmark = class {
 	constructor() {
 		this.minimumMeasurements = 210;
@@ -13740,7 +13728,7 @@ function fetchStyle(value) {
 }
 //#endregion
 //#region node_modules/pbf/index.js
-const SHIFT_LEFT_32 = 65536 * 65536;
+const SHIFT_LEFT_32 = 4294967296;
 const TEXT_DECODER_MIN_LENGTH$1 = 12;
 const utf8TextDecoder$1 = typeof TextDecoder === "undefined" ? null : new TextDecoder("utf-8");
 const PBF_VARINT = 0;
@@ -15409,7 +15397,8 @@ var DataConstantProperty = class {
 			warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
 			return b;
 		}
-		const interpolationFn = interpolateFactory[this.specification.type];
+		const interpolationType = this.specification.type;
+		const interpolationFn = interpolateFactory[interpolationType];
 		if (interpolationFn) return interpolationFn(a, b, t);
 		else return a;
 	}
@@ -15443,7 +15432,8 @@ var DataDrivenProperty = class {
 			warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
 			return b;
 		}
-		const interpolationFn = interpolateFactory[this.specification.type];
+		const interpolationType = this.specification.type;
+		const interpolationFn = interpolateFactory[interpolationType];
 		if (interpolationFn) {
 			const interpolatedValue = interpolationFn(a.value.value, b.value.value, t);
 			return new PossiblyEvaluatedPropertyValue(this, {
@@ -18906,7 +18896,6 @@ var DEMData = class DEMData {
 				this.greenFactor = 25.6;
 				this.blueFactor = .1;
 				this.baseShift = 1e4;
-				break;
 		}
 		for (let x = 0; x < dim; x++) {
 			this.data[this._idx(-1, x)] = this.data[this._idx(0, x)];
@@ -18979,17 +18968,13 @@ var DEMData = class DEMData {
 			case -1:
 				xMin = xMax - 1;
 				break;
-			case 1:
-				xMax = xMin + 1;
-				break;
+			case 1: xMax = xMin + 1;
 		}
 		switch (dy) {
 			case -1:
 				yMin = yMax - 1;
 				break;
-			case 1:
-				yMax = yMin + 1;
-				break;
+			case 1: yMax = yMin + 1;
 		}
 		const ox = -dx * this.dim;
 		const oy = -dy * this.dim;
@@ -19985,7 +19970,7 @@ var Subdivider = class {
 		for (let i = 0; i < flattened.length; i += 2) {
 			const vy = flattened[i + 1];
 			if (vy === -32768) flattened[i + 1] = -32767;
-			if (vy === 32767) flattened[i + 1] = SOUTH_POLE_Y - 1;
+			if (vy === 32767) flattened[i + 1] = 32766;
 		}
 	}
 	/**
@@ -21203,9 +21188,8 @@ const EXTRUDE_SCALE = 63;
 const COS_HALF_SHARP_CORNER = Math.cos(75 / 2 * (Math.PI / 180));
 const SHARP_CORNER_OFFSET = 15;
 const DEG_PER_TRIANGLE = 20;
-const LINE_DISTANCE_BUFFER_BITS = 15;
 const LINE_DISTANCE_SCALE = 1 / 2;
-const MAX_LINE_DISTANCE = Math.pow(2, LINE_DISTANCE_BUFFER_BITS - 1) / LINE_DISTANCE_SCALE;
+const MAX_LINE_DISTANCE = Math.pow(2, 14) / LINE_DISTANCE_SCALE;
 /**
 * @internal
 * Line bucket class
@@ -22367,7 +22351,6 @@ var TaggedString = class TaggedString {
 };
 //#endregion
 //#region src/style/parse_glyph_pbf.ts
-const border$1 = 3;
 function readFontstacks(tag, glyphs, pbf) {
 	if (tag === 1) pbf.readMessage(readFontstack, glyphs);
 }
@@ -22377,8 +22360,8 @@ function readFontstack(tag, glyphs, pbf) {
 		glyphs.push({
 			id,
 			bitmap: new AlphaImage({
-				width: width + 2 * border$1,
-				height: height + 2 * border$1
+				width: width + 6,
+				height: height + 6
 			}, bitmap),
 			metrics: {
 				width,
@@ -22711,9 +22694,7 @@ function getAnchorAlignment(anchor) {
 			break;
 		case "left":
 		case "top-left":
-		case "bottom-left":
-			horizontalAlign = 0;
-			break;
+		case "bottom-left": horizontalAlign = 0;
 	}
 	switch (anchor) {
 		case "bottom":
@@ -22723,9 +22704,7 @@ function getAnchorAlignment(anchor) {
 			break;
 		case "top":
 		case "top-right":
-		case "top-left":
-			verticalAlign = 0;
-			break;
+		case "top-left": verticalAlign = 0;
 	}
 	return {
 		horizontalAlign,
@@ -24111,7 +24090,8 @@ async function loadSprite(originalSprite, requestManager, pixelRatio, abortContr
 	const jsonsMap = {};
 	const imagesMap = {};
 	for (const { id, url } of spriteArray) {
-		jsonsMap[id] = getJSON(await requestManager.transformRequest(normalizeSpriteURL(url, format, ".json"), "SpriteJSON"), abortController);
+		const jsonRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, ".json"), "SpriteJSON");
+		jsonsMap[id] = getJSON(jsonRequestParameters, abortController);
 		const imageRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, ".png"), "SpriteImage");
 		imagesMap[id] = ImageRequest.getImage(imageRequestParameters, abortController);
 	}
@@ -24342,8 +24322,8 @@ var ImageManager = class extends Evented {
 		if (pattern && pattern.position.version === image.version) return pattern.position;
 		if (!pattern) {
 			const bin = {
-				w: image.data.width + padding$1 * 2,
-				h: image.data.height + padding$1 * 2,
+				w: image.data.width + 2,
+				h: image.data.height + 2,
 				x: 0,
 				y: 0
 			};
@@ -24463,7 +24443,8 @@ var ImageManager = class extends Evented {
 async function loadGlyphRange(fontstack, range, urlTemplate, requestManager) {
 	const begin = range * 256;
 	const end = begin + 255;
-	const response = await getArrayBuffer(await requestManager.transformRequest(urlTemplate.replace("{fontstack}", fontstack).replace("{range}", `${begin}-${end}`), "Glyphs"), new AbortController());
+	const request = await requestManager.transformRequest(urlTemplate.replace("{fontstack}", fontstack).replace("{range}", `${begin}-${end}`), "Glyphs");
+	const response = await getArrayBuffer(request, new AbortController());
 	if (!response?.data) throw new Error(`Could not load glyph range. range: ${range}, ${begin}-${end}`);
 	const glyphs = {};
 	for (const glyph of parseGlyphPbf(response.data)) glyphs[glyph.id] = glyph;
@@ -24717,8 +24698,8 @@ var GlyphManager = class GlyphManager {
 		return {
 			id,
 			bitmap: new AlphaImage({
-				width: char.width || 30 * textureScale,
-				height: char.height || 30 * textureScale
+				width: char.width || 60,
+				height: char.height || 60
 			}, char.data),
 			metrics: {
 				width: isControl ? 0 : char.glyphWidth / textureScale || 24,
@@ -24734,7 +24715,7 @@ var GlyphManager = class GlyphManager {
 		const fontFamilies = stack ? stack.split(",") : [];
 		fontFamilies.push(defaultGenericFontFamily);
 		const fontFamily = fontFamilies.map((fontName) => /[-\w]+/.test(fontName) ? fontName : `'${CSS.escape(fontName)}'`).join(",");
-		const fontSize = 24 * textureScale;
+		const fontSize = 48;
 		const fontWeight = this._fontWeight(fontFamilies[0]);
 		const fontStyle = this._fontStyle(fontFamilies[0]);
 		if (typeof document !== "undefined" && document.fonts?.load) try {
@@ -24744,8 +24725,8 @@ var GlyphManager = class GlyphManager {
 		}
 		return new GlyphManager.TinySDF({
 			fontSize,
-			buffer: 3 * textureScale,
-			radius: 8 * textureScale,
+			buffer: 6,
+			radius: 16,
 			cutoff: .25,
 			fontFamily,
 			fontWeight,
@@ -26878,9 +26859,7 @@ function getGeoJSONBounds(data) {
 		case "Feature":
 			coordinates = getCoordinatesFromGeometry(data.geometry);
 			break;
-		default:
-			coordinates = getCoordinatesFromGeometry(data);
-			break;
+		default: coordinates = getCoordinatesFromGeometry(data);
 	}
 	if (coordinates.length === 0) return bounds;
 	for (const coordinate of coordinates) {
@@ -27691,9 +27670,11 @@ var ImageSource = class extends Evented {
 			const maxTileY = Math.floor(maxY * tilesAtZoom);
 			const minTileXWrapped = (minTileX % tilesAtZoom + tilesAtZoom) % tilesAtZoom;
 			const maxTileXWrapped = maxTileX % tilesAtZoom;
+			const minWrap = Math.floor(minTileX / tilesAtZoom);
+			const maxWrap = Math.floor(maxTileX / tilesAtZoom);
 			ranges[z] = {
-				minWrap: Math.floor(minTileX / tilesAtZoom),
-				maxWrap: Math.floor(maxTileX / tilesAtZoom),
+				minWrap,
+				maxWrap,
 				minTileXWrapped,
 				maxTileXWrapped,
 				minTileY,
@@ -29442,9 +29423,7 @@ function unpackBlock256(inValues, inPos, out, outPos, bitWidth) {
 		case 16:
 			fastUnpack256_16(inValues, inPos, out, outPos);
 			break;
-		default:
-			fastUnpack256_Generic(inValues, inPos, out, outPos, bitWidth);
-			break;
+		default: fastUnpack256_Generic(inValues, inPos, out, outPos, bitWidth);
 	}
 	return inPos + (bitWidth << 3) | 0;
 }
@@ -29562,9 +29541,7 @@ function decodePageBlocks(inValues, pageStart, inPos, packedEnd, out, outPos, bl
 				for (let i = 0; i < 256; i = i + 1 | 0) out[blockOutPos + i | 0] = inValues[tmpInPos + i | 0] | 0;
 				tmpInPos = tmpInPos + 256 | 0;
 				break;
-			default:
-				tmpInPos = unpackBlock256(inValues, tmpInPos, out, blockOutPos, bitWidth);
-				break;
+			default: tmpInPos = unpackBlock256(inValues, tmpInPos, out, blockOutPos, bitWidth);
 		}
 		if (exceptionCount > 0) bytePosIn = applyBlockExceptions(out, blockOutPos, bitWidth, exceptionCount, byteContainer, byteContainerLen, bytePosIn, workspace, run);
 	}
@@ -29699,7 +29676,6 @@ function fastUnpack32(inValues, inPos, out, outPos, bitWidth) {
 		case 32:
 			for (let i = 0; i < 32; i = i + 1 | 0) out[outPos + i | 0] = inValues[inPos + i | 0] | 0;
 			return;
-		default: break;
 	}
 	const valueMask = MASKS[bitWidth] >>> 0;
 	let inputWordIndex = inPos;
@@ -30400,9 +30376,7 @@ function decodeStreamMetadataInternal(tile, offset) {
 		case PhysicalStreamType.OFFSET:
 			logicalStreamType = { offsetType: OFFSET_TYPE_BY_ID[stream_type & 15] };
 			break;
-		case PhysicalStreamType.LENGTH:
-			logicalStreamType = { lengthType: LENGTH_TYPE_BY_ID[stream_type & 15] };
-			break;
+		case PhysicalStreamType.LENGTH: logicalStreamType = { lengthType: LENGTH_TYPE_BY_ID[stream_type & 15] };
 	}
 	offset.increment();
 	const encodings_header = tile[offset.get()];
@@ -30943,7 +30917,8 @@ function convertGeometryVector(geometryVector) {
 							lineStrings[j] = getLineStringOrRing(vertexBuffer, vertexBufferOffset, numVertices, false);
 							vertexBufferOffset += numVertices * 2;
 						} else {
-							lineStrings[j] = decodeDictionaryEncodedLineStringOrRing(geometryVector.vertexBufferType, vertexBuffer, vertexOffsets, vertexOffsetsOffset, numVertices, false, mortonSettings);
+							const vertices = decodeDictionaryEncodedLineStringOrRing(geometryVector.vertexBufferType, vertexBuffer, vertexOffsets, vertexOffsetsOffset, numVertices, false, mortonSettings);
+							lineStrings[j] = vertices;
 							vertexOffsetsOffset += numVertices;
 						}
 					}
@@ -31180,30 +31155,28 @@ var GpuVector = class {
 					if (geometryOffsets) geometryOffsetsCounter++;
 				}
 				break;
-			case GEOMETRY_TYPE.MULTIPOLYGON:
-				{
-					const numPolygons = geometryOffsets[geometryOffsetsCounter] - geometryOffsets[geometryOffsetsCounter - 1];
-					geometryOffsetsCounter++;
-					const allRings = [];
-					for (let p = 0; p < numPolygons; p++) {
-						const numRings = partOffsets[partOffsetCounter] - partOffsets[partOffsetCounter - 1];
-						partOffsetCounter++;
-						for (let j = 0; j < numRings; j++) {
-							const numVertices = ringOffsets[ringOffsetsCounter] - ringOffsets[ringOffsetsCounter - 1];
-							ringOffsetsCounter++;
-							const ring = [];
-							for (let k = 0; k < numVertices; k++) {
-								const x = this._vertexBuffer[vertexBufferOffset++];
-								const y = this._vertexBuffer[vertexBufferOffset++];
-								ring.push(new Point(x, y));
-							}
-							if (ring.length > 0) ring.push(ring[0]);
-							allRings.push(ring);
+			case GEOMETRY_TYPE.MULTIPOLYGON: {
+				const numPolygons = geometryOffsets[geometryOffsetsCounter] - geometryOffsets[geometryOffsetsCounter - 1];
+				geometryOffsetsCounter++;
+				const allRings = [];
+				for (let p = 0; p < numPolygons; p++) {
+					const numRings = partOffsets[partOffsetCounter] - partOffsets[partOffsetCounter - 1];
+					partOffsetCounter++;
+					for (let j = 0; j < numRings; j++) {
+						const numVertices = ringOffsets[ringOffsetsCounter] - ringOffsets[ringOffsetsCounter - 1];
+						ringOffsetsCounter++;
+						const ring = [];
+						for (let k = 0; k < numVertices; k++) {
+							const x = this._vertexBuffer[vertexBufferOffset++];
+							const y = this._vertexBuffer[vertexBufferOffset++];
+							ring.push(new Point(x, y));
 						}
+						if (ring.length > 0) ring.push(ring[0]);
+						allRings.push(ring);
 					}
-					geometries[i] = allRings;
 				}
-				break;
+				geometries[i] = allRings;
+			}
 		}
 		return geometries;
 	}
@@ -31289,22 +31262,18 @@ function decodeGeometryColumn(tile, numStreams, offset, numFeatures, scalingData
 						case OffsetType.VERTEX:
 							vertexOffsets = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 							break;
-						case OffsetType.INDEX:
-							indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
-							break;
+						case OffsetType.INDEX: indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 					}
 					break;
-				case PhysicalStreamType.DATA:
-					if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-					else {
-						const mortonMetadata = geometryStreamMetadata;
-						mortonSettings = {
-							numBits: mortonMetadata.numBits,
-							coordinateShift: mortonMetadata.coordinateShift
-						};
-						vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-					}
-					break;
+				case PhysicalStreamType.DATA: if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+				else {
+					const mortonMetadata = geometryStreamMetadata;
+					mortonSettings = {
+						numBits: mortonMetadata.numBits,
+						coordinateShift: mortonMetadata.coordinateShift
+					};
+					vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+				}
 			}
 		}
 		if (indexBuffer) {
@@ -31352,22 +31321,18 @@ function decodeGeometryColumn(tile, numStreams, offset, numFeatures, scalingData
 					case OffsetType.VERTEX:
 						vertexOffsets = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 						break;
-					case OffsetType.INDEX:
-						indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
-						break;
+					case OffsetType.INDEX: indexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata);
 				}
 				break;
-			case PhysicalStreamType.DATA:
-				if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-				else {
-					const mortonMetadata = geometryStreamMetadata;
-					mortonSettings = {
-						numBits: mortonMetadata.numBits,
-						coordinateShift: mortonMetadata.coordinateShift
-					};
-					vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
-				}
-				break;
+			case PhysicalStreamType.DATA: if (DictionaryType.VERTEX === geometryStreamMetadata.logicalStreamType.dictionaryType) vertexBuffer = decodeSignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+			else {
+				const mortonMetadata = geometryStreamMetadata;
+				mortonSettings = {
+					numBits: mortonMetadata.numBits,
+					coordinateShift: mortonMetadata.coordinateShift
+				};
+				vertexBuffer = decodeUnsignedInt32Stream(tile, offset, geometryStreamMetadata, scalingData);
+			}
 		}
 	}
 	let geometryOffsets;
@@ -31759,7 +31724,6 @@ function decodeSharedDictionary(data, offset, column, propertyColumnNames) {
 					dictionaryStreamDecoded = true;
 				} else symbolTableBuffer = data.subarray(offset.get(), offset.get() + streamMetadata.byteLength);
 				offset.add(streamMetadata.byteLength);
-				break;
 		}
 	}
 	const childFields = column.complexType.children;
@@ -35509,8 +35473,8 @@ function getIconQuads(shapedIcon, iconRotate, isSDFIcon, hasIconTextFit) {
 	const quads = [];
 	const image = shapedIcon.image;
 	const pixelRatio = image.pixelRatio;
-	const imageWidth = image.paddedRect.w - 2 * border;
-	const imageHeight = image.paddedRect.h - 2 * border;
+	const imageWidth = image.paddedRect.w - 2;
+	const imageHeight = image.paddedRect.h - 2;
 	let icon = {
 		x1: shapedIcon.left,
 		y1: shapedIcon.top,
@@ -35978,9 +35942,7 @@ function evaluateVariableOffset(anchor, offset) {
 			case "bottom":
 				y = -radialOffset + baselineOffset;
 				break;
-			case "top":
-				y = radialOffset - baselineOffset;
-				break;
+			case "top": y = radialOffset - baselineOffset;
 		}
 		switch (anchor) {
 			case "top-right":
@@ -35994,9 +35956,7 @@ function evaluateVariableOffset(anchor, offset) {
 			case "left":
 				x = radialOffset;
 				break;
-			case "right":
-				x = -radialOffset;
-				break;
+			case "right": x = -radialOffset;
 		}
 		return [x, y];
 	}
@@ -36012,9 +35972,7 @@ function evaluateVariableOffset(anchor, offset) {
 				break;
 			case "bottom-right":
 			case "bottom-left":
-			case "bottom":
-				y = -offsetY + baselineOffset;
-				break;
+			case "bottom": y = -offsetY + baselineOffset;
 		}
 		switch (anchor) {
 			case "top-right":
@@ -36024,9 +35982,7 @@ function evaluateVariableOffset(anchor, offset) {
 				break;
 			case "top-left":
 			case "bottom-left":
-			case "left":
-				x = offsetX;
-				break;
+			case "left": x = offsetX;
 		}
 		return [x, y];
 	}
@@ -37137,7 +37093,7 @@ var KDBush = class KDBush {
 			this.coords = new ArrayType(data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
 			this._pos = 0;
 			this._finished = false;
-			new Uint8Array(data, 0, 2).set([219, (VERSION << 4) + arrayTypeIndex]);
+			new Uint8Array(data, 0, 2).set([219, 16 + arrayTypeIndex]);
 			new Uint16Array(data, 2, 1)[0] = nodeSize;
 			new Uint32Array(data, 4, 1)[0] = numItems;
 		}
@@ -38926,7 +38882,7 @@ var MercatorTransform = class MercatorTransform {
 				zoom
 			};
 			let lngRange = this._helper._lngRange;
-			if (!this._helper._renderWorldCopies && lngRange === null) lngRange = [-179.9999999999, 179.9999999999];
+			if (!this._helper._renderWorldCopies && lngRange === null) lngRange = [-179.9999999999, 180 - 1e-10];
 			const worldSize = this.tileSize * zoomScale(result.zoom);
 			let minY = 0;
 			let maxY = worldSize;
@@ -39148,7 +39104,7 @@ var MercatorTransform = class MercatorTransform {
 		const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp$2(Math.PI - groundAngle - fovAboveCenter, .01, Math.PI - .01));
 		const horizon = getMercatorHorizon(this);
 		const horizonAngle = Math.atan(horizon / this._helper.cameraToCenterDistance);
-		const minFovCenterToHorizonRadians = degreesToRadians(90 - maxMercatorHorizonAngle);
+		const minFovCenterToHorizonRadians = degreesToRadians(.75);
 		const fovCenterToHorizon = horizonAngle > minFovCenterToHorizonRadians ? 2 * horizonAngle * (.5 + offset.y / (horizon * 2)) : minFovCenterToHorizonRadians;
 		const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp$2(Math.PI - groundAngle - fovCenterToHorizon, .01, Math.PI - .01));
 		const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
@@ -40258,9 +40214,8 @@ var GlobeCoveringTilesDetailsProvider = class {
 		const tileMercatorSize = 1 / scale;
 		const tileCornerX = tileID.x / scale;
 		const tileCornerY = tileID.y / scale;
-		const worldSize = 1;
-		const halfWorld = .5 * worldSize;
-		let smallestDistance = 2 * worldSize;
+		const halfWorld = .5;
+		let smallestDistance = 2;
 		smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileMercatorSize));
 		smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileMercatorSize, tileMercatorSize));
 		smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, 2 - tileCornerY - tileMercatorSize, tileMercatorSize));
@@ -42391,9 +42346,7 @@ var Style = class extends Evented {
 			case "setTransition":
 				operations.push(() => {});
 				break;
-			default:
-				unimplemented.push(op.command);
-				break;
+			default: unimplemented.push(op.command);
 		}
 		return {
 			operations,
@@ -43193,8 +43146,8 @@ var GlyphAtlas = class {
 				const bin = {
 					x: 0,
 					y: 0,
-					w: src.bitmap.width + 2 * padding,
-					h: src.bitmap.height + 2 * padding
+					w: src.bitmap.width + 2,
+					h: src.bitmap.height + 2
 				};
 				bins.push(bin);
 				stackPositions[id] = {
@@ -43815,9 +43768,7 @@ var Program = class {
 			case gl.TRIANGLES:
 				primitiveSize = 3;
 				break;
-			case gl.LINE_STRIP:
-				primitiveSize = 1;
-				break;
+			case gl.LINE_STRIP: primitiveSize = 1;
 		}
 		for (const segment of segments.get()) {
 			segment.vaos ||= {};
@@ -44084,9 +44035,7 @@ const hillshadeUniformValues = (painter, tile, layer) => {
 		case "multidirectional":
 			method = 3;
 			break;
-		default:
-			method = 0;
-			break;
+		default: method = 0;
 	}
 	const illumination = layer.getIlluminationProperties();
 	for (let i = 0; i < illumination.directionRadians.length; i++) if (layer.paint.get("hillshade-illumination-anchor") === "viewport") illumination.directionRadians[i] += painter.transform.bearingInRadians;
@@ -46968,7 +46917,9 @@ function drawTerrain(painter, terrain, tiles, renderOptions) {
 		const terrainData = terrain.getTerrainData(tile.tileID);
 		context.activeTexture.set(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-		const uniformValues = terrainUniformValues(terrain.getSkirtLength(tr.zoom), tr.calculateFogMatrix(tile.tileID.toUnwrapped()), painter.style.sky, tr.pitch, isRenderingGlobe);
+		const eleDelta = terrain.getSkirtLength(tr.zoom);
+		const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
+		const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
 		const projectionData = tr.getProjectionData({
 			overscaledTileID: tile.tileID,
 			applyTerrainMatrix: false,
@@ -47046,11 +46997,12 @@ function drawAtmosphere(painter, sky, light) {
 	vec[1] /= vec[3];
 	vec[2] /= vec[3];
 	vec[3] = 1;
-	const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, [
+	const globePosition = [
 		vec[0],
 		vec[1],
 		vec[2]
-	], globeRadius, invProjMatrix);
+	];
+	const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, invProjMatrix);
 	const mesh = getMesh(context, sky);
 	program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, "atmosphere", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }
@@ -47761,7 +47713,7 @@ var Hash = class {
 			location = location.replace("&&", "&");
 			window.history.replaceState(window.history.state, null, location);
 		};
-		this._updateHash = throttle(this._updateHashUnthrottled, 30 * 1e3 / 100);
+		this._updateHash = throttle(this._updateHashUnthrottled, 3e4 / 100);
 		this._hashName = hashName && encodeURIComponent(hashName);
 	}
 	/**
@@ -49240,7 +49192,7 @@ var ScrollZoomHandler = class {
 			const t = (now() - currentEase.start) / currentEase.duration;
 			const speed = currentEase.easing(t + .01) - currentEase.easing(t);
 			const x = .27 / Math.sqrt(speed * speed + 1e-4) * .01;
-			easing = bezier(x, Math.sqrt(.27 * .27 - x * x), .25, 1);
+			easing = bezier(x, Math.sqrt(.0729 - x * x), .25, 1);
 		}
 		this._prevEase = {
 			start: now(),
@@ -51650,7 +51602,7 @@ var Terrain = class {
 		context.bindFramebuffer.set(this.getFramebuffer("depth").framebuffer);
 		gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
 		context.bindFramebuffer.set(null);
-		return (rgba[0] / (256 * 256 * 256) + rgba[1] / (256 * 256) + rgba[2] / 256 + rgba[3]) / 256;
+		return (rgba[0] / 16777216 + rgba[1] / 65536 + rgba[2] / 256 + rgba[3]) / 256;
 	}
 	/**
 	* create a regular mesh which will be used by all terrain-tiles
@@ -58702,7 +58654,6 @@ var Marker = class extends Evented {
 		}
 		if (popup) {
 			if (!("offset" in popup.options)) {
-				const markerHeight = 41 - 5.8 / 2;
 				const markerRadius = 13.5;
 				const linearOffset = Math.abs(markerRadius) / Math.SQRT2;
 				popup.options.offset = this._defaultMarker ? {
@@ -58710,10 +58661,10 @@ var Marker = class extends Evented {
 					"top-left": [0, 0],
 					"top-right": [0, 0],
 					"bottom": [0, -38.1],
-					"bottom-left": [linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
-					"bottom-right": [-linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
-					"left": [markerRadius, (markerHeight - markerRadius) * -1],
-					"right": [-13.5, (markerHeight - markerRadius) * -1]
+					"bottom-left": [linearOffset, (24.6 + linearOffset) * -1],
+					"bottom-right": [-linearOffset, (24.6 + linearOffset) * -1],
+					"left": [markerRadius, -24.6],
+					"right": [-13.5, -24.6]
 				} : this._offset;
 			}
 			this._popup = popup;
@@ -60554,8 +60505,8 @@ var SymbolCollisionBox = class extends Benchmark {
 		const symbolCount = 2e4;
 		for (let i = 0; i < symbolCount; i++) this._symbols.push({
 			collisionBox: {
-				anchorPointX: rndRange(4, EXTENT - 4),
-				anchorPointY: rndRange(4, EXTENT - 4),
+				anchorPointX: rndRange(4, 8188),
+				anchorPointY: rndRange(4, 8188),
 				x1: rndRange(-20, -2),
 				y1: rndRange(-20, -2),
 				x2: rndRange(2, 20),
@@ -60638,17 +60589,16 @@ var CrossTileSymbolIndexBench = class extends Benchmark {
 var Subdivide = class extends Benchmark {
 	async setup() {
 		await super.setup();
-		const vertexCountMultiplier = 11;
 		this.granularity = 64;
 		this.tileID = new CanonicalTileID(2, 1, 1);
 		const polygon = [];
-		polygon.push(generateRing(EXTENT / 2, EXTENT / 2, EXTENT * 1.1 / 2, 81 * vertexCountMultiplier));
+		polygon.push(generateRing(EXTENT / 2, EXTENT / 2, EXTENT * 1.1 / 2, 891));
 		function generateHole(cx, cy, r, vertexCount) {
 			polygon.push(generateRing(cx * EXTENT, cy * EXTENT, r * EXTENT, vertexCount));
 		}
-		generateHole(.25, .5, .15, 16 * vertexCountMultiplier);
-		generateHole(.75, .5, .15, 2 * vertexCountMultiplier);
-		generateHole(.5, .1, .05, 4 * vertexCountMultiplier);
+		generateHole(.25, .5, .15, 176);
+		generateHole(.75, .5, .15, 22);
+		generateHole(.5, .1, .05, 44);
 		this.polygon = polygon;
 	}
 	bench() {
@@ -61225,7 +61175,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main c913f4f (local)` : "main c913f4f";
+const version = new URL(import.meta.url).origin === location.origin ? `main 93d8872 (local)` : "main 93d8872";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
