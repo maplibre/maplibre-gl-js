@@ -3152,7 +3152,11 @@ export class Map extends Evented<MapEventType> {
         this.style.addImage(id, styleImage);
         const {userImage} = styleImage;
         if (isCustomStyleImage(userImage)) {
-            userImage.onAdd?.({map: this, id, invalidate: () => this._invalidateImage(id, userImage)});
+            userImage.onAdd?.({map: this, id, invalidate: () => {
+                if (this.style?.getImage(id)?.userImage !== userImage) return;
+                this.style.imageManager.invalidateImage(id);
+                this.triggerRepaint();
+            }});
         } else {
             userImage?.onAdd?.(this, id);
         }
@@ -3182,16 +3186,6 @@ export class Map extends Evented<MapEventType> {
         return this;
     }
 
-    /**
-     * Backs {@link StyleImageContext.invalidate}. Takes the image itself, not just its ID, so
-     * that a callback held past a `removeImage` cannot invalidate whatever took the ID next.
-     */
-    _invalidateImage(id: string, userImage: CustomStyleImageInterface): void {
-        if (this.style?.getImage(id)?.userImage !== userImage) return;
-        this.style.imageManager.invalidateImage(id);
-        this.triggerRepaint();
-    }
-
     _createStyleImage(image: StyleImageSource, options: Partial<StyleImageMetadata> = {}): StyleImage | null {
         const {
             pixelRatio = 1,
@@ -3210,19 +3204,7 @@ export class Map extends Evented<MapEventType> {
         } else if (isCustomStyleImage(image)) {
             const {width, height} = image;
             // The image paints its own slot, so these transparent pixels only ever pad it.
-            return {
-                data: new RGBAImage({width, height}),
-                pixelRatio,
-                stretchX,
-                stretchY,
-                content,
-                textFitWidth,
-                textFitHeight,
-                sdf,
-                version,
-                isCustomImage: true,
-                userImage: image
-            };
+            return {data: new RGBAImage({width, height}), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version, isCustomImage: true, userImage: image};
         } else if (image.width === undefined || image.height === undefined) {
             this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
@@ -4168,7 +4150,9 @@ export class Map extends Evented<MapEventType> {
         }
 
         if (this._lostContextStyle.images && this.style) {
-            this.style.imageManager.restoreImages(this._lostContextStyle.images);
+            this.style.imageManager.images = this._lostContextStyle.images;
+            // The atlas textures died with the old context, so images that paint their own slots owe every atlas a fresh paint.
+            for (const id in this._lostContextStyle.images) this.style.imageManager.invalidateImage(id);
         }
 
         this._lostContextStyle = {style: null, images: null};
@@ -4350,9 +4334,8 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        // An image that asked to be drawn again is dirty in the same way.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty ||
-            Boolean(this.style?.imageManager.hasInvalidatedImages());
+        // `_frameRequest` covers anything that asked for another frame while this one drew, such as a custom image invalidating itself.
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || Boolean(this._frameRequest);
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

@@ -239,11 +239,10 @@ test('a custom image is handed a callback that asks for it to be drawn again', (
     expect(onAdd).toHaveBeenCalledWith({map, id: 'custom', invalidate: expect.any(Function)});
 
     const triggerRepaint = vi.spyOn(map, 'triggerRepaint');
-    // `addImage` already asked for the first paint.
-    map.style.imageManager.invalidatedImages = {};
+    const version = map.getImage('custom').version;
 
     onAdd.mock.calls[0][0].invalidate();
-    expect(map.style.imageManager.hasInvalidatedImages()).toBe(true);
+    expect(map.getImage('custom').version).toBe(version + 1);
     expect(triggerRepaint).toHaveBeenCalled();
 });
 
@@ -255,10 +254,10 @@ test('a callback held past `removeImage` cannot invalidate whatever took the ima
     map.addImage('custom', image);
     map.removeImage('custom');
     map.addImage('custom', {width: 1, height: 1, data: new Uint8Array(4)});
-    map.style.imageManager.invalidatedImages = {};
+    const version = map.getImage('custom').version;
 
     onAdd.mock.calls[0][0].invalidate();
-    expect(map.style.imageManager.hasInvalidatedImages()).toBe(false);
+    expect(map.getImage('custom').version).toBe(version);
 });
 
 test('map does not fire `styleimagemissing` for empty icon values', async () => {

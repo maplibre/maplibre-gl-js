@@ -27,10 +27,7 @@ export type StyleImageData = {
     data: RGBAImage;
     version?: number;
     hasRenderCallback?: boolean;
-    /**
-     * Whether {@link StyleImageData.userImage} paints its own slot of the atlas. Unlike
-     * `userImage`, this survives the trip to a worker, where the atlas is packed.
-     */
+    /** Whether {@link StyleImageData.userImage} paints its own slot of the atlas. Sent to the worker, which packs the atlas but never receives `userImage` itself. */
     isCustomImage?: boolean;
     userImage?: StyleImageInterface | CustomStyleImageInterface;
     spriteData?: SpriteOnDemandStyleImage;
@@ -127,7 +124,8 @@ export type StyleImageContext = {
      * animates on every frame.
      *
      * Once the image has been removed from the map this does nothing, so a timer that outlives
-     * {@link Map.removeImage} cannot bring the image back.
+     * {@link Map.removeImage} can neither bring the image back nor disturb whatever was added
+     * under its ID next.
      */
     invalidate: () => void;
 };
@@ -236,8 +234,6 @@ export interface CustomStyleImageInterface {
  * ```
  */
 export interface StyleImageInterface {
-    /** Absent, which is what tells this apart from a {@link CustomStyleImageInterface}. */
-    type?: undefined;
     width: number;
     height: number;
     data: Uint8Array | Uint8ClampedArray;
@@ -267,12 +263,8 @@ export interface StyleImageInterface {
     onRemove?: () => void;
 }
 
-/**
- * `type` cannot discriminate the union on its own here, because this project compiles without
- * `strictNullChecks` and the absence of a property is not a narrowing signal without it.
- */
 export function isCustomStyleImage(image: StyleImageInterface | CustomStyleImageInterface): image is CustomStyleImageInterface {
-    return image?.type === 'custom';
+    return (image as CustomStyleImageInterface)?.type === 'custom';
 }
 
 export function renderStyleImage(image: StyleImage): boolean {

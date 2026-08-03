@@ -118,7 +118,7 @@ test('a CustomStyleImageInterface is told to release its GPU resources on contex
 
     expect(map.hasImage('gpu-image')).toBe(true);
     expect(map.getImage('gpu-image').userImage).toBe(userImage);
-    expect(map.style.imageManager.hasInvalidatedImages()).toBe(true);
+    expect(map.style.imageManager.updatedImages['gpu-image']).toBe(true);
 
     map.remove();
 });

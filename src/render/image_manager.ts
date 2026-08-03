@@ -44,7 +44,6 @@ export class ImageManager extends Evented {
     images: {[_: string]: StyleImage};
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
-    invalidatedImages: {[_: string]: boolean};
     loaded: boolean;
     /**
      * This is used to track requests for images that are not yet available. When the image is loaded,
@@ -66,7 +65,6 @@ export class ImageManager extends Evented {
         this.images = {};
         this.updatedImages = {};
         this.callbackDispatchedThisFrame = {};
-        this.invalidatedImages = {};
         this.loaded = false;
         this.requestors = [];
         this.missingImageResolver = null;
@@ -129,41 +127,20 @@ export class ImageManager extends Evented {
         return image;
     }
 
-    /**
-     * Add an image the map does not have yet. A custom image starts out owing the map a frame,
-     * since nothing has painted its slot of the atlas yet.
-     */
     addImage(id: string, image: StyleImage): void {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
-            if (image.isCustomImage) this.invalidatedImages[id] = true;
+            this.invalidateImage(id);
         }
     }
 
     /**
-     * Take over the images of a manager that is going away, as happens when a lost WebGL
-     * context is restored. The atlas textures died with the old context, so every image that
-     * paints its own slot owes each atlas a fresh paint.
-     */
-    restoreImages(images: {[_: string]: StyleImage}): void {
-        this.images = images;
-        for (const id in images) {
-            if (images[id].isCustomImage) this.invalidatedImages[id] = true;
-        }
-    }
-
-    /**
-     * Ask for a custom image to be drawn again before the next frame. Does nothing for an image
-     * that is not on the map, so a timer that outlives `removeImage` cannot revive it.
+     * Ask for a custom image to be drawn again. Bumping the version is all it takes: every atlas
+     * holding the image compares its slot against that version and repaints the ones that differ.
      */
     invalidateImage(id: string): void {
-        if (this.images[id]) this.invalidatedImages[id] = true;
-    }
-
-    hasInvalidatedImages(): boolean {
-        for (const _ in this.invalidatedImages) return true;
-        return false;
+        if (this.images[id]?.isCustomImage) this.updateImage(id, this.images[id], false);
     }
 
     _validate(id: string, image: StyleImage): boolean {
@@ -222,7 +199,6 @@ export class ImageManager extends Evented {
         const image = this.images[id];
         delete this.images[id];
         delete this.patterns[id];
-        delete this.invalidatedImages[id];
 
         if (image.userImage?.onRemove) {
             image.userImage.onRemove();
@@ -381,12 +357,6 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
     }
 
-    /**
-     * Give each image named a chance to change before this frame is drawn. A custom image is
-     * not drawn here, where there is no texture to draw into: every atlas holding it compares
-     * its slot against the version, so one bump here is what gets the image drawn into each of
-     * them this frame.
-     */
     dispatchRenderCallbacks(ids: string[]): void {
         for (const id of ids) {
 
@@ -397,14 +367,6 @@ export class ImageManager extends Evented {
             const image = this.getImage(id);
             if (!image) {
                 warnOnce(`Image with ID: "${id}" was not found`);
-                continue;
-            }
-
-            if (image.isCustomImage) {
-                if (!this.invalidatedImages[id]) continue;
-                delete this.invalidatedImages[id];
-                image.version++;
-                this.updatedImages[id] = true;
             } else if (renderStyleImage(image)) {
                 this.updateImage(id, image);
             }

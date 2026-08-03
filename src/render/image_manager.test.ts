@@ -15,47 +15,29 @@ function customImage(render = vi.fn()): StyleImage {
     };
 }
 
-test('a custom image is dirty as soon as it is added, and its version moves once per frame', () => {
-    const manager = new ImageManager();
-    manager.addImage('custom', customImage());
-    expect(manager.hasInvalidatedImages()).toBe(true);
-
-    manager.beginFrame();
-    manager.dispatchRenderCallbacks(['custom']);
-    expect(manager.getImage('custom').version).toBe(1);
-    expect(manager.updatedImages.custom).toBe(true);
-    // A second atlas dispatching must not move the version out from under the first one's slot.
-    manager.dispatchRenderCallbacks(['custom']);
-    expect(manager.getImage('custom').version).toBe(1);
-
-    manager.beginFrame();
-    manager.dispatchRenderCallbacks(['custom']);
-    expect(manager.getImage('custom').version).toBe(1);
-    expect(manager.hasInvalidatedImages()).toBe(false);
-
-    manager.invalidateImage('custom');
-    manager.beginFrame();
-    manager.dispatchRenderCallbacks(['custom']);
-    expect(manager.getImage('custom').version).toBe(2);
-});
-
-test('a custom image is not drawn during dispatch, but in the atlas patch where there is a texture', () => {
+test('a custom image owes the atlas a paint when added and on every invalidate, but is drawn by the atlas patch, not here', () => {
     const render = vi.fn();
     const manager = new ImageManager();
     manager.addImage('custom', customImage(render));
+    expect(manager.getImage('custom').version).toBe(1);
+    expect(manager.updatedImages.custom).toBe(true);
+
+    manager.invalidateImage('custom');
+    expect(manager.getImage('custom').version).toBe(2);
 
     manager.beginFrame();
     manager.dispatchRenderCallbacks(['custom']);
-
     expect(render).not.toHaveBeenCalled();
+    expect(manager.getImage('custom').version).toBe(2);
 });
 
 test('invalidating an image the map does not have does nothing', () => {
     const manager = new ImageManager();
     manager.invalidateImage('never-added');
-    expect(manager.hasInvalidatedImages()).toBe(false);
 
     manager.addImage('custom', customImage());
     manager.removeImage('custom');
-    expect(manager.hasInvalidatedImages()).toBe(false);
+    manager.invalidateImage('custom');
+
+    expect(manager.updatedImages['never-added']).toBeUndefined();
 });
