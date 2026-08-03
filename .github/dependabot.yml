@@ -36,3 +36,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      # Odd-numbered Node.js majors are never promoted to LTS
+      - dependency-name: "node"
+        versions: ["27.x", "29.x", "31.x", "33.x", "35.x", "37.x", "39.x"]
