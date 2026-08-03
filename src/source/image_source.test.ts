@@ -278,6 +278,98 @@ describe('ImageSource', () => {
         expect(errorHandler).not.toHaveBeenCalled();
     });
 
+    describe('texture lifecycle', () => {
+        let source: ImageSource;
+        let tile: Tile;
+
+        beforeEach(async () => {
+            server.respondImmediately = true;
+            source = createSource({url: '/image.png', eventedParent: map});
+            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+            source.onAdd(map);
+            await loaded;
+
+            const {z, x, y} = source.tileID;
+            tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
+            await source.loadTile(tile);
+        });
+
+        test.each([
+            {
+                input: 'a url',
+                update: () => {
+                    const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+                    source.updateImage({url: '/image2.png'});
+                    return loaded;
+                }
+            },
+            {
+                input: 'a decoded image',
+                update: async () => {
+                    source.updateImage({image: new ImageBitmap()});
+                }
+            },
+        ])('uploads $input into the texture the tiles already hold', async ({update}) => {
+            source.prepare();
+            const texture = source.texture;
+            const upload = vi.spyOn(texture, 'update');
+            const destroy = vi.spyOn(texture, 'destroy');
+
+            await update();
+            source.prepare();
+
+            expect(upload).toHaveBeenCalledTimes(1);
+            expect(destroy).not.toHaveBeenCalled();
+            expect(source.texture).toBe(texture);
+            expect(tile.texture).toBe(texture);
+        });
+
+        test('keeps the texture the tiles hold live when updateImage runs from an event fired during prepare', () => {
+            source.on('data', (e: MapSourceDataEvent) => {
+                if (e.sourceDataType === 'idle') source.updateImage({image: new ImageBitmap()});
+            });
+
+            source.prepare();
+
+            // prepare() runs inside painter.render(), which draws the tiles after it returns.
+            expect(source.texture).toBeTruthy();
+            expect(tile.texture).toBe(source.texture);
+            expect(source.texture.texture).not.toBeNull();
+        });
+
+        test('deletes its texture and drops its image when the source is removed', () => {
+            source.prepare();
+            const destroy = vi.spyOn(source.texture, 'destroy');
+
+            source.onRemove();
+
+            expect(destroy).toHaveBeenCalledTimes(1);
+            expect(source.texture).toBeNull();
+            expect(source.image).toBeNull();
+            expect(source.tiles).toEqual({});
+        });
+
+        test('keeps the image it displays, and its texture, when the url handed to updateImage fails to load', async () => {
+            // Suppress errors as we're loading a missing image.
+            map.on('error', () => {});
+            source.prepare();
+            const texture = source.texture;
+            const image = source.image;
+            const upload = vi.spyOn(texture, 'update');
+            const destroy = vi.spyOn(texture, 'destroy');
+
+            const failed = waitForEvent(source, 'error', () => true);
+            source.updateImage({url: '/missing-image.png'});
+            await failed;
+            source.prepare();
+
+            expect(destroy).not.toHaveBeenCalled();
+            expect(upload).not.toHaveBeenCalled();
+            expect(source.texture).toBe(texture);
+            expect(source.image).toBe(image);
+        });
+    });
+
     describe('updateImage with a decoded image', () => {
         let source: ImageSource;
         let transformRequest: Mock<(url: string, resourceType?: string) => any>;
@@ -310,13 +402,6 @@ describe('ImageSource', () => {
                 ([e]) => e.dataType === 'source' && e.sourceDataType === 'metadata'
             );
             expect(firedMetadata).toBe(true);
-        });
-
-        test('resets the texture so the new image is uploaded on the next prepare', () => {
-            source.texture = {} as Texture;
-            source.updateImage({image: new ImageBitmap()});
-
-            expect(source.texture).toBeNull();
         });
 
         test('updates coordinates alongside the image', () => {

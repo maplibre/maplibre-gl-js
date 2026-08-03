@@ -201,6 +201,22 @@ describe('CanvasSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
+    test.each([true, false])('deletes its texture when the source is removed, without flushing the canvas first (animate: %s)', (animate) => {
+        const source = createSource({animate});
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        source.onAdd(map);
+        source.tiles[String(tile.tileID.wrap)] = tile;
+
+        const texture = {update: vi.fn(), destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        source.onRemove();
+
+        expect(texture.update).not.toHaveBeenCalled();
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+        expect(source._playing).toBe(false);
+    });
 });
 
 test('CanvasSource.serialize', () => {
