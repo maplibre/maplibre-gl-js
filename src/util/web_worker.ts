@@ -54,7 +54,9 @@ export function watchWorkerStartup(worker: ActorTarget, onLoadError: (error: Err
     let alive = false;
     const onMessage = () => {
         alive = true;
-        cleanup();
+        // Deferred: removing listeners while an event is being dispatched is
+        // safe on real EventTargets but not on all worker stand-ins.
+        queueMicrotask(cleanup);
     };
     const onError = (e: ErrorEvent) => {
         if (alive) return;

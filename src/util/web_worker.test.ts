@@ -140,7 +140,7 @@ describe('watchWorkerStartup (#8018)', () => {
     test('reports an error that arrives before any message', () => {
         const worker = makeFakeWorker();
         const onLoadError = vi.fn();
-        watchWorkerStartup(worker as any, onLoadError);
+        watchWorkerStartup(worker, onLoadError);
         worker.emit('error', {message: 'not found'});
         expect(onLoadError).toHaveBeenCalledTimes(1);
         expect(onLoadError.mock.calls[0][0].message).toContain('failed to load');
@@ -150,16 +150,17 @@ describe('watchWorkerStartup (#8018)', () => {
     test('ignores errors after the worker has produced a message', () => {
         const worker = makeFakeWorker();
         const onLoadError = vi.fn();
-        watchWorkerStartup(worker as any, onLoadError);
+        watchWorkerStartup(worker, onLoadError);
         worker.emit('message', {});
         worker.emit('error', {message: 'runtime hiccup'});
         expect(onLoadError).not.toHaveBeenCalled();
     });
 
-    test('detaches its listeners after settling', () => {
+    test('detaches its listeners after settling', async () => {
         const worker = makeFakeWorker();
-        watchWorkerStartup(worker as any, () => {});
+        watchWorkerStartup(worker, () => {});
         worker.emit('message', {});
+        await Promise.resolve();
         expect(worker.listenerCount('message')).toBe(0);
         expect(worker.listenerCount('error')).toBe(0);
     });
