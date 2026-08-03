@@ -20,8 +20,6 @@ The main bundle creates the worker via `new Worker(url, {type: 'module'})`. The 
 
 `banner.ts` is used to create a banner at the beginning of the output file.
 
-`rolldown_plugins.ts` defines plugins shared between the main build and the benchmarks: a transform that strips a problematic label from jsonlint's generated parser, and a bundle-size visualizer that runs when invoked via `npm run bundle-stats`.
-
 <hr>
 
 ### `npm run codegen`
