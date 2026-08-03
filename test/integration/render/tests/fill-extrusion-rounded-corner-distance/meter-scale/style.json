@@ -1,0 +1,174 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 1024,
+      "allowed": 0.001,
+      "description": "Three 45-45-90 triangles with 10, 20 and 40 m legs sit flush against each other and share one 2 m rounded-corner-distance over a 1 m / 10 m ground grid. Right-angle vertices sit on 10 m grid intersections at (-40,-20), (-30,-20) and (-10,-20) m, so the 2 m tangent distance is two minor cells along each leg regardless of triangle size. The camera is top-down with a 0.25 m height so the roof outline is the footprint."
+    }
+  },
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "local://geojson/meter-grid.json"
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "size": "small"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.00035972815,
+                    -0.00017986407
+                  ],
+                  [
+                    -0.00026979611,
+                    -0.00017986407
+                  ],
+                  [
+                    -0.00035972815,
+                    -8.993204e-05
+                  ],
+                  [
+                    -0.00035972815,
+                    -0.00017986407
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "size": "mid"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.00026979611,
+                    -0.00017986407
+                  ],
+                  [
+                    -8.993204e-05,
+                    -0.00017986407
+                  ],
+                  [
+                    -0.00026979611,
+                    0.0
+                  ],
+                  [
+                    -0.00026979611,
+                    -0.00017986407
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "size": "large"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -8.993204e-05,
+                    -0.00017986407
+                  ],
+                  [
+                    0.00026979611,
+                    -0.00017986407
+                  ],
+                  [
+                    -8.993204e-05,
+                    0.00017986407
+                  ],
+                  [
+                    -8.993204e-05,
+                    -0.00017986407
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "pitch": 0,
+  "bearing": 0,
+  "zoom": 19.6,
+  "center": [
+    -4.496602e-05,
+    0
+  ],
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "grid-minor",
+      "type": "line",
+      "source": "grid",
+      "filter": [
+        "==",
+        [
+          "get",
+          "class"
+        ],
+        "minor"
+      ],
+      "paint": {
+        "line-color": "#e0e0e0",
+        "line-width": 1
+      }
+    },
+    {
+      "id": "grid-major",
+      "type": "line",
+      "source": "grid",
+      "filter": [
+        "==",
+        [
+          "get",
+          "class"
+        ],
+        "major"
+      ],
+      "paint": {
+        "line-color": "#9e9e9e",
+        "line-width": 1
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "layout": {
+        "fill-extrusion-rounded-corner-distance": 2
+      },
+      "paint": {
+        "fill-extrusion-color": "blue",
+        "fill-extrusion-height": 0.25
+      }
+    }
+  ]
+}
