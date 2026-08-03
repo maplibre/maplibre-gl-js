@@ -27,15 +27,21 @@ test('patchUpdatedImage uploads the image data', () => {
     expect(context.gl.copyTexSubImage2D).not.toHaveBeenCalled();
 });
 
-test('patchUpdatedImage lets a userImage paint its own slot instead', () => {
-    const renderToTexture = vi.fn();
-    const {context, texture, position, styleImage} = setup({userImage: {width: 2, height: 2, data: new Uint8Array(16), renderToTexture}});
+test('patchUpdatedImage lets a custom image paint its own slot instead', () => {
+    const render = vi.fn();
+    const {context, texture, position, styleImage} = setup({isCustomImage: true, userImage: {type: 'custom', width: 2, height: 2, render}});
     vi.spyOn(texture, 'update');
 
     new ImageAtlas({}, {}).patchUpdatedImage(position, styleImage, texture);
 
-    expect(renderToTexture).toHaveBeenCalledWith({gl: context.gl, texture: texture.texture, x: 5, y: 9, width: 2, height: 2});
+    expect(render).toHaveBeenCalledWith({gl: context.gl, texture: texture.texture, x: 5, y: 9, width: 2, height: 2});
     expect(texture.update).not.toHaveBeenCalled();
+});
+
+test('a custom image starts out owing every atlas a paint, whatever version it is at', () => {
+    const image = {version: 7, isCustomImage: true} as StyleImage;
+    expect(new ImagePosition({x: 0, y: 0, w: 4, h: 4}, image).version).toBe(-1);
+    expect(new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 7} as StyleImage).version).toBe(7);
 });
 
 test('patchUpdatedImages resets WebGL state after every image that painted itself', () => {
@@ -44,20 +50,20 @@ test('patchUpdatedImages resets WebGL state after every image that painted itsel
     // The reset has to land between the two images: the second one trusts the state cache the
     // first one is free to invalidate.
     let painted = 0;
-    const renderToTexture = vi.fn(() => expect(context.setDirty).toHaveBeenCalledTimes(painted++));
+    const render = vi.fn(() => expect(context.setDirty).toHaveBeenCalledTimes(painted++));
     const atlas = new ImageAtlas({}, {});
     const imageManager = {
         updatedImages: {a: true, b: true},
         dispatchRenderCallbacks: vi.fn(),
-        getImage: () => ({data: new RGBAImage({width: 2, height: 2}), version: 1,
-            userImage: {width: 2, height: 2, data: new Uint8Array(16), renderToTexture}})
+        getImage: () => ({data: new RGBAImage({width: 2, height: 2}), version: 1, isCustomImage: true,
+            userImage: {type: 'custom', width: 2, height: 2, render}})
     } as any;
     atlas.iconPositions.a = new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 0} as StyleImage);
     atlas.iconPositions.b = new ImagePosition({x: 4, y: 0, w: 4, h: 4}, {version: 0} as StyleImage);
 
     atlas.patchUpdatedImages(imageManager, texture);
 
-    expect(renderToTexture).toHaveBeenCalledTimes(2);
+    expect(render).toHaveBeenCalledTimes(2);
     expect(context.setDirty).toHaveBeenCalledTimes(2);
 
     // Nothing left to patch, so nothing to reset.
@@ -66,12 +72,12 @@ test('patchUpdatedImages resets WebGL state after every image that painted itsel
 });
 
 test('patchUpdatedImage skips an image the atlas already holds at this version', () => {
-    const renderToTexture = vi.fn();
-    const {texture, position, styleImage} = setup({version: 0, userImage: {width: 2, height: 2, data: new Uint8Array(16), renderToTexture}});
+    const render = vi.fn();
+    const {texture, position, styleImage} = setup({version: 0, isCustomImage: true, userImage: {type: 'custom', width: 2, height: 2, render}});
     vi.spyOn(texture, 'update');
 
     new ImageAtlas({}, {}).patchUpdatedImage(position, styleImage, texture);
 
-    expect(renderToTexture).not.toHaveBeenCalled();
+    expect(render).not.toHaveBeenCalled();
     expect(texture.update).not.toHaveBeenCalled();
 });

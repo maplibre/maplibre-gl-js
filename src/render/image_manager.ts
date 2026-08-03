@@ -42,8 +42,14 @@ const padding = 1;
 */
 export class ImageManager extends Evented {
     images: {[_: string]: StyleImage};
+    /**
+     * Images that have changed at least once. Never cleared: what stops an atlas from patching
+     * the same pixels twice is the version each {@link ImagePosition} remembers, not this.
+     */
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
+    /** Custom images that have asked to be drawn again, see {@link StyleImageContext.invalidate}. */
+    invalidatedImages: {[_: string]: boolean};
     loaded: boolean;
     /**
      * This is used to track requests for images that are not yet available. When the image is loaded,
@@ -65,6 +71,7 @@ export class ImageManager extends Evented {
         this.images = {};
         this.updatedImages = {};
         this.callbackDispatchedThisFrame = {};
+        this.invalidatedImages = {};
         this.loaded = false;
         this.requestors = [];
         this.missingImageResolver = null;
@@ -131,7 +138,35 @@ export class ImageManager extends Evented {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
+            // Nothing has painted its slot yet, so it starts out owing the map a frame.
+            if (image.isCustomImage) this.invalidatedImages[id] = true;
         }
+    }
+
+    /**
+     * Take over the images of a manager that is going away, as happens when a lost WebGL
+     * context is restored.
+     */
+    restoreImages(images: {[_: string]: StyleImage}): void {
+        this.images = images;
+        // The atlas textures died with the old context, so every image that paints its own slot
+        // owes each atlas a fresh paint.
+        for (const id in images) {
+            if (images[id].isCustomImage) this.invalidatedImages[id] = true;
+        }
+    }
+
+    /**
+     * Ask for a custom image to be drawn again before the next frame. Does nothing for an image
+     * that is not on the map, so a timer that outlives `removeImage` cannot revive it.
+     */
+    invalidateImage(id: string): void {
+        if (this.images[id]) this.invalidatedImages[id] = true;
+    }
+
+    hasInvalidatedImages(): boolean {
+        for (const _ in this.invalidatedImages) return true;
+        return false;
     }
 
     _validate(id: string, image: StyleImage): boolean {
@@ -190,6 +225,7 @@ export class ImageManager extends Evented {
         const image = this.images[id];
         delete this.images[id];
         delete this.patterns[id];
+        delete this.invalidatedImages[id];
 
         if (image.userImage?.onRemove) {
             image.userImage.onRemove();
@@ -252,7 +288,8 @@ export class ImageManager extends Evented {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage?.render)
+                    hasRenderCallback: Boolean(image.userImage?.render),
+                    isCustomImage: image.isCustomImage
                 };
             }
         }
@@ -355,10 +392,19 @@ export class ImageManager extends Evented {
             this.callbackDispatchedThisFrame[id] = true;
 
             const image = this.getImage(id);
-            if (!image) warnOnce(`Image with ID: "${id}" was not found`);
+            if (!image) {
+                warnOnce(`Image with ID: "${id}" was not found`);
+                continue;
+            }
 
-            const updated = renderStyleImage(image);
-            if (updated) {
+            if (image.isCustomImage) {
+                if (!this.invalidatedImages[id]) continue;
+                delete this.invalidatedImages[id];
+                // Every atlas holding this image compares its slot against the version, so one
+                // bump here is what gets the image drawn into each of them this frame.
+                image.version++;
+                this.updatedImages[id] = true;
+            } else if (renderStyleImage(image)) {
                 this.updateImage(id, image);
             }
         }

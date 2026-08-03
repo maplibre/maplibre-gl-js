@@ -39,7 +39,9 @@ import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
-import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
+import {isCustomStyleImage} from '../style/style_image.ts';
+
+import type {CustomStyleImageInterface, StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
@@ -452,7 +454,7 @@ export type StyleImageSource = HTMLImageElement | ImageBitmap | ImageData | {
     width: number;
     height: number;
     data: Uint8Array | Uint8ClampedArray;
-} | StyleImageInterface;
+} | StyleImageInterface | CustomStyleImageInterface;
 
 /**
  * Callback used by {@link Map.setMissingStyleImageResolver} to resolve missing style images,
@@ -3148,8 +3150,11 @@ export class Map extends Evented<MapEventType> {
         }
 
         this.style.addImage(id, styleImage);
-        if (styleImage.userImage?.onAdd) {
-            styleImage.userImage.onAdd(this, id);
+        const {userImage} = styleImage;
+        if (isCustomStyleImage(userImage)) {
+            userImage.onAdd?.({map: this, id, invalidate: () => this._invalidateImage(id, userImage)});
+        } else {
+            userImage?.onAdd?.(this, id);
         }
         return this;
     }
@@ -3177,6 +3182,16 @@ export class Map extends Evented<MapEventType> {
         return this;
     }
 
+    /**
+     * Backs {@link StyleImageContext.invalidate}. Takes the image itself, not just its ID, so
+     * that a callback held past a `removeImage` cannot invalidate whatever took the ID next.
+     */
+    _invalidateImage(id: string, userImage: CustomStyleImageInterface): void {
+        if (this.style?.getImage(id)?.userImage !== userImage) return;
+        this.style.imageManager.invalidateImage(id);
+        this.triggerRepaint();
+    }
+
     _createStyleImage(image: StyleImageSource, options: Partial<StyleImageMetadata> = {}): StyleImage | null {
         const {
             pixelRatio = 1,
@@ -3192,6 +3207,23 @@ export class Map extends Evented<MapEventType> {
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
             return {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version};
+        } else if (isCustomStyleImage(image)) {
+            const {width, height} = image;
+            // The image paints its own slot of the atlas, so these transparent pixels are only
+            // ever used for the one-pixel padding around it.
+            return {
+                data: new RGBAImage({width, height}),
+                pixelRatio,
+                stretchX,
+                stretchY,
+                content,
+                textFitWidth,
+                textFitHeight,
+                sdf,
+                version,
+                isCustomImage: true,
+                userImage: image
+            };
         } else if (image.width === undefined || image.height === undefined) {
             this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
@@ -3236,7 +3268,7 @@ export class Map extends Evented<MapEventType> {
      * if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
      * ```
      */
-    updateImage(id: string, image: StyleImageSource): this {
+    updateImage(id: string, image: Exclude<StyleImageSource, CustomStyleImageInterface>): this {
 
         const existingImage = this.style.getImage(id);
         if (!existingImage) {
@@ -4148,7 +4180,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         if (this._lostContextStyle.images && this.style) {
-            this.style.imageManager.images = this._lostContextStyle.images;
+            this.style.imageManager.restoreImages(this._lostContextStyle.images);
         }
 
         this._lostContextStyle = {style: null, images: null};
@@ -4330,7 +4362,10 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        // A custom style image that asked to be drawn again, either from `render` or from a
+        // callback that ran during this frame, is dirty in the same way.
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty ||
+            Boolean(this.style?.imageManager.hasInvalidatedImages());
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

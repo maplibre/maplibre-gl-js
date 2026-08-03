@@ -1,6 +1,6 @@
 import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
-import {type StyleImageInterface} from '../../style/style_image.ts';
+import {type CustomStyleImageInterface, type StyleImageInterface} from '../../style/style_image.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MessageType} from '../../util/actor_messages.ts';
 
@@ -213,6 +213,46 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.data.width).toEqual(inputImage.width);
     expect(gotImage.data.height).toEqual(inputImage.height);
     expect(gotImage.sdf).toBe(true);
+});
+
+test('map addImage packs a placeholder for a custom image, which brings its own pixels', () => {
+    const map = createMap();
+    const id = 'add-get-custom-style-image';
+    const inputImage: CustomStyleImageInterface = {type: 'custom', width: 3, height: 2, render: vi.fn()};
+
+    map.addImage(id, inputImage);
+
+    const gotImage = map.getImage(id);
+    expect(gotImage.data.width).toBe(3);
+    expect(gotImage.data.height).toBe(2);
+    expect([...gotImage.data.data]).toEqual(new Array(3 * 2 * 4).fill(0));
+    expect(gotImage.isCustomImage).toBe(true);
+    expect(gotImage.userImage).toBe(inputImage);
+});
+
+test('a custom image is handed a callback that asks for it to be drawn again', () => {
+    const map = createMap();
+    const onAdd = vi.fn();
+    const image: CustomStyleImageInterface = {type: 'custom', width: 1, height: 1, render: vi.fn(), onAdd};
+
+    map.addImage('custom', image);
+    expect(onAdd).toHaveBeenCalledWith({map, id: 'custom', invalidate: expect.any(Function)});
+
+    const {invalidate} = onAdd.mock.calls[0][0];
+    const triggerRepaint = vi.spyOn(map, 'triggerRepaint');
+    // Adding the image already asked for the first paint, so clear that first.
+    map.style.imageManager.invalidatedImages = {};
+
+    invalidate();
+    expect(map.style.imageManager.hasInvalidatedImages()).toBe(true);
+    expect(triggerRepaint).toHaveBeenCalled();
+
+    // A timer that outlives the image cannot bring it back, nor invalidate whatever took its ID.
+    map.removeImage('custom');
+    map.addImage('custom', {width: 1, height: 1, data: new Uint8Array(4)});
+    map.style.imageManager.invalidatedImages = {};
+    invalidate();
+    expect(map.style.imageManager.hasInvalidatedImages()).toBe(false);
 });
 
 test('map getMaxTextureSize reports what the WebGL context supports', async () => {

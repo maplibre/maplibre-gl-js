@@ -4,7 +4,7 @@ import {register} from '../util/web_worker_transfer.ts';
 import potpack from 'potpack';
 
 import type {StyleImage} from '../style/style_image.ts';
-import {type TextFit} from '../style/style_image.ts';
+import {isCustomStyleImage, type TextFit} from '../style/style_image.ts';
 import type {ImageManager} from './image_manager.ts';
 import type {Texture} from '../webgl/texture.ts';
 import type {Rect} from './glyph_atlas.ts';
@@ -26,6 +26,7 @@ export class ImagePosition {
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
+        isCustomImage,
         stretchX,
         stretchY,
         content,
@@ -37,7 +38,9 @@ export class ImagePosition {
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
-        this.version = version;
+        // A custom image paints its own slot and has never painted this one, whatever version
+        // it is at now, so the slot starts out behind.
+        this.version = isCustomImage ? -1 : version;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
     }
@@ -151,9 +154,9 @@ export class ImageAtlas {
         position.version = image.version;
         const [x, y] = position.tl;
         const {userImage} = image;
-        if (userImage?.renderToTexture) {
+        if (isCustomStyleImage(userImage)) {
             const {width, height} = image.data;
-            userImage.renderToTexture({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+            userImage.render({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
             // Same contract as a custom layer: the callback may leave any WebGL state behind.
             // This has to happen before the next image in the batch, which may be an ordinary
             // upload that would otherwise trust the stale pixel store cache.

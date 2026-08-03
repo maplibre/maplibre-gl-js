@@ -93,15 +93,15 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
-test('a StyleImageInterface is told to release its GPU resources on context loss, and survives it', async () => {
+test('a CustomStyleImageInterface is told to release its GPU resources on context loss, and survives it', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
     await map.once('load');
 
     const userImage = {
-        width: 2, height: 2, data: new Uint8Array(2 * 2 * 4),
-        render: () => false,
-        renderToTexture: vi.fn(),
+        type: 'custom' as const,
+        width: 2, height: 2,
+        render: vi.fn(),
         onRemove: vi.fn()
     };
     map.addImage('gpu-image', userImage);
@@ -120,6 +120,8 @@ test('a StyleImageInterface is told to release its GPU resources on context loss
 
     expect(map.hasImage('gpu-image')).toBe(true);
     expect(map.getImage('gpu-image').userImage).toBe(userImage);
+    // The atlas textures died with the old context, so the image owes them a fresh paint.
+    expect(map.style.imageManager.hasInvalidatedImages()).toBe(true);
 
     map.remove();
 });

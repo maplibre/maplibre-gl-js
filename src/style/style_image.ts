@@ -27,7 +27,12 @@ export type StyleImageData = {
     data: RGBAImage;
     version?: number;
     hasRenderCallback?: boolean;
-    userImage?: StyleImageInterface;
+    /**
+     * Whether {@link StyleImageData.userImage} paints its own slot of the atlas. Unlike
+     * `userImage`, this survives the trip to a worker, where the atlas is packed.
+     */
+    isCustomImage?: boolean;
+    userImage?: StyleImageInterface | CustomStyleImageInterface;
     spriteData?: SpriteOnDemandStyleImage;
 };
 
@@ -92,9 +97,15 @@ export type StyleImageMetadata = {
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
- * Where a {@link StyleImageInterface} writes its pixels when it implements
- * {@link StyleImageInterface.renderToTexture}. The texture is shared with other images, so
- * only the rectangle described here belongs to this image.
+ * Where a {@link CustomStyleImageInterface} writes its pixels. The texture is shared with
+ * other images, so only the rectangle described here belongs to this image.
+ *
+ * This hands over the atlas texture rather than a framebuffer MapLibre owns, so that an image
+ * whose pixels already live on the GPU can reach the atlas with a single `copyTexSubImage2D`.
+ * Forcing every image through an intermediate render target measured 9x slower for that case,
+ * 6.40ms against 0.68ms a frame for 50 256x256 icons on an M4 Max: ANGLE's Metal backend
+ * services `copyTexSubImage2D` with a blit encoder, while each offscreen draw costs a
+ * render-pass boundary of roughly 60us.
  */
 export type StyleImageRenderTarget = {
     gl: WebGL2RenderingContext;
@@ -110,6 +121,72 @@ export type StyleImageRenderTarget = {
 };
 
 /**
+ * What a {@link CustomStyleImageInterface} is given when it is added to a map.
+ */
+export type StyleImageContext = {
+    map: Map;
+    /** The ID the image was added under with {@link Map.addImage}. */
+    id: string;
+    /**
+     * Ask for this image to be drawn again. {@link CustomStyleImageInterface.render} is called
+     * before the next frame, and a frame is scheduled. This is the only way an image is marked
+     * as changed: call it from a timer, an event, or from `render` itself for an image that
+     * animates on every frame.
+     *
+     * Once the image has been removed from the map this does nothing, so a timer that outlives
+     * {@link Map.removeImage} cannot bring the image back.
+     */
+    invalidate: () => void;
+};
+
+/**
+ * Interface for a style image that draws itself with WebGL, for {@link Map.addImage}. This is a
+ * specification for implementers to model: it is not an exported method or class.
+ *
+ * Unlike {@link StyleImageInterface}, which hands MapLibre an array of pixels to upload, a
+ * custom image draws straight into its slot of the shared icon atlas. Nothing new is possible
+ * that `render` could not already do, but an image that changes often, such as an animated
+ * icon, gets much cheaper: no CPU pixel work and no upload.
+ *
+ * @see [Animate an icon on the GPU.](https://maplibre.org/maplibre-gl-js/docs/examples/animate-an-icon-on-the-gpu/)
+ */
+export interface CustomStyleImageInterface {
+    type: 'custom';
+    width: number;
+    height: number;
+    /**
+     * Draw this image. Called before the first frame it is used in, again whenever
+     * {@link StyleImageContext.invalidate} has been called, and again whenever a slot this image
+     * has never painted is packed into an atlas.
+     *
+     * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
+     * `target.texture`. Drawing outside that rectangle corrupts other images. MapLibre restores
+     * its own WebGL state afterwards, so bindings, framebuffers and pixel store settings are
+     * yours to change.
+     *
+     * An image can sit in more than one atlas, so one change may call this several times with a
+     * different `target`.
+     */
+    render: (target: StyleImageRenderTarget) => void;
+    /**
+     * Optional method called when the image has been added to the Map with {@link Map.addImage}.
+     *
+     * @param context - The map this image was added to, its ID, and the callback that asks for
+     * it to be drawn again.
+     */
+    onAdd?: (context: StyleImageContext) => void;
+    /**
+     * Optional method called when the image is removed from the map with
+     * {@link Map.removeImage}. This gives the image a chance to release its GPU resources.
+     *
+     * This also fires when the WebGL context is lost, after which the same image is added back
+     * without a matching `onAdd`, so anything released here has to be recreatable from
+     * {@link CustomStyleImageInterface.render}.
+     */
+    onRemove?: () => void;
+}
+
+/**
  * Interface for dynamically generated style images. This is a specification for
  * implementers to model: it is not an exported method or class.
  *
@@ -117,6 +194,9 @@ export type StyleImageRenderTarget = {
  * icons and patterns or make them respond to user input. Style images can implement a
  * {@link StyleImageInterface.render} method. The method is called every frame and
  * can be used to update the image.
+ *
+ * An image that draws itself with WebGL rather than handing over an array of pixels implements
+ * {@link CustomStyleImageInterface} instead.
  *
  * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
  *
@@ -163,6 +243,8 @@ export type StyleImageRenderTarget = {
  * ```
  */
 export interface StyleImageInterface {
+    /** Absent, which is what tells this apart from a {@link CustomStyleImageInterface}. */
+    type?: undefined;
     width: number;
     height: number;
     data: Uint8Array | Uint8ClampedArray;
@@ -180,21 +262,6 @@ export interface StyleImageInterface {
      */
     render?: () => boolean;
     /**
-     * Optional method that draws the image straight onto the GPU, called instead of uploading
-     * `data`. Implement it to skip the CPU work and the upload that
-     * {@link StyleImageInterface.render} costs, which is worth doing for an image that changes
-     * every frame.
-     *
-     * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
-     * `target.texture`. Drawing outside that rectangle corrupts other images.
-     *
-     * MapLibre restores its own WebGL state afterwards, so bindings, framebuffers and pixel
-     * store settings are yours to change. Images are packed once per rendered tile, so one
-     * change may call this several times with a different `target`. `data` is still uploaded
-     * when those are packed and is what shows until the next change, so keep a still in it.
-     */
-    renderToTexture?: (target: StyleImageRenderTarget) => void;
-    /**
      * Optional method called when the layer has been added to the Map with {@link Map.addImage}.
      *
      * @param map - The Map this custom layer was just added to.
@@ -206,20 +273,24 @@ export interface StyleImageInterface {
      *
      * This also fires when the WebGL context is lost, after which the same image is added
      * back without a matching `onAdd`. An image holding GPU resources should release them
-     * here and recreate them lazily in {@link StyleImageInterface.renderToTexture}.
+     * here and recreate them lazily.
      */
     onRemove?: () => void;
 }
 
+/**
+ * `type` cannot discriminate the union on its own here, because this project compiles without
+ * `strictNullChecks` and the absence of a property is not a narrowing signal without it.
+ */
+export function isCustomStyleImage(image: StyleImageInterface | CustomStyleImageInterface): image is CustomStyleImageInterface {
+    return image?.type === 'custom';
+}
+
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
-    if (userImage?.render) {
-        const updated = userImage.render();
-        if (updated) {
-            // A `renderToTexture` image paints its own pixels, so nothing ever reads `data`.
-            if (!userImage.renderToTexture) image.data.replace(new Uint8Array(userImage.data.buffer));
-            return true;
-        }
+    if (!isCustomStyleImage(userImage) && userImage?.render?.()) {
+        image.data.replace(new Uint8Array(userImage.data.buffer));
+        return true;
     }
     return false;
 }
