@@ -175,13 +175,6 @@ npm run build-dist
 ```
 Once that finishes, you will have a standalone build at `dist/maplibre-gl.mjs`, `dist/maplibre-gl-worker.mjs` and `dist/maplibre-gl.css`. Load it via `<script type="module">`; the worker URL is auto-detected as a sibling of the loaded module.
 
-## Analyze your Standalone Build
-
-MapLibre seeks to keep production bundle sizes small. If your changes involve substantial additions or changes to dependencies, the effects on bundle size can be visualized by running
-```bash
-npm run bundle-stats
-```
-
 ## Testing changes and Writing Documentation
 
 See [`developer-guides/README-docs.md`](./developer-guides/README-docs.md)
