@@ -20,7 +20,9 @@ export type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 const shaderBlendDefines = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
-    'hsv-value': ['#define LAYER_BLEND;', '#define LAYER_BLEND_HSV_VALUE;']
+    'hsv-value': ['#define LAYER_BLEND;', '#define LAYER_BLEND_HSV_VALUE;'],
+    color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
+    luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;']
 } satisfies Partial<Record<LayerBlend, string[]>>;
 
 type ShaderBlend = keyof typeof shaderBlendDefines;

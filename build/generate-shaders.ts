@@ -18,7 +18,8 @@ function glslToTs(code: string): string {
         .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
         .replace(/\n+/g, '\n') // collapse multi line breaks
         .replace(/\n\s+/g, '\n') // strip indentation
-        .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
+        .replace(/[ \t]?([+-\/*=,])[ \t]?/g, '$1') // strip whitespace around operators, but never a line break: a following line that starts with an operator character (`/**`, `-x`) would be pulled onto the previous line, and if that line is a preprocessor directive it swallows the code
+
         .replace(/(?<!\n#[^\n]*)([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks, but not after a preprocessor directive
 
     return `// This file is generated. Edit build/generate-shaders.ts, then run \`npm run codegen\`.
