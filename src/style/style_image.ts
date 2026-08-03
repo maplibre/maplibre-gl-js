@@ -99,8 +99,8 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
 export type StyleImageRenderTarget = {
     gl: WebGL2RenderingContext;
     /**
-     * The icon atlas to write into. MapLibre does not bind it for you, so start with
-     * `gl.bindTexture(gl.TEXTURE_2D, texture)` or attach it to your own framebuffer.
+     * The icon atlas to write into. MapLibre does not bind it for you, so you must call
+     * `gl.bindTexture(gl.TEXTURE_2D, texture)`.
      */
     texture: WebGLTexture;
     x: number;
