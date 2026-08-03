@@ -42,13 +42,8 @@ const padding = 1;
 */
 export class ImageManager extends Evented {
     images: {[_: string]: StyleImage};
-    /**
-     * Images that have changed at least once. Never cleared: what stops an atlas from patching
-     * the same pixels twice is the version each {@link ImagePosition} remembers, not this.
-     */
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
-    /** Custom images that have asked to be drawn again, see {@link StyleImageContext.invalidate}. */
     invalidatedImages: {[_: string]: boolean};
     loaded: boolean;
     /**

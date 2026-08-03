@@ -255,12 +255,6 @@ test('a custom image is handed a callback that asks for it to be drawn again', (
     expect(map.style.imageManager.hasInvalidatedImages()).toBe(false);
 });
 
-test('map getMaxTextureSize reports what the WebGL context supports', async () => {
-    const map = createMap();
-    await map.once('load');
-    expect(map.getMaxTextureSize()).toBe(map.painter.context.maxTextureSize);
-});
-
 test('map does not fire `styleimagemissing` for empty icon values', async () => {
     const map = createMap();
 

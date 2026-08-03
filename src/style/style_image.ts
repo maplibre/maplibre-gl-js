@@ -263,10 +263,6 @@ export interface StyleImageInterface {
     /**
      * Optional method called when the icon is removed from the map with {@link Map.removeImage}.
      * This gives the image a chance to clean up resources and event listeners.
-     *
-     * This also fires when the WebGL context is lost, after which the same image is added
-     * back without a matching `onAdd`. An image holding GPU resources should release them
-     * here and recreate them lazily.
      */
     onRemove?: () => void;
 }

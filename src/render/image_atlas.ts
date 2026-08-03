@@ -38,8 +38,6 @@ export class ImagePosition {
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
-        // A custom image paints its own slot and has never painted this one, whatever version
-        // it is at now, so the slot starts out behind.
         this.version = isCustomImage ? -1 : version;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
