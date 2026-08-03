@@ -21,25 +21,23 @@
             "type": "Feature",
             "properties": {},
             "geometry": {
-              "type": "Polygon",
+              "type": "LineString",
               "coordinates": [
                 [
-                  [
-                    11.509,
-                    47.3355
-                  ],
-                  [
-                    11.541,
-                    47.3355
-                  ],
-                  [
-                    11.525,
-                    47.356
-                  ],
-                  [
-                    11.509,
-                    47.3355
-                  ]
+                  11.509,
+                  47.3355
+                ],
+                [
+                  11.541,
+                  47.3355
+                ],
+                [
+                  11.525,
+                  47.356
+                ],
+                [
+                  11.509,
+                  47.3355
                 ]
               ]
             }
@@ -50,12 +48,13 @@
   },
   "layers": [
     {
-      "id": "fill",
-      "type": "fill",
+      "id": "line",
+      "type": "line",
       "source": "geojson",
       "paint": {
-        "fill-color": "#90ee90",
-        "fill-layer-blend": "multiply"
+        "line-color": "#90ee90",
+        "line-width": 16,
+        "line-layer-blend": "multiply"
       }
     }
   ]

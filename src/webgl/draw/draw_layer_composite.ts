@@ -10,18 +10,20 @@ import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import type {FillPaintPropsPossiblyEvaluated} from '../../style/style_layer/fill_style_layer_properties.g.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-/** The `{line,fill}-layer-blend` values. */
-export type LayerBlend = 'normal' | 'multiply' | 'screen' | 'overlay' | 'plus' | 'erase';
+/** The `{line,fill}-layer-blend` values, which the style spec keeps identical for both layer types. */
+export type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 
 /** Blend modes evaluated in the shader. Only these need a copy of the backdrop. */
-type ShaderBlend = 'multiply' | 'overlay';
-
 const shaderBlendDefines = {
-    multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'] as string[],
-    overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'] as string[]
-} as const;
+    multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
+    overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
+    'hsv-value': ['#define LAYER_BLEND;', '#define LAYER_BLEND_HSV_VALUE;']
+} satisfies Partial<Record<LayerBlend, string[]>>;
+
+type ShaderBlend = keyof typeof shaderBlendDefines;
 
 /** Blend modes a fixed-function blend function reproduces exactly, so the GPU's own destination suffices. */
 const fixedFunctionBlends: Record<Exclude<LayerBlend, ShaderBlend | 'normal'>, Readonly<ColorMode>> = {
@@ -195,7 +197,7 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(bx, by, bw, bh);
 
-    const shaderBlend: ShaderBlend | null = blend === 'multiply' || blend === 'overlay' ? blend : null;
+    const shaderBlend: ShaderBlend | null = blend in shaderBlendDefines ? blend as ShaderBlend : null;
 
     if (shaderBlend) {
         context.activeTexture.set(gl.TEXTURE1);

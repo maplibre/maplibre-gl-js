@@ -12,6 +12,14 @@
   ],
   "zoom": 12,
   "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
     "geojson": {
       "type": "geojson",
       "data": {
@@ -50,12 +58,27 @@
   },
   "layers": [
     {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#cbb994"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "terrain",
+      "paint": {
+        "hillshade-shadow-color": "#473b24"
+      }
+    },
+    {
       "id": "fill",
       "type": "fill",
       "source": "geojson",
       "paint": {
         "fill-color": "#90ee90",
-        "fill-layer-blend": "multiply"
+        "fill-layer-blend": "hsv-value"
       }
     }
   ]

@@ -782,6 +782,7 @@ async function createServer() {
         passthrough: true,
     });
     const server = http.createServer((req, res) => {
+        if (process.env.LOG_REQUESTS) fs.appendFileSync(process.env.LOG_REQUESTS, `${req.url}\n`);
         res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
         res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
