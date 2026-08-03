@@ -20,7 +20,8 @@ export type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 const shaderBlendDefines = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
-    'hsv-value': ['#define LAYER_BLEND;', '#define LAYER_BLEND_HSV_VALUE;'],
+    // Both W3C non-separable modes share their helpers, gated on the extra `NONSEPARABLE` define:
+    // the defines carry a trailing `;`, so a `#if defined(A) || defined(B)` expression fails to parse.
     color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
     luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;']
 } satisfies Partial<Record<LayerBlend, string[]>>;
