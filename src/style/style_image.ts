@@ -27,7 +27,6 @@ export type StyleImageData = {
     data: RGBAImage;
     version?: number;
     hasRenderCallback?: boolean;
-    /** Whether {@link StyleImageData.userImage} paints its own slot of the atlas. Sent to the worker, which packs the atlas but never receives `userImage` itself. */
     isCustomImage?: boolean;
     userImage?: StyleImageInterface | CustomStyleImageInterface;
     spriteData?: SpriteOnDemandStyleImage;
