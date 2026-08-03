@@ -855,36 +855,40 @@ describe('terrain elevation and tile detail (#4703)', () => {
         expect(withoutParam).toBe(withParam);
     });
 
+    function coveringWithPeak(peakElevation: number, pitch: number = 80) {
+        const transform = new MercatorTransform();
+        transform.resize(800, 600);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setZoom(13);
+        transform.setMaxPitch(85);
+        transform.setPitch(pitch);
+        // A mountain on the tiles around the point at the bottom of the screen,
+        // the ground closest to the camera.
+        const near = MercatorCoordinate.fromLngLat(transform.screenPointToLocation(new Point(400, 599)));
+        const terrain = {
+            getMinMaxElevation(id: {canonical: {x: number; y: number; z: number}}) {
+                const c = id.canonical;
+                const n = 2 ** c.z;
+                const onMountain = Math.abs(c.x + 0.5 - near.x * n) <= 1.5 && Math.abs(c.y + 0.5 - near.y * n) <= 1.5;
+                return onMountain
+                    ? {minElevation: Math.max(0, peakElevation - 400), maxElevation: peakElevation}
+                    : {minElevation: 0, maxElevation: 50};
+            }
+        } as unknown as Terrain;
+        return coveringTiles(transform, {tileSize: 512, terrain});
+    }
+
     test('a mountain near the camera increases covering detail', () => {
-        function setup() {
-            const transform = new MercatorTransform();
-            transform.resize(800, 600);
-            transform.setCenter(new LngLat(0, 0));
-            transform.setZoom(13);
-            transform.setMaxPitch(85);
-            transform.setPitch(80);
-            return transform;
-        }
-        function coveringWithPeak(peakElevation: number) {
-            const transform = setup();
-            const near = MercatorCoordinate.fromLngLat(transform.screenPointToLocation(new Point(400, 599)));
-            const radius = 1500 / 40075017;
-            const terrain = {
-                getMinMaxElevation(id: {canonical: {x: number; y: number; z: number}}) {
-                    const c = id.canonical;
-                    const n = 2 ** c.z;
-                    const overlaps = !(near.x + radius < c.x / n || near.x - radius > (c.x + 1) / n ||
-                        near.y + radius < c.y / n || near.y - radius > (c.y + 1) / n);
-                    return overlaps
-                        ? {minElevation: Math.max(0, peakElevation - 400), maxElevation: peakElevation}
-                        : {minElevation: 0, maxElevation: 50};
-                }
-            } as unknown as Terrain;
-            return coveringTiles(transform, {tileSize: 512, terrain});
-        }
         const flat = coveringWithPeak(50);
         const withPeak = coveringWithPeak(1300);
         expect(withPeak.length).toBeGreaterThan(flat.length);
+    });
+
+    test('low-pitch views are not refined by terrain elevation', () => {
+        const maxZoom = (tiles: OverscaledTileID[]) => Math.max(...tiles.map(t => t.canonical.z));
+        const flat = coveringWithPeak(0, 40);
+        const withPeak = coveringWithPeak(1500, 40);
+        expect(maxZoom(withPeak)).toBe(maxZoom(flat));
     });
 
     test('tiles with an unknown elevation range keep the center-plane distance', () => {

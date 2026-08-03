@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix terrain tiles near the camera loading at too low a detail level when the surface rises close to a pitched camera (e.g. flying over a peak): tile selection now measures the vertical distance to each tile's own elevation range instead of the center's elevation plane ([#4703](https://github.com/maplibre/maplibre-gl-js/issues/4703)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Fix terrain close under a high-pitched camera loading at too low a detail level ([#4703](https://github.com/maplibre/maplibre-gl-js/issues/4703)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 

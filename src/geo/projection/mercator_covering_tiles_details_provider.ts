@@ -1,10 +1,9 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
 import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
-import {clamp} from '../../util/util.ts';
 import {type MercatorCoordinate} from '../mercator_coordinate.ts';
 import {type IReadonlyTransform} from '../transform_interface.ts';
-import {type CoveringTilesOptionsInternal} from './covering_tiles.ts';
+import {maxConstantZoomPitch, type CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
@@ -42,9 +41,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
     }
     
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
-        const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
-        const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
-        return (!!options.terrain || transform.pitch > maxConstantZoomPitch);
+        return (!!options.terrain || transform.pitch > maxConstantZoomPitch(transform));
     }
 
     allowWorldCopies(): boolean {
