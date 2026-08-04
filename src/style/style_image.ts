@@ -118,10 +118,13 @@ export type StyleImageWebGLData = {
     /**
      * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
      * `target.texture`. That rectangle is the only part of the shared atlas that belongs to this
-     * image; drawing outside it corrupts the others. MapLibre restores its own WebGL state
-     * afterwards, so bindings, framebuffers and pixel store settings are yours to change. The
-     * scissor test is the one exception: MapLibre never touches it, so an image that enables it
-     * has to disable it again.
+     * image; drawing outside it corrupts the others.
+     *
+     * The context arrives in the same state a custom layer's is given: cull face, active texture
+     * and the pixel store settings at their WebGL defaults, and no vertex array bound. Everything
+     * is yours to change, and MapLibre restores its own state afterwards. The scissor test is the
+     * one exception: MapLibre never touches it, so an image that enables it has to disable it
+     * again.
      *
      * Called before the first frame the image is used in, again whenever
      * {@link StyleImageInterface.render} returns `true`, and again for each atlas holding a slot

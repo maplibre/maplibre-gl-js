@@ -39,8 +39,12 @@ test('patchUpdatedImages resets WebGL state between images, so the second never 
     const context = new Context(createNullGL());
     const texture = new Texture(context, new RGBAImage({width: 16, height: 16}), context.gl.RGBA);
     vi.spyOn(context, 'setDirty');
+    vi.spyOn(context, 'setCustomLayerDefaults');
     let painted = 0;
-    const webgl = vi.fn(() => expect(context.setDirty).toHaveBeenCalledTimes(painted++));
+    const webgl = vi.fn(() => {
+        expect(context.setDirty).toHaveBeenCalledTimes(painted++);
+        expect(context.setCustomLayerDefaults).toHaveBeenCalledTimes(painted);
+    });
     const atlas = new ImageAtlas({}, {});
     const imageManager = {
         updatedImages: {a: true, b: true},

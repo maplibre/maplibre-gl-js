@@ -154,7 +154,7 @@ export class ImageAtlas {
         const data = image.userImage?.data;
         if (isStyleImageWebGLData(data)) {
             const {width, height} = image.data;
-            texture.context.unbindVAO();
+            texture.context.setCustomLayerDefaults();
             data.webgl({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
             texture.context.setDirty();
         } else {

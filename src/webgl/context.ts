@@ -177,6 +177,25 @@ export class Context {
         this.pixelStoreUnpackFlipY.dirty = true;
     }
 
+    /*
+     * Reset some GL state to default values to avoid hard-to-debug bugs
+     * in code handed the raw context, such as custom layers and WebGL style images.
+     */
+    setCustomLayerDefaults(): void {
+        // Prevent custom layers from unintentionally modify the last VAO used.
+        // All other state is state is restored on it's own, but for VAOs it's
+        // simpler to unbind so that we don't have to track the state of VAOs.
+        this.unbindVAO();
+
+        // The default values for this state is meaningful and often expected.
+        // Leaving this state dirty could cause a lot of confusion for users.
+        this.cullFace.setDefault();
+        this.activeTexture.setDefault();
+        this.pixelStoreUnpack.setDefault();
+        this.pixelStoreUnpackPremultiplyAlpha.setDefault();
+        this.pixelStoreUnpackFlipY.setDefault();
+    }
+
     createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean): IndexBuffer {
         return new IndexBuffer(this, array, dynamicDraw);
     }
