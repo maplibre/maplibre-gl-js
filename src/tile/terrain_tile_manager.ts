@@ -310,7 +310,7 @@ export class TerrainTileManager extends Evented {
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */
-    anyTilesAfterTime(time: number = Date.now()): boolean {
+    anyTilesAfterTime(time: number = now()): boolean {
         return this._lastTilesetChange >= time;
     }
 

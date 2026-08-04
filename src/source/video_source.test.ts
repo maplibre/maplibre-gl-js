@@ -120,7 +120,7 @@ describe('VideoSource', () => {
     test('onRemove removes playing listener and pauses video', () => {
         const video = window.document.createElement('video');
         const removeListenerSpy = vi.spyOn(video, 'removeEventListener');
-        const pauseSpy = vi.spyOn(video, 'pause');
+        const pauseSpy = vi.spyOn(video, 'pause').mockImplementation(() => {});
 
         const source = createSource({
             type: 'video',

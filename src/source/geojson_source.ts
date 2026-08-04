@@ -70,6 +70,24 @@ export type SetClusterOptions = {
 };
 
 /**
+ * The cluster options currently configured on a source, as returned by `getClusterOptions`
+ */
+export type GetClusterOptions = {
+    /**
+     * Whether or not the source is clustered
+     */
+    cluster: boolean;
+    /**
+     * The cluster's max zoom
+     */
+    clusterMaxZoom: number;
+    /**
+     * The cluster's radius, in pixels
+     */
+    clusterRadius: number;
+};
+
+/**
  * A source containing GeoJSON.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
@@ -226,6 +244,10 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         return pixelValue * (EXTENT / this.tileSize);
     }
 
+    private _tileUnitsToPixels(tileUnitValue: number): number {
+        return tileUnitValue / (EXTENT / this.tileSize);
+    }
+
     private _getClusterMaxZoom(clusterMaxZoom: number): number {
         const effectiveClusterMaxZoom = clusterMaxZoom ? Math.round(clusterMaxZoom) : this.maxzoom - 1;
         if (!(Number.isInteger(clusterMaxZoom) || clusterMaxZoom === undefined)) {
@@ -322,6 +344,25 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
+     * Gets the cluster options currently configured on the source.
+     * The returned values mirror the options accepted by `setClusterOptions`.
+     *
+     * @returns the source's current cluster options
+     * @example
+     * ```ts
+     * const {cluster, clusterMaxZoom, clusterRadius} = map.getSource('some id').getClusterOptions();
+     * ```
+     */
+    getClusterOptions(): GetClusterOptions {
+        const {cluster, clusterOptions} = this.workerOptions.geojsonVtOptions;
+        return {
+            cluster,
+            clusterMaxZoom: clusterOptions.maxZoom,
+            clusterRadius: this._tileUnitsToPixels(clusterOptions.radius)
+        };
+    }
+
+    /**
      * For clustered sources, fetches the zoom at which the given cluster expands.
      *
      * @param clusterId - The value of the cluster's `cluster_id` property.
@@ -409,7 +450,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
     private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
-        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {

@@ -1,7 +1,7 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
+import {wrap, clamp, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
@@ -218,7 +218,7 @@ export class MercatorTransform implements ITransform {
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
     }
-    setTransitionState(_value: number, _error: number): void {
+    setTransitionState(_value: number): void {
         // Do nothing
     }
     //
@@ -748,6 +748,7 @@ export class MercatorTransform implements ITransform {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
             fallbackMatrix: mainMatrix,
+            clipAntimeridian: false,
         };
     }
 
@@ -799,21 +800,6 @@ export class MercatorTransform implements ITransform {
             // place the pos matrix into the transform's internal cache.
             this.calculatePosMatrix(coord);
         }
-    }
-
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        const modelAsMercatorCoordinate = MercatorCoordinate.fromLngLat(
-            location,
-            altitude
-        );
-        const scale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
-
-        const m = createIdentityMat4f64();
-        mat4.translate(m, m, [modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z]);
-        mat4.rotateZ(m, m, Math.PI);
-        mat4.rotateX(m, m, Math.PI / 2);
-        mat4.scale(m, m, [-scale, scale, scale]);
-        return m;
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {

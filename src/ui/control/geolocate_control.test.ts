@@ -422,7 +422,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger before added to map', () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const geolocate = new GeolocateControl(undefined);
 
@@ -724,7 +724,7 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
 
         const moveStartPromise = map.once('movestart');
-        map._moving = false;
+        map._camera._moving = false;
         map.resize([new ResizeObserverEntry()]);
         await moveStartPromise;
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');

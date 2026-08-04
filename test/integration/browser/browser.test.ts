@@ -459,7 +459,7 @@ describe('Browser tests', () => {
                     }
                 });
             await map.once('idle');
-            map.transformCameraUpdate = () => ({});
+            map.setTransformCameraUpdate(() => ({}));
         });
 
         const canvas = await page.$('.maplibregl-canvas');

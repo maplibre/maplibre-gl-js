@@ -1,0 +1,192 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Wide antimeridian-crossing band viewed from the north pole (the framing most reports of #6248 use). Fill must be uniform 50% red, never double-blended.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    180,
+    65
+  ],
+  "zoom": 0.45,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "shapes": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    21.852773082232943,
+                    30.443024748791714
+                  ],
+                  [
+                    319.65485606523356,
+                    30.443024748791714
+                  ],
+                  [
+                    319.65485606523356,
+                    49.14964417101615
+                  ],
+                  [
+                    21.852773082232943,
+                    49.14964417101615
+                  ],
+                  [
+                    21.852773082232943,
+                    30.443024748791714
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -174.945,
+                    13.088
+                  ],
+                  [
+                    -179.786,
+                    12.371
+                  ],
+                  [
+                    -184.171,
+                    10.293
+                  ],
+                  [
+                    -187.722,
+                    7.055
+                  ],
+                  [
+                    -190.173,
+                    2.951
+                  ],
+                  [
+                    -191.366,
+                    -1.673
+                  ],
+                  [
+                    -191.42,
+                    -4.862
+                  ],
+                  [
+                    -190.37,
+                    -9.523
+                  ],
+                  [
+                    -188.001,
+                    -13.697
+                  ],
+                  [
+                    -184.44,
+                    -17.016
+                  ],
+                  [
+                    -179.951,
+                    -19.159
+                  ],
+                  [
+                    -174.945,
+                    -19.901
+                  ],
+                  [
+                    -169.94,
+                    -19.159
+                  ],
+                  [
+                    -165.45,
+                    -17.016
+                  ],
+                  [
+                    -161.89,
+                    -13.697
+                  ],
+                  [
+                    -159.52,
+                    -9.523
+                  ],
+                  [
+                    -158.471,
+                    -4.862
+                  ],
+                  [
+                    -158.525,
+                    -1.673
+                  ],
+                  [
+                    -159.717,
+                    2.951
+                  ],
+                  [
+                    -162.169,
+                    7.055
+                  ],
+                  [
+                    -165.72,
+                    10.293
+                  ],
+                  [
+                    -170.105,
+                    12.371
+                  ],
+                  [
+                    -174.945,
+                    13.088
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "shapes",
+      "paint": {
+        "fill-color": "#ff0000",
+        "fill-opacity": 0.5
+      }
+    },
+    {
+      "id": "border",
+      "type": "line",
+      "source": "shapes",
+      "paint": {
+        "line-color": "#0000ff",
+        "line-width": 10
+      }
+    }
+  ]
+}

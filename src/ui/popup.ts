@@ -2,9 +2,9 @@ import {extend} from '../util/util.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
+import Point from '@mapbox/point-geometry';
 
 import type {MapLibreEvent, MapMouseEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
@@ -282,7 +282,7 @@ export class Popup extends Evented<PopupEventType> {
         if (this.options.locationOccludedOpacity === undefined) {
             return;
         }
-        if (this._map.transform.isLocationOccluded(this.getLngLat())) {
+        if (this._map._camera.transform.isLocationOccluded(this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
             this._container.style.opacity = '';
@@ -663,7 +663,7 @@ export class Popup extends Evented<PopupEventType> {
             this._container.style.maxWidth = this.options.maxWidth;
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform, this._trackPointer);
 
         let cursor: Point;
         if (event && 'point' in event && event.point) {
@@ -674,7 +674,7 @@ export class Popup extends Evented<PopupEventType> {
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationToScreenPoint(this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map._camera.transform.locationToScreenPoint(this._lngLat);
         }
 
         let anchor = this.options.anchor;
@@ -688,7 +688,7 @@ export class Popup extends Evented<PopupEventType> {
 
             if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height - padding.bottom) {
+            } else if (pos.y > this._map._camera.transform.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
@@ -696,7 +696,7 @@ export class Popup extends Evented<PopupEventType> {
 
             if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2 - padding.right) {
+            } else if (pos.x > this._map._camera.transform.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 

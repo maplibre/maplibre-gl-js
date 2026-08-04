@@ -1,5 +1,5 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map.ts';
+import {Map, type MapOptions, type MissingStyleImageResolver, type StyleImageSource, type WebGLContextAttributesWithType} from './ui/map.ts';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control.ts';
 import {GeolocateControl, GeolocateEvent, GeolocatePositionEvent, GeolocateErrorEvent, type GeolocateControlEventType, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control.ts';
@@ -22,9 +22,9 @@ import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
 import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
-import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source.ts';
+import {GeoJSONSource, type GetClusterOptions, type SetClusterOptions} from './source/geojson_source.ts';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
-import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
+import {type CanonicalTileRange, type Coordinates, type ImageSourceImage, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source.ts';
 import {RasterTileSource} from './source/raster_tile_source.ts';
 import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source.ts';
@@ -298,9 +298,11 @@ export {
     type Tile,
     type Listener,
     type Coordinates,
+    type ImageSourceImage,
     type UpdateImageOptions,
     type DragPanOptions,
     type FullscreenControlOptions,
+    type GetClusterOptions,
     type SetClusterOptions,
     type GeoJSONSourceDiff,
     type GeolocateControlOptions,
@@ -365,6 +367,8 @@ export {
     type MessageType,
     type StyleGlyph,
     type MapOptions,
+    type MissingStyleImageResolver,
+    type StyleImageSource,
     type GestureOptions,
     type WebGLContextAttributesWithType,
     type IControl,
