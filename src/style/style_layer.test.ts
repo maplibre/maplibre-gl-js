@@ -171,7 +171,8 @@ describe('StyleLayer.setPaintProperty', () => {
         layer.updateTransitions({} as TransitionParameters);
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
-        expect(layer.paint.get('fill-outline-color').value).toMatchObject({kind: 'constant', value: {r: 1, g: 0, b: 0, a: 1}});
+        const outlineColor = layer.paint.get('fill-outline-color');
+        expect(outlineColor.value).toMatchObject({kind: 'constant', value: {r: 1, g: 0, b: 0, a: 1}});
     });
 
     test('sets null property value', () => {
