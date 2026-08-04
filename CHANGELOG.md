@@ -1,10 +1,13 @@
 ## main
 ### ✨ Features and improvements
+- Add the `fill-extrusion-rounded-corner-distance` layout property, which replaces each fill-extrusion corner with an arc spanning the given distance (in meters) along the adjacent edges. The distance is clamped to 20% of each adjacent edge's length so that short edges don't collapse, and near-straight corners (turns below 5°) are left untouched. Defaults to `0`, which keeps corners sharp ([#7934](https://github.com/maplibre/maplibre-gl-js/issues/7934)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Improve Mercator rendering performance by skipping a redundant clipping mask border pass ([#8038](https://github.com/maplibre/maplibre-gl-js/pull/8038)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fix anti-meridian wrapping error for globe and vertical projection ([#7672](https://github.com/maplibre/maplibre-gl-js/issues/7672)) (by [@thomfuhrmann](https://github.com/thomfuhrmann))
+- Improve terrain elevation sampling performance by caching DEM tile lookups and coordinate transforms within each render ([#8025](https://github.com/maplibre/maplibre-gl-js/pull/8025)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
 
 ## 6.1.0
