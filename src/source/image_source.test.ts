@@ -352,19 +352,20 @@ describe('ImageSource', () => {
         });
 
         test('keeps the image it displays, and its texture, when the url handed to updateImage fails to load', async () => {
-            // Suppress errors as we're loading a missing image.
-            map.on('error', () => {});
             source.prepare();
             const texture = source.texture;
             const image = source.image;
             const upload = vi.spyOn(texture, 'update');
             const destroy = vi.spyOn(texture, 'destroy');
+            const errorHandler = vi.fn();
+            map.on('error', errorHandler);
 
             const failed = waitForEvent(source, 'error', () => true);
             source.updateImage({url: '/missing-image.png'});
             await failed;
             source.prepare();
 
+            expect(errorHandler).toHaveBeenCalledTimes(1);
             expect(destroy).not.toHaveBeenCalled();
             expect(upload).not.toHaveBeenCalled();
             expect(source.texture).toBe(texture);
