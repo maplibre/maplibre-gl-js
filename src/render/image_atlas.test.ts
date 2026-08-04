@@ -7,7 +7,7 @@ import {RGBAImage} from '../util/image.ts';
 
 import type {StyleImage} from '../style/style_image.ts';
 
-const webGLImage = (webgl = vi.fn()): StyleImage => ({
+const webGLImage = (webgl: () => void): StyleImage => ({
     data: new RGBAImage({width: 2, height: 2}),
     version: 1,
     pixelRatio: 1,

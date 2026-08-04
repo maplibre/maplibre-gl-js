@@ -93,8 +93,7 @@ export type StyleImageMetadata = {
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
- * Where a {@link StyleImageWebGLData.webgl} callback writes its pixels. The texture is shared
- * with other images, so only the rectangle described here belongs to this image.
+ * Where a {@link StyleImageWebGLData.webgl} callback writes its pixels.
  */
 export type StyleImageWebGLTarget = {
     gl: WebGL2RenderingContext;
@@ -117,18 +116,16 @@ export type StyleImageWebGLTarget = {
  */
 export type StyleImageWebGLData = {
     /**
-     * Draw the image. Called before the first frame it is used in, again whenever
-     * {@link StyleImageInterface.render} returns `true`, and again whenever a slot this image has
-     * never painted is packed into an atlas.
-     *
      * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
-     * `target.texture`. Drawing outside that rectangle corrupts other images. MapLibre restores
-     * its own WebGL state afterwards, so bindings, framebuffers and pixel store settings are
-     * yours to change. The scissor test is the one exception: MapLibre never touches it, so an
-     * image that enables it has to disable it again.
+     * `target.texture`. That rectangle is the only part of the shared atlas that belongs to this
+     * image; drawing outside it corrupts the others. MapLibre restores its own WebGL state
+     * afterwards, so bindings, framebuffers and pixel store settings are yours to change. The
+     * scissor test is the one exception: MapLibre never touches it, so an image that enables it
+     * has to disable it again.
      *
-     * An image can sit in more than one atlas, so one change may call this several times with a
-     * different `target`.
+     * Called before the first frame the image is used in, again whenever
+     * {@link StyleImageInterface.render} returns `true`, and again for each atlas holding a slot
+     * this image has never painted, so one change may mean several calls with different targets.
      */
     webgl: (target: StyleImageWebGLTarget) => void;
 };
@@ -235,15 +232,7 @@ export function isStyleImageWebGLData(data: StyleImageInterface['data']): data i
 
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
-    if (!userImage?.render) {
-        return false;
-    }
-    const updated = userImage.render();
-    if (!updated) {
-        return false;
-    }
-    if (!isStyleImageWebGLData(userImage.data)) {
-        image.data.replace(new Uint8Array(userImage.data.buffer));
-    }
+    if (!userImage?.render?.()) return false;
+    if (!isStyleImageWebGLData(userImage.data)) image.data.replace(new Uint8Array(userImage.data.buffer));
     return true;
 }

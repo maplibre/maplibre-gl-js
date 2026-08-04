@@ -135,11 +135,7 @@ export class ImageManager extends Evented {
         }
     }
 
-    /**
-     * Ask for an image that draws itself with WebGL to be painted again. Bumping the version is
-     * all it takes: every atlas holding the image compares its slot against that version and
-     * repaints the ones that differ.
-     */
+    /** Ask for a WebGL image to be painted again: every atlas repaints the slots whose version is stale. */
     invalidateImage(id: string): void {
         if (this.images[id]?.isWebGLImage) this.updateImage(id, this.images[id], false);
     }

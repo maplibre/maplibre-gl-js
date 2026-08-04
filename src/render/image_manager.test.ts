@@ -41,11 +41,12 @@ test('a WebGL image is repainted when its render callback reports a change, and 
 
 test('invalidating an image the map does not have does nothing', () => {
     const manager = new ImageManager();
-    manager.invalidateImage('never-added');
-
     manager.addImage('webgl', webGLImage());
     manager.removeImage('webgl');
-    manager.invalidateImage('webgl');
 
+    manager.invalidateImage('webgl');
+    manager.invalidateImage('never-added');
+
+    expect(manager.getImage('webgl')).toBeUndefined();
     expect(manager.updatedImages['never-added']).toBeUndefined();
 });

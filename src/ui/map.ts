@@ -3198,16 +3198,14 @@ export class Map extends Evented<MapEventType> {
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
                 'or object with `width`, `height`, and `data` properties with the same format as `ImageData`')));
             return null;
-        } else if (isStyleImageWebGLData((image as StyleImageInterface).data)) {
-            const {width, height} = image;
-            // The image paints its own slot, so these transparent pixels only ever pad it.
-            return {data: new RGBAImage({width, height}), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version, isWebGLImage: true, userImage: image};
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
+            const isWebGLImage = isStyleImageWebGLData(userImage.data);
 
             return {
-                data: new RGBAImage({width, height}, new Uint8Array(data)),
+                // A WebGL image paints its own slot, so its pixels are only ever transparent padding.
+                data: isWebGLImage ? new RGBAImage({width, height}) : new RGBAImage({width, height}, new Uint8Array(data)),
                 pixelRatio,
                 stretchX,
                 stretchY,
@@ -3216,6 +3214,7 @@ export class Map extends Evented<MapEventType> {
                 textFitHeight,
                 sdf,
                 version,
+                isWebGLImage,
                 userImage
             };
         }

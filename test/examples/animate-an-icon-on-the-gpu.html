@@ -43,8 +43,7 @@
     // a StyleImageInterface whose `data` paints the icon with WebGL instead of listing its pixels
     // Search for StyleImageWebGLData in https://maplibre.org/maplibre-gl-js/docs/API/
     const rainbowTriangle = {
-        width: 128,
-        height: 128,
+        width: 128, height: 128,
 
         // called once a frame: keep the frames coming, and report that the icon has changed
         render () {
@@ -53,39 +52,40 @@
         },
 
         data: {
+            // `this` is the data object, so the icon's own state is reached by name
             webgl ({gl, texture, x, y, width, height}) {
-                if (!this.program) this.setup(gl);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+                if (!rainbowTriangle.program) rainbowTriangle.setup(gl);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, rainbowTriangle.framebuffer);
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
                 // the viewport confines this draw to the icon's own slot, which it repaints in full
                 gl.viewport(x, y, width, height);
-                gl.useProgram(this.program);
-                gl.uniform1f(this.uTime, performance.now() / 1000);
+                gl.useProgram(rainbowTriangle.program);
+                gl.uniform1f(rainbowTriangle.uTime, performance.now() / 1000);
                 gl.drawArrays(gl.TRIANGLES, 0, 3);
-            },
-
-            setup (gl) {
-                this.program = gl.createProgram();
-                for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]]) {
-                    const shader = gl.createShader(type);
-                    gl.shaderSource(shader, source);
-                    gl.compileShader(shader);
-                    gl.attachShader(this.program, shader);
-                }
-                gl.linkProgram(this.program);
-                this.uTime = gl.getUniformLocation(this.program, 'u_time');
-                this.framebuffer = gl.createFramebuffer();
-                this.gl = gl;
             }
+        },
+
+        setup (gl) {
+            this.program = gl.createProgram();
+            for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]]) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                gl.attachShader(this.program, shader);
+            }
+            gl.linkProgram(this.program);
+            this.uTime = gl.getUniformLocation(this.program, 'u_time');
+            this.framebuffer = gl.createFramebuffer();
+            this.gl = gl;
         },
 
         // also called when the WebGL context is lost, so setup has to be repeatable
         onRemove () {
-            if (!this.data.program) return;
-            this.data.gl.deleteProgram(this.data.program);
-            this.data.gl.deleteFramebuffer(this.data.framebuffer);
-            this.data.program = undefined;
+            if (!this.program) return;
+            this.gl.deleteProgram(this.program);
+            this.gl.deleteFramebuffer(this.framebuffer);
+            this.program = undefined;
         }
     };
 
