@@ -353,26 +353,37 @@ describe('ImageSource', () => {
         });
 
         test('a superseded load that still succeeds leaves its replacement armed', async () => {
-            const controllers: AbortController[] = [];
-            const settlers: Array<(response: {data: ImageBitmap}) => void> = [];
-            const issued: Array<() => void> = [];
-            const started = [0, 1].map(() => new Promise<void>((resolve) => issued.push(resolve)));
-            // No abort listener: past the response, the decode ignores the signal.
-            vi.spyOn(ImageRequest, 'getImage').mockImplementation((_request, abortController) => {
-                controllers.push(abortController);
-                issued[controllers.length - 1]?.();
-                return new Promise<{data: ImageBitmap}>((resolve) => {
-                    settlers.push(resolve);
-                });
+            let markFirstRequestIssued: () => void;
+            const firstRequestIssued = new Promise<void>((resolve) => {
+                markFirstRequestIssued = resolve;
             });
+            let respondToFirstRequest: (response: {data: ImageBitmap}) => void;
 
-            const first = source.load();
-            await started[0];
+            let markReplacementRequestIssued: () => void;
+            const replacementRequestIssued = new Promise<void>((resolve) => {
+                markReplacementRequestIssued = resolve;
+            });
+            let replacementController: AbortController;
+
+            // No abort listener: past the response, the decode ignores the signal.
+            const getImageSpy = vi.spyOn(ImageRequest, 'getImage')
+                .mockImplementationOnce(() => new Promise<{data: ImageBitmap}>((resolve) => {
+                    respondToFirstRequest = resolve;
+                    markFirstRequestIssued();
+                }))
+                .mockImplementationOnce((_request, abortController) => {
+                    replacementController = abortController;
+                    markReplacementRequestIssued();
+                    return new Promise<{data: ImageBitmap}>(() => {});
+                });
+
+            const firstLoad = source.load();
+            await firstRequestIssued;
             source.updateImage({url: '/image2.png'});
-            await started[1];
+            await replacementRequestIssued;
 
-            settlers[0]({data: new ImageBitmap()});
-            await first;
+            respondToFirstRequest({data: new ImageBitmap()});
+            await firstLoad;
 
             expect(source.loaded()).toBe(false);
             expect(source.image).toBeUndefined();
@@ -380,8 +391,8 @@ describe('ImageSource', () => {
             const bitmap = new ImageBitmap();
             source.updateImage({image: bitmap});
 
-            expect(controllers).toHaveLength(2);
-            expect(controllers[1].signal.aborted).toBe(true);
+            expect(getImageSpy).toHaveBeenCalledTimes(2);
+            expect(replacementController.signal.aborted).toBe(true);
         });
 
         test('a superseded load does not overwrite the image that replaced it', async () => {
