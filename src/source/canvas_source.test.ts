@@ -201,8 +201,21 @@ describe('CanvasSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
-    test.each([true, false])('deletes its texture when the source is removed, without flushing the canvas first (animate: %s)', (animate) => {
-        const source = createSource({animate});
+    test('deletes its texture when a static source is removed', () => {
+        const source = createSource({animate: false});
+        source.onAdd(map);
+
+        const texture = {update: vi.fn(), destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        source.onRemove();
+
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+    });
+
+    test('deletes its texture when an animating source is removed, without uploading the canvas into it first', () => {
+        const source = createSource({animate: true});
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         source.onAdd(map);
         source.tiles[String(tile.tileID.wrap)] = tile;
@@ -210,12 +223,14 @@ describe('CanvasSource', () => {
         const texture = {update: vi.fn(), destroy: vi.fn()} as any;
         source.texture = texture;
 
+        expect(source.hasTransition()).toBe(true);
+
         source.onRemove();
 
         expect(texture.update).not.toHaveBeenCalled();
         expect(texture.destroy).toHaveBeenCalledTimes(1);
         expect(source.texture).toBeNull();
-        expect(source._playing).toBe(false);
+        expect(source.hasTransition()).toBe(false);
     });
 });
 
