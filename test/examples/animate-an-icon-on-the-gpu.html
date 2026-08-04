@@ -8,7 +8,6 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -16,32 +15,24 @@
 </head>
 <body>
 <div id="map"></div>
-
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    const map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json'
-    });
+    const map = new maplibregl.Map({container: 'map', style: 'https://demotiles.maplibre.org/style.json'});
 
-    // the corners are baked into the shader, so this example needs no vertex attributes
+    // a triangle whose corner colours travel around it once a second, baked into the shader
     const vertexSource = `#version 300 es
-
     const vec2 corners[3] = vec2[3](vec2(0.0, 0.9), vec2(-0.8, -0.5), vec2(0.8, -0.5));
     const vec3 colors[3] = vec3[3](vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
-    uniform float u_angle;
+    uniform float u_time;
     out vec3 v_color;
     void main() {
-        v_color = colors[gl_VertexID];
-        vec2 pos = mat2(cos(u_angle), sin(u_angle), -sin(u_angle), cos(u_angle)) * corners[gl_VertexID];
-        // the icon atlas holds its rows top to bottom and a framebuffer writes them bottom to
-        // top, so the y axis is flipped here
-        gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
+        v_color = mix(colors[gl_VertexID], colors[(gl_VertexID + 1) % 3], u_time);
+        // the atlas holds its rows top to bottom and a framebuffer writes them bottom to top
+        gl_Position = vec4(corners[gl_VertexID].x, -corners[gl_VertexID].y, 0.0, 1.0);
     }`;
 
     const fragmentSource = `#version 300 es
-
     precision highp float;
     in vec3 v_color;
     out vec4 fragColor;
@@ -51,7 +42,7 @@
 
     // implementation of CustomStyleImageInterface, an icon that paints itself with WebGL
     // Search for CustomStyleImageInterface in https://maplibre.org/maplibre-gl-js/docs/API/
-    const spinningTriangle = {
+    const rainbowTriangle = {
         type: 'custom',
         width: 128,
         height: 128,
@@ -60,56 +51,36 @@
             this.invalidate = invalidate;
         },
 
-        // draws this icon's slot of the shared icon atlas
         render ({gl, texture, x, y, width, height}) {
             if (!this.program) this.setup(gl);
-
             gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-            // the viewport keeps the triangle inside this icon's slot, and the scissor does the
-            // same for the clear, which would otherwise wipe every other icon in the atlas.
-            // MapLibre never touches the scissor test, so this has to turn it back off itself
+            // the viewport confines this draw to the icon's own slot, which it repaints in full
             gl.viewport(x, y, width, height);
-            gl.scissor(x, y, width, height);
-            gl.enable(gl.SCISSOR_TEST);
-            gl.clearColor(0, 0, 0, 0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            gl.disable(gl.SCISSOR_TEST);
-
-            gl.disable(gl.BLEND);
-            gl.disable(gl.DEPTH_TEST);
             gl.useProgram(this.program);
-            gl.uniform1f(this.uAngle, performance.now() / 500);
-            gl.bindVertexArray(null);
+            gl.uniform1f(this.uTime, (performance.now() % 1000) / 1000);
             gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-            // ask to be drawn again, which is what keeps the animation going. An icon that
-            // changes less often would call this from a timer instead, letting the map idle
+            // ask to be drawn again, which is what keeps the animation going
             this.invalidate();
         },
 
         setup (gl) {
-            const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertexShader, vertexSource);
-            gl.compileShader(vertexShader);
-
-            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(fragmentShader, fragmentSource);
-            gl.compileShader(fragmentShader);
-
             this.program = gl.createProgram();
-            gl.attachShader(this.program, vertexShader);
-            gl.attachShader(this.program, fragmentShader);
+            for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]]) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                gl.attachShader(this.program, shader);
+            }
             gl.linkProgram(this.program);
-            this.uAngle = gl.getUniformLocation(this.program, 'u_angle');
-
+            this.uTime = gl.getUniformLocation(this.program, 'u_time');
             this.framebuffer = gl.createFramebuffer();
             this.gl = gl;
         },
 
-        // also called when the WebGL context is lost, so everything above has to be
-        // recreatable from scratch
+        // also called when the WebGL context is lost, so setup has to be repeatable
         onRemove () {
             if (!this.program) return;
             this.gl.deleteProgram(this.program);
@@ -119,18 +90,9 @@
     };
 
     map.on('load', () => {
-        map.addImage('spinning-triangle', spinningTriangle, {pixelRatio: 2});
-
-        map.addSource('points', {
-            'type': 'geojson',
-            'data': {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [0, 0]}}
-        });
-        map.addLayer({
-            'id': 'points',
-            'type': 'symbol',
-            'source': 'points',
-            'layout': {'icon-image': 'spinning-triangle'}
-        });
+        map.addImage('rainbow-triangle', rainbowTriangle, {pixelRatio: 2});
+        map.addSource('points', {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]}});
+        map.addLayer({id: 'points', type: 'symbol', source: 'points', layout: {'icon-image': 'rainbow-triangle'}});
     });
 </script>
 </body>
