@@ -153,7 +153,6 @@ export class CanvasSource extends ImageSource {
         }
     }
 
-    /** Not `pause()`: its canvas flush would upload into the texture the next line deletes. */
     onRemove(): void {
         this._playing = false;
         super.onRemove();
