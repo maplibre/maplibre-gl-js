@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Fill extrusion rounded corners</title>
+    <meta property="og:description" content="Use fill-extrusion-rounded-corner-distance to round the corners of extruded polygons." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-07-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #controls {
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            background-color: rgba(50, 50, 50, 0.85);
+            padding: 12px 16px;
+            border-radius: 6px;
+            min-width: 280px;
+        }
+        #controls table { border-collapse: collapse; width: 100%; }
+        #controls td { padding: 4px 6px; vertical-align: middle; }
+        #controls td:last-child { text-align: right; width: 3em; }
+        #controls label { white-space: nowrap; }
+        #controls input[type=range] { width: 120px; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="controls">
+    <table>
+        <tr>
+            <td><label for="corner-radius">Corner radius (m)</label></td>
+            <td><input type="range" id="corner-radius" min="0" max="5" step="0.1" value="2" /></td>
+            <td><span>2</span></td>
+        </tr>
+        <tr>
+            <td><label for="extrusion-height">Height multiplier</label></td>
+            <td><input type="range" id="extrusion-height" min="0" max="3" step="0.1" value="1" /></td>
+            <td><span>1</span>×</td>
+        </tr>
+        <tr>
+            <td><label for="extrusion-opacity">Opacity</label></td>
+            <td><input type="range" id="extrusion-opacity" min="0" max="1" step="0.05" value="0.8" /></td>
+            <td><span>80</span>%</td>
+        </tr>
+    </table>
+</div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        center: [-74.0066, 40.7135],
+        zoom: 15.5,
+        pitch: 45,
+        bearing: -17.6,
+        container: 'map',
+        canvasContextAttributes: {antialias: true}
+    });
+
+    map.on('load', () => {
+        const layers = map.getStyle().layers;
+        const labelLayerId = layers.find(l => l.type === 'symbol' && l.layout?.['text-field']).id;
+        const buildingSource = layers.find(l => l['source-layer'] === 'building').source;
+
+        map.addLayer({
+            id: 'building-extrusion',
+            type: 'fill-extrusion',
+            source: buildingSource,
+            'source-layer': 'building',
+            filter: ['==', ['get', 'render_min_height'], 0],
+            layout: {
+                'fill-extrusion-rounded-corner-distance': 2
+            },
+            paint: {
+                'fill-extrusion-color': [
+                    'interpolate', ['linear'], ['get', 'render_height'],
+                    0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
+                ],
+                'fill-extrusion-height': ['get', 'render_height'],
+                'fill-extrusion-opacity': 0.8
+            }
+        }, labelLayerId);
+
+        document.getElementById('corner-radius').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            e.target.closest('tr').querySelector('span').textContent = val;
+            map.setLayoutProperty('building-extrusion', 'fill-extrusion-rounded-corner-distance', val);
+        });
+        document.getElementById('extrusion-height').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            e.target.closest('tr').querySelector('span').textContent = val;
+            map.setPaintProperty('building-extrusion', 'fill-extrusion-height', ['*', val, ['get', 'render_height']]);
+        });
+        document.getElementById('extrusion-opacity').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            e.target.closest('tr').querySelector('span').textContent = val;
+            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', Math.round(val * 100));
+        });
+    });
+</script>
+</body>
+</html>
