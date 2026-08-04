@@ -268,7 +268,14 @@ export function isCustomStyleImage(image: StyleImageInterface | CustomStyleImage
 
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
-    if (!isCustomStyleImage(userImage) && userImage?.render?.()) {
+    if (isCustomStyleImage(userImage)) {
+        return false;
+    }
+    if (!userImage?.render) {
+        return false;
+    }
+    const updated = userImage.render();
+    if (updated) {
         image.data.replace(new Uint8Array(userImage.data.buffer));
         return true;
     }
