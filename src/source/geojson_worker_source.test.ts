@@ -118,8 +118,7 @@ describe('geojson tile worker source', () => {
 
         await source.loadData({source: 'source', data: geoJson, geojsonVtOptions: {}} as LoadGeoJSONParameters);
 
-        let loadTileSettled = false;
-        const onSettled = () => { loadTileSettled = true; };
+        const onSettled = vi.fn();
         source.loadTile({
             source: 'source',
             uid: 0,
@@ -137,7 +136,7 @@ describe('geojson tile worker source', () => {
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters) as WorkerTileWithData;
 
-        expect(loadTileSettled).toBe(false);
+        expect(onSettled).not.toHaveBeenCalled();
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();
     });
@@ -190,8 +189,7 @@ describe('geojson tile worker source', () => {
 
         await source.loadData({source: 'source', data: geoJson, geojsonVtOptions: {}} as LoadGeoJSONParameters);
 
-        let loadTileSettled = false;
-        const onSettled = () => { loadTileSettled = true; };
+        const onSettled = vi.fn();
         source.loadTile({
             source: 'source',
             uid: 0,
@@ -216,7 +214,7 @@ describe('geojson tile worker source', () => {
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters) as WorkerTileWithData;
 
-        expect(loadTileSettled).toBe(false);
+        expect(onSettled).not.toHaveBeenCalled();
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();
     });

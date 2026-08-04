@@ -144,8 +144,7 @@ describe('vector tile worker source', () => {
             request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
         });
 
-        let loadTileSettled = false;
-        const onSettled = () => { loadTileSettled = true; };
+        const onSettled = vi.fn();
         source.loadTile({
             source: 'source',
             uid: 0,
@@ -165,7 +164,7 @@ describe('vector tile worker source', () => {
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters) as WorkerTileWithData;
-        expect(loadTileSettled).toBe(false);
+        expect(onSettled).not.toHaveBeenCalled();
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();
         expect(res.rawTileData).toStrictEqual(rawTileData);

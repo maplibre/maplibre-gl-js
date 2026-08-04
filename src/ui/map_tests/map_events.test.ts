@@ -964,7 +964,7 @@ describe('map events', () => {
         map.on('load', loadHandler);
         await sleep(1);
 
-        expect(loadHandler).toThrow();
+        expect(loadHandler).toThrow('Error in load handler');
     });
 
     test('no idle event during move', async () => {

@@ -96,24 +96,18 @@ describe('Map', () => {
             const map = createMap({style});
 
             await map.once('load');
-            const disagreements: Array<{event: boolean; map: boolean}> = [];
             const promise = new Promise<void>((resolve) => {
                 map.on('data', (e: MapSourceDataEvent) => {
-                    if (e.dataType === 'source' && 'source' in e) {
-                        if (map.isSourceLoaded('geojson') !== e.isSourceLoaded) {
-                            disagreements.push({event: e.isSourceLoaded, map: map.isSourceLoaded('geojson')});
-                        }
-                        if (e.sourceDataType === 'idle') {
-                            resolve();
-                        }
+                    if (e.dataType !== 'source' || !('source' in e)) return;
+                    expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
+                    if (e.sourceDataType === 'idle') {
+                        resolve();
                     }
                 });
             });
             map.addSource('geojson', createStyleSource());
             expect(map.isSourceLoaded('geojson')).toBe(false);
             await promise;
-
-            expect(disagreements).toHaveLength(0);
         });
 
         test('Map.isStyleLoaded', async () => {

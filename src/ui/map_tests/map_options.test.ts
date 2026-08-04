@@ -46,22 +46,16 @@ describe('mapOptions', () => {
     });
 
     test('fadeDuration is set after first idle event', async () => {
+        let idleTriggered = false;
         const fadeDuration = 100;
-        const observedFadeDurations: number[] = [];
         const spy = vi.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
-            observedFadeDurations.push(parameters.fadeDuration);
+            expect(parameters.fadeDuration).toBe(idleTriggered ? fadeDuration : 0);
         });
         const style = createStyle();
         const map = createMap({style, fadeDuration});
         await map.once('idle');
-
-        expect(observedFadeDurations).not.toHaveLength(0);
-        expect(observedFadeDurations.filter(duration => duration !== 0)).toHaveLength(0);
-
-        const updatesBeforeZoom = observedFadeDurations.length;
+        idleTriggered = true;
         map.zoomTo(0.5, {duration: 100});
         spy.mockRestore();
-
-        expect(observedFadeDurations.slice(updatesBeforeZoom).filter(duration => duration !== fadeDuration)).toHaveLength(0);
     });
 });

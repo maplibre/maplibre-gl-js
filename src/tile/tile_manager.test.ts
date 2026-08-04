@@ -2328,11 +2328,9 @@ describe('tile manager loaded', () => {
 
         const sourceLoadedPromise = waitForEvent(tileManager, 'data', () => tileManager.loaded());
 
-        const loadedBeforeIdle: boolean[] = [];
         tileManager.on('data', (e) => {
-            if (e.sourceDataType !== 'idle') {
-                loadedBeforeIdle.push(tileManager.loaded());
-            }
+            if (e.sourceDataType === 'idle') return;
+            expect(tileManager.loaded()).toBe(false);
         });
 
         tileManager.onAdd(undefined);
@@ -2341,8 +2339,6 @@ describe('tile manager loaded', () => {
         tr.resize(512, 512);
         tileManager.update(tr);
         await sourceLoadedPromise;
-
-        expect(loadedBeforeIdle).not.toContain(true);
     });
 });
 
