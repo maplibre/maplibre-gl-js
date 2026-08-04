@@ -32,7 +32,7 @@ test('ignore minZooms over maxZoom', () => {
     const map = createMap({zoom: 2, maxZoom: 5});
     expect(() => {
         map.setMinZoom(6);
-    }).toThrow();
+    }).toThrow('minZoom must be between -2 and the current maxZoom, inclusive');
     map.setZoom(0);
     expect(map.getZoom()).toBe(0);
 });
@@ -62,7 +62,7 @@ test('ignore maxZooms over minZoom', () => {
     const map = createMap({minZoom: 5});
     expect(() => {
         map.setMaxZoom(4);
-    }).toThrow();
+    }).toThrow('maxZoom must be greater than the current minZoom');
     map.setZoom(5);
     expect(map.getZoom()).toBe(5);
 });

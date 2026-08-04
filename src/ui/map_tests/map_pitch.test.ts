@@ -31,7 +31,7 @@ test('ignore minPitchs over maxPitch', () => {
     const map = createMap({pitch: 0, maxPitch: 10});
     expect(() => {
         map.setMinPitch(20);
-    }).toThrow();
+    }).toThrow('minPitch must be between 0 and the current maxPitch, inclusive');
     map.setPitch(0);
     expect(map.getPitch()).toBe(0);
 });
@@ -89,7 +89,7 @@ test('ignore maxPitchs over minPitch', () => {
     const map = createMap({minPitch: 10});
     expect(() => {
         map.setMaxPitch(0);
-    }).toThrow();
+    }).toThrow('maxPitch must be greater than the current minPitch');
     map.setPitch(10);
     expect(map.getPitch()).toBe(10);
 });

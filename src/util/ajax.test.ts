@@ -71,7 +71,7 @@ describe('ajax', () => {
         const promise = getJSON({url: ''}, new AbortController());
         server.respond();
 
-        await expect(promise).rejects.toThrow();
+        await expect(promise).rejects.toThrow(SyntaxError);
     });
 
     test('getJSON, 404', async () => {

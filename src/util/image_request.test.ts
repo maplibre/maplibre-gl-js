@@ -55,17 +55,15 @@ describe('ImageRequest', () => {
     test('Cancel: getImage cancelling frees up request for maxParallelImageRequests', async () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        const abortedRequests: Array<Promise<unknown>> = [];
+        const abortedRequests: Array<Promise<void>> = [];
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            abortedRequests.push(ImageRequest.getImage({url: ''}, abortController));
+            abortedRequests.push(expect(ImageRequest.getImage({url: ''}, abortController)).rejects.toSatisfy(isAbortError));
             abortController.abort();
             await sleep(0);
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
-        for (const request of abortedRequests) {
-            await expect(request).rejects.toSatisfy(isAbortError);
-        }
+        await Promise.all(abortedRequests);
     });
 
     test('Cancel: getImage requests that were once queued are still abortable', async () => {
@@ -145,7 +143,7 @@ describe('ImageRequest', () => {
 
         server.respond();
 
-        await expect(promise).rejects.toThrow();
+        await expect(promise).rejects.toThrow('error');
     });
 
     test('getImage uses HTMLImageElement when createImageBitmap is not supported', async () => {

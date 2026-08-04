@@ -1,6 +1,7 @@
 import {describe, test, expect, beforeEach, vi, afterEach} from 'vitest';
 import {beforeMapTest, createMap as globalCreateMap} from './test/util.ts';
 import {browser} from './browser.ts';
+import {AbortError} from './abort_error.ts';
 
 describe('browser', () => {
     describe('frame',() => {
@@ -142,7 +143,7 @@ describe('browser', () => {
             const abortController = new AbortController();
             const promise = browser.frameAsync(abortController);
             abortController.abort();
-            await expect(promise).rejects.toThrow();
+            await expect(promise).rejects.toThrow(AbortError);
         });
     });
 

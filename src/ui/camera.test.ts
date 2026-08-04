@@ -126,7 +126,7 @@ describe('calculateCameraOptionsFromTo', () => {
     });
 
     test('same To as From error', () => {
-        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow();
+        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow('Can\'t calculate camera options with same From and To');
     });
 });
 

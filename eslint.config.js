@@ -159,6 +159,7 @@ export default [
             'vitest/valid-title': ['error', {allowArguments: true}],
 
             'vitest/no-duplicate-hooks': 'error',
+            'vitest/require-to-throw-message': 'error',
             'vitest/no-test-return-statement': 'error',
             'vitest/prefer-hooks-in-order': 'error',
             'vitest/prefer-hooks-on-top': 'error',

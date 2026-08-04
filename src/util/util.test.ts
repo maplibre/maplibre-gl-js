@@ -449,7 +449,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     test('ignore bad format', async () => {
         format = 'OTHER';
-        await expect(readImageUsingVideoFrame(canvas, 0, 0, 2, 2)).rejects.toThrow();
+        await expect(readImageUsingVideoFrame(canvas, 0, 0, 2, 2)).rejects.toThrow('Unrecognized format OTHER');
         expect(frame.close).toHaveBeenCalledTimes(1);
     });
 
