@@ -313,12 +313,17 @@ describe('ImageSource', () => {
 
     describe('superseding an in-flight load', () => {
         let source: ImageSource;
+        let errorHandler: Mock;
 
         beforeEach(() => {
             source = createSource({url: '/image.png', eventedParent: map});
-            // Suppress errors because we're aborting.
-            map.on('error', () => {});
+            errorHandler = vi.fn();
+            map.on('error', errorHandler);
             source.map = map;
+        });
+
+        afterEach(() => {
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('cancels a load before its request is issued and keeps the new image', async () => {
@@ -423,16 +428,22 @@ describe('ImageSource', () => {
     describe('updateImage with a decoded image', () => {
         let source: ImageSource;
         let transformRequest: Mock<(url: string, resourceType?: string) => any>;
+        let errorHandler: Mock;
 
         beforeEach(() => {
             transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
             map.setTransformRequest(transformRequest);
-            // Suppress errors from aborting the initial (never-responded) request.
-            map.on('error', () => {});
+            errorHandler = vi.fn();
+            map.on('error', errorHandler);
             source = createSource({url: '/image.png', eventedParent: map});
             // onAdd's load calls transformRequest before its first await; clear that call.
             source.onAdd(map);
             transformRequest.mockClear();
+        });
+
+        // Every test here aborts the initial, never-responded request.
+        afterEach(() => {
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('sets the image directly without a network request and fires metadata', () => {
