@@ -42,7 +42,7 @@ test('set tile LOD params for a non-existent source', async () => {
 
     expect(map.getSource('source-id1').calculateTileZoom).toBeUndefined();
     expect(map.getSource('source-id2').calculateTileZoom).toBeUndefined();
-    expect(() => {map.setSourceTileLodParams(1, 1, 'non-existent-source-id');}).toThrowError();
+    expect(() => {map.setSourceTileLodParams(1, 1, 'non-existent-source-id');}).toThrow();
     expect(map.getSource('source-id1').calculateTileZoom).toBeUndefined();
     expect(map.getSource('source-id2').calculateTileZoom).toBeUndefined();
 });

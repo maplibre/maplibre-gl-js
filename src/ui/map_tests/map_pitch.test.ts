@@ -140,8 +140,8 @@ test('fire move and pitch events when pitch is changed due to minPitch change', 
     map.on('pitch', handleEvent);
     map.on('pitchend', handleEvent);
     map.setMinPitch(11);
-    expect(map.getPitch()).toEqual(11);
-    expect(map.getMinPitch()).toEqual(11);
+    expect(map.getPitch()).toBe(11);
+    expect(map.getMinPitch()).toBe(11);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });
 
@@ -155,7 +155,7 @@ test('fire move and pitch events when pitch is changed due to maxPitch change', 
     map.on('pitch', handleEvent);
     map.on('pitchend', handleEvent);
     map.setMaxPitch(10);
-    expect(map.getPitch()).toEqual(10);
-    expect(map.getMaxPitch()).toEqual(10);
+    expect(map.getPitch()).toBe(10);
+    expect(map.getMaxPitch()).toBe(10);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });

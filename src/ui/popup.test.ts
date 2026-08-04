@@ -333,7 +333,7 @@ describe('popup', () => {
         expect(popup._pos).toEqual(map.project([5, 0]));
     });
 
-    test('Popup wraps position after map move if it would otherwise go offscreen (right)', () => {
+    test('Popup wraps position after map move if it would otherwise go offscreen (left)', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
         const popup = new Popup()
@@ -613,7 +613,7 @@ describe('popup', () => {
         ).toContain('maplibregl-popup-track-pointer');
     });
 
-    test('Pointer-tracked popup with content set later is tagged with right class ', () => {
+    test('Pointer-tracked popup with content set later is tagged with right class', () => {
         const map = createMap();
         const popup = new Popup()
             .trackPointer()
@@ -626,7 +626,7 @@ describe('popup', () => {
         ).toContain('maplibregl-popup-track-pointer');
     });
 
-    test('Pointer-tracked popup that is set afterwards is tagged with right class ', () => {
+    test('Pointer-tracked popup that is set afterwards is tagged with right class', () => {
         const map = createMap();
         const popup = new Popup()
             .addTo(map);

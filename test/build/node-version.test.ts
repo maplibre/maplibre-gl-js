@@ -10,10 +10,7 @@ describe('Node.js version', () => {
 
         const expected = nvmrc.split('.')[0];
         for (const image of images) {
-            const major = image.split('.')[0];
-            if (major !== expected) {
-                expect.fail(`docker-compose.yml uses node:${image} but .nvmrc says ${nvmrc}, update both together`);
-            }
+            expect(image.split('.')[0], `docker-compose.yml uses node:${image} but .nvmrc says ${nvmrc}, update both together`).toBe(expected);
         }
     });
 });

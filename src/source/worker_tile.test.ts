@@ -299,9 +299,12 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(() => expect(false).toBeTruthy());
-        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(() => expect(false).toBeTruthy());
+        let supersededSettled = 0;
+        const onSettled = () => { supersededSettled++; };
+        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
+        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
         const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
+        expect(supersededSettled).toBe(0);
         expect(result).toBeDefined();
         expect(cancelCount).toBe(6);
         expect(sendAsync).toHaveBeenCalledTimes(9);

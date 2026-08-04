@@ -102,16 +102,16 @@ test('transformCameraUpdate is called after changing min or max zoom', async () 
     map.setMaxZoom(18);
     map.setZoom(18);
     await map.once('style.load');
-    expect(map.getZoom()).toEqual(18);
-    expect(map.getMinZoom()).toEqual(5);
-    expect(map.getMaxZoom()).toEqual(18);
+    expect(map.getZoom()).toBe(18);
+    expect(map.getMinZoom()).toBe(5);
+    expect(map.getMaxZoom()).toBe(18);
     const transformCameraUpdate = vi.fn(t => t);
     map.setTransformCameraUpdate(transformCameraUpdate);
 
     map.setMaxZoom(16);
-    expect(map.getZoom()).toEqual(16);
-    expect(map.getMinZoom()).toEqual(5);
-    expect(map.getMaxZoom()).toEqual(16);
+    expect(map.getZoom()).toBe(16);
+    expect(map.getMinZoom()).toBe(5);
+    expect(map.getMaxZoom()).toBe(16);
     expect(transformCameraUpdate.mock.calls[0][0]).toMatchObject({
         zoom: 16,
         minZoom: 5,
@@ -127,9 +127,9 @@ test('transformCameraUpdate is called after changing min or max zoom', async () 
 
     map.setMinZoom(6);
     map.setTransformCameraUpdate(transformCameraUpdate);
-    expect(map.getZoom()).toEqual(6);
-    expect(map.getMinZoom()).toEqual(6);
-    expect(map.getMaxZoom()).toEqual(16);
+    expect(map.getZoom()).toBe(6);
+    expect(map.getMinZoom()).toBe(6);
+    expect(map.getMaxZoom()).toBe(16);
     expect(transformCameraUpdate.mock.calls[2][0]).toMatchObject({
         zoom: 6,
         minZoom: 6,
@@ -147,8 +147,8 @@ test('fire move and zoom events when zoom is changed due to minZoom change', () 
     map.on('zoom', handleEvent);
     map.on('zoomend', handleEvent);
     map.setMinZoom(11);
-    expect(map.getZoom()).toEqual(11);
-    expect(map.getMinZoom()).toEqual(11);
+    expect(map.getZoom()).toBe(11);
+    expect(map.getMinZoom()).toBe(11);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });
 
@@ -162,7 +162,7 @@ test('fire move and zoom events when zoom is changed due to maxZoom change', () 
     map.on('zoom', handleEvent);
     map.on('zoomend', handleEvent);
     map.setMaxZoom(10);
-    expect(map.getZoom()).toEqual(10);
-    expect(map.getMaxZoom()).toEqual(10);
+    expect(map.getZoom()).toBe(10);
+    expect(map.getMaxZoom()).toBe(10);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });

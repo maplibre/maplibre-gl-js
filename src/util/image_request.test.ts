@@ -55,13 +55,17 @@ describe('ImageRequest', () => {
     test('Cancel: getImage cancelling frees up request for maxParallelImageRequests', async () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
+        const abortedRequests: Array<Promise<unknown>> = [];
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+            abortedRequests.push(ImageRequest.getImage({url: ''}, abortController));
             abortController.abort();
             await sleep(0);
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
+        for (const request of abortedRequests) {
+            await expect(request).rejects.toSatisfy(isAbortError);
+        }
     });
 
     test('Cancel: getImage requests that were once queued are still abortable', async () => {
@@ -79,7 +83,7 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+        const queuedRequestPromise = ImageRequest.getImage({url: queuedURL}, abortController);
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);
@@ -95,6 +99,7 @@ describe('ImageRequest', () => {
         expect((queuedRequest as any).aborted).toBeUndefined();
         abortController.abort();
         expect((queuedRequest as any).aborted).toBe(true);
+        await expect(queuedRequestPromise).rejects.toSatisfy(isAbortError);
     });
 
     test('getImage sends accept/webp header', async () => {

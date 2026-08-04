@@ -110,7 +110,7 @@ describe('transform', () => {
         expect(transform.tileZoom).toBe(5);
     });
 
-    test('set zoom clamps tileZoom to non negative value ', () => {
+    test('set zoom clamps tileZoom to non negative value', () => {
         const transform = new MercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 60});
         transform.setZoom(-2);
         expect(transform.tileZoom).toBe(0);

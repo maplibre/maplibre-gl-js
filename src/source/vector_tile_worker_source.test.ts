@@ -66,7 +66,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.reloadTile reloads a previously-loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = vi.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
+        const parse = vi.fn().mockResolvedValue({});
 
         source.tileState.loaded = {
             '0': {
@@ -144,13 +144,15 @@ describe('vector tile worker source', () => {
             request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
         });
 
+        let loadTileSettled = false;
+        const onSettled = () => { loadTileSettled = true; };
         source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf'},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters).then(onSettled, onSettled);
 
         server.respond();
 
@@ -163,6 +165,7 @@ describe('vector tile worker source', () => {
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters) as WorkerTileWithData;
+        expect(loadTileSettled).toBe(false);
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();
         expect(res.rawTileData).toStrictEqual(rawTileData);
@@ -391,7 +394,7 @@ describe('vector tile worker source', () => {
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-        expect(await promise).toBeNull();
+        await expect(promise).resolves.toBeNull();
     });
 
     test('VectorTileWorkerSource.returns a good error message when failing to parse a tile', async () => {
@@ -412,7 +415,7 @@ describe('vector tile worker source', () => {
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-        await expect(loadTilePromise).rejects.toThrowError(/Unable to parse the tile at/);
+        await expect(loadTilePromise).rejects.toThrow(/Unable to parse the tile at/);
     });
 
     test('VectorTileWorkerSource.returns a good error message when failing to parse a gzipped tile', async () => {
@@ -431,7 +434,7 @@ describe('vector tile worker source', () => {
         server.respond();
 
         expect(parse).not.toHaveBeenCalled();
-        await expect(loadTilePromise).rejects.toThrowError(/gzipped/);
+        await expect(loadTilePromise).rejects.toThrow(/gzipped/);
     });
 
     test('VectorTileWorkerSource provides resource timing information', async () => {

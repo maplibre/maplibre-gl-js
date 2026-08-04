@@ -137,6 +137,68 @@ export default [
         },
     },
     {
+        files: ['src/**/*.test.ts', 'test/**/*.test.{ts,js}'],
+        plugins: {
+            vitest
+        },
+        rules: {
+            ...vitest.configs.recommended.rules,
+
+            'vitest/expect-expect': ['error', {
+                assertFunctionNames: ['expect', 'expect.*', 'expect*', 'equalWithPrecision'],
+            }],
+            // unbound-method: tests stash method references to restore them afterwards
+            'vitest/unbound-method': 'off',
+            // prefer-spy-on: stubs are built as `{} as T`, and vi.spyOn needs an existing property
+            'vitest/prefer-spy-on': 'off',
+            // prefer-called-once is the exact inverse of prefer-called-times
+            'vitest/prefer-called-once': 'off',
+
+            // vitest supports expect(actual, message), unlike jest
+            'vitest/valid-expect': ['error', {maxArgs: 2}],
+            'vitest/valid-title': ['error', {allowArguments: true}],
+
+            'vitest/no-duplicate-hooks': 'error',
+            'vitest/no-test-return-statement': 'error',
+            'vitest/prefer-hooks-in-order': 'error',
+            'vitest/prefer-hooks-on-top': 'error',
+            'vitest/require-awaited-expect-poll': 'error',
+
+            'vitest/consistent-test-it': ['error', {fn: 'test', withinDescribe: 'test'}],
+            'vitest/consistent-vitest-vi': ['error', {fn: 'vi'}],
+            'vitest/prefer-importing-vitest-globals': 'error',
+            'vitest/no-alias-methods': 'error',
+            'vitest/no-test-prefixes': 'error',
+            'vitest/prefer-todo': 'error',
+
+            'vitest/prefer-to-be': 'error',
+            'vitest/prefer-to-be-object': 'error',
+            'vitest/prefer-to-contain': 'error',
+            'vitest/prefer-to-have-length': 'error',
+            'vitest/prefer-comparison-matcher': 'error',
+            'vitest/prefer-equality-matcher': 'error',
+            'vitest/prefer-expect-resolves': 'error',
+            'vitest/prefer-expect-type-of': 'error',
+
+            'vitest/prefer-called-times': 'error',
+            'vitest/prefer-to-have-been-called-times': 'error',
+            'vitest/prefer-mock-promise-shorthand': 'error',
+            'vitest/prefer-mock-return-shorthand': 'error',
+            'vitest/prefer-vi-mocked': 'error',
+            'vitest/prefer-import-in-mock': 'error',
+        },
+    },
+    {
+        // render and query tests derive their titles from the fixture files
+        files: ['test/integration/render/render.test.ts', 'test/integration/query/query.test.ts'],
+        plugins: {
+            vitest
+        },
+        rules: {
+            'vitest/valid-title': 'off'
+        },
+    },
+    {
         files: ['**/*.html'],
         plugins: {
             html

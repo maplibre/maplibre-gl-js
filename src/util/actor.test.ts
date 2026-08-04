@@ -144,7 +144,7 @@ describe('Actor', () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         worker.worker.actor.invoker.trigger = async () => {
@@ -209,7 +209,7 @@ describe('Actor', () => {
 
         worker.worker.actor.mapId = '2';
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {} as any, targetMapId: '1'});
@@ -223,7 +223,7 @@ describe('Actor', () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: 'getClusterExpansionZoom', data: {} as any, origin: 'https://example.com'});
@@ -237,7 +237,7 @@ describe('Actor', () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'null'});
@@ -251,7 +251,7 @@ describe('Actor', () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'file://'});
@@ -265,7 +265,7 @@ describe('Actor', () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
 
         actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'resource://android'});

@@ -20,6 +20,12 @@ function readAsText(blob) {
     });
 }
 
+async function expectRejection(promise: Promise<unknown>): Promise<AJAXError> {
+    const error = await promise.catch((e) => e);
+    expect(error).toBeInstanceOf(Error);
+    return error as AJAXError;
+}
+
 const originalFetch = global.fetch;
 
 describe('ajax', () => {
@@ -37,18 +43,14 @@ describe('ajax', () => {
             request.respond(404, undefined, '404 Not Found');
         });
 
-        try {
-            const promise =  getArrayBuffer({url: 'http://example.com/test.bin'}, new AbortController());
-            server.respond();
-            await promise;
-        } catch (error) {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.bin');
-            expect(body).toBe('404 Not Found');
-        }
+        const promise = getArrayBuffer({url: 'http://example.com/test.bin'}, new AbortController());
+        server.respond();
+
+        const ajaxError = await expectRejection(promise);
+        expect(ajaxError.status).toBe(404);
+        expect(ajaxError.statusText).toBe('Not Found');
+        expect(ajaxError.url).toBe('http://example.com/test.bin');
+        await expect(readAsText(ajaxError.body)).resolves.toBe('404 Not Found');
     });
 
     test('getJSON', async () => {
@@ -68,11 +70,8 @@ describe('ajax', () => {
         });
         const promise = getJSON({url: ''}, new AbortController());
         server.respond();
-        try {
-            await promise;
-        } catch (error) {
-            expect(error).toBeTruthy();
-        }
+
+        await expect(promise).rejects.toThrow();
     });
 
     test('getJSON, 404', async () => {
@@ -82,16 +81,11 @@ describe('ajax', () => {
         const promise = getJSON({url: 'http://example.com/test.json'}, new AbortController());
         server.respond();
 
-        try {
-            await promise;
-        } catch (error) {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.json');
-            expect(body).toBe('404 Not Found');
-        }
+        const ajaxError = await expectRejection(promise);
+        expect(ajaxError.status).toBe(404);
+        expect(ajaxError.statusText).toBe('Not Found');
+        expect(ajaxError.url).toBe('http://example.com/test.json');
+        await expect(readAsText(ajaxError.body)).resolves.toBe('404 Not Found');
     });
 
     test('getJSON, aborted', async () => {
@@ -103,12 +97,9 @@ describe('ajax', () => {
         abortController.abort();
         server.respond();
 
-        try {
-            await promise;
-        } catch (error) {
-            expect(ensureError(error).name).toBe('AbortError');
-            expect(isAbortError(error)).toBe(true);
-        }
+        const error = await expectRejection(promise);
+        expect(ensureError(error).name).toBe('AbortError');
+        expect(isAbortError(error)).toBe(true);
     });
 
     test('getJSON with fetch, aborted', async () => {
@@ -126,12 +117,9 @@ describe('ajax', () => {
         abortController.abort();
         server.respond();
 
-        try {
-            await promise;
-        } catch (error) {
-            expect(ensureError(error).name).toBe('AbortError');
-            expect(isAbortError(error)).toBe(true);
-        }
+        const error = await expectRejection(promise);
+        expect(ensureError(error).name).toBe('AbortError');
+        expect(isAbortError(error)).toBe(true);
     });
 
     test('getReferrer method (outside Worker), same origin https URL', () => {
