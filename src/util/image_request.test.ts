@@ -55,15 +55,14 @@ describe('ImageRequest', () => {
     test('Cancel: getImage cancelling frees up request for maxParallelImageRequests', async () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        const abortedRequests: Array<Promise<void>> = [];
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            abortedRequests.push(expect(ImageRequest.getImage({url: ''}, abortController)).rejects.toSatisfy(isAbortError));
+            const request = ImageRequest.getImage({url: ''}, abortController);
             abortController.abort();
+            await expect(request).rejects.toSatisfy(isAbortError);
             await sleep(0);
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
-        await Promise.all(abortedRequests);
     });
 
     test('Cancel: getImage requests that were once queued are still abortable', async () => {
