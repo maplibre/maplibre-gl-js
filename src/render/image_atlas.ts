@@ -144,13 +144,6 @@ export class ImageAtlas {
         }
     }
 
-    /**
-     * @internal
-     * Uploads the image's pixels, or lets a `CustomStyleImageInterface` paint its slot
-     * itself. User WebGL is bracketed the way `drawCustom` brackets a custom layer: `unbindVAO`
-     * first, since `setDirty` can force a VAO re-bind but cannot repair one whose contents user
-     * code overwrote, and `setDirty` after, since the next image may read `Context`'s state cache.
-     */
     patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void {
         if (!position || !image) return;
 
