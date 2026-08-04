@@ -152,7 +152,8 @@ export interface CustomStyleImageInterface {
      * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
      * `target.texture`. Drawing outside that rectangle corrupts other images. MapLibre restores
      * its own WebGL state afterwards, so bindings, framebuffers and pixel store settings are
-     * yours to change.
+     * yours to change. The scissor test is the one exception: MapLibre never touches it, so an
+     * image that enables it has to disable it again.
      *
      * An image can sit in more than one atlas, so one change may call this several times with a
      * different `target`.

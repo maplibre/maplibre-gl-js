@@ -25,44 +25,36 @@
         style: 'https://demotiles.maplibre.org/style.json'
     });
 
-    const size = 200;
-
+    // the corners are baked into the shader, so this example needs no vertex attributes
     const vertexSource = `#version 300 es
 
-    in vec2 a_pos;
-    out vec2 v_pos;
+    const vec2 corners[3] = vec2[3](vec2(0.0, 0.9), vec2(-0.8, -0.5), vec2(0.8, -0.5));
+    const vec3 colors[3] = vec3[3](vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
+    uniform float u_angle;
+    out vec3 v_color;
     void main() {
-        v_pos = a_pos;
-        // the icon atlas holds its rows top to bottom and a framebuffer is read bottom to top,
-        // so the y axis is flipped here to cancel out the copy below
-        gl_Position = vec4(a_pos.x, -a_pos.y, 0.0, 1.0);
+        v_color = colors[gl_VertexID];
+        vec2 pos = mat2(cos(u_angle), sin(u_angle), -sin(u_angle), cos(u_angle)) * corners[gl_VertexID];
+        // the icon atlas holds its rows top to bottom and a framebuffer writes them bottom to
+        // top, so the y axis is flipped here
+        gl_Position = vec4(pos.x, -pos.y, 0.0, 1.0);
     }`;
 
-    // draws the same pulsing dot as the "add an animated icon" example, in premultiplied alpha
     const fragmentSource = `#version 300 es
 
     precision highp float;
-    uniform float u_time;
-    in vec2 v_pos;
+    in vec3 v_color;
     out vec4 fragColor;
     void main() {
-        float dist = length(v_pos);
-        float aa = fwidth(dist);
-        float outerRadius = 0.3 + 0.7 * u_time;
-        float outerMask = 1.0 - smoothstep(outerRadius - aa, outerRadius + aa, dist);
-        float innerMask = 1.0 - smoothstep(0.3 - aa, 0.3 + aa, dist);
-        fragColor = mix(
-            vec4(1.0, 0.78, 0.78, 1.0) * (1.0 - u_time) * outerMask,
-            vec4(1.0, 0.39, 0.39, 1.0),
-            innerMask);
+        fragColor = vec4(v_color, 1.0);
     }`;
 
     // implementation of CustomStyleImageInterface, an icon that paints itself with WebGL
     // Search for CustomStyleImageInterface in https://maplibre.org/maplibre-gl-js/docs/API/
-    const pulsingDot = {
+    const spinningTriangle = {
         type: 'custom',
-        width: size,
-        height: size,
+        width: 128,
+        height: 128,
 
         onAdd ({invalidate}) {
             this.invalidate = invalidate;
@@ -72,21 +64,25 @@
         render ({gl, texture, x, y, width, height}) {
             if (!this.program) this.setup(gl);
 
-            // draw the dot into an offscreen texture of our own
             gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-            gl.viewport(0, 0, width, height);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+            // the viewport keeps the triangle inside this icon's slot, and the scissor does the
+            // same for the clear, which would otherwise wipe every other icon in the atlas.
+            // MapLibre never touches the scissor test, so this has to turn it back off itself
+            gl.viewport(x, y, width, height);
+            gl.scissor(x, y, width, height);
+            gl.enable(gl.SCISSOR_TEST);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.disable(gl.SCISSOR_TEST);
+
             gl.disable(gl.BLEND);
             gl.disable(gl.DEPTH_TEST);
-            gl.disable(gl.SCISSOR_TEST);
             gl.useProgram(this.program);
-            gl.uniform1f(this.uTime, (performance.now() % 1000) / 1000);
-            gl.bindVertexArray(this.vertexArray);
+            gl.uniform1f(this.uAngle, performance.now() / 500);
+            gl.bindVertexArray(null);
             gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-            // then copy it into this icon's slot. Copying rather than drawing into the atlas
-            // directly means nothing here can touch another icon's pixels
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x, y, 0, 0, width, height);
 
             // ask to be drawn again, which is what keeps the animation going. An icon that
             // changes less often would call this from a timer instead, letting the map idle
@@ -106,26 +102,9 @@
             gl.attachShader(this.program, vertexShader);
             gl.attachShader(this.program, fragmentShader);
             gl.linkProgram(this.program);
-            this.uTime = gl.getUniformLocation(this.program, 'u_time');
+            this.uAngle = gl.getUniformLocation(this.program, 'u_angle');
 
-            this.offscreenTexture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this.offscreenTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             this.framebuffer = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.offscreenTexture, 0);
-
-            // one triangle covering the whole viewport, in its own vertex array so that this
-            // example cannot disturb the attributes MapLibre has set up
-            this.buffer = gl.createBuffer();
-            this.vertexArray = gl.createVertexArray();
-            gl.bindVertexArray(this.vertexArray);
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-            const aPos = gl.getAttribLocation(this.program, 'a_pos');
-            gl.enableVertexAttribArray(aPos);
-            gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
             this.gl = gl;
         },
 
@@ -135,38 +114,22 @@
             if (!this.program) return;
             this.gl.deleteProgram(this.program);
             this.gl.deleteFramebuffer(this.framebuffer);
-            this.gl.deleteTexture(this.offscreenTexture);
-            this.gl.deleteBuffer(this.buffer);
-            this.gl.deleteVertexArray(this.vertexArray);
             this.program = undefined;
         }
     };
 
     map.on('load', () => {
-        map.addImage('pulsing-dot', pulsingDot, {pixelRatio: 2});
+        map.addImage('spinning-triangle', spinningTriangle, {pixelRatio: 2});
 
         map.addSource('points', {
             'type': 'geojson',
-            'data': {
-                'type': 'FeatureCollection',
-                'features': [
-                    {
-                        'type': 'Feature',
-                        'geometry': {
-                            'type': 'Point',
-                            'coordinates': [0, 0]
-                        }
-                    }
-                ]
-            }
+            'data': {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [0, 0]}}
         });
         map.addLayer({
             'id': 'points',
             'type': 'symbol',
             'source': 'points',
-            'layout': {
-                'icon-image': 'pulsing-dot'
-            }
+            'layout': {'icon-image': 'spinning-triangle'}
         });
     });
 </script>
