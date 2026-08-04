@@ -1266,7 +1266,7 @@ function cross(out, a, b) {
 * @param {ReadonlyMat4} m matrix to transform with
 * @returns {vec3} out
 */
-function transformMat4$2(out, a, m) {
+function transformMat4$1(out, a, m) {
 	var x = a[0], y = a[1], z = a[2];
 	var w = m[3] * x + m[7] * y + m[11] * z + m[15];
 	w = w || 1;
@@ -1497,7 +1497,7 @@ function normalize$2(out, a) {
 * @param {ReadonlyMat4} m matrix to transform with
 * @returns {vec4} out
 */
-function transformMat4$1(out, a, m) {
+function transformMat4(out, a, m) {
 	var x = a[0], y = a[1], z = a[2], w = a[3];
 	out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
 	out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
@@ -1909,23 +1909,6 @@ function normalize(out, a) {
 */
 function dot$1(a, b) {
 	return a[0] * b[0] + a[1] * b[1];
-}
-/**
-* Transforms the vec2 with a mat4
-* 3rd vector component is implicitly '0'
-* 4th vector component is implicitly '1'
-*
-* @param {vec2} out the receiving vector
-* @param {ReadonlyVec2} a the vector to transform
-* @param {ReadonlyMat4} m matrix to transform with
-* @returns {vec2} out
-*/
-function transformMat4(out, a, m) {
-	var x = a[0];
-	var y = a[1];
-	out[0] = m[0] * x + m[4] * y + m[12];
-	out[1] = m[1] * x + m[5] * y + m[13];
-	return out;
 }
 /**
 * Rotate a 2D vector
@@ -21145,7 +21128,7 @@ function projectQueryGeometry(queryGeometry, pixelPosMatrix, z) {
 			z,
 			1
 		];
-		transformMat4$1(v, v, pixelPosMatrix);
+		transformMat4(v, v, pixelPosMatrix);
 		projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
 	}
 	return projectedQueryGeometry;
@@ -34551,7 +34534,7 @@ function projectWithMatrix(x, y, matrix, getElevation) {
 			getElevation(x, y),
 			1
 		];
-		transformMat4$1(pos, pos, matrix);
+		transformMat4(pos, pos, matrix);
 	} else {
 		pos = [
 			x,
@@ -34779,7 +34762,7 @@ function projectFromLabelPlaneToClipSpace(x, y, projectionContext, pitchedLabelP
 			0,
 			1
 		];
-		transformMat4$1(pos, pos, pitchedLabelPlaneMatrixInverse);
+		transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
 		return projectionContext.transform.projectTileCoordinates(pos[0] / pos[3], pos[1] / pos[3], projectionContext.unwrappedTileID, projectionContext.getElevation).point;
 	} else return {
 		x: x / projectionContext.width * 2 - 1,
@@ -35191,7 +35174,7 @@ var CollisionIndex = class {
 					getElevation(x, y),
 					1
 				];
-				transformMat4$1(pos, pos, simpleProjectionMatrix);
+				transformMat4(pos, pos, simpleProjectionMatrix);
 			} else {
 				pos = [
 					x,
@@ -38598,7 +38581,7 @@ var Frustum = class Frustum {
 	}
 };
 function unprojectClipSpacePoint(point, invProj, worldSize, scale) {
-	const v = transformMat4$1([], point, invProj);
+	const v = transformMat4([], point, invProj);
 	const s = 1 / v[3] / worldSize * scale;
 	return mul(v, v, [
 		s,
@@ -39028,8 +39011,8 @@ var MercatorTransform = class MercatorTransform {
 			1,
 			1
 		];
-		transformMat4$1(coord0, coord0, this._pixelMatrixInverse);
-		transformMat4$1(coord1, coord1, this._pixelMatrixInverse);
+		transformMat4(coord0, coord0, this._pixelMatrixInverse);
+		transformMat4(coord1, coord1, this._pixelMatrixInverse);
 		const w0 = coord0[3];
 		const w1 = coord1[3];
 		const x0 = coord0[0] / w0;
@@ -39055,7 +39038,7 @@ var MercatorTransform = class MercatorTransform {
 			elevation,
 			1
 		];
-		transformMat4$1(p, p, pixelMatrix);
+		transformMat4(p, p, pixelMatrix);
 		return new Point(p[0] / p[3], p[1] / p[3]);
 	}
 	getBounds() {
@@ -39170,7 +39153,7 @@ var MercatorTransform = class MercatorTransform {
 			-1,
 			1
 		];
-		transformMat4$1(cameraPos, cameraPos, this._invViewProjMatrix);
+		transformMat4(cameraPos, cameraPos, this._invViewProjMatrix);
 		this._cameraPosition = [
 			cameraPos[0] / cameraPos[3],
 			cameraPos[1] / cameraPos[3],
@@ -39236,7 +39219,7 @@ var MercatorTransform = class MercatorTransform {
 			0,
 			1
 		];
-		return transformMat4$1(p, p, this._pixelMatrix)[3] / this._helper.cameraToCenterDistance;
+		return transformMat4(p, p, this._pixelMatrix)[3] / this._helper.cameraToCenterDistance;
 	}
 	getCameraPoint() {
 		return this._helper.getCameraPoint();
@@ -39257,7 +39240,7 @@ var MercatorTransform = class MercatorTransform {
 			elevation,
 			1
 		];
-		transformMat4$1(p, p, this._viewProjMatrix);
+		transformMat4(p, p, this._viewProjMatrix);
 		return p[2] / p[3];
 	}
 	getProjectionData(params) {
@@ -39310,7 +39293,7 @@ var MercatorTransform = class MercatorTransform {
 				getElevation(x, y),
 				1
 			];
-			transformMat4$1(pos, pos, matrix);
+			transformMat4(pos, pos, matrix);
 		} else {
 			pos = [
 				x,
@@ -40734,7 +40717,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 			spherePos[2] * vectorMultiplier,
 			1
 		];
-		transformMat4$1(pos, pos, this._globeViewProjMatrixF64);
+		transformMat4(pos, pos, this._globeViewProjMatrixF64);
 		const plane = this._cachedClippingPlane;
 		const isOccluded = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3] < 0;
 		return {
@@ -40846,7 +40829,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		const vec = angularCoordinatesToSurfaceVector(lngLat);
 		scale$2(vec, vec, 1 + elevation / earthRadius);
 		const result = createVec4f64();
-		transformMat4$1(result, [
+		transformMat4(result, [
 			vec[0],
 			vec[1],
 			vec[2],
@@ -40977,7 +40960,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 	*/
 	_projectSurfacePointToScreen(pos) {
 		const projected = createVec4f64();
-		transformMat4$1(projected, [...pos, 1], this._globeViewProjMatrixF64);
+		transformMat4(projected, [...pos, 1], this._globeViewProjMatrixF64);
 		projected[0] /= projected[3];
 		projected[1] /= projected[3];
 		return new Point((projected[0] * .5 + .5) * this.width, (-projected[1] * .5 + .5) * this.height);
@@ -41006,7 +40989,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		pos[1] = (p.y / this.height * 2 - 1) * -1;
 		pos[2] = 1;
 		pos[3] = 1;
-		transformMat4$1(pos, pos, this._globeViewProjMatrixF64Inverted);
+		transformMat4(pos, pos, this._globeViewProjMatrixF64Inverted);
 		pos[0] /= pos[3];
 		pos[1] /= pos[3];
 		pos[2] /= pos[3];
@@ -41033,7 +41016,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 	isSurfacePointOnScreen(vec) {
 		if (!this.isSurfacePointVisible(vec)) return false;
 		const projected = createVec4f64();
-		transformMat4$1(projected, [...vec, 1], this._globeViewProjMatrixF64);
+		transformMat4(projected, [...vec, 1], this._globeViewProjMatrixF64);
 		projected[0] /= projected[3];
 		projected[1] /= projected[3];
 		projected[2] /= projected[3];
@@ -46966,7 +46949,7 @@ function getSunPos(light, transform) {
 		rotateX$1(lightMat, lightMat, transform.center.lat * Math.PI / 180);
 		rotateY$1(lightMat, lightMat, -transform.center.lng * Math.PI / 180);
 	}
-	transformMat4$2(lightPos, lightPos, lightMat);
+	transformMat4$1(lightPos, lightPos, lightMat);
 	return lightPos;
 }
 function drawAtmosphere(painter, sky, light) {
@@ -46987,12 +46970,12 @@ function drawAtmosphere(painter, sky, light) {
 	const invProjMatrix = transform.inverseProjectionMatrix;
 	const vec = /* @__PURE__ */ new Float64Array(4);
 	vec[3] = 1;
-	transformMat4$1(vec, vec, transform.modelViewProjectionMatrix);
+	transformMat4(vec, vec, transform.modelViewProjectionMatrix);
 	vec[0] /= vec[3];
 	vec[1] /= vec[3];
 	vec[2] /= vec[3];
 	vec[3] = 1;
-	transformMat4$1(vec, vec, invProjMatrix);
+	transformMat4(vec, vec, invProjMatrix);
 	vec[0] /= vec[3];
 	vec[1] /= vec[3];
 	vec[2] /= vec[3];
@@ -51336,7 +51319,8 @@ var Terrain = class {
 		this._terrainSkirtLength = terrainSkirtLength;
 		this.qualityFactor = 2;
 		this.meshSize = 128;
-		this._demMatrixCache = {};
+		this._demMatrixCache = /* @__PURE__ */ new Map();
+		this._elevationSamplerCache = /* @__PURE__ */ new Map();
 		this.coordsIndex = [];
 		this._coordsTextureSize = 1024;
 	}
@@ -51382,12 +51366,8 @@ var Terrain = class {
 	getDEMElevation(tileID, x, y, extent = EXTENT) {
 		const normalized = tileID.normalizeCoordinates(x, y, extent);
 		if (!normalized) return 0;
-		const terrain = this.getTerrainData(normalized.tileID);
-		const dem = terrain.tile?.dem;
-		if (!dem) return 0;
-		const pos = transformMat4([], [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
-		const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
-		return dem.sampleBilinear(coord[0], coord[1]);
+		const sampler = this._getElevationSampler(normalized.tileID);
+		return sampler ? sampler(normalized.x, normalized.y, extent) : 0;
 	}
 	/**
 	* Get the elevation for given {@link LngLat} in respect of exaggeration.
@@ -51429,6 +51409,55 @@ var Terrain = class {
 		return this.getDEMElevation(tileID, x, y, extent) * this.exaggeration;
 	}
 	/**
+	* Clear CPU elevation samplers that may retain a previously selected DEM tile.
+	* @internal
+	*/
+	resetElevationCache() {
+		this._elevationSamplerCache.clear();
+	}
+	_getElevationSampler(tileID) {
+		const key = tileID.key;
+		const cachedSampler = this._elevationSamplerCache.get(key);
+		if (cachedSampler) return cachedSampler;
+		const sourceTile = this.tileManager.getSourceTile(tileID, true);
+		const dem = sourceTile?.dem;
+		if (!sourceTile || !dem) return null;
+		const matrix = this._getDEMTileMatrix(tileID, sourceTile);
+		const demPixelScaleX = matrix[0] * dem.dim;
+		const demPixelScaleY = matrix[5] * dem.dim;
+		const demPixelOffsetX = matrix[12] * dem.dim;
+		const demPixelOffsetY = matrix[13] * dem.dim;
+		const sampler = (x, y, extent) => {
+			const extentScale = extent === 8192 ? 1 : EXTENT / extent;
+			return dem.sampleBilinear(x * extentScale * demPixelScaleX + demPixelOffsetX, y * extentScale * demPixelScaleY + demPixelOffsetY);
+		};
+		this._elevationSamplerCache.set(key, sampler);
+		return sampler;
+	}
+	_getDEMTileMatrix(tileID, sourceTile) {
+		const matrixKey = `${sourceTile.tileID.key}/${tileID.key}`;
+		const cachedMatrix = this._demMatrixCache.get(matrixKey);
+		if (cachedMatrix) return cachedMatrix;
+		const maxzoom = this.tileManager.getSource().maxzoom;
+		let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
+		if (tileID.overscaledZ > tileID.canonical.z) if (tileID.canonical.z >= maxzoom) dz = tileID.canonical.z - maxzoom;
+		else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom");
+		const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+		const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+		const demMatrix = fromScaling(/* @__PURE__ */ new Float64Array(16), [
+			1 / (EXTENT << dz),
+			1 / (EXTENT << dz),
+			0
+		]);
+		translate$1(demMatrix, demMatrix, [
+			dx * EXTENT,
+			dy * EXTENT,
+			0
+		]);
+		this._demMatrixCache.set(matrixKey, demMatrix);
+		return demMatrix;
+	}
+	/**
 	* returns a Terrain Object for a tile. Unless the tile corresponds to data (e.g. tile is loading), return a flat dem object
 	* @param tileID - the tile to get the terrain for
 	* @returns the terrain data to use in the program
@@ -51463,34 +51492,12 @@ var Terrain = class {
 			sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
 			sourceTile.needsTerrainPrepare = false;
 		}
-		const matrixKey = sourceTile && sourceTile.toString() + sourceTile.tileID.key + tileID.key;
-		if (matrixKey && !this._demMatrixCache[matrixKey]) {
-			const maxzoom = this.tileManager.getSource().maxzoom;
-			let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
-			if (tileID.overscaledZ > tileID.canonical.z) if (tileID.canonical.z >= maxzoom) dz = tileID.canonical.z - maxzoom;
-			else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom");
-			const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-			const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-			const demMatrix = fromScaling(/* @__PURE__ */ new Float64Array(16), [
-				1 / (EXTENT << dz),
-				1 / (EXTENT << dz),
-				0
-			]);
-			translate$1(demMatrix, demMatrix, [
-				dx * EXTENT,
-				dy * EXTENT,
-				0
-			]);
-			this._demMatrixCache[matrixKey] = {
-				matrix: demMatrix,
-				coord: tileID
-			};
-		}
+		const terrainMatrix = sourceTile ? this._getDEMTileMatrix(tileID, sourceTile) : this._emptyDemMatrix;
 		return {
 			"u_depth": 2,
 			"u_terrain": 3,
 			"u_terrain_dim": sourceTile?.dem?.dim || 1,
-			"u_terrain_matrix": matrixKey ? this._demMatrixCache[matrixKey].matrix : this._emptyDemMatrix,
+			"u_terrain_matrix": terrainMatrix,
 			"u_terrain_unpack": sourceTile?.dem?.getUnpackVector() || this._emptyDemUnpack,
 			"u_terrain_exaggeration": this.exaggeration,
 			texture: (sourceTile?.demTexture || this._emptyDemTexture).texture,
@@ -53858,21 +53865,29 @@ var Map$1 = class extends Evented {
 			this._camera.terrain = this.terrain;
 			this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
 			this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-			this._terrainDataCallback = (e) => {
-				if (e.dataType === "style") this.terrain.tileManager.releaseAllRTT();
-				else if (e.dataType === "source" && e.tile) {
-					if (e.sourceId === options.source && !this._camera.elevationFreeze) {
-						this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-						if (this.getCenterClampedToGround()) this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-					}
-					if (e.source?.type === "image") this.terrain.tileManager.releaseAllRTT();
-					else this.terrain.tileManager.releaseRTT(e.tile.tileID);
-				}
-			};
+			this._terrainDataCallback = (e) => this._handleTerrainDataEvent(e, options.source);
 			this.style.on("data", this._terrainDataCallback);
 		}
 		this.fire(new MapTerrainEvent({ terrain: options }));
 		return this;
+	}
+	_handleTerrainDataEvent(event, terrainSourceId) {
+		if (event.dataType === "style") {
+			this.terrain.tileManager.releaseAllRTT();
+			return;
+		}
+		const isTerrainSourceEvent = event.sourceId === terrainSourceId;
+		if (isTerrainSourceEvent) this.terrain.resetElevationCache();
+		if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
+			this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+			if (this.getCenterClampedToGround()) this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+		}
+		if (!event.tile) return;
+		if (event.source?.type === "image") {
+			this.terrain.tileManager.releaseAllRTT();
+			return;
+		}
+		this.terrain.tileManager.releaseRTT(event.tile.tileID);
 	}
 	/**
 	* Get the terrain-options if terrain is loaded
@@ -54967,6 +54982,7 @@ var Map$1 = class extends Evented {
 		}
 		if (this.terrain) {
 			this.terrain.tileManager.update(this._camera.transform, this.terrain);
+			this.terrain.resetElevationCache();
 			this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
 			if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
 		} else {
@@ -61175,7 +61191,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 8364005 (local)` : "main 8364005";
+const version = new URL(import.meta.url).origin === location.origin ? `main 5ec810e (local)` : "main 5ec810e";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
