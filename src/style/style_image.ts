@@ -266,6 +266,19 @@ export function isCustomStyleImage(image: StyleImageInterface | CustomStyleImage
     return (image as CustomStyleImageInterface)?.type === 'custom';
 }
 
+export function onAddStyleImage(image: StyleImage, map: Map, id: string): void {
+    const {userImage} = image;
+    if (isCustomStyleImage(userImage)) {
+        userImage.onAdd?.({map, id, invalidate: () => {
+            if (map.style?.getImage(id)?.userImage !== userImage) return;
+            map.style.imageManager.invalidateImage(id);
+            map.triggerRepaint();
+        }});
+        return;
+    }
+    userImage?.onAdd?.(map, id);
+}
+
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
     if (isCustomStyleImage(userImage)) {

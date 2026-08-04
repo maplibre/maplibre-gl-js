@@ -39,7 +39,7 @@ import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
-import {isCustomStyleImage} from '../style/style_image.ts';
+import {isCustomStyleImage, onAddStyleImage} from '../style/style_image.ts';
 
 import type {CustomStyleImageInterface, StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
@@ -3150,16 +3150,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         this.style.addImage(id, styleImage);
-        const {userImage} = styleImage;
-        if (isCustomStyleImage(userImage)) {
-            userImage.onAdd?.({map: this, id, invalidate: () => {
-                if (this.style?.getImage(id)?.userImage !== userImage) return;
-                this.style.imageManager.invalidateImage(id);
-                this.triggerRepaint();
-            }});
-        } else {
-            userImage?.onAdd?.(this, id);
-        }
+        onAddStyleImage(styleImage, this, id);
         return this;
     }
 
