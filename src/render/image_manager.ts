@@ -365,9 +365,10 @@ export class ImageManager extends Evented {
             this.callbackDispatchedThisFrame[id] = true;
 
             const image = this.getImage(id);
-            if (!image) {
-                warnOnce(`Image with ID: "${id}" was not found`);
-            } else if (renderStyleImage(image)) {
+            if (!image) warnOnce(`Image with ID: "${id}" was not found`);
+
+            const updated = renderStyleImage(image);
+            if (updated) {
                 this.updateImage(id, image);
             }
         }
