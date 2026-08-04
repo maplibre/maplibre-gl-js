@@ -321,7 +321,7 @@ describe('ImageSource', () => {
             source.map = map;
         });
 
-        test('cancels a load that is still transforming its request', async () => {
+        test('cancels a load before its request is issued and keeps the new image', async () => {
             const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async () => ({data: new ImageBitmap()}));
             const load = source.load();
 
