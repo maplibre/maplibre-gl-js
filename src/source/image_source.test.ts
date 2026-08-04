@@ -294,28 +294,30 @@ describe('ImageSource', () => {
             await source.loadTile(tile);
         });
 
-        test.each([
-            {
-                input: 'a url',
-                update: () => {
-                    const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-                    source.updateImage({url: '/image2.png'});
-                    return loaded;
-                }
-            },
-            {
-                input: 'a decoded image',
-                update: async () => {
-                    source.updateImage({image: new ImageBitmap()});
-                }
-            },
-        ])('uploads $input into the texture the tiles already hold', async ({update}) => {
+        test('uploads a url into the texture the tiles already hold', async () => {
             source.prepare();
             const texture = source.texture;
             const upload = vi.spyOn(texture, 'update');
             const destroy = vi.spyOn(texture, 'destroy');
 
-            await update();
+            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+            source.updateImage({url: '/image2.png'});
+            await loaded;
+            source.prepare();
+
+            expect(upload).toHaveBeenCalledTimes(1);
+            expect(destroy).not.toHaveBeenCalled();
+            expect(source.texture).toBe(texture);
+            expect(tile.texture).toBe(texture);
+        });
+
+        test('uploads a decoded image into the texture the tiles already hold', () => {
+            source.prepare();
+            const texture = source.texture;
+            const upload = vi.spyOn(texture, 'update');
+            const destroy = vi.spyOn(texture, 'destroy');
+
+            source.updateImage({image: new ImageBitmap()});
             source.prepare();
 
             expect(upload).toHaveBeenCalledTimes(1);
