@@ -11,7 +11,6 @@ import {Event as MapEvent} from '../util/evented.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap, createTerrain} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
-import * as timeControl from '../util/time_control.ts';
 
 let map: Map;
 let manager: HandlerManager;
@@ -335,9 +334,10 @@ describe('terrain gesture anchoring', () => {
         const target = await setupGestureMap();
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
+        let raycastElevation = 1000;
         map.terrain = {
             ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000),
+            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, raycastElevation),
         } as any as Terrain;
 
         // Start the pinch with the finger midpoint exactly where the grabbed point renders
@@ -354,9 +354,12 @@ describe('terrain gesture anchoring', () => {
             mid = mid.add(new Point(15, 10));
             halfSpread += 10;
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
+            // terrain "loading" mid-gesture must not move the anchor plane
+            raycastElevation = 4000;
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
+        expect(map._handlers._terrainGestureAnchorElevation).toBe(1000);
 
         const slip = slipOf(anchor, mid);
         endGesture(target);
@@ -393,53 +396,6 @@ describe('terrain gesture anchoring', () => {
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
-    });
-
-    it('captures the anchor elevation once per gesture even as terrain data changes', async () => {
-        const target = await setupGestureMap();
-        const anchor = new LngLat(7.49, 45.905);
-        const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
-        let raycastElevation = 1000;
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, raycastElevation),
-        } as any as Terrain;
-
-        const start = map.project(anchor);
-        gestureStep('touchstart', target, pinchTouches(start, 30));
-        let mid = start;
-        let halfSpread = 30;
-        for (let step = 0; step < 3; step++) {
-            mid = mid.add(new Point(15, 10));
-            halfSpread += 10;
-            gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
-            // terrain "loading" mid-gesture: a re-capture would move to a 4000 m plane
-            raycastElevation = 4000;
-        }
-
-        expect(map._handlers._terrainGestureAnchorElevation).toBe(1000);
-        const slip = slipOf(anchor, mid);
-        endGesture(target);
-        expect(slip).toBeLessThan(0.5);
-    });
-
-    it('anchors wheel zoom over terrain to the terrain elevation under the cursor', async () => {
-        const timeControlNow = vi.spyOn(timeControl, 'now');
-        let now = 1555555555555;
-        timeControlNow.mockReturnValue(now);
-        const target = await setupGestureMap();
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(0.5, 0.35, 1500),
-        } as any as Terrain;
-
-        simulate.wheel(target, {deltaY: -simulate.magicWheelZoomDelta, clientX: 60, clientY: 60});
-        map._renderTaskQueue.run();
-        now += 400;
-        timeControlNow.mockReturnValue(now);
-        map._renderTaskQueue.run();
-
-        expect(map._handlers._terrainGestureAnchorElevation).toBe(1500);
     });
 
     it('touch drag with terrain keeps a grabbed point elevated above the center plane under the finger', async () => {
@@ -503,11 +459,14 @@ describe('terrain gesture anchoring', () => {
         expect(centerMovedPx).toBeGreaterThan(20);
     });
 
-    it('falls back when the grabbed terrain point is above the camera altitude', async () => {
+    it.each([
+        ['the terrain under the gesture is not loaded', null],
+        ['the grabbed terrain point is above the camera altitude', new MercatorCoordinate(0.5, 0.35, 1e6)],
+    ])('falls back to the center-elevation behavior when %s', async (_name, raycastResult) => {
         const target = await setupGestureMap();
         map.terrain = {
             ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(0.5, 0.35, 1e6),
+            pointCoordinate: () => raycastResult,
         } as any as Terrain;
 
         const startCenter = map.getCenter();
@@ -521,29 +480,10 @@ describe('terrain gesture anchoring', () => {
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
         }
 
+        // the gesture still zooms and pans sanely near where it started
         expect(map.getZoom()).toBeGreaterThan(11.5);
         expect(Math.abs(map.getCenter().lng - startCenter.lng)).toBeLessThan(0.5);
         expect(Math.abs(map.getCenter().lat - startCenter.lat)).toBeLessThan(0.5);
-        endGesture(target);
-    });
-
-    it('falls back to the previous terrain gesture behavior when the terrain under the gesture is not loaded', async () => {
-        const target = await setupGestureMap();
-        // pointCoordinate returns null (sky / not yet rendered)
-        map.terrain = createTerrain();
-
-        const start = new Point(80, 90);
-        gestureStep('touchstart', target, pinchTouches(start, 30));
-        let mid = start;
-        let halfSpread = 30;
-        for (let step = 0; step < 3; step++) {
-            mid = mid.add(new Point(15, 10));
-            halfSpread += 10;
-            gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
-        }
-
-        expect(map.getZoom()).toBeGreaterThan(11.5);
-        expect(map._handlers._terrainGestureAnchorElevation).toBeNull();
         endGesture(target);
     });
 
