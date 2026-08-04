@@ -3,6 +3,7 @@ import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {type StyleLayer} from '../../style/style_layer.ts';
 import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import {type LngLat} from '../../geo/lng_lat.ts';
 import {type MapLibreEvent, MapSourceDataEvent} from '../events.ts';
 import {Map} from '../map.ts';
 import {ErrorEvent} from '../../util/evented.ts';
@@ -998,6 +999,31 @@ describe('map events', () => {
         map._renderTaskQueue.run();
 
         expect(actualZoom).toBe(map.getZoom());
+    });
+
+    test('dragend and moveend report the same camera when terrain elevation arrives during the drag', async () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        await map.once('style.load');
+        let demLoaded = false;
+        const terrain = createTerrain();
+        terrain.getElevationForLngLatZoom = () => demLoaded ? 1000 : 0;
+        map.terrain = terrain;
+        map._camera.terrain = terrain;
+
+        // DEM arrives mid-gesture
+        map.on('drag', () => { demLoaded = true; });
+
+        let dragEndCamera: {center: LngLat; zoom: number};
+        let moveEndCamera: {center: LngLat; zoom: number};
+        map.on('dragend', () => { dragEndCamera = {center: map.getCenter(), zoom: map.getZoom()}; });
+        map.on('moveend', () => { moveEndCamera = {center: map.getCenter(), zoom: map.getZoom()}; });
+
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+
+        expect(dragEndCamera).toBeDefined();
+        expect(moveEndCamera).toEqual(dragEndCamera);
     });
 
     test('drag from center', () => {
