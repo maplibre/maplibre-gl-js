@@ -99,7 +99,7 @@ describe('ImageRequest', () => {
 
     test('getImage sends accept/webp header', async () => {
         server.respondWith((request) => {
-            expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
+            expect(request.requestHeaders.accept).toContain('image/webp');
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
 
