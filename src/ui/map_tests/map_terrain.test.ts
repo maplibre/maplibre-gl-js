@@ -87,6 +87,26 @@ describe('setTerrain', () => {
         const innerContainer = map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner');
         expect(innerContainer.innerHTML).toBe(`DEM B | ${defaultAttributionControlOptions.customAttribution}`);
     });
+
+    test('invalidates cached elevation when terrain source data changes without a tile', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.setTerrain({source: 'terrainrgb'});
+        if (!map.terrain) throw new Error('Expected terrain to be set');
+        const resetElevationCache = vi.spyOn(map.terrain, 'resetElevationCache');
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'terrainrgb',
+            sourceDataType: 'content',
+            source: {type: 'raster-dem'}
+        } as any);
+
+        expect(resetElevationCache).toHaveBeenCalledOnce();
+    });
 });
 
 describe('getTerrain', () => {
