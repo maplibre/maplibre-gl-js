@@ -135,7 +135,6 @@ export class ImageManager extends Evented {
         }
     }
 
-    /** Ask for a WebGL image to be painted again: every atlas repaints the slots whose version is stale. */
     invalidateImage(id: string): void {
         if (this.images[id]?.isWebGLImage) this.updateImage(id, this.images[id], false);
     }
