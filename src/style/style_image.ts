@@ -224,7 +224,8 @@ export interface StyleImageInterface {
      * This gives the image a chance to clean up resources and event listeners.
      *
      * This also fires when the WebGL context is lost, after which the same image is added back
-     * without a matching `onAdd`, so anything released here has to be recreatable.
+     * without a matching `onAdd`, so the image has to be able to build again whatever it
+     * released here.
      */
     onRemove?: () => void;
 }
