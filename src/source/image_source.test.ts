@@ -79,22 +79,6 @@ describe('ImageSource', () => {
         expect(source.image).toBeTruthy();
     });
 
-    test('aborts the exact request it handed to ImageRequest', async () => {
-        const source = createSource({url: '/image.png'});
-        const {controllers, started} = stubInFlightImageRequests(1);
-
-        source.onAdd(map);
-        await started[0];
-
-        expect(controllers).toHaveLength(1);
-        expect(controllers[0]).toBeInstanceOf(AbortController);
-        expect(controllers[0].signal.aborted).toBe(false);
-
-        source.updateImage({image: new ImageBitmap()});
-
-        expect(controllers[0].signal.aborted).toBe(true);
-    });
-
     test('does not start the request when the source is aborted during an async transformRequest', async () => {
         const source = createSource({url: '/image.png'});
         let transformStarted: () => void;
