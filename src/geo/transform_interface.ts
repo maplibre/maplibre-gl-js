@@ -501,18 +501,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
      */
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
-
-    /**
-     * @internal
-     * Computes the horizontal distance of two points
-     * possibly wrapping coordinate differences across the anti-meridian
-     * based on active projection requirements.
-     *
-     * @param a - first point
-     * @param b - second point
-     * @returns The normalized distance between these two points
-     */
-    distance2d(a: MercatorCoordinate, b: MercatorCoordinate): number;
 }
 
 /**

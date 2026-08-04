@@ -460,8 +460,4 @@ export class GlobeTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
-
-    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
-        return this.currentTransform.distance2d(a, b);
-    }
 }

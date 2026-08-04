@@ -40,7 +40,7 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
         return new Aabb([wrap + tileID.x / numTiles, tileID.y / numTiles, minElevation],
             [wrap + (tileID.x + 1) / numTiles, (tileID.y + 1) / numTiles, maxElevation]);
     }
-    
+
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
         const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
         const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
@@ -51,7 +51,11 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
         return true;
     }
 
-    prepareNextFrame(): void { 
+    prepareNextFrame(): void {
         // Do nothing
+    }
+
+    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
+        return Math.hypot(a.x - b.x, a.y - b.y);
     }
 }

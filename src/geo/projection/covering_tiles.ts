@@ -235,7 +235,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
 
-    const distanceToCenter2d = transform.distance2d(centerCoord, cameraCoord);
+    const distanceToCenter2d = detailsProvider.distance2d(centerCoord, cameraCoord);
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 

@@ -980,13 +980,4 @@ export class VerticalPerspectiveTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
         return undefined;
     }
-
-    /**
-     * account for wrapping of centerCoord/cameraCoord around the anti-meridian
-     * this ensures that the coordinate difference stays in the range [-0.5, 0.5]
-    */
-    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
-        const deltaX = a.x - b.x;
-        return Math.hypot(deltaX - Math.round(deltaX), a.y - b.y);
-    }
 }

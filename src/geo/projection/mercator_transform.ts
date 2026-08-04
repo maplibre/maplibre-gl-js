@@ -831,8 +831,4 @@ export class MercatorTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.calculatePosMatrix(tileID);
     }
-
-    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
-        return Math.hypot(a.x - b.x, a.y - b.y);
-    }
 }
