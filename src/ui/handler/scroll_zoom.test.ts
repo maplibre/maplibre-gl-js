@@ -656,11 +656,6 @@ describe('ScrollZoomHandler', () => {
     });
 
     describe('globe zooms around the pointer', () => {
-        // The globe's horizon is ~68 px from the center point in the 400x300 test viewport at zoom 0. An offset
-        // of 40 px sits well inside the globe, 67.5 px is inside the band where anchoring eases off again (the
-        // mouse ray passes 0.97 globe radii from the center there) and 85 px misses the planet entirely.
-        // Offsets are taken along y where the drift of a horizon-near location is measured, so that the
-        // separate easing keyed on longitude difference to the map center stays out of it.
         async function zoomInAtOffset(offset: Point) {
             const timeControlNow = vi.spyOn(timeControl, 'now');
             timeControlNow.mockReturnValue(1555555555555);
@@ -687,25 +682,25 @@ describe('ScrollZoomHandler', () => {
             return result;
         }
 
-        test('keeps the location under the pointer while the globe is small on screen', async () => {
-            const {driftLng, center} = await zoomInAtOffset(new Point(40, 0));
+        test('keeps the location under the pointer while the globe is small on screen, and still zooms towards it', async () => {
+            const wellInsideTheGlobe = new Point(0, -40);
+            const {driftLng, driftLat, center} = await zoomInAtOffset(wellInsideTheGlobe);
             expect(driftLng).toBeCloseTo(0, 6);
-            // A map that ignored the wheel entirely would also report zero drift, so pin the center it zoomed to.
-            expect(center.lng).toBeCloseTo(0.5972, 3);
+            expect(driftLat).toBeCloseTo(0, 6);
+            expect(center.lat).toBeCloseTo(0.5972, 3);
         });
 
-        test('eases the anchoring off close to the horizon, where the exact solution misbehaves', async () => {
-            const {driftLat} = await zoomInAtOffset(new Point(0, -67.5));
-            // Eased off, not given up on: zooming that ignores the pointer here drifts by ~2.7°.
+        test('eases the anchoring off near the horizon instead of dropping it', async () => {
+            const nearTheHorizon = new Point(0, -67.5);
+            const {driftLat} = await zoomInAtOffset(nearTheHorizon);
             expect(Math.abs(driftLat)).toBeGreaterThan(0.5);
             expect(Math.abs(driftLat)).toBeLessThan(1.5);
         });
 
-        test('leaves zooming with the pointer off the planet alone', async () => {
-            const {center} = await zoomInAtOffset(new Point(85, 0));
-            // Only while the ray keeps missing: zoom in far enough and the growing globe reaches the pointer,
-            // from where it is anchored like any other location on the globe.
-            expect(center.lng).toBeCloseTo(0.2443, 3);
+        test('leaves zooming with the pointer off the planet unchanged', async () => {
+            const offThePlanet = new Point(0, -85);
+            const {center} = await zoomInAtOffset(offThePlanet);
+            expect(center.lat).toBeCloseTo(0.3545, 3);
         });
     });
 
