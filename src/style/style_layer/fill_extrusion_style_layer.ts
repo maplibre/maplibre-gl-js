@@ -3,13 +3,13 @@ import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
 import {translateDistance, translate} from '../query_utils.ts';
-import properties, {type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
-import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties.ts';
+import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
+import {type Layout, type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties.ts';
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
-import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
+import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
 
 export class Point3D extends Point {
     z: number;
@@ -18,6 +18,9 @@ export class Point3D extends Point {
 export const isFillExtrusionStyleLayer = (layer: StyleLayer): layer is FillExtrusionStyleLayer => layer.type === 'fill-extrusion';
 
 export class FillExtrusionStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<FillExtrusionLayoutProps>;
+    layout: PossiblyEvaluated<FillExtrusionLayoutProps, FillExtrusionLayoutPropsPossiblyEvaluated>;
+
     _transitionablePaint: Transitionable<FillExtrusionPaintProps>;
     _transitioningPaint: Transitioning<FillExtrusionPaintProps>;
     paint: PossiblyEvaluated<FillExtrusionPaintProps, FillExtrusionPaintPropsPossiblyEvaluated>;

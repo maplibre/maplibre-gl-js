@@ -1,5 +1,4 @@
 import fs from 'fs';
-import {plugins} from '../../build/rolldown_plugins.ts';
 import {execSync} from 'child_process';
 import {defineConfig, type RolldownOptions} from 'rolldown';
 import {replacePlugin} from 'rolldown/plugins';
@@ -34,7 +33,7 @@ const replaceValues = {
     'process.env.NODE_ENV': JSON.stringify('production'),
 };
 
-const allPlugins = [...plugins(true), replacePlugin(replaceValues, {preventAssignment: true})];
+const allPlugins = [replacePlugin(replaceValues, {preventAssignment: true})];
 
 const benchmarkSuiteConfig = (name: string): RolldownOptions[] => [{
     input: `test/bench/${name}/index.ts`,

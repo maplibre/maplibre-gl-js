@@ -318,12 +318,14 @@ export class Painter {
             stencilRefs[tileID.key] = this.nextStencilID++;
         }
 
-        // A two-pass approach is needed. See comment in draw_raster.ts for more details.
-        // However, we use a simpler approach because we don't care about overdraw here.
+        // A two-pass approach is needed for subdivided projections. See comment in draw_raster.ts
+        // for more details. In non-subdivided projections the border flag does not change the mesh,
+        // so one pass produces the same stencil mask.
+        if (this.style.projection.useSubdivision) {
+            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+        }
 
-        // First pass - draw tiles with borders and with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
-        // Second pass - draw borderless tiles with GL_ALWAYS
+        // Final pass - draw borderless tiles with GL_ALWAYS
         this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
 
         this._tileClippingMaskIDs = stencilRefs;

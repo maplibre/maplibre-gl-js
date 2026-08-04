@@ -126,7 +126,7 @@ describe('SymbolBucket', () => {
         } as any);
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0].includes('Too many glyphs being rendered in a tile.')).toBeTruthy();
+        expect(spy.mock.calls[0][0]).toContain('Too many glyphs being rendered in a tile.');
     });
 
     test('SymbolBucket image undefined sdf', () => {
