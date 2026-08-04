@@ -93,6 +93,7 @@ export class ImageAtlas {
 
         for (const id in icons) {
             const src = icons[id];
+            if (src.isWebGLImage) continue;
             const bin = iconPositions[id].paddedRect;
             RGBAImage.copy(src.data, image, {x: 0, y: 0}, {x: bin.x + IMAGE_PADDING, y: bin.y + IMAGE_PADDING}, src.data);
         }

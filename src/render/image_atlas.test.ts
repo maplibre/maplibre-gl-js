@@ -1,5 +1,5 @@
 import {test, expect, vi} from 'vitest';
-import {ImageAtlas, ImagePosition} from './image_atlas.ts';
+import {ImageAtlas, ImagePosition, IMAGE_PADDING} from './image_atlas.ts';
 import {Context} from '../webgl/context.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
@@ -14,6 +14,16 @@ const webGLImage = (webgl: () => void): StyleImage => ({
     sdf: false,
     isWebGLImage: true,
     userImage: {width: 2, height: 2, data: {webgl}}
+});
+
+test('a WebGL image is packed into the atlas without copying its blank pixels', () => {
+    const copy = vi.spyOn(RGBAImage, 'copy');
+    const icon = (isWebGLImage?: boolean) => ({data: new RGBAImage({width: 2, height: 2}), version: 0, pixelRatio: 1, sdf: false, isWebGLImage});
+
+    const atlas = new ImageAtlas({webgl: icon(true), pixels: icon()}, {});
+
+    expect(atlas.iconPositions.webgl.paddedRect.w).toBe(2 + 2 * IMAGE_PADDING);
+    expect(copy).toHaveBeenCalledTimes(1);
 });
 
 test('patchUpdatedImage lets a WebGL image paint its own slot instead of uploading pixels', () => {
