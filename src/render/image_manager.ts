@@ -136,11 +136,12 @@ export class ImageManager extends Evented {
     }
 
     /**
-     * Ask for a custom image to be drawn again. Bumping the version is all it takes: every atlas
-     * holding the image compares its slot against that version and repaints the ones that differ.
+     * Ask for an image that draws itself with WebGL to be painted again. Bumping the version is
+     * all it takes: every atlas holding the image compares its slot against that version and
+     * repaints the ones that differ.
      */
     invalidateImage(id: string): void {
-        if (this.images[id]?.isCustomImage) this.updateImage(id, this.images[id], false);
+        if (this.images[id]?.isWebGLImage) this.updateImage(id, this.images[id], false);
     }
 
     _validate(id: string, image: StyleImage): boolean {
@@ -262,7 +263,7 @@ export class ImageManager extends Evented {
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
                     hasRenderCallback: Boolean(image.userImage?.render),
-                    isCustomImage: image.isCustomImage
+                    isWebGLImage: image.isWebGLImage
                 };
             }
         }

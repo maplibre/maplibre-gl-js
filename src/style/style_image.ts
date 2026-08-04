@@ -27,8 +27,8 @@ export type StyleImageData = {
     data: RGBAImage;
     version?: number;
     hasRenderCallback?: boolean;
-    isCustomImage?: boolean;
-    userImage?: StyleImageInterface | CustomStyleImageInterface;
+    isWebGLImage?: boolean;
+    userImage?: StyleImageInterface;
     spriteData?: SpriteOnDemandStyleImage;
 };
 
@@ -93,10 +93,10 @@ export type StyleImageMetadata = {
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
- * Where a {@link CustomStyleImageInterface} writes its pixels. The texture is shared with
- * other images, so only the rectangle described here belongs to this image.
+ * Where a {@link StyleImageWebGLData.webgl} callback writes its pixels. The texture is shared
+ * with other images, so only the rectangle described here belongs to this image.
  */
-export type StyleImageRenderTarget = {
+export type StyleImageWebGLTarget = {
     gl: WebGL2RenderingContext;
     /**
      * The icon atlas to write into. MapLibre does not bind it for you, so start with
@@ -110,44 +110,16 @@ export type StyleImageRenderTarget = {
 };
 
 /**
- * What a {@link CustomStyleImageInterface} is given when it is added to a map.
- */
-export type StyleImageContext = {
-    map: Map;
-    /** The ID the image was added under with {@link Map.addImage}. */
-    id: string;
-    /**
-     * Ask for this image to be drawn again. {@link CustomStyleImageInterface.render} is called
-     * before the next frame, and a frame is scheduled. This is the only way an image is marked
-     * as changed: call it from a timer, an event, or from `render` itself for an image that
-     * animates on every frame.
-     *
-     * Once the image has been removed from the map this does nothing, so a timer that outlives
-     * {@link Map.removeImage} can neither bring the image back nor disturb whatever was added
-     * under its ID next.
-     */
-    invalidate: () => void;
-};
-
-/**
- * Interface for a style image that draws itself with WebGL, for {@link Map.addImage}. This is a
- * specification for implementers to model: it is not an exported method or class.
- *
- * Unlike {@link StyleImageInterface}, which hands MapLibre an array of pixels to upload, a
- * custom image draws straight into its slot of the shared icon atlas. Nothing new is possible
- * that `render` could not already do, but an image that changes often, such as an animated
- * icon, gets much cheaper: no CPU pixel work and no upload.
+ * What a {@link StyleImageInterface} gives as its `data` when it draws itself with WebGL rather
+ * than handing over an array of pixels.
  *
  * @see [Animate an icon on the GPU.](https://maplibre.org/maplibre-gl-js/docs/examples/animate-an-icon-on-the-gpu/)
  */
-export interface CustomStyleImageInterface {
-    type: 'custom';
-    width: number;
-    height: number;
+export type StyleImageWebGLData = {
     /**
-     * Draw this image. Called before the first frame it is used in, again whenever
-     * {@link StyleImageContext.invalidate} has been called, and again whenever a slot this image
-     * has never painted is packed into an atlas.
+     * Draw the image. Called before the first frame it is used in, again whenever
+     * {@link StyleImageInterface.render} returns `true`, and again whenever a slot this image has
+     * never painted is packed into an atlas.
      *
      * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
      * `target.texture`. Drawing outside that rectangle corrupts other images. MapLibre restores
@@ -158,24 +130,8 @@ export interface CustomStyleImageInterface {
      * An image can sit in more than one atlas, so one change may call this several times with a
      * different `target`.
      */
-    render: (target: StyleImageRenderTarget) => void;
-    /**
-     * Optional method called when the image has been added to the Map with {@link Map.addImage}.
-     *
-     * @param context - The map this image was added to, its ID, and the callback that asks for
-     * it to be drawn again.
-     */
-    onAdd?: (context: StyleImageContext) => void;
-    /**
-     * Optional method called when the image is removed from the map with
-     * {@link Map.removeImage}. This gives the image a chance to release its GPU resources.
-     *
-     * This also fires when the WebGL context is lost, after which the same image is added back
-     * without a matching `onAdd`, so anything released here has to be recreatable from
-     * {@link CustomStyleImageInterface.render}.
-     */
-    onRemove?: () => void;
-}
+    webgl: (target: StyleImageWebGLTarget) => void;
+};
 
 /**
  * Interface for dynamically generated style images. This is a specification for
@@ -185,9 +141,6 @@ export interface CustomStyleImageInterface {
  * icons and patterns or make them respond to user input. Style images can implement a
  * {@link StyleImageInterface.render} method. The method is called every frame and
  * can be used to update the image.
- *
- * An image that draws itself with WebGL rather than handing over an array of pixels implements
- * {@link CustomStyleImageInterface} instead.
  *
  * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
  *
@@ -233,16 +186,26 @@ export interface CustomStyleImageInterface {
  *  map.addImage('flashing_square', flashingSquare);
  * ```
  */
+
 export interface StyleImageInterface {
     width: number;
     height: number;
-    data: Uint8Array | Uint8ClampedArray;
+    /**
+     * The image's pixels, in the same format as `ImageData`, or a {@link StyleImageWebGLData}
+     * callback that draws them with WebGL. A WebGL image draws straight into its slot of the
+     * shared icon atlas. Nothing new is possible that pixels could not express, but an image that
+     * changes often, such as an animated icon, gets much cheaper: no CPU pixel work and no upload.
+     */
+    data: Uint8Array | Uint8ClampedArray | StyleImageWebGLData;
     /**
      * This method is called once before every frame where the icon will be used.
      * The method can optionally update the image's `data` member with a new image.
      *
      * If the method updates the image it must return `true` to commit the change.
      * If the method returns `false` or nothing the image is assumed to not have changed.
+     *
+     * An image whose `data` draws with WebGL has nothing to update here; returning `true` is how
+     * it asks for {@link StyleImageWebGLData.webgl} to be called again.
      *
      * If updates are infrequent it maybe easier to use {@link Map.updateImage} to update
      * the image instead of implementing this method.
@@ -259,39 +222,28 @@ export interface StyleImageInterface {
     /**
      * Optional method called when the icon is removed from the map with {@link Map.removeImage}.
      * This gives the image a chance to clean up resources and event listeners.
+     *
+     * This also fires when the WebGL context is lost, after which the same image is added back
+     * without a matching `onAdd`, so anything released here has to be recreatable.
      */
     onRemove?: () => void;
 }
 
-export function isCustomStyleImage(image: StyleImageInterface | CustomStyleImageInterface): image is CustomStyleImageInterface {
-    return (image as CustomStyleImageInterface)?.type === 'custom';
-}
-
-export function onAddStyleImage(image: StyleImage, map: Map, id: string): void {
-    const {userImage} = image;
-    if (isCustomStyleImage(userImage)) {
-        userImage.onAdd?.({map, id, invalidate: () => {
-            if (map.style?.getImage(id)?.userImage !== userImage) return;
-            map.style.imageManager.invalidateImage(id);
-            map.triggerRepaint();
-        }});
-        return;
-    }
-    userImage?.onAdd?.(map, id);
+export function isStyleImageWebGLData(data: StyleImageInterface['data']): data is StyleImageWebGLData {
+    return typeof (data as StyleImageWebGLData)?.webgl === 'function';
 }
 
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
-    if (isCustomStyleImage(userImage)) {
-        return false;
-    }
     if (!userImage?.render) {
         return false;
     }
     const updated = userImage.render();
-    if (updated) {
-        image.data.replace(new Uint8Array(userImage.data.buffer));
-        return true;
+    if (!updated) {
+        return false;
     }
-    return false;
+    if (!isStyleImageWebGLData(userImage.data)) {
+        image.data.replace(new Uint8Array(userImage.data.buffer));
+    }
+    return true;
 }

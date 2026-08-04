@@ -31,6 +31,7 @@ import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
@@ -39,9 +40,7 @@ import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
-import {isCustomStyleImage, onAddStyleImage} from '../style/style_image.ts';
-
-import type {CustomStyleImageInterface, StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
+import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
@@ -454,7 +453,7 @@ export type StyleImageSource = HTMLImageElement | ImageBitmap | ImageData | {
     width: number;
     height: number;
     data: Uint8Array | Uint8ClampedArray;
-} | StyleImageInterface | CustomStyleImageInterface;
+} | StyleImageInterface;
 
 /**
  * Callback used by {@link Map.setMissingStyleImageResolver} to resolve missing style images,
@@ -3150,7 +3149,9 @@ export class Map extends Evented<MapEventType> {
         }
 
         this.style.addImage(id, styleImage);
-        onAddStyleImage(styleImage, this, id);
+        if (styleImage.userImage?.onAdd) {
+            styleImage.userImage.onAdd(this, id);
+        }
         return this;
     }
 
@@ -3192,15 +3193,15 @@ export class Map extends Evented<MapEventType> {
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
             return {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version};
-        } else if (isCustomStyleImage(image)) {
-            const {width, height} = image;
-            // The image paints its own slot, so these transparent pixels only ever pad it.
-            return {data: new RGBAImage({width, height}), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version, isCustomImage: true, userImage: image};
         } else if (image.width === undefined || image.height === undefined) {
             this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
                 'or object with `width`, `height`, and `data` properties with the same format as `ImageData`')));
             return null;
+        } else if (isStyleImageWebGLData((image as StyleImageInterface).data)) {
+            const {width, height} = image;
+            // The image paints its own slot, so these transparent pixels only ever pad it.
+            return {data: new RGBAImage({width, height}), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version, isWebGLImage: true, userImage: image};
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
@@ -3240,7 +3241,7 @@ export class Map extends Evented<MapEventType> {
      * if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
      * ```
      */
-    updateImage(id: string, image: Exclude<StyleImageSource, CustomStyleImageInterface>): this {
+    updateImage(id: string, image: StyleImageSource): this {
 
         const existingImage = this.style.getImage(id);
         if (!existingImage) {
@@ -3263,8 +3264,13 @@ export class Map extends Evented<MapEventType> {
                 'The width and height of the updated image must be that same as the previous version of the image')));
         }
 
-        const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
-        existingImage.data.replace(data, copy);
+        existingImage.isWebGLImage = isStyleImageWebGLData(data);
+        if (existingImage.isWebGLImage) {
+            existingImage.userImage = image as StyleImageInterface;
+        } else {
+            const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
+            existingImage.data.replace(data as Uint8Array | Uint8ClampedArray, copy);
+        }
 
         this.style.updateImage(id, existingImage);
         return this;
@@ -4142,7 +4148,7 @@ export class Map extends Evented<MapEventType> {
 
         if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
-            // The atlas textures died with the old context, so images that paint their own slots owe every atlas a fresh paint.
+            // The atlas textures died with the old context, so images that paint themselves with WebGL owe every atlas a fresh paint.
             for (const id in this._lostContextStyle.images) this.style.imageManager.invalidateImage(id);
         }
 
@@ -4325,8 +4331,7 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        // `_frameRequest` covers anything that asked for another frame while this one drew, such as a custom image invalidating itself.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || Boolean(this._frameRequest);
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

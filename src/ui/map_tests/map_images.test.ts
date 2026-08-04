@@ -1,6 +1,6 @@
 import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
-import {type CustomStyleImageInterface, type StyleImageInterface} from '../../style/style_image.ts';
+import {type StyleImageInterface} from '../../style/style_image.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MessageType} from '../../util/actor_messages.ts';
 
@@ -215,10 +215,11 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
-test('map addImage packs a placeholder for a custom image, which brings its own pixels', () => {
+test('map addImage packs a placeholder for a WebGL image, which brings its own pixels', () => {
     const map = createMap();
-    const id = 'add-get-custom-style-image';
-    const inputImage: CustomStyleImageInterface = {type: 'custom', width: 3, height: 2, render: vi.fn()};
+    const id = 'add-get-webgl-style-image';
+    const onAdd = vi.fn();
+    const inputImage: StyleImageInterface = {width: 3, height: 2, data: {webgl: vi.fn()}, onAdd};
 
     map.addImage(id, inputImage);
 
@@ -226,38 +227,21 @@ test('map addImage packs a placeholder for a custom image, which brings its own 
     expect(gotImage.data.width).toBe(3);
     expect(gotImage.data.height).toBe(2);
     expect([...gotImage.data.data]).toEqual(new Array(3 * 2 * 4).fill(0));
-    expect(gotImage.isCustomImage).toBe(true);
+    expect(gotImage.isWebGLImage).toBe(true);
     expect(gotImage.userImage).toBe(inputImage);
+    expect(onAdd).toHaveBeenCalledWith(map, id);
 });
 
-test('a custom image is handed a callback that asks for it to be drawn again', () => {
+test('map updateImage swaps a WebGL image\'s draw callback instead of copying pixels', () => {
     const map = createMap();
-    const onAdd = vi.fn();
-    const image: CustomStyleImageInterface = {type: 'custom', width: 1, height: 1, render: vi.fn(), onAdd};
+    const replacement: StyleImageInterface = {width: 1, height: 1, data: {webgl: vi.fn()}};
 
-    map.addImage('custom', image);
-    expect(onAdd).toHaveBeenCalledWith({map, id: 'custom', invalidate: expect.any(Function)});
+    map.addImage('webgl', {width: 1, height: 1, data: {webgl: vi.fn()}});
+    const version = map.getImage('webgl').version;
+    map.updateImage('webgl', replacement);
 
-    const triggerRepaint = vi.spyOn(map, 'triggerRepaint');
-    const version = map.getImage('custom').version;
-
-    onAdd.mock.calls[0][0].invalidate();
-    expect(map.getImage('custom').version).toBe(version + 1);
-    expect(triggerRepaint).toHaveBeenCalled();
-});
-
-test('a callback held past `removeImage` cannot invalidate whatever took the image ID next', () => {
-    const map = createMap();
-    const onAdd = vi.fn();
-    const image: CustomStyleImageInterface = {type: 'custom', width: 1, height: 1, render: vi.fn(), onAdd};
-
-    map.addImage('custom', image);
-    map.removeImage('custom');
-    map.addImage('custom', {width: 1, height: 1, data: new Uint8Array(4)});
-    const version = map.getImage('custom').version;
-
-    onAdd.mock.calls[0][0].invalidate();
-    expect(map.getImage('custom').version).toBe(version);
+    expect(map.getImage('webgl').userImage).toBe(replacement);
+    expect(map.getImage('webgl').version).toBe(version + 1);
 });
 
 test('map does not fire `styleimagemissing` for empty icon values', async () => {

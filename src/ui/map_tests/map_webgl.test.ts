@@ -93,15 +93,14 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
-test('a CustomStyleImageInterface is told to release its GPU resources on context loss, and survives it', async () => {
+test('a WebGL style image is told to release its GPU resources on context loss, and survives it', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
     await map.once('load');
 
     const userImage = {
-        type: 'custom' as const,
         width: 2, height: 2,
-        render: vi.fn(),
+        data: {webgl: vi.fn()},
         onRemove: vi.fn()
     };
     map.addImage('gpu-image', userImage);

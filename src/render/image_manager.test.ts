@@ -4,40 +4,48 @@ import {RGBAImage} from '../util/image.ts';
 
 import type {StyleImage} from '../style/style_image.ts';
 
-function customImage(render = vi.fn()): StyleImage {
+function webGLImage(render?: () => boolean): StyleImage {
     return {
         data: new RGBAImage({width: 2, height: 2}),
         version: 0,
         pixelRatio: 1,
         sdf: false,
-        isCustomImage: true,
-        userImage: {type: 'custom', width: 2, height: 2, render}
+        isWebGLImage: true,
+        userImage: {width: 2, height: 2, data: {webgl: vi.fn()}, render}
     };
 }
 
-test('a custom image owes the atlas a paint when added and on every invalidate, but is drawn by the atlas patch, not here', () => {
-    const render = vi.fn();
+test('a WebGL image owes every atlas a paint as soon as it is added, even without a render callback', () => {
     const manager = new ImageManager();
-    manager.addImage('custom', customImage(render));
-    expect(manager.getImage('custom').version).toBe(1);
-    expect(manager.updatedImages.custom).toBe(true);
+    manager.addImage('webgl', webGLImage());
 
-    manager.invalidateImage('custom');
-    expect(manager.getImage('custom').version).toBe(2);
+    expect(manager.getImage('webgl').version).toBe(1);
+    expect(manager.updatedImages.webgl).toBe(true);
+});
+
+test('a WebGL image is repainted when its render callback reports a change, and left alone otherwise', () => {
+    const manager = new ImageManager();
+    let changed = false;
+    manager.addImage('webgl', webGLImage(() => changed));
+    const version = manager.getImage('webgl').version;
 
     manager.beginFrame();
-    manager.dispatchRenderCallbacks(['custom']);
-    expect(render).not.toHaveBeenCalled();
-    expect(manager.getImage('custom').version).toBe(2);
+    manager.dispatchRenderCallbacks(['webgl']);
+    expect(manager.getImage('webgl').version).toBe(version);
+
+    changed = true;
+    manager.beginFrame();
+    manager.dispatchRenderCallbacks(['webgl']);
+    expect(manager.getImage('webgl').version).toBe(version + 1);
 });
 
 test('invalidating an image the map does not have does nothing', () => {
     const manager = new ImageManager();
     manager.invalidateImage('never-added');
 
-    manager.addImage('custom', customImage());
-    manager.removeImage('custom');
-    manager.invalidateImage('custom');
+    manager.addImage('webgl', webGLImage());
+    manager.removeImage('webgl');
+    manager.invalidateImage('webgl');
 
     expect(manager.updatedImages['never-added']).toBeUndefined();
 });

@@ -4,7 +4,7 @@ import {register} from '../util/web_worker_transfer.ts';
 import potpack from 'potpack';
 
 import type {StyleImage} from '../style/style_image.ts';
-import {isCustomStyleImage, type TextFit} from '../style/style_image.ts';
+import {isStyleImageWebGLData, type TextFit} from '../style/style_image.ts';
 import type {ImageManager} from './image_manager.ts';
 import type {Texture} from '../webgl/texture.ts';
 import type {Rect} from './glyph_atlas.ts';
@@ -26,7 +26,7 @@ export class ImagePosition {
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
-        isCustomImage,
+        isWebGLImage,
         stretchX,
         stretchY,
         content,
@@ -38,7 +38,7 @@ export class ImagePosition {
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
-        this.version = isCustomImage ? -1 : version;
+        this.version = isWebGLImage ? -1 : version;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
     }
@@ -151,11 +151,11 @@ export class ImageAtlas {
 
         position.version = image.version;
         const [x, y] = position.tl;
-        const {userImage} = image;
-        if (isCustomStyleImage(userImage)) {
+        const data = image.userImage?.data;
+        if (isStyleImageWebGLData(data)) {
             const {width, height} = image.data;
             texture.context.unbindVAO();
-            userImage.render({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+            data.webgl({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
             texture.context.setDirty();
         } else {
             texture.update(image.data, undefined, {x, y});
