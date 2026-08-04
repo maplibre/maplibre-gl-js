@@ -20,14 +20,14 @@
 
     const map = new maplibregl.Map({container: 'map', style: 'https://demotiles.maplibre.org/style.json'});
 
-    // a triangle whose corner colours travel around it once a second, baked into the shader
+    // corner hues that cycle once a second, as cosines of time so that they never jump
     const vertexSource = `#version 300 es
     const vec2 corners[3] = vec2[3](vec2(0.0, 0.9), vec2(-0.8, -0.5), vec2(0.8, -0.5));
-    const vec3 colors[3] = vec3[3](vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
     uniform float u_time;
     out vec3 v_color;
     void main() {
-        v_color = mix(colors[gl_VertexID], colors[(gl_VertexID + 1) % 3], u_time);
+        float hue = u_time + float(gl_VertexID) / 3.0;
+        v_color = 0.4 + cos(6.2832 * (hue + vec3(0.0, 1.0 / 3.0, 2.0 / 3.0)));
         // the atlas holds its rows top to bottom and a framebuffer writes them bottom to top
         gl_Position = vec4(corners[gl_VertexID].x, -corners[gl_VertexID].y, 0.0, 1.0);
     }`;
@@ -59,7 +59,7 @@
             // the viewport confines this draw to the icon's own slot, which it repaints in full
             gl.viewport(x, y, width, height);
             gl.useProgram(this.program);
-            gl.uniform1f(this.uTime, (performance.now() % 1000) / 1000);
+            gl.uniform1f(this.uTime, performance.now() / 1000);
             gl.drawArrays(gl.TRIANGLES, 0, 3);
 
             // ask to be drawn again, which is what keeps the animation going
