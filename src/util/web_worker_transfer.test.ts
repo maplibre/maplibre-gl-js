@@ -119,7 +119,7 @@ describe('web worker transfer', () => {
         const trySerialize = () => {
             serialize(new BadClass());
         };
-        expect(trySerialize).toThrow();
+        expect(trySerialize).toThrow('can\'t serialize object of unregistered class BadClass');
     });
     test('serialize can not used reserved property #name', () => {
         class BadClass {
@@ -133,7 +133,7 @@ describe('web worker transfer', () => {
         const badObject = new BadClass();
         expect(() => {
             serialize(badObject);
-        }).toThrow();
+        }).toThrow('$name property is reserved for worker serialization logic.');
     });
     test('deserialize Object has $name', () => {
         const badObject = {
@@ -142,18 +142,18 @@ describe('web worker transfer', () => {
         const tryDeserialize = () => {
             deserialize(badObject);
         };
-        expect(tryDeserialize).toThrow();
+        expect(tryDeserialize).toThrow('can\'t deserialize unregistered class foo');
     });
 
     test('some objects can not be serialized', () => {
         expect(() => {
             serialize(BigInt(123));
-        }).toThrow();
+        }).toThrow('can\'t serialize object of type bigint');
     });
     test('some objects can not be deserialized', () => {
         expect(() => {
             deserialize(BigInt(123) as unknown);
-        }).toThrow();
+        }).toThrow('can\'t deserialize object of type bigint');
     });
 
     test('"has" filter returns false for undefined or missing properties after serialization', () => {

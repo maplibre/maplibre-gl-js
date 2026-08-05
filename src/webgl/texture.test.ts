@@ -15,7 +15,7 @@ describe('Texture', () => {
             return new Context(createNullGL());
         }
 
-        function checkPixelStoreState(context: Context): void {
+        function expectPixelStoreState(context: Context): void {
             expect(context.pixelStoreUnpack.current).toEqual(context.pixelStoreUnpack.default);
             expect(context.pixelStoreUnpackFlipY.current).toEqual(context.pixelStoreUnpackFlipY.default);
             expect(context.pixelStoreUnpackPremultiplyAlpha.current).toEqual(context.pixelStoreUnpackPremultiplyAlpha.default);
@@ -26,7 +26,7 @@ describe('Texture', () => {
             // We test the Texture constructor's side effects
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _texture = new Texture(context, testImage, context.gl.RGBA, {premultiply: false});
-            checkPixelStoreState(context);
+            expectPixelStoreState(context);
         });
 
         test('premultiply=true', () => {
@@ -34,7 +34,7 @@ describe('Texture', () => {
             // We test the Texture constructor's side effects
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _texture = new Texture(context, testImage, context.gl.RGBA, {premultiply: true});
-            checkPixelStoreState(context);
+            expectPixelStoreState(context);
         });
     });
 

@@ -58,25 +58,25 @@ describe('mercator utils', () => {
     describe('tileCoordinatesToMercatorCoordinates', () => {
         const precisionDigits = 10;
 
-        test('Test 0,0', () => {
+        test('0,0', () => {
             const result = tileCoordinatesToMercatorCoordinates(0, 0, new CanonicalTileID(0, 0, 0));
             expect(result.x).toBe(0);
             expect(result.y).toBe(0);
         });
 
-        test('Test tile center', () => {
+        test('tile center', () => {
             const result = tileCoordinatesToMercatorCoordinates(EXTENT / 2, EXTENT / 2, new CanonicalTileID(0, 0, 0));
             expect(result.x).toBeCloseTo(0.5, precisionDigits);
             expect(result.y).toBeCloseTo(0.5, precisionDigits);
         });
 
-        test('Test higher zoom 0,0', () => {
+        test('higher zoom 0,0', () => {
             const result = tileCoordinatesToMercatorCoordinates(0, 0, new CanonicalTileID(3, 0, 0));
             expect(result.x).toBe(0);
             expect(result.y).toBe(0);
         });
 
-        test('Test higher zoom tile center', () => {
+        test('higher zoom tile center', () => {
             const result = tileCoordinatesToMercatorCoordinates(EXTENT / 2, EXTENT / 2, new CanonicalTileID(3, 0, 0));
             expect(result.x).toBeCloseTo(1 / 16, precisionDigits);
             expect(result.y).toBeCloseTo(1 / 16, precisionDigits);
@@ -86,25 +86,25 @@ describe('mercator utils', () => {
     describe('tileCoordinatesToLocation', () => {
         const precisionDigits = 5;
 
-        test('Test 0,0', () => {
+        test('0,0', () => {
             const result = tileCoordinatesToLocation(0, 0, new CanonicalTileID(0, 0, 0));
             expect(result.lng).toBeCloseTo(-180, precisionDigits);
             expect(result.lat).toBeCloseTo(MAX_VALID_LATITUDE, precisionDigits);
         });
 
-        test('Test tile center', () => {
+        test('tile center', () => {
             const result = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, new CanonicalTileID(0, 0, 0));
             expect(result.lng).toBeCloseTo(0, precisionDigits);
             expect(result.lat).toBeCloseTo(0, precisionDigits);
         });
 
-        test('Test higher zoom 0,0', () => {
+        test('higher zoom 0,0', () => {
             const result = tileCoordinatesToLocation(0, 0, new CanonicalTileID(3, 0, 0));
             expect(result.lng).toBeCloseTo(-180, precisionDigits);
             expect(result.lat).toBeCloseTo(MAX_VALID_LATITUDE, precisionDigits);
         });
 
-        test('Test higher zoom mercator center', () => {
+        test('higher zoom mercator center', () => {
             const result = tileCoordinatesToLocation(EXTENT, EXTENT, new CanonicalTileID(3, 3, 3));
             expect(result.lng).toBeCloseTo(0, precisionDigits);
             expect(result.lat).toBeCloseTo(0, precisionDigits);

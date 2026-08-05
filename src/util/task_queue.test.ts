@@ -85,7 +85,7 @@ describe('TaskQueue', () => {
     test('TaskQueue.run() throws on attempted re-entrance', () => {
         const q = new TaskQueue();
         q.add(() => q.run());
-        expect(() => q.run()).toThrow();
+        expect(() => q.run()).toThrow('Attempting to run(), but is already running.');
     });
 
     test('TaskQueue.clear() prevents queued task from being executed', () => {
