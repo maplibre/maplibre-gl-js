@@ -48,9 +48,6 @@ describe('ImageSource', () => {
 
     afterEach(() => {
         map.remove();
-    });
-
-    afterEach(() => {
         vi.restoreAllMocks();
     });
 

@@ -14,11 +14,11 @@ const loadEsm = (relPath: string) => import(pathToFileURL(path.resolve(relPath))
 describe('ESM build', () => {
     test('main bundle exports the public API', async () => {
         const mod = await loadEsm('dist/maplibre-gl-dev.mjs');
-        expect(typeof mod.Map).toBe('function');
-        expect(typeof mod.Marker).toBe('function');
-        expect(typeof mod.Popup).toBe('function');
-        expect(typeof mod.setWorkerUrl).toBe('function');
-        expect(typeof mod.getWorkerUrl).toBe('function');
+        expect(mod.Map).toBeTypeOf('function');
+        expect(mod.Marker).toBeTypeOf('function');
+        expect(mod.Popup).toBeTypeOf('function');
+        expect(mod.setWorkerUrl).toBeTypeOf('function');
+        expect(mod.getWorkerUrl).toBeTypeOf('function');
     });
 
     test('worker bundle loads as an ES module', async () => {
@@ -34,8 +34,8 @@ describe('ESM build', () => {
     test('production main bundle exports the public API (if built)', async () => {
         if (!fs.existsSync('dist/maplibre-gl.mjs')) return;
         const mod = await loadEsm('dist/maplibre-gl.mjs');
-        expect(typeof mod.Map).toBe('function');
-        expect(typeof mod.setWorkerUrl).toBe('function');
+        expect(mod.Map).toBeTypeOf('function');
+        expect(mod.setWorkerUrl).toBeTypeOf('function');
     });
 
     test('production worker bundle loads as an ES module (if built)', async () => {

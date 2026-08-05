@@ -71,7 +71,7 @@ describe('VertexBuffer', () => {
 
         expect(array.arrayBuffer.byteLength).toBe(0);
         expect(array.int16.buffer).not.toBe(originalBuffer);
-        expect(array.int16.length).toBe(0);
+        expect(array.int16).toHaveLength(0);
     });
 
     test('dynamic buffer preserves StructArray data after upload', () => {
