@@ -46,6 +46,8 @@ describe('render', () => {
 
     test('must not fail with incompletely loaded style', () => {
         painter.render(style, renderOptions);
+
+        expect(painter.renderPass).toBe('translucent');
     });
 
     test('calls terrainDepth but not terrainCoords', () => {
