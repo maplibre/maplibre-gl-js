@@ -519,6 +519,7 @@ export class TileManager extends Evented {
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
+                usedForTerrain: this.usedForTerrain,
                 calculateTileZoom: this._source.calculateTileZoom,
             });
 

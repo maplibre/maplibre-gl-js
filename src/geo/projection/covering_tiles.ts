@@ -51,6 +51,12 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
      */
     reparseOverscaled?: boolean;
     /**
+     * `true` when this covering organizes the raster-dem source that terrain reads
+     * elevation from. Disables the near-terrain zoom refinement, whose inputs derive
+     * from the DEM tiles this covering would select.
+     */
+    usedForTerrain?: boolean;
+    /**
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
@@ -246,7 +252,12 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
-    const refineNearTerrain = options.terrain && transform.pitch > maxConstantZoomPitch(transform);
+    // The raster-dem source's own covering is never refined: its selection controls which
+    // DEM tiles are loaded, and every DEM-derived covering input (elevation ranges, culling
+    // volumes, center elevation) would then feed back into the selection and oscillate,
+    // never letting the map reach idle. All other coverings (draped sources, RTT tiles)
+    // only consume DEM state, so refining them converges once the DEM set has loaded.
+    const refineNearTerrain = options.terrain && !options.usedForTerrain && transform.pitch > maxConstantZoomPitch(transform);
     
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
