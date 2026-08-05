@@ -98,7 +98,8 @@ test('removeLayer restores Map.loaded() to true', async () => {
 
     await map.once('render');
     map.removeLayer('layerId');
-    await waitForEvent(map, 'render', () => map.loaded());
+    await expect(waitForEvent(map, 'render', () => map.loaded())).resolves.toBeDefined();
+
     map.remove();
 });
 

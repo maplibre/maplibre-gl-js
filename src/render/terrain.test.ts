@@ -364,7 +364,7 @@ describe('Terrain', () => {
         const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
         terrain.getDEMElevation(tileID, EXTENT + 100, 50);
 
-        expect(getSourceTile).toHaveBeenCalledOnce();
+        expect(getSourceTile).toHaveBeenCalledTimes(1);
         const [calledTileID] = getSourceTile.mock.calls[0];
         expect(calledTileID.canonical.x).toBe(1);
         expect(calledTileID.canonical.y).toBe(0);
@@ -395,11 +395,11 @@ describe('Terrain', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(0, 88), 0)).toBe(0);
         });
 
-        test('zoom', () => {
+        test('zoom below the minimum', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MIN_TILE_ZOOM - 1)).toBe(0);
         });
 
-        test('zoom', () => {
+        test('zoom above the maximum', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MAX_TILE_ZOOM + 1)).toBe(0);
         });
     });

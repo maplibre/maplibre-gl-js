@@ -33,10 +33,10 @@ test('loadGlyphRange', async ()  => {
 
         expect(glyph.id).toBe(Number(id));
         expect(glyph.metrics).toBeTruthy();
-        expect(typeof glyph.metrics.width).toBe('number');
-        expect(typeof glyph.metrics.height).toBe('number');
-        expect(typeof glyph.metrics.top).toBe('number');
-        expect(typeof glyph.metrics.advance).toBe('number');
+        expect(glyph.metrics.width).toBeTypeOf('number');
+        expect(glyph.metrics.height).toBeTypeOf('number');
+        expect(glyph.metrics.top).toBeTypeOf('number');
+        expect(glyph.metrics.advance).toBeTypeOf('number');
     }
     expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
 });
@@ -64,10 +64,10 @@ test('loadGlyphRange with async transformRequest', async () => {
 
         expect(glyph.id).toBe(Number(id));
         expect(glyph.metrics).toBeTruthy();
-        expect(typeof glyph.metrics.width).toBe('number');
-        expect(typeof glyph.metrics.height).toBe('number');
-        expect(typeof glyph.metrics.top).toBe('number');
-        expect(typeof glyph.metrics.advance).toBe('number');
+        expect(glyph.metrics.width).toBeTypeOf('number');
+        expect(glyph.metrics.height).toBeTypeOf('number');
+        expect(glyph.metrics.top).toBeTypeOf('number');
+        expect(glyph.metrics.advance).toBeTypeOf('number');
     }
     expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
     expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');

@@ -105,7 +105,7 @@ describe('setTerrain', () => {
             source: {type: 'raster-dem'}
         } as any);
 
-        expect(resetElevationCache).toHaveBeenCalledOnce();
+        expect(resetElevationCache).toHaveBeenCalledTimes(1);
     });
 });
 

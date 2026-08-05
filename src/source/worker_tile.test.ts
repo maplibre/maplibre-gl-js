@@ -299,9 +299,11 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(() => expect(false).toBeTruthy());
-        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(() => expect(false).toBeTruthy());
+        const onSettled = vi.fn();
+        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
+        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
         const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
+        expect(onSettled).not.toHaveBeenCalled();
         expect(result).toBeDefined();
         expect(cancelCount).toBe(6);
         expect(sendAsync).toHaveBeenCalledTimes(9);
