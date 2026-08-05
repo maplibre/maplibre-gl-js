@@ -316,8 +316,16 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         // inflate the overscaled zoom, whose key would then shift as DEM tiles load in.
         let distToTileZ = distanceZ;
         if (refineNearTerrain && it.zoom < maxZoom) {
+            // The elevation range is read from a fixed coarse level rather than the
+            // candidate's own: the covering selection drives which DEM tiles load, and
+            // reading the candidate's level feeds the selection back into itself (parent
+            // data selects deeper tiles, whose narrower own-level data then deselects
+            // them), which can oscillate forever and never let the map reach idle. A
+            // coarse ancestor's range is a superset of the candidate's, erring toward
+            // slightly more detail.
+            const qz = Math.min(tileID.z, Math.max(minZoom, desiredZ - 2));
             const {minElevation, maxElevation} = options.terrain.getMinMaxElevation(
-                new OverscaledTileID(tileID.z, it.wrap, tileID.z, tileID.x, tileID.y));
+                new OverscaledTileID(qz, it.wrap, qz, tileID.x >> (tileID.z - qz), tileID.y >> (tileID.z - qz)));
             if (minElevation !== null && maxElevation !== null) {
                 const minZ = mercatorZfromAltitude(minElevation, transform.center.lat);
                 const maxZ = mercatorZfromAltitude(maxElevation, transform.center.lat);
