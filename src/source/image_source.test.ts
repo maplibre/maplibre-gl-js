@@ -19,6 +19,19 @@ function createSource(options) {
     return new ImageSource('id', options, {} as any, options.eventedParent);
 }
 
+async function createLoadedSourceWithTile(map: Map, server: FakeServer) {
+    server.respondImmediately = true;
+    const source = createSource({url: '/image.png', eventedParent: map});
+    const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+    source.onAdd(map);
+    await loaded;
+
+    const {z, x, y} = source.tileID;
+    const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
+    await source.loadTile(tile);
+    return {source, tile};
+}
+
 describe('ImageSource', () => {
     stubAjaxGetImage(undefined);
     let server: FakeServer;
@@ -202,6 +215,57 @@ describe('ImageSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
+    test('uploads a url into the texture the tiles already hold', async () => {
+        const {source, tile} = await createLoadedSourceWithTile(map, server);
+        source.prepare();
+        const texture = source.texture;
+        const upload = vi.spyOn(texture, 'update');
+        const destroy = vi.spyOn(texture, 'destroy');
+
+        const load = vi.spyOn(source, 'load');
+        source.updateImage({url: '/image2.png'});
+        await load.mock.results[0].value;
+        source.prepare();
+
+        expect(upload).toHaveBeenCalledTimes(1);
+        expect(destroy).not.toHaveBeenCalled();
+        expect(source.texture).toBe(texture);
+        expect(tile.texture).toBe(texture);
+    });
+
+    test('uploads a decoded image into the texture the tiles already hold', async () => {
+        const {source, tile} = await createLoadedSourceWithTile(map, server);
+        source.prepare();
+        const texture = source.texture;
+        const upload = vi.spyOn(texture, 'update');
+        const destroy = vi.spyOn(texture, 'destroy');
+
+        source.updateImage({image: new ImageBitmap()});
+        source.prepare();
+
+        expect(upload).toHaveBeenCalledTimes(1);
+        expect(destroy).not.toHaveBeenCalled();
+        expect(source.texture).toBe(texture);
+        expect(tile.texture).toBe(texture);
+    });
+
+    test('keeps the texture the tiles hold live when updateImage runs from an event fired during prepare', async () => {
+        const {source, tile} = await createLoadedSourceWithTile(map, server);
+        source.on('data', (e: MapSourceDataEvent) => {
+            if (e.sourceDataType === 'idle') source.updateImage({image: new ImageBitmap()});
+        });
+
+        source.prepare();
+
+        expect(source.texture).toBeTruthy();
+        expect(tile.texture).toBe(source.texture);
+        expect(source.texture.texture).not.toBeNull();
+
+        const upload = vi.spyOn(source.texture, 'update');
+        source.prepare();
+        expect(upload).toHaveBeenCalledTimes(1);
+    });
+
     test('serialize url and coordinates', () => {
         const source = createSource({url: '/image.png'});
 
@@ -278,99 +342,39 @@ describe('ImageSource', () => {
         expect(errorHandler).not.toHaveBeenCalled();
     });
 
-    describe('texture lifecycle', () => {
-        let source: ImageSource;
-        let tile: Tile;
+    test('keeps the image it displays, and its texture, when the url handed to updateImage fails to load', async () => {
+        const {source} = await createLoadedSourceWithTile(map, server);
+        source.prepare();
+        const texture = source.texture;
+        const image = source.image;
+        const upload = vi.spyOn(texture, 'update');
+        const destroy = vi.spyOn(texture, 'destroy');
+        const errorHandler = vi.fn();
+        map.on('error', errorHandler);
 
-        beforeEach(async () => {
-            server.respondImmediately = true;
-            source = createSource({url: '/image.png', eventedParent: map});
-            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-            source.onAdd(map);
-            await loaded;
+        const load = vi.spyOn(source, 'load');
+        source.updateImage({url: '/missing-image.png'});
+        await load.mock.results[0].value;
+        source.prepare();
 
-            const {z, x, y} = source.tileID;
-            tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
-            await source.loadTile(tile);
-        });
+        expect(errorHandler).toHaveBeenCalledTimes(1);
+        expect(destroy).not.toHaveBeenCalled();
+        expect(upload).not.toHaveBeenCalled();
+        expect(source.texture).toBe(texture);
+        expect(source.image).toBe(image);
+    });
 
-        test('uploads a url into the texture the tiles already hold', async () => {
-            source.prepare();
-            const texture = source.texture;
-            const upload = vi.spyOn(texture, 'update');
-            const destroy = vi.spyOn(texture, 'destroy');
+    test('deletes its texture and drops its image when the source is removed', async () => {
+        const {source} = await createLoadedSourceWithTile(map, server);
+        source.prepare();
+        const destroy = vi.spyOn(source.texture, 'destroy');
 
-            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-            source.updateImage({url: '/image2.png'});
-            await loaded;
-            source.prepare();
+        source.onRemove();
 
-            expect(upload).toHaveBeenCalledTimes(1);
-            expect(destroy).not.toHaveBeenCalled();
-            expect(source.texture).toBe(texture);
-            expect(tile.texture).toBe(texture);
-        });
-
-        test('uploads a decoded image into the texture the tiles already hold', () => {
-            source.prepare();
-            const texture = source.texture;
-            const upload = vi.spyOn(texture, 'update');
-            const destroy = vi.spyOn(texture, 'destroy');
-
-            source.updateImage({image: new ImageBitmap()});
-            source.prepare();
-
-            expect(upload).toHaveBeenCalledTimes(1);
-            expect(destroy).not.toHaveBeenCalled();
-            expect(source.texture).toBe(texture);
-            expect(tile.texture).toBe(texture);
-        });
-
-        test('keeps the texture the tiles hold live when updateImage runs from an event fired during prepare', () => {
-            source.on('data', (e: MapSourceDataEvent) => {
-                if (e.sourceDataType === 'idle') source.updateImage({image: new ImageBitmap()});
-            });
-
-            source.prepare();
-
-            // prepare() runs inside painter.render(), which draws the tiles after it returns.
-            expect(source.texture).toBeTruthy();
-            expect(tile.texture).toBe(source.texture);
-            expect(source.texture.texture).not.toBeNull();
-        });
-
-        test('deletes its texture and drops its image when the source is removed', () => {
-            source.prepare();
-            const destroy = vi.spyOn(source.texture, 'destroy');
-
-            source.onRemove();
-
-            expect(destroy).toHaveBeenCalledTimes(1);
-            expect(source.texture).toBeNull();
-            expect(source.image).toBeNull();
-            expect(source.tiles).toEqual({});
-        });
-
-        test('keeps the image it displays, and its texture, when the url handed to updateImage fails to load', async () => {
-            source.prepare();
-            const texture = source.texture;
-            const image = source.image;
-            const upload = vi.spyOn(texture, 'update');
-            const destroy = vi.spyOn(texture, 'destroy');
-            const errorHandler = vi.fn();
-            map.on('error', errorHandler);
-
-            const failed = waitForEvent(source, 'error', () => true);
-            source.updateImage({url: '/missing-image.png'});
-            await failed;
-            source.prepare();
-
-            expect(errorHandler).toHaveBeenCalledTimes(1);
-            expect(destroy).not.toHaveBeenCalled();
-            expect(upload).not.toHaveBeenCalled();
-            expect(source.texture).toBe(texture);
-            expect(source.image).toBe(image);
-        });
+        expect(destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+        expect(source.image).toBeNull();
+        expect(source.tiles).toEqual({});
     });
 
     describe('updateImage with a decoded image', () => {
