@@ -75,6 +75,13 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         };
     }
 
+    /**
+     * Zooms around the pointer.
+     *
+     * `setLocationAtPoint` is exact but degenerates when called repeatedly for a
+     * location whose longitude is far from the center's, or one near the horizon,
+     * so those cases blend towards a heuristic.
+     */
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
         const zoomPixel = deltas.around;
         const zoomLoc = tr.screenPointToLocation(zoomPixel);
@@ -89,12 +96,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         if (actualZoomDelta === 0) {
             return;
         }
-
-        // Problem: `setLocationAtPoint` for globe works when it is called a single time, but is a little glitchy in practice when used repeatedly for zooming.
-        // - `setLocationAtPoint` repeatedly called at a location behind a pole will eventually glitch out
-        // - `setLocationAtPoint` at location the longitude of which is more than 90° different from current center will eventually glitch out
-        // But otherwise works fine at higher zooms, or when the target is somewhat near the current map center.
-        // Solution: use a heuristic zooming in the problematic cases and interpolate to `setLocationAtPoint` when possible.
 
         const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
         const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
