@@ -303,10 +303,6 @@ describe('ImageSource', () => {
             source.map = map;
         });
 
-        afterEach(() => {
-            expect(errorHandler).not.toHaveBeenCalled();
-        });
-
         test('cancels a load before its request is issued and keeps the new image', async () => {
             const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async () => ({data: new ImageBitmap()}));
             const load = source.load();
@@ -317,6 +313,7 @@ describe('ImageSource', () => {
 
             expect(getImageSpy).not.toHaveBeenCalled();
             expect(source.image).toBe(bitmap);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('a superseded load neither reports itself loaded nor disarms its replacement', async () => {
@@ -336,6 +333,7 @@ describe('ImageSource', () => {
             expect(controllers).toHaveLength(2);
             expect(controllers[1].signal.aborted).toBe(true);
             expect(source.image).toBe(bitmap);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('a superseded load that still succeeds leaves its replacement armed', async () => {
@@ -353,7 +351,7 @@ describe('ImageSource', () => {
 
             // No abort listener: past the response, the decode ignores the signal.
             const getImageSpy = vi.spyOn(ImageRequest, 'getImage')
-                .mockImplementationOnce(() => new Promise<{data: ImageBitmap}>((resolve) => {
+                .mockReturnValueOnce(new Promise<{data: ImageBitmap}>((resolve) => {
                     respondToFirstRequest = resolve;
                     markFirstRequestIssued();
                 }))
@@ -379,6 +377,7 @@ describe('ImageSource', () => {
 
             expect(getImageSpy).toHaveBeenCalledTimes(2);
             expect(replacementController.signal.aborted).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('a superseded load does not overwrite the image that replaced it', async () => {
@@ -403,6 +402,7 @@ describe('ImageSource', () => {
             await load;
 
             expect(source.image).toBe(bitmap);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
     });
 
@@ -422,11 +422,6 @@ describe('ImageSource', () => {
             transformRequest.mockClear();
         });
 
-        // Every test here aborts the initial, never-responded request.
-        afterEach(() => {
-            expect(errorHandler).not.toHaveBeenCalled();
-        });
-
         test('sets the image directly without a network request and fires metadata', () => {
             const handler = vi.fn();
             source.on('data', handler);
@@ -442,6 +437,7 @@ describe('ImageSource', () => {
                 ([e]) => e.dataType === 'source' && e.sourceDataType === 'metadata'
             );
             expect(firedMetadata).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('resets the texture so the new image is uploaded on the next prepare', () => {
@@ -449,6 +445,7 @@ describe('ImageSource', () => {
             source.updateImage({image: new ImageBitmap()});
 
             expect(source.texture).toBeNull();
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('updates coordinates alongside the image', () => {
@@ -458,12 +455,14 @@ describe('ImageSource', () => {
             });
 
             expect(source.serialize().coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('cancels a pending request', () => {
             const spy = vi.spyOn(source._request, 'abort');
             source.updateImage({image: new ImageBitmap()});
             expect(spy).toHaveBeenCalled();
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('accepts an ImageData instance', () => {
@@ -473,6 +472,7 @@ describe('ImageSource', () => {
             expect(transformRequest).not.toHaveBeenCalled();
             expect(source.image).toBe(imageData);
             expect(source.loaded()).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
     });
 
