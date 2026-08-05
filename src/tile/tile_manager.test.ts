@@ -500,7 +500,7 @@ describe('TileManager._reloadTile', () => {
         expect(tile.fadeEndTime).toBe(1300);
     });
 
-    test('bases the self fade timer on the load when it arrives before the first load lands', async () => {
+    test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tileManager = createTileManager();
         tileManager._rasterFadeDuration = 300;
