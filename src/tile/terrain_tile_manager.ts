@@ -112,6 +112,17 @@ export class TerrainTileManager extends Evented {
                 this._lastTilesetChange = now();
             }
         }
+        // TEMPORARY diagnostics for the windows fog-sky-blend-globe idle timeout; will be dropped.
+        {
+            const cover = this._renderableTilesKeys.slice().sort().join(',');
+            if (cover !== (this as any)._dbgLastCover) {
+                (this as any)._dbgLastCover = cover;
+                let h = 0;
+                for (let i = 0; i < cover.length; i++) h = (h * 31 + cover.charCodeAt(i)) | 0;
+                // eslint-disable-next-line no-console
+                console.log(`[cover] rtt n=${this._renderableTilesKeys.length} h=${h}`);
+            }
+        }
         // free unused tiles
         for (const key in this._tiles) {
             if (!keys[key]) {

@@ -4225,6 +4225,14 @@ export class Map extends Evented<MapEventType> {
      * @param paintStartTimeStamp - The time when the animation frame began executing.
      */
     _render(paintStartTimeStamp: number): this {
+        // TEMPORARY diagnostics for the windows fog-sky-blend-globe idle timeout; will be dropped.
+        if (this.terrain) {
+            (this as any)._dbgFrames = ((this as any)._dbgFrames || 0) + 1;
+            if ((this as any)._dbgFrames % 120 === 0) {
+                // eslint-disable-next-line no-console
+                console.log(`[frames] ${(this as any)._dbgFrames} tilesLoaded=${this.areTilesLoaded()}`);
+            }
+        }
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         const isGlobeRendering = this.style.projection?.transitionState > 0;
