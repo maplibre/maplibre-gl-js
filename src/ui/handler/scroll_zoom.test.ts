@@ -360,6 +360,7 @@ describe('ScrollZoomHandler', () => {
 
         const map = createMap();
         map._renderTaskQueue.run();
+        const startZoom = map.getZoom();
 
         simulate.wheel(map.getCanvas(), {deltaY: -1});
         simulate.wheel(map.getCanvas(), {deltaY: -1});
@@ -373,6 +374,7 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
         map._renderTaskQueue.run();
 
+        expect(map.getZoom()).toBeCloseTo(startZoom);
         map.remove();
     });
 

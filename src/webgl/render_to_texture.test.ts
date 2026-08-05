@@ -1,4 +1,4 @@
-import {beforeEach, describe, test, expect, vi, type Mock} from 'vitest';
+import {beforeEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
@@ -155,8 +155,8 @@ describe('render to texture', () => {
         tile.rttObjects[0] = obj;
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
-        (terrain.tileManager.getTerrainCoords as Mock).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
-        (painter.releaseRTT as Mock).mockClear();
+        (vi.mocked(terrain.tileManager.getTerrainCoords)).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
+        (vi.mocked(painter.releaseRTT)).mockClear();
 
         rtt.prepareForRender(style, 0);
 
@@ -218,7 +218,7 @@ describe('render to texture', () => {
 
     test('should clear tile cache on source state update', () => {
         const state = {revision: 0};
-        (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue(state as any);
 
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
@@ -289,7 +289,7 @@ describe('render to texture', () => {
             }
         } as any as Style;
 
-        (terrain.tileManager.getTerrainCoords as Mock).mockClear();
+        (vi.mocked(terrain.tileManager.getTerrainCoords)).mockClear();
         rtt.prepareForRender(testStyle, 0);
 
         expect(maineTileManager.getVisibleCoordinates).toHaveBeenCalledTimes(1);
