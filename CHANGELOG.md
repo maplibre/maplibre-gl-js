@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix raster tiles fading in again when they are reloaded, briefly flashing the map background, most visibly when switching projection ([#8106](https://github.com/maplibre/maplibre-gl-js/pull/8106)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
 ## 6.1.0
