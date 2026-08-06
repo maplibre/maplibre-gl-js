@@ -8,6 +8,7 @@
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Emit an error event when `Map#queryRenderedFeatures` receives more than two screen points ([#5685](https://github.com/maplibre/maplibre-gl-js/issues/5685)) (by [@isjiajia01](https://github.com/isjiajia01))
 - _...Add new stuff here..._
 
 ## 6.7.0
