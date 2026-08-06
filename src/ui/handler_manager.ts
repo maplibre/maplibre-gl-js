@@ -676,12 +676,9 @@ export class HandlerManager {
             }
         }
 
-        for (const name in endEvents) {
-            this._fireEvent(name, endEvents[name]);
-        }
-
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
+        // unfreeze elevation and apply the correction before the end events, so dragend and moveend agree
         if (finishedMoving && this._terrainMovement) {
             this._camera.elevationFreeze = false;
             this._terrainMovement = false;
@@ -690,6 +687,9 @@ export class HandlerManager {
                 tr.recalculateZoomAndCenter(this._map.terrain);
             }
             this._camera.applyUpdatedTransform(tr);
+        }
+        for (const name in endEvents) {
+            this._fireEvent(name, endEvents[name]);
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;

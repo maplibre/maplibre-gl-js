@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `dragend` and `moveend` reporting a different center and zoom when terrain DEM elevation arrives during a drag ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989)) (by [@xvodddwannaG](https://github.com/xvodddwannaG))
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Improve terrain elevation sampling performance by caching DEM tile lookups and coordinate transforms within each render ([#8025](https://github.com/maplibre/maplibre-gl-js/pull/8025)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
