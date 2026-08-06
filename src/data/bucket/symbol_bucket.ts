@@ -3,11 +3,13 @@ import {
     collisionVertexAttributes,
     collisionBoxLayout,
     dynamicLayoutAttributes,
+    rotationAlignmentAttributes,
 } from './symbol_attributes.ts';
 
 import {SymbolLayoutArray,
     SymbolDynamicLayoutArray,
     SymbolOpacityArray,
+    SymbolRotationAlignmentArray,
     CollisionBoxLayoutArray,
     CollisionVertexArray,
     PlacedSymbolArray,
@@ -175,12 +177,15 @@ export class SymbolBuffers {
     opacityVertexBuffer: VertexBuffer;
     hasVisibleVertices: boolean;
 
+    rotationAlignmentVertexArray: SymbolRotationAlignmentArray;
+    rotationAlignmentVertexBuffer: VertexBuffer;
+
     collisionVertexArray: CollisionVertexArray;
     collisionVertexBuffer: VertexBuffer;
 
     placedSymbolArray: PlacedSymbolArray;
 
-    constructor(programConfigurations: ProgramConfigurationSet<SymbolStyleLayer>) {
+    constructor(programConfigurations: ProgramConfigurationSet<SymbolStyleLayer>, hasRotationAlignmentData: boolean = false) {
         this.layoutVertexArray = new SymbolLayoutArray();
         this.indexArray = new TriangleIndexArray();
         this.programConfigurations = programConfigurations;
@@ -189,6 +194,9 @@ export class SymbolBuffers {
         this.opacityVertexArray = new SymbolOpacityArray();
         this.hasVisibleVertices = false;
         this.placedSymbolArray = new PlacedSymbolArray();
+        if (hasRotationAlignmentData) {
+            this.rotationAlignmentVertexArray = new SymbolRotationAlignmentArray();
+        }
     }
 
     isEmpty(): boolean {
@@ -211,6 +219,9 @@ export class SymbolBuffers {
             // This is a performance hack so that we can write to opacityVertexArray with uint32s
             // even though the shaders read uint8s
             this.opacityVertexBuffer.itemSize = 1;
+            if (this.rotationAlignmentVertexArray) {
+                this.rotationAlignmentVertexBuffer = context.createVertexBuffer(this.rotationAlignmentVertexArray, rotationAlignmentAttributes.members);
+            }
         }
         if (upload || update) {
             this.programConfigurations.upload(context);
@@ -225,6 +236,7 @@ export class SymbolBuffers {
         this.segments.destroy();
         this.dynamicLayoutVertexBuffer.destroy();
         this.opacityVertexBuffer.destroy();
+        this.rotationAlignmentVertexBuffer?.destroy();
     }
 }
 
@@ -403,7 +415,9 @@ export class SymbolBucket implements Bucket {
 
     createArrays(): void {
         this.text = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, property => property.startsWith('text')));
-        this.icon = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, property => property.startsWith('icon')));
+        this.icon = new SymbolBuffers(
+            new ProgramConfigurationSet(this.layers, this.zoom, property => property.startsWith('icon')),
+            this.layers[0].hasDataDrivenIconRotationAlignment);
 
         this.glyphOffsetArray = new GlyphOffsetArray();
         this.lineVertexArray = new SymbolLineVertexArray();
@@ -635,7 +649,7 @@ export class SymbolBucket implements Bucket {
         quads: SymbolQuad[],
         sizeVertex: any,
         lineOffset: [number, number],
-        alongLine: boolean,
+        rotateWithMap: boolean,
         feature: SymbolFeature,
         writingMode: WritingMode,
         labelAnchor: Anchor,
@@ -665,6 +679,14 @@ export class SymbolBucket implements Bucket {
             addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, br.x, y + br.y, tex.x + tex.w, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY);
 
             addDynamicAttributes(arrays.dynamicLayoutVertexArray, labelAnchor, angle);
+
+            if (arrays.rotationAlignmentVertexArray) {
+                const rotate = rotateWithMap ? 1 : 0;
+                arrays.rotationAlignmentVertexArray.emplaceBack(rotate);
+                arrays.rotationAlignmentVertexArray.emplaceBack(rotate);
+                arrays.rotationAlignmentVertexArray.emplaceBack(rotate);
+                arrays.rotationAlignmentVertexArray.emplaceBack(rotate);
+            }
 
             indexArray.emplaceBack(index, index + 2, index + 1);
             indexArray.emplaceBack(index + 1, index + 2, index + 3);

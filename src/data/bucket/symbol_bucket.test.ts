@@ -109,6 +109,22 @@ describe('SymbolBucket', () => {
         expect(b2).toBe(a2);
     });
 
+    test('skips feature rotation alignment without per-vertex data', () => {
+        const bucket = bucketSetup();
+        const options = createPopulateOptions([]);
+        const getIconRotateWithMap = vi.spyOn(bucket.layers[0], 'getIconRotateWithMap');
+
+        bucket.populate(features, options, undefined);
+        performSymbolLayout({
+            bucket,
+            glyphMap: stacks,
+            glyphPositions: {},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+        } as any);
+
+        expect(getIconRotateWithMap).not.toHaveBeenCalled();
+    });
+
     test('SymbolBucket integer overflow', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         SymbolBucket.MAX_GLYPHS = 5;
