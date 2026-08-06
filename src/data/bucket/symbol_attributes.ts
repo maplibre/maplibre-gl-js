@@ -14,6 +14,11 @@ export const placementOpacityAttributes: StructArrayLayout = createLayout([
     {name: 'a_fade_opacity', components: 1, type: 'Uint32'}
 ], 4);
 
+/** Stores supported data-driven `icon-rotation-alignment` values as 1 for `map` and 0 for `viewport`. */
+export const rotationAlignmentAttributes: StructArrayLayout = createLayout([
+    {name: 'a_rotate_symbol', components: 1, type: 'Uint8'}
+]);
+
 export const collisionVertexAttributes: StructArrayLayout = createLayout([
     {name: 'a_placed', components: 2, type: 'Uint8'},
     {name: 'a_shift', components: 2, type: 'Float32'},

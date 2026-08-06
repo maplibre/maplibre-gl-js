@@ -28,6 +28,7 @@ import {
     symbolLayoutAttributes,
     dynamicLayoutAttributes,
     placementOpacityAttributes,
+    rotationAlignmentAttributes,
     collisionBox,
     collisionBoxLayout,
     collisionCircleLayout,
@@ -155,6 +156,7 @@ for (const name in layoutAttributes) {
 createStructArrayType('symbol_layout', symbolLayoutAttributes);
 createStructArrayType('symbol_dynamic_layout', dynamicLayoutAttributes);
 createStructArrayType('symbol_opacity', placementOpacityAttributes);
+createStructArrayType('symbol_rotation_alignment', rotationAlignmentAttributes);
 createStructArrayType('collision_box', collisionBox, true);
 createStructArrayType('collision_box_layout', collisionBoxLayout);
 createStructArrayType('collision_circle_layout', collisionCircleLayout);

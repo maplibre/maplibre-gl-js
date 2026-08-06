@@ -13,6 +13,8 @@ import {
     type PropertyValue
 } from '../properties.ts';
 
+import {warnOnce} from '../../util/util.ts';
+
 import {
     isExpression,
     StyleExpression,
@@ -41,6 +43,12 @@ export class SymbolStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<SymbolPaintProps>;
     paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
 
+    /** Whether this layer uses per-vertex icon rotation alignment. */
+    hasDataDrivenIconRotationAlignment: boolean;
+
+    /** What `icon-rotation-alignment: auto` stands for in this layer, see {@link recalculate}. */
+    _autoIconRotationAlignment: 'map' | 'viewport';
+
     constructor(layer: LayerSpecification, globalState: Record<string, any>) {
         super(layer, properties, globalState);
     }
@@ -48,12 +56,17 @@ export class SymbolStyleLayer extends StyleLayer {
     recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
 
-        if (this.layout.get('icon-rotation-alignment') === 'auto') {
-            if (this.layout.get('symbol-placement') !== 'point') {
-                this.layout._values['icon-rotation-alignment'] = 'map';
-            } else {
-                this.layout._values['icon-rotation-alignment'] = 'viewport';
-            }
+        // `auto` is resolved against `symbol-placement`, which is never data-driven, so the value it
+        // stands for is the same for every feature even when the property itself is a data
+        // expression.
+        this._autoIconRotationAlignment = this.layout.get('symbol-placement') !== 'point' ? 'map' : 'viewport';
+
+        const iconRotationAlignment = this.layout.get('icon-rotation-alignment');
+        if (iconRotationAlignment.constantOr(null) === 'auto') {
+            this.layout._values['icon-rotation-alignment'] = new PossiblyEvaluatedPropertyValue(
+                iconRotationAlignment.property,
+                {kind: 'constant', value: this._autoIconRotationAlignment},
+                iconRotationAlignment.parameters);
         }
 
         if (this.layout.get('text-rotation-alignment') === 'auto') {
@@ -69,8 +82,13 @@ export class SymbolStyleLayer extends StyleLayer {
             this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment') === 'map' ? 'map' : 'viewport';
         }
         if (this.layout.get('icon-pitch-alignment') === 'auto') {
-            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment');
+            // `icon-pitch-alignment` is not data-driven, so it cannot inherit a data expression.
+            // Such layers fall back to `viewport`, which is also the only pitch alignment that
+            // per-feature rotation alignment is supported with.
+            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment').constantOr('viewport');
         }
+
+        this.hasDataDrivenIconRotationAlignment = this._supportsDataDrivenIconRotationAlignment();
 
         if (this.layout.get('symbol-placement') === 'point') {
             const writingModes = this.layout.get('text-writing-mode');
@@ -87,6 +105,34 @@ export class SymbolStyleLayer extends StyleLayer {
         }
 
         this._setPaintOverrides();
+    }
+
+    /**
+     * A data-driven `icon-rotation-alignment` is realised by rotating each symbol in the vertex
+     * shader, which is only how alignment is expressed for point symbols drawn in the viewport
+     * plane. Along a line the angle comes from the CPU-side line projection, and with
+     * `icon-pitch-alignment: map` it is baked into the label plane matrix. Both are per-layer. Such
+     * layers keep the old behaviour, using the constant fallback for the whole layer.
+     */
+    _supportsDataDrivenIconRotationAlignment(): boolean {
+        if (this.layout.get('icon-rotation-alignment').isConstant()) {
+            return false;
+        }
+        if (this.layout.get('symbol-placement') !== 'point') {
+            warnOnce(`${this.id}: data-driven "icon-rotation-alignment" is only supported with "symbol-placement": "point".`);
+            return false;
+        }
+        if (this.layout.get('icon-pitch-alignment') === 'map') {
+            warnOnce(`${this.id}: data-driven "icon-rotation-alignment" is not supported with "icon-pitch-alignment": "map".`);
+            return false;
+        }
+        return true;
+    }
+
+    /** Resolves the feature alignment to whether the icon rotates with the map. */
+    getIconRotateWithMap(feature: Feature, canonical: CanonicalTileID): boolean {
+        const alignment = this.layout.get('icon-rotation-alignment').evaluate(feature, {}, canonical);
+        return (alignment === 'auto' ? this._autoIconRotationAlignment : alignment) === 'map';
     }
 
     getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]): any {

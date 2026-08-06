@@ -17,7 +17,8 @@ import {
     type SymbolIconUniformsType,
     symbolIconUniformValues,
     symbolSDFUniformValues,
-    symbolTextAndIconUniformValues
+    symbolTextAndIconUniformValues,
+    RotateSymbolMode
 } from '../program/symbol_program.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
@@ -87,7 +88,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
         drawLayerSymbols(painter, tileManager, layer, coords, false,
             layer.paint.get('icon-translate'),
             layer.paint.get('icon-translate-anchor'),
-            layer.layout.get('icon-rotation-alignment'),
+            layer.layout.get('icon-rotation-alignment').constantOr(layer._autoIconRotationAlignment),
             layer.layout.get('icon-pitch-alignment'),
             layer.layout.get('icon-keep-upright'),
             stencilMode, colorMode, isRenderingToTexture
@@ -318,6 +319,9 @@ function drawLayerSymbols(
     // Pitched point labels are automatically rotated by the pitchedLabelPlaneMatrix projection
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
+    const rotateSymbol = !isText && layer.hasDataDrivenIconRotationAlignment ?
+        RotateSymbolMode.perFeature :
+        (rotateInShader ? RotateSymbolMode.always : RotateSymbolMode.never);
 
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
@@ -410,16 +414,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                    size, rotateSymbol, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                    size, rotateSymbol, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling, isOffset);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                size, rotateSymbol, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                 uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling, isOffset);
         }
 
@@ -517,5 +521,5 @@ function drawSymbolElements(
         uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
-        buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
+        buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer, buffers.rotationAlignmentVertexBuffer);
 }
