@@ -258,10 +258,10 @@ describe('popup', () => {
     test('Popup provides LngLat accessors', () => {
         expect(new Popup().getLngLat()).toBeUndefined();
 
-        expect(new Popup().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Popup().setLngLat([1, 2]).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Popup().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-        expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     });

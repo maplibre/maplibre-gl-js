@@ -123,19 +123,19 @@ describe('marker', () => {
     test('Marker provides LngLat accessors', () => {
         expect(new Marker().getLngLat()).toBeUndefined();
 
-        expect(new Marker().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Marker().setLngLat([1, 2]).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Marker().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-        expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     });
 
     test('Marker provides offset accessors', () => {
-        expect(new Marker().setOffset([1, 2]).getOffset() instanceof Point).toBeTruthy();
+        expect(new Marker().setOffset([1, 2]).getOffset()).toBeInstanceOf(Point);
         expect(new Marker().setOffset([1, 2]).getOffset()).toEqual(new Point(1, 2));
 
-        expect(new Marker().setOffset(new Point(1, 2)).getOffset() instanceof Point).toBeTruthy();
+        expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toBeInstanceOf(Point);
         expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toEqual(new Point(1, 2));
 
     });

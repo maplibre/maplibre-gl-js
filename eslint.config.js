@@ -126,6 +126,14 @@ export default [
                 {
                     'selector': 'CallExpression[callee.property.name=\'forEach\']',
                     'message': 'Do not use forEach. Use for...of for iteration, map for mapping, or reduce for accumulation instead.'
+                },
+                {
+                    'selector': 'CallExpression[callee.name="expect"][arguments.0.type="BinaryExpression"][arguments.0.operator="instanceof"]',
+                    'message': 'Do not use instanceof inside expect(). Use toBeInstanceOf() instead.'
+                },
+                {
+                    'selector': 'CallExpression[callee.name="expect"][arguments.0.type="CallExpression"][arguments.0.callee.property.name="contains"][arguments.0.callee.object.property.name="classList"], CallExpression[callee.name="expect"][arguments.0.type="UnaryExpression"][arguments.0.operator="!"][arguments.0.argument.type="CallExpression"][arguments.0.argument.callee.property.name="contains"][arguments.0.argument.callee.object.property.name="classList"]',
+                    'message': 'Do not use classList.contains inside expect(). Use toContain() on classList directly instead.'
                 }
             ],
 

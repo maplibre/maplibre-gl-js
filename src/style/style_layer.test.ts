@@ -13,7 +13,7 @@ describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification, {});
 
-        expect(layer instanceof FillStyleLayer).toBeTruthy();
+        expect(layer).toBeInstanceOf(FillStyleLayer);
     });
 });
 

@@ -63,7 +63,7 @@ describe('CanonicalTileID', () => {
 
 describe('OverscaledTileID', () => {
     test('constructor', () => {
-        expect(new OverscaledTileID(0, 0, 0, 0, 0) instanceof OverscaledTileID).toBeTruthy();
+        expect(new OverscaledTileID(0, 0, 0, 0, 0)).toBeInstanceOf(OverscaledTileID);
     });
 
     test('constructor - deeper canonicalZ than overscaledZ disallowed', () => {
