@@ -2549,6 +2549,10 @@ export class Map extends Evented<MapEventType> {
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-features-under-the-mouse-pointer/)
      */
     queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
+        if (Array.isArray(geometryOrOptions) && typeof geometryOrOptions[0] !== 'number' && geometryOrOptions.length > 2) {
+            this.fire(new ErrorEvent(new Error('queryRenderedFeatures only accepts a single point or a bounding box of two points.')));
+            return [];
+        }
         if (!this.style) {
             return [];
         }
