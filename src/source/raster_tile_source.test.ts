@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -216,15 +216,21 @@ describe('RasterTileSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
-    test('supports updating tiles', () => {
+    test('supports updating tiles', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+        }));
         const source = createSource({url: '/source.json'});
-        source.setTiles(['http://example.com/{z}/{x}/{y}.png?updated=true']);
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
-            }
-        });
+        server.respondImmediately = true;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        source.setTiles(['http://example.com/{z}/{x}/{y}.png?updated=true']);
+        await promise;
+
+        expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
     });
 
     test('cancels TileJSON request if removed', async () => {
@@ -256,7 +262,7 @@ describe('RasterTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(server.requests.length).toBe(2);
+        expect(server.requests).toHaveLength(2);
         expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'raster',
@@ -265,7 +271,7 @@ describe('RasterTileSource', () => {
         expect(errorHandler).not.toHaveBeenCalled();
     });
 
-    it('serializes options', () => {
+    test('serializes options', () => {
         const source = createSource({
             tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
             minzoom: 2,

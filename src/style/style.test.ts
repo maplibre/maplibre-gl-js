@@ -598,7 +598,7 @@ describe('Style.loadJSON', () => {
         layer.recalculate({} as EvaluationParameters, []);
         const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
-        expect(paint.get('circle-radius').evaluate({} as Feature, {})).toEqual(12);
+        expect(paint.get('circle-radius').evaluate({} as Feature, {})).toBe(12);
     });
 
     test('does not throw if request is pending when removed', async () => {
@@ -778,7 +778,7 @@ describe('Style.update', () => {
 
         await style.once('style.load');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         // Add multiple images — should NOT broadcast setImages immediately
@@ -806,7 +806,7 @@ describe('Style.update', () => {
 
         await style.once('style.load');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         // Trigger an update that changes layers but not images
@@ -826,7 +826,7 @@ describe('Style.update', () => {
 
         await style.once('style.load');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         // Trigger both image and layer changes in the same frame
@@ -853,7 +853,7 @@ describe('Style.update', () => {
         style.addImage('img2', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
         style.update({} as EvaluationParameters);
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.removeImage('img1');
@@ -877,7 +877,7 @@ describe('Style.update', () => {
         style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
         style.update({} as EvaluationParameters);
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.updateImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
@@ -1300,7 +1300,7 @@ describe('Style.addSource', () => {
             style.addSource('source-id', source);
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('throws on duplicates', async () => {
@@ -1370,7 +1370,7 @@ describe('Style.removeSource', () => {
             style.removeSource('source-id');
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('clears tiles', async () => {
@@ -2474,7 +2474,7 @@ describe('Style.addLayer', () => {
             style.addLayer(layer);
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('emits error on duplicates', async () => {
@@ -2592,7 +2592,7 @@ describe('Style.removeLayer', () => {
             style.update({} as EvaluationParameters);
         });
 
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('tears down layer event forwarding', async () => {
@@ -2604,9 +2604,8 @@ describe('Style.removeLayer', () => {
             }]
         }));
 
-        style.on('error', () => {
-            throw new Error('test failed');
-        });
+        const styleErrorListener = vi.fn();
+        style.on('error', styleErrorListener);
 
         await style.once('style.load');
         const layer = style._layers.background;
@@ -2616,6 +2615,8 @@ describe('Style.removeLayer', () => {
         layer.on('error', () => {});
 
         layer.fire(new Event('error', {mapLibre: true}));
+
+        expect(styleErrorListener).not.toHaveBeenCalled();
     });
 
     test('fires an error on non-existence', async () => {
@@ -2682,7 +2683,7 @@ describe('Style.moveLayer', () => {
             style.moveLayer('background');
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('fires an error on non-existence', async () => {
@@ -2984,7 +2985,7 @@ describe('Style.setFilter', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.setFilter('symbol', ['==', 'id', 1]);
@@ -3018,7 +3019,7 @@ describe('Style.setFilter', () => {
         style.setFilter('symbol', filter);
         style.update({} as EvaluationParameters); // flush pending operations
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
         filter[2] = 2;
         style.setFilter('symbol', filter);
@@ -3067,7 +3068,7 @@ describe('Style.setFilter', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.setFilter('symbol', 'notafilter' as any as FilterSpecification, {validate: false});
@@ -3119,7 +3120,7 @@ describe('Style.setLayerZoomRange', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
         style.setLayerZoomRange('symbol', 5, 12);
         expect(style.getLayer('symbol').minzoom).toBe(5);
@@ -3474,7 +3475,7 @@ describe('Style.query*Features', () => {
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
-    test('querySourceFeatures not raise validation errors if validation was disabled', () => {
+    test('queryRenderedFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error']) {
@@ -3781,12 +3782,12 @@ describe('Style.serialize', () => {
         expect(result['4,2,true']).toBeDefined();
 
         // Verify the entries have the expected atlas properties
-        expect(typeof result['2,1,false'].width).toBe('number');
-        expect(typeof result['2,1,false'].height).toBe('number');
-        expect(typeof result['2,1,false'].y).toBe('number');
-        expect(typeof result['4,2,true'].width).toBe('number');
-        expect(typeof result['4,2,true'].height).toBe('number');
-        expect(typeof result['4,2,true'].y).toBe('number');
+        expect(result['2,1,false'].width).toBeTypeOf('number');
+        expect(result['2,1,false'].height).toBeTypeOf('number');
+        expect(result['2,1,false'].y).toBeTypeOf('number');
+        expect(result['4,2,true'].width).toBeTypeOf('number');
+        expect(result['4,2,true'].height).toBeTypeOf('number');
+        expect(result['4,2,true'].y).toBeTypeOf('number');
     });
 });
 

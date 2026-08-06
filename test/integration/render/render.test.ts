@@ -915,14 +915,6 @@ describe('Render tests', () => {
         await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     }, 30000);
 
-    afterAll(async () => {
-        await stopCoverageAndReport(page, workers, 'render');
-        printHTMLReport(testStyles);
-        server.close();
-        mvtServer.close();
-        await browser.close();
-    });
-
     beforeEach((ctx) => {
         if (ctx.task.result?.retryCount > 0) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
@@ -935,6 +927,14 @@ describe('Render tests', () => {
         page.removeAllListeners('pageerror');
         page.removeAllListeners('response');
         page.removeAllListeners('requestfailed');
+    });
+
+    afterAll(async () => {
+        await stopCoverageAndReport(page, workers, 'render');
+        printHTMLReport(testStyles);
+        server.close();
+        mvtServer.close();
+        await browser.close();
     });
 
     for (const style of testStyles) {

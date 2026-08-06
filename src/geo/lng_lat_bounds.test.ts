@@ -41,7 +41,7 @@ describe('LngLatBounds', () => {
         const t1 = () => {
             bounds.getCenter();
         };
-        expect(t1).toThrow();
+        expect(t1).toThrow(TypeError);
     });
 
     test('extend with coordinate', () => {
