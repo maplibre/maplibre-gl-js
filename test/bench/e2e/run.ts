@@ -4,6 +4,7 @@ import minimist from 'minimist';
 import {launchPuppeteer} from '../../integration/lib/puppeteer_config.ts';
 import {summaryStatistics} from '../lib/statistics.ts';
 import type {Page} from 'puppeteer';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const PORT = 2900;
 const METRICS = ['bundleImport', 'styleLoad', 'firstTile', 'mapLoad', 'mapIdle'];
@@ -48,22 +49,63 @@ function createServer(): Promise<http.Server> {
     return new Promise((resolve) => server.listen(PORT, () => resolve(server)));
 }
 
-async function waitForResult(page: Page, artifact: Artifact): Promise<{version: string; metrics: Record<string, number>}> {
-    const started = Date.now();
-    while (Date.now() - started < 60_000) {
-        const state = await page.evaluate(() => ({
-            result: (window as any).e2eBenchResult,
-            error: (window as any).e2eBenchError,
-        }));
-        if (state.error) {
-            throw new Error(`benchmark page failed for ${artifact.url}: ${state.error}`);
+function measureInPage(page: Page, bundleUrl: string): Promise<{version: string; metrics: Record<string, number>}> {
+    return page.evaluate(async (bundleUrl) => {
+        performance.mark('bundle-import-start');
+        const maplibregl: typeof MapLibreGL = await import(bundleUrl);
+        performance.mark('bundle-import-end');
+
+        const styleResponse = await fetch(`${location.origin}/styles/basic-v9.json`);
+        const styleText = await styleResponse.text();
+        const style = JSON.parse(styleText.replaceAll('local://', `${location.origin}/`));
+
+        let sawFirstTile = false;
+        performance.mark('map-create');
+        const map = new maplibregl.Map({
+            container: 'map',
+            style,
+            center: [0, 0],
+            zoom: 0
+        });
+        map.on('style.load', () => performance.mark('style-load'));
+        map.on('sourcedata', (e) => {
+            if (e.tile && !sawFirstTile) {
+                sawFirstTile = true;
+                performance.mark('first-tile');
+            }
+        });
+        map.once('load', () => performance.mark('map-load'));
+        await new Promise(resolve => map.once('idle', resolve));
+        performance.mark('map-idle');
+
+        const metrics: Record<string, number> = {};
+        const measureFrom = (name: string, startMark: string, endMark: string) => {
+            performance.measure(name, startMark, endMark);
+            metrics[name] = performance.getEntriesByName(name, 'measure')[0].duration;
+        };
+        measureFrom('bundleImport', 'bundle-import-start', 'bundle-import-end');
+        measureFrom('styleLoad', 'map-create', 'style-load');
+        if (sawFirstTile) {
+            measureFrom('firstTile', 'map-create', 'first-tile');
         }
-        if (state.result) {
-            return state.result;
-        }
-        await new Promise(resolve => setTimeout(resolve, 200));
+        measureFrom('mapLoad', 'map-create', 'map-load');
+        measureFrom('mapIdle', 'map-create', 'map-idle');
+
+        return {version: maplibregl.getVersion(), metrics};
+    }, bundleUrl);
+}
+
+async function measureOnce(page: Page, artifact: Artifact): Promise<{version: string; metrics: Record<string, number>}> {
+    await page.goto(`http://localhost:${PORT}/e2e/index.html`, {waitUntil: 'load'});
+    try {
+        await page.addStyleTag({url: new URL('maplibre-gl.css', artifact.url).href});
+        return await Promise.race([
+            measureInPage(page, artifact.url),
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timed out after 60s')), 60_000)),
+        ]);
+    } catch (error) {
+        throw new Error(`benchmark page failed for ${artifact.url}: ${(error as Error).message}`);
     }
-    throw new Error(`benchmark page timed out after 60s for ${artifact.url}`);
 }
 
 function trimmedMean(samples: number[]): number {
@@ -101,12 +143,9 @@ async function main() {
         for (const artifact of artifacts) {
             const page = await browser.newPage();
             await page.setViewport({width: 1280, height: 1024});
-            page.setDefaultTimeout(0);
-            const pageUrl = `http://localhost:${PORT}/e2e/index.html?bundle=${encodeURIComponent(artifact.url)}`;
 
             for (let i = -1; i < runs; i++) {
-                await page.goto(pageUrl, {waitUntil: 'load'});
-                const result = await waitForResult(page, artifact);
+                const result = await measureOnce(page, artifact);
                 artifact.version = result.version;
                 if (i >= 0) {
                     for (const metric of METRICS) {
