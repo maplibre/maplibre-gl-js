@@ -43491,7 +43491,7 @@ var Layout = class extends Benchmark {
 };
 //#endregion
 //#region package.json
-var version$4 = "6.1.0";
+var version$4 = "6.2.0";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
 const rasterBoundsAttributes = createLayout([{
@@ -61191,7 +61191,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 0bb5a5f (local)` : "main 0bb5a5f";
+const version = new URL(import.meta.url).origin === location.origin ? `main 5bba02d (local)` : "main 5bba02d";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
