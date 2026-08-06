@@ -118,6 +118,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.clearAllMocks();
+    restoreNow();
 });
 
 describe('TileManager.addTile', () => {
@@ -428,105 +429,6 @@ describe('TileManager.removeTile', () => {
     });
 });
 
-describe('TileManager._reloadTile', () => {
-    afterEach(() => {
-        restoreNow();
-    });
-
-    test('keeps the self fade timer of a tile that already has data', async () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const tileManager = createTileManager();
-        tileManager._rasterFadeDuration = 300;
-        tileManager._source.loadTile = async (tile: Tile) => {
-            tile.state = 'loaded';
-        };
-        setNow(1000);
-        const tile = tileManager._addTile(tileID);
-        await tileManager.once('data');
-        tile.setSelfFadeLogic(now() + 300);
-        setNow(1010);
-
-        await tileManager._reloadTile(tileID.key, 'reloading');
-
-        expect(tile.selfFading).toBe(true);
-        expect(tile.timeAdded).toBe(1000);
-        expect(tile.fadeEndTime).toBe(1300);
-    });
-
-    test('keeps the self fade timer of an expired tile that already has data', async () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const tileManager = createTileManager();
-        tileManager._rasterFadeDuration = 300;
-        tileManager._source.loadTile = async (tile: Tile) => {
-            tile.state = 'loaded';
-        };
-        setNow(1000);
-        const tile = tileManager._addTile(tileID);
-        await tileManager.once('data');
-        tile.setSelfFadeLogic(now() + 300);
-        setNow(1010);
-
-        await tileManager._reloadTile(tileID.key, 'expired');
-
-        expect(tile.selfFading).toBe(true);
-        expect(tile.timeAdded).toBe(1000);
-        expect(tile.fadeEndTime).toBe(1300);
-        expect(tile.refreshedUponExpiration).toBe(true);
-    });
-
-    test('keeps the cross fade of a tile that already has data', async () => {
-        const parentID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const childID = new OverscaledTileID(1, 0, 1, 0, 0);
-        const tileManager = createTileManager();
-        tileManager._rasterFadeDuration = 300;
-        tileManager._source.loadTile = async (tile: Tile) => {
-            tile.state = 'loaded';
-        };
-        setNow(1000);
-        const tile = tileManager._addTile(childID);
-        await tileManager.once('data');
-        tile.setCrossFadeLogic({
-            fadingRole: FadingRoles.Base,
-            fadingDirection: FadingDirections.Incoming,
-            fadingParentID: parentID,
-            fadeEndTime: now() + 300
-        });
-        setNow(1010);
-
-        await tileManager._reloadTile(childID.key, 'reloading');
-
-        expect(tile.fadingParentID).toBe(parentID);
-        expect(tile.timeAdded).toBe(1000);
-        expect(tile.fadeEndTime).toBe(1300);
-    });
-
-    test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const tileManager = createTileManager();
-        tileManager._rasterFadeDuration = 300;
-        let respond: () => void;
-        const responded = new Promise<void>(resolve => { respond = resolve; });
-        tileManager._source.loadTile = async (tile: Tile) => {
-            await responded;
-            tile.state = 'loaded';
-        };
-        setNow(1000);
-        const tile = tileManager._addTile(tileID);
-        tile.setSelfFadeLogic(now() + 300);
-        const firstLoad = tileManager.once('data');
-
-        const reload = tileManager._reloadTile(tileID.key, 'reloading');
-
-        expect(tile.state).toBe('loading');
-        setNow(1010);
-        respond();
-        await Promise.all([firstLoad, reload]);
-        expect(tile.selfFading).toBe(true);
-        expect(tile.timeAdded).toBe(1010);
-        expect(tile.fadeEndTime).toBe(1310);
-    });
-});
-
 describe('TileManager / Source lifecycle', () => {
     test('does not fire load or change before source load event', async () => {
         const tileManager = createTileManager({noLoad: true});
@@ -725,6 +627,144 @@ describe('TileManager / Source lifecycle', () => {
         const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
         expect(renderableZooms).toEqual([0]);
 
+    });
+
+    test('keeps the self fade timer when reloading a tile that has data', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+        tileManager.update(transform);
+        await loadPromise;
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        setNow(1010);
+        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        await reloadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1000);
+        expect(tile.fadeEndTime).toBe(1300);
+    });
+
+    test('keeps the self fade timer when reloading a tile that has data, if event is source data change', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+        tileManager.update(transform);
+        await loadPromise;
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        setNow(1010);
+        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
+
+        await reloadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1000);
+        expect(tile.fadeEndTime).toBe(1300);
+        expect(tile.refreshedUponExpiration).toBe(true);
+    });
+
+    test('keeps the cross fade when reloading a tile that has data', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        const parentID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const childID = new OverscaledTileID(1, 0, 1, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === childID.key);
+        tileManager.update(transform);
+        await loadPromise;
+        const tile = tileManager.getTile(childID);
+        tile.setCrossFadeLogic({
+            fadingRole: FadingRoles.Base,
+            fadingDirection: FadingDirections.Incoming,
+            fadingParentID: parentID,
+            fadeEndTime: now() + 300
+        });
+        setNow(1010);
+        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === childID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        await reloadPromise;
+        expect(tile.fadingParentID).toBe(parentID);
+        expect(tile.timeAdded).toBe(1000);
+        expect(tile.fadeEndTime).toBe(1300);
+    });
+
+    test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        let respond: () => void;
+        const responded = new Promise<void>(resolve => { respond = resolve; });
+        tileManager._source.loadTile = async (tile) => {
+            await responded;
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        tileManager.update(transform);
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        expect(tile.state).toBe('loading');
+        setNow(1010);
+        respond();
+        await loadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1010);
+        expect(tile.fadeEndTime).toBe(1310);
     });
 
 });
