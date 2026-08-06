@@ -87,6 +87,7 @@ export class NullWebGL2RenderingContext {
     NEAREST: number = 0x2600;
     LINEAR_MIPMAP_NEAREST: number = 0x2701;
     NEAREST_MIPMAP_LINEAR: number = 0x2702;
+    LINEAR_MIPMAP_LINEAR: number = 0x2703;
     REPEAT: number = 0x2901;
     CLAMP_TO_EDGE: number = 0x812F;
     TEXTURE0: number = 0x84C0;
