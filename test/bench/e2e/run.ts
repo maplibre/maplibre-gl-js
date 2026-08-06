@@ -109,7 +109,8 @@ async function measureOnce(page: Page, artifact: Artifact): Promise<{version: st
 }
 
 function trimmedMean(samples: number[]): number {
-    return summaryStatistics(samples).trimmedMean;
+    const summary = summaryStatistics(samples);
+    return summary.trimmedMean ?? summary.mean;
 }
 
 function formatTable(artifacts: Artifact[]): string {
