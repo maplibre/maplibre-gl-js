@@ -238,7 +238,6 @@ export function isStyleImageWebGLData(data: StyleImageInterface['data']): data i
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
     if (!userImage?.render) return false;
-
     const updated = userImage.render();
     if (!updated) return false;
 
