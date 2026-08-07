@@ -44,15 +44,3 @@ test('a WebGL image is left alone when its render callback reports no change', (
 
     expect(manager.getImage('webgl').version).toBe(version);
 });
-
-test('invalidating an image the map does not have does nothing', () => {
-    const manager = new ImageManager();
-    manager.addImage('webgl', webGLImage());
-    manager.removeImage('webgl');
-
-    manager.invalidateImage('webgl');
-    manager.invalidateImage('never-added');
-
-    expect(manager.getImage('webgl')).toBeUndefined();
-    expect(manager.updatedImages['never-added']).toBeUndefined();
-});

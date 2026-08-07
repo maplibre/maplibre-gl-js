@@ -4155,8 +4155,11 @@ export class Map extends Evented<MapEventType> {
 
         if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
-            // The atlas textures died with the old context, so images that paint themselves with WebGL owe every atlas a fresh paint.
-            for (const id in this._lostContextStyle.images) this.style.imageManager.invalidateImage(id);
+            // The atlas textures died with the old context, so images that render themselves with WebGL owe every atlas a fresh render.
+            for (const id in this._lostContextStyle.images) {
+                const image = this._lostContextStyle.images[id];
+                if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
+            }
         }
 
         this._lostContextStyle = {style: null, images: null};

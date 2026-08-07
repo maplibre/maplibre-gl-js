@@ -131,12 +131,8 @@ export class ImageManager extends Evented {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
-            this.invalidateImage(id);
+            if (image.isWebGLImage) this.updateImage(id, image, false);
         }
-    }
-
-    invalidateImage(id: string): void {
-        if (this.images[id]?.isWebGLImage) this.updateImage(id, this.images[id], false);
     }
 
     _validate(id: string, image: StyleImage): boolean {
