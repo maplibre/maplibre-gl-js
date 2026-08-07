@@ -129,6 +129,100 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
 }
 
 /**
+ * How much of the angle between the view axis and the horizon is given over to easing off, measured
+ * inward from the horizon, so the handover sits at `1 - this` of that angle. It happens a little
+ * before the silhouette rather than at it, which is what lets the two curves meet in slope as well
+ * as position. Only the outermost sliver of the globe is affected, where a pixel is already worth
+ * degrees of arc.
+ *
+ * This is the one number here open to taste, and it sets two things at once. Narrowing it keeps
+ * the drag exact over more of the globe, and, because the slope of the exact curve steepens
+ * towards tangency, it also hands over at a higher rate and so eases off faster. The two cannot be
+ * moved apart: the falloff rate is not free, it is whatever the exact curve is doing where the
+ * hyperbola picks it up.
+ *
+ * Bell's trackball hands over at `1/sqrt(2)` of the ball radius, the outer 29% or so, which his
+ * geometry forces rather than chooses: a hyperbola of the form `k/d` can meet a sphere in both
+ * value and slope at exactly one radius. Fitting the hyperbola to a slope computed on the spot
+ * instead leaves the handover free, so this one can be narrower and keep dragging on the globe
+ * exact almost everywhere.
+ */
+const PAN_FALLOFF_BAND = 0.1;
+
+/** Kept just below a half turn so the center cannot land exactly on the far side of the globe. */
+const PAN_MAX_ANGLE = Math.PI * 0.98;
+
+/**
+ * Returns the point on the globe that a drag towards `point` should aim at.
+ *
+ * A ray at angle `a` off the view axis meets the globe at `asin(D sin a) - a`, whose slope runs
+ * away to infinity as the ray goes tangent: at the silhouette a pixel is worth degrees of arc, and
+ * past it there is no intersection at all. `screenPointToLocation` copes by snapping missing pixels
+ * onto the horizon circle, but that collapses the radial dimension, so cursor motion along the
+ * horizon turns into a twist about the view axis and the bearing spins away.
+ *
+ * So the exact curve is left a band of {@link PAN_FALLOFF_BAND} before tangency, and continued
+ * with a hyperbola that matches it in both value and slope there and then decelerates, saturating
+ * short of the far side. This follows Bell's virtual trackball, which likewise blends the sphere
+ * into a hyperbolic sheet before reaching the rim; the band is much narrower here so that dragging
+ * on the globe stays exact almost everywhere. Bell's construction was never published on its own,
+ * it comes from SGI's `trackball.c`, but it is described and compared with the alternatives in
+ * Henriksen, Sporring and Hornbæk, "Virtual Trackballs Revisited", IEEE Transactions on
+ * Visualization and Computer Graphics 10(2):206-216, 2004, doi:10.1109/TVCG.2004.1260772.
+ *
+ * @param tr - The transform being dragged.
+ * @param point - The cursor position.
+ */
+function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
+    const origin = tr.cameraPosition;
+    const distance = vec3.length(origin);
+    if (distance <= 1) {
+        // Camera on or inside the globe, so every ray meets it and the frame below is undefined.
+        return tr.screenPointToLocation(point);
+    }
+
+    // Work in the frame of the sub-camera point `u`, where a view ray splits into `-c*u + s*e`,
+    // `e` being the lateral direction and atan2(s, c) the ray's angle off the view axis. Taking
+    // that angle with atan2 rather than asin covers rays pointing away from the globe as just a
+    // wide angle, which the falloff below saturates. Nothing reaches that today, since it needs a
+    // ray more than 90 degrees off the view axis and the pitch limit keeps every ray well inside
+    // that, but it costs nothing here and avoids a branch that could only ignore the drag.
+    const u = createVec3f64();
+    vec3.normalize(u, origin);
+    const direction = tr.getRayDirectionFromPixel(point);
+    const c = -vec3.dot(direction, u);
+    const lateral = createVec3f64();
+    vec3.scaleAndAdd(lateral, direction, u, c);
+    const s = vec3.length(lateral);
+    if (s < 1e-9) {
+        // Ray straight down the view axis, which meets the globe, and `e` below would be degenerate.
+        return tr.screenPointToLocation(point);
+    }
+
+    const angle = Math.atan2(s, c);
+    const horizonAngle = Math.asin(1 / distance);
+    const handoverAngle = horizonAngle * (1 - PAN_FALLOFF_BAND);
+    if (angle < handoverAngle) {
+        return tr.screenPointToLocation(point);
+    }
+
+    const sinHandover = distance * Math.sin(handoverAngle);
+    const targetAtHandover = Math.asin(clamp(sinHandover, -1, 1)) - handoverAngle;
+    const slopeAtHandover = distance * Math.cos(handoverAngle) / Math.sqrt(Math.max(1 - sinHandover * sinHandover, 1e-12)) - 1;
+    const room = PAN_MAX_ANGLE - targetAtHandover;
+    const excess = angle - handoverAngle;
+    const target = targetAtHandover + room * (slopeAtHandover * excess) / (room + slopeAtHandover * excess);
+
+    const e = createVec3f64();
+    vec3.scale(e, lateral, 1 / s);
+    const surface = createVec3f64();
+    vec3.scale(surface, u, Math.cos(clamp(target, 0, PAN_MAX_ANGLE)));
+    vec3.scaleAndAdd(surface, surface, e, Math.sin(clamp(target, 0, PAN_MAX_ANGLE)));
+    vec3.normalize(surface, surface);
+    return sphereSurfacePointToCoordinates(surface);
+}
+
+/**
  * Rotates the globe so that the given location appears at the given screen point, using a
  * quaternion rotation. Unlike the bearing-preserving {@link ITransform.setLocationAtPoint}, this
  * stays smooth when dragging near and across the poles.
@@ -137,9 +231,8 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  * twist about the view axis, and `bearing` is that twist, so `fixedBearing` selects whether the
  * twist is applied.
  *
- * Screen points that miss the globe are ignored: they unproject to a fake location snapped to the
- * visible horizon, and rotating towards it mostly twists the globe around the view axis, which
- * compounds frame-to-frame into a rapid bearing spin.
+ * Panning continues once the cursor leaves the globe, using {@link panSurfaceLocation} for the
+ * location to drag towards, easing off as it goes rather than stopping.
  *
  * The delta rotation's axis is computed in the surface-vector frame of
  * {@link angularCoordinatesToSurfaceVector} (x = sin(lng)·cos(lat), y = sin(lat),
@@ -159,13 +252,20 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  * mode. Omitting it skips that handling.
  */
 export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
-    if (!tr.isPointOnMapSurface(point)) {
+    const pointLngLat = panSurfaceLocation(tr, point);
+    // Both ends of the rotation have to come from the same mapping. The caller derives `lnglat`
+    // with `screenPointToLocation`, which snaps to the horizon once the cursor is off the globe,
+    // so pairing the two would rotate between unrelated points and spin the globe. Re-derive the
+    // previous cursor location the same way instead, when the drag tells us where it was.
+    let sourceLngLat = lnglat;
+    if (panDelta) {
+        sourceLngLat = panSurfaceLocation(tr, point.sub(panDelta));
+    } else if (!tr.isPointOnMapSurface(point)) {
         return;
     }
 
-    const pointLngLat = tr.screenPointToLocation(point);
     const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
-    const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
+    const vecToTarget = angularCoordinatesToSurfaceVector(sourceLngLat);
     const centerQuat = orientationFromLngLatBearing(tr.center, tr.bearing);
     const w = vec3.cross(createVec3f64(), vecToTarget, vecToPixelCurrent);
     const l = Math.sqrt(vec3.dot(w, w));
