@@ -613,7 +613,7 @@ describe('Browser tests', () => {
                 }
             };
 
-            map.addImage('square', image as any);
+            map.addImage('square', image);
             map.addSource('point', {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]} as any});
             map.addLayer({id: 'point', type: 'symbol', source: 'point', layout: {'icon-image': 'square'}});
             await map.once('idle');
