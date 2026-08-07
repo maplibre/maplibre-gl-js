@@ -1,8 +1,12 @@
 ## main
 ### ✨ Features and improvements
+- Make fired/listened map events typed. This means that `map.on("something", ...)` (and `once`, `listens`) will now give you an typescript error and better autocomplete. If you relied on firing/listening custom events via the map, this still works via the escape hatches `map.fire("something" as any)` -> `map.on("something" as any, ...)` ([#8072](https://github.com/maplibre/maplibre-gl-js/issues/8072)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `ImageSource`, `VideoSource` and `CanvasSource` leaking a GPU texture on every image update and on removal, and a resized texture losing its wrap and filter settings ([#8094](https://github.com/maplibre/maplibre-gl-js/pull/8094)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix `map.queryRenderedFeatures()` sometimes causing "Out of bounds" error due to race condition while loading tile data ([#8064](https://github.com/maplibre/maplibre-gl-js/issues/8064)) (by [@smvjohansenbouvet](https://github.com/smvjohansenbouvet))
+- Fix zooming the globe with the scroll wheel or a two-finger pinch drifting away from the pointer while the globe is small on screen, instead of keeping the location under the pointer as it does when zoomed in ([#8095](https://github.com/maplibre/maplibre-gl-js/pull/8095)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is still preserved while panning, as before; set `DragPanOptions.fixedBearing` to `false` to instead let the globe rotate so the grabbed location tracks the cursor exactly ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
 - _...Add new stuff here..._
 
