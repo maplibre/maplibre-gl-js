@@ -18,7 +18,7 @@ import type {
 import type Point from '@mapbox/point-geometry';
 import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
-import {isAbortError} from '../util/abort_error.ts';
+import {isAbortError, throwIfAborted} from '../util/abort_error.ts';
 
 /**
  * Four geographical coordinates,
@@ -171,14 +171,19 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
 
         this.url = this.options.url;
 
-        const request = await this.map._requestManager.transformRequest(this.url, ResourceType.Image);
         this._request = new AbortController();
+        const abortController = this._request;
         try {
-            const image = await ImageRequest.getImage(request, this._request);
+            const request = await this.map._requestManager.transformRequest(this.url, ResourceType.Image);
+            throwIfAborted(abortController.signal);
+
+            const image = await ImageRequest.getImage(request, abortController);
+            if (this._request && this._request !== abortController) return;
+            const owned = this._request === abortController;
             this._request = null;
             this._loaded = true;
 
-            if (image?.data) {
+            if (owned && image?.data) {
                 this._setImage(image.data);
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
@@ -186,6 +191,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
                 this._finishLoading();
             }
         } catch (err) {
+            if (this._request && this._request !== abortController) return;
             this._request = null;
             this._loaded = true;
             if (!isAbortError(err)) {

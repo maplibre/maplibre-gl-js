@@ -8,7 +8,7 @@ import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {loadTileJson} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
 import {Texture} from '../webgl/texture.ts';
-import {isAbortError} from '../util/abort_error.ts';
+import {isAbortError, throwIfAborted} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
@@ -206,20 +206,24 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const premultiply = this._premultiplyAlpha;
         const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.abortController = new AbortController();
+        const abortController = tile.abortController;
         try {
+            const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
+            throwIfAborted(abortController.signal);
+
             const response = await ImageRequest.getImage(
                 request,
-                tile.abortController,
+                abortController,
                 this.map._refreshExpiredTiles,
                 imageBitmapOptions
             );
-            delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 return;
             }
+            if (tile.abortController !== abortController) return;
+            delete tile.abortController;
             if (response?.data) {
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
@@ -237,10 +241,13 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 tile.state = 'loaded';
             }
         } catch (err) {
-            delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-            } else if (err) {
+                return;
+            }
+            if (tile.abortController !== abortController) return;
+            delete tile.abortController;
+            if (err) {
                 tile.state = 'errored';
                 throw err;
             }

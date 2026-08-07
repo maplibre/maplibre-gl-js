@@ -6,6 +6,7 @@ import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '.
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {ImageRequest} from '../util/image_request.ts';
+import {AbortError} from '../util/abort_error.ts';
 import type {Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -17,6 +18,23 @@ function createSource(options) {
     }, options);
 
     return new ImageSource('id', options, {} as any, options.eventedParent);
+}
+
+// Requests that stay in flight until aborted; started[n] resolves once the n-th is issued.
+function stubInFlightImageRequests(count: number) {
+    const controllers: AbortController[] = [];
+    const issued: Array<() => void> = [];
+    const started = Array.from({length: count}, () => new Promise<void>((resolve) => issued.push(resolve)));
+
+    vi.spyOn(ImageRequest, 'getImage').mockImplementation((_request, abortController) => {
+        controllers.push(abortController);
+        issued[controllers.length - 1]?.();
+        return new Promise<never>((_resolve, reject) => {
+            abortController.signal.addEventListener('abort', () => reject(new AbortError()));
+        });
+    });
+
+    return {controllers, started};
 }
 
 async function createLoadedSourceWithTile(map: Map, server: FakeServer) {
@@ -71,7 +89,7 @@ describe('ImageSource', () => {
         expect(source.image).toBeTruthy();
     });
 
-    test('passes a live AbortController to ImageRequest when the source is aborted during an async transformRequest', async () => {
+    test('does not start the request when the source is aborted during an async transformRequest', async () => {
         const source = createSource({url: '/image.png'});
         let transformStarted: () => void;
         const transformCalled = new Promise<void>((resolve) => {
@@ -84,27 +102,26 @@ describe('ImageSource', () => {
                 releaseTransform = resolve;
             });
         });
-        const image = {width: 1, height: 1} as ImageBitmap;
-        let requestController: AbortController;
-        let sourceControllerAtRequestTime: AbortController;
-        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
-            requestController = abortController;
-            sourceControllerAtRequestTime = source._request;
-            return {data: image};
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async () => {
+            return {data: new ImageBitmap()};
+        });
+        const metadata = vi.fn();
+        source.on('data', (e: MapSourceDataEvent) => {
+            if (e.sourceDataType === 'metadata') metadata();
         });
 
-        source.onAdd(map);
+        source.map = map;
+        const load = source.load();
         await transformCalled; // load() is suspended in the transform
         source.onRemove(); // the abort lands during that suspension
-        const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         releaseTransform({url: '/image.png'});
-        await loaded;
+        await load;
 
-        expect(getImageSpy).toHaveBeenCalledTimes(1);
-        // The request must carry the source's own live controller, so an abort
-        // arriving while it is in flight reaches exactly this request.
-        expect(requestController).toBeInstanceOf(AbortController);
-        expect(requestController).toBe(sourceControllerAtRequestTime);
+        expect(getImageSpy).not.toHaveBeenCalled();
+        expect(source.image).toBeNull();
+        expect(metadata).not.toHaveBeenCalled();
+        // Nothing succeeds the torn-down load, so it finishes its own bookkeeping.
+        expect(source.loaded()).toBe(true);
     });
 
     test('transforms url request', () => {
@@ -339,6 +356,120 @@ describe('ImageSource', () => {
         expect(errorHandler).not.toHaveBeenCalled();
     });
 
+    describe('superseding an in-flight load', () => {
+        let source: ImageSource;
+        let errorHandler: Mock;
+
+        beforeEach(() => {
+            source = createSource({url: '/image.png', eventedParent: map});
+            errorHandler = vi.fn();
+            map.on('error', errorHandler);
+            source.map = map;
+        });
+
+        test('cancels a load before its request is issued and keeps the new image', async () => {
+            const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async () => ({data: new ImageBitmap()}));
+            const load = source.load();
+
+            const bitmap = new ImageBitmap();
+            source.updateImage({image: bitmap});
+            await load;
+
+            expect(getImageSpy).not.toHaveBeenCalled();
+            expect(source.image).toBe(bitmap);
+            expect(errorHandler).not.toHaveBeenCalled();
+        });
+
+        test('a superseded load neither reports itself loaded nor disarms its replacement', async () => {
+            const {controllers, started} = stubInFlightImageRequests(2);
+            const first = source.load();
+            await started[0];
+
+            source.updateImage({url: '/image2.png'});
+            await first;
+            await started[1];
+
+            expect(source.loaded()).toBe(false);
+
+            const bitmap = new ImageBitmap();
+            source.updateImage({image: bitmap});
+
+            expect(controllers).toHaveLength(2);
+            expect(controllers[1].signal.aborted).toBe(true);
+            expect(source.image).toBe(bitmap);
+            expect(errorHandler).not.toHaveBeenCalled();
+        });
+
+        test('a superseded load that still succeeds leaves its replacement armed', async () => {
+            let markFirstRequestIssued: () => void;
+            const firstRequestIssued = new Promise<void>((resolve) => {
+                markFirstRequestIssued = resolve;
+            });
+            let respondToFirstRequest: (response: {data: ImageBitmap}) => void;
+
+            let markReplacementRequestIssued: () => void;
+            const replacementRequestIssued = new Promise<void>((resolve) => {
+                markReplacementRequestIssued = resolve;
+            });
+            let replacementController: AbortController;
+
+            // No abort listener: past the response, the decode ignores the signal.
+            const getImageSpy = vi.spyOn(ImageRequest, 'getImage')
+                .mockReturnValueOnce(new Promise<{data: ImageBitmap}>((resolve) => {
+                    respondToFirstRequest = resolve;
+                    markFirstRequestIssued();
+                }))
+                .mockImplementationOnce((_request, abortController) => {
+                    replacementController = abortController;
+                    markReplacementRequestIssued();
+                    return new Promise<{data: ImageBitmap}>(() => {});
+                });
+
+            const firstLoad = source.load();
+            await firstRequestIssued;
+            source.updateImage({url: '/image2.png'});
+            await replacementRequestIssued;
+
+            respondToFirstRequest({data: new ImageBitmap()});
+            await firstLoad;
+
+            expect(source.loaded()).toBe(false);
+            expect(source.image).toBeUndefined();
+
+            const bitmap = new ImageBitmap();
+            source.updateImage({image: bitmap});
+
+            expect(getImageSpy).toHaveBeenCalledTimes(2);
+            expect(replacementController.signal.aborted).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
+        });
+
+        test('a superseded load does not overwrite the image that replaced it', async () => {
+            let requestStarted: () => void;
+            const requestCalled = new Promise<void>((resolve) => {
+                requestStarted = resolve;
+            });
+            let respond: (response: {data: ImageBitmap}) => void;
+            // getImage drops the controller once the response is in, so its decode ignores the abort.
+            vi.spyOn(ImageRequest, 'getImage').mockImplementation(() => {
+                requestStarted();
+                return new Promise<{data: ImageBitmap}>((resolve) => {
+                    respond = resolve;
+                });
+            });
+            const load = source.load();
+            await requestCalled;
+
+            const bitmap = new ImageBitmap();
+            source.updateImage({image: bitmap});
+            respond({data: new ImageBitmap()});
+            await load;
+
+            expect(source.image).toBe(bitmap);
+            expect(errorHandler).not.toHaveBeenCalled();
+        });
+    });
+
     test('keeps the image it displays, and its texture, when the url handed to updateImage fails to load', async () => {
         const {source} = await createLoadedSourceWithTile(map, server);
         source.prepare();
@@ -377,16 +508,15 @@ describe('ImageSource', () => {
     describe('updateImage with a decoded image', () => {
         let source: ImageSource;
         let transformRequest: Mock<(url: string, resourceType?: string) => any>;
+        let errorHandler: Mock;
 
         beforeEach(() => {
             transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
             map.setTransformRequest(transformRequest);
-            // Suppress errors from aborting the initial (never-responded) request.
-            map.on('error', () => {});
+            errorHandler = vi.fn();
+            map.on('error', errorHandler);
             source = createSource({url: '/image.png', eventedParent: map});
-            // onAdd starts the initial load synchronously up to its first await, so
-            // this._request is set and transformRequest is called once. Clear that call
-            // so tests can assert the image path issues no further request.
+            // onAdd's load calls transformRequest before its first await; clear that call.
             source.onAdd(map);
             transformRequest.mockClear();
         });
@@ -406,6 +536,7 @@ describe('ImageSource', () => {
                 ([e]) => e.dataType === 'source' && e.sourceDataType === 'metadata'
             );
             expect(firedMetadata).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('updates coordinates alongside the image', () => {
@@ -415,12 +546,14 @@ describe('ImageSource', () => {
             });
 
             expect(source.serialize().coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('cancels a pending request', () => {
             const spy = vi.spyOn(source._request, 'abort');
             source.updateImage({image: new ImageBitmap()});
             expect(spy).toHaveBeenCalled();
+            expect(errorHandler).not.toHaveBeenCalled();
         });
 
         test('accepts an ImageData instance', () => {
@@ -430,6 +563,7 @@ describe('ImageSource', () => {
             expect(transformRequest).not.toHaveBeenCalled();
             expect(source.image).toBe(imageData);
             expect(source.loaded()).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
         });
     });
 
