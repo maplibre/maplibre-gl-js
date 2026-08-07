@@ -217,9 +217,8 @@ function drawLineTiles(
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         } else if (constantDasharray) {
             const round = layer.layout.get('line-cap').constantOr(null) === 'round';
-            const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
-            const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
-            programConfiguration.setConstantDashPositions(dashTo, dashFrom);
+            const dash = painter.lineAtlas.getDash(constantDasharray.to, round);
+            programConfiguration.setConstantDashPositions(dash);
         }
 
         const projectionData = transform.getProjectionData({
@@ -235,10 +234,10 @@ function drawLineTiles(
             uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade);
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
-            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
+            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
             bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
-            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
             uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);

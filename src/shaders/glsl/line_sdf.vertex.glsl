@@ -18,14 +18,11 @@ uniform mediump float u_ratio;
 uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_units_to_pixels;
 uniform float u_tileratio;
-uniform float u_crossfade_from;
-uniform float u_crossfade_to;
 uniform float u_lineatlas_height;
 
 out vec2 v_normal;
 flat out vec2 v_width2;
-out vec2 v_tex_a;
-out vec2 v_tex_b;
+out vec2 v_tex;
 out float v_gamma_scale;
 #ifdef GLOBE
 out float v_depth;
@@ -38,8 +35,7 @@ out float v_depth;
 #pragma maplibre: define lowp float offset
 #pragma maplibre: define mediump float width
 #pragma maplibre: define lowp float floorwidth
-#pragma maplibre: define mediump vec4 dasharray_from
-#pragma maplibre: define mediump vec4 dasharray_to
+#pragma maplibre: define mediump vec4 dasharray
 
 void main() {
     #pragma maplibre: initialize highp vec4 color
@@ -49,8 +45,7 @@ void main() {
     #pragma maplibre: initialize lowp float offset
     #pragma maplibre: initialize mediump float width
     #pragma maplibre: initialize lowp float floorwidth
-    #pragma maplibre: initialize mediump vec4 dasharray_from
-    #pragma maplibre: initialize mediump vec4 dasharray_to
+    #pragma maplibre: initialize mediump vec4 dasharray
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {
@@ -113,12 +108,9 @@ void main() {
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif
 
-    float u_patternscale_a_x = u_tileratio / dasharray_from.w / u_crossfade_from;
-    float u_patternscale_a_y = -dasharray_from.z / 2.0 / u_lineatlas_height;
-    float u_patternscale_b_x = u_tileratio / dasharray_to.w / u_crossfade_to;
-    float u_patternscale_b_y = -dasharray_to.z / 2.0 / u_lineatlas_height;
+    float patternscale_x = u_tileratio / dasharray.w;
+    float patternscale_y = -dasharray.z / 2.0 / u_lineatlas_height;
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
+    v_tex = vec2(a_linesofar * patternscale_x / floorwidth, normal.y * patternscale_y + (dasharray.y + 0.5) / u_lineatlas_height);
     v_width2 = vec2(outset, inset);
 }

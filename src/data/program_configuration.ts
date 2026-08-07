@@ -139,8 +139,7 @@ class CrossFadedConstantBinder implements UniformBinder {
     uniformNames: string[];
     patternFrom: number[];
     patternTo: number[];
-    dashFrom: number[];
-    dashTo: number[];
+    dash: number[];
     pixelRatioFrom: number;
     pixelRatioTo: number;
 
@@ -159,9 +158,8 @@ class CrossFadedConstantBinder implements UniformBinder {
         this.patternTo = posTo.tlbr;
     }
 
-    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry) {
-        this.dashTo = [0, dashTo.y, dashTo.height, dashTo.width];
-        this.dashFrom = [0, dashFrom.y, dashFrom.height, dashFrom.width];
+    setConstantDashPositions(dash: DashEntry) {
+        this.dash = [0, dash.y, dash.height, dash.width];
     }
 
     setUniform(uniform: Uniform<any>, globals: GlobalProperties, currentValue: PossiblyEvaluatedPropertyValue<unknown>, uniformName: string) {
@@ -171,10 +169,8 @@ class CrossFadedConstantBinder implements UniformBinder {
             value = this.patternTo;
         } else if (uniformName === 'u_pattern_from') {
             value = this.patternFrom;
-        } else if (uniformName === 'u_dasharray_to') {
-            value = this.dashTo;
-        } else if (uniformName === 'u_dasharray_from') {
-            value = this.dashFrom;
+        } else if (uniformName === 'u_dasharray') {
+            value = this.dash;
         } else if (uniformName === 'u_pixel_ratio_to') {
             value = this.pixelRatioTo;
         } else if (uniformName === 'u_pixel_ratio_from') {
@@ -187,7 +183,7 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
-        return (name.startsWith('u_pattern') || name.startsWith('u_dasharray_')) ?
+        return (name.startsWith('u_pattern') || name.startsWith('u_dasharray')) ?
             new Uniform4f(context, location) :
             new Uniform1f(context, location);
     }
@@ -403,8 +399,10 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         //
         // The crossfade `from` vertex is the value at the previous integer zoom (min when zooming in,
         // max when zooming out) and `to` is the value at the current integer zoom (mid). This matches the
-        // convention used by CrossFadedConstantBinder, where `u_dasharray_to` / `u_pattern_to` carry the
-        // current zoom's value and the crossfade `t` blends from the previous value to it.
+        // convention used by CrossFadedConstantBinder, where `u_pattern_to` carries the current zoom's
+        // value and the crossfade `t` blends from the previous value to it. Dashes are not cross-faded,
+        // so CrossFadedDasharrayBinder only stores the current integer zoom's value (mid) and both arrays
+        // end up with the same content.
         for (let i = start; i < end; i++) {
             this.emplace(this.zoomInPaintVertexArray, i, min, mid);
             this.emplace(this.zoomOutPaintVertexArray, i, max, mid);
@@ -462,10 +460,8 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
     }
 
     protected emplace(array: StructArray, index: number, fromPos: DashEntry, toPos: DashEntry): void {
-        array.emplace(index,
-            0, fromPos.y, fromPos.height, fromPos.width,
-            0, toPos.y, toPos.height, toPos.width,
-        );
+        // Dashes are not cross-faded: only the value at the current integer zoom (`toPos`) is used.
+        array.emplace(index, 0, toPos.y, toPos.height, toPos.width);
     }
 }
 
@@ -558,11 +554,11 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry): void {
+    setConstantDashPositions(dash: DashEntry): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
-                binder.setConstantDashPositions(dashTo, dashFrom);
+                binder.setConstantDashPositions(dash);
         }
     }
 
@@ -771,7 +767,7 @@ function paintAttributeNames(property: string, type: string) {
         'text-halo-width': ['halo_width'],
         'icon-halo-width': ['halo_width'],
         'line-gap-width': ['gapwidth'],
-        'line-dasharray': ['dasharray_to', 'dasharray_from'],
+        'line-dasharray': ['dasharray'],
         'line-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],
         'fill-extrusion-pattern': ['pattern_to', 'pattern_from', 'pixel_ratio_to', 'pixel_ratio_from'],

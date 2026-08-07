@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Remove cross-fading of `line-dasharray` between zoom levels: dashes no longer play an awkward scaling animation when crossing integer zoom levels, and stay stable while zooming with styles whose `line-width` doubles per zoom (e.g. `["interpolate", ["exponential", 2], ["zoom"], ...]`) ([#4583](https://github.com/maplibre/maplibre-gl-js/issues/4583)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - _...Add new stuff here..._
 
 ## 6.2.0
