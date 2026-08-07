@@ -2,7 +2,7 @@ import {filterObject} from '../util/util.ts';
 
 import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
-import {Evented, ErrorEvent} from '../util/evented.ts';
+import {Evented, ErrorEvent, type ErrorEventType} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
 import type {Bucket, BucketParameters} from '../data/bucket.ts';
@@ -83,7 +83,7 @@ const ERROR_LAYOUT_NOT_PAINT = ' is a LAYOUT property not a PAINT property. Use 
 /**
  * A base class for style layers
  */
-export abstract class StyleLayer extends Evented {
+export abstract class StyleLayer extends Evented<ErrorEventType> {
     id: string;
     metadata: unknown;
     type: LayerSpecification['type'] | CustomLayerInterface['type'];

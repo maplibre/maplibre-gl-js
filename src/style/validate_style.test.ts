@@ -1,9 +1,9 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {validateAndEmit, validateStyle, validateStyleAndEmit} from './validate_style.ts';
-import {Evented} from '../util/evented.ts';
+import {Evented, type ErrorEventType} from '../util/evented.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-class TestEmitter extends Evented {}
+class TestEmitter extends Evented<ErrorEventType> {}
 
 afterEach(() => {
     vi.restoreAllMocks();
