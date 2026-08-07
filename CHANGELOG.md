@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `ImageSource`, `VideoSource` and `CanvasSource` leaking a GPU texture on every image update and on removal, and a resized texture losing its wrap and filter settings ([#8094](https://github.com/maplibre/maplibre-gl-js/pull/8094)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix `map.queryRenderedFeatures()` sometimes causing "Out of bounds" error due to race condition while loading tile data ([#8064](https://github.com/maplibre/maplibre-gl-js/issues/8064)) (by [@smvjohansenbouvet](https://github.com/smvjohansenbouvet))
 - _...Add new stuff here..._
 
