@@ -154,7 +154,8 @@ export class CanvasSource extends ImageSource {
     }
 
     onRemove(): void {
-        this.pause();
+        this._playing = false;
+        super.onRemove();
     }
 
     prepare(): void {

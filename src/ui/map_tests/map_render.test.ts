@@ -87,5 +87,5 @@ test('redraw', async () => {
     const renderPromise = map.once('render');
 
     map.redraw();
-    await renderPromise;
+    await expect(renderPromise).resolves.toBeDefined();
 });

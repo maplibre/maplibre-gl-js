@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
 import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
@@ -30,7 +30,7 @@ describe('HandlerManager terrain scenarios', () => {
         manager = map._handlers;
     });
 
-    it('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
+    test('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
@@ -78,7 +78,7 @@ describe('HandlerManager terrain scenarios', () => {
         expect(setCenterMock).not.toHaveBeenCalled();
     });
 
-    it('_handleMapControls enables terrain movement for globe terrain handling', () => {
+    test('_handleMapControls enables terrain movement for globe terrain handling', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
@@ -119,7 +119,7 @@ describe('HandlerManager terrain scenarios', () => {
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 
-    it('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
+    test('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
@@ -160,7 +160,7 @@ describe('HandlerManager terrain scenarios', () => {
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 
-    it('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
+    test('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
@@ -204,7 +204,7 @@ describe('HandlerManager terrain scenarios', () => {
         expect(setCenterMock).not.toHaveBeenCalled();
     });
 
-    it('_handleMapControls drags using transform when already moving in mercator terrain', () => {
+    test('_handleMapControls drags using transform when already moving in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
@@ -250,7 +250,7 @@ describe('HandlerManager terrain scenarios', () => {
         expect(handlePan).not.toHaveBeenCalled();
     });
 
-    it('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
+    test('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
