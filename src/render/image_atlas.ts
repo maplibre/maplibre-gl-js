@@ -28,7 +28,7 @@ export class ImagePosition {
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
-        isWebGLImage,
+        isWebGLImage = false,
         stretchX,
         stretchY,
         content,
@@ -41,7 +41,7 @@ export class ImagePosition {
         this.stretchY = stretchY;
         this.content = content;
         this.version = version;
-        this.needsFirstWebGLRender = !!isWebGLImage;
+        this.needsFirstWebGLRender = isWebGLImage;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
     }
