@@ -1,6 +1,6 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec4} from 'gl-matrix';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 
 import type {IReadonlyTransform} from '../transform_interface.ts';
@@ -51,6 +51,12 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
      */
     reparseOverscaled?: boolean;
     /**
+     * `true` when this covering organizes the raster-dem source that terrain reads
+     * elevation from. Disables the near-terrain zoom refinement, whose inputs derive
+     * from the DEM tiles this covering would select.
+     */
+    usedForTerrain?: boolean;
+    /**
      * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
      */
     terrain?: Terrain;
@@ -65,15 +71,21 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
  * @param requestedCenterZoom - the requested zoom level, valid at the center point.
  * @param distanceToTile2D - 2D distance from the camera to the candidate tile, in mercator units.
  * @param distanceToTileZ - vertical distance from the camera to the candidate tile, in mercator units.
+ * With terrain, this accounts for the tile's elevation range, so a tile whose surface rises close
+ * to the camera is recognized as close.
  * @param distanceToCenter3D - distance from camera to center point, in mercator units
  * @param cameraVerticalFOV - camera vertical field of view, in degrees
+ * @param distanceToCenterZ - vertical distance from the camera to the center point, in mercator
+ * units. The foreshortening terms are computed against this value; `distanceToTileZ` may differ
+ * from it when terrain accounts for the tile's own elevation. Without terrain the two are equal.
  * @return the desired zoom level for this tile. May not be an integer.
  */
 export type CalculateTileZoomFunction = (requestedCenterZoom: number,
     distanceToTile2D: number,
     distanceToTileZ: number,
     distanceToCenter3D: number,
-    cameraVerticalFOV: number) => number;
+    cameraVerticalFOV: number,
+    distanceToCenterZ?: number) => number;
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
@@ -123,7 +135,8 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         distanceToTile2D: number,
         distanceToTileZ: number,
         distanceToCenter3D: number,
-        cameraVerticalFOV: number): number {
+        cameraVerticalFOV: number,
+        distanceToCenterZ?: number): number {
         /**
         * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
         * tiles to be loaded. Calculate the value that will result in the selected number of zoom levels in
@@ -134,12 +147,18 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
             scaleZoom(Math.cos(degreesToRadians(maxMercatorHorizonAngle - cameraVerticalFOV)) /
                 Math.cos(degreesToRadians(maxMercatorHorizonAngle))) - 1);
 
-        const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
+        // The foreshortening penalty estimates how compressed a tile appears on screen and is
+        // measured against the center's elevation plane (distanceToCenterZ). A tile raised close
+        // to the camera is also seen edge-on, but must not be penalized like a distant horizon
+        // tile: its elevation influences only the 3D distance ratio above, which grants close
+        // terrain the detail its proximity warrants (#4703).
+        const pitchReferenceZ = distanceToCenterZ ?? distanceToTileZ;
+        const centerPitch = Math.acos(pitchReferenceZ / distanceToCenter3D);
         const tileCountPitch0 = 2 * integralOfCosXByP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
         const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch + degreesToRadians(cameraVerticalFOV / 2));
         const lowestPitch = Math.min(highestPitch, centerPitch - degreesToRadians(cameraVerticalFOV / 2));
         const tileCount = integralOfCosXByP(pitchTileLoadingBehavior - 1, lowestPitch, highestPitch);
-        const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+        const thisTilePitch = Math.atan(distanceToTile2D / pitchReferenceZ);
         const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
 
         let thisTileDesiredZ = requestedCenterZoom;
@@ -151,6 +170,16 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         return thisTileDesiredZ;
     };
 }
+/**
+ * The highest pitch, in degrees, at which every tile still gets the zoom of the
+ * center tile. Above it, tile zoom varies across the screen. Accounts for roll
+ * widening the vertical field of view.
+ */
+export function maxConstantZoomPitch(transform: IReadonlyTransform): number {
+    const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
+    return clamp(78.5 - zfov / 2, 0.0, 60.0);
+}
+
 const defaultMaxZoomLevelsOnScreen = 9.314;
 const defaultTileCountMaxMinRatio = 3.0;
 const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
@@ -223,6 +252,12 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
+    // The raster-dem source's own covering is never refined: its selection controls which
+    // DEM tiles are loaded, and every DEM-derived covering input (elevation ranges, culling
+    // volumes, center elevation) would then feed back into the selection and oscillate,
+    // never letting the map reach idle. All other coverings (draped sources, RTT tiles)
+    // only consume DEM state, so refining them converges once the DEM set has loaded.
+    const refineNearTerrain = options.terrain && !options.usedForTerrain && transform.pitch > maxConstantZoomPitch(transform);
     
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
@@ -280,14 +315,46 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
 
         const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, boundingVolume);
 
+        // With terrain (mercator only) at high pitch, measure the vertical distance to the
+        // tile's own elevation range instead of to the center's elevation plane, so a peak
+        // rising close under the camera is recognized as close and gets the detail its
+        // proximity warrants (#4703). Low-pitch views keep the center-plane distance: the
+        // problem this solves only appears near the camera in immersive views. The culling
+        // bounding volume is not used here: its elevation is deliberately overestimated (see
+        // getElevationForTileCulling), which would collapse this distance and explode tile
+        // counts. Tiles whose elevation range is not known yet keep the center-plane distance.
+        // Skipped at maxzoom and beyond: there the refinement cannot add real detail, only
+        // inflate the overscaled zoom, whose key would then shift as DEM tiles load in.
+        let distToTileZ = distanceZ;
+        if (refineNearTerrain && it.zoom < maxZoom) {
+            // The elevation range is read from a fixed coarse level rather than the
+            // candidate's own: the covering selection drives which DEM tiles load, and
+            // reading the candidate's level feeds the selection back into itself (parent
+            // data selects deeper tiles, whose narrower own-level data then deselects
+            // them), which can oscillate forever and never let the map reach idle. A
+            // coarse ancestor's range is a superset of the candidate's, erring toward
+            // slightly more detail.
+            const qz = Math.min(tileID.z, Math.max(minZoom, desiredZ - 2));
+            const {minElevation, maxElevation} = options.terrain.getMinMaxElevation(
+                new OverscaledTileID(qz, it.wrap, qz, tileID.x >> (tileID.z - qz), tileID.y >> (tileID.z - qz)));
+            if (minElevation !== null && maxElevation !== null) {
+                const minZ = mercatorZfromAltitude(minElevation, transform.center.lat);
+                const maxZ = mercatorZfromAltitude(maxElevation, transform.center.lat);
+                // The distanceZ / 4 floor caps the extra detail near terrain at two zoom
+                // levels over the center-plane estimate, bounding the tile count.
+                distToTileZ = Math.max(minZ - cameraCoord.z, cameraCoord.z - maxZ, distanceZ / 4);
+            }
+        }
+
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
             const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
             thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
-                distanceZ,
+                distToTileZ,
                 distanceToCenter3d,
-                transform.fov);
+                transform.fov,
+                distanceZ);
         }
         thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
