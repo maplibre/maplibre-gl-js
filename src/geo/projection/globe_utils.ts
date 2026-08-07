@@ -1,8 +1,9 @@
-import {type ReadonlyVec4, vec3} from 'gl-matrix';
-import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
+import {quat, type ReadonlyVec4, vec3} from 'gl-matrix';
+import {clamp, createVec3f64, createVec4f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
 import {LngLat} from '../lng_lat.ts';
 import {EXTENT} from '../../data/extent.ts';
 import type Point from '@mapbox/point-geometry';
+import type {ITransform} from '../transform_interface.ts';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
@@ -105,6 +106,120 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     } else {
         return new LngLat(0.0, latDegrees);
     }
+}
+
+/**
+ * Returns the globe orientation quaternion for the given map center and bearing.
+ * The inverse of {@link lngLatBearingFromOrientation}.
+ */
+export function orientationFromLngLatBearing(lngLat: LngLat, bearing: number): quat {
+    return quat.fromEuler(createVec4f64(), -lngLat.lng, -lngLat.lat, bearing);
+}
+
+/**
+ * Given a globe orientation quaternion, returns the corresponding map center and bearing.
+ * The inverse of {@link orientationFromLngLatBearing}.
+ */
+export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: number; bearing: number } {
+    const x = q[0], y = q[1], z = q[2], w = q[3];
+    const lng = -Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)) * 180 / Math.PI;
+    const lat = -Math.asin(clamp(2 * (w * y - z * x), -1, 1)) * 180 / Math.PI;
+    const bearing = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * 180 / Math.PI;
+    return {lng, lat, bearing};
+}
+
+/**
+ * Rotates the globe so that the given location appears at the given screen point, using a
+ * quaternion rotation. Unlike the bearing-preserving {@link ITransform.setLocationAtPoint}, this
+ * stays smooth when dragging near and across the poles.
+ *
+ * The `(lng, lat)` extracted from the orientation is the swing (center) target, independent of the
+ * twist about the view axis, and `bearing` is that twist, so `fixedBearing` selects whether the
+ * twist is applied.
+ *
+ * Screen points that miss the globe are ignored: they unproject to a fake location snapped to the
+ * visible horizon, and rotating towards it mostly twists the globe around the view axis, which
+ * compounds frame-to-frame into a rapid bearing spin.
+ *
+ * The delta rotation's axis is computed in the surface-vector frame of
+ * {@link angularCoordinatesToSurfaceVector} (x = sin(lng)·cos(lat), y = sin(lat),
+ * z = cos(lng)·cos(lat)) while the orientation quaternion uses the Euler frame of
+ * {@link orientationFromLngLatBearing}, hence the component swizzle and sign flip when the two
+ * are combined.
+ *
+ * Note: automatically adjusts zoom to keep planet size consistent
+ * (same size before and after a call), like `setLocationAtPoint` does.
+ * @param tr - The transform to rotate.
+ * @param lnglat - The location to bring under `point`.
+ * @param point - The screen point that `lnglat` should appear at.
+ * @param fixedBearing - When `true`, applies the swing only and keeps the bearing fixed, so the
+ * globe still moves smoothly across the poles without rotating the map. When `false` (the default),
+ * applies the full rotation, so the grabbed location tracks the cursor exactly and the bearing drifts.
+ * @param panDelta - The drag's pixel delta, used by the near-pole handling of the fixed-bearing
+ * mode. Omitting it skips that handling.
+ */
+export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
+    if (!tr.isPointOnMapSurface(point)) {
+        return;
+    }
+
+    const pointLngLat = tr.screenPointToLocation(point);
+    const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
+    const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
+    const centerQuat = orientationFromLngLatBearing(tr.center, tr.bearing);
+    const w = vec3.cross(createVec3f64(), vecToTarget, vecToPixelCurrent);
+    const l = Math.sqrt(vec3.dot(w, w));
+    const t = Math.acos(clamp(vec3.dot(vecToTarget, vecToPixelCurrent), -1, 1)) / 2;
+    const s = Math.sin(t);
+    const delta = l ? quat.fromValues((w[1] / l) * s, (-w[0] / l) * s, (w[2] / l) * s, Math.cos(t)) : quat.fromValues(0, 0, 0, 1);
+    const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
+    const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
+
+    const oldLat = tr.center.lat;
+    const oldBearing = tr.bearing;
+    const finalLat = clamp(newCenterLat, -90, 90);
+    const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
+
+    tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
+    tr.setBearing(fixedBearing ? oldBearing : newBearing);
+    tr.setZoom(tr.zoom + getZoomAdjustment(oldLat, tr.center.lat));
+}
+
+/**
+ * Returns the center longitude for a bearing-preserving drag.
+ *
+ * The swing longitude becomes ill-conditioned near the pole and the grabbed location slips away
+ * from the cursor. Within the last ~12 degrees of latitude the cursor is therefore treated as
+ * turning a dial around the pole: its angular motion drives longitude, blended in with a
+ * smoothstep anchored on {@link MAX_VALID_LATITUDE}, the highest latitude the center can reach.
+ * The angle comes from the raw pixel delta rather than a round-tripped previous cursor position,
+ * which would suffer catastrophic cancellation at the pole, and is skipped within ~20px of the
+ * pole, where it is noise.
+ * @param tr - The transform being dragged.
+ * @param point - The cursor position.
+ * @param panDelta - The drag's pixel delta, or undefined to use the swing longitude only.
+ * @param newCenterLng - The swing target longitude.
+ * @returns the center longitude to apply.
+ */
+function fixedBearingLongitude(tr: ITransform, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
+    const oldLng = tr.center.lng;
+    const oldLat = tr.center.lat;
+    const poleLat = oldLat >= 0 ? 90 : -90;
+    const polePoint = tr.locationToScreenPoint(new LngLat(0, poleLat));
+    const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
+    const r2 = rx * rx + ry * ry;
+
+    const tRamp = clamp(1 - (MAX_VALID_LATITUDE - Math.abs(oldLat)) / 12, 0, 1);
+    const dial = tRamp * tRamp * (3 - 2 * tRamp);
+    const dLngSwing = mod(newCenterLng - oldLng + 180, 360) - 180;
+
+    let dLngDial = 0;
+    if (dial > 0 && panDelta && r2 > 400) {
+        const dTheta = (rx * panDelta.y - ry * panDelta.x) / r2;
+        dLngDial = (poleLat > 0 ? 1 : -1) * dTheta * 180 / Math.PI;
+    }
+
+    return oldLng + (1 - dial) * dLngSwing + dial * dLngDial;
 }
 
 /**
