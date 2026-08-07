@@ -16,7 +16,7 @@ import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
@@ -55,7 +55,7 @@ type TileResult = {
  *  - unloading cached tiles not needed to render a given viewport
  *  - managing tile state and feature state
  */
-export class TileManager extends Evented {
+export class TileManager extends Evented<SourceEventType> {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
