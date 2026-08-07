@@ -23,20 +23,26 @@ test('a WebGL image owes every atlas a render as soon as it is added, even witho
     expect(manager.updatedImages.webgl).toBe(true);
 });
 
-test('a WebGL image is re-rendered when its render callback reports a change, and left alone otherwise', () => {
+test('a WebGL image is re-rendered when its render callback reports a change', () => {
     const manager = new ImageManager();
-    let changed = false;
-    manager.addImage('webgl', webGLImage(() => changed));
+    manager.addImage('webgl', webGLImage(() => true));
     const version = manager.getImage('webgl').version;
 
     manager.beginFrame();
     manager.dispatchRenderCallbacks(['webgl']);
-    expect(manager.getImage('webgl').version).toBe(version);
 
-    changed = true;
+    expect(manager.getImage('webgl').version).toBe(version + 1);
+});
+
+test('a WebGL image is left alone when its render callback reports no change', () => {
+    const manager = new ImageManager();
+    manager.addImage('webgl', webGLImage(() => false));
+    const version = manager.getImage('webgl').version;
+
     manager.beginFrame();
     manager.dispatchRenderCallbacks(['webgl']);
-    expect(manager.getImage('webgl').version).toBe(version + 1);
+
+    expect(manager.getImage('webgl').version).toBe(version);
 });
 
 test('invalidating an image the map does not have does nothing', () => {

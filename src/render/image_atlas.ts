@@ -39,7 +39,7 @@ export class ImagePosition {
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
-        // WebGL images are not written into the atlas until the next `render`
+        // WebGL images are not written into the atlas until the next render
         // We use -1 to mean "uninitialized" and call the first render "version 0"
         this.version = isWebGLImage ? -1 : version;
         this.textFitWidth = textFitWidth;
