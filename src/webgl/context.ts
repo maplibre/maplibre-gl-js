@@ -177,7 +177,7 @@ export class Context {
         this.pixelStoreUnpackFlipY.dirty = true;
     }
 
-    /*
+    /**
      * Reset some GL state to default values before handing users the raw context, as we do for
      * custom layers and WebGL style images, to avoid hard-to-debug bugs in their code.
      *
