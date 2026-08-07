@@ -39,7 +39,7 @@ export class ImagePosition {
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
-        // WebGL images are not written into the atlas until the next `render` 
+        // WebGL images are not written into the atlas until the next `render`
         // We use -1 to mean "uninitialized" and call the first render "version 0"
         this.version = isWebGLImage ? -1 : version;
         this.textFitWidth = textFitWidth;
@@ -156,14 +156,15 @@ export class ImageAtlas {
         position.version = image.version;
         const [x, y] = position.tl;
         const data = image.userImage?.data;
-        if (isStyleImageWebGLData(data)) {
-            const {width, height} = image.data;
-            texture.context.setCustomLayerDefaults();
-            data.renderWithWebGL({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
-            texture.context.setDirty();
-        } else {
+        if (!isStyleImageWebGLData(data)) {
             texture.update(image.data, undefined, {x, y});
+            return;
         }
+
+        const {width, height} = image.data;
+        texture.context.setCustomLayerDefaults();
+        data.renderWithWebGL({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+        texture.context.setDirty();
     }
 
 }
