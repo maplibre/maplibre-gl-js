@@ -37,7 +37,6 @@ export class WorkerTile {
     collectResourceTiming: boolean;
     returnDependencies: boolean;
 
-    status: 'parsing' | 'done';
     data: VectorTileLike;
     collisionBoxArray: CollisionBoxArray;
 
@@ -61,7 +60,6 @@ export class WorkerTile {
     }
 
     async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
-        this.status = 'parsing';
         this.data = data;
 
         this.collisionBoxArray = new CollisionBoxArray();
@@ -192,7 +190,6 @@ export class WorkerTile {
             }
         }
 
-        this.status = 'done';
         return {
             buckets: Object.values(buckets).filter(b => !b.isEmpty()),
             featureIndex,
