@@ -219,7 +219,7 @@ test('map addImage packs a placeholder for a WebGL image, which brings its own p
     const map = createMap();
     const id = 'add-get-webgl-style-image';
     const onAdd = vi.fn();
-    const inputImage: StyleImageInterface = {width: 3, height: 2, data: {webgl: vi.fn()}, onAdd};
+    const inputImage: StyleImageInterface = {width: 3, height: 2, data: {renderWithWebGL: vi.fn()}, onAdd};
 
     map.addImage(id, inputImage);
 
@@ -232,11 +232,11 @@ test('map addImage packs a placeholder for a WebGL image, which brings its own p
     expect(onAdd).toHaveBeenCalledWith(map, id);
 });
 
-test('map updateImage swaps a WebGL image\'s draw callback instead of copying pixels', () => {
+test('map updateImage swaps a WebGL image\'s renderWithWebGL callback instead of copying pixels', () => {
     const map = createMap();
-    const replacement: StyleImageInterface = {width: 1, height: 1, data: {webgl: vi.fn()}};
+    const replacement: StyleImageInterface = {width: 1, height: 1, data: {renderWithWebGL: vi.fn()}};
 
-    map.addImage('webgl', {width: 1, height: 1, data: {webgl: vi.fn()}});
+    map.addImage('webgl', {width: 1, height: 1, data: {renderWithWebGL: vi.fn()}});
     const version = map.getImage('webgl').version;
     map.updateImage('webgl', replacement);
 

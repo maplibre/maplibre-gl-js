@@ -40,7 +40,7 @@
         fragColor = vec4(v_color, 1.0);
     }`;
 
-    // a StyleImageInterface whose `data` paints the icon with WebGL instead of listing its pixels
+    // a StyleImageInterface whose `data` renders the icon with WebGL instead of listing its pixels
     // Search for StyleImageWebGLData in https://maplibre.org/maplibre-gl-js/docs/API/
     const rainbowTriangle = {
         width: 128, height: 128,
@@ -53,7 +53,7 @@
 
         data: {
             // `this` is the data object, so the icon's own state is reached by name
-            webgl ({gl, texture, x, y, width, height}) {
+            renderWithWebGL ({gl, texture, x, y, width, height}) {
                 if (!rainbowTriangle.program) rainbowTriangle.setup(gl);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, rainbowTriangle.framebuffer);
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);

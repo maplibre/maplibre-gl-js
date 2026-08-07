@@ -100,7 +100,7 @@ test('a WebGL style image is told to release its GPU resources on context loss, 
 
     const userImage = {
         width: 2, height: 2,
-        data: {webgl: vi.fn()},
+        data: {renderWithWebGL: vi.fn()},
         onRemove: vi.fn()
     };
     map.addImage('gpu-image', userImage);

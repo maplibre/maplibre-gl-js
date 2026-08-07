@@ -11,11 +11,11 @@ function webGLImage(render?: () => boolean): StyleImage {
         pixelRatio: 1,
         sdf: false,
         isWebGLImage: true,
-        userImage: {width: 2, height: 2, data: {webgl: vi.fn()}, render}
+        userImage: {width: 2, height: 2, data: {renderWithWebGL: vi.fn()}, render}
     };
 }
 
-test('a WebGL image owes every atlas a paint as soon as it is added, even without a render callback', () => {
+test('a WebGL image owes every atlas a render as soon as it is added, even without a render callback', () => {
     const manager = new ImageManager();
     manager.addImage('webgl', webGLImage());
 
@@ -23,7 +23,7 @@ test('a WebGL image owes every atlas a paint as soon as it is added, even withou
     expect(manager.updatedImages.webgl).toBe(true);
 });
 
-test('a WebGL image is repainted when its render callback reports a change, and left alone otherwise', () => {
+test('a WebGL image is re-rendered when its render callback reports a change, and left alone otherwise', () => {
     const manager = new ImageManager();
     let changed = false;
     manager.addImage('webgl', webGLImage(() => changed));

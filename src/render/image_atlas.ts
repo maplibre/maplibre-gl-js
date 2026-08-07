@@ -156,7 +156,7 @@ export class ImageAtlas {
         if (isStyleImageWebGLData(data)) {
             const {width, height} = image.data;
             texture.context.setCustomLayerDefaults();
-            data.webgl({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+            data.renderWithWebGL({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
             texture.context.setDirty();
         } else {
             texture.update(image.data, undefined, {x, y});

@@ -93,7 +93,7 @@ export type StyleImageMetadata = {
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
- * Where a {@link StyleImageWebGLData.webgl} callback writes its pixels.
+ * Where a {@link StyleImageWebGLData.renderWithWebGL} callback writes its pixels.
  */
 export type StyleImageWebGLTarget = {
     gl: WebGL2RenderingContext;
@@ -109,28 +109,29 @@ export type StyleImageWebGLTarget = {
 };
 
 /**
- * What a {@link StyleImageInterface} gives as its `data` when it draws itself with WebGL rather
+ * What a {@link StyleImageInterface} gives as its `data` when it renders itself with WebGL rather
  * than handing over an array of pixels.
  *
  * @see [Animate an icon on the GPU.](https://maplibre.org/maplibre-gl-js/docs/examples/animate-an-icon-on-the-gpu/)
  */
 export type StyleImageWebGLData = {
     /**
-     * Draw exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
+     * Render exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
      * `target.texture`. That rectangle is the only part of the shared atlas that belongs to this
      * image; drawing outside it corrupts the others.
      *
-     * The context arrives in the same state a custom layer's is given: cull face, active texture
-     * and the pixel store settings at their WebGL defaults, and no vertex array bound. Everything
-     * is yours to change, and MapLibre restores its own state afterwards. The scissor test is the
-     * one exception: MapLibre never touches it, so an image that enables it has to disable it
-     * again.
+     * This is the image's counterpart to {@link CustomLayerInterface.render}, and the context
+     * arrives in the same state a custom layer's is given: cull face, active texture and the pixel
+     * store settings at their WebGL defaults, and no vertex array bound. Everything is yours to
+     * change, and MapLibre restores its own state afterwards. The scissor test is the one
+     * exception: MapLibre never touches it, so an image that enables it has to disable it again.
      *
      * Called before the first frame the image is used in, again whenever
      * {@link StyleImageInterface.render} returns `true`, and again for each atlas holding a slot
-     * this image has never painted, so one change may mean several calls with different targets.
+     * this image has never rendered into, so one change may mean several calls with different
+     * targets.
      */
-    webgl: (target: StyleImageWebGLTarget) => void;
+    renderWithWebGL: (target: StyleImageWebGLTarget) => void;
 };
 
 /**
@@ -192,7 +193,7 @@ export interface StyleImageInterface {
     height: number;
     /**
      * The image's pixels, in the same format as `ImageData`, or a {@link StyleImageWebGLData}
-     * callback that draws them with WebGL. A WebGL image draws straight into its slot of the
+     * callback that renders them with WebGL. A WebGL image renders straight into its slot of the
      * shared icon atlas. Nothing new is possible that pixels could not express, but an image that
      * changes often, such as an animated icon, gets much cheaper: no CPU pixel work and no upload.
      */
@@ -204,8 +205,8 @@ export interface StyleImageInterface {
      * If the method updates the image it must return `true` to commit the change.
      * If the method returns `false` or nothing the image is assumed to not have changed.
      *
-     * An image whose `data` draws with WebGL has nothing to update here; returning `true` is how
-     * it asks for {@link StyleImageWebGLData.webgl} to be called again.
+     * An image whose `data` renders with WebGL has nothing to update here; returning `true` is how
+     * it asks for {@link StyleImageWebGLData.renderWithWebGL} to be called again.
      *
      * If updates are infrequent it maybe easier to use {@link Map.updateImage} to update
      * the image instead of implementing this method.
@@ -231,7 +232,7 @@ export interface StyleImageInterface {
 }
 
 export function isStyleImageWebGLData(data: StyleImageInterface['data']): data is StyleImageWebGLData {
-    return typeof (data as StyleImageWebGLData)?.webgl === 'function';
+    return typeof (data as StyleImageWebGLData)?.renderWithWebGL === 'function';
 }
 
 export function renderStyleImage(image: StyleImage): boolean {
