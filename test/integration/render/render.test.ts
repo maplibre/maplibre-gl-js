@@ -495,51 +495,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             'null-island': NullIsland
         };
 
-        // a StyleImageInterface that paints its atlas slot with WebGL rather than with pixels
-        const webglImageImplementations = {
-            'triangle': {
-                width: 64,
-                height: 64,
-                data: {
-                    webgl ({gl, texture, x, y, width, height}) {
-                        const impl = webglImageImplementations.triangle as any;
-                        if (!impl.program) {
-                            const vertexSource = `#version 300 es
-                            const vec2 corners[3] = vec2[3](vec2(0.0, 0.9), vec2(-0.8, -0.5), vec2(0.8, -0.5));
-                            const vec3 colors[3] = vec3[3](vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));
-                            out vec3 v_color;
-                            void main() {
-                                v_color = colors[gl_VertexID];
-                                // the atlas holds its rows top to bottom and a framebuffer writes them bottom to top
-                                gl_Position = vec4(corners[gl_VertexID].x, -corners[gl_VertexID].y, 0.0, 1.0);
-                            }`;
-                            const fragmentSource = `#version 300 es
-                            precision highp float;
-                            in vec3 v_color;
-                            out vec4 fragColor;
-                            void main() {
-                                fragColor = vec4(v_color, 1.0);
-                            }`;
-                            impl.program = gl.createProgram();
-                            for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]] as Array<[number, string]>) {
-                                const shader = gl.createShader(type);
-                                gl.shaderSource(shader, source);
-                                gl.compileShader(shader);
-                                gl.attachShader(impl.program, shader);
-                            }
-                            gl.linkProgram(impl.program);
-                            impl.framebuffer = gl.createFramebuffer();
-                        }
-                        gl.bindFramebuffer(gl.FRAMEBUFFER, impl.framebuffer);
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-                        gl.viewport(x, y, width, height);
-                        gl.useProgram(impl.program);
-                        gl.drawArrays(gl.TRIANGLES, 0, 3);
-                    }
-                }
-            }
-        };
-
         async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
             const fakeCanvas = document.getElementById(id) as HTMLCanvasElement;
 
@@ -626,9 +581,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         map.addImage(operation[1], image, operation[3] || {});
                         break;
                     }
-                    case 'addWebGLImage':
-                        map.addImage(operation[1], webglImageImplementations[operation[2]] as any, operation[3] || {});
-                        break;
                     case 'addCustomLayer':
                         map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
                         map._render();
