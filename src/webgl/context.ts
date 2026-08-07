@@ -178,17 +178,18 @@ export class Context {
     }
 
     /*
-     * Reset some GL state to default values to avoid hard-to-debug bugs
-     * in code handed the raw context, such as custom layers and WebGL style images.
+     * Reset some GL state to default values before handing users the raw context, as we do for
+     * custom layers and WebGL style images, to avoid hard-to-debug bugs in their code.
+     *
+     * MapLibre restores all of its own state afterwards, so the only state worth resetting first
+     * is state users would be surprised to find dirty: `CULL_FACE`, `TEXTURE0` and the three
+     * `UNPACK_` settings, whose defaults are meaningful enough that most code assumes them.
+     * The vertex array is unbound rather than reset, so that MapLibre never has to track it and
+     * a user's `vertexAttribPointer` calls cannot land on one of ours.
      */
     setCustomLayerDefaults(): void {
-        // Prevent custom layers from unintentionally modify the last VAO used.
-        // All other state is state is restored on it's own, but for VAOs it's
-        // simpler to unbind so that we don't have to track the state of VAOs.
         this.unbindVAO();
 
-        // The default values for this state is meaningful and often expected.
-        // Leaving this state dirty could cause a lot of confusion for users.
         this.cullFace.setDefault();
         this.activeTexture.setDefault();
         this.pixelStoreUnpack.setDefault();
