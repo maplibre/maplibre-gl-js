@@ -64,6 +64,9 @@ export class Texture {
             gl.deleteTexture(this.texture);
             this.texture = gl.createTexture();
             this._ownedHandle = this.texture;
+            // A fresh handle is back on GL's defaults, so bind() has to re-apply these.
+            this.filter = undefined;
+            this.wrap = undefined;
         }
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
