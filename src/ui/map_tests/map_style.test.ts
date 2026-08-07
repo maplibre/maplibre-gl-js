@@ -78,12 +78,14 @@ describe('setStyle', () => {
         ]);
     });
 
-    test('can be called more than once', () => {
+    test('can be called more than once', async () => {
         const map = createMap();
 
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        await map.once('style.load');
 
+        expect(map.getStyle()).toEqual({version: 8, sources: {}, layers: []});
     });
 
     test('setStyle back to the first style should work', async () => {
@@ -477,12 +479,16 @@ describe('getStyle', () => {
             type: 'background'
         } as LayerSpecification;
         map.addLayer(layer);
+
+        expect(map.getLayer('background')).toBeDefined();
     });
 
     test('a source can be added even if a map is created without a style', () => {
         const map = createMap({deleteStyle: true});
         const source = createStyleSource();
         map.addSource('fill', source);
+
+        expect(map.getSource('fill')).toBeDefined();
     });
 
     test('a layer can be added with an embedded source specification', () => {
@@ -496,6 +502,8 @@ describe('getStyle', () => {
             type: 'symbol',
             source
         });
+
+        expect(map.getLayer('foo')).toBeDefined();
     });
 
     test('returns the style with added source and layer', async () => {

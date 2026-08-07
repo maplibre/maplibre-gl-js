@@ -247,7 +247,7 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.on allows a listener to infer the event type ', () => {
+    test('Map.on allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -411,7 +411,7 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(0);
     });
 
-    test('Map.off allows a listener to infer the event type ', () => {
+    test('Map.off allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -440,7 +440,7 @@ describe('map events', () => {
         expect(handler.onMoveOnce).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.once allows a listener to infer the event type ', () => {
+    test('Map.once allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -964,7 +964,7 @@ describe('map events', () => {
         map.on('load', loadHandler);
         await sleep(1);
 
-        expect(loadHandler).toThrowError();
+        expect(loadHandler).toThrow('Error in load handler');
     });
 
     test('no idle event during move', async () => {
@@ -981,7 +981,7 @@ describe('map events', () => {
         const map = createMap();
         const sourcePromise = map.once('sourcedataabort');
         map.fire(new EventedEvent('dataabort'));
-        await sourcePromise;
+        await expect(sourcePromise).resolves.toBeDefined();
     });
 
     test('getZoom on moveend is the same as after the map end moving, with terrain on', async () => {

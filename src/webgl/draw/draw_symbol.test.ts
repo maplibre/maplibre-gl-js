@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, type Mock} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
@@ -19,18 +19,18 @@ import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
 
-vi.mock('../../render/painter');
-vi.mock('../program');
-vi.mock('../../tile/tile_manager');
-vi.mock('../../tile/tile');
-vi.mock('../../data/bucket/symbol_bucket', () => {
+vi.mock(import('../../render/painter'));
+vi.mock(import('../program'));
+vi.mock(import('../../tile/tile_manager'));
+vi.mock(import('../../tile/tile'));
+vi.mock(import('../../data/bucket/symbol_bucket'), () => {
     return {
         SymbolBucket: vi.fn()
-    };
+    } as any;
 });
 
-vi.mock('../../symbol/projection');
-(symbolProjection.getPitchedLabelPlaneMatrix as Mock).mockReturnValue(mat4.create());
+vi.mock(import('../../symbol/projection'));
+(vi.mocked(symbolProjection.getPitchedLabelPlaneMatrix)).mockReturnValue(mat4.create());
 
 function createMockTransform() {
     return {
@@ -94,7 +94,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as Mock).mockReturnValue(programMock);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -157,7 +157,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as Mock).mockReturnValue(programMock);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -177,9 +177,9 @@ describe('drawSymbol', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        (tile.getBucket as Mock).mockReturnValue(bucketMock);
+        (vi.mocked(tile.getBucket)).mockReturnValue(bucketMock);
         const tileManagerMock = new TileManager(null, null, null);
-        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
             map: {},
@@ -224,7 +224,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as Mock).mockReturnValue(programMock);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -244,9 +244,9 @@ describe('drawSymbol', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        (tile.getBucket as Mock).mockReturnValue(bucketMock);
+        (vi.mocked(tile.getBucket)).mockReturnValue(bucketMock);
         const tileManagerMock = new TileManager(null, null, null);
-        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
