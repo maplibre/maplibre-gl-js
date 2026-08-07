@@ -7,16 +7,16 @@ describe('CanonicalTileID', () => {
     test('constructor', () => {
         expect(() => {
             new CanonicalTileID(MIN_TILE_ZOOM - 1, 0, 0);
-        }).toThrow();
+        }).toThrow(`x=0, y=0, z=${MIN_TILE_ZOOM - 1} outside of bounds`);
         expect(() => {
             new CanonicalTileID(MAX_TILE_ZOOM + 1, 0, 0);
-        }).toThrow();
+        }).toThrow(`x=0, y=0, z=${MAX_TILE_ZOOM + 1} outside of bounds`);
         expect(() => {
             new CanonicalTileID(2, 4, 0);
-        }).toThrow();
+        }).toThrow('x=4, y=0, z=2 outside of bounds');
         expect(() => {
             new CanonicalTileID(2, 0, 4);
-        }).toThrow();
+        }).toThrow('x=0, y=4, z=2 outside of bounds');
     });
 
     test('.key', () => {
@@ -67,7 +67,7 @@ describe('OverscaledTileID', () => {
     });
 
     test('constructor - deeper canonicalZ than overscaledZ disallowed', () => {
-        expect(() => new OverscaledTileID(7, 0, 8, 0, 0)).toThrow();
+        expect(() => new OverscaledTileID(7, 0, 8, 0, 0)).toThrow('overscaledZ should be >= z; overscaledZ = 7; z = 8');
     });
 
     test('.key', () => {

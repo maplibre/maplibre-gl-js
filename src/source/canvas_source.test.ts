@@ -69,7 +69,7 @@ describe('CanvasSource', () => {
         source.onAdd(map);
         await promise;
 
-        expect(typeof source.play).toBe('function');
+        expect(source.play).toBeTypeOf('function');
     });
 
     describe('Validations', () => {

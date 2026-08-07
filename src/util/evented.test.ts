@@ -120,10 +120,13 @@ describe('Evented', () => {
 
     test('does not immediately call listeners added within another listener', () => {
         const evented = new StubbedEvented();
+        const nestedListener = vi.fn();
         evented.on('a', () => {
-            evented.on('a', () => { throw new Error('fail'); });
+            evented.on('a', nestedListener);
         });
         evented.fire(new Event('a'));
+
+        expect(nestedListener).not.toHaveBeenCalled();
     });
 
     test('has backward compatibility for fire(string, object) API', () => {

@@ -2,10 +2,11 @@
 
 Benchmarks help us catch performance regressions and improve performance.
 
-There are two kinds of benchmarks in this repository, answering two different questions:
+There are three kinds of benchmarks in this repository:
 
 * **Micro benchmarks** live next to the code they measure as `src/**/*.bench.ts` files and run under [Vitest bench mode](https://vitest.dev/guide/features.html#benchmarking). They answer "did my change make this code path faster on my machine, right now" while you work on it.
-* **The version-comparison harness** under `test/bench/` runs the full benchmark suite in a browser and compares the working copy against published builds of `main` and past releases. It answers "did the library get slower between versions" and is documented from [Running Benchmarks](#running-benchmarks) onward.
+* **End-to-end benchmarks** under `test/bench/e2e/` load real production artifacts (your `dist/` build, a release from the CDN) in headless Chrome and time a map through the public API. They answer "did the library get slower between versions".
+* **The version-comparison harness** under `test/bench/` runs the full benchmark suite in a browser against special benchmark builds published to gh-pages, documented from [Running Benchmarks](#running-benchmarks) onward.
 
 ## Micro benchmarks
 
@@ -45,6 +46,24 @@ bench('subdividePolygon', () => {
 ```
 
 Keep setup work (building fixtures, parsing data) at module level so the measured call is the only thing inside `bench()`. See `src/geo/projection/covering_tiles.bench.ts` and `src/render/subdivision.bench.ts` for examples.
+
+## End-to-end benchmarks
+
+The e2e runner measures the real built library, not a benchmark build. It loads production `.mjs` artifacts in headless Chrome, drives a map through the public API against fully local fixtures (style, tiles, glyphs, sprite; zero network), and reads the timeline through the map's own events: bundle import, style load, first tile, load, first idle.
+
+Compare the latest release against your working copy (run `npm run build-dist` first):
+
+```bash
+npm run bench-e2e
+```
+
+Artifacts are positional: `dist` is the local build, `latest` resolves through unpkg, a bare version like `6.0.0` fetches that release, and any URL to a `maplibre-gl.mjs` is used as-is. `--runs N` controls samples per artifact (default 8):
+
+```bash
+npm run bench-e2e -- 6.0.0 dist --runs 16
+```
+
+Columns are labeled by each artifact's own reported version. With exactly two artifacts the table adds a delta column. Artifacts run sequentially on one machine, and the same-session noise caveat from micro benchmarks applies here unchanged.
 
 ## Running Benchmarks
 

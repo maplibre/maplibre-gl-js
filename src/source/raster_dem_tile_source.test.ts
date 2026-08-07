@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -198,7 +198,7 @@ describe('RasterDEMTileSource', () => {
         ]);
     });
 
-    it('serializes options', () => {
+    test('serializes options', () => {
         const source = createSource({
             tiles: ['http://localhost:2900/raster-dem/{z}/{x}/{y}.png'],
             minzoom: 2,
