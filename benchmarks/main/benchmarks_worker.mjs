@@ -21297,6 +21297,11 @@ function writeUtf8(buf, str, pos) {
 	return pos;
 }
 //#endregion
+//#region src/style/style_image.ts
+function isStyleImageWebGLData(data) {
+	return typeof data?.renderWithWebGL === "function";
+}
+//#endregion
 //#region node_modules/potpack/index.js
 /**
 * @typedef {Object} PotpackBox
@@ -21371,13 +21376,14 @@ function potpack(boxes) {
 	};
 }
 var ImagePosition = class {
-	constructor(paddedRect, { pixelRatio, version, stretchX, stretchY, content, textFitWidth, textFitHeight }) {
+	constructor(paddedRect, { pixelRatio, version, isWebGLImage = false, stretchX, stretchY, content, textFitWidth, textFitHeight }) {
 		this.paddedRect = paddedRect;
 		this.pixelRatio = pixelRatio;
 		this.stretchX = stretchX;
 		this.stretchY = stretchY;
 		this.content = content;
 		this.version = version;
+		this.needsFirstWebGLRender = isWebGLImage;
 		this.textFitWidth = textFitWidth;
 		this.textFitHeight = textFitHeight;
 	}
@@ -21411,6 +21417,7 @@ var ImageAtlas = class {
 		});
 		for (const id in icons) {
 			const src = icons[id];
+			if (src.isWebGLImage) continue;
 			const bin = iconPositions[id].paddedRect;
 			RGBAImage.copy(src.data, image, {
 				x: 0,
@@ -21499,13 +21506,29 @@ var ImageAtlas = class {
 	}
 	patchUpdatedImage(position, image, texture) {
 		if (!position || !image) return;
-		if (position.version === image.version) return;
+		if (!position.needsFirstWebGLRender && position.version === image.version) return;
+		position.needsFirstWebGLRender = false;
 		position.version = image.version;
 		const [x, y] = position.tl;
-		texture.update(image.data, void 0, {
+		const data = image.userImage?.data;
+		if (!isStyleImageWebGLData(data)) {
+			texture.update(image.data, void 0, {
+				x,
+				y
+			});
+			return;
+		}
+		const { width, height } = image.data;
+		texture.context.setCustomLayerDefaults();
+		data.renderWithWebGL({
+			gl: texture.context.gl,
+			texture: texture.texture,
 			x,
-			y
+			y,
+			width,
+			height
 		});
+		texture.context.setDirty();
 	}
 };
 register("ImagePosition", ImagePosition);

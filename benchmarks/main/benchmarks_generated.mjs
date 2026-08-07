@@ -22372,15 +22372,15 @@ function parseGlyphPbf(data) {
 }
 //#endregion
 //#region src/style/style_image.ts
+function isStyleImageWebGLData(data) {
+	return typeof data?.renderWithWebGL === "function";
+}
 function renderStyleImage(image) {
 	const { userImage } = image;
-	if (userImage?.render) {
-		if (userImage.render()) {
-			image.data.replace(new Uint8Array(userImage.data.buffer));
-			return true;
-		}
-	}
-	return false;
+	if (!userImage?.render) return false;
+	if (!userImage.render()) return false;
+	if (!isStyleImageWebGLData(userImage.data)) image.data.replace(new Uint8Array(userImage.data.buffer));
+	return true;
 }
 //#endregion
 //#region node_modules/potpack/index.js
@@ -22457,13 +22457,14 @@ function potpack(boxes) {
 	};
 }
 var ImagePosition = class {
-	constructor(paddedRect, { pixelRatio, version, stretchX, stretchY, content, textFitWidth, textFitHeight }) {
+	constructor(paddedRect, { pixelRatio, version, isWebGLImage = false, stretchX, stretchY, content, textFitWidth, textFitHeight }) {
 		this.paddedRect = paddedRect;
 		this.pixelRatio = pixelRatio;
 		this.stretchX = stretchX;
 		this.stretchY = stretchY;
 		this.content = content;
 		this.version = version;
+		this.needsFirstWebGLRender = isWebGLImage;
 		this.textFitWidth = textFitWidth;
 		this.textFitHeight = textFitHeight;
 	}
@@ -22497,6 +22498,7 @@ var ImageAtlas = class {
 		});
 		for (const id in icons) {
 			const src = icons[id];
+			if (src.isWebGLImage) continue;
 			const bin = iconPositions[id].paddedRect;
 			RGBAImage.copy(src.data, image, {
 				x: 0,
@@ -22585,13 +22587,29 @@ var ImageAtlas = class {
 	}
 	patchUpdatedImage(position, image, texture) {
 		if (!position || !image) return;
-		if (position.version === image.version) return;
+		if (!position.needsFirstWebGLRender && position.version === image.version) return;
+		position.needsFirstWebGLRender = false;
 		position.version = image.version;
 		const [x, y] = position.tl;
-		texture.update(image.data, void 0, {
+		const data = image.userImage?.data;
+		if (!isStyleImageWebGLData(data)) {
+			texture.update(image.data, void 0, {
+				x,
+				y
+			});
+			return;
+		}
+		const { width, height } = image.data;
+		texture.context.setCustomLayerDefaults();
+		data.renderWithWebGL({
+			gl: texture.context.gl,
+			texture: texture.texture,
 			x,
-			y
+			y,
+			width,
+			height
 		});
+		texture.context.setDirty();
 	}
 };
 register$1("ImagePosition", ImagePosition);
@@ -24191,7 +24209,10 @@ var ImageManager = class extends Evented {
 	}
 	addImage(id, image) {
 		if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
-		if (this._validate(id, image)) this.images[id] = image;
+		if (this._validate(id, image)) {
+			this.images[id] = image;
+			if (image.isWebGLImage) this.updateImage(id, image, false);
+		}
 	}
 	_validate(id, image) {
 		let valid = true;
@@ -24283,7 +24304,8 @@ var ImageManager = class extends Evented {
 					content: image.content,
 					textFitWidth: image.textFitWidth,
 					textFitHeight: image.textFitHeight,
-					hasRenderCallback: Boolean(image.userImage?.render)
+					hasRenderCallback: Boolean(image.userImage?.render),
+					isWebGLImage: image.isWebGLImage
 				};
 			}
 		}
@@ -45264,6 +45286,24 @@ var Context = class {
 		this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
 		this.pixelStoreUnpackFlipY.dirty = true;
 	}
+	/**
+	* Reset some GL state to default values before handing users the raw context, as we do for
+	* custom layers and WebGL style images, to avoid hard-to-debug bugs in their code.
+	*
+	* MapLibre restores all of its own state afterwards, so the only state worth resetting first
+	* is state users would be surprised to find dirty: `CULL_FACE`, `TEXTURE0` and the three
+	* `UNPACK_` settings, whose defaults are meaningful enough that most code assumes them.
+	* The vertex array is unbound rather than reset, so that MapLibre never has to track it and
+	* a user's `vertexAttribPointer` calls cannot land on one of ours.
+	*/
+	setCustomLayerDefaults() {
+		this.unbindVAO();
+		this.cullFace.setDefault();
+		this.activeTexture.setDefault();
+		this.pixelStoreUnpack.setDefault();
+		this.pixelStoreUnpackPremultiplyAlpha.setDefault();
+		this.pixelStoreUnpackFlipY.setDefault();
+	}
 	createIndexBuffer(array, dynamicDraw) {
 		return new IndexBuffer(this, array, dynamicDraw);
 	}
@@ -47581,12 +47621,7 @@ var Painter = class Painter {
 		return this.cache[key];
 	}
 	setCustomLayerDefaults() {
-		this.context.unbindVAO();
-		this.context.cullFace.setDefault();
-		this.context.activeTexture.setDefault();
-		this.context.pixelStoreUnpack.setDefault();
-		this.context.pixelStoreUnpackPremultiplyAlpha.setDefault();
-		this.context.pixelStoreUnpackFlipY.setDefault();
+		this.context.setCustomLayerDefaults();
 	}
 	setBaseState() {
 		const gl = this.context.gl;
@@ -52057,7 +52092,13 @@ var Map$1 = class extends Evented {
 		};
 		this._contextRestored = (event) => {
 			if (this._lostContextStyle.style) this.setStyle(this._lostContextStyle.style, { diff: false });
-			if (this._lostContextStyle.images && this.style) this.style.imageManager.images = this._lostContextStyle.images;
+			if (this._lostContextStyle.images && this.style) {
+				this.style.imageManager.images = this._lostContextStyle.images;
+				for (const id in this._lostContextStyle.images) {
+					const image = this._lostContextStyle.images[id];
+					if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
+				}
+			}
 			this._lostContextStyle = {
 				style: null,
 				images: null
@@ -54134,8 +54175,12 @@ var Map$1 = class extends Evented {
 		} else {
 			const { width, height, data } = image;
 			const userImage = image;
+			const isWebGLImage = isStyleImageWebGLData(userImage.data);
 			return {
-				data: new RGBAImage({
+				data: isWebGLImage ? new RGBAImage({
+					width,
+					height
+				}) : new RGBAImage({
 					width,
 					height
 				}, new Uint8Array(data)),
@@ -54147,6 +54192,7 @@ var Map$1 = class extends Evented {
 				textFitHeight,
 				sdf,
 				version,
+				isWebGLImage,
 				userImage
 			};
 		}
@@ -54177,8 +54223,12 @@ var Map$1 = class extends Evented {
 		const { width, height, data } = image instanceof HTMLImageElement || isImageBitmap(image) ? browser.getImageData(image) : image;
 		if (width === void 0 || height === void 0) return this.fire(new ErrorEvent(/* @__PURE__ */ new Error("Invalid arguments to map.updateImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, or object with `width`, `height`, and `data` properties with the same format as `ImageData`")));
 		if (width !== existingImage.data.width || height !== existingImage.data.height) return this.fire(new ErrorEvent(/* @__PURE__ */ new Error("The width and height of the updated image must be that same as the previous version of the image")));
-		const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
-		existingImage.data.replace(data, copy);
+		existingImage.isWebGLImage = isStyleImageWebGLData(data);
+		if (existingImage.isWebGLImage) existingImage.userImage = image;
+		else {
+			const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
+			existingImage.data.replace(data, copy);
+		}
 		this.style.updateImage(id, existingImage);
 		return this;
 	}
@@ -61236,7 +61286,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main f950bf6 (local)` : "main f950bf6";
+const version = new URL(import.meta.url).origin === location.origin ? `main bc21e82 (local)` : "main bc21e82";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
