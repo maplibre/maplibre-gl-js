@@ -2615,7 +2615,7 @@ describe('Style.removeLayer', () => {
         // Bind a listener to prevent fallback Evented error reporting.
         layer.on('error', () => {});
 
-        layer.fire(new ErrorEvent('error', {mapLibre: true}));
+        layer.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
 
         expect(styleErrorListener).not.toHaveBeenCalled();
     });
