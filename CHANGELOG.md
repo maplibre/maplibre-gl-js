@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `map.queryRenderedFeatures()` sometimes causing "Out of bounds" error due to race condition while loading tile data ([#8064](https://github.com/maplibre/maplibre-gl-js/issues/8064)) (by [@smvjohansenbouvet](https://github.com/smvjohansenbouvet))
 - Fix zooming the globe with the scroll wheel or a two-finger pinch drifting away from the pointer while the globe is small on screen, instead of keeping the location under the pointer as it does when zoomed in ([#8095](https://github.com/maplibre/maplibre-gl-js/pull/8095)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
