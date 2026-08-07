@@ -243,6 +243,7 @@ export function createTerrain(): Terrain {
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
+        resetElevationCache: () => {},
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,

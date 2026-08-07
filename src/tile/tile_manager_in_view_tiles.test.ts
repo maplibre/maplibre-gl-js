@@ -81,7 +81,7 @@ describe('InViewTiles', () => {
         inViewTiles.handleWrapJump(1);
 
         const tiles = inViewTiles.getAllTiles();
-        expect(tiles.length).toBe(1);
+        expect(tiles).toHaveLength(1);
         expect(tiles[0].tileID.wrap).toBe(1);
         expect(inViewTiles.getTileById(tiles[0].tileID.key)).toBe(tiles[0]);
     });
@@ -96,7 +96,7 @@ describe('InViewTiles', () => {
         inViewTiles.handleWrapJump(-1);
 
         const tiles = inViewTiles.getAllTiles();
-        expect(tiles.length).toBe(2);
+        expect(tiles).toHaveLength(2);
         
         const updatedTile1 = tiles.find(t => t.uid === tile1.uid);
         const updatedTile2 = tiles.find(t => t.uid === tile2.uid);

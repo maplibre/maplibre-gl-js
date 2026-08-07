@@ -49,11 +49,7 @@ describe('mapOptions', () => {
         let idleTriggered = false;
         const fadeDuration = 100;
         const spy = vi.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
-            if (!idleTriggered) {
-                expect(parameters.fadeDuration).toBe(0);
-            } else {
-                expect(parameters.fadeDuration).toBe(fadeDuration);
-            }
+            expect(parameters.fadeDuration).toBe(idleTriggered ? fadeDuration : 0);
         });
         const style = createStyle();
         const map = createMap({style, fadeDuration});
