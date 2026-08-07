@@ -41514,6 +41514,35 @@ var GlobeTransform = class GlobeTransform {
 //#endregion
 //#region src/geo/projection/vertical_perspective_camera_helper.ts
 /**
+* Zoom movement slowing starts when the mouse ray passes further than this above the planet surface,
+* so a cursor off the globe does not move the map unnaturally. Globe radius is 1, so 0.3 is ~2000 km.
+*/
+const RAY_SURFACE_DISTANCE_FOR_SLOWING_START = .3;
+/** How sharply zoom movement slows as the mouse ray rises above the planet surface. Lower is more gradual. */
+const SLOWING_MULTIPLIER = .5;
+/** Longitude difference between zoom location and map center at which the blend from exact to heuristic zooming starts, in degrees. */
+const INTERPOLATE_TO_HEURISTIC_START_LNG = 45;
+/** Longitude difference at which the blend to heuristic zooming is complete, in degrees. */
+const INTERPOLATE_TO_HEURISTIC_END_LNG = 85;
+/** Exponent applied to the blend factor: below 1, so the blend leans towards heuristic zooming and flattens as it completes. */
+const INTERPOLATE_TO_HEURISTIC_EXPONENT = .25;
+/**
+* Distance of the mouse ray from the globe center at which the blend from exact to heuristic zooming
+* starts. Globe radius is 1, so 1 is a ray grazing the horizon.
+*/
+const INTERPOLATE_TO_HEURISTIC_START_HORIZON = .95;
+/** Ray distance at which the blend to heuristic zooming is complete. */
+const INTERPOLATE_TO_HEURISTIC_END_HORIZON = .999;
+/**
+* Globe radius relative to the smaller viewport dimension below which zoom movement near the horizon
+* starts being inhibited, avoiding unnatural movements when the map is zoomed out a lot.
+*/
+const SLOWING_RADIUS_START = .9;
+/** Globe radius relative to the smaller viewport dimension at which that inhibition is at full strength. */
+const SLOWING_RADIUS_STOP = .5;
+/** Fraction of the zoom movement that remains once the globe has shrunk to `SLOWING_RADIUS_STOP`. */
+const SLOWING_RADIUS_SLOW_FACTOR = .25;
+/**
 * @internal
 */
 var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
@@ -41528,6 +41557,13 @@ var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
 			easingOffset: new Point(0, 0)
 		};
 	}
+	/**
+	* Zooms around the pointer.
+	*
+	* `setLocationAtPoint` is exact but degenerates when called repeatedly for a
+	* location whose longitude is far from the center's, or one near the horizon,
+	* so those cases blend towards a heuristic.
+	*/
 	handleMapControlsRollPitchBearingZoom(deltas, tr) {
 		const zoomPixel = deltas.around;
 		const zoomLoc = tr.screenPointToLocation(zoomPixel);
@@ -41538,16 +41574,6 @@ var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
 		if (deltas.zoomDelta) tr.setZoom(tr.zoom + deltas.zoomDelta);
 		const actualZoomDelta = tr.zoom - oldZoomPreZoomDelta;
 		if (actualZoomDelta === 0) return;
-		const raySurfaceDistanceForSlowingStart = .3;
-		const slowingMultiplier = .5;
-		const interpolateToHeuristicStartLng = 45;
-		const interpolateToHeuristicEndLng = 85;
-		const interpolateToHeuristicExponent = .25;
-		const interpolateToHeuristicStartRadius = .75;
-		const interpolateToHeuristicEndRadius = .35;
-		const slowingRadiusStart = .9;
-		const slowingRadiusStop = .5;
-		const slowingRadiusSlowFactor = .25;
 		const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
 		const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1);
 		const dLat = differenceOfAnglesDegrees(tr.center.lat, zoomLoc.lat);
@@ -41560,19 +41586,20 @@ var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
 			rayDirection[1] * distanceToClosestPoint,
 			rayDirection[2] * distanceToClosestPoint
 		]);
-		const distanceFromSurface = length$1(closestPoint) - 1;
-		const distanceFactor = Math.exp(-Math.max(distanceFromSurface - raySurfaceDistanceForSlowingStart, 0) * slowingMultiplier);
-		const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height);
-		const radiusFactor = remapSaturate(radius, slowingRadiusStart, slowingRadiusStop, 1, slowingRadiusSlowFactor);
-		const factor = (1 - zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
+		const rayDistanceFromGlobeCenter = length$1(closestPoint);
+		const distanceFromSurface = rayDistanceFromGlobeCenter - 1;
+		const distanceFactor = Math.exp(-Math.max(distanceFromSurface - RAY_SURFACE_DISTANCE_FOR_SLOWING_START, 0) * SLOWING_MULTIPLIER);
+		const interpolationFactorHorizon = remapSaturate(rayDistanceFromGlobeCenter, INTERPOLATE_TO_HEURISTIC_START_HORIZON, INTERPOLATE_TO_HEURISTIC_END_HORIZON, 0, 1);
+		const radiusFactor = remapSaturate(getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height), SLOWING_RADIUS_START, SLOWING_RADIUS_STOP, 1, SLOWING_RADIUS_SLOW_FACTOR);
+		const slowingFactor = Math.min(distanceFactor, lerp(1, radiusFactor, interpolationFactorHorizon));
+		const factor = (1 - zoomScale(-actualZoomDelta)) * slowingFactor;
 		const oldCenterLat = tr.center.lat;
 		const oldZoom = tr.zoom;
 		const heuristicCenter = new LngLat(tr.center.lng + dLng * factor, clamp$2(tr.center.lat + dLat * factor, -85.051129, MAX_VALID_LATITUDE));
 		tr.setLocationAtPoint(zoomLoc, zoomPixel);
 		const exactCenter = tr.center;
-		const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), interpolateToHeuristicStartLng, interpolateToHeuristicEndLng, 0, 1);
-		const interpolationFactorRadius = remapSaturate(radius, interpolateToHeuristicStartRadius, interpolateToHeuristicEndRadius, 0, 1);
-		const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorRadius), interpolateToHeuristicExponent);
+		const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), INTERPOLATE_TO_HEURISTIC_START_LNG, INTERPOLATE_TO_HEURISTIC_END_LNG, 0, 1);
+		const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorHorizon), INTERPOLATE_TO_HEURISTIC_EXPONENT);
 		const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
 		const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
 		tr.setCenter(new LngLat(exactCenter.lng + lngExactToHeuristic * heuristicFactor, exactCenter.lat + latExactToHeuristic * heuristicFactor).wrap());
@@ -61209,7 +61236,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 252b259 (local)` : "main 252b259";
+const version = new URL(import.meta.url).origin === location.origin ? `main 2a9d46c (local)` : "main 2a9d46c";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
