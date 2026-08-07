@@ -14572,6 +14572,8 @@ var Texture = class {
 			gl.deleteTexture(this.texture);
 			this.texture = gl.createTexture();
 			this._ownedHandle = this.texture;
+			this.filter = void 0;
+			this.wrap = void 0;
 		}
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		context.pixelStoreUnpackFlipY.set(false);

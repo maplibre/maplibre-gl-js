@@ -18734,6 +18734,8 @@ var Texture = class {
 			gl.deleteTexture(this.texture);
 			this.texture = gl.createTexture();
 			this._ownedHandle = this.texture;
+			this.filter = void 0;
+			this.wrap = void 0;
 		}
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		context.pixelStoreUnpackFlipY.set(false);
@@ -27499,6 +27501,7 @@ var ImageSource = class extends Evented {
 	constructor(id, options, dispatcher, eventedParent) {
 		super();
 		this.flippedWindingOrder = false;
+		this._imageDirty = false;
 		this.id = id;
 		this.dispatcher = dispatcher;
 		this.coordinates = options.coordinates;
@@ -27522,7 +27525,7 @@ var ImageSource = class extends Evented {
 			this._request = null;
 			this._loaded = true;
 			if (image?.data) {
-				this.image = image.data;
+				this._setImage(image.data);
 				if (newCoordinates) this.coordinates = newCoordinates;
 				this._finishLoading();
 			}
@@ -27552,16 +27555,25 @@ var ImageSource = class extends Evented {
 		}
 		if ("image" in options) {
 			this._loaded = true;
-			this.image = options.image;
+			this._setImage(options.image);
 			if (options.coordinates) this.coordinates = options.coordinates;
-			this.texture = null;
 			this._finishLoading();
 			return this;
 		}
 		if (!options.url) return this;
 		this.options.url = options.url;
-		this.load(options.coordinates).finally(() => this.texture = null);
+		this.load(options.coordinates);
 		return this;
+	}
+	/** Loaded tiles hold `this.texture`, so the wrapper has to outlive the images in it. */
+	_setImage(image) {
+		this.image = image;
+		this._imageDirty = true;
+	}
+	/** Teardown only: dropping the reference alone leaves the allocation to the GC. */
+	_disposeTexture() {
+		this.texture?.destroy();
+		this.texture = null;
 	}
 	_finishLoading() {
 		if (this.map) {
@@ -27578,6 +27590,9 @@ var ImageSource = class extends Evented {
 			this._request.abort();
 			this._request = null;
 		}
+		this._disposeTexture();
+		this.image = null;
+		this.tiles = {};
 	}
 	/**
 	* Sets the image's coordinates and re-renders the map.
@@ -27605,7 +27620,11 @@ var ImageSource = class extends Evented {
 		if (!this.texture) {
 			this.texture = new Texture(context, this.image, gl.RGBA);
 			this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+		} else if (this._imageDirty) {
+			this.texture.update(this.image);
+			this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 		}
+		this._imageDirty = false;
 		let newTilesLoaded = false;
 		for (const w in this.tiles) {
 			const tile = this.tiles[w];
@@ -27925,7 +27944,8 @@ var CanvasSource = class extends ImageSource {
 		}
 	}
 	onRemove() {
-		this.pause();
+		this._playing = false;
+		super.onRemove();
 	}
 	prepare() {
 		let resize = false;
@@ -61189,7 +61209,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 69e7d58 (local)` : "main 69e7d58";
+const version = new URL(import.meta.url).origin === location.origin ? `main 252b259 (local)` : "main 252b259";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
