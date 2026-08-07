@@ -3,7 +3,7 @@ import {VectorTile} from '@mapbox/vector-tile';
 import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
 import {WorkerTile} from './worker_tile.ts';
-import {WorkerTileState, type ParsingState} from './worker_tile_state.ts';
+import {WorkerTileState} from './worker_tile_state.ts';
 import {BoundedLRUCache} from '../tile/tile_cache.ts';
 import {ensureError, extend} from '../util/util.ts';
 import {RequestPerformance} from '../util/request_performance.ts';
@@ -106,17 +106,12 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = vectorTile;
             this.tileState.markLoaded(uid, workerTile);
+            const parsingState = {rawData, cacheControl, resourceTiming};
+            this.tileState.setParsing(uid, parsingState);
 
-            const parseState = {rawData, cacheControl, resourceTiming};  // Keep data so reloadTile can access if parse is canceled.
-            this.tileState.setParsing(uid, parseState);
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.removeParsing(uid);
-            }
+            return await this._parseWorkerTile(workerTile, params);
         } catch (err) {
             this.tileState.finishLoading(uid);
-            workerTile.status = 'done';
             this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
@@ -128,16 +123,23 @@ export class VectorTileWorkerSource implements WorkerSource {
         return extend({etagUnmodified: true as const}, cacheControl, resourceTiming);
     }
 
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
+    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const parseState = this.tileState.getParsing(workerTile.uid);
+
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
+        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
+        // After the main thread has successfully received and stored rawTileData,
+        // we no longer need to store it in the worker or transfer additional copies of it.
         if (parseState) {
             const {rawData, cacheControl, resourceTiming} = parseState;
             // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
             const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
-            // Transferring a copy of rawTileData because the worker needs to retain its copy.
+            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
             result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
+            this.tileState.removeParsing(workerTile.uid);
         }
+        // else: this seems like a missing case where cache control is lost? see #3309
 
         return result;
     }
@@ -209,27 +211,16 @@ export class VectorTileWorkerSource implements WorkerSource {
      */
     async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
-
         const workerTile = this.tileState.getLoaded(uid);
         if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
 
+        // If there was no vector tile data on the initial load, don't try to reparse the tile.
+        if (!workerTile.vectorTile) {
+            return;
+        }
+
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
-
-        if (workerTile.status === 'parsing') {
-            // if we are cancelling the original parse, make sure to pass the rawTileData from the original parse
-            const parseState = this.tileState.getParsing(uid);
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.removeParsing(uid);
-            }
-        }
-
-        // If there was no vector tile data on the initial load, don't try and reparse the tile.
-        // this seems like a missing case where cache control is lost? see #3309
-        if (workerTile.status === 'done' && workerTile.vectorTile) {
-            return await this._parseWorkerTile(workerTile, params);
-        }
+        return await this._parseWorkerTile(workerTile, params);
     }
 
     /**
