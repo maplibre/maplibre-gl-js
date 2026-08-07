@@ -18,6 +18,7 @@ export class ImagePosition {
     paddedRect: Rect;
     pixelRatio: number;
     version: number;
+    needsFirstWebGLRender: boolean;
     stretchY: Array<[number, number]>;
     stretchX: Array<[number, number]>;
     content: [number, number, number, number];
@@ -39,9 +40,8 @@ export class ImagePosition {
         this.stretchX = stretchX;
         this.stretchY = stretchY;
         this.content = content;
-        // WebGL images are not written into the atlas until the next render
-        // We use -1 to mean "uninitialized" and call the first render "version 0"
-        this.version = isWebGLImage ? -1 : version;
+        this.version = version;
+        this.needsFirstWebGLRender = !!isWebGLImage;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
     }
@@ -151,8 +151,9 @@ export class ImageAtlas {
     patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void {
         if (!position || !image) return;
 
-        if (position.version === image.version) return;
+        if (!position.needsFirstWebGLRender && position.version === image.version) return;
 
+        position.needsFirstWebGLRender = false;
         position.version = image.version;
         const [x, y] = position.tl;
         const data = image.userImage?.data;

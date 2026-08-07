@@ -41,8 +41,9 @@ test('patchUpdatedImage lets a WebGL image render its own slot instead of upload
 });
 
 test('a WebGL image starts out owing every atlas a render, whatever version it is at', () => {
-    expect(new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 7, isWebGLImage: true} as StyleImage).version).toBe(-1);
-    expect(new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 7} as StyleImage).version).toBe(7);
+    const webgl = new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 7, isWebGLImage: true} as StyleImage);
+    expect([webgl.needsFirstWebGLRender, webgl.version]).toEqual([true, 7]);
+    expect(new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 7} as StyleImage).needsFirstWebGLRender).toBe(false);
 });
 
 test('patchUpdatedImages resets WebGL state between images, so the second never trusts a cache the first invalidated', () => {
