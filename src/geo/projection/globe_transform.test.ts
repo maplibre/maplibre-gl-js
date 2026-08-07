@@ -9,6 +9,7 @@ import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {differenceOfAnglesDegrees} from '../../util/util.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -698,20 +699,60 @@ describe('GlobeTransform', () => {
             expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
         });
 
-        test('target points that miss the globe are ignored', () => {
+        test('target points that miss the globe are ignored without a pan delta', () => {
             const freshTransform = createGlobeTransform();
             freshTransform.setZoom(1);
             freshTransform.setTransitionState(1);
             freshTransform.setCenter(new LngLat(5, 10));
-            const centerBefore = freshTransform.center;
+            const lngBefore = freshTransform.center.lng;
+            const latBefore = freshTransform.center.lat;
             const bearingBefore = freshTransform.bearing;
             point = new Point(620, 240);
             expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
             coords = freshTransform.screenPointToLocation(point);
             quaternionSetLocationAtPoint(freshTransform, coords, point);
-            expect(freshTransform.center.lng).toBe(centerBefore.lng);
-            expect(freshTransform.center.lat).toBe(centerBefore.lat);
+            expect(freshTransform.center.lng).toBe(lngBefore);
+            expect(freshTransform.center.lat).toBe(latBefore);
             expect(freshTransform.bearing).toBe(bearingBefore);
+        });
+
+        test('panning continues once the cursor leaves the globe', () => {
+            const freshTransform = createGlobeTransform();
+            freshTransform.setZoom(1);
+            freshTransform.setTransitionState(1);
+            freshTransform.setCenter(new LngLat(5, 10));
+            const lngBefore = freshTransform.center.lng;
+            const bearingBefore = freshTransform.bearing;
+            point = new Point(620, 240);
+            expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
+            coords = freshTransform.screenPointToLocation(point);
+            quaternionSetLocationAtPoint(freshTransform, coords, point, true, new Point(20, 0));
+            expect(freshTransform.center.lng).not.toBe(lngBefore);
+            expect(isNaN(freshTransform.center.lng)).toBe(false);
+            expect(isNaN(freshTransform.center.lat)).toBe(false);
+            expect(freshTransform.bearing).toBe(bearingBefore);
+        });
+
+        test('panning off the globe is slower than on it', () => {
+            const travel = (screenPoint: Point) => {
+                const tr = createGlobeTransform();
+                tr.setZoom(1);
+                tr.setTransitionState(1);
+                tr.setCenter(new LngLat(0, 0));
+                const panDelta = new Point(20, 0);
+                const location = tr.screenPointToLocation(screenPoint.sub(panDelta));
+                quaternionSetLocationAtPoint(tr, location, screenPoint, true, panDelta);
+                return Math.abs(differenceOfAnglesDegrees(0, tr.center.lng));
+            };
+            const onGlobe = new Point(340, 240);
+            const offGlobe = new Point(620, 240);
+            const reference = createGlobeTransform();
+            reference.setZoom(1);
+            reference.setTransitionState(1);
+            reference.setCenter(new LngLat(0, 0));
+            expect(reference.isPointOnMapSurface(onGlobe)).toBe(true);
+            expect(reference.isPointOnMapSurface(offGlobe)).toBe(false);
+            expect(travel(offGlobe)).toBeLessThan(travel(onGlobe));
         });
     });
 });
