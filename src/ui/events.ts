@@ -1,4 +1,4 @@
-import {Event} from '../util/evented.ts';
+import {Event, type ErrorEvent} from '../util/evented.ts';
 
 import {DOM} from '../util/dom.ts';
 import Point from '@mapbox/point-geometry';
