@@ -6,6 +6,13 @@ import type {Painter} from '../../render/painter.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import {type mat4} from 'gl-matrix';
 
+/** Selects whether `u_rotate_symbol` uses a constant or the per-vertex rotation attribute. */
+export const enum RotateSymbolMode {
+    never = 0,
+    always = 1,
+    perFeature = 2
+}
+
 export type SymbolIconUniformsType = {
     'u_is_size_zoom_constant': Uniform1i;
     'u_is_size_feature_constant': Uniform1i;
@@ -168,7 +175,7 @@ const symbolIconUniformValues = (
         uSizeT: number;
         uSize: number;
     },
-    rotateInShader: boolean,
+    rotateSymbol: RotateSymbolMode,
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
@@ -190,7 +197,7 @@ const symbolIconUniformValues = (
         'u_size': size ? size.uSize : 0,
         'u_camera_to_center_distance': transform.cameraToCenterDistance,
         'u_pitch': transform.pitch / 360 * 2 * Math.PI,
-        'u_rotate_symbol': +rotateInShader,
+        'u_rotate_symbol': rotateSymbol,
         'u_aspect_ratio': transform.width / transform.height,
         'u_fade_change': painter.options.fadeDuration ? painter.symbolFadeChange : 1,
         'u_label_plane_matrix': labelPlaneMatrix,
@@ -213,7 +220,7 @@ const symbolSDFUniformValues = (
         uSizeT: number;
         uSize: number;
     },
-    rotateInShader: boolean,
+    rotateSymbol: RotateSymbolMode,
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
@@ -230,7 +237,7 @@ const symbolSDFUniformValues = (
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
+        rotateSymbol, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
         glCoordMatrix, translation, isText, texSize, pitchedScale, isOffset), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
@@ -245,7 +252,7 @@ const symbolTextAndIconUniformValues = (
         uSizeT: number;
         uSize: number;
     },
-    rotateInShader: boolean,
+    rotateSymbol: RotateSymbolMode,
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
@@ -259,7 +266,7 @@ const symbolTextAndIconUniformValues = (
     isOffset: boolean        
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
+        rotateSymbol, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
         glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale, isOffset), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1

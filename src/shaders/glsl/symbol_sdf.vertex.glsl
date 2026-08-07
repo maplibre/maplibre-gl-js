@@ -3,6 +3,7 @@ layout(location = 1) in vec4 a_data;
 layout(location = 2) in vec4 a_pixeloffset;
 layout(location = 3) in vec3 a_projected_pos;
 layout(location = 4) in float a_fade_opacity;
+layout(location = 5) in float a_rotate_symbol;
 
 // contents of a_size vary based on the type of property value
 // used for {text,icon}-size.
@@ -22,7 +23,9 @@ uniform bool u_pitch_with_map;
 uniform bool u_is_along_line;
 uniform bool u_is_variable_anchor;
 uniform highp float u_pitch;
-uniform bool u_rotate_symbol;
+// 0: never rotate with the map, 1: always rotate with the map,
+// 2: rotate per vertex, from a_rotate_symbol (data-driven icon-rotation-alignment)
+uniform int u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
@@ -107,7 +110,7 @@ void main() {
     float fontScale = u_is_text ? size / 24.0 : size;
 
     highp float symbol_rotation = 0.0;
-    if (u_rotate_symbol) {
+    if (u_rotate_symbol == 2 ? a_rotate_symbol > 0.5 : u_rotate_symbol == 1) {
         // Point labels with 'rotation-alignment: map' are horizontal with respect to tile units
         // To figure out that angle in projected space, we draw a short horizontal line in tile
         // space, project it, and measure its angle in projected space.

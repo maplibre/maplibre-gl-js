@@ -3,6 +3,7 @@ layout(location = 1) in vec4 a_data;
 layout(location = 2) in vec4 a_pixeloffset;
 layout(location = 3) in vec3 a_projected_pos;
 layout(location = 4) in float a_fade_opacity;
+layout(location = 5) in float a_rotate_symbol;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -10,7 +11,9 @@ uniform highp float u_size_t; // used to interpolate between zoom stops when siz
 uniform highp float u_size; // used when size is both zoom and feature constant
 uniform highp float u_camera_to_center_distance;
 uniform highp float u_pitch;
-uniform bool u_rotate_symbol;
+// 0: never rotate with the map, 1: always rotate with the map,
+// 2: rotate per vertex, from a_rotate_symbol (data-driven icon-rotation-alignment)
+uniform int u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform float u_fade_change;
 uniform mat4 u_label_plane_matrix;
@@ -84,7 +87,7 @@ void main() {
     float fontScale = u_is_text ? size / 24.0 : size;
 
     highp float symbol_rotation = 0.0;
-    if (u_rotate_symbol) {
+    if (u_rotate_symbol == 2 ? a_rotate_symbol > 0.5 : u_rotate_symbol == 1) {
         // See comments in symbol_sdf.vertex
         vec4 offsetProjectedPoint = projectTileWithElevation(translated_a_pos + vec2(1, 0), ele);
 
