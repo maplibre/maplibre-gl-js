@@ -6,7 +6,7 @@ There are three kinds of benchmarks in this repository:
 
 * **Micro benchmarks** live next to the code they measure as `src/**/*.bench.ts` files and run under [Vitest bench mode](https://vitest.dev/guide/features.html#benchmarking). They answer "did my change make this code path faster on my machine, right now" while you work on it.
 * **End-to-end benchmarks** under `test/bench/e2e/` load real production artifacts (your `dist/` build, a release from the CDN) in headless Chrome and time a map through the public API. They answer "did the library get slower between versions".
-* **The version-comparison harness** under `test/bench/` runs the full benchmark suite in a browser against special benchmark builds published to gh-pages, documented from [Running Benchmarks](#running-benchmarks) onward.
+* **The browser harness** under `test/bench/` runs the full benchmark suite against a benchmark build of your checkout and plots the samples, documented from [Running Benchmarks](#running-benchmarks) onward.
 
 ## Micro benchmarks
 
@@ -73,13 +73,11 @@ Chrome needs to load a worker from a different origin. To avoid a security error
 
 To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/versions/index.html`](http://localhost:9966/test/bench/versions/index.html).
 
-To run all benchmarks for the checkout only, that is without comparing to any releases, open [`http://localhost:9966/test/bench/versions/index.html?compare=`](http://localhost:9966/test/bench/versions/index.html?compare=).
-
 To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions/index.html#Layout`](http://localhost:9966/test/bench/versions/index.html#Layout).
 
-By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/test/bench/versions/index.html?compare=main](http://localhost:9966/test/bench/versions/index.html?compare=main) or [localhost:9966/test/bench/versions/index.html?compare=main#Layout](http://localhost:9966/test/bench/versions/index.html?compare=main#Layout) to compare only to main, or [localhost:9966/test/bench/versions/index.html?compare=v1.13.1](http://localhost:9966/test/bench/versions/index.html?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
+The page measures the benchmark build of your checkout. To compare a change against a release, use the [end-to-end benchmarks](#end-to-end-benchmarks), which measure the shipped library.
 
-To run all benchmarks in headless chromium use `npm run benchmark`. As with the browser you can include one or more `--compare` arguments to change the default comparison, e.g. `npm run benchmark -- --compare main`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Layout Paint`.
+To run all benchmarks in headless chromium use `npm run benchmark`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Layout Paint`.
 
 ## Running Style Benchmarks
 
@@ -143,10 +141,3 @@ We recommend installing a browser extension that can take full-page snapshots, e
 [FireShot](https://chrome.google.com/webstore/detail/take-webpage-screenshots/mcbpblocgmgfnpjjppndjkmgjaogfceg).
 
 Alternatively there is a suitable pdf at [`test/bench/results/all.pdf`](./results/all.pdf) after a successful run of `npm run benchmark`.
-
-## GitHub Pages and the benchmarks
-
-The benchmarks run in a browser. A website stored at `bench/versions/index.html` serves as a shell to load the benchmark code (which is in `benchmarks_generated.js`), run the benchmarks, and display the measurement results with some nice plots. The whole transpiled and minified library is stored in `benchmarks_generated.js`, so to compare different versions of the library the browser loads multiple `benchmarks_generated.js` files which are hosted in the GitHub Pages of this repository. Whenever a new version of MapLibre GL JS gets published, a new `benchmarks_generated.js` file will be created and uploaded to the GitHub Pages branch. See
-
-* https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks
-* https://github.com/maplibre/maplibre-gl-js/blob/main/.github/workflows/upload-benchmarks.yml
