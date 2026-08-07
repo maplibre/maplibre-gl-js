@@ -72,6 +72,33 @@ describe('queryRenderedFeatures', () => {
         expect(spy.mock.calls[0][0]).toEqual([{x: 612, y: 100}]);
     });
 
+    test('fires an error when geometry contains more than two points', async () => {
+        const map = createMap();
+        await map.once('load');
+        const errorListener = vi.fn();
+        const queryListener = vi.spyOn(map.style, 'queryRenderedFeatures');
+        map.on('error', errorListener);
+
+        const result = map.queryRenderedFeatures([[0, 0], [10, 10], [20, 20]] as any);
+
+        expect(result).toEqual([]);
+        expect(errorListener).toHaveBeenCalledTimes(1);
+        expect(errorListener.mock.calls[0][0].error.message).toBe('queryRenderedFeatures only accepts a single point or a bounding box of two points.');
+        expect(queryListener).not.toHaveBeenCalled();
+    });
+
+    test('fires an error for more than two points when no style is loaded', () => {
+        const map = createMap({style: undefined});
+        const errorListener = vi.fn();
+        map.on('error', errorListener);
+
+        const result = map.queryRenderedFeatures([[0, 0], [10, 10], [20, 20]] as any);
+
+        expect(result).toEqual([]);
+        expect(errorListener).toHaveBeenCalledTimes(1);
+        expect(errorListener.mock.calls[0][0].error.message).toBe('queryRenderedFeatures only accepts a single point or a bounding box of two points.');
+    });
+
     test('returns an empty array when no style is loaded', () => {
         const map = createMap({style: undefined});
         expect(map.queryRenderedFeatures()).toEqual([]);
