@@ -330,7 +330,7 @@ describe('terrain gesture anchoring', () => {
         return map.project(anchor).dist(expectedAt);
     }
 
-    it('moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
+    test('moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
         const target = await setupGestureMap();
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
@@ -459,14 +459,36 @@ describe('terrain gesture anchoring', () => {
         expect(centerMovedPx).toBeGreaterThan(20);
     });
 
-    test.each([
-        ['the terrain under the gesture is not loaded', null],
-        ['the grabbed terrain point is above the camera altitude', new MercatorCoordinate(0.5, 0.35, 1e6)],
-    ])('falls back to the center-elevation behavior when %s', async (_name, raycastResult) => {
+    test('falls back to the center-elevation behavior when the terrain under the gesture is not loaded', async () => {
         const target = await setupGestureMap();
         map.terrain = {
             ...createTerrain(),
-            pointCoordinate: () => raycastResult,
+            pointCoordinate: () => null,
+        } as any as Terrain;
+
+        const startCenter = map.getCenter();
+        const start = new Point(80, 90);
+        gestureStep('touchstart', target, pinchTouches(start, 30));
+        let mid = start;
+        let halfSpread = 30;
+        for (let step = 0; step < 3; step++) {
+            mid = mid.add(new Point(15, 10));
+            halfSpread += 10;
+            gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
+        }
+
+        // the gesture still zooms and pans sanely near where it started
+        expect(map.getZoom()).toBeGreaterThan(11.5);
+        expect(Math.abs(map.getCenter().lng - startCenter.lng)).toBeLessThan(0.5);
+        expect(Math.abs(map.getCenter().lat - startCenter.lat)).toBeLessThan(0.5);
+        endGesture(target);
+    });
+
+    test('falls back to the center-elevation behavior when the grabbed terrain point is above the camera altitude', async () => {
+        const target = await setupGestureMap();
+        map.terrain = {
+            ...createTerrain(),
+            pointCoordinate: () => new MercatorCoordinate(0.5, 0.35, 1e6),
         } as any as Terrain;
 
         const startCenter = map.getCenter();
