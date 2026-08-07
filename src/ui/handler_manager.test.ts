@@ -367,7 +367,7 @@ describe('terrain gesture anchoring', () => {
         expect(map._handlers._terrainGestureAnchorElevation).toBeNull();
     });
 
-    it('pitched moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
+    test('pitched moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
         const target = await setupGestureMap(60);
         const anchor = new LngLat(7.494, 45.904);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
@@ -398,7 +398,7 @@ describe('terrain gesture anchoring', () => {
         expect(slip).toBeLessThan(0.5);
     });
 
-    it('touch drag with terrain keeps a grabbed point elevated above the center plane under the finger', async () => {
+    test('touch drag with terrain keeps a grabbed point elevated above the center plane under the finger', async () => {
         const target = await setupGestureMap();
         // a 2000 m ridge east of the center, with the center itself at 300 m
         const ridgeStartLng = map.getCenter().lng + 0.003;
@@ -431,7 +431,7 @@ describe('terrain gesture anchoring', () => {
         expect(slip).toBeLessThan(0.5);
     });
 
-    it('center-anchored pinch over terrain still pans with the centroid', async () => {
+    test('center-anchored pinch over terrain still pans with the centroid', async () => {
         const target = await setupGestureMap();
         map.touchZoomRotate.enable({around: 'center'});
         const anchor = new LngLat(7.49, 45.905);
@@ -459,7 +459,7 @@ describe('terrain gesture anchoring', () => {
         expect(centerMovedPx).toBeGreaterThan(20);
     });
 
-    it.each([
+    test.each([
         ['the terrain under the gesture is not loaded', null],
         ['the grabbed terrain point is above the camera altitude', new MercatorCoordinate(0.5, 0.35, 1e6)],
     ])('falls back to the center-elevation behavior when %s', async (_name, raycastResult) => {
@@ -487,7 +487,7 @@ describe('terrain gesture anchoring', () => {
         endGesture(target);
     });
 
-    it('control: the same moving-centroid pinch without terrain keeps the grabbed point under the fingers', async () => {
+    test('control: the same moving-centroid pinch without terrain keeps the grabbed point under the fingers', async () => {
         const target = await setupGestureMap();
 
         const start = new Point(67, 76);
