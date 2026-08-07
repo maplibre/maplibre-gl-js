@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { Measurement } from './benchmark';
+import {type Measurement} from './benchmark.ts';
 
 export type RegressionResults = {
     correlation:number;

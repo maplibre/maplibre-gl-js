@@ -1,13 +1,23 @@
 ## main
 ### ✨ Features and improvements
-- Add the `fill-extrusion-rounded-corner-distance` layout property, which replaces each fill-extrusion corner with an arc spanning the given distance (in meters) along the adjacent edges. The distance is clamped to 20% of each adjacent edge's length so that short edges don't collapse, and near-straight corners (turns below 5°) are left untouched. Defaults to `0`, which keeps corners sharp ([#7934](https://github.com/maplibre/maplibre-gl-js/issues/7934)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- Improve Mercator rendering performance by skipping a redundant clipping mask border pass ([#8038](https://github.com/maplibre/maplibre-gl-js/pull/8038)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is still preserved while panning, as before; set `DragPanOptions.fixedBearing` to `false` to instead let the globe rotate so the grabbed location tracks the cursor exactly ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
+- _...Add new stuff here..._
+
+## 6.2.0
+
+### ✨ Features and improvements
+
+- Add the `fill-extrusion-rounded-corner-distance` layout property, which replaces each fill-extrusion corner with an arc spanning the given distance (in meters) along the adjacent edges. The distance is clamped to 20% of each adjacent edge's length so that short edges don't collapse, and near-straight corners (turns below 5°) are left untouched. Defaults to `0`, which keeps corners sharp ([#7934](https://github.com/maplibre/maplibre-gl-js/issues/7934)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Improve Mercator rendering performance by skipping a redundant clipping mask border pass ([#8038](https://github.com/maplibre/maplibre-gl-js/pull/8038)) (by [@DoFabien](https://github.com/DoFabien))
+- Add a docker-compose service to build and serve the examples (#57) ([#8026](https://github.com/maplibre/maplibre-gl-js/pull/8026)) (by [@clement-igonet](https://github.com/clement-igonet))
+
+### 🐞 Bug fixes
+
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Improve terrain elevation sampling performance by caching DEM tile lookups and coordinate transforms within each render ([#8025](https://github.com/maplibre/maplibre-gl-js/pull/8025)) (by [@DoFabien](https://github.com/DoFabien))
-- _...Add new stuff here..._
 
 ## 6.1.0
 
@@ -28,7 +38,6 @@
 - Fix globe latitude precision on some GPUs (e.g. Mali) by reformulating the mercator-to-sphere Y coordinate algebraically (`exp` + rational arithmetic instead of `atan`/`sin`/`cos`), avoiding float32 cancellation and imprecise hardware transcendentals near the equator; the runtime GPU `atan`-error measurement/correction this superseded has also been removed ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix a race in `RasterTileSource.loadTile` and `ImageSource.load` where a tile/image aborted during an awaited `transformRequest` passed an undefined `AbortController` into the image request queue, crashing it with `TypeError: Cannot read properties of undefined (reading 'signal')` ([#8004](https://github.com/maplibre/maplibre-gl-js/issues/8004)) (by [@jan-grzybek](https://github.com/jan-grzybek))
 - Fix `setTerrain` not destroying the previously active terrain when switching to a new configuration, which leaked its GPU resources and left the old source still configured as a terrain source ([#7990](https://github.com/maplibre/maplibre-gl-js/issues/7990)) (by [@lazerg](https://github.com/lazerg))
-- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is still preserved while panning, as before; set `DragPanOptions.fixedBearing` to `false` to instead let the globe rotate so the grabbed location tracks the cursor exactly ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
 - Fix fill and line layers being rendered twice near the antimeridian on globe when looking at poles or when zoomed out ([#6248](https://github.com/maplibre/maplibre-gl-js/issues/6248)) (by [@pabueco](https://github.com/pabueco))
 
 ## 6.0.0
