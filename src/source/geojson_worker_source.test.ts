@@ -219,6 +219,94 @@ describe('geojson tile worker source', () => {
         expect(res.rawTileData).toBeDefined();
     });
 
+    test('GeoJSONWorkerSource.reloadTile should include rawTileData in result when loadTile and reloadTile were aborted', async () => {
+        // Simulates scenario where loadTile + reloadTile + reloadTile all fire before the previous call can resolve
+
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': '_geojsonTileLayer',
+            type: 'symbol',
+            layout: {
+                'icon-image': 'hello',
+                'text-font': ['StandardFont-Bold'],
+                'text-field': '{name}'
+            }
+        }]);
+
+        let sendAsyncShouldAbort = false;
+        const actor = {
+            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
+                if (sendAsyncShouldAbort) {
+                    return new Promise((_resolve, reject) => {
+                        reject('aborted by test');
+                    });
+                }
+
+                return new Promise((resolve, reject) => {
+                    const res = setTimeout(() => {
+                        const response = message.type === 'getImages' ?
+                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                        resolve(response);
+                    }, 100);
+                    abortController.signal.addEventListener('abort', () => {
+                        clearTimeout(res);
+                        reject('aborted by abortController');
+                    });
+                });
+            }
+        };
+
+        // Step 1: Create source and load data
+        const source = new GeoJSONWorkerSource(actor, layerIndex, ['hello']);
+        const geoJson = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                id: 1,
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0]
+                },
+                properties: {
+                    name: 'test'
+                }
+            }]
+        } as GeoJSON.GeoJSON;
+        await source.loadData({source: 'source', data: geoJson, geojsonVtOptions: {}} as LoadGeoJSONParameters);
+
+        // Step 2: Call loadTile and have it abort
+        sendAsyncShouldAbort = true;
+        await expect(source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters)).rejects.toThrow(/aborted/);
+
+        // Step 3: Call reloadTile and have it abort
+        sendAsyncShouldAbort = true;
+        await expect(source.reloadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters)).rejects.toThrow(/aborted/);
+
+        // Step 4: Call reloadTile
+        sendAsyncShouldAbort = false;
+        const res = await source.reloadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters) as WorkerTileWithData;
+
+        expect(res).toBeDefined();
+        expect(res.rawTileData).toBeDefined();
+    });
+
     test('GeoJSONWorkerSource.loadTile returns null for an empty tile', async () => {
         const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: {type: 'FeatureCollection', features: []}, geojsonVtOptions: {}} as LoadGeoJSONParameters);
