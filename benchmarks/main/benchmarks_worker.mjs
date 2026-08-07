@@ -28762,7 +28762,6 @@ var WorkerTile = class {
 		this.inFlightDependencies = [];
 	}
 	async parse(data, layerIndex, availableImages, actor, subdivisionGranularity) {
-		this.status = "parsing";
 		this.data = data;
 		this.collisionBoxArray = new CollisionBoxArray();
 		const sourceLayerCoder = new DictionaryCoder(Object.keys(data.layers).sort());
@@ -28897,7 +28896,6 @@ var WorkerTile = class {
 				bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
 			}
 		}
-		this.status = "done";
 		return {
 			buckets: Object.values(buckets).filter((b) => !b.isEmpty()),
 			featureIndex,
@@ -29132,20 +29130,15 @@ var VectorTileWorkerSource = class {
 			const resourceTiming = this._finishRequestTiming(timing);
 			workerTile.vectorTile = vectorTile;
 			this.tileState.markLoaded(uid, workerTile);
-			const parseState = {
+			const parsingState = {
 				rawData,
 				cacheControl,
 				resourceTiming
 			};
-			this.tileState.setParsing(uid, parseState);
-			try {
-				return await this._parseWorkerTile(workerTile, params, parseState);
-			} finally {
-				this.tileState.removeParsing(uid);
-			}
+			this.tileState.setParsing(uid, parsingState);
+			return await this._parseWorkerTile(workerTile, params);
 		} catch (err) {
 			this.tileState.finishLoading(uid);
-			workerTile.status = "done";
 			this.tileState.markLoaded(uid, workerTile);
 			throw err;
 		}
@@ -29153,7 +29146,8 @@ var VectorTileWorkerSource = class {
 	_getEtagUnmodifiedResult(response, timing) {
 		return extend({ etagUnmodified: true }, this._getExpiryData(response), this._finishRequestTiming(timing));
 	}
-	async _parseWorkerTile(workerTile, params, parseState) {
+	async _parseWorkerTile(workerTile, params) {
+		const parseState = this.tileState.getParsing(workerTile.uid);
 		let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 		if (parseState) {
 			const { rawData, cacheControl, resourceTiming } = parseState;
@@ -29162,6 +29156,7 @@ var VectorTileWorkerSource = class {
 				rawTileData: rawData.slice(0),
 				encoding
 			}, result, cacheControl, resourceTiming);
+			this.tileState.removeParsing(workerTile.uid);
 		}
 		return result;
 	}
@@ -29215,16 +29210,9 @@ var VectorTileWorkerSource = class {
 		const uid = params.uid;
 		const workerTile = this.tileState.getLoaded(uid);
 		if (!workerTile) throw new Error("Should not be trying to reload a tile that was never loaded or has been removed");
+		if (!workerTile.vectorTile) return;
 		workerTile.showCollisionBoxes = params.showCollisionBoxes;
-		if (workerTile.status === "parsing") {
-			const parseState = this.tileState.getParsing(uid);
-			try {
-				return await this._parseWorkerTile(workerTile, params, parseState);
-			} finally {
-				this.tileState.removeParsing(uid);
-			}
-		}
-		if (workerTile.status === "done" && workerTile.vectorTile) return await this._parseWorkerTile(workerTile, params);
+		return await this._parseWorkerTile(workerTile, params);
 	}
 	/**
 	* Implements {@link WorkerSource.abortTile}.
@@ -29310,35 +29298,16 @@ var GeoJSONWorkerSource = class {
 			const { vectorTile, rawData } = loadResult;
 			workerTile.vectorTile = vectorTile;
 			this.tileState.markLoaded(uid, workerTile);
-			const parseState = { rawData };
-			this.tileState.setParsing(uid, parseState);
-			try {
-				return await this._parseWorkerTile(workerTile, params, parseState);
-			} finally {
-				this.tileState.removeParsing(uid);
-			}
+			const parsingState = { rawData };
+			this.tileState.setParsing(uid, parsingState);
+			return await this._parseWorkerTile(workerTile, params);
 		} catch (err) {
-			workerTile.status = "done";
 			this.tileState.markLoaded(uid, workerTile);
 			throw err;
 		}
 	}
-	async _reloadLoadedTile(params) {
-		const uid = params.uid;
-		const workerTile = this.tileState.getLoaded(uid);
-		if (!workerTile) throw new Error("Should not be trying to reload a tile that was never loaded or has been removed");
-		workerTile.showCollisionBoxes = params.showCollisionBoxes;
-		if (workerTile.status === "parsing") {
-			const parseState = this.tileState.getParsing(uid);
-			try {
-				return await this._parseWorkerTile(workerTile, params, parseState);
-			} finally {
-				this.tileState.removeParsing(uid);
-			}
-		}
-		if (workerTile.status === "done" && workerTile.vectorTile) return await this._parseWorkerTile(workerTile, params);
-	}
-	async _parseWorkerTile(workerTile, params, parseState) {
+	async _parseWorkerTile(workerTile, params) {
+		const parseState = this.tileState.getParsing(workerTile.uid);
 		let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 		if (parseState) {
 			const { rawData } = parseState;
@@ -29346,6 +29315,7 @@ var GeoJSONWorkerSource = class {
 				rawTileData: rawData.slice(0),
 				encoding: "mvt"
 			}, result);
+			this.tileState.removeParsing(workerTile.uid);
 		}
 		return result;
 	}
@@ -29413,9 +29383,13 @@ var GeoJSONWorkerSource = class {
 	* @param params - the parameters
 	* @returns A promise that resolves when the tile is reloaded
 	*/
-	reloadTile(params) {
-		if (this.tileState.getLoaded(params.uid)) return this._reloadLoadedTile(params);
-		return this.loadTile(params);
+	async reloadTile(params) {
+		const uid = params.uid;
+		const workerTile = this.tileState.getLoaded(uid);
+		if (!workerTile) return await this.loadTile(params);
+		if (!workerTile.vectorTile) return;
+		workerTile.showCollisionBoxes = params.showCollisionBoxes;
+		return await this._parseWorkerTile(workerTile, params);
 	}
 	/**
 	* Fetch, parse and process GeoJSON according to the given parameters.
