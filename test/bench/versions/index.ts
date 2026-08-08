@@ -1,8 +1,4 @@
-import locationsWithTileID from '../lib/locations_with_tile_id.ts';
-import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import Layout from '../benchmarks/layout.ts';
 import Placement from '../benchmarks/placement.ts';
-import SymbolLayout from '../benchmarks/symbol_layout.ts';
 import WorkerTransfer from '../benchmarks/worker_transfer.ts';
 import Paint from '../benchmarks/paint.ts';
 import PaintStates from '../benchmarks/paint_states.ts';
@@ -23,8 +19,6 @@ import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data.ts
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data.ts';
 import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain.ts';
 import RoundPolygonCorners from '../benchmarks/round_polygon_corners.ts';
-
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
@@ -54,7 +48,6 @@ register('QueryPoint', new QueryPoint(style, locations));
 register('QueryBox', new QueryBox(style, locations));
 register('GeoJSONSourceUpdateData', new GeoJSONSourceUpdateData());
 register('GeoJSONSourceSetData', new GeoJSONSourceSetData());
-register('Layout', new Layout(style));
 register('Placement', new Placement(style, locations));
 register('WorkerTransfer', new WorkerTransfer(style));
 register('PaintStates', new PaintStates(center));
@@ -78,7 +71,6 @@ register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
 register('Load', new Load());
-register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
 register('HillshadeLoad', new HillshadeLoad());
 register('ColorReliefLoad', new ColorReliefLoad());
 register('CustomLayer', new CustomLayer());
