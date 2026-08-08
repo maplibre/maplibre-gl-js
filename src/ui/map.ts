@@ -31,6 +31,7 @@ import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
@@ -3208,9 +3209,11 @@ export class Map extends Evented<MapEventType> {
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
+            const isWebGLImage = isStyleImageWebGLData(userImage.data);
 
             return {
-                data: new RGBAImage({width, height}, new Uint8Array(data)),
+                // A WebGL image paints its own slot, so its pixels are only ever transparent padding.
+                data: isWebGLImage ? new RGBAImage({width, height}) : new RGBAImage({width, height}, new Uint8Array(data)),
                 pixelRatio,
                 stretchX,
                 stretchY,
@@ -3219,6 +3222,7 @@ export class Map extends Evented<MapEventType> {
                 textFitHeight,
                 sdf,
                 version,
+                isWebGLImage,
                 userImage
             };
         }
@@ -3267,8 +3271,13 @@ export class Map extends Evented<MapEventType> {
                 'The width and height of the updated image must be that same as the previous version of the image')));
         }
 
-        const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
-        existingImage.data.replace(data, copy);
+        existingImage.isWebGLImage = isStyleImageWebGLData(data);
+        if (existingImage.isWebGLImage) {
+            existingImage.userImage = image as StyleImageInterface;
+        } else {
+            const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
+            existingImage.data.replace(data as Uint8Array | Uint8ClampedArray, copy);
+        }
 
         this.style.updateImage(id, existingImage);
         return this;
@@ -4146,6 +4155,11 @@ export class Map extends Evented<MapEventType> {
 
         if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
+            // The atlas textures died with the old context, so images that render themselves with WebGL owe every atlas a fresh render.
+            for (const id in this._lostContextStyle.images) {
+                const image = this._lostContextStyle.images[id];
+                if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
+            }
         }
 
         this._lostContextStyle = {style: null, images: null};

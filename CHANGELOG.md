@@ -1,9 +1,11 @@
 ## main
 ### ✨ Features and improvements
 - Make fired/listened map events typed. This means that `map.on("something", ...)` (and `once`, `listens`) will now give you an typescript error and better autocomplete. If you relied on firing/listening custom events via the map, this still works via the escape hatches `map.fire("something" as any)` -> `map.on("something" as any, ...)` ([#8072](https://github.com/maplibre/maplibre-gl-js/issues/8072)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Let a `StyleImageInterface` give a `{renderWithWebGL}` callback as its `data`, an escape hatch for plugin developers and advanced users that renders a style image on the GPU instead of moving its pixels through the CPU. Nothing new is possible that pixels could not already express, but an image that changes often, such as an animated icon, gets more performant ([#7954](https://github.com/maplibre/maplibre-gl-js/pull/7954)) (by [@lucaswoj](https://github.com/lucaswoj))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix terrain pan/zoom gestures losing the grabbed terrain point: gestures are now solved against the elevation of the terrain under the gesture instead of the frozen center elevation, so terrain under the pointer/fingers no longer slips during moving-centroid pinches and drags ([#8067](https://github.com/maplibre/maplibre-gl-js/pull/8067)) (by [@StrawberryJam22](https://github.com/StrawberryJam22))
 - Fix `ImageSource`, `VideoSource` and `CanvasSource` leaking a GPU texture on every image update and on removal, and a resized texture losing its wrap and filter settings ([#8094](https://github.com/maplibre/maplibre-gl-js/pull/8094)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix `map.queryRenderedFeatures()` sometimes causing "Out of bounds" error due to race condition while loading tile data ([#8064](https://github.com/maplibre/maplibre-gl-js/issues/8064)) (by [@smvjohansenbouvet](https://github.com/smvjohansenbouvet))
 - Fix zooming the globe with the scroll wheel or a two-finger pinch drifting away from the pointer while the globe is small on screen, instead of keeping the location under the pointer as it does when zoomed in ([#8095](https://github.com/maplibre/maplibre-gl-js/pull/8095)) (by [@mondsichtung](https://github.com/mondsichtung))

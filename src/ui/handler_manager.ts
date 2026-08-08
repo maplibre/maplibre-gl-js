@@ -31,6 +31,12 @@ import type {Terrain} from '../render/terrain.ts';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
+/**
+ * A terrain gesture's anchor plane must stay below this fraction of the camera's
+ * altitude over the center-elevation plane, or the ray-plane solve degenerates.
+ */
+const TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION = 0.9;
+
 class RenderFrameEvent extends Event {
     type: 'renderFrame';
     timeStamp: number;
@@ -163,6 +169,11 @@ export class HandlerManager {
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     _terrainMovement: boolean;
+    /**
+     * Elevation in meters of the terrain point grabbed at gesture start; kept for the
+     * same lifetime as the elevation freeze. Null when that terrain was not available.
+     */
+    _terrainGestureAnchorElevation: number | null = null;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -543,17 +554,10 @@ export class HandlerManager {
         // stop any ongoing camera animations (easeTo, flyTo)
         this._camera.stop(true);
 
-        let {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around, pinchAround} = combinedResult;
+        const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta} = combinedResult;
 
-        if (pinchAround !== undefined) {
-            around = pinchAround;
-        }
-
-        around ||= this._camera.transform.centerPoint;
-
-        if (terrain && !tr.isPointOnMapSurface(around)) {
-            around = tr.centerPoint;
-        }
+        let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
+        const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;
 
         const deltasForHelper: MapControlsDeltas = {
             panDelta,
@@ -562,17 +566,14 @@ export class HandlerManager {
             pitchDelta,
             bearingDelta,
             around,
+            aroundElevation,
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
         if (this._camera.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
         }
-        // If we are rotating about the center point, avoid numerical issues near the horizon by using the transform's
-        // center directly, instead of computing it from the screen point
-        const preZoomAroundLoc = around.distSqr(tr.centerPoint) < 1.0e-2 ?
-            tr.center :
-            tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
+        const preZoomAroundLoc = this._computePreZoomAroundLoc(tr, around, panDelta, aroundElevation);
 
         this._handleMapControls({
             terrain,
@@ -590,6 +591,65 @@ export class HandlerManager {
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
 
+    }
+
+    /**
+     * The gesture's anchor point: the pinch midpoint when pinching, otherwise the
+     * pan's anchor, clamped to the center point when it does not lie on the map.
+     */
+    _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, tr: ITransform): {around: Point; aroundOnSurface: boolean} {
+        let around = combinedResult.pinchAround !== undefined ? combinedResult.pinchAround : combinedResult.around;
+        around ||= this._camera.transform.centerPoint;
+        if (terrain && !tr.isPointOnMapSurface(around)) {
+            return {around: tr.centerPoint, aroundOnSurface: false};
+        }
+        return {around, aroundOnSurface: true};
+    }
+
+    /**
+     * The elevation of the plane a terrain gesture is solved on: the elevation of the
+     * terrain point grabbed at gesture start, captured here on the gesture's first
+     * frame. Undefined means the gesture is solved at the center's elevation instead —
+     * when the grabbed terrain is not loaded, the anchor is the center point (a
+     * center-point anchor is skipped by the camera helper and would lose the pan), or
+     * the anchor plane is too close to the camera for a stable ray-plane solve.
+     */
+    _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, tr: ITransform, combinedEventsInProgress: EventsInProgress): number | undefined {
+        if (!aroundOnSurface) {
+            return undefined;
+        }
+        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            const anchor = terrain.pointCoordinate(around);
+            this._terrainGestureAnchorElevation = anchor ? anchor.z : null;
+        }
+        if (this._terrainGestureAnchorElevation === null) {
+            return undefined;
+        }
+        const elevation = this._terrainGestureAnchorElevation;
+        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
+            return undefined;
+        }
+        if (elevation - tr.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (tr.getCameraAltitude() - tr.elevation)) {
+            return undefined;
+        }
+        return elevation;
+    }
+
+    /**
+     * The location that was under `around` before this frame's deltas — the point the
+     * camera helper re-anchors after zooming — solved at `aroundElevation` when a
+     * terrain gesture provides one. When rotating about the center point, the
+     * transform's center is used directly to avoid numerical issues near the horizon.
+     */
+    _computePreZoomAroundLoc(tr: ITransform, around: Point, panDelta: Point | undefined, aroundElevation: number | undefined): LngLat {
+        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
+            return tr.center;
+        }
+        const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
+        if (aroundElevation !== undefined) {
+            return tr.screenPointToLocationAtElevation(aroundPreviousPoint, aroundElevation);
+        }
+        return tr.screenPointToLocation(aroundPreviousPoint);
     }
 
     _handleMapControls({
@@ -626,7 +686,9 @@ export class HandlerManager {
             return;
         }
 
-        if (combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
+        if (deltasForHelper.aroundElevation === undefined &&
+            combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
+            // no usable anchor: drag by pixel-delta on the center-elevation plane
             tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
             return;
         }
@@ -688,6 +750,7 @@ export class HandlerManager {
         if (finishedMoving && this._terrainMovement) {
             this._camera.elevationFreeze = false;
             this._terrainMovement = false;
+            this._terrainGestureAnchorElevation = null;
             const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);

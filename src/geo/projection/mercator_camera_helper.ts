@@ -47,7 +47,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         if (deltas.around.distSqr(tr.centerPoint) < 1.0e-2) {
             return;
         }
-        tr.setLocationAtPoint(preZoomAroundLoc, deltas.around);
+        tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, deltas.aroundElevation);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {

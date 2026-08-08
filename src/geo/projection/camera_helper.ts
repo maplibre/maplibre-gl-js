@@ -16,6 +16,11 @@ export type MapControlsDeltas = {
     pitchDelta: number;
     rollDelta: number;
     around: Point;
+    /**
+     * Elevation in meters of the terrain under `around` at gesture start; when set,
+     * pan and zoom keep the terrain at this elevation under `around`.
+     */
+    aroundElevation?: number;
 };
 
 export type CameraForBoxAndBearingHandlerResult = {

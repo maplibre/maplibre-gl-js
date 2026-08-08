@@ -400,6 +400,31 @@ describe('GlobeTransform', () => {
                     expect(globeTransform.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
                 });
             });
+
+            test('ignores the elevation parameter when rendering the globe', () => {
+                const transform = createGlobeTransform();
+                transform.setZoom(1);
+                coords = new LngLat(5, 10);
+                point = new Point(320, 240);
+                transform.setLocationAtPoint(coords, point, 1000);
+                unprojected = transform.screenPointToLocationAtElevation(point, 1000);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('solves on the plane at the given elevation when rendering mercator', () => {
+                const transform = createGlobeTransform();
+                transform.setZoom(5);
+                transform.setPitch(40);
+                transform.setTransitionState(0); // rendering mercator
+                coords = new LngLat(5, 10);
+                point = new Point(320, 200);
+                transform.setLocationAtPoint(coords, point, 500);
+                unprojected = transform.screenPointToLocationAtElevation(point, 500);
+                // exact up to the center-latitude change the solve itself causes (~1e-5 deg)
+                expect(unprojected.lng).toBeCloseTo(coords.lng, 3);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, 3);
+            });
         });
     });
 
