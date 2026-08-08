@@ -59,7 +59,12 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
+            // DEM tiles encode elevation in their RGB channels: the pixels are data, not
+            // color, and must decode exactly. Opt out of the browser's image color
+            // management.
+            const response = await ImageRequest.getImage(
+                request, tile.abortController, this.map._refreshExpiredTiles,
+                {colorSpaceConversion: 'none'});
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
