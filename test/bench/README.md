@@ -75,11 +75,11 @@ To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/ben
 
 To run all benchmarks for the checkout only, that is without comparing to any releases, open [`http://localhost:9966/test/bench/versions/index.html?compare=`](http://localhost:9966/test/bench/versions/index.html?compare=).
 
-To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions/index.html#Layout`](http://localhost:9966/test/bench/versions/index.html#Layout).
+To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions/index.html#Paint`](http://localhost:9966/test/bench/versions/index.html#Paint).
 
-By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/test/bench/versions/index.html?compare=main](http://localhost:9966/test/bench/versions/index.html?compare=main) or [localhost:9966/test/bench/versions/index.html?compare=main#Layout](http://localhost:9966/test/bench/versions/index.html?compare=main#Layout) to compare only to main, or [localhost:9966/test/bench/versions/index.html?compare=v1.13.1](http://localhost:9966/test/bench/versions/index.html?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
+By default, the benchmark page will compare the local branch against `main` and the latest release. To change this, include one or more `compare` query parameters in the URL: E.g., [localhost:9966/test/bench/versions/index.html?compare=main](http://localhost:9966/test/bench/versions/index.html?compare=main) or [localhost:9966/test/bench/versions/index.html?compare=main#Paint](http://localhost:9966/test/bench/versions/index.html?compare=main#Paint) to compare only to main, or [localhost:9966/test/bench/versions/index.html?compare=v1.13.1](http://localhost:9966/test/bench/versions/index.html?compare=v1.13.1) to compare to `v1.13.1` (but not `main`).  Versions available for comparison are the ones stored in the `gh-pages` branch, see [here](https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks).
 
-To run all benchmarks in headless chromium use `npm run benchmark`. As with the browser you can include one or more `--compare` arguments to change the default comparison, e.g. `npm run benchmark -- --compare main`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Layout Paint`.
+To run all benchmarks in headless chromium use `npm run benchmark`. As with the browser you can include one or more `--compare` arguments to change the default comparison, e.g. `npm run benchmark -- --compare main`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Paint Placement`.
 
 ## Running Style Benchmarks
 
@@ -92,9 +92,9 @@ Note: `MAPLIBRE_STYLES` takes a comma-separated list of up to 3 MapLibre styles 
 
 To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/styles/index.html`](http://localhost:9966/test/bench/styles/index.html).
 
-To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/styles/index.html#Layout`](http://localhost:9966/test/bench/styles/index.html#Layout).
+To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/styles/index.html#Paint`](http://localhost:9966/test/bench/styles/index.html#Paint).
 
-By default, the style benchmark page will run its benchmarks against `https://tiles.openfreemap.org/styles/liberty`. `Layout` and `Paint` styles will run one instance of the test for each tile/location in an internal list of tiles. This behavior helps visualize the ways in which a style performs given various conditions present in each tile (CJK text, dense urban areas, rural areas, etc). `QueryBox` and `QueryPoint` use the internal list of tiles but otherwise run the same as their non-style benchmark equivalents. All other benchmark tests from the non-style suite are not used when benchmarking styles.
+By default, the style benchmark page will run its benchmarks against `https://tiles.openfreemap.org/styles/liberty`. `Paint` will run one instance of the test for each tile/location in an internal list of tiles. This behavior helps visualize the ways in which a style performs given various conditions present in each tile (CJK text, dense urban areas, rural areas, etc). `QueryBox` and `QueryPoint` use the internal list of tiles but otherwise run the same as their non-style benchmark equivalents. All other benchmark tests from the non-style suite are not used when benchmarking styles.
 
 ## Generating gl statistics
 

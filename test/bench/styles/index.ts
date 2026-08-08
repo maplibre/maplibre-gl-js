@@ -1,6 +1,5 @@
 import locationsWithTileID from '../lib/locations_with_tile_id.ts';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import Layout from '../benchmarks/layout.ts';
 import Paint from '../benchmarks/paint.ts';
 import QueryPoint from '../benchmarks/query_point.ts';
 import QueryBox from '../benchmarks/query_box.ts';
@@ -26,7 +25,6 @@ function register(name, Benchmark, locations?, location?) {
     benchmarks.push({name, versions, location});
 }
 
-locations.forEach(location => register('Layout', Layout, location.tileID, location));
 locations.forEach(location => register('Paint', Paint, [location], location));
 register('QueryPoint', QueryPoint, locations);
 register('QueryBox', QueryBox, locations);
