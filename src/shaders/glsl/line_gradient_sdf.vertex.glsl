@@ -10,8 +10,8 @@
 // long distances for long segments. Use this value to unscale the distance.
 #define LINE_DISTANCE_SCALE 2.0
 
-layout(location = 0) in vec2 a_pos_normal;
-layout(location = 1) in vec4 a_data;
+layout(location = 0) in ivec2 a_pos_normal;
+layout(location = 1) in ivec4 a_data;
 layout(location = 2) in float a_uv_x;
 layout(location = 3) in float a_split_index;
 
@@ -64,21 +64,21 @@ void main() {
     // Retina devices need a smaller distance to avoid aliasing.
     float ANTIALIASING = 1.0 / u_device_pixel_ratio / 2.0;
 
-    vec2 a_extrude = a_data.xy - 128.0;
-    float a_direction = mod(a_data.z, 4.0) - 1.0;
-    float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;
+    vec2 a_extrude = vec2(a_data.xy - 128);
+    float a_direction = float((a_data.z & 3) - 1);
+    float a_linesofar = float((a_data.z >> 2) + a_data.w * 64) * LINE_DISTANCE_SCALE;
 
     // Gradient UV computation
     float texel_height = 1.0 / u_image_height;
     float half_texel_height = 0.5 * texel_height;
     v_uv = vec2(a_uv_x, a_split_index * texel_height - half_texel_height);
 
-    vec2 pos = floor(a_pos_normal * 0.5);
+    vec2 pos = vec2(a_pos_normal >> 1);
 
     // x is 1 if it's a round cap, 0 otherwise
     // y is 1 if the normal points up, and -1 if it points down
     // We store these in the least significant bit of a_pos_normal
-    mediump vec2 normal = a_pos_normal - 2.0 * pos;
+    mediump vec2 normal = vec2(a_pos_normal & 1);
     normal.y = normal.y * 2.0 - 1.0;
     v_normal = normal;
 
