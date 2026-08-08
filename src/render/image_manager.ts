@@ -136,6 +136,7 @@ export class ImageManager extends Evented<ImageManagerEventType> {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
+            if (image.isWebGLImage) this.updateImage(id, image, false);
         }
     }
 
@@ -257,7 +258,8 @@ export class ImageManager extends Evented<ImageManagerEventType> {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage?.render)
+                    hasRenderCallback: Boolean(image.userImage?.render),
+                    isWebGLImage: image.isWebGLImage
                 };
             }
         }

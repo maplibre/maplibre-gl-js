@@ -1,7 +1,5 @@
 import locationsWithTileID from '../lib/locations_with_tile_id.ts';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import StyleLayerCreate from '../benchmarks/style_layer_create.ts';
-import Validate from '../benchmarks/style_validate.ts';
 import Layout from '../benchmarks/layout.ts';
 import Paint from '../benchmarks/paint.ts';
 import QueryPoint from '../benchmarks/query_point.ts';
@@ -28,8 +26,6 @@ function register(name, Benchmark, locations?, location?) {
     benchmarks.push({name, versions, location});
 }
 
-register('StyleLayerCreate', StyleLayerCreate);
-register('Validate', Validate);
 locations.forEach(location => register('Layout', Layout, location.tileID, location));
 locations.forEach(location => register('Paint', Paint, [location], location));
 register('QueryPoint', QueryPoint, locations);

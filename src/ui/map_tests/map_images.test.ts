@@ -215,6 +215,35 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
+test('map addImage packs a placeholder for a WebGL image, which brings its own pixels', () => {
+    const map = createMap();
+    const id = 'add-get-webgl-style-image';
+    const onAdd = vi.fn();
+    const inputImage: StyleImageInterface = {width: 3, height: 2, data: {renderWithWebGL: vi.fn()}, onAdd};
+
+    map.addImage(id, inputImage);
+
+    const gotImage = map.getImage(id);
+    expect(gotImage.data.width).toBe(3);
+    expect(gotImage.data.height).toBe(2);
+    expect([...gotImage.data.data]).toEqual(new Array(3 * 2 * 4).fill(0));
+    expect(gotImage.isWebGLImage).toBe(true);
+    expect(gotImage.userImage).toBe(inputImage);
+    expect(onAdd).toHaveBeenCalledWith(map, id);
+});
+
+test('map updateImage swaps a WebGL image\'s renderWithWebGL callback instead of copying pixels', () => {
+    const map = createMap();
+    const replacement: StyleImageInterface = {width: 1, height: 1, data: {renderWithWebGL: vi.fn()}};
+
+    map.addImage('webgl', {width: 1, height: 1, data: {renderWithWebGL: vi.fn()}});
+    const version = map.getImage('webgl').version;
+    map.updateImage('webgl', replacement);
+
+    expect(map.getImage('webgl').userImage).toBe(replacement);
+    expect(map.getImage('webgl').version).toBe(version + 1);
+});
+
 test('map does not fire `styleimagemissing` for empty icon values', async () => {
     const map = createMap();
 

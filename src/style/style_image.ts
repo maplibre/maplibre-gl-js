@@ -27,6 +27,7 @@ export type StyleImageData = {
     data: RGBAImage;
     version?: number;
     hasRenderCallback?: boolean;
+    isWebGLImage?: boolean;
     userImage?: StyleImageInterface;
     spriteData?: SpriteOnDemandStyleImage;
 };
@@ -92,6 +93,48 @@ export type StyleImageMetadata = {
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
+ * Where a {@link StyleImageWebGLData.renderWithWebGL} callback writes its pixels.
+ */
+export type StyleImageWebGLTarget = {
+    gl: WebGL2RenderingContext;
+    /**
+     * The icon atlas to write into. MapLibre does not bind it for you, so start with
+     * `gl.bindTexture(gl.TEXTURE_2D, texture)` or attach it to your own framebuffer.
+     */
+    texture: WebGLTexture;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+};
+
+/**
+ * What a {@link StyleImageInterface} gives as its `data` when it renders itself with WebGL rather
+ * than handing over an array of pixels.
+ *
+ * @see [Animate an icon on the GPU.](https://maplibre.org/maplibre-gl-js/docs/examples/animate-an-icon-on-the-gpu/)
+ */
+export type StyleImageWebGLData = {
+    /**
+     * Render exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of
+     * `target.texture`. That rectangle is the only part of the shared atlas that belongs to this
+     * image; drawing outside it corrupts the others.
+     *
+     * This is the image's counterpart to {@link CustomLayerInterface.render}, and the context
+     * arrives in the same state a custom layer's is given: cull face, active texture and the pixel
+     * store settings at their WebGL defaults, and no vertex array bound. Everything is yours to
+     * change, and MapLibre restores its own state afterwards. The scissor test is the one
+     * exception: MapLibre never touches it, so an image that enables it has to disable it again.
+     *
+     * Called before the first frame the image is used in, again whenever
+     * {@link StyleImageInterface.render} returns `true`, and again for each atlas holding a slot
+     * this image has never rendered into, so one change may mean several calls with different
+     * targets.
+     */
+    renderWithWebGL: (target: StyleImageWebGLTarget) => void;
+};
+
+/**
  * Interface for dynamically generated style images. This is a specification for
  * implementers to model: it is not an exported method or class.
  *
@@ -148,13 +191,22 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
 export interface StyleImageInterface {
     width: number;
     height: number;
-    data: Uint8Array | Uint8ClampedArray;
+    /**
+     * The image's pixels, in the same format as `ImageData`, or a {@link StyleImageWebGLData}
+     * callback that renders them with WebGL. A WebGL image renders straight into its slot of the
+     * shared icon atlas. Nothing new is possible that pixels could not express, but an image that
+     * changes often, such as an animated icon, gets much cheaper: no CPU pixel work and no upload.
+     */
+    data: Uint8Array | Uint8ClampedArray | StyleImageWebGLData;
     /**
      * This method is called once before every frame where the icon will be used.
      * The method can optionally update the image's `data` member with a new image.
      *
      * If the method updates the image it must return `true` to commit the change.
      * If the method returns `false` or nothing the image is assumed to not have changed.
+     *
+     * An image whose `data` renders with WebGL has nothing to update here; returning `true` is how
+     * it asks for {@link StyleImageWebGLData.renderWithWebGL} to be called again.
      *
      * If updates are infrequent it maybe easier to use {@link Map.updateImage} to update
      * the image instead of implementing this method.
@@ -171,18 +223,24 @@ export interface StyleImageInterface {
     /**
      * Optional method called when the icon is removed from the map with {@link Map.removeImage}.
      * This gives the image a chance to clean up resources and event listeners.
+     *
+     * This also fires when the WebGL context is lost, after which the same image is added back
+     * without a matching `onAdd`, so the image has to be able to build again whatever it
+     * released here.
      */
     onRemove?: () => void;
 }
 
+export function isStyleImageWebGLData(data: StyleImageInterface['data']): data is StyleImageWebGLData {
+    return typeof (data as StyleImageWebGLData)?.renderWithWebGL === 'function';
+}
+
 export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
-    if (userImage?.render) {
-        const updated = userImage.render();
-        if (updated) {
-            image.data.replace(new Uint8Array(userImage.data.buffer));
-            return true;
-        }
-    }
-    return false;
+    if (!userImage?.render) return false;
+    const updated = userImage.render();
+    if (!updated) return false;
+
+    if (!isStyleImageWebGLData(userImage.data)) image.data.replace(new Uint8Array(userImage.data.buffer));
+    return true;
 }
