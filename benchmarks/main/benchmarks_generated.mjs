@@ -58746,226 +58746,6 @@ async function importScriptInWorkers(workerUrl) {
 	await getGlobalDispatcher().broadcast("IS", workerUrl);
 }
 //#endregion
-//#region test/bench/benchmarks/symbol_collision_box.ts
-function splitmix32(a) {
-	return function() {
-		a |= 0;
-		a = a + 2654435769 | 0;
-		let t = a ^ a >>> 16;
-		t = Math.imul(t, 569420461);
-		t = t ^ t >>> 15;
-		t = Math.imul(t, 1935289751);
-		return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
-	};
-}
-var SymbolCollisionBox = class extends Benchmark {
-	constructor(useGlobeProjection) {
-		super();
-		this._useGlobeProjection = false;
-		this._useGlobeProjection = useGlobeProjection;
-	}
-	_createTransform() {
-		if (this._useGlobeProjection) return {
-			transform: new GlobeTransform(),
-			calculatePosMatrix: (_tileID) => {}
-		};
-		else {
-			const tr = new MercatorTransform({
-				minZoom: 0,
-				maxZoom: 22,
-				minPitch: 0,
-				maxPitch: 60,
-				renderWorldCopies: true
-			});
-			return {
-				transform: tr,
-				calculatePosMatrix: (tileID) => {
-					return tr.calculatePosMatrix(tileID, false);
-				}
-			};
-		}
-	}
-	async setup() {
-		const { transform, calculatePosMatrix } = this._createTransform();
-		this._transform = transform;
-		transform.resize(1024, 1024);
-		const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-		const unwrappedTileID = tileID.toUnwrapped();
-		const rng = splitmix32(3735928559);
-		const rndRange = (min, max) => {
-			return rng() * (max - min) + min;
-		};
-		this._symbols = [];
-		const symbolCount = 2e4;
-		for (let i = 0; i < symbolCount; i++) this._symbols.push({
-			collisionBox: {
-				anchorPointX: rndRange(4, 8188),
-				anchorPointY: rndRange(4, 8188),
-				x1: rndRange(-20, -2),
-				y1: rndRange(-20, -2),
-				x2: rndRange(2, 20),
-				y2: rndRange(2, 20)
-			},
-			overlapMode: "never",
-			textPixelRatio: 1,
-			tileID,
-			unwrappedTileID,
-			pitchWithMap: rng() > .5,
-			rotateWithMap: rng() > .5,
-			translation: [rndRange(-20, 20), rndRange(-20, 20)],
-			shift: rng() > .5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : void 0,
-			simpleProjectionMatrix: calculatePosMatrix(unwrappedTileID)
-		});
-	}
-	async bench() {
-		const ci = new CollisionIndex(this._transform);
-		ci.grid.hitTest = (_x1, _y1, _x2, _y2, _overlapMode, _predicate) => {
-			return true;
-		};
-		for (const s of this._symbols) ci.placeCollisionBox(s.collisionBox, s.overlapMode, s.textPixelRatio, s.tileID, s.unwrappedTileID, s.pitchWithMap, s.rotateWithMap, s.translation, null, null, s.shift, s.simpleProjectionMatrix);
-	}
-};
-//#endregion
-//#region test/bench/benchmarks/cross_tile_symbol_index.ts
-const styleLayer = { id: "test" };
-const SYMBOL_COUNT = 3e3;
-const makeSymbolInstance = (x, y, key, crossTileID = 0) => {
-	return {
-		anchorX: x,
-		anchorY: y,
-		key,
-		crossTileID
-	};
-};
-const makeTile = (tileID, symbolInstances) => {
-	const bucket = {
-		symbolInstances: {
-			get(i) {
-				return symbolInstances[i];
-			},
-			length: symbolInstances.length
-		},
-		layerIds: ["test"]
-	};
-	return {
-		tileID,
-		getBucket: () => bucket,
-		latestFeatureIndex: {}
-	};
-};
-/**
-* Benchmarks CrossTileSymbolIndex.addLayer with 3000 symbols that have
-* pre-assigned crossTileIDs — simulating features with IDs (via promoteId
-* or generateId). All symbols share the same key and coordinates, which is
-* the pathological case for coordinate-based findMatches.
-*/
-var CrossTileSymbolIndexBench = class extends Benchmark {
-	async setup() {
-		const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
-		const childID = new OverscaledTileID(7, 0, 7, 16, 16);
-		const mainInstances = [];
-		const childInstances = [];
-		for (let i = 0; i < SYMBOL_COUNT; i++) {
-			mainInstances.push(makeSymbolInstance(0, 0, "", i + 1));
-			childInstances.push(makeSymbolInstance(0, 0, "", i + 1));
-		}
-		this._mainTile = makeTile(mainID, mainInstances);
-		this._childTile = makeTile(childID, childInstances);
-	}
-	bench() {
-		const index = new CrossTileSymbolIndex();
-		index.addLayer(styleLayer, [this._mainTile], 0);
-		index.addLayer(styleLayer, [this._childTile], 0);
-	}
-};
-//#endregion
-//#region test/bench/benchmarks/subdivide.ts
-var Subdivide = class extends Benchmark {
-	async setup() {
-		await super.setup();
-		this.granularity = 64;
-		this.tileID = new CanonicalTileID(2, 1, 1);
-		const polygon = [];
-		polygon.push(generateRing(EXTENT / 2, EXTENT / 2, EXTENT * 1.1 / 2, 891));
-		function generateHole(cx, cy, r, vertexCount) {
-			polygon.push(generateRing(cx * EXTENT, cy * EXTENT, r * EXTENT, vertexCount));
-		}
-		generateHole(.25, .5, .15, 176);
-		generateHole(.75, .5, .15, 22);
-		generateHole(.5, .1, .05, 44);
-		this.polygon = polygon;
-	}
-	bench() {
-		for (let i = 0; i < 10; i++) subdividePolygon(this.polygon, this.tileID, this.granularity, true);
-	}
-};
-function generateRing(cx, cy, radius, vertexCount) {
-	const ring = [];
-	for (let i = 0; i < vertexCount; i++) {
-		const angle = i / vertexCount * 2 * Math.PI;
-		ring.push(new Point(Math.round(cx + Math.cos(angle) * radius), Math.round(cy + Math.sin(angle) * radius)));
-	}
-	return ring;
-}
-//#endregion
-//#region test/bench/benchmarks/feature_index.ts
-var LoadMatchingFeature = class extends Benchmark {
-	async setup() {
-		await super.setup();
-		const numLayersToAdd = 100;
-		const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-		this.featureIndex = new FeatureIndex(tileID);
-		const layerIds = Array.from({ length: numLayersToAdd }, (_, i) => `layer-${i}`);
-		this.layerIdsToTest = new Set(Array.from({ length: numLayersToAdd }, (_, i) => `non-existing-layer-${i}`));
-		this.featureIndex.bucketLayerIDs = [layerIds];
-		this.featureIndex.vtLayers = {};
-		this.featureIndex.vtLayers["0"] = { feature: () => ({}) };
-	}
-	bench() {
-		this.featureIndex.loadMatchingFeature({}, 0, 0, 0, { needGeometry: false }, this.layerIdsToTest, [], {}, {});
-	}
-};
-//#endregion
-//#region test/bench/benchmarks/covering_tiles_globe.ts
-var CoveringTilesGlobe = class extends Benchmark {
-	constructor(pitch) {
-		super();
-		this._pitch = pitch;
-	}
-	bench() {
-		const transform = new GlobeTransform();
-		transform.setCenter(new LngLat(0, 0));
-		transform.setZoom(4);
-		transform.resize(4096, 4096);
-		transform.setMaxPitch(this._pitch);
-		transform.setPitch(this._pitch);
-		for (let i = 0; i < 40; i++) {
-			transform.setCenter(new LngLat(i * .2, 0));
-			coveringTiles(transform, { tileSize: 256 });
-		}
-	}
-};
-//#endregion
-//#region test/bench/benchmarks/covering_tiles_mercator.ts
-var CoveringTilesMercator = class extends Benchmark {
-	constructor(pitch) {
-		super();
-		this._pitch = pitch;
-	}
-	bench() {
-		const transform = new MercatorTransform();
-		transform.setCenter(new LngLat(0, 0));
-		transform.setZoom(4);
-		transform.resize(4096, 4096);
-		transform.setMaxPitch(this._pitch);
-		transform.setPitch(this._pitch);
-		for (let i = 0; i < 40; i++) {
-			transform.setCenter(new LngLat(i * .2, 0));
-			coveringTiles(transform, { tileSize: 256 });
-		}
-	}
-};
-//#endregion
 //#region test/bench/benchmarks/geojson_source_update_data.ts
 var GeoJSONSourceUpdateData = class extends Benchmark {
 	async setup() {
@@ -59469,7 +59249,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main d7a39ea (local)` : "main d7a39ea";
+const version = new URL(import.meta.url).origin === location.origin ? `main 1a66c2d (local)` : "main 1a66c2d";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
@@ -59516,20 +59296,11 @@ register("LayerSymbolWithIcons", new LayerSymbolWithIcons());
 register("LayerTextWithVariableAnchor", new LayerTextWithVariableAnchor());
 register("LayerSymbolWithSortKey", new LayerSymbolWithSortKey());
 register("Load", new MapLoad());
-register("LoadMatchingFeature", new LoadMatchingFeature());
 register("SymbolLayout", new SymbolLayout(style, styleLocations.map((location) => location.tileID[0])));
 register("HillshadeLoad", new HillshadeLoad());
 register("ColorReliefLoad", new ColorReliefLoad());
 register("CustomLayer", new CustomLayer());
 register("MapIdle", new MapIdle());
-register("SymbolCollisionBox", new SymbolCollisionBox(false));
-register("SymbolCollisionBoxGlobe", new SymbolCollisionBox(true));
-register("CrossTileSymbolIndex", new CrossTileSymbolIndexBench());
-register("Subdivide", new Subdivide());
-register("CoveringTilesGlobe", new CoveringTilesGlobe(0));
-register("CoveringTilesGlobePitched", new CoveringTilesGlobe(60));
-register("CoveringTilesMercator", new CoveringTilesMercator(0));
-register("CoveringTilesMercatorPitched", new CoveringTilesMercator(60));
 register("Terrain3DGlobe", new Terrain3DGlobe());
 register("Terrain3DMercator", new Terrain3DMercator());
 register("Terrain2DGlobe", new Terrain2DGlobe());
