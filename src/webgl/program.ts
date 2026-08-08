@@ -30,6 +30,22 @@ function getTokenizedAttributesAndUniforms(array: string[]): string[] {
     return result;
 }
 
+export function getIntegerAttributes(gl: WebGL2RenderingContext, program: WebGLProgram): {[_: string]: boolean} {
+    const integerTypes = new Set<number>([
+        gl.INT, gl.INT_VEC2, gl.INT_VEC3, gl.INT_VEC4,
+        gl.UNSIGNED_INT, gl.UNSIGNED_INT_VEC2, gl.UNSIGNED_INT_VEC3, gl.UNSIGNED_INT_VEC4
+    ]);
+    const integerAttributes: {[_: string]: boolean} = {};
+    const numActiveAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+    for (let i = 0; i < numActiveAttributes; i++) {
+        const attribute = gl.getActiveAttrib(program, i);
+        if (attribute && integerTypes.has(attribute.type)) {
+            integerAttributes[attribute.name] = true;
+        }
+    }
+    return integerAttributes;
+}
+
 /**
  * @internal
  * A webgl program to execute in the GPU space
@@ -37,6 +53,7 @@ function getTokenizedAttributesAndUniforms(array: string[]): string[] {
 export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
     attributes: {[_: string]: number};
+    integerAttributes: {[_: string]: boolean};
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
@@ -143,6 +160,8 @@ export class Program<Us extends UniformBindings> {
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
+
+        this.integerAttributes = getIntegerAttributes(gl, this.program);
 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);

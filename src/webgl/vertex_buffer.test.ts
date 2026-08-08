@@ -49,10 +49,25 @@ describe('VertexBuffer', () => {
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
         const spy = vi.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
-        buffer.setVertexAttribPointers(context.gl, {attributes: {map: 5, box: 6}} as any, 50);
+        buffer.setVertexAttribPointers(context.gl, {attributes: {map: 5, box: 6}, integerAttributes: {}} as any, 50);
         expect(spy.mock.calls).toEqual([
             [5, 1, context.gl['SHORT'], false, 6, 300],
             [6, 2, context.gl['SHORT'], false, 6, 304]
+        ]);
+    });
+
+    test('setVertexAttribPointers uses vertexAttribIPointer for integer attributes', () => {
+        const context = new Context(gl);
+        const array = new TestArray();
+        const buffer = new VertexBuffer(context, array, attributes);
+        const integerSpy = vi.spyOn(context.gl, 'vertexAttribIPointer').mockImplementation(() => {});
+        const floatSpy = vi.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
+        buffer.setVertexAttribPointers(context.gl, {attributes: {map: 5, box: 6}, integerAttributes: {box: true}} as any, 50);
+        expect(integerSpy.mock.calls).toEqual([
+            [6, 2, context.gl['SHORT'], 6, 304]
+        ]);
+        expect(floatSpy.mock.calls).toEqual([
+            [5, 1, context.gl['SHORT'], false, 6, 300]
         ]);
     });
 

@@ -84,14 +84,25 @@ export class VertexBuffer {
             const attribIndex: number | void = program.attributes[member.name];
 
             if (attribIndex !== undefined) {
-                gl.vertexAttribPointer(
-                    attribIndex,
-                    member.components,
-                    gl[AttributeType[member.type]],
-                    false,
-                    this.itemSize,
-                    member.offset + (this.itemSize * (vertexOffset || 0))
-                );
+                const offset = member.offset + (this.itemSize * (vertexOffset || 0));
+                if (program.integerAttributes[member.name]) {
+                    gl.vertexAttribIPointer(
+                        attribIndex,
+                        member.components,
+                        gl[AttributeType[member.type]],
+                        this.itemSize,
+                        offset
+                    );
+                } else {
+                    gl.vertexAttribPointer(
+                        attribIndex,
+                        member.components,
+                        gl[AttributeType[member.type]],
+                        false,
+                        this.itemSize,
+                        offset
+                    );
+                }
             }
         }
     }
