@@ -38830,10 +38830,18 @@ var MercatorTransform = class MercatorTransform {
 		const elevation = terrain ? terrain.getElevationForLngLatZoom(center, this._helper._tileZoom) : 0;
 		this._helper.recalculateZoomAndCenter(elevation);
 	}
-	setLocationAtPoint(lnglat, point) {
-		const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+	/**
+	* Moves the center so that `lnglat`, on the ground at `elevation` meters, renders
+	* at the screen `point`. Both rays are cast through the same inverse pixel matrix
+	* so its inversion error cancels out of their difference; the current-center ray
+	* must be intersected at the center's own elevation (z=0) — intersecting it with
+	* the elevated plane would land `(elevation - centerElevation)·tan(pitch)` away
+	* from the center and make repeated calls drift.
+	*/
+	setLocationAtPoint(lnglat, point, elevation = this.elevation) {
+		const z = elevation - this.elevation;
 		const a = this.screenPointToMercatorCoordinateAtZ(point, z);
-		const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
+		const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
 		const loc = MercatorCoordinate.fromLngLat(lnglat);
 		const newCenter = new MercatorCoordinate(loc.x - (a.x - b.x), loc.y - (a.y - b.y));
 		this.setCenter(newCenter?.toLngLat());
@@ -38845,6 +38853,9 @@ var MercatorTransform = class MercatorTransform {
 	screenPointToLocation(p, terrain) {
 		return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
 	}
+	screenPointToLocationAtElevation(p, elevation) {
+		return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
+	}
 	screenPointToMercatorCoordinate(p, terrain) {
 		if (terrain) {
 			const coordinate = terrain.pointCoordinate(p);
@@ -38852,8 +38863,12 @@ var MercatorTransform = class MercatorTransform {
 		}
 		return this.screenPointToMercatorCoordinateAtZ(p);
 	}
-	screenPointToMercatorCoordinateAtZ(p, mercatorZ) {
-		const targetZ = mercatorZ ? mercatorZ : 0;
+	/**
+	* Intersects the ray through a screen point with the horizontal plane at `z`,
+	* given in meters relative to the plane at the center's elevation (not mercator units).
+	*/
+	screenPointToMercatorCoordinateAtZ(p, z) {
+		const targetZ = z ? z : 0;
 		const coord0 = [
 			p.x,
 			p.y,
@@ -39289,7 +39304,7 @@ var MercatorCameraHelper = class {
 	}
 	handleMapControlsPan(deltas, tr, preZoomAroundLoc) {
 		if (deltas.around.distSqr(tr.centerPoint) < .01) return;
-		tr.setLocationAtPoint(preZoomAroundLoc, deltas.around);
+		tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, deltas.aroundElevation);
 	}
 	cameraForBoxAndBearing(options, padding, bounds, bearing, tr) {
 		return cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
@@ -40751,7 +40766,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 	* Note: automatically adjusts zoom to keep planet size consistent
 	* (same size before and after a {@link setLocationAtPoint} call).
 	*/
-	setLocationAtPoint(lnglat, point) {
+	setLocationAtPoint(lnglat, point, _elevation) {
 		const vecToPixelCurrent = angularCoordinatesToSurfaceVector(this.unprojectScreenPoint(point));
 		const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
 		const zero = createVec3f64();
@@ -40829,6 +40844,9 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 	}
 	screenPointToLocation(p, terrain) {
 		return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+	}
+	screenPointToLocationAtElevation(p, _elevation) {
+		return this.screenPointToLocation(p);
 	}
 	isPointOnMapSurface(p, _terrain) {
 		const rayOrigin = this._cameraPosition;
@@ -41308,13 +41326,13 @@ var GlobeTransform = class GlobeTransform {
 	* Note: automatically adjusts zoom to keep planet size consistent
 	* (same size before and after a {@link setLocationAtPoint} call).
 	*/
-	setLocationAtPoint(lnglat, point) {
+	setLocationAtPoint(lnglat, point, elevation) {
 		if (!this.isGlobeRendering) {
-			this._mercatorTransform.setLocationAtPoint(lnglat, point);
+			this._mercatorTransform.setLocationAtPoint(lnglat, point, elevation);
 			this.apply(this._mercatorTransform, false);
 			return;
 		}
-		this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point);
+		this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point, elevation);
 		this.apply(this._verticalPerspectiveTransform, false);
 	}
 	locationToScreenPoint(lnglat, terrain) {
@@ -41325,6 +41343,9 @@ var GlobeTransform = class GlobeTransform {
 	}
 	screenPointToLocation(p, terrain) {
 		return this.currentTransform.screenPointToLocation(p, terrain);
+	}
+	screenPointToLocationAtElevation(p, elevation) {
+		return this.currentTransform.screenPointToLocationAtElevation(p, elevation);
 	}
 	isPointOnMapSurface(p, terrain) {
 		return this.currentTransform.isPointOnMapSurface(p, terrain);
@@ -49625,6 +49646,11 @@ var TransformProvider = class {
 //#endregion
 //#region src/ui/handler_manager.ts
 const isMoving = (p) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
+/**
+* A terrain gesture's anchor plane must stay below this fraction of the camera's
+* altitude over the center-elevation plane, or the ray-plane solve degenerates.
+*/
+const TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION = .9;
 var RenderFrameEvent = class extends Event {};
 function hasChange(result) {
 	return result.panDelta?.mag() || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;
@@ -49645,6 +49671,7 @@ var HandlerManager = class {
 		return this._el?.ownerDocument?.defaultView || window;
 	}
 	constructor(map, camera, options) {
+		this._terrainGestureAnchorElevation = null;
 		this.handleWindowEvent = (e) => {
 			this.handleEvent(e, `${e.type}Window`);
 		};
@@ -49942,20 +49969,20 @@ var HandlerManager = class {
 			return;
 		}
 		this._camera.stop(true);
-		let { panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around, pinchAround } = combinedResult;
-		if (pinchAround !== void 0) around = pinchAround;
-		around ||= this._camera.transform.centerPoint;
-		if (terrain && !tr.isPointOnMapSurface(around)) around = tr.centerPoint;
+		const { panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta } = combinedResult;
+		let { around, aroundOnSurface } = this._resolveAround(combinedResult, terrain, tr);
+		const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : void 0;
 		const deltasForHelper = {
 			panDelta,
 			zoomDelta,
 			rollDelta,
 			pitchDelta,
 			bearingDelta,
-			around
+			around,
+			aroundElevation
 		};
 		if (this._camera.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) around = tr.centerPoint;
-		const preZoomAroundLoc = around.distSqr(tr.centerPoint) < .01 ? tr.center : tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
+		const preZoomAroundLoc = this._computePreZoomAroundLoc(tr, around, panDelta, aroundElevation);
 		this._handleMapControls({
 			terrain,
 			tr,
@@ -49968,6 +49995,54 @@ var HandlerManager = class {
 		this._map._update();
 		if (!combinedResult.noInertia) this._inertia.record(combinedResult);
 		this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
+	}
+	/**
+	* The gesture's anchor point: the pinch midpoint when pinching, otherwise the
+	* pan's anchor, clamped to the center point when it does not lie on the map.
+	*/
+	_resolveAround(combinedResult, terrain, tr) {
+		let around = combinedResult.pinchAround !== void 0 ? combinedResult.pinchAround : combinedResult.around;
+		around ||= this._camera.transform.centerPoint;
+		if (terrain && !tr.isPointOnMapSurface(around)) return {
+			around: tr.centerPoint,
+			aroundOnSurface: false
+		};
+		return {
+			around,
+			aroundOnSurface: true
+		};
+	}
+	/**
+	* The elevation of the plane a terrain gesture is solved on: the elevation of the
+	* terrain point grabbed at gesture start, captured here on the gesture's first
+	* frame. Undefined means the gesture is solved at the center's elevation instead —
+	* when the grabbed terrain is not loaded, the anchor is the center point (a
+	* center-point anchor is skipped by the camera helper and would lose the pan), or
+	* the anchor plane is too close to the camera for a stable ray-plane solve.
+	*/
+	_terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) {
+		if (!aroundOnSurface) return;
+		if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+			const anchor = terrain.pointCoordinate(around);
+			this._terrainGestureAnchorElevation = anchor ? anchor.z : null;
+		}
+		if (this._terrainGestureAnchorElevation === null) return;
+		const elevation = this._terrainGestureAnchorElevation;
+		if (around.distSqr(tr.centerPoint) < .01) return;
+		if (elevation - tr.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (tr.getCameraAltitude() - tr.elevation)) return;
+		return elevation;
+	}
+	/**
+	* The location that was under `around` before this frame's deltas — the point the
+	* camera helper re-anchors after zooming — solved at `aroundElevation` when a
+	* terrain gesture provides one. When rotating about the center point, the
+	* transform's center is used directly to avoid numerical issues near the horizon.
+	*/
+	_computePreZoomAroundLoc(tr, around, panDelta, aroundElevation) {
+		if (around.distSqr(tr.centerPoint) < .01) return tr.center;
+		const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
+		if (aroundElevation !== void 0) return tr.screenPointToLocationAtElevation(aroundPreviousPoint, aroundElevation);
+		return tr.screenPointToLocation(aroundPreviousPoint);
 	}
 	_handleMapControls({ terrain, tr, deltasForHelper, preZoomAroundLoc, combinedEventsInProgress, panDelta }) {
 		const cameraHelper = this._camera.cameraHelper;
@@ -49990,7 +50065,7 @@ var HandlerManager = class {
 			cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
 			return;
 		}
-		if (combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
+		if (deltasForHelper.aroundElevation === void 0 && combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
 			tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
 			return;
 		}
@@ -50028,6 +50103,7 @@ var HandlerManager = class {
 		if (finishedMoving && this._terrainMovement) {
 			this._camera.elevationFreeze = false;
 			this._terrainMovement = false;
+			this._terrainGestureAnchorElevation = null;
 			const tr = this._camera.getTransformForUpdate();
 			if (this._map.getCenterClampedToGround()) tr.recalculateZoomAndCenter(this._map.terrain);
 			this._camera.applyUpdatedTransform(tr);
@@ -59249,7 +59325,7 @@ var RoundPolygonCorners = class extends Benchmark {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 1a66c2d (local)` : "main 1a66c2d";
+const version = new URL(import.meta.url).origin === location.origin ? `main 871bb78 (local)` : "main 871bb78";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
