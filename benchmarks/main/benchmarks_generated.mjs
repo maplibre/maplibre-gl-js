@@ -21,6 +21,99 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 	enumerable: true
 }) : target, mod));
 //#endregion
+//#region test/bench/lib/benchmark.ts
+const minTimeForMeasurement = 20;
+var Benchmark = class {
+	constructor() {
+		this.minimumMeasurements = 210;
+	}
+	/**
+	* The `setup` method is intended to be overridden by subclasses. It will be called once, prior to
+	* running any benchmark iterations, and may set state on `this` which the benchmark later accesses.
+	* If the setup involves an asynchronous step, `setup` may return a promise.
+	*/
+	setup() {}
+	/**
+	* The `bench` method is intended to be overridden by subclasses. It should contain the code to be
+	* benchmarked. It may access state on `this` set by the `setup` function (but should not modify this
+	* state). It will be called multiple times, the total number to be determined by the harness. If
+	* the benchmark involves an asynchronous step, `bench` may return a promise.
+	*/
+	bench() {}
+	/**
+	* The `teardown` method is intended to be overridden by subclasses. It will be called once, after
+	* running all benchmark iterations, and may perform any necessary cleanup. If cleaning up involves
+	* an asynchronous step, `teardown` may return a promise.
+	*/
+	teardown() {}
+	/**
+	* Run the benchmark by executing `setup` once, sampling the execution time of `bench` some number of
+	* times, and then executing `teardown`. Yields an array of execution times.
+	*/
+	async run() {
+		try {
+			await this.setup();
+			return this._begin();
+		} catch (e) {
+			console.error(e);
+		}
+	}
+	_done() {
+		return this._elapsed >= 500 && this._measurements.length > this.minimumMeasurements;
+	}
+	_begin() {
+		this._measurements = [];
+		this._elapsed = 0;
+		this._iterationsPerMeasurement = 1;
+		this._start = performance.now();
+		const bench = this.bench();
+		if (bench instanceof Promise) return bench.then(() => this._measureAsync());
+		else return this._measureSync();
+	}
+	_measureSync() {
+		while (true) {
+			const time = performance.now() - this._start;
+			this._elapsed += time;
+			if (time < minTimeForMeasurement) {
+				this._iterationsPerMeasurement++;
+				this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
+			} else this._measurements.push({
+				time,
+				iterations: this._iterationsPerMeasurement
+			});
+			if (this._done()) return this._end();
+			this._start = performance.now();
+			for (let i = this._iterationsPerMeasurement; i > 0; --i) this.bench();
+		}
+	}
+	async _measureAsync() {
+		while (true) {
+			const time = performance.now() - this._start;
+			this._elapsed += time;
+			if (time < minTimeForMeasurement) {
+				this._iterationsPerMeasurement++;
+				this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
+			} else this._measurements.push({
+				time,
+				iterations: this._iterationsPerMeasurement
+			});
+			if (this._done()) return this._end();
+			this._start = performance.now();
+			for (let i = this._iterationsPerMeasurement; i > 0; --i) await this.bench();
+		}
+	}
+	async _end() {
+		await this.teardown();
+		return this._measurements;
+	}
+	static renderMap(map, paintStartTimeStamp) {
+		map._render(paintStartTimeStamp);
+		const gl = map.painter.context.gl;
+		gl.finish();
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, /* @__PURE__ */ new Uint8Array(4));
+	}
+};
+//#endregion
 //#region node_modules/@mapbox/point-geometry/index.js
 /**
 * A standalone point geometry with useful accessor, comparison, and
@@ -2765,373 +2858,1069 @@ function isTouchableOrPointableType(eventType) {
 	return touchableEvents[eventType] || pointableEvents[eventType];
 }
 //#endregion
-//#region src/geo/lng_lat.ts
-const earthRadius = 6371008.8;
+//#region src/util/abort_error.ts
 /**
-* A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees.
-* These coordinates are based on the [WGS84 (EPSG:4326) standard](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84).
-*
-* MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match the
-* [GeoJSON specification](https://tools.ietf.org/html/rfc7946).
-*
-* Note that any MapLibre GL JS method that accepts a `LngLat` object as an argument or option
-* can also accept an `Array` of two numbers and will perform an implicit conversion.
-* This flexible type is documented as {@link LngLatLike}.
-*
-* @group Geography and Geometry
-*
-* @example
-* ```ts
-* let ll = new LngLat(-123.9749, 40.7736);
-* ll.lng; // = -123.9749
-* ```
-* @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/)
+* An error message to use when an operation is aborted
 */
-var LngLat = class LngLat {
-	/**
-	* @param lng - Longitude, measured in degrees.
-	* @param lat - Latitude, measured in degrees.
-	*/
-	constructor(lng, lat) {
-		if (isNaN(lng) || isNaN(lat)) throw new Error(`Invalid LngLat object: (${lng}, ${lat})`);
-		this.lng = +lng;
-		this.lat = +lat;
-		if (this.lat > 90 || this.lat < -90) throw new Error("Invalid LngLat latitude value: must be between -90 and 90");
+const ABORT_ERROR = "AbortError";
+var AbortError = class extends Error {
+	constructor(messageOrError = ABORT_ERROR) {
+		super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
+		this.name = ABORT_ERROR;
+		if (messageOrError instanceof Error && messageOrError.stack) this.stack = messageOrError.stack;
 	}
+};
+/**
+* Check if an error is an abort error
+* @param error - An error object
+* @returns - true if the error is an abort error
+*/
+function isAbortError(error) {
+	return error instanceof Error && error.name === "AbortError";
+}
+/**
+* Throws an AbortError if the provided abort signal has already been aborted.
+*
+* @param signal - The abort signal to check.
+* @throws AbortError If the signal is aborted.
+*/
+function throwIfAborted(signal) {
+	if (signal.aborted) throw new AbortError(signal.reason);
+}
+//#endregion
+//#region src/util/browser.ts
+let linkEl;
+let reducedMotionQuery;
+let reducedMotionOverride;
+/** */
+const browser = {
 	/**
-	* Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
-	*
-	* @returns The wrapped `LngLat` object.
-	* @example
-	* ```ts
-	* let ll = new LngLat(286.0251, 40.7736);
-	* let wrapped = ll.wrap();
-	* wrapped.lng; // = -73.9749
-	* ```
+	* Schedules a callback to be invoked on the next animation frame.
+	* @param abortController - Controller to abort the scheduled frame.
+	* @param fn - Callback to invoke with the paint start timestamp.
+	* @param reject - Callback to invoke if the frame is aborted.
+	* @param targetWindow - Optional window to use for requestAnimationFrame.
+	*   When the map is rendered in a popup window or iframe, pass the owning
+	*   window to ensure animation frames continue even when the main window
+	*   is not focused.
 	*/
-	wrap() {
-		return new LngLat(wrap(this.lng, -180, 180), this.lat);
-	}
+	frame(abortController, fn, reject, targetWindow) {
+		const win = targetWindow || window;
+		const frameId = win.requestAnimationFrame((paintStartTimestamp) => {
+			unsubscribe();
+			fn(paintStartTimestamp);
+		});
+		const { unsubscribe } = subscribe(abortController.signal, "abort", () => {
+			unsubscribe();
+			win.cancelAnimationFrame(frameId);
+			reject(new AbortError(abortController.signal.reason));
+		}, false);
+	},
 	/**
-	* Returns the coordinates represented as an array of two numbers.
-	*
-	* @returns The coordinates represented as an array of longitude and latitude.
-	* @example
-	* ```ts
-	* let ll = new LngLat(-73.9749, 40.7736);
-	* ll.toArray(); // = [-73.9749, 40.7736]
-	* ```
+	* Returns a promise that resolves on the next animation frame.
+	* @param abortController - Controller to abort the scheduled frame.
+	* @param targetWindow - Optional window to use for requestAnimationFrame.
+	* @see {@link browser.frame}
 	*/
-	toArray() {
-		return [this.lng, this.lat];
-	}
-	/**
-	* Returns the coordinates represent as a string.
-	*
-	* @returns The coordinates represented as a string of the format `'LngLat(lng, lat)'`.
-	* @example
-	* ```ts
-	* let ll = new LngLat(-73.9749, 40.7736);
-	* ll.toString(); // = "LngLat(-73.9749, 40.7736)"
-	* ```
-	*/
-	toString() {
-		return `LngLat(${this.lng}, ${this.lat})`;
-	}
-	/**
-	* Returns the approximate distance between a pair of coordinates in meters
-	* Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky and Telescope, vol. 68, no. 2, 1984, p. 159)
-	*
-	* @param lngLat - coordinates to compute the distance to
-	* @returns Distance in meters between the two coordinates.
-	* @example
-	* ```ts
-	* let new_york = new LngLat(-74.0060, 40.7128);
-	* let los_angeles = new LngLat(-118.2437, 34.0522);
-	* new_york.distanceTo(los_angeles); // = 3935751.690893987, "true distance" using a non-spherical approximation is ~3966km
-	* ```
-	*/
-	distanceTo(lngLat) {
-		const rad = Math.PI / 180;
-		const lat1 = this.lat * rad;
-		const lat2 = lngLat.lat * rad;
-		const a = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos((lngLat.lng - this.lng) * rad);
-		return earthRadius * Math.acos(Math.min(a, 1));
-	}
-	/**
-	* Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties
-	* to a `LngLat` object.
-	*
-	* If a `LngLat` object is passed in, the function returns it unchanged.
-	*
-	* @param input - An array of two numbers or object to convert, or a `LngLat` object to return.
-	* @returns A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
-	* @example
-	* ```ts
-	* let arr = [-73.9749, 40.7736];
-	* let ll = LngLat.convert(arr);
-	* ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
-	* ```
-	*/
-	static convert(input) {
-		if (input instanceof LngLat) return input;
-		if (Array.isArray(input) && (input.length === 2 || input.length === 3)) return new LngLat(Number(input[0]), Number(input[1]));
-		if (!Array.isArray(input) && typeof input === "object" && input !== null) return new LngLat(Number("lng" in input ? input.lng : input.lon), Number(input.lat));
-		throw new Error("`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]");
+	frameAsync(abortController, targetWindow) {
+		return new Promise((resolve, reject) => {
+			this.frame(abortController, resolve, reject, targetWindow);
+		});
+	},
+	getImageData(img, padding = 0) {
+		return this.getImageCanvasContext(img).getImageData(-padding, -padding, img.width + 2 * padding, img.height + 2 * padding);
+	},
+	getImageCanvasContext(img) {
+		const canvas = window.document.createElement("canvas");
+		const context = canvas.getContext("2d", { willReadFrequently: true });
+		if (!context) throw new Error("failed to create canvas 2d context");
+		canvas.width = img.width;
+		canvas.height = img.height;
+		context.drawImage(img, 0, 0, img.width, img.height);
+		return context;
+	},
+	resolveURL(path) {
+		linkEl ||= document.createElement("a");
+		linkEl.href = path;
+		return linkEl.href;
+	},
+	get hardwareConcurrency() {
+		return typeof navigator !== "undefined" && navigator.hardwareConcurrency || 4;
+	},
+	get prefersReducedMotion() {
+		if (reducedMotionOverride !== void 0) return reducedMotionOverride;
+		if (!matchMedia) return false;
+		reducedMotionQuery ??= matchMedia("(prefers-reduced-motion: reduce)");
+		return reducedMotionQuery.matches;
+	},
+	set prefersReducedMotion(value) {
+		reducedMotionOverride = value;
 	}
 };
 //#endregion
-//#region src/geo/mercator_coordinate.ts
-const earthCircumference = 2 * Math.PI * earthRadius;
-function circumferenceAtLatitude(latitude) {
-	return earthCircumference * Math.cos(latitude * Math.PI / 180);
-}
-function mercatorXfromLng$1(lng) {
-	return (180 + lng) / 360;
-}
-function mercatorYfromLat$1(lat) {
-	return (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
-}
-function mercatorZfromAltitude(altitude, lat) {
-	return altitude / circumferenceAtLatitude(lat);
-}
-function lngFromMercatorX(x) {
-	return x * 360 - 180;
-}
-function latFromMercatorY$1(y) {
-	const y2 = 180 - y * 360;
-	return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
-}
-function altitudeFromMercatorZ(z, y) {
-	return z * circumferenceAtLatitude(latFromMercatorY$1(y));
-}
+//#region src/util/time_control.ts
 /**
-* Determine the Mercator scale factor for a given latitude, see
-* https://en.wikipedia.org/wiki/Mercator_projection#Scale_factor
-*
-* At the equator the scale factor will be 1, which increases at higher latitudes.
-*
-* @param lat - Latitude
-* @returns scale factor
+* Manages time flow with optional freezing capability for deterministic rendering.
 */
-function mercatorScale(lat) {
-	return 1 / Math.cos(lat * Math.PI / 180);
+var TimeManager = class {
+	constructor() {
+		this._frozenAt = null;
+	}
+	/**
+	* Gets the current time, either real or frozen.
+	* @returns Current time in milliseconds
+	*/
+	getCurrentTime() {
+		return this._frozenAt !== null ? this._frozenAt : performance.now();
+	}
+	/**
+	* Sets time at a specific timestamp.
+	* @param timestamp - Time in milliseconds to set
+	*/
+	setNow(timestamp) {
+		this._frozenAt = timestamp;
+	}
+	/**
+	* Restores normal time flow.
+	*/
+	restoreNow() {
+		this._frozenAt = null;
+	}
+	/**
+	* Returns whether time is currently frozen.
+	* @returns True if time is frozen, false otherwise
+	*/
+	isFrozen() {
+		return this._frozenAt !== null;
+	}
+};
+const timeManager = new TimeManager();
+/**
+* Returns the current time in milliseconds.
+* When time is frozen via setNow(), returns the frozen timestamp.
+* Otherwise returns real browser time via performance.now().
+*
+* @returns Current time in milliseconds
+* @example
+* ```ts
+* // Measure elapsed time
+* const start = maplibregl.now();
+* // ... later ...
+* const elapsed = maplibregl.now() - start;
+*
+* // During frozen time
+* maplibregl.setNow(16.67);
+* console.log(maplibregl.now()); // 16.67
+* maplibregl.restoreNow();
+* console.log(maplibregl.now()); // real time
+* ```
+*/
+function now() {
+	return timeManager.getCurrentTime();
 }
 /**
-* A `MercatorCoordinate` object represents a projected three dimensional position.
+* Freezes time at a specific timestamp for deterministic rendering.
+* Useful for frame-by-frame video capture where each frame needs
+* a consistent time value.
 *
-* `MercatorCoordinate` uses the web mercator projection ([EPSG:3857](https://epsg.io/3857)) with slightly different units:
-*
-* - the size of 1 unit is the width of the projected world instead of the "mercator meter"
-* - the origin of the coordinate space is at the north-west corner instead of the middle
-*
-* For example, `MercatorCoordinate(0, 0, 0)` is the north-west corner of the mercator world and
-* `MercatorCoordinate(1, 1, 0)` is the south-east corner. If you are familiar with
-* [vector tiles](https://github.com/mapbox/vector-tile-spec) it may be helpful to think
-* of the coordinate space as the `0/0/0` tile with an extent of `1`.
-*
-* The `z` dimension of `MercatorCoordinate` is conformal. A cube in the mercator coordinate space would be rendered as a cube.
-*
-* @group Geography and Geometry
+* @param timestamp - Time in milliseconds to freeze at
+* @example
+* ```ts
+* // Freeze time for video export at 60fps
+* setNow(0);           // First frame
+* // ... render frame ...
+* setNow(16.67);       // Second frame
+* // ... render frame ...
+* setNow(33.34);       // Third frame
+* // ... done ...
+* restoreNow();        // Resume normal time
+* ```
+*/
+function setNow(timestamp) {
+	timeManager.setNow(timestamp);
+}
+/**
+* Restores normal time flow after freezing with setNow().
+* Call this after finishing deterministic rendering operations.
 *
 * @example
 * ```ts
-* let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
+* // After video export, resume normal time
+* setNow(0);
+* // ... export frames ...
+* restoreNow(); // Map animations resume normally
 * ```
-* @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/)
-* @see [Add a 3D model using three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
-* @see [Add a simple custom layer on a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/)
 */
-var MercatorCoordinate = class MercatorCoordinate {
-	/**
-	* @param x - The x component of the position.
-	* @param y - The y component of the position.
-	* @param z - The z component of the position.
-	*/
-	constructor(x, y, z = 0) {
-		this.x = +x;
-		this.y = +y;
-		this.z = +z;
+function restoreNow() {
+	timeManager.restoreNow();
+}
+/**
+* Returns whether time is currently frozen.
+* @returns True if time is frozen via setNow(), false otherwise
+* @example
+* ```ts
+* setNow(1000);
+* console.log(isTimeFrozen()); // true
+* restoreNow();
+* console.log(isTimeFrozen()); // false
+* ```
+*/
+function isTimeFrozen() {
+	return timeManager.isFrozen();
+}
+//#endregion
+//#region src/util/dom.ts
+var DOM = class DOM {
+	static {
+		this.docStyle = typeof window !== "undefined" && window.document?.documentElement.style;
+	}
+	static {
+		this.selectProp = !DOM.docStyle || "userSelect" in DOM.docStyle ? "userSelect" : "webkitUserSelect";
+	}
+	static create(tagName, className, container) {
+		const el = window.document.createElement(tagName);
+		if (className !== void 0) el.className = className;
+		if (container) container.appendChild(el);
+		return el;
+	}
+	static createNS(namespaceURI, tagName) {
+		return window.document.createElementNS(namespaceURI, tagName);
+	}
+	static disableDrag() {
+		if (DOM.docStyle && DOM.selectProp) {
+			DOM.userSelect = DOM.docStyle[DOM.selectProp];
+			DOM.docStyle[DOM.selectProp] = "none";
+		}
+	}
+	static enableDrag() {
+		if (DOM.docStyle && DOM.selectProp) DOM.docStyle[DOM.selectProp] = DOM.userSelect;
+	}
+	static suppressClickInternal(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		window.removeEventListener("click", DOM.suppressClickInternal, true);
+	}
+	static suppressClick() {
+		window.addEventListener("click", DOM.suppressClickInternal, true);
+		window.setTimeout(() => {
+			window.removeEventListener("click", DOM.suppressClickInternal, true);
+		}, 0);
+	}
+	static getScale(element) {
+		const rect = element.getBoundingClientRect();
+		return {
+			x: rect.width / element.offsetWidth || 1,
+			y: rect.height / element.offsetHeight || 1,
+			boundingClientRect: rect
+		};
+	}
+	static getPoint(el, scale, e) {
+		const rect = scale.boundingClientRect;
+		return new Point((e.clientX - rect.left) / scale.x - el.clientLeft, (e.clientY - rect.top) / scale.y - el.clientTop);
+	}
+	static mousePos(el, e) {
+		const scale = DOM.getScale(el);
+		return DOM.getPoint(el, scale, e);
+	}
+	static touchPos(el, touches) {
+		const points = [];
+		const scale = DOM.getScale(el);
+		for (const touch of touches) points.push(DOM.getPoint(el, scale, touch));
+		return points;
 	}
 	/**
-	* Project a `LngLat` to a `MercatorCoordinate`.
-	*
-	* @param lngLatLike - The location to project.
-	* @param altitude - The altitude in meters of the position.
-	* @returns The projected mercator coordinate.
-	* @example
-	* ```ts
-	* let coord = MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
-	* coord; // MercatorCoordinate(0.5, 0.5, 0)
-	* ```
+	* Sanitize an HTML string - this might not be enough to prevent all XSS attacks
+	* Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
+	* (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
 	*/
-	static fromLngLat(lngLatLike, altitude = 0) {
-		const lngLat = LngLat.convert(lngLatLike);
-		return new MercatorCoordinate(mercatorXfromLng$1(lngLat.lng), mercatorYfromLat$1(lngLat.lat), mercatorZfromAltitude(altitude, lngLat.lat));
+	static sanitize(str) {
+		const html = new DOMParser().parseFromString(str, "text/html").body || document.createElement("body");
+		const scripts = html.querySelectorAll("script");
+		for (const script of scripts) script.remove();
+		DOM.clean(html);
+		return html.innerHTML;
 	}
 	/**
-	* Returns the `LngLat` for the coordinate.
-	*
-	* @returns The `LngLat` object.
-	* @example
-	* ```ts
-	* let coord = new MercatorCoordinate(0.5, 0.5, 0);
-	* let lngLat = coord.toLngLat(); // LngLat(0, 0)
-	* ```
+	* Check if the attribute is potentially dangerous
 	*/
-	toLngLat() {
-		return new LngLat(lngFromMercatorX(this.x), latFromMercatorY$1(this.y));
+	static isPossiblyDangerous(name, value) {
+		const val = value.replace(/\s+/g, "").toLowerCase();
+		if ([
+			"src",
+			"href",
+			"xlink:href"
+		].includes(name)) {
+			if (val.includes("javascript:") || val.includes("data:")) return true;
+		}
+		if (name.startsWith("on")) return true;
 	}
 	/**
-	* Returns the altitude in meters of the coordinate.
-	*
-	* @returns The altitude in meters.
-	* @example
-	* ```ts
-	* let coord = new MercatorCoordinate(0, 0, 0.02);
-	* coord.toAltitude(); // 6914.281956295339
-	* ```
+	* Remove dangerous stuff from the HTML document's nodes
+	* @param html - The HTML document
 	*/
-	toAltitude() {
-		return altitudeFromMercatorZ(this.z, this.y);
+	static clean(html) {
+		const nodes = html.children;
+		for (const node of nodes) {
+			DOM.removeAttributes(node);
+			DOM.clean(node);
+		}
 	}
 	/**
-	* Returns the distance of 1 meter in `MercatorCoordinate` units at this latitude.
-	*
-	* For coordinates in real world units using meters, this naturally provides the scale
-	* to transform into `MercatorCoordinate`s.
-	*
-	* @returns Distance of 1 meter in `MercatorCoordinate` units.
+	* Remove potentially dangerous attributes from an element
+	* @param elem - The element
 	*/
-	meterInMercatorCoordinateUnits() {
-		return 1 / earthCircumference * mercatorScale(latFromMercatorY$1(this.y));
+	static removeAttributes(elem) {
+		for (const { name, value } of elem.attributes) {
+			if (!DOM.isPossiblyDangerous(name, value)) continue;
+			elem.removeAttribute(name);
+		}
 	}
 };
 //#endregion
-//#region src/util/transferable_grid_index.ts
-const NUM_PARAMS = 3;
-var TransferableGridIndex = class TransferableGridIndex {
-	constructor(extent, n, padding) {
-		const cells = this.cells = [];
-		if (extent instanceof ArrayBuffer) {
-			this.arrayBuffer = extent;
-			const array = new Int32Array(this.arrayBuffer);
-			extent = array[0];
-			n = array[1];
-			padding = array[2];
-			this.d = n + 2 * padding;
-			for (let k = 0; k < this.d * this.d; k++) {
-				const start = array[NUM_PARAMS + k];
-				const end = array[NUM_PARAMS + k + 1];
-				cells.push(start === end ? null : array.subarray(start, end));
+//#region package.json
+var version$4 = "6.2.0";
+//#endregion
+//#region src/util/config.ts
+const config = {
+	MAX_PARALLEL_IMAGE_REQUESTS: 16,
+	MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: 8,
+	MAX_TILE_CACHE_ZOOM_LEVELS: 5,
+	REGISTERED_PROTOCOLS: {},
+	WORKER_URL: ""
+};
+//#endregion
+//#region src/source/protocol_crud.ts
+function getProtocol(url) {
+	return config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf("://"))];
+}
+/**
+* Adds a custom load resource function that will be called when using a URL that starts with a custom url schema.
+* This will happen in the main thread, and workers might call it if they don't know how to handle the protocol.
+* The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
+* The function passed will receive the request parameters and should return with the resulting resource,
+* for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+*
+* @param customProtocol - the protocol to hook, for example 'custom'
+* @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
+* @example
+* ```ts
+* // This will fetch a file using the fetch API (this is obviously a non interesting example...)
+* addProtocol('custom', async (params, abortController) => {
+*      const t = await fetch(`https://${params.url.split("://")[1]}`);
+*      if (t.status == 200) {
+*          const buffer = await t.arrayBuffer();
+*          return {data: buffer}
+*      } else {
+*          throw new Error(`Tile fetch error: ${t.statusText}`);
+*      }
+*  });
+* // the following is an example of a way to return an error when trying to load a tile
+* addProtocol('custom2', async (params, abortController) => {
+*      throw new Error('someErrorMessage');
+* });
+* ```
+* @see [Add a COG raster source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-cog-raster-source/)
+* @see [Add Contour Lines](https://maplibre.org/maplibre-gl-js/docs/examples/add-contour-lines/)
+* @see [PMTiles source and protocol](https://maplibre.org/maplibre-gl-js/docs/examples/pmtiles-source-and-protocol/)
+* @see [Use addProtocol to Transform Feature Properties](https://maplibre.org/maplibre-gl-js/docs/examples/use-addprotocol-to-transform-feature-properties/)
+*/
+function addProtocol(customProtocol, loadFn) {
+	config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
+}
+/**
+* Removes a previously added protocol in the main thread.
+*
+* @param customProtocol - the custom protocol to remove registration for
+* @example
+* ```ts
+* removeProtocol('custom');
+* ```
+*/
+function removeProtocol(customProtocol) {
+	delete config.REGISTERED_PROTOCOLS[customProtocol];
+}
+//#endregion
+//#region src/util/ajax.ts
+/**
+* This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
+*/
+const GLOBAL_DISPATCHER_ID = "global-dispatcher";
+/**
+* An error thrown when a HTTP request results in an error response.
+*/
+var AJAXError = class extends Error {
+	/**
+	* @param status - The response's HTTP status code.
+	* @param statusText - The response's HTTP status text.
+	* @param url - The request's URL.
+	* @param body - The response's body.
+	*/
+	constructor(status, statusText, url, body) {
+		super(`AJAXError: ${statusText} (${status}): ${url}`);
+		this.status = status;
+		this.statusText = statusText;
+		this.url = url;
+		this.body = body;
+	}
+};
+/**
+* Ensure that we're sending the correct referrer from blob URL worker bundles.
+* For files loaded from the local file system, `location.origin` will be set
+* to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
+* and we will set an empty referrer. Otherwise, we're using the document's URL.
+* If we're on a blob URL and parent window is cross-origin, parent.location throws
+* SecurityError DOMException, this means we are probably not in blob URL worker bundle.
+*/
+function getReferrer() {
+	if (isWorker(self)) return self.worker?.referrer;
+	if (window.location.protocol === "blob:") try {
+		return window.parent.location.href;
+	} catch {}
+	return window.location.href;
+}
+/**
+* Determines whether a URL is a file:// URL. This is obviously the case if it begins
+* with file://. Relative URLs are also file:// URLs iff the original document was loaded
+* via a file:// URL.
+* @param url - The URL to check
+* @returns `true` if the URL is a file:// URL, `false` otherwise
+*/
+const isFileURL = (url) => url.startsWith("file:") || getReferrer()?.startsWith("file:") && !/^\w+:/.test(url);
+async function makeFetchRequest(requestParameters, abortController) {
+	const request = new Request(requestParameters.url, {
+		method: requestParameters.method || "GET",
+		body: requestParameters.body,
+		credentials: requestParameters.credentials,
+		headers: requestParameters.headers,
+		cache: requestParameters.cache,
+		referrer: getReferrer(),
+		referrerPolicy: requestParameters.referrerPolicy,
+		signal: abortController.signal
+	});
+	if (requestParameters.type === "json" && !request.headers.has("Accept")) request.headers.set("Accept", "application/json");
+	let response;
+	try {
+		response = await fetch(request);
+	} catch (e) {
+		if (isAbortError(e)) throw e;
+		throw new AJAXError(0, ensureError(e).message, requestParameters.url, new Blob());
+	}
+	if (!response.ok) {
+		const body = await response.blob();
+		throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
+	}
+	let parsePromise;
+	if (requestParameters.type === "arrayBuffer" || requestParameters.type === "image") parsePromise = response.arrayBuffer();
+	else if (requestParameters.type === "json") parsePromise = response.json();
+	else parsePromise = response.text();
+	const result = await parsePromise;
+	throwIfAborted(abortController.signal);
+	return {
+		data: result,
+		cacheControl: response.headers.get("Cache-Control"),
+		expires: response.headers.get("Expires"),
+		etag: response.headers.get("ETag")
+	};
+}
+function makeXMLHttpRequest(requestParameters, abortController) {
+	return new Promise((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		xhr.open(requestParameters.method || "GET", requestParameters.url, true);
+		if (requestParameters.type === "arrayBuffer" || requestParameters.type === "image") xhr.responseType = "arraybuffer";
+		for (const k in requestParameters.headers) xhr.setRequestHeader(k, requestParameters.headers[k]);
+		if (requestParameters.type === "json") {
+			xhr.responseType = "text";
+			if (!requestParameters.headers?.Accept) xhr.setRequestHeader("Accept", "application/json");
+		}
+		xhr.withCredentials = requestParameters.credentials === "include";
+		xhr.onerror = () => {
+			reject(new Error(xhr.statusText));
+		};
+		xhr.onload = () => {
+			if (abortController.signal.aborted) return;
+			if ((xhr.status >= 200 && xhr.status < 300 || xhr.status === 0) && xhr.response !== null) {
+				let data = xhr.response;
+				if (requestParameters.type === "json") try {
+					data = JSON.parse(xhr.response);
+				} catch (err) {
+					reject(err);
+					return;
+				}
+				resolve({
+					data,
+					cacheControl: xhr.getResponseHeader("Cache-Control"),
+					expires: xhr.getResponseHeader("Expires"),
+					etag: xhr.getResponseHeader("ETag")
+				});
+			} else {
+				const body = new Blob([xhr.response], { type: xhr.getResponseHeader("Content-Type") });
+				reject(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
 			}
-			const keysOffset = array[NUM_PARAMS + cells.length];
-			const bboxesOffset = array[NUM_PARAMS + cells.length + 1];
-			this.keys = array.subarray(keysOffset, bboxesOffset);
-			this.bboxes = array.subarray(bboxesOffset);
-			this.insert = this._insertReadonly;
-		} else {
-			this.d = n + 2 * padding;
-			for (let i = 0; i < this.d * this.d; i++) cells.push([]);
-			this.keys = [];
-			this.bboxes = [];
+		};
+		abortController.signal.addEventListener("abort", () => {
+			xhr.abort();
+			reject(new AbortError(abortController.signal.reason));
+		});
+		xhr.send(requestParameters.body);
+	});
+}
+/**
+* We're trying to use the Fetch API if possible. However, requests for resources with the file:// URI scheme don't work with the Fetch API.
+* In this case we unconditionally use XHR on the current thread since referrers don't matter.
+* This method can also use the registered method if `addProtocol` was called.
+* @param requestParameters - The request parameters
+* @param abortController - The abort controller allowing to cancel the request
+* @returns a promise resolving to the response, including cache control and expiry data
+*/
+const makeRequest = async function(requestParameters, abortController) {
+	if (requestParameters.url.includes("://") && !/^https?:|^file:/.test(requestParameters.url)) {
+		const protocolLoadFn = getProtocol(requestParameters.url);
+		if (protocolLoadFn) {
+			const response = await protocolLoadFn(requestParameters, abortController);
+			if (!response.data && requestParameters.type === "arrayBuffer") return extend(response, { data: /* @__PURE__ */ new ArrayBuffer(0) });
+			return response;
 		}
-		this.n = n;
-		this.extent = extent;
-		this.padding = padding;
-		this.scale = n / extent;
-		this.uid = 0;
-		const p = padding / n * extent;
-		this.min = -p;
-		this.max = extent + p;
+		if (isWorker(self) && self.worker?.actor) return self.worker.actor.sendAsync({
+			type: "GR",
+			data: requestParameters,
+			targetMapId: GLOBAL_DISPATCHER_ID
+		}, abortController);
 	}
-	insert(key, x1, y1, x2, y2) {
-		this._forEachCell(x1, y1, x2, y2, this._insertCell, this.uid++, void 0, void 0);
-		this.keys.push(key);
-		this.bboxes.push(x1);
-		this.bboxes.push(y1);
-		this.bboxes.push(x2);
-		this.bboxes.push(y2);
+	if (!isFileURL(requestParameters.url)) {
+		if (fetch && Request && AbortController && Object.hasOwn(Request.prototype, "signal")) return makeFetchRequest(requestParameters, abortController);
+		if (isWorker(self) && self.worker?.actor) return self.worker.actor.sendAsync({
+			type: "GR",
+			data: requestParameters,
+			mustQueue: true,
+			targetMapId: GLOBAL_DISPATCHER_ID
+		}, abortController);
 	}
-	_insertReadonly() {
-		throw new Error("Cannot insert into a GridIndex created from an ArrayBuffer.");
+	return makeXMLHttpRequest(requestParameters, abortController);
+};
+const getJSON = (requestParameters, abortController) => {
+	return makeRequest(extend(requestParameters, { type: "json" }), abortController);
+};
+const getArrayBuffer = (requestParameters, abortController) => {
+	return makeRequest(extend(requestParameters, { type: "arrayBuffer" }), abortController);
+};
+/** 
+* Determines whether a URL is same origin as the current location. Supports relative URLs too.
+* 
+* A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
+* try-catch is expansive so just use a heuristic check to avoid it
+* 
+* - Relative URL and empty URL are always same origin.
+* - data URL containing an image is always same origin.
+* - blob URL is checked using `URL` constructor by its parent URL; opaque blob URL is never same origin.
+* - Absolute URL is checked using `URL` constructor.
+* 
+* Checks blob URL before relative URL because opaque blob URL does not contain `://` too.
+* 
+* @param inComingUrl - The URL to check
+* @returns `true` if the URL is same origin as current location, `false` otherwise
+*/
+function sameOrigin(inComingUrl) {
+	if (!inComingUrl) return true;
+	if (inComingUrl.startsWith("data:image/")) return true;
+	if (inComingUrl.startsWith("blob:")) {
+		inComingUrl = inComingUrl.slice(5);
+		if (inComingUrl.startsWith("null")) return false;
 	}
-	_insertCell(x1, y1, x2, y2, cellIndex, uid) {
-		this.cells[cellIndex].push(uid);
-	}
-	query(x1, y1, x2, y2, intersectionTest) {
-		const min = this.min;
-		const max = this.max;
-		if (x1 <= min && y1 <= min && max <= x2 && max <= y2 && !intersectionTest) return [...this.keys];
-		else {
-			const result = [];
-			this._forEachCell(x1, y1, x2, y2, this._queryCell, result, {}, intersectionTest);
-			return result;
+	if (inComingUrl.indexOf("://") <= 0) return true;
+	const urlObj = new URL(inComingUrl);
+	const locationObj = window.location;
+	return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
+}
+const getVideo = (urls) => {
+	const video = window.document.createElement("video");
+	video.muted = true;
+	return new Promise((resolve) => {
+		video.onloadstart = () => {
+			resolve(video);
+		};
+		for (const url of urls) {
+			const s = window.document.createElement("source");
+			if (!sameOrigin(url)) video.crossOrigin = "Anonymous";
+			s.src = url;
+			video.appendChild(s);
 		}
-	}
-	_queryCell(x1, y1, x2, y2, cellIndex, result, seenUids, intersectionTest) {
-		const cell = this.cells[cellIndex];
-		if (cell !== null) {
-			const keys = this.keys;
-			const bboxes = this.bboxes;
-			for (const uid of cell) if (seenUids[uid] === void 0) {
-				const offset = uid * 4;
-				if (intersectionTest ? intersectionTest(bboxes[offset + 0], bboxes[offset + 1], bboxes[offset + 2], bboxes[offset + 3]) : x1 <= bboxes[offset + 2] && y1 <= bboxes[offset + 3] && x2 >= bboxes[offset + 0] && y2 >= bboxes[offset + 1]) {
-					seenUids[uid] = true;
-					result.push(keys[uid]);
-				} else seenUids[uid] = false;
+	});
+};
+//#endregion
+//#region src/util/image_request.ts
+let ImageRequest;
+(function(_ImageRequest) {
+	let imageRequestQueue;
+	let currentParallelImageRequests;
+	let throttleControlCallbackHandleCounter;
+	let throttleControlCallbacks;
+	_ImageRequest.resetRequestQueue = () => {
+		imageRequestQueue = [];
+		currentParallelImageRequests = 0;
+		throttleControlCallbackHandleCounter = 0;
+		throttleControlCallbacks = {};
+	};
+	_ImageRequest.addThrottleControl = (callback) => {
+		const handle = throttleControlCallbackHandleCounter++;
+		throttleControlCallbacks[handle] = callback;
+		return handle;
+	};
+	_ImageRequest.removeThrottleControl = (callbackHandle) => {
+		delete throttleControlCallbacks[callbackHandle];
+		processQueue();
+	};
+	/**
+	* Check to see if any of the installed callbacks are requesting the queue
+	* to be throttled.
+	* @returns `true` if any callback is causing the queue to be throttled.
+	*/
+	const isThrottled = () => {
+		for (const key of Object.keys(throttleControlCallbacks)) if (throttleControlCallbacks[key]()) return true;
+		return false;
+	};
+	_ImageRequest.getImage = (requestParameters, abortController, supportImageRefresh = true, imageBitmapOptions) => {
+		return new Promise((resolve, reject) => {
+			requestParameters.headers ||= {};
+			requestParameters.headers.accept = "image/webp,*/*";
+			extend(requestParameters, { type: "image" });
+			const request = {
+				abortController,
+				requestParameters,
+				supportImageRefresh,
+				imageBitmapOptions,
+				state: "queued",
+				onError: (error) => {
+					reject(error);
+				},
+				onSuccess: (response) => {
+					resolve(response);
+				}
+			};
+			imageRequestQueue.push(request);
+			processQueue();
+		});
+	};
+	const arrayBufferToCanvasImageSource = (data, imageBitmapOptions) => {
+		if (typeof createImageBitmap === "function") return arrayBufferToImageBitmap(data, imageBitmapOptions);
+		else return arrayBufferToImage(data);
+	};
+	const doImageRequest = async (itemInQueue) => {
+		itemInQueue.state = "running";
+		const { requestParameters, supportImageRefresh, imageBitmapOptions, onError, onSuccess, abortController } = itemInQueue;
+		const canUseHTMLImageElement = supportImageRefresh === false && !imageBitmapOptions && !isWorker(self) && !getProtocol(requestParameters.url) && (!requestParameters.headers || Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === "accept", true));
+		currentParallelImageRequests++;
+		const getImagePromise = canUseHTMLImageElement ? getImageUsingHtmlImage(requestParameters, abortController) : makeRequest(requestParameters, abortController);
+		try {
+			const response = await getImagePromise;
+			delete itemInQueue.abortController;
+			itemInQueue.state = "completed";
+			if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) onSuccess(response);
+			else if (response.data) onSuccess({
+				data: await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions),
+				cacheControl: response.cacheControl,
+				expires: response.expires
+			});
+		} catch (err) {
+			delete itemInQueue.abortController;
+			onError(ensureError(err));
+		} finally {
+			currentParallelImageRequests--;
+			processQueue();
+		}
+	};
+	/**
+	* Process some number of items in the image request queue.
+	*/
+	const processQueue = () => {
+		const maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
+		for (let numImageRequests = currentParallelImageRequests; numImageRequests < maxImageRequests && imageRequestQueue.length > 0; numImageRequests++) {
+			const topItemInQueue = imageRequestQueue.shift();
+			if (topItemInQueue.abortController.signal.aborted) {
+				numImageRequests--;
+				continue;
 			}
+			doImageRequest(topItemInQueue);
 		}
+	};
+	const getImageUsingHtmlImage = (requestParameters, abortController) => {
+		return new Promise((resolve, reject) => {
+			const image = new Image();
+			const url = requestParameters.url;
+			const credentials = requestParameters.credentials;
+			if (credentials && credentials === "include") image.crossOrigin = "use-credentials";
+			else if (credentials && credentials === "same-origin" || !sameOrigin(url)) image.crossOrigin = "anonymous";
+			abortController.signal.addEventListener("abort", () => {
+				image.src = "";
+				reject(new AbortError(abortController.signal.reason));
+			});
+			image.fetchPriority = "high";
+			image.onload = () => {
+				image.onerror = image.onload = null;
+				resolve({ data: image });
+			};
+			image.onerror = () => {
+				image.onerror = image.onload = null;
+				if (abortController.signal.aborted) return;
+				reject(/* @__PURE__ */ new Error("Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported."));
+			};
+			image.src = url;
+		});
+	};
+})(ImageRequest || (ImageRequest = {}));
+ImageRequest.resetRequestQueue();
+//#endregion
+//#region src/util/request_manager.ts
+var RequestManager = class {
+	constructor(transformRequestFn) {
+		this._transformRequestFn = transformRequestFn ?? null;
 	}
-	_forEachCell(x1, y1, x2, y2, fn, arg1, arg2, intersectionTest) {
-		const cx1 = this._convertToCellCoord(x1);
-		const cy1 = this._convertToCellCoord(y1);
-		const cx2 = this._convertToCellCoord(x2);
-		const cy2 = this._convertToCellCoord(y2);
-		for (let x = cx1; x <= cx2; x++) for (let y = cy1; y <= cy2; y++) {
-			const cellIndex = this.d * y + x;
-			if (intersectionTest && !intersectionTest(this._convertFromCellCoord(x), this._convertFromCellCoord(y), this._convertFromCellCoord(x + 1), this._convertFromCellCoord(y + 1))) continue;
-			if (fn.call(this, x1, y1, x2, y2, cellIndex, arg1, arg2, intersectionTest)) return;
-		}
+	transformRequest(url, type) {
+		if (this._transformRequestFn) return this._transformRequestFn(url, type) || { url };
+		return { url };
 	}
-	_convertFromCellCoord(x) {
-		return (x - this.padding) / this.scale;
+	setTransformRequest(transformRequest) {
+		this._transformRequestFn = transformRequest;
 	}
-	_convertToCellCoord(x) {
-		return Math.max(0, Math.min(this.d - 1, Math.floor(x * this.scale) + this.padding));
+};
+//#endregion
+//#region src/util/evented.ts
+function _addEventListener(type, listener, listenerList) {
+	if (!listenerList[type]?.includes(listener)) {
+		listenerList[type] ||= [];
+		listenerList[type].push(listener);
 	}
-	toArrayBuffer() {
-		if (this.arrayBuffer) return this.arrayBuffer;
-		const cells = this.cells;
-		const metadataLength = NUM_PARAMS + this.cells.length + 1 + 1;
-		let totalCellLength = 0;
-		for (const cell of this.cells) totalCellLength += cell.length;
-		const array = new Int32Array(metadataLength + totalCellLength + this.keys.length + this.bboxes.length);
-		array[0] = this.extent;
-		array[1] = this.n;
-		array[2] = this.padding;
-		let offset = metadataLength;
-		for (let k = 0; k < cells.length; k++) {
-			const cell = cells[k];
-			array[NUM_PARAMS + k] = offset;
-			array.set(cell, offset);
-			offset += cell.length;
-		}
-		array[NUM_PARAMS + cells.length] = offset;
-		array.set(this.keys, offset);
-		offset += this.keys.length;
-		array[NUM_PARAMS + cells.length + 1] = offset;
-		array.set(this.bboxes, offset);
-		offset += this.bboxes.length;
-		return array.buffer;
+}
+function _removeEventListener(type, listener, listenerList) {
+	if (listenerList?.[type]) {
+		const index = listenerList[type].indexOf(listener);
+		if (index !== -1) listenerList[type].splice(index, 1);
 	}
-	static serialize(grid, transferables) {
-		const buffer = grid.toArrayBuffer();
-		if (transferables) transferables.push(buffer);
-		return { buffer };
+}
+/**
+* The event class
+*/
+var Event = class {
+	constructor(type, data = {}) {
+		extend(this, data);
+		this.type = type;
 	}
-	static deserialize(serialized) {
-		return new TransferableGridIndex(serialized.buffer);
+};
+/**
+* An error event
+*/
+var ErrorEvent = class extends Event {
+	constructor(error, data = {}) {
+		super("error", extend({ error }, data));
+	}
+};
+/**
+* Methods mixed in to other classes for event capabilities.
+*
+* @group Event Related
+*/
+var Evented = class {
+	/**
+	* Adds a listener to a specified event type.
+	*
+	* @param type - The event type to add a listen for.
+	* @param listener - The function to be called when the event is fired.
+	* The listener function is called with the data object passed to `fire`,
+	* extended with `target` and `type` properties.
+	*/
+	on(type, listener) {
+		this._listeners ||= {};
+		_addEventListener(type, listener, this._listeners);
+		return { unsubscribe: () => {
+			this.off(type, listener);
+		} };
+	}
+	/**
+	* Removes a previously registered event listener.
+	*
+	* @param type - The event type to remove listeners for.
+	* @param listener - The listener function to remove.
+	*/
+	off(type, listener) {
+		_removeEventListener(type, listener, this._listeners);
+		_removeEventListener(type, listener, this._oneTimeListeners);
+		return this;
+	}
+	once(type, listener) {
+		if (!listener) return new Promise((resolve) => this.once(type, resolve));
+		this._oneTimeListeners ||= {};
+		_addEventListener(type, listener, this._oneTimeListeners);
+		return this;
+	}
+	fire(event, properties) {
+		const firedEvent = typeof event === "string" ? new Event(event, properties || {}) : event;
+		const type = firedEvent.type;
+		if (this.listens(type)) {
+			firedEvent.target = this;
+			const listeners = this._listeners?.[type]?.slice() ?? [];
+			for (const listener of listeners) listener.call(this, firedEvent);
+			const oneTimeListeners = this._oneTimeListeners?.[type]?.slice() ?? [];
+			for (const listener of oneTimeListeners) {
+				_removeEventListener(type, listener, this._oneTimeListeners);
+				listener.call(this, firedEvent);
+			}
+			const parent = this._eventedParent;
+			if (parent) {
+				extend(firedEvent, typeof this._eventedParentData === "function" ? this._eventedParentData() : this._eventedParentData);
+				parent.fire(firedEvent);
+			}
+		} else if (firedEvent instanceof ErrorEvent) console.error(firedEvent.error);
+		return this;
+	}
+	/**
+	* Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
+	*
+	* @param type - The event type
+	* @returns `true` if there is at least one registered listener for specified event type, `false` otherwise
+	*/
+	listens(type) {
+		return Boolean(this._listeners?.[type]?.length || this._oneTimeListeners?.[type]?.length || this._eventedParent?.listens(type));
+	}
+	/**
+	* Bubble all events fired by this instance of Evented to this parent instance of Evented.
+	*/
+	setEventedParent(parent, data) {
+		this._eventedParent = parent;
+		this._eventedParentData = data;
+		return this;
+	}
+};
+//#endregion
+//#region src/ui/events.ts
+/**
+* The base event for MapLibre
+*
+* @group Event Related
+*/
+var MapLibreEvent = class extends Event {};
+/**
+* `MapMovementEvent` is the event type for the camera-transition map events:
+* `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `rotatestart`, `rotate`, `rotateend`,
+* `dragstart`, `drag`, `dragend`, `pitchstart`, `pitch`, `pitchend`, `rollstart`, `roll` and `rollend`.
+* These are fired as the map's view changes, as a result of either user interaction or methods such
+* as {@link Map.jumpTo} / {@link Map.flyTo}.
+*
+* @group Event Related
+*/
+var MapMovementEvent = class extends MapLibreEvent {};
+/**
+* The `style.load` event, fired once the map's style has fully loaded or changed.
+*
+* @group Event Related
+*/
+var MapStyleLoadEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("style.load", data);
+	}
+};
+/**
+* The style data event
+*
+* @group Event Related
+*/
+var MapStyleDataEvent = class extends MapLibreEvent {
+	constructor(type, data = {}) {
+		super(type, data);
+		this.dataType = "style";
+	}
+};
+/**
+* A `MapSourceDataEvent` is emitted with the source-related `data`, `dataloading`, `dataabort`,
+* `sourcedata`, `sourcedataloading` and `sourcedataabort` events. Its `dataType` is always `'source'`.
+*
+* Possible values for `sourceDataType`s are:
+*
+* - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+* - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
+* - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
+* - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
+*
+* @group Event Related
+*
+* @example
+* ```ts
+* // The sourcedata event is an example of a MapSourceDataEvent.
+* // Set up an event listener on the map.
+* map.on('sourcedata', (e) => {
+*    if (e.isSourceLoaded) {
+*        // Do something when the source has finished loading
+*    }
+* });
+* ```
+*/
+var MapSourceDataEvent = class extends MapLibreEvent {
+	constructor(type, data = {}) {
+		super(type, data);
+		this.dataType = "source";
+	}
+};
+/**
+* `MapMouseEvent` is the event type for mouse-related map events.
+*
+* @group Event Related
+*
+* @example
+* ```ts
+* // The `click` event is an example of a `MapMouseEvent`.
+* // Set up an event listener on the map.
+* map.on('click', (e) => {
+*   // The event object (e) contains information like the
+*   // coordinates of the point on the map that was clicked.
+*   console.log('A click event has occurred at ' + e.lngLat);
+* });
+* ```
+*/
+var MapMouseEvent = class extends MapLibreEvent {
+	/**
+	* Prevents subsequent default processing of the event by the map.
+	*
+	* Calling this method will prevent the following default map behaviors:
+	*
+	*   * On `mousedown` events, the behavior of {@link DragPanHandler}
+	*   * On `mousedown` events, the behavior of {@link DragRotateHandler}
+	*   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
+	*   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
+	*
+	*/
+	preventDefault() {
+		this._defaultPrevented = true;
+	}
+	/**
+	* `true` if `preventDefault` has been called.
+	*/
+	get defaultPrevented() {
+		return this._defaultPrevented;
+	}
+	constructor(type, map, originalEvent, data = {}) {
+		originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
+		const point = DOM.mousePos(map.getCanvas(), originalEvent);
+		const lngLat = map.unproject(point);
+		super(type, extend({
+			point,
+			lngLat,
+			originalEvent
+		}, data));
+		this._defaultPrevented = false;
+		this.target = map;
+	}
+};
+/**
+* `MapTouchEvent` is the event type for touch-related map events.
+*
+* @group Event Related
+*/
+var MapTouchEvent = class extends MapLibreEvent {
+	/**
+	* Prevents subsequent default processing of the event by the map.
+	*
+	* Calling this method will prevent the following default map behaviors:
+	*
+	*   * On `touchstart` events, the behavior of {@link DragPanHandler}
+	*   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
+	*
+	*/
+	preventDefault() {
+		this._defaultPrevented = true;
+	}
+	/**
+	* `true` if `preventDefault` has been called.
+	*/
+	get defaultPrevented() {
+		return this._defaultPrevented;
+	}
+	constructor(type, map, originalEvent) {
+		const touches = type === "touchend" ? originalEvent.changedTouches : originalEvent.touches;
+		const points = DOM.touchPos(map.getCanvasContainer(), touches);
+		const lngLats = points.map((t) => map.unproject(t));
+		const point = points.reduce((prev, curr, i, arr) => {
+			return prev.add(curr.div(arr.length));
+		}, new Point(0, 0));
+		const lngLat = map.unproject(point);
+		super(type, {
+			points,
+			point,
+			lngLats,
+			lngLat,
+			originalEvent
+		});
+		this._defaultPrevented = false;
+	}
+};
+/**
+* `MapWheelEvent` is the event type for the `wheel` map event.
+*
+* @group Event Related
+*/
+var MapWheelEvent = class extends MapLibreEvent {
+	/**
+	* Prevents subsequent default processing of the event by the map.
+	*
+	* Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
+	*/
+	preventDefault() {
+		this._defaultPrevented = true;
+	}
+	/**
+	* `true` if `preventDefault` has been called.
+	*/
+	get defaultPrevented() {
+		return this._defaultPrevented;
+	}
+	/** */
+	constructor(map, originalEvent) {
+		super("wheel", { originalEvent });
+		this._defaultPrevented = false;
+	}
+};
+/**
+* A `MapBoxZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
+*
+* @group Event Related
+*/
+var MapBoxZoomEvent = class extends MapLibreEvent {};
+/**
+* The terrain event
+*
+* @group Event Related
+*/
+var MapTerrainEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("terrain", data);
+	}
+};
+/**
+* The map projection event
+*
+* @group Event Related
+*/
+var MapProjectionEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("projectiontransition", data);
+	}
+};
+/**
+* An event related to the web gl context
+*
+* @group Event Related
+*/
+var MapContextEvent = class extends MapLibreEvent {};
+/**
+* The style image missing event, fired when an image is still missing after the missing style image
+* resolver has been given a chance to supply it. To load or generate images on demand,
+* use {@link Map.setMissingStyleImageResolver}.
+* Event listeners cannot resolve the missing image for the current request.
+*
+* @group Event Related
+*
+* @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
+*/
+var MapStyleImageMissingEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("styleimagemissing", data);
 	}
 };
 const latest = {
@@ -9104,8 +9893,8 @@ var Length = class Length {
 };
 const EXTENT$1 = 8192;
 function getTileCoordinates(p, canonical) {
-	const x = mercatorXfromLng(p[0]);
-	const y = mercatorYfromLat(p[1]);
+	const x = mercatorXfromLng$1(p[0]);
+	const y = mercatorYfromLat$1(p[1]);
 	const tilesAtZoom = Math.pow(2, canonical.z);
 	return [Math.round(x * tilesAtZoom * EXTENT$1), Math.round(y * tilesAtZoom * EXTENT$1)];
 }
@@ -9113,18 +9902,18 @@ function getLngLatFromTileCoord(coord, canonical) {
 	const tilesAtZoom = Math.pow(2, canonical.z);
 	const x = (coord[0] / EXTENT$1 + canonical.x) / tilesAtZoom;
 	const y = (coord[1] / EXTENT$1 + canonical.y) / tilesAtZoom;
-	return [lngFromMercatorXfromLng(x), latFromMercatorY(y)];
+	return [lngFromMercatorXfromLng(x), latFromMercatorY$1(y)];
 }
-function mercatorXfromLng(lng) {
+function mercatorXfromLng$1(lng) {
 	return (180 + lng) / 360;
 }
 function lngFromMercatorXfromLng(mercatorX) {
 	return mercatorX * 360 - 180;
 }
-function mercatorYfromLat(lat) {
+function mercatorYfromLat$1(lat) {
 	return (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
 }
-function latFromMercatorY(mercatorY) {
+function latFromMercatorY$1(mercatorY) {
 	return 360 / Math.PI * Math.atan(Math.exp((180 - mercatorY * 360) * Math.PI / 180)) - 90;
 }
 function updateBBox(bbox, coord) {
@@ -12508,301 +13297,204 @@ function createVisibility(visibility, rootKey, globalState) {
 	return new VisibilityExpressionClass(visibility, rootKey, globalState);
 }
 //#endregion
-//#region src/util/abort_error.ts
+//#region src/style/validate_style.ts
+const validateStyle = validateStyleMin;
 /**
-* An error message to use when an operation is aborted
+* The source types the spec has a schema for, and therefore the only ones it can judge. Taken from
+* the spec itself so the two cannot drift apart.
 */
-const ABORT_ERROR = "AbortError";
-var AbortError = class extends Error {
-	constructor(messageOrError = ABORT_ERROR) {
-		super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
-		this.name = ABORT_ERROR;
-		if (messageOrError instanceof Error && messageOrError.stack) this.stack = messageOrError.stack;
-	}
-};
+const SPEC_SOURCE_TYPES = new Set(Object.keys(latest).filter((key) => key.startsWith("source_")).map((key) => key.slice(7).replaceAll("_", "-")));
 /**
-* Check if an error is an abort error
-* @param error - An error object
-* @returns - true if the error is an abort error
-*/
-function isAbortError(error) {
-	return error instanceof Error && error.name === "AbortError";
-}
-/**
-* Throws an AbortError if the provided abort signal has already been aborted.
+* The sources whose type the spec has no schema for, so it rejects them outright even though we
+* render them: `canvas`, and anything registered with {@link addSourceType}. They are the renderer's
+* business rather than the spec's, so the spec's complaints about them are dropped -- otherwise
+* `map.setStyle(map.getStyle())` would fail on a source the user added correctly.
 *
-* @param signal - The abort signal to check.
-* @throws AbortError If the signal is aborted.
+* Each such source produces a single error keyed by `sources.<id>`, which is what is matched here.
+* @param style - the style about to be validated
+* @returns the `sources.<id>` key prefixes whose errors should be ignored
 */
-function throwIfAborted(signal) {
-	if (signal.aborted) throw new AbortError(signal.reason);
-}
-//#endregion
-//#region src/util/config.ts
-const config = {
-	MAX_PARALLEL_IMAGE_REQUESTS: 16,
-	MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: 8,
-	MAX_TILE_CACHE_ZOOM_LEVELS: 5,
-	REGISTERED_PROTOCOLS: {},
-	WORKER_URL: ""
-};
-//#endregion
-//#region src/source/protocol_crud.ts
-function getProtocol(url) {
-	return config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf("://"))];
+function unjudgeableSourceKeys(style) {
+	return Object.entries(style.sources ?? {}).filter(([, source]) => !SPEC_SOURCE_TYPES.has(source.type)).map(([id]) => `sources.${id}`);
 }
 /**
-* Adds a custom load resource function that will be called when using a URL that starts with a custom url schema.
-* This will happen in the main thread, and workers might call it if they don't know how to handle the protocol.
-* The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
-* The function passed will receive the request parameters and should return with the resulting resource,
-* for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
+* Validates a whole style and emits what it finds, ignoring the sources the spec cannot judge.
 *
-* @param customProtocol - the protocol to hook, for example 'custom'
-* @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
-* @example
-* ```ts
-* // This will fetch a file using the fetch API (this is obviously a non interesting example...)
-* addProtocol('custom', async (params, abortController) => {
-*      const t = await fetch(`https://${params.url.split("://")[1]}`);
-*      if (t.status == 200) {
-*          const buffer = await t.arrayBuffer();
-*          return {data: buffer}
-*      } else {
-*          throw new Error(`Tile fetch error: ${t.statusText}`);
-*      }
-*  });
-* // the following is an example of a way to return an error when trying to load a tile
-* addProtocol('custom2', async (params, abortController) => {
-*      throw new Error('someErrorMessage');
-* });
-* ```
-* @see [Add a COG raster source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-cog-raster-source/)
-* @see [Add Contour Lines](https://maplibre.org/maplibre-gl-js/docs/examples/add-contour-lines/)
-* @see [PMTiles source and protocol](https://maplibre.org/maplibre-gl-js/docs/examples/pmtiles-source-and-protocol/)
-* @see [Use addProtocol to Transform Feature Properties](https://maplibre.org/maplibre-gl-js/docs/examples/use-addprotocol-to-transform-feature-properties/)
+* @param emitter - the object to fire {@link ErrorEvent}s on
+* @param style - the style to validate
+* @returns whether validation failed, i.e. whether the caller should give up on the style
 */
-function addProtocol(customProtocol, loadFn) {
-	config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
+function validateStyleAndEmit(emitter, style) {
+	const ignored = unjudgeableSourceKeys(style);
+	return emitValidationErrors(emitter, validateStyle(style).filter(({ message }) => !ignored.some((key) => message.startsWith(`${key}:`) || message.startsWith(`${key}.`))));
 }
 /**
-* Removes a previously added protocol in the main thread.
+* Emits everything a validator found, and reports whether any of it was severe enough to abort.
 *
-* @param customProtocol - the custom protocol to remove registration for
-* @example
-* ```ts
-* removeProtocol('custom');
-* ```
+* Warnings are logged rather than emitted as errors: the style still renders, just not necessarily
+* as its author intended (e.g. a filter mixing deprecated syntax into an expression tree). Treating
+* them as errors would abort the whole style load and leave a blank map.
+* See https://github.com/maplibre/maplibre-style-spec/issues/1751
+*
+* @param emitter - the object to fire {@link ErrorEvent}s on
+* @param errors - what validation turned up, if anything
+* @returns whether validation failed, i.e. whether the caller should give up on the value
 */
-function removeProtocol(customProtocol) {
-	delete config.REGISTERED_PROTOCOLS[customProtocol];
-}
-//#endregion
-//#region src/util/ajax.ts
-/**
-* This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
-*/
-const GLOBAL_DISPATCHER_ID = "global-dispatcher";
-/**
-* An error thrown when a HTTP request results in an error response.
-*/
-var AJAXError = class extends Error {
-	/**
-	* @param status - The response's HTTP status code.
-	* @param statusText - The response's HTTP status text.
-	* @param url - The request's URL.
-	* @param body - The response's body.
-	*/
-	constructor(status, statusText, url, body) {
-		super(`AJAXError: ${statusText} (${status}): ${url}`);
-		this.status = status;
-		this.statusText = statusText;
-		this.url = url;
-		this.body = body;
-	}
-};
-/**
-* Ensure that we're sending the correct referrer from blob URL worker bundles.
-* For files loaded from the local file system, `location.origin` will be set
-* to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
-* and we will set an empty referrer. Otherwise, we're using the document's URL.
-* If we're on a blob URL and parent window is cross-origin, parent.location throws
-* SecurityError DOMException, this means we are probably not in blob URL worker bundle.
-*/
-function getReferrer() {
-	if (isWorker(self)) return self.worker?.referrer;
-	if (window.location.protocol === "blob:") try {
-		return window.parent.location.href;
-	} catch {}
-	return window.location.href;
-}
-/**
-* Determines whether a URL is a file:// URL. This is obviously the case if it begins
-* with file://. Relative URLs are also file:// URLs iff the original document was loaded
-* via a file:// URL.
-* @param url - The URL to check
-* @returns `true` if the URL is a file:// URL, `false` otherwise
-*/
-const isFileURL = (url) => url.startsWith("file:") || getReferrer()?.startsWith("file:") && !/^\w+:/.test(url);
-async function makeFetchRequest(requestParameters, abortController) {
-	const request = new Request(requestParameters.url, {
-		method: requestParameters.method || "GET",
-		body: requestParameters.body,
-		credentials: requestParameters.credentials,
-		headers: requestParameters.headers,
-		cache: requestParameters.cache,
-		referrer: getReferrer(),
-		referrerPolicy: requestParameters.referrerPolicy,
-		signal: abortController.signal
-	});
-	if (requestParameters.type === "json" && !request.headers.has("Accept")) request.headers.set("Accept", "application/json");
-	let response;
-	try {
-		response = await fetch(request);
-	} catch (e) {
-		if (isAbortError(e)) throw e;
-		throw new AJAXError(0, ensureError(e).message, requestParameters.url, new Blob());
-	}
-	if (!response.ok) {
-		const body = await response.blob();
-		throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
-	}
-	let parsePromise;
-	if (requestParameters.type === "arrayBuffer" || requestParameters.type === "image") parsePromise = response.arrayBuffer();
-	else if (requestParameters.type === "json") parsePromise = response.json();
-	else parsePromise = response.text();
-	const result = await parsePromise;
-	throwIfAborted(abortController.signal);
-	return {
-		data: result,
-		cacheControl: response.headers.get("Cache-Control"),
-		expires: response.headers.get("Expires"),
-		etag: response.headers.get("ETag")
-	};
-}
-function makeXMLHttpRequest(requestParameters, abortController) {
-	return new Promise((resolve, reject) => {
-		const xhr = new XMLHttpRequest();
-		xhr.open(requestParameters.method || "GET", requestParameters.url, true);
-		if (requestParameters.type === "arrayBuffer" || requestParameters.type === "image") xhr.responseType = "arraybuffer";
-		for (const k in requestParameters.headers) xhr.setRequestHeader(k, requestParameters.headers[k]);
-		if (requestParameters.type === "json") {
-			xhr.responseType = "text";
-			if (!requestParameters.headers?.Accept) xhr.setRequestHeader("Accept", "application/json");
+function emitValidationErrors(emitter, errors) {
+	let hasErrors = false;
+	for (const error of errors) {
+		if (error.severity === "warning") {
+			warnOnce(error.message);
+			continue;
 		}
-		xhr.withCredentials = requestParameters.credentials === "include";
-		xhr.onerror = () => {
-			reject(new Error(xhr.statusText));
-		};
-		xhr.onload = () => {
-			if (abortController.signal.aborted) return;
-			if ((xhr.status >= 200 && xhr.status < 300 || xhr.status === 0) && xhr.response !== null) {
-				let data = xhr.response;
-				if (requestParameters.type === "json") try {
-					data = JSON.parse(xhr.response);
-				} catch (err) {
-					reject(err);
-					return;
-				}
-				resolve({
-					data,
-					cacheControl: xhr.getResponseHeader("Cache-Control"),
-					expires: xhr.getResponseHeader("Expires"),
-					etag: xhr.getResponseHeader("ETag")
-				});
-			} else {
-				const body = new Blob([xhr.response], { type: xhr.getResponseHeader("Content-Type") });
-				reject(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
+		emitter.fire(new ErrorEvent(new Error(error.message)));
+		hasErrors = true;
+	}
+	return hasErrors;
+}
+/**
+* Runs a validator over a value and emits whatever it finds.
+*
+* @param emitter - the object to fire {@link ErrorEvent}s on
+* @param validator - the validator to run, e.g. {@link validateFilter}
+* @param params - what to validate: the `value`, plus whatever context the validator needs, such as
+* the `key` locating it in the style, or the surrounding `style` that {@link validateStyle.layer} looks at
+* @param options - setter options; validation is skipped entirely when `validate` is `false`
+* @returns whether validation failed, i.e. whether the caller should give up on the value
+*/
+function validateAndEmit(emitter, validator, params, options) {
+	if (options?.validate === false) return false;
+	return emitValidationErrors(emitter, validator({
+		styleSpec: latest,
+		...params
+	}));
+}
+//#endregion
+//#region src/util/transferable_grid_index.ts
+const NUM_PARAMS = 3;
+var TransferableGridIndex = class TransferableGridIndex {
+	constructor(extent, n, padding) {
+		const cells = this.cells = [];
+		if (extent instanceof ArrayBuffer) {
+			this.arrayBuffer = extent;
+			const array = new Int32Array(this.arrayBuffer);
+			extent = array[0];
+			n = array[1];
+			padding = array[2];
+			this.d = n + 2 * padding;
+			for (let k = 0; k < this.d * this.d; k++) {
+				const start = array[NUM_PARAMS + k];
+				const end = array[NUM_PARAMS + k + 1];
+				cells.push(start === end ? null : array.subarray(start, end));
 			}
-		};
-		abortController.signal.addEventListener("abort", () => {
-			xhr.abort();
-			reject(new AbortError(abortController.signal.reason));
-		});
-		xhr.send(requestParameters.body);
-	});
-}
-/**
-* We're trying to use the Fetch API if possible. However, requests for resources with the file:// URI scheme don't work with the Fetch API.
-* In this case we unconditionally use XHR on the current thread since referrers don't matter.
-* This method can also use the registered method if `addProtocol` was called.
-* @param requestParameters - The request parameters
-* @param abortController - The abort controller allowing to cancel the request
-* @returns a promise resolving to the response, including cache control and expiry data
-*/
-const makeRequest = async function(requestParameters, abortController) {
-	if (requestParameters.url.includes("://") && !/^https?:|^file:/.test(requestParameters.url)) {
-		const protocolLoadFn = getProtocol(requestParameters.url);
-		if (protocolLoadFn) {
-			const response = await protocolLoadFn(requestParameters, abortController);
-			if (!response.data && requestParameters.type === "arrayBuffer") return extend(response, { data: /* @__PURE__ */ new ArrayBuffer(0) });
-			return response;
+			const keysOffset = array[NUM_PARAMS + cells.length];
+			const bboxesOffset = array[NUM_PARAMS + cells.length + 1];
+			this.keys = array.subarray(keysOffset, bboxesOffset);
+			this.bboxes = array.subarray(bboxesOffset);
+			this.insert = this._insertReadonly;
+		} else {
+			this.d = n + 2 * padding;
+			for (let i = 0; i < this.d * this.d; i++) cells.push([]);
+			this.keys = [];
+			this.bboxes = [];
 		}
-		if (isWorker(self) && self.worker?.actor) return self.worker.actor.sendAsync({
-			type: "GR",
-			data: requestParameters,
-			targetMapId: GLOBAL_DISPATCHER_ID
-		}, abortController);
+		this.n = n;
+		this.extent = extent;
+		this.padding = padding;
+		this.scale = n / extent;
+		this.uid = 0;
+		const p = padding / n * extent;
+		this.min = -p;
+		this.max = extent + p;
 	}
-	if (!isFileURL(requestParameters.url)) {
-		if (fetch && Request && AbortController && Object.hasOwn(Request.prototype, "signal")) return makeFetchRequest(requestParameters, abortController);
-		if (isWorker(self) && self.worker?.actor) return self.worker.actor.sendAsync({
-			type: "GR",
-			data: requestParameters,
-			mustQueue: true,
-			targetMapId: GLOBAL_DISPATCHER_ID
-		}, abortController);
+	insert(key, x1, y1, x2, y2) {
+		this._forEachCell(x1, y1, x2, y2, this._insertCell, this.uid++, void 0, void 0);
+		this.keys.push(key);
+		this.bboxes.push(x1);
+		this.bboxes.push(y1);
+		this.bboxes.push(x2);
+		this.bboxes.push(y2);
 	}
-	return makeXMLHttpRequest(requestParameters, abortController);
-};
-const getJSON = (requestParameters, abortController) => {
-	return makeRequest(extend(requestParameters, { type: "json" }), abortController);
-};
-const getArrayBuffer = (requestParameters, abortController) => {
-	return makeRequest(extend(requestParameters, { type: "arrayBuffer" }), abortController);
-};
-/** 
-* Determines whether a URL is same origin as the current location. Supports relative URLs too.
-* 
-* A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
-* try-catch is expansive so just use a heuristic check to avoid it
-* 
-* - Relative URL and empty URL are always same origin.
-* - data URL containing an image is always same origin.
-* - blob URL is checked using `URL` constructor by its parent URL; opaque blob URL is never same origin.
-* - Absolute URL is checked using `URL` constructor.
-* 
-* Checks blob URL before relative URL because opaque blob URL does not contain `://` too.
-* 
-* @param inComingUrl - The URL to check
-* @returns `true` if the URL is same origin as current location, `false` otherwise
-*/
-function sameOrigin(inComingUrl) {
-	if (!inComingUrl) return true;
-	if (inComingUrl.startsWith("data:image/")) return true;
-	if (inComingUrl.startsWith("blob:")) {
-		inComingUrl = inComingUrl.slice(5);
-		if (inComingUrl.startsWith("null")) return false;
+	_insertReadonly() {
+		throw new Error("Cannot insert into a GridIndex created from an ArrayBuffer.");
 	}
-	if (inComingUrl.indexOf("://") <= 0) return true;
-	const urlObj = new URL(inComingUrl);
-	const locationObj = window.location;
-	return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
-}
-const getVideo = (urls) => {
-	const video = window.document.createElement("video");
-	video.muted = true;
-	return new Promise((resolve) => {
-		video.onloadstart = () => {
-			resolve(video);
-		};
-		for (const url of urls) {
-			const s = window.document.createElement("source");
-			if (!sameOrigin(url)) video.crossOrigin = "Anonymous";
-			s.src = url;
-			video.appendChild(s);
+	_insertCell(x1, y1, x2, y2, cellIndex, uid) {
+		this.cells[cellIndex].push(uid);
+	}
+	query(x1, y1, x2, y2, intersectionTest) {
+		const min = this.min;
+		const max = this.max;
+		if (x1 <= min && y1 <= min && max <= x2 && max <= y2 && !intersectionTest) return [...this.keys];
+		else {
+			const result = [];
+			this._forEachCell(x1, y1, x2, y2, this._queryCell, result, {}, intersectionTest);
+			return result;
 		}
-	});
+	}
+	_queryCell(x1, y1, x2, y2, cellIndex, result, seenUids, intersectionTest) {
+		const cell = this.cells[cellIndex];
+		if (cell !== null) {
+			const keys = this.keys;
+			const bboxes = this.bboxes;
+			for (const uid of cell) if (seenUids[uid] === void 0) {
+				const offset = uid * 4;
+				if (intersectionTest ? intersectionTest(bboxes[offset + 0], bboxes[offset + 1], bboxes[offset + 2], bboxes[offset + 3]) : x1 <= bboxes[offset + 2] && y1 <= bboxes[offset + 3] && x2 >= bboxes[offset + 0] && y2 >= bboxes[offset + 1]) {
+					seenUids[uid] = true;
+					result.push(keys[uid]);
+				} else seenUids[uid] = false;
+			}
+		}
+	}
+	_forEachCell(x1, y1, x2, y2, fn, arg1, arg2, intersectionTest) {
+		const cx1 = this._convertToCellCoord(x1);
+		const cy1 = this._convertToCellCoord(y1);
+		const cx2 = this._convertToCellCoord(x2);
+		const cy2 = this._convertToCellCoord(y2);
+		for (let x = cx1; x <= cx2; x++) for (let y = cy1; y <= cy2; y++) {
+			const cellIndex = this.d * y + x;
+			if (intersectionTest && !intersectionTest(this._convertFromCellCoord(x), this._convertFromCellCoord(y), this._convertFromCellCoord(x + 1), this._convertFromCellCoord(y + 1))) continue;
+			if (fn.call(this, x1, y1, x2, y2, cellIndex, arg1, arg2, intersectionTest)) return;
+		}
+	}
+	_convertFromCellCoord(x) {
+		return (x - this.padding) / this.scale;
+	}
+	_convertToCellCoord(x) {
+		return Math.max(0, Math.min(this.d - 1, Math.floor(x * this.scale) + this.padding));
+	}
+	toArrayBuffer() {
+		if (this.arrayBuffer) return this.arrayBuffer;
+		const cells = this.cells;
+		const metadataLength = NUM_PARAMS + this.cells.length + 1 + 1;
+		let totalCellLength = 0;
+		for (const cell of this.cells) totalCellLength += cell.length;
+		const array = new Int32Array(metadataLength + totalCellLength + this.keys.length + this.bboxes.length);
+		array[0] = this.extent;
+		array[1] = this.n;
+		array[2] = this.padding;
+		let offset = metadataLength;
+		for (let k = 0; k < cells.length; k++) {
+			const cell = cells[k];
+			array[NUM_PARAMS + k] = offset;
+			array.set(cell, offset);
+			offset += cell.length;
+		}
+		array[NUM_PARAMS + cells.length] = offset;
+		array.set(this.keys, offset);
+		offset += this.keys.length;
+		array[NUM_PARAMS + cells.length + 1] = offset;
+		array.set(this.bboxes, offset);
+		offset += this.bboxes.length;
+		return array.buffer;
+	}
+	static serialize(grid, transferables) {
+		const buffer = grid.toArrayBuffer();
+		if (transferables) transferables.push(buffer);
+		return { buffer };
+	}
+	static deserialize(serialized) {
+		return new TransferableGridIndex(serialized.buffer);
+	}
 };
 //#endregion
 //#region src/util/web_worker_transfer.ts
@@ -12921,1693 +13613,6 @@ function deserialize$1(input) {
 		result[key] = registry[classRegistryKey].shallow.includes(key) ? value : deserialize$1(value);
 	}
 	return result;
-}
-//#endregion
-//#region src/util/world_bounds.ts
-/**
-* Returns true if a given tile zoom (Z), X, and Y are in the bounds of the world.
-* Zoom bounds are the minimum zoom (inclusive) through the maximum zoom (inclusive).
-* X and Y bounds are 0 (inclusive) to their respective zoom-dependent maxima (exclusive).
-*
-* @param zoom - the tile zoom (Z)
-* @param x - the tile X
-* @param y - the tile Y
-* @returns `true` if a given tile zoom, X, and Y are in the bounds of the world.
-*/
-function isInBoundsForTileZoomXY(zoom, x, y) {
-	return !(zoom < 0 || zoom > 25 || y < 0 || y >= Math.pow(2, zoom) || x < 0 || x >= Math.pow(2, zoom));
-}
-/**
-* Returns true if a given zoom and `LngLat` are in the bounds of the world.
-* Does not wrap `LngLat` when checking if in bounds.
-* Zoom bounds are the minimum zoom (inclusive) through the maximum zoom (inclusive).
-* `LngLat` bounds are the mercator world's north-west corner (inclusive) to its south-east corner (exclusive).
-*
-* @param zoom - the tile zoom (Z)
-* @param LngLat - the `LngLat` object containing the longitude and latitude
-* @returns `true` if a given zoom and `LngLat` are in the bounds of the world.
-*/
-function isInBoundsForZoomLngLat(zoom, lnglat) {
-	const { x, y } = MercatorCoordinate.fromLngLat(lnglat);
-	return !(zoom < 0 || zoom > 25 || y < 0 || y >= 1 || x < 0 || x >= 1);
-}
-//#endregion
-//#region src/tile/tile_id.ts
-/**
-* A canonical way to define a tile ID
-*/
-var CanonicalTileID = class {
-	constructor(z, x, y) {
-		if (!isInBoundsForTileZoomXY(z, x, y)) throw new Error(`x=${x}, y=${y}, z=${z} outside of bounds. 0<=x<${Math.pow(2, z)}, 0<=y<${Math.pow(2, z)} 0<=z<=25 `);
-		this.z = z;
-		this.x = x;
-		this.y = y;
-		this.key = calculateTileKey(0, z, z, x, y);
-	}
-	equals(id) {
-		return this.z === id.z && this.x === id.x && this.y === id.y;
-	}
-	/**
-	* given a list of urls, choose a url template and return a tile URL
-	*/
-	url(urls, pixelRatio, scheme) {
-		const bbox = getTileBBox(this.x, this.y, this.z);
-		const quadkey = getQuadkey(this.z, this.x, this.y);
-		return urls[(this.x + this.y) % urls.length].replace(/{prefix}/g, (this.x % 16).toString(16) + (this.y % 16).toString(16)).replace(/{z}/g, String(this.z)).replace(/{x}/g, String(this.x)).replace(/{y}/g, String(scheme === "tms" ? Math.pow(2, this.z) - this.y - 1 : this.y)).replace(/{ratio}/g, pixelRatio > 1 ? "@2x" : "").replace(/{quadkey}/g, quadkey).replace(/{bbox-epsg-3857}/g, bbox);
-	}
-	isChildOf(parent) {
-		const dz = this.z - parent.z;
-		return dz > 0 && parent.x === this.x >> dz && parent.y === this.y >> dz;
-	}
-	getTilePoint(coord) {
-		const tilesAtZoom = Math.pow(2, this.z);
-		return new Point((coord.x * tilesAtZoom - this.x) * EXTENT, (coord.y * tilesAtZoom - this.y) * EXTENT);
-	}
-	toString() {
-		return `${this.z}/${this.x}/${this.y}`;
-	}
-};
-/**
-* @internal
-* An unwrapped tile identifier
-*/
-var UnwrappedTileID = class {
-	constructor(wrap, canonical) {
-		this.wrap = wrap;
-		this.canonical = canonical;
-		this.key = calculateTileKey(wrap, canonical.z, canonical.z, canonical.x, canonical.y);
-	}
-};
-/**
-* An overscaled tile identifier
-*/
-var OverscaledTileID = class OverscaledTileID {
-	constructor(overscaledZ, wrap, z, x, y) {
-		this.terrainRttPosMatrix32f = null;
-		if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
-		this.overscaledZ = overscaledZ;
-		this.wrap = wrap;
-		this.canonical = new CanonicalTileID(z, +x, +y);
-		this.key = calculateTileKey(wrap, overscaledZ, z, x, y);
-	}
-	clone() {
-		return new OverscaledTileID(this.overscaledZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
-	}
-	equals(id) {
-		return this.overscaledZ === id.overscaledZ && this.wrap === id.wrap && this.canonical.equals(id.canonical);
-	}
-	/**
-	* Returns a new `OverscaledTileID` representing the tile at the target zoom level.
-	* When targetZ is greater than the current canonical z, the canonical coordinates are unchanged.
-	* When targetZ is less than the current canonical z, the canonical coordinates are updated.
-	* @param targetZ - the zoom level to scale to. Must be less than or equal to this.overscaledZ
-	* @returns a new OverscaledTileID representing the tile at the target zoom level
-	* @throws if targetZ is greater than this.overscaledZ
-	*/
-	scaledTo(targetZ) {
-		if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
-		const zDifference = this.canonical.z - targetZ;
-		if (targetZ > this.canonical.z) return new OverscaledTileID(targetZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
-		else return new OverscaledTileID(targetZ, this.wrap, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
-	}
-	isOverscaled() {
-		return this.overscaledZ > this.canonical.z;
-	}
-	calculateScaledKey(targetZ, withWrap) {
-		if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
-		const zDifference = this.canonical.z - targetZ;
-		if (targetZ > this.canonical.z) return calculateTileKey(this.wrap * +withWrap, targetZ, this.canonical.z, this.canonical.x, this.canonical.y);
-		else return calculateTileKey(this.wrap * +withWrap, targetZ, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
-	}
-	isChildOf(parent) {
-		if (parent.wrap !== this.wrap) return false;
-		if (this.overscaledZ - parent.overscaledZ <= 0) return false;
-		if (parent.overscaledZ === 0) return this.overscaledZ > 0;
-		const dz = this.canonical.z - parent.canonical.z;
-		if (dz < 0) return false;
-		return parent.canonical.x === this.canonical.x >> dz && parent.canonical.y === this.canonical.y >> dz;
-	}
-	children(sourceMaxZoom) {
-		if (this.overscaledZ >= sourceMaxZoom) return [new OverscaledTileID(this.overscaledZ + 1, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y)];
-		const z = this.canonical.z + 1;
-		const x = this.canonical.x * 2;
-		const y = this.canonical.y * 2;
-		return [
-			new OverscaledTileID(z, this.wrap, z, x, y),
-			new OverscaledTileID(z, this.wrap, z, x + 1, y),
-			new OverscaledTileID(z, this.wrap, z, x, y + 1),
-			new OverscaledTileID(z, this.wrap, z, x + 1, y + 1)
-		];
-	}
-	isLessThan(rhs) {
-		if (this.wrap < rhs.wrap) return true;
-		if (this.wrap > rhs.wrap) return false;
-		if (this.overscaledZ < rhs.overscaledZ) return true;
-		if (this.overscaledZ > rhs.overscaledZ) return false;
-		if (this.canonical.x < rhs.canonical.x) return true;
-		if (this.canonical.x > rhs.canonical.x) return false;
-		return this.canonical.y < rhs.canonical.y;
-	}
-	wrapped() {
-		return new OverscaledTileID(this.overscaledZ, 0, this.canonical.z, this.canonical.x, this.canonical.y);
-	}
-	unwrapTo(wrap) {
-		return new OverscaledTileID(this.overscaledZ, wrap, this.canonical.z, this.canonical.x, this.canonical.y);
-	}
-	overscaleFactor() {
-		return Math.pow(2, this.overscaledZ - this.canonical.z);
-	}
-	toUnwrapped() {
-		return new UnwrappedTileID(this.wrap, this.canonical);
-	}
-	toString() {
-		return `${this.overscaledZ}/${this.canonical.x}/${this.canonical.y}`;
-	}
-	getTilePoint(coord) {
-		return this.canonical.getTilePoint(new MercatorCoordinate(coord.x - this.wrap, coord.y));
-	}
-	/**
-	* Maps tile-local coordinates that may fall outside the `[0, extent)` range
-	* to the correct neighbor tile and the corresponding in-tile position.
-	*
-	* Coordinates can exceed tile bounds when geometry (e.g. symbol labels along
-	* lines) extends across tile edges. This method resolves such coordinates to
-	* the appropriate adjacent tile, wrapping horizontally across world boundaries
-	* and returning `null` when the target falls beyond the polar tile-grid limits.
-	*
-	* When the coordinates are already in bounds, the original tile ID is returned.
-	*
-	* @param x - x coordinate relative to this tile, may be outside `[0, extent)`
-	* @param y - y coordinate relative to this tile, may be outside `[0, extent)`
-	* @param extent - tile coordinate extent, default {@link EXTENT}
-	* @returns the resolved tile ID and in-tile coordinates, or `null` if the
-	*          target is beyond the tile grid (e.g. past the poles)
-	*/
-	normalizeCoordinates(x, y, extent = EXTENT) {
-		if (x >= 0 && x < extent && y >= 0 && y < extent) return {
-			tileID: this,
-			x,
-			y
-		};
-		const tileOffsetX = Math.floor(x / extent);
-		const tileOffsetY = Math.floor(y / extent);
-		const newX = x - tileOffsetX * extent;
-		const newY = y - tileOffsetY * extent;
-		const z = this.canonical.z;
-		const dim = 1 << z;
-		const newCanonicalY = this.canonical.y + tileOffsetY;
-		if (newCanonicalY < 0 || newCanonicalY >= dim) return null;
-		let newCanonicalX = this.canonical.x + tileOffsetX;
-		let newWrap = this.wrap;
-		if (newCanonicalX < 0) {
-			newWrap -= Math.ceil(-newCanonicalX / dim);
-			newCanonicalX = (newCanonicalX % dim + dim) % dim;
-		} else if (newCanonicalX >= dim) {
-			newWrap += Math.floor(newCanonicalX / dim);
-			newCanonicalX = newCanonicalX % dim;
-		}
-		return {
-			tileID: new OverscaledTileID(this.overscaledZ, newWrap, z, newCanonicalX, newCanonicalY),
-			x: newX,
-			y: newY
-		};
-	}
-};
-function calculateTileKey(wrap, overscaledZ, z, x, y) {
-	wrap *= 2;
-	if (wrap < 0) wrap = wrap * -1 - 1;
-	const dim = 1 << z;
-	return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
-}
-const EPSG3857_HALF_CIRCUMFERENCE = Math.PI * 6378137;
-/**
-* Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
-* box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
-*
-* Inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
-*/
-function getTileBBox(x, y, z) {
-	y = Math.pow(2, z) - y - 1;
-	const min = getEpsg3857Coords(x * 256, y * 256, z);
-	const max = getEpsg3857Coords((x + 1) * 256, (y + 1) * 256, z);
-	return `${min[0]},${min[1]},${max[0]},${max[1]}`;
-}
-/** Projects tile pixel coordinates to EPSG:3857 meters. */
-function getEpsg3857Coords(x, y, z) {
-	const resolution = 2 * EPSG3857_HALF_CIRCUMFERENCE / 256 / Math.pow(2, z);
-	return [x * resolution - EPSG3857_HALF_CIRCUMFERENCE, y * resolution - EPSG3857_HALF_CIRCUMFERENCE];
-}
-function getQuadkey(z, x, y) {
-	let quadkey = "";
-	for (let i = z; i > 0; i--) {
-		const mask = 1 << i - 1;
-		quadkey += (x & mask ? 1 : 0) + (y & mask ? 2 : 0);
-	}
-	return quadkey;
-}
-function compareTileId(a, b) {
-	const aWrap = Math.abs(a.wrap * 2) - +(a.wrap < 0);
-	const bWrap = Math.abs(b.wrap * 2) - +(b.wrap < 0);
-	return a.overscaledZ - b.overscaledZ || bWrap - aWrap || b.canonical.y - a.canonical.y || b.canonical.x - a.canonical.x;
-}
-register$1("CanonicalTileID", CanonicalTileID);
-register$1("OverscaledTileID", OverscaledTileID, { omit: ["terrainRttPosMatrix32f"] });
-//#endregion
-//#region test/bench/lib/locations_with_tile_id.ts
-function locationsWithTileID(locations) {
-	return locations.map((feature) => {
-		const { coordinates } = feature.geometry;
-		const { zoom } = feature.properties;
-		const { x, y } = MercatorCoordinate.fromLngLat({
-			lng: coordinates[0],
-			lat: coordinates[1]
-		});
-		const scale = Math.pow(2, zoom);
-		const tileX = Math.floor(x * scale);
-		const tileY = Math.floor(y * scale);
-		return {
-			description: feature.properties["place_name"],
-			tileID: [new OverscaledTileID(zoom, 0, zoom, tileX, tileY)],
-			zoom,
-			center: coordinates
-		};
-	});
-}
-//#endregion
-//#region test/bench/data/style-benchmark-locations.json
-var features = [
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-95.392, 29.799]
-		},
-		"properties": {
-			"place_name": "Roads, Houston, z12",
-			"zoom": 12,
-			"tags": ["road"]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-95.381, 29.749]
-		},
-		"properties": {
-			"place_name": "Roads, Houston, z13",
-			"zoom": 13,
-			"tags": [
-				"road",
-				"poi_label",
-				"landuse"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-73.985, 40.758]
-		},
-		"properties": {
-			"place_name": "High zoom labels, buildings, roads, New York City, z16",
-			"zoom": 16,
-			"tags": [
-				"poi_label",
-				"building",
-				"road"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-73.985, 40.758]
-		},
-		"properties": {
-			"place_name": "High zoom labels, buildings, roads, New York City, z17, overzoomed",
-			"zoom": 17,
-			"tags": [
-				"poi_label",
-				"road",
-				"building"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [139.76, 35.695]
-		},
-		"properties": {
-			"place_name": "High zoom cjk labels, when using local lang, buildings, roads, Tokyo, z16",
-			"zoom": 16,
-			"tags": [
-				"poi_label",
-				"building",
-				"road"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [139.76, 35.695]
-		},
-		"properties": {
-			"place_name": "High zoom cjk labels, when using local lang, buildings, roads, Tokyo, z17, overzoomed",
-			"zoom": 17,
-			"tags": [
-				"poi_label",
-				"road",
-				"building"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [27.602, 61.521]
-		},
-		"properties": {
-			"place_name": "Water, Finland, z10",
-			"zoom": 10,
-			"tags": ["water"]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [2.21, 48.745]
-		},
-		"properties": {
-			"place_name": "Landuse and roads, Paris, z11",
-			"zoom": 11,
-			"tags": [
-				"place_label:settlement",
-				"road",
-				"landuse",
-				"poi_label",
-				"hillshade"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-118.314, 33.996]
-		},
-		"properties": {
-			"place_name": "Buildings, LA, z16",
-			"zoom": 16,
-			"tags": ["building", "road"]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [2.316, 48.867]
-		},
-		"properties": {
-			"place_name": "High zoom roads, paths, landuse, labels, Paris, 15",
-			"zoom": 15,
-			"tags": [
-				"road",
-				"road:pedestrian",
-				"poi_label",
-				"landuse",
-				"transit_stop_label"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [2.316, 48.867]
-		},
-		"properties": {
-			"place_name": "High zoom pedestrian polygon fills, roads, paths, landuse, labels, Paris, z16",
-			"zoom": 16,
-			"tags": [
-				"landuse",
-				"road",
-				"road:pedestrian",
-				"poi_label",
-				"road:path"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [8.835, 46.317]
-		},
-		"properties": {
-			"place_name": "Hillshading, Switzerland, z9",
-			"zoom": 9,
-			"tags": ["hillshade", "place_label"]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [8.835, 46.317]
-		},
-		"properties": {
-			"place_name": "Hillshading and contours, Switzerland, z12",
-			"zoom": 12,
-			"tags": ["hillshade"]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [8.416, 51.056]
-		},
-		"properties": {
-			"place_name": "Landcover, Germany z6",
-			"zoom": 6,
-			"tags": [
-				"landcover",
-				"place_label:settlement",
-				"road",
-				"admin"
-			]
-		}
-	},
-	{
-		"type": "Feature",
-		"geometry": {
-			"type": "Point",
-			"coordinates": [7.762, 50.322]
-		},
-		"properties": {
-			"place_name": "Landcover, Germany z8",
-			"zoom": 8,
-			"tags": [
-				"place_label:settlement",
-				"road",
-				"hillshade"
-			]
-		}
-	}
-];
-//#endregion
-//#region test/bench/lib/benchmark.ts
-const minTimeForMeasurement = 20;
-var Benchmark = class {
-	constructor() {
-		this.minimumMeasurements = 210;
-	}
-	/**
-	* The `setup` method is intended to be overridden by subclasses. It will be called once, prior to
-	* running any benchmark iterations, and may set state on `this` which the benchmark later accesses.
-	* If the setup involves an asynchronous step, `setup` may return a promise.
-	*/
-	setup() {}
-	/**
-	* The `bench` method is intended to be overridden by subclasses. It should contain the code to be
-	* benchmarked. It may access state on `this` set by the `setup` function (but should not modify this
-	* state). It will be called multiple times, the total number to be determined by the harness. If
-	* the benchmark involves an asynchronous step, `bench` may return a promise.
-	*/
-	bench() {}
-	/**
-	* The `teardown` method is intended to be overridden by subclasses. It will be called once, after
-	* running all benchmark iterations, and may perform any necessary cleanup. If cleaning up involves
-	* an asynchronous step, `teardown` may return a promise.
-	*/
-	teardown() {}
-	/**
-	* Run the benchmark by executing `setup` once, sampling the execution time of `bench` some number of
-	* times, and then executing `teardown`. Yields an array of execution times.
-	*/
-	async run() {
-		try {
-			await this.setup();
-			return this._begin();
-		} catch (e) {
-			console.error(e);
-		}
-	}
-	_done() {
-		return this._elapsed >= 500 && this._measurements.length > this.minimumMeasurements;
-	}
-	_begin() {
-		this._measurements = [];
-		this._elapsed = 0;
-		this._iterationsPerMeasurement = 1;
-		this._start = performance.now();
-		const bench = this.bench();
-		if (bench instanceof Promise) return bench.then(() => this._measureAsync());
-		else return this._measureSync();
-	}
-	_measureSync() {
-		while (true) {
-			const time = performance.now() - this._start;
-			this._elapsed += time;
-			if (time < minTimeForMeasurement) {
-				this._iterationsPerMeasurement++;
-				this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
-			} else this._measurements.push({
-				time,
-				iterations: this._iterationsPerMeasurement
-			});
-			if (this._done()) return this._end();
-			this._start = performance.now();
-			for (let i = this._iterationsPerMeasurement; i > 0; --i) this.bench();
-		}
-	}
-	async _measureAsync() {
-		while (true) {
-			const time = performance.now() - this._start;
-			this._elapsed += time;
-			if (time < minTimeForMeasurement) {
-				this._iterationsPerMeasurement++;
-				this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
-			} else this._measurements.push({
-				time,
-				iterations: this._iterationsPerMeasurement
-			});
-			if (this._done()) return this._end();
-			this._start = performance.now();
-			for (let i = this._iterationsPerMeasurement; i > 0; --i) await this.bench();
-		}
-	}
-	async _end() {
-		await this.teardown();
-		return this._measurements;
-	}
-	static renderMap(map, paintStartTimeStamp) {
-		map._render(paintStartTimeStamp);
-		const gl = map.painter.context.gl;
-		gl.finish();
-		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, /* @__PURE__ */ new Uint8Array(4));
-	}
-};
-//#endregion
-//#region test/bench/lib/fetch_style.ts
-function fetchStyle(value) {
-	return typeof value === "string" ? fetch(value).then((response) => response.json()) : Promise.resolve(value);
-}
-//#endregion
-//#region node_modules/pbf/index.js
-const SHIFT_LEFT_32 = 4294967296;
-const TEXT_DECODER_MIN_LENGTH$1 = 12;
-const utf8TextDecoder$1 = typeof TextDecoder === "undefined" ? null : new TextDecoder("utf-8");
-const PBF_VARINT = 0;
-const PBF_FIXED64 = 1;
-const PBF_BYTES = 2;
-const PBF_FIXED32 = 5;
-var PbfReader = class {
-	/**
-	* @param {Uint8Array | ArrayBuffer} buf
-	*/
-	constructor(buf) {
-		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
-		this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
-		this.pos = 0;
-		this.type = 0;
-		this._valueStart = -1;
-		this.length = this.buf.length;
-	}
-	/**
-	* @template T
-	* @param {(tag: number, result: T, pbf: PbfReader) => void} readField
-	* @param {T} result
-	* @param {number} [end]
-	*/
-	readFields(readField, result, end = this.length) {
-		let field;
-		while (field = this.nextField(end)) readField(field, result, this);
-		return result;
-	}
-	/**
-	* @template T
-	* @param {(tag: number, result: T, pbf: PbfReader) => void} readField
-	* @param {T} result
-	*/
-	readMessage(readField, result) {
-		return this.readFields(readField, result, this.readVarint() + this.pos);
-	}
-	readFixed32() {
-		const val = this.dataView.getUint32(this.pos, true);
-		this.pos += 4;
-		return val;
-	}
-	readSFixed32() {
-		const val = this.dataView.getInt32(this.pos, true);
-		this.pos += 4;
-		return val;
-	}
-	readFixed64() {
-		const val = this.dataView.getUint32(this.pos, true) + this.dataView.getUint32(this.pos + 4, true) * SHIFT_LEFT_32;
-		this.pos += 8;
-		return val;
-	}
-	readSFixed64() {
-		const val = this.dataView.getUint32(this.pos, true) + this.dataView.getInt32(this.pos + 4, true) * SHIFT_LEFT_32;
-		this.pos += 8;
-		return val;
-	}
-	readFloat() {
-		const val = this.dataView.getFloat32(this.pos, true);
-		this.pos += 4;
-		return val;
-	}
-	readDouble() {
-		const val = this.dataView.getFloat64(this.pos, true);
-		this.pos += 8;
-		return val;
-	}
-	/**
-	* @param {boolean} [isSigned]
-	*/
-	readVarint(isSigned) {
-		const buf = this.buf;
-		const b0 = buf[this.pos++];
-		if (b0 < 128) return b0;
-		let val = b0 & 127, b;
-		b = buf[this.pos++];
-		val |= (b & 127) << 7;
-		if (b < 128) return val;
-		b = buf[this.pos++];
-		val |= (b & 127) << 14;
-		if (b < 128) return val;
-		b = buf[this.pos++];
-		val |= (b & 127) << 21;
-		if (b < 128) return val;
-		b = buf[this.pos];
-		val |= (b & 15) << 28;
-		return readVarintRemainder(val, isSigned, this);
-	}
-	readSVarint() {
-		const num = this.readVarint();
-		return num % 2 === 1 ? (num + 1) / -2 : num / 2;
-	}
-	readBoolean() {
-		return Boolean(this.readVarint());
-	}
-	readString() {
-		const end = this.readVarint() + this.pos;
-		const pos = this.pos;
-		this.pos = end;
-		if (end - pos >= TEXT_DECODER_MIN_LENGTH$1 && utf8TextDecoder$1) return utf8TextDecoder$1.decode(this.buf.subarray(pos, end));
-		return readUtf8$1(this.buf, pos, end);
-	}
-	readBytes() {
-		const end = this.readVarint() + this.pos, buffer = this.buf.subarray(this.pos, end);
-		this.pos = end;
-		return buffer;
-	}
-	/**
-	* @param {number[]} [arr]
-	* @param {boolean} [isSigned]
-	*/
-	readPackedVarint(arr = [], isSigned) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readVarint(isSigned));
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedSVarint(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readSVarint());
-		return arr;
-	}
-	/** @param {boolean[]} [arr] */
-	readPackedBoolean(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readBoolean());
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedFloat(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readFloat());
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedDouble(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readDouble());
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedFixed32(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readFixed32());
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedSFixed32(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readSFixed32());
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedFixed64(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readFixed64());
-		return arr;
-	}
-	/** @param {number[]} [arr] */
-	readPackedSFixed64(arr = []) {
-		const end = this.readPackedEnd();
-		while (this.pos < end) arr.push(this.readSFixed64());
-		return arr;
-	}
-	readPackedEnd() {
-		return this.type === PBF_BYTES ? this.readVarint() + this.pos : this.pos + 1;
-	}
-	/**
-	* Advance to the next field. Returns the field number, or 0 at end-of-message.
-	* @param {number} [end]
-	*/
-	nextField(end = this.length) {
-		if (this.pos === this._valueStart) this.skip(this.type);
-		if (this.pos >= end) return 0;
-		const tag = this.readVarint();
-		this.type = tag & 7;
-		this._valueStart = this.pos;
-		return tag >>> 3;
-	}
-	/** @param {number} val */
-	skip(val) {
-		const type = val & 7;
-		if (type === PBF_VARINT) while (this.buf[this.pos++] > 127);
-		else if (type === PBF_BYTES) this.pos = this.readVarint() + this.pos;
-		else if (type === PBF_FIXED32) this.pos += 4;
-		else if (type === PBF_FIXED64) this.pos += 8;
-		else throw new Error(`Unimplemented type: ${type}`);
-	}
-};
-/**
-* @param {number} l
-* @param {boolean | undefined} s
-* @param {PbfReader} p
-*/
-function readVarintRemainder(l, s, p) {
-	const buf = p.buf;
-	let h, b;
-	b = buf[p.pos++];
-	h = (b & 112) >> 4;
-	if (b < 128) return toNum(l, h, s);
-	b = buf[p.pos++];
-	h |= (b & 127) << 3;
-	if (b < 128) return toNum(l, h, s);
-	b = buf[p.pos++];
-	h |= (b & 127) << 10;
-	if (b < 128) return toNum(l, h, s);
-	b = buf[p.pos++];
-	h |= (b & 127) << 17;
-	if (b < 128) return toNum(l, h, s);
-	b = buf[p.pos++];
-	h |= (b & 127) << 24;
-	if (b < 128) return toNum(l, h, s);
-	b = buf[p.pos++];
-	h |= (b & 1) << 31;
-	if (b < 128) return toNum(l, h, s);
-	throw new Error("Expected varint not more than 10 bytes");
-}
-/**
-* @param {number} low
-* @param {number} high
-* @param {boolean} [isSigned]
-*/
-function toNum(low, high, isSigned) {
-	return isSigned ? high * 4294967296 + (low >>> 0) : (high >>> 0) * 4294967296 + (low >>> 0);
-}
-/**
-* @param {Uint8Array} buf
-* @param {number} pos
-* @param {number} end
-*/
-function readUtf8$1(buf, pos, end) {
-	let str = "";
-	let i = pos;
-	while (i < end) {
-		const b0 = buf[i];
-		let c = null;
-		let bytesPerSequence = b0 > 239 ? 4 : b0 > 223 ? 3 : b0 > 191 ? 2 : 1;
-		if (i + bytesPerSequence > end) break;
-		let b1, b2, b3;
-		if (bytesPerSequence === 1) {
-			if (b0 < 128) c = b0;
-		} else if (bytesPerSequence === 2) {
-			b1 = buf[i + 1];
-			if ((b1 & 192) === 128) {
-				c = (b0 & 31) << 6 | b1 & 63;
-				if (c <= 127) c = null;
-			}
-		} else if (bytesPerSequence === 3) {
-			b1 = buf[i + 1];
-			b2 = buf[i + 2];
-			if ((b1 & 192) === 128 && (b2 & 192) === 128) {
-				c = (b0 & 15) << 12 | (b1 & 63) << 6 | b2 & 63;
-				if (c <= 2047 || c >= 55296 && c <= 57343) c = null;
-			}
-		} else if (bytesPerSequence === 4) {
-			b1 = buf[i + 1];
-			b2 = buf[i + 2];
-			b3 = buf[i + 3];
-			if ((b1 & 192) === 128 && (b2 & 192) === 128 && (b3 & 192) === 128) {
-				c = (b0 & 15) << 18 | (b1 & 63) << 12 | (b2 & 63) << 6 | b3 & 63;
-				if (c <= 65535 || c >= 1114112) c = null;
-			}
-		}
-		if (c === null) {
-			c = 65533;
-			bytesPerSequence = 1;
-		} else if (c > 65535) {
-			c -= 65536;
-			str += String.fromCharCode(c >>> 10 & 1023 | 55296);
-			c = 56320 | c & 1023;
-		}
-		str += String.fromCharCode(c);
-		i += bytesPerSequence;
-	}
-	return str;
-}
-//#endregion
-//#region node_modules/@mapbox/vector-tile/index.js
-/** @import {PbfReader} from 'pbf' */
-/** @import {Feature} from 'geojson' */
-var VectorTileFeature = class {
-	/**
-	* @param {PbfReader} pbf
-	* @param {number} end
-	* @param {number} extent
-	* @param {string[]} keys
-	* @param {(number | string | boolean)[]} values
-	*/
-	constructor(pbf, end, extent, keys, values) {
-		/** @type {Record<string, number | string | boolean>} */
-		this.properties = Object.create(null);
-		this.extent = extent;
-		/** @type {0 | 1 | 2 | 3} */
-		this.type = 0;
-		/** @type {number | undefined} */
-		this.id = void 0;
-		/** @private */
-		this._pbf = pbf;
-		/** @private */
-		this._geometry = -1;
-		/** @private */
-		this._keys = keys;
-		/** @private */
-		this._values = values;
-		while (pbf.pos < end) {
-			const tag = pbf.readVarint();
-			if (tag === 8) this.id = pbf.readVarint();
-			else if (tag === 18) {
-				const tagsEnd = pbf.readVarint() + pbf.pos;
-				while (pbf.pos < tagsEnd) {
-					const key = keys[pbf.readVarint()];
-					const value = values[pbf.readVarint()];
-					this.properties[key] = value;
-				}
-			} else if (tag === 24) this.type = pbf.readVarint();
-			else if (tag === 34) {
-				this._geometry = pbf.pos;
-				pbf.skip(tag);
-			} else pbf.skip(tag);
-		}
-	}
-	loadGeometry() {
-		if (this._geometry < 0) throw new Error("feature has no geometry");
-		const pbf = this._pbf;
-		pbf.pos = this._geometry;
-		const end = pbf.readVarint() + pbf.pos;
-		/** @type Point[][] */
-		const lines = [];
-		/** @type Point[] | undefined */
-		let line;
-		let cmd = 1;
-		let length = 0;
-		let x = 0;
-		let y = 0;
-		while (pbf.pos < end) {
-			if (length <= 0) {
-				const cmdLen = pbf.readVarint();
-				cmd = cmdLen & 7;
-				length = cmdLen >> 3;
-				if (length === 0) continue;
-			}
-			length--;
-			if (cmd === 1) {
-				x += pbf.readSVarint();
-				y += pbf.readSVarint();
-				if (line) lines.push(line);
-				line = [new Point(x, y)];
-			} else if (cmd === 2) {
-				x += pbf.readSVarint();
-				y += pbf.readSVarint();
-				if (line) line.push(new Point(x, y));
-			} else if (cmd === 7) {
-				if (line) line.push(line[0].clone());
-			} else throw new Error(`unknown command ${cmd}`);
-		}
-		if (line) lines.push(line);
-		return lines;
-	}
-	bbox() {
-		if (this._geometry < 0) throw new Error("feature has no geometry");
-		const pbf = this._pbf;
-		pbf.pos = this._geometry;
-		const end = pbf.readVarint() + pbf.pos;
-		let cmd = 1, length = 0, x = 0, y = 0, x1 = Infinity, x2 = -Infinity, y1 = Infinity, y2 = -Infinity;
-		while (pbf.pos < end) {
-			if (length <= 0) {
-				const cmdLen = pbf.readVarint();
-				cmd = cmdLen & 7;
-				length = cmdLen >> 3;
-				if (length === 0) continue;
-			}
-			length--;
-			if (cmd === 1 || cmd === 2) {
-				x += pbf.readSVarint();
-				y += pbf.readSVarint();
-				if (x < x1) x1 = x;
-				if (x > x2) x2 = x;
-				if (y < y1) y1 = y;
-				if (y > y2) y2 = y;
-			} else if (cmd !== 7) throw new Error(`unknown command ${cmd}`);
-		}
-		return [
-			x1,
-			y1,
-			x2,
-			y2
-		];
-	}
-	/**
-	* @param {number} x
-	* @param {number} y
-	* @param {number} z
-	* @return {Feature}
-	*/
-	toGeoJSON(x, y, z) {
-		const size = this.extent * Math.pow(2, z), x0 = this.extent * x, y0 = this.extent * y, vtCoords = this.loadGeometry();
-		/** @param {Point} p */
-		function projectPoint(p) {
-			return [(p.x + x0) * 360 / size - 180, 360 / Math.PI * Math.atan(Math.exp((1 - (p.y + y0) * 2 / size) * Math.PI)) - 90];
-		}
-		/** @param {Point[]} line */
-		function projectLine(line) {
-			return line.map(projectPoint);
-		}
-		/** @type {Feature["geometry"]} */
-		let geometry;
-		if (this.type === 1) {
-			const points = [];
-			for (const line of vtCoords) points.push(line[0]);
-			const coordinates = projectLine(points);
-			geometry = points.length === 1 ? {
-				type: "Point",
-				coordinates: coordinates[0]
-			} : {
-				type: "MultiPoint",
-				coordinates
-			};
-		} else if (this.type === 2) {
-			const coordinates = vtCoords.map(projectLine);
-			geometry = coordinates.length === 1 ? {
-				type: "LineString",
-				coordinates: coordinates[0]
-			} : {
-				type: "MultiLineString",
-				coordinates
-			};
-		} else if (this.type === 3) {
-			const polygons = classifyRings(vtCoords);
-			const coordinates = [];
-			for (const polygon of polygons) coordinates.push(polygon.map(projectLine));
-			geometry = coordinates.length === 1 ? {
-				type: "Polygon",
-				coordinates: coordinates[0]
-			} : {
-				type: "MultiPolygon",
-				coordinates
-			};
-		} else throw new Error("unknown feature type");
-		/** @type {Feature} */
-		const result = {
-			type: "Feature",
-			geometry,
-			properties: this.properties
-		};
-		if (this.id != null) result.id = this.id;
-		return result;
-	}
-};
-/** @type {['Unknown', 'Point', 'LineString', 'Polygon']} */
-VectorTileFeature.types = [
-	"Unknown",
-	"Point",
-	"LineString",
-	"Polygon"
-];
-/** classifies an array of rings into polygons with outer rings and holes
-* @param {Point[][]} rings
-*/
-function classifyRings(rings) {
-	const len = rings.length;
-	if (len <= 1) return [rings];
-	const polygons = [];
-	let polygon, ccw;
-	for (let i = 0; i < len; i++) {
-		const area = signedArea$1(rings[i]);
-		if (area === 0) continue;
-		if (ccw === void 0) ccw = area < 0;
-		if (ccw === area < 0) {
-			if (polygon) polygons.push(polygon);
-			polygon = [rings[i]];
-		} else if (polygon) polygon.push(rings[i]);
-	}
-	if (polygon) polygons.push(polygon);
-	return polygons;
-}
-/** @param {Point[]} ring */
-function signedArea$1(ring) {
-	let sum = 0;
-	for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-		p1 = ring[i];
-		p2 = ring[j];
-		sum += (p2.x - p1.x) * (p1.y + p2.y);
-	}
-	return sum;
-}
-var VectorTileLayer = class {
-	/**
-	* @param {PbfReader} pbf
-	* @param {number} [end]
-	*/
-	constructor(pbf, end) {
-		this.version = 1;
-		this.name = "";
-		this.extent = 4096;
-		this.length = 0;
-		/** @private */
-		this._pbf = pbf;
-		/** @private
-		* @type {string[]} */
-		this._keys = [];
-		/** @private
-		* @type {(number | string | boolean)[]} */
-		this._values = [];
-		/** @private
-		* @type {number[]} */
-		this._features = [];
-		if (end === void 0) end = pbf.length;
-		while (pbf.pos < end) {
-			const tag = pbf.readVarint();
-			if (tag === 10) this.name = pbf.readString();
-			else if (tag === 18) {
-				this._features.push(pbf.pos);
-				pbf.skip(tag);
-			} else if (tag === 26) this._keys.push(pbf.readString());
-			else if (tag === 34) this._values.push(readValueMessage(pbf));
-			else if (tag === 40) this.extent = pbf.readVarint();
-			else if (tag === 120) this.version = pbf.readVarint();
-			else pbf.skip(tag);
-		}
-		this.length = this._features.length;
-	}
-	/** return feature `i` from this layer as a `VectorTileFeature`
-	* @param {number} i
-	*/
-	feature(i) {
-		if (i < 0 || i >= this._features.length) throw new Error("feature index out of bounds");
-		this._pbf.pos = this._features[i];
-		const end = this._pbf.readVarint() + this._pbf.pos;
-		return new VectorTileFeature(this._pbf, end, this.extent, this._keys, this._values);
-	}
-};
-/**
-* @param {PbfReader} pbf
-*/
-function readValueMessage(pbf) {
-	let value = null;
-	const end = pbf.readVarint() + pbf.pos;
-	while (pbf.pos < end) {
-		const tag = pbf.readVarint();
-		value = tag === 10 ? pbf.readString() : tag === 21 ? pbf.readFloat() : tag === 25 ? pbf.readDouble() : tag === 32 ? pbf.readVarint(true) : tag === 40 ? pbf.readVarint() : tag === 48 ? pbf.readSVarint() : tag === 56 ? pbf.readBoolean() : (pbf.skip(tag), null);
-	}
-	if (value == null) throw new Error("unknown feature value");
-	return value;
-}
-var VectorTile = class {
-	/**
-	* @param {PbfReader} pbf
-	* @param {number} [end]
-	*/
-	constructor(pbf, end = pbf.length) {
-		/** @type {Record<string, VectorTileLayer>} */
-		const layers = Object.create(null);
-		while (pbf.pos < end) {
-			const tag = pbf.readVarint();
-			if (tag === 26) {
-				const layer = new VectorTileLayer(pbf, pbf.readVarint() + pbf.pos);
-				if (layer.length) layers[layer.name] = layer;
-			} else pbf.skip(tag);
-		}
-		this.layers = layers;
-	}
-};
-//#endregion
-//#region src/util/evented.ts
-function _addEventListener(type, listener, listenerList) {
-	if (!listenerList[type]?.includes(listener)) {
-		listenerList[type] ||= [];
-		listenerList[type].push(listener);
-	}
-}
-function _removeEventListener(type, listener, listenerList) {
-	if (listenerList?.[type]) {
-		const index = listenerList[type].indexOf(listener);
-		if (index !== -1) listenerList[type].splice(index, 1);
-	}
-}
-/**
-* The event class
-*/
-var Event = class {
-	constructor(type, data = {}) {
-		extend(this, data);
-		this.type = type;
-	}
-};
-/**
-* An error event
-*/
-var ErrorEvent = class extends Event {
-	constructor(error, data = {}) {
-		super("error", extend({ error }, data));
-	}
-};
-/**
-* Methods mixed in to other classes for event capabilities.
-*
-* @group Event Related
-*/
-var Evented = class {
-	/**
-	* Adds a listener to a specified event type.
-	*
-	* @param type - The event type to add a listen for.
-	* @param listener - The function to be called when the event is fired.
-	* The listener function is called with the data object passed to `fire`,
-	* extended with `target` and `type` properties.
-	*/
-	on(type, listener) {
-		this._listeners ||= {};
-		_addEventListener(type, listener, this._listeners);
-		return { unsubscribe: () => {
-			this.off(type, listener);
-		} };
-	}
-	/**
-	* Removes a previously registered event listener.
-	*
-	* @param type - The event type to remove listeners for.
-	* @param listener - The listener function to remove.
-	*/
-	off(type, listener) {
-		_removeEventListener(type, listener, this._listeners);
-		_removeEventListener(type, listener, this._oneTimeListeners);
-		return this;
-	}
-	once(type, listener) {
-		if (!listener) return new Promise((resolve) => this.once(type, resolve));
-		this._oneTimeListeners ||= {};
-		_addEventListener(type, listener, this._oneTimeListeners);
-		return this;
-	}
-	fire(event, properties) {
-		const firedEvent = typeof event === "string" ? new Event(event, properties || {}) : event;
-		const type = firedEvent.type;
-		if (this.listens(type)) {
-			firedEvent.target = this;
-			const listeners = this._listeners?.[type]?.slice() ?? [];
-			for (const listener of listeners) listener.call(this, firedEvent);
-			const oneTimeListeners = this._oneTimeListeners?.[type]?.slice() ?? [];
-			for (const listener of oneTimeListeners) {
-				_removeEventListener(type, listener, this._oneTimeListeners);
-				listener.call(this, firedEvent);
-			}
-			const parent = this._eventedParent;
-			if (parent) {
-				extend(firedEvent, typeof this._eventedParentData === "function" ? this._eventedParentData() : this._eventedParentData);
-				parent.fire(firedEvent);
-			}
-		} else if (firedEvent instanceof ErrorEvent) console.error(firedEvent.error);
-		return this;
-	}
-	/**
-	* Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
-	*
-	* @param type - The event type
-	* @returns `true` if there is at least one registered listener for specified event type, `false` otherwise
-	*/
-	listens(type) {
-		return Boolean(this._listeners?.[type]?.length || this._oneTimeListeners?.[type]?.length || this._eventedParent?.listens(type));
-	}
-	/**
-	* Bubble all events fired by this instance of Evented to this parent instance of Evented.
-	*/
-	setEventedParent(parent, data) {
-		this._eventedParent = parent;
-		this._eventedParentData = data;
-		return this;
-	}
-};
-//#endregion
-//#region src/util/dom.ts
-var DOM = class DOM {
-	static {
-		this.docStyle = typeof window !== "undefined" && window.document?.documentElement.style;
-	}
-	static {
-		this.selectProp = !DOM.docStyle || "userSelect" in DOM.docStyle ? "userSelect" : "webkitUserSelect";
-	}
-	static create(tagName, className, container) {
-		const el = window.document.createElement(tagName);
-		if (className !== void 0) el.className = className;
-		if (container) container.appendChild(el);
-		return el;
-	}
-	static createNS(namespaceURI, tagName) {
-		return window.document.createElementNS(namespaceURI, tagName);
-	}
-	static disableDrag() {
-		if (DOM.docStyle && DOM.selectProp) {
-			DOM.userSelect = DOM.docStyle[DOM.selectProp];
-			DOM.docStyle[DOM.selectProp] = "none";
-		}
-	}
-	static enableDrag() {
-		if (DOM.docStyle && DOM.selectProp) DOM.docStyle[DOM.selectProp] = DOM.userSelect;
-	}
-	static suppressClickInternal(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		window.removeEventListener("click", DOM.suppressClickInternal, true);
-	}
-	static suppressClick() {
-		window.addEventListener("click", DOM.suppressClickInternal, true);
-		window.setTimeout(() => {
-			window.removeEventListener("click", DOM.suppressClickInternal, true);
-		}, 0);
-	}
-	static getScale(element) {
-		const rect = element.getBoundingClientRect();
-		return {
-			x: rect.width / element.offsetWidth || 1,
-			y: rect.height / element.offsetHeight || 1,
-			boundingClientRect: rect
-		};
-	}
-	static getPoint(el, scale, e) {
-		const rect = scale.boundingClientRect;
-		return new Point((e.clientX - rect.left) / scale.x - el.clientLeft, (e.clientY - rect.top) / scale.y - el.clientTop);
-	}
-	static mousePos(el, e) {
-		const scale = DOM.getScale(el);
-		return DOM.getPoint(el, scale, e);
-	}
-	static touchPos(el, touches) {
-		const points = [];
-		const scale = DOM.getScale(el);
-		for (const touch of touches) points.push(DOM.getPoint(el, scale, touch));
-		return points;
-	}
-	/**
-	* Sanitize an HTML string - this might not be enough to prevent all XSS attacks
-	* Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
-	* (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
-	*/
-	static sanitize(str) {
-		const html = new DOMParser().parseFromString(str, "text/html").body || document.createElement("body");
-		const scripts = html.querySelectorAll("script");
-		for (const script of scripts) script.remove();
-		DOM.clean(html);
-		return html.innerHTML;
-	}
-	/**
-	* Check if the attribute is potentially dangerous
-	*/
-	static isPossiblyDangerous(name, value) {
-		const val = value.replace(/\s+/g, "").toLowerCase();
-		if ([
-			"src",
-			"href",
-			"xlink:href"
-		].includes(name)) {
-			if (val.includes("javascript:") || val.includes("data:")) return true;
-		}
-		if (name.startsWith("on")) return true;
-	}
-	/**
-	* Remove dangerous stuff from the HTML document's nodes
-	* @param html - The HTML document
-	*/
-	static clean(html) {
-		const nodes = html.children;
-		for (const node of nodes) {
-			DOM.removeAttributes(node);
-			DOM.clean(node);
-		}
-	}
-	/**
-	* Remove potentially dangerous attributes from an element
-	* @param elem - The element
-	*/
-	static removeAttributes(elem) {
-		for (const { name, value } of elem.attributes) {
-			if (!DOM.isPossiblyDangerous(name, value)) continue;
-			elem.removeAttribute(name);
-		}
-	}
-};
-//#endregion
-//#region src/ui/events.ts
-/**
-* The base event for MapLibre
-*
-* @group Event Related
-*/
-var MapLibreEvent = class extends Event {};
-/**
-* `MapMovementEvent` is the event type for the camera-transition map events:
-* `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `rotatestart`, `rotate`, `rotateend`,
-* `dragstart`, `drag`, `dragend`, `pitchstart`, `pitch`, `pitchend`, `rollstart`, `roll` and `rollend`.
-* These are fired as the map's view changes, as a result of either user interaction or methods such
-* as {@link Map.jumpTo} / {@link Map.flyTo}.
-*
-* @group Event Related
-*/
-var MapMovementEvent = class extends MapLibreEvent {};
-/**
-* The `style.load` event, fired once the map's style has fully loaded or changed.
-*
-* @group Event Related
-*/
-var MapStyleLoadEvent = class extends MapLibreEvent {
-	constructor(data = {}) {
-		super("style.load", data);
-	}
-};
-/**
-* The style data event
-*
-* @group Event Related
-*/
-var MapStyleDataEvent = class extends MapLibreEvent {
-	constructor(type, data = {}) {
-		super(type, data);
-		this.dataType = "style";
-	}
-};
-/**
-* A `MapSourceDataEvent` is emitted with the source-related `data`, `dataloading`, `dataabort`,
-* `sourcedata`, `sourcedataloading` and `sourcedataabort` events. Its `dataType` is always `'source'`.
-*
-* Possible values for `sourceDataType`s are:
-*
-* - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
-* - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
-* - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
-* - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
-*
-* @group Event Related
-*
-* @example
-* ```ts
-* // The sourcedata event is an example of a MapSourceDataEvent.
-* // Set up an event listener on the map.
-* map.on('sourcedata', (e) => {
-*    if (e.isSourceLoaded) {
-*        // Do something when the source has finished loading
-*    }
-* });
-* ```
-*/
-var MapSourceDataEvent = class extends MapLibreEvent {
-	constructor(type, data = {}) {
-		super(type, data);
-		this.dataType = "source";
-	}
-};
-/**
-* `MapMouseEvent` is the event type for mouse-related map events.
-*
-* @group Event Related
-*
-* @example
-* ```ts
-* // The `click` event is an example of a `MapMouseEvent`.
-* // Set up an event listener on the map.
-* map.on('click', (e) => {
-*   // The event object (e) contains information like the
-*   // coordinates of the point on the map that was clicked.
-*   console.log('A click event has occurred at ' + e.lngLat);
-* });
-* ```
-*/
-var MapMouseEvent = class extends MapLibreEvent {
-	/**
-	* Prevents subsequent default processing of the event by the map.
-	*
-	* Calling this method will prevent the following default map behaviors:
-	*
-	*   * On `mousedown` events, the behavior of {@link DragPanHandler}
-	*   * On `mousedown` events, the behavior of {@link DragRotateHandler}
-	*   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
-	*   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-	*
-	*/
-	preventDefault() {
-		this._defaultPrevented = true;
-	}
-	/**
-	* `true` if `preventDefault` has been called.
-	*/
-	get defaultPrevented() {
-		return this._defaultPrevented;
-	}
-	constructor(type, map, originalEvent, data = {}) {
-		originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
-		const point = DOM.mousePos(map.getCanvas(), originalEvent);
-		const lngLat = map.unproject(point);
-		super(type, extend({
-			point,
-			lngLat,
-			originalEvent
-		}, data));
-		this._defaultPrevented = false;
-		this.target = map;
-	}
-};
-/**
-* `MapTouchEvent` is the event type for touch-related map events.
-*
-* @group Event Related
-*/
-var MapTouchEvent = class extends MapLibreEvent {
-	/**
-	* Prevents subsequent default processing of the event by the map.
-	*
-	* Calling this method will prevent the following default map behaviors:
-	*
-	*   * On `touchstart` events, the behavior of {@link DragPanHandler}
-	*   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
-	*
-	*/
-	preventDefault() {
-		this._defaultPrevented = true;
-	}
-	/**
-	* `true` if `preventDefault` has been called.
-	*/
-	get defaultPrevented() {
-		return this._defaultPrevented;
-	}
-	constructor(type, map, originalEvent) {
-		const touches = type === "touchend" ? originalEvent.changedTouches : originalEvent.touches;
-		const points = DOM.touchPos(map.getCanvasContainer(), touches);
-		const lngLats = points.map((t) => map.unproject(t));
-		const point = points.reduce((prev, curr, i, arr) => {
-			return prev.add(curr.div(arr.length));
-		}, new Point(0, 0));
-		const lngLat = map.unproject(point);
-		super(type, {
-			points,
-			point,
-			lngLats,
-			lngLat,
-			originalEvent
-		});
-		this._defaultPrevented = false;
-	}
-};
-/**
-* `MapWheelEvent` is the event type for the `wheel` map event.
-*
-* @group Event Related
-*/
-var MapWheelEvent = class extends MapLibreEvent {
-	/**
-	* Prevents subsequent default processing of the event by the map.
-	*
-	* Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
-	*/
-	preventDefault() {
-		this._defaultPrevented = true;
-	}
-	/**
-	* `true` if `preventDefault` has been called.
-	*/
-	get defaultPrevented() {
-		return this._defaultPrevented;
-	}
-	/** */
-	constructor(map, originalEvent) {
-		super("wheel", { originalEvent });
-		this._defaultPrevented = false;
-	}
-};
-/**
-* A `MapBoxZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
-*
-* @group Event Related
-*/
-var MapBoxZoomEvent = class extends MapLibreEvent {};
-/**
-* The terrain event
-*
-* @group Event Related
-*/
-var MapTerrainEvent = class extends MapLibreEvent {
-	constructor(data = {}) {
-		super("terrain", data);
-	}
-};
-/**
-* The map projection event
-*
-* @group Event Related
-*/
-var MapProjectionEvent = class extends MapLibreEvent {
-	constructor(data = {}) {
-		super("projectiontransition", data);
-	}
-};
-/**
-* An event related to the web gl context
-*
-* @group Event Related
-*/
-var MapContextEvent = class extends MapLibreEvent {};
-/**
-* The style image missing event, fired when an image is still missing after the missing style image
-* resolver has been given a chance to supply it. To load or generate images on demand,
-* use {@link Map.setMissingStyleImageResolver}.
-* Event listeners cannot resolve the missing image for the current request.
-*
-* @group Event Related
-*
-* @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
-*/
-var MapStyleImageMissingEvent = class extends MapLibreEvent {
-	constructor(data = {}) {
-		super("styleimagemissing", data);
-	}
-};
-//#endregion
-//#region src/style/validate_style.ts
-const validateStyle = validateStyleMin;
-/**
-* The source types the spec has a schema for, and therefore the only ones it can judge. Taken from
-* the spec itself so the two cannot drift apart.
-*/
-const SPEC_SOURCE_TYPES = new Set(Object.keys(latest).filter((key) => key.startsWith("source_")).map((key) => key.slice(7).replaceAll("_", "-")));
-/**
-* The sources whose type the spec has no schema for, so it rejects them outright even though we
-* render them: `canvas`, and anything registered with {@link addSourceType}. They are the renderer's
-* business rather than the spec's, so the spec's complaints about them are dropped -- otherwise
-* `map.setStyle(map.getStyle())` would fail on a source the user added correctly.
-*
-* Each such source produces a single error keyed by `sources.<id>`, which is what is matched here.
-* @param style - the style about to be validated
-* @returns the `sources.<id>` key prefixes whose errors should be ignored
-*/
-function unjudgeableSourceKeys(style) {
-	return Object.entries(style.sources ?? {}).filter(([, source]) => !SPEC_SOURCE_TYPES.has(source.type)).map(([id]) => `sources.${id}`);
-}
-/**
-* Validates a whole style and emits what it finds, ignoring the sources the spec cannot judge.
-*
-* @param emitter - the object to fire {@link ErrorEvent}s on
-* @param style - the style to validate
-* @returns whether validation failed, i.e. whether the caller should give up on the style
-*/
-function validateStyleAndEmit(emitter, style) {
-	const ignored = unjudgeableSourceKeys(style);
-	return emitValidationErrors(emitter, validateStyle(style).filter(({ message }) => !ignored.some((key) => message.startsWith(`${key}:`) || message.startsWith(`${key}.`))));
-}
-/**
-* Emits everything a validator found, and reports whether any of it was severe enough to abort.
-*
-* Warnings are logged rather than emitted as errors: the style still renders, just not necessarily
-* as its author intended (e.g. a filter mixing deprecated syntax into an expression tree). Treating
-* them as errors would abort the whole style load and leave a blank map.
-* See https://github.com/maplibre/maplibre-style-spec/issues/1751
-*
-* @param emitter - the object to fire {@link ErrorEvent}s on
-* @param errors - what validation turned up, if anything
-* @returns whether validation failed, i.e. whether the caller should give up on the value
-*/
-function emitValidationErrors(emitter, errors) {
-	let hasErrors = false;
-	for (const error of errors) {
-		if (error.severity === "warning") {
-			warnOnce(error.message);
-			continue;
-		}
-		emitter.fire(new ErrorEvent(new Error(error.message)));
-		hasErrors = true;
-	}
-	return hasErrors;
-}
-/**
-* Runs a validator over a value and emits whatever it finds.
-*
-* @param emitter - the object to fire {@link ErrorEvent}s on
-* @param validator - the validator to run, e.g. {@link validateFilter}
-* @param params - what to validate: the `value`, plus whatever context the validator needs, such as
-* the `key` locating it in the style, or the surrounding `style` that {@link validateStyle.layer} looks at
-* @param options - setter options; validation is skipped entirely when `validate` is `false`
-* @returns whether validation failed, i.e. whether the caller should give up on the value
-*/
-function validateAndEmit(emitter, validator, params, options) {
-	if (options?.validate === false) return false;
-	return emitValidationErrors(emitter, validator({
-		styleSpec: latest,
-		...params
-	}));
 }
 //#endregion
 //#region src/style/zoom_history.ts
@@ -15082,7 +14087,7 @@ var Transitioning = class {
 * given layer type. It can calculate the possibly-evaluated values for all of them at once, producing a
 * `PossiblyEvaluated` instance for the same set of properties.
 */
-var Layout$1 = class {
+var Layout = class {
 	constructor(properties, rootKey, globalState) {
 		this._properties = properties;
 		this._values = Object.create(properties.defaultPropertyValues);
@@ -15400,7 +14405,7 @@ var StyleLayer = class extends Evented {
 			this.filter = layer.filter;
 			this._featureFilter = featureFilter(layer.filter, `layers[${this.id}].filter`, globalState);
 		}
-		if (properties.layout) this._unevaluatedLayout = new Layout$1(properties.layout, `layers[${this.id}].layout`, globalState);
+		if (properties.layout) this._unevaluatedLayout = new Layout(properties.layout, `layers[${this.id}].layout`, globalState);
 		if (properties.paint) {
 			this._transitionablePaint = new Transitionable(properties.paint, `layers[${this.id}].paint`, globalState);
 			for (const property in layer.paint) this.setPaintProperty(property, layer.paint[property], { validate: false });
@@ -18996,7 +18001,7 @@ function earcut(data, holeIndices, dim = 2) {
 function linkedList(data, start, end, dim, clockwise) {
 	/** @type {Node | null} */
 	let last = null;
-	if (clockwise === signedArea(data, start, end, dim) > 0) for (let i = start; i < end; i += dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
+	if (clockwise === signedArea$1(data, start, end, dim) > 0) for (let i = start; i < end; i += dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
 	else for (let i = end - dim; i >= start; i -= dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
 	if (last && equals(last, last.next)) {
 		removeNode(last);
@@ -19479,7 +18484,7 @@ function createNode(i, x, y) {
 	};
 }
 /** @param {ArrayLike<number>} data @param {number} start @param {number} end @param {number} dim @returns {number} */
-function signedArea(data, start, end, dim) {
+function signedArea$1(data, start, end, dim) {
 	let sum = 0;
 	for (let i = start, j = end - dim; i < end; i += dim) {
 		sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
@@ -20455,6 +19460,535 @@ const members$2 = layout$3.members;
 layout$3.size;
 layout$3.alignment;
 //#endregion
+//#region node_modules/@mapbox/vector-tile/index.js
+/** @import {PbfReader} from 'pbf' */
+/** @import {Feature} from 'geojson' */
+var VectorTileFeature = class {
+	/**
+	* @param {PbfReader} pbf
+	* @param {number} end
+	* @param {number} extent
+	* @param {string[]} keys
+	* @param {(number | string | boolean)[]} values
+	*/
+	constructor(pbf, end, extent, keys, values) {
+		/** @type {Record<string, number | string | boolean>} */
+		this.properties = Object.create(null);
+		this.extent = extent;
+		/** @type {0 | 1 | 2 | 3} */
+		this.type = 0;
+		/** @type {number | undefined} */
+		this.id = void 0;
+		/** @private */
+		this._pbf = pbf;
+		/** @private */
+		this._geometry = -1;
+		/** @private */
+		this._keys = keys;
+		/** @private */
+		this._values = values;
+		while (pbf.pos < end) {
+			const tag = pbf.readVarint();
+			if (tag === 8) this.id = pbf.readVarint();
+			else if (tag === 18) {
+				const tagsEnd = pbf.readVarint() + pbf.pos;
+				while (pbf.pos < tagsEnd) {
+					const key = keys[pbf.readVarint()];
+					const value = values[pbf.readVarint()];
+					this.properties[key] = value;
+				}
+			} else if (tag === 24) this.type = pbf.readVarint();
+			else if (tag === 34) {
+				this._geometry = pbf.pos;
+				pbf.skip(tag);
+			} else pbf.skip(tag);
+		}
+	}
+	loadGeometry() {
+		if (this._geometry < 0) throw new Error("feature has no geometry");
+		const pbf = this._pbf;
+		pbf.pos = this._geometry;
+		const end = pbf.readVarint() + pbf.pos;
+		/** @type Point[][] */
+		const lines = [];
+		/** @type Point[] | undefined */
+		let line;
+		let cmd = 1;
+		let length = 0;
+		let x = 0;
+		let y = 0;
+		while (pbf.pos < end) {
+			if (length <= 0) {
+				const cmdLen = pbf.readVarint();
+				cmd = cmdLen & 7;
+				length = cmdLen >> 3;
+				if (length === 0) continue;
+			}
+			length--;
+			if (cmd === 1) {
+				x += pbf.readSVarint();
+				y += pbf.readSVarint();
+				if (line) lines.push(line);
+				line = [new Point(x, y)];
+			} else if (cmd === 2) {
+				x += pbf.readSVarint();
+				y += pbf.readSVarint();
+				if (line) line.push(new Point(x, y));
+			} else if (cmd === 7) {
+				if (line) line.push(line[0].clone());
+			} else throw new Error(`unknown command ${cmd}`);
+		}
+		if (line) lines.push(line);
+		return lines;
+	}
+	bbox() {
+		if (this._geometry < 0) throw new Error("feature has no geometry");
+		const pbf = this._pbf;
+		pbf.pos = this._geometry;
+		const end = pbf.readVarint() + pbf.pos;
+		let cmd = 1, length = 0, x = 0, y = 0, x1 = Infinity, x2 = -Infinity, y1 = Infinity, y2 = -Infinity;
+		while (pbf.pos < end) {
+			if (length <= 0) {
+				const cmdLen = pbf.readVarint();
+				cmd = cmdLen & 7;
+				length = cmdLen >> 3;
+				if (length === 0) continue;
+			}
+			length--;
+			if (cmd === 1 || cmd === 2) {
+				x += pbf.readSVarint();
+				y += pbf.readSVarint();
+				if (x < x1) x1 = x;
+				if (x > x2) x2 = x;
+				if (y < y1) y1 = y;
+				if (y > y2) y2 = y;
+			} else if (cmd !== 7) throw new Error(`unknown command ${cmd}`);
+		}
+		return [
+			x1,
+			y1,
+			x2,
+			y2
+		];
+	}
+	/**
+	* @param {number} x
+	* @param {number} y
+	* @param {number} z
+	* @return {Feature}
+	*/
+	toGeoJSON(x, y, z) {
+		const size = this.extent * Math.pow(2, z), x0 = this.extent * x, y0 = this.extent * y, vtCoords = this.loadGeometry();
+		/** @param {Point} p */
+		function projectPoint(p) {
+			return [(p.x + x0) * 360 / size - 180, 360 / Math.PI * Math.atan(Math.exp((1 - (p.y + y0) * 2 / size) * Math.PI)) - 90];
+		}
+		/** @param {Point[]} line */
+		function projectLine(line) {
+			return line.map(projectPoint);
+		}
+		/** @type {Feature["geometry"]} */
+		let geometry;
+		if (this.type === 1) {
+			const points = [];
+			for (const line of vtCoords) points.push(line[0]);
+			const coordinates = projectLine(points);
+			geometry = points.length === 1 ? {
+				type: "Point",
+				coordinates: coordinates[0]
+			} : {
+				type: "MultiPoint",
+				coordinates
+			};
+		} else if (this.type === 2) {
+			const coordinates = vtCoords.map(projectLine);
+			geometry = coordinates.length === 1 ? {
+				type: "LineString",
+				coordinates: coordinates[0]
+			} : {
+				type: "MultiLineString",
+				coordinates
+			};
+		} else if (this.type === 3) {
+			const polygons = classifyRings(vtCoords);
+			const coordinates = [];
+			for (const polygon of polygons) coordinates.push(polygon.map(projectLine));
+			geometry = coordinates.length === 1 ? {
+				type: "Polygon",
+				coordinates: coordinates[0]
+			} : {
+				type: "MultiPolygon",
+				coordinates
+			};
+		} else throw new Error("unknown feature type");
+		/** @type {Feature} */
+		const result = {
+			type: "Feature",
+			geometry,
+			properties: this.properties
+		};
+		if (this.id != null) result.id = this.id;
+		return result;
+	}
+};
+/** @type {['Unknown', 'Point', 'LineString', 'Polygon']} */
+VectorTileFeature.types = [
+	"Unknown",
+	"Point",
+	"LineString",
+	"Polygon"
+];
+/** classifies an array of rings into polygons with outer rings and holes
+* @param {Point[][]} rings
+*/
+function classifyRings(rings) {
+	const len = rings.length;
+	if (len <= 1) return [rings];
+	const polygons = [];
+	let polygon, ccw;
+	for (let i = 0; i < len; i++) {
+		const area = signedArea(rings[i]);
+		if (area === 0) continue;
+		if (ccw === void 0) ccw = area < 0;
+		if (ccw === area < 0) {
+			if (polygon) polygons.push(polygon);
+			polygon = [rings[i]];
+		} else if (polygon) polygon.push(rings[i]);
+	}
+	if (polygon) polygons.push(polygon);
+	return polygons;
+}
+/** @param {Point[]} ring */
+function signedArea(ring) {
+	let sum = 0;
+	for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
+		p1 = ring[i];
+		p2 = ring[j];
+		sum += (p2.x - p1.x) * (p1.y + p2.y);
+	}
+	return sum;
+}
+var VectorTileLayer = class {
+	/**
+	* @param {PbfReader} pbf
+	* @param {number} [end]
+	*/
+	constructor(pbf, end) {
+		this.version = 1;
+		this.name = "";
+		this.extent = 4096;
+		this.length = 0;
+		/** @private */
+		this._pbf = pbf;
+		/** @private
+		* @type {string[]} */
+		this._keys = [];
+		/** @private
+		* @type {(number | string | boolean)[]} */
+		this._values = [];
+		/** @private
+		* @type {number[]} */
+		this._features = [];
+		if (end === void 0) end = pbf.length;
+		while (pbf.pos < end) {
+			const tag = pbf.readVarint();
+			if (tag === 10) this.name = pbf.readString();
+			else if (tag === 18) {
+				this._features.push(pbf.pos);
+				pbf.skip(tag);
+			} else if (tag === 26) this._keys.push(pbf.readString());
+			else if (tag === 34) this._values.push(readValueMessage(pbf));
+			else if (tag === 40) this.extent = pbf.readVarint();
+			else if (tag === 120) this.version = pbf.readVarint();
+			else pbf.skip(tag);
+		}
+		this.length = this._features.length;
+	}
+	/** return feature `i` from this layer as a `VectorTileFeature`
+	* @param {number} i
+	*/
+	feature(i) {
+		if (i < 0 || i >= this._features.length) throw new Error("feature index out of bounds");
+		this._pbf.pos = this._features[i];
+		const end = this._pbf.readVarint() + this._pbf.pos;
+		return new VectorTileFeature(this._pbf, end, this.extent, this._keys, this._values);
+	}
+};
+/**
+* @param {PbfReader} pbf
+*/
+function readValueMessage(pbf) {
+	let value = null;
+	const end = pbf.readVarint() + pbf.pos;
+	while (pbf.pos < end) {
+		const tag = pbf.readVarint();
+		value = tag === 10 ? pbf.readString() : tag === 21 ? pbf.readFloat() : tag === 25 ? pbf.readDouble() : tag === 32 ? pbf.readVarint(true) : tag === 40 ? pbf.readVarint() : tag === 48 ? pbf.readSVarint() : tag === 56 ? pbf.readBoolean() : (pbf.skip(tag), null);
+	}
+	if (value == null) throw new Error("unknown feature value");
+	return value;
+}
+var VectorTile = class {
+	/**
+	* @param {PbfReader} pbf
+	* @param {number} [end]
+	*/
+	constructor(pbf, end = pbf.length) {
+		/** @type {Record<string, VectorTileLayer>} */
+		const layers = Object.create(null);
+		while (pbf.pos < end) {
+			const tag = pbf.readVarint();
+			if (tag === 26) {
+				const layer = new VectorTileLayer(pbf, pbf.readVarint() + pbf.pos);
+				if (layer.length) layers[layer.name] = layer;
+			} else pbf.skip(tag);
+		}
+		this.layers = layers;
+	}
+};
+//#endregion
+//#region src/geo/lng_lat.ts
+const earthRadius = 6371008.8;
+/**
+* A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees.
+* These coordinates are based on the [WGS84 (EPSG:4326) standard](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84).
+*
+* MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match the
+* [GeoJSON specification](https://tools.ietf.org/html/rfc7946).
+*
+* Note that any MapLibre GL JS method that accepts a `LngLat` object as an argument or option
+* can also accept an `Array` of two numbers and will perform an implicit conversion.
+* This flexible type is documented as {@link LngLatLike}.
+*
+* @group Geography and Geometry
+*
+* @example
+* ```ts
+* let ll = new LngLat(-123.9749, 40.7736);
+* ll.lng; // = -123.9749
+* ```
+* @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/)
+*/
+var LngLat = class LngLat {
+	/**
+	* @param lng - Longitude, measured in degrees.
+	* @param lat - Latitude, measured in degrees.
+	*/
+	constructor(lng, lat) {
+		if (isNaN(lng) || isNaN(lat)) throw new Error(`Invalid LngLat object: (${lng}, ${lat})`);
+		this.lng = +lng;
+		this.lat = +lat;
+		if (this.lat > 90 || this.lat < -90) throw new Error("Invalid LngLat latitude value: must be between -90 and 90");
+	}
+	/**
+	* Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
+	*
+	* @returns The wrapped `LngLat` object.
+	* @example
+	* ```ts
+	* let ll = new LngLat(286.0251, 40.7736);
+	* let wrapped = ll.wrap();
+	* wrapped.lng; // = -73.9749
+	* ```
+	*/
+	wrap() {
+		return new LngLat(wrap(this.lng, -180, 180), this.lat);
+	}
+	/**
+	* Returns the coordinates represented as an array of two numbers.
+	*
+	* @returns The coordinates represented as an array of longitude and latitude.
+	* @example
+	* ```ts
+	* let ll = new LngLat(-73.9749, 40.7736);
+	* ll.toArray(); // = [-73.9749, 40.7736]
+	* ```
+	*/
+	toArray() {
+		return [this.lng, this.lat];
+	}
+	/**
+	* Returns the coordinates represent as a string.
+	*
+	* @returns The coordinates represented as a string of the format `'LngLat(lng, lat)'`.
+	* @example
+	* ```ts
+	* let ll = new LngLat(-73.9749, 40.7736);
+	* ll.toString(); // = "LngLat(-73.9749, 40.7736)"
+	* ```
+	*/
+	toString() {
+		return `LngLat(${this.lng}, ${this.lat})`;
+	}
+	/**
+	* Returns the approximate distance between a pair of coordinates in meters
+	* Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky and Telescope, vol. 68, no. 2, 1984, p. 159)
+	*
+	* @param lngLat - coordinates to compute the distance to
+	* @returns Distance in meters between the two coordinates.
+	* @example
+	* ```ts
+	* let new_york = new LngLat(-74.0060, 40.7128);
+	* let los_angeles = new LngLat(-118.2437, 34.0522);
+	* new_york.distanceTo(los_angeles); // = 3935751.690893987, "true distance" using a non-spherical approximation is ~3966km
+	* ```
+	*/
+	distanceTo(lngLat) {
+		const rad = Math.PI / 180;
+		const lat1 = this.lat * rad;
+		const lat2 = lngLat.lat * rad;
+		const a = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos((lngLat.lng - this.lng) * rad);
+		return earthRadius * Math.acos(Math.min(a, 1));
+	}
+	/**
+	* Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties
+	* to a `LngLat` object.
+	*
+	* If a `LngLat` object is passed in, the function returns it unchanged.
+	*
+	* @param input - An array of two numbers or object to convert, or a `LngLat` object to return.
+	* @returns A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
+	* @example
+	* ```ts
+	* let arr = [-73.9749, 40.7736];
+	* let ll = LngLat.convert(arr);
+	* ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
+	* ```
+	*/
+	static convert(input) {
+		if (input instanceof LngLat) return input;
+		if (Array.isArray(input) && (input.length === 2 || input.length === 3)) return new LngLat(Number(input[0]), Number(input[1]));
+		if (!Array.isArray(input) && typeof input === "object" && input !== null) return new LngLat(Number("lng" in input ? input.lng : input.lon), Number(input.lat));
+		throw new Error("`LngLatLike` argument must be specified as a LngLat instance, an object {lng: <lng>, lat: <lat>}, an object {lon: <lng>, lat: <lat>}, or an array of [<lng>, <lat>]");
+	}
+};
+//#endregion
+//#region src/geo/mercator_coordinate.ts
+const earthCircumference = 2 * Math.PI * earthRadius;
+function circumferenceAtLatitude(latitude) {
+	return earthCircumference * Math.cos(latitude * Math.PI / 180);
+}
+function mercatorXfromLng(lng) {
+	return (180 + lng) / 360;
+}
+function mercatorYfromLat(lat) {
+	return (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
+}
+function mercatorZfromAltitude(altitude, lat) {
+	return altitude / circumferenceAtLatitude(lat);
+}
+function lngFromMercatorX(x) {
+	return x * 360 - 180;
+}
+function latFromMercatorY(y) {
+	const y2 = 180 - y * 360;
+	return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
+}
+function altitudeFromMercatorZ(z, y) {
+	return z * circumferenceAtLatitude(latFromMercatorY(y));
+}
+/**
+* Determine the Mercator scale factor for a given latitude, see
+* https://en.wikipedia.org/wiki/Mercator_projection#Scale_factor
+*
+* At the equator the scale factor will be 1, which increases at higher latitudes.
+*
+* @param lat - Latitude
+* @returns scale factor
+*/
+function mercatorScale(lat) {
+	return 1 / Math.cos(lat * Math.PI / 180);
+}
+/**
+* A `MercatorCoordinate` object represents a projected three dimensional position.
+*
+* `MercatorCoordinate` uses the web mercator projection ([EPSG:3857](https://epsg.io/3857)) with slightly different units:
+*
+* - the size of 1 unit is the width of the projected world instead of the "mercator meter"
+* - the origin of the coordinate space is at the north-west corner instead of the middle
+*
+* For example, `MercatorCoordinate(0, 0, 0)` is the north-west corner of the mercator world and
+* `MercatorCoordinate(1, 1, 0)` is the south-east corner. If you are familiar with
+* [vector tiles](https://github.com/mapbox/vector-tile-spec) it may be helpful to think
+* of the coordinate space as the `0/0/0` tile with an extent of `1`.
+*
+* The `z` dimension of `MercatorCoordinate` is conformal. A cube in the mercator coordinate space would be rendered as a cube.
+*
+* @group Geography and Geometry
+*
+* @example
+* ```ts
+* let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
+* ```
+* @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/)
+* @see [Add a 3D model using three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+* @see [Add a simple custom layer on a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/)
+*/
+var MercatorCoordinate = class MercatorCoordinate {
+	/**
+	* @param x - The x component of the position.
+	* @param y - The y component of the position.
+	* @param z - The z component of the position.
+	*/
+	constructor(x, y, z = 0) {
+		this.x = +x;
+		this.y = +y;
+		this.z = +z;
+	}
+	/**
+	* Project a `LngLat` to a `MercatorCoordinate`.
+	*
+	* @param lngLatLike - The location to project.
+	* @param altitude - The altitude in meters of the position.
+	* @returns The projected mercator coordinate.
+	* @example
+	* ```ts
+	* let coord = MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
+	* coord; // MercatorCoordinate(0.5, 0.5, 0)
+	* ```
+	*/
+	static fromLngLat(lngLatLike, altitude = 0) {
+		const lngLat = LngLat.convert(lngLatLike);
+		return new MercatorCoordinate(mercatorXfromLng(lngLat.lng), mercatorYfromLat(lngLat.lat), mercatorZfromAltitude(altitude, lngLat.lat));
+	}
+	/**
+	* Returns the `LngLat` for the coordinate.
+	*
+	* @returns The `LngLat` object.
+	* @example
+	* ```ts
+	* let coord = new MercatorCoordinate(0.5, 0.5, 0);
+	* let lngLat = coord.toLngLat(); // LngLat(0, 0)
+	* ```
+	*/
+	toLngLat() {
+		return new LngLat(lngFromMercatorX(this.x), latFromMercatorY(this.y));
+	}
+	/**
+	* Returns the altitude in meters of the coordinate.
+	*
+	* @returns The altitude in meters.
+	* @example
+	* ```ts
+	* let coord = new MercatorCoordinate(0, 0, 0.02);
+	* coord.toAltitude(); // 6914.281956295339
+	* ```
+	*/
+	toAltitude() {
+		return altitudeFromMercatorZ(this.z, this.y);
+	}
+	/**
+	* Returns the distance of 1 meter in `MercatorCoordinate` units at this latitude.
+	*
+	* For coordinates in real world units using meters, this naturally provides the scale
+	* to transform into `MercatorCoordinate`s.
+	*
+	* @returns Distance of 1 meter in `MercatorCoordinate` units.
+	*/
+	meterInMercatorCoordinateUnits() {
+		return 1 / earthCircumference * mercatorScale(latFromMercatorY(this.y));
+	}
+};
+//#endregion
 //#region src/geo/projection/mercator_utils.ts
 const maxMercatorHorizonAngle = 89.25;
 /**
@@ -20485,7 +20019,7 @@ function tileCoordinatesToLocation(inTileX, inTileY, canonicalTileID) {
 */
 function projectToWorldCoordinates(worldSize, lnglat) {
 	const lat = clamp$2(lnglat.lat, -85.051129, MAX_VALID_LATITUDE);
-	return new Point(mercatorXfromLng$1(lnglat.lng) * worldSize, mercatorYfromLat$1(lat) * worldSize);
+	return new Point(mercatorXfromLng(lnglat.lng) * worldSize, mercatorYfromLat(lat) * worldSize);
 }
 /**
 * Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
@@ -22148,6 +21682,285 @@ var TaggedString = class TaggedString {
 	}
 };
 //#endregion
+//#region node_modules/pbf/index.js
+const SHIFT_LEFT_32 = 4294967296;
+const TEXT_DECODER_MIN_LENGTH$1 = 12;
+const utf8TextDecoder$1 = typeof TextDecoder === "undefined" ? null : new TextDecoder("utf-8");
+const PBF_VARINT = 0;
+const PBF_FIXED64 = 1;
+const PBF_BYTES = 2;
+const PBF_FIXED32 = 5;
+var PbfReader = class {
+	/**
+	* @param {Uint8Array | ArrayBuffer} buf
+	*/
+	constructor(buf) {
+		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
+		this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
+		this.pos = 0;
+		this.type = 0;
+		this._valueStart = -1;
+		this.length = this.buf.length;
+	}
+	/**
+	* @template T
+	* @param {(tag: number, result: T, pbf: PbfReader) => void} readField
+	* @param {T} result
+	* @param {number} [end]
+	*/
+	readFields(readField, result, end = this.length) {
+		let field;
+		while (field = this.nextField(end)) readField(field, result, this);
+		return result;
+	}
+	/**
+	* @template T
+	* @param {(tag: number, result: T, pbf: PbfReader) => void} readField
+	* @param {T} result
+	*/
+	readMessage(readField, result) {
+		return this.readFields(readField, result, this.readVarint() + this.pos);
+	}
+	readFixed32() {
+		const val = this.dataView.getUint32(this.pos, true);
+		this.pos += 4;
+		return val;
+	}
+	readSFixed32() {
+		const val = this.dataView.getInt32(this.pos, true);
+		this.pos += 4;
+		return val;
+	}
+	readFixed64() {
+		const val = this.dataView.getUint32(this.pos, true) + this.dataView.getUint32(this.pos + 4, true) * SHIFT_LEFT_32;
+		this.pos += 8;
+		return val;
+	}
+	readSFixed64() {
+		const val = this.dataView.getUint32(this.pos, true) + this.dataView.getInt32(this.pos + 4, true) * SHIFT_LEFT_32;
+		this.pos += 8;
+		return val;
+	}
+	readFloat() {
+		const val = this.dataView.getFloat32(this.pos, true);
+		this.pos += 4;
+		return val;
+	}
+	readDouble() {
+		const val = this.dataView.getFloat64(this.pos, true);
+		this.pos += 8;
+		return val;
+	}
+	/**
+	* @param {boolean} [isSigned]
+	*/
+	readVarint(isSigned) {
+		const buf = this.buf;
+		const b0 = buf[this.pos++];
+		if (b0 < 128) return b0;
+		let val = b0 & 127, b;
+		b = buf[this.pos++];
+		val |= (b & 127) << 7;
+		if (b < 128) return val;
+		b = buf[this.pos++];
+		val |= (b & 127) << 14;
+		if (b < 128) return val;
+		b = buf[this.pos++];
+		val |= (b & 127) << 21;
+		if (b < 128) return val;
+		b = buf[this.pos];
+		val |= (b & 15) << 28;
+		return readVarintRemainder(val, isSigned, this);
+	}
+	readSVarint() {
+		const num = this.readVarint();
+		return num % 2 === 1 ? (num + 1) / -2 : num / 2;
+	}
+	readBoolean() {
+		return Boolean(this.readVarint());
+	}
+	readString() {
+		const end = this.readVarint() + this.pos;
+		const pos = this.pos;
+		this.pos = end;
+		if (end - pos >= TEXT_DECODER_MIN_LENGTH$1 && utf8TextDecoder$1) return utf8TextDecoder$1.decode(this.buf.subarray(pos, end));
+		return readUtf8$1(this.buf, pos, end);
+	}
+	readBytes() {
+		const end = this.readVarint() + this.pos, buffer = this.buf.subarray(this.pos, end);
+		this.pos = end;
+		return buffer;
+	}
+	/**
+	* @param {number[]} [arr]
+	* @param {boolean} [isSigned]
+	*/
+	readPackedVarint(arr = [], isSigned) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readVarint(isSigned));
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedSVarint(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readSVarint());
+		return arr;
+	}
+	/** @param {boolean[]} [arr] */
+	readPackedBoolean(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readBoolean());
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedFloat(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readFloat());
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedDouble(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readDouble());
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedFixed32(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readFixed32());
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedSFixed32(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readSFixed32());
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedFixed64(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readFixed64());
+		return arr;
+	}
+	/** @param {number[]} [arr] */
+	readPackedSFixed64(arr = []) {
+		const end = this.readPackedEnd();
+		while (this.pos < end) arr.push(this.readSFixed64());
+		return arr;
+	}
+	readPackedEnd() {
+		return this.type === PBF_BYTES ? this.readVarint() + this.pos : this.pos + 1;
+	}
+	/**
+	* Advance to the next field. Returns the field number, or 0 at end-of-message.
+	* @param {number} [end]
+	*/
+	nextField(end = this.length) {
+		if (this.pos === this._valueStart) this.skip(this.type);
+		if (this.pos >= end) return 0;
+		const tag = this.readVarint();
+		this.type = tag & 7;
+		this._valueStart = this.pos;
+		return tag >>> 3;
+	}
+	/** @param {number} val */
+	skip(val) {
+		const type = val & 7;
+		if (type === PBF_VARINT) while (this.buf[this.pos++] > 127);
+		else if (type === PBF_BYTES) this.pos = this.readVarint() + this.pos;
+		else if (type === PBF_FIXED32) this.pos += 4;
+		else if (type === PBF_FIXED64) this.pos += 8;
+		else throw new Error(`Unimplemented type: ${type}`);
+	}
+};
+/**
+* @param {number} l
+* @param {boolean | undefined} s
+* @param {PbfReader} p
+*/
+function readVarintRemainder(l, s, p) {
+	const buf = p.buf;
+	let h, b;
+	b = buf[p.pos++];
+	h = (b & 112) >> 4;
+	if (b < 128) return toNum(l, h, s);
+	b = buf[p.pos++];
+	h |= (b & 127) << 3;
+	if (b < 128) return toNum(l, h, s);
+	b = buf[p.pos++];
+	h |= (b & 127) << 10;
+	if (b < 128) return toNum(l, h, s);
+	b = buf[p.pos++];
+	h |= (b & 127) << 17;
+	if (b < 128) return toNum(l, h, s);
+	b = buf[p.pos++];
+	h |= (b & 127) << 24;
+	if (b < 128) return toNum(l, h, s);
+	b = buf[p.pos++];
+	h |= (b & 1) << 31;
+	if (b < 128) return toNum(l, h, s);
+	throw new Error("Expected varint not more than 10 bytes");
+}
+/**
+* @param {number} low
+* @param {number} high
+* @param {boolean} [isSigned]
+*/
+function toNum(low, high, isSigned) {
+	return isSigned ? high * 4294967296 + (low >>> 0) : (high >>> 0) * 4294967296 + (low >>> 0);
+}
+/**
+* @param {Uint8Array} buf
+* @param {number} pos
+* @param {number} end
+*/
+function readUtf8$1(buf, pos, end) {
+	let str = "";
+	let i = pos;
+	while (i < end) {
+		const b0 = buf[i];
+		let c = null;
+		let bytesPerSequence = b0 > 239 ? 4 : b0 > 223 ? 3 : b0 > 191 ? 2 : 1;
+		if (i + bytesPerSequence > end) break;
+		let b1, b2, b3;
+		if (bytesPerSequence === 1) {
+			if (b0 < 128) c = b0;
+		} else if (bytesPerSequence === 2) {
+			b1 = buf[i + 1];
+			if ((b1 & 192) === 128) {
+				c = (b0 & 31) << 6 | b1 & 63;
+				if (c <= 127) c = null;
+			}
+		} else if (bytesPerSequence === 3) {
+			b1 = buf[i + 1];
+			b2 = buf[i + 2];
+			if ((b1 & 192) === 128 && (b2 & 192) === 128) {
+				c = (b0 & 15) << 12 | (b1 & 63) << 6 | b2 & 63;
+				if (c <= 2047 || c >= 55296 && c <= 57343) c = null;
+			}
+		} else if (bytesPerSequence === 4) {
+			b1 = buf[i + 1];
+			b2 = buf[i + 2];
+			b3 = buf[i + 3];
+			if ((b1 & 192) === 128 && (b2 & 192) === 128 && (b3 & 192) === 128) {
+				c = (b0 & 15) << 18 | (b1 & 63) << 12 | (b2 & 63) << 6 | b3 & 63;
+				if (c <= 65535 || c >= 1114112) c = null;
+			}
+		}
+		if (c === null) {
+			c = 65533;
+			bytesPerSequence = 1;
+		} else if (c > 65535) {
+			c -= 65536;
+			str += String.fromCharCode(c >>> 10 & 1023 | 55296);
+			c = 56320 | c & 1023;
+		}
+		str += String.fromCharCode(c);
+		i += bytesPerSequence;
+	}
+	return str;
+}
+//#endregion
 //#region src/style/parse_glyph_pbf.ts
 function readFontstacks(tag, glyphs, pbf) {
 	if (tag === 1) pbf.readMessage(readFontstack, glyphs);
@@ -23654,212 +23467,6 @@ function createStyleLayer(layer, globalState) {
 	}
 }
 //#endregion
-//#region src/util/image_request.ts
-let ImageRequest;
-(function(_ImageRequest) {
-	let imageRequestQueue;
-	let currentParallelImageRequests;
-	let throttleControlCallbackHandleCounter;
-	let throttleControlCallbacks;
-	_ImageRequest.resetRequestQueue = () => {
-		imageRequestQueue = [];
-		currentParallelImageRequests = 0;
-		throttleControlCallbackHandleCounter = 0;
-		throttleControlCallbacks = {};
-	};
-	_ImageRequest.addThrottleControl = (callback) => {
-		const handle = throttleControlCallbackHandleCounter++;
-		throttleControlCallbacks[handle] = callback;
-		return handle;
-	};
-	_ImageRequest.removeThrottleControl = (callbackHandle) => {
-		delete throttleControlCallbacks[callbackHandle];
-		processQueue();
-	};
-	/**
-	* Check to see if any of the installed callbacks are requesting the queue
-	* to be throttled.
-	* @returns `true` if any callback is causing the queue to be throttled.
-	*/
-	const isThrottled = () => {
-		for (const key of Object.keys(throttleControlCallbacks)) if (throttleControlCallbacks[key]()) return true;
-		return false;
-	};
-	_ImageRequest.getImage = (requestParameters, abortController, supportImageRefresh = true, imageBitmapOptions) => {
-		return new Promise((resolve, reject) => {
-			requestParameters.headers ||= {};
-			requestParameters.headers.accept = "image/webp,*/*";
-			extend(requestParameters, { type: "image" });
-			const request = {
-				abortController,
-				requestParameters,
-				supportImageRefresh,
-				imageBitmapOptions,
-				state: "queued",
-				onError: (error) => {
-					reject(error);
-				},
-				onSuccess: (response) => {
-					resolve(response);
-				}
-			};
-			imageRequestQueue.push(request);
-			processQueue();
-		});
-	};
-	const arrayBufferToCanvasImageSource = (data, imageBitmapOptions) => {
-		if (typeof createImageBitmap === "function") return arrayBufferToImageBitmap(data, imageBitmapOptions);
-		else return arrayBufferToImage(data);
-	};
-	const doImageRequest = async (itemInQueue) => {
-		itemInQueue.state = "running";
-		const { requestParameters, supportImageRefresh, imageBitmapOptions, onError, onSuccess, abortController } = itemInQueue;
-		const canUseHTMLImageElement = supportImageRefresh === false && !imageBitmapOptions && !isWorker(self) && !getProtocol(requestParameters.url) && (!requestParameters.headers || Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === "accept", true));
-		currentParallelImageRequests++;
-		const getImagePromise = canUseHTMLImageElement ? getImageUsingHtmlImage(requestParameters, abortController) : makeRequest(requestParameters, abortController);
-		try {
-			const response = await getImagePromise;
-			delete itemInQueue.abortController;
-			itemInQueue.state = "completed";
-			if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) onSuccess(response);
-			else if (response.data) onSuccess({
-				data: await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions),
-				cacheControl: response.cacheControl,
-				expires: response.expires
-			});
-		} catch (err) {
-			delete itemInQueue.abortController;
-			onError(ensureError(err));
-		} finally {
-			currentParallelImageRequests--;
-			processQueue();
-		}
-	};
-	/**
-	* Process some number of items in the image request queue.
-	*/
-	const processQueue = () => {
-		const maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
-		for (let numImageRequests = currentParallelImageRequests; numImageRequests < maxImageRequests && imageRequestQueue.length > 0; numImageRequests++) {
-			const topItemInQueue = imageRequestQueue.shift();
-			if (topItemInQueue.abortController.signal.aborted) {
-				numImageRequests--;
-				continue;
-			}
-			doImageRequest(topItemInQueue);
-		}
-	};
-	const getImageUsingHtmlImage = (requestParameters, abortController) => {
-		return new Promise((resolve, reject) => {
-			const image = new Image();
-			const url = requestParameters.url;
-			const credentials = requestParameters.credentials;
-			if (credentials && credentials === "include") image.crossOrigin = "use-credentials";
-			else if (credentials && credentials === "same-origin" || !sameOrigin(url)) image.crossOrigin = "anonymous";
-			abortController.signal.addEventListener("abort", () => {
-				image.src = "";
-				reject(new AbortError(abortController.signal.reason));
-			});
-			image.fetchPriority = "high";
-			image.onload = () => {
-				image.onerror = image.onload = null;
-				resolve({ data: image });
-			};
-			image.onerror = () => {
-				image.onerror = image.onload = null;
-				if (abortController.signal.aborted) return;
-				reject(/* @__PURE__ */ new Error("Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported."));
-			};
-			image.src = url;
-		});
-	};
-})(ImageRequest || (ImageRequest = {}));
-ImageRequest.resetRequestQueue();
-//#endregion
-//#region src/util/request_manager.ts
-var RequestManager = class {
-	constructor(transformRequestFn) {
-		this._transformRequestFn = transformRequestFn ?? null;
-	}
-	transformRequest(url, type) {
-		if (this._transformRequestFn) return this._transformRequestFn(url, type) || { url };
-		return { url };
-	}
-	setTransformRequest(transformRequest) {
-		this._transformRequestFn = transformRequest;
-	}
-};
-//#endregion
-//#region src/util/browser.ts
-let linkEl;
-let reducedMotionQuery;
-let reducedMotionOverride;
-/** */
-const browser = {
-	/**
-	* Schedules a callback to be invoked on the next animation frame.
-	* @param abortController - Controller to abort the scheduled frame.
-	* @param fn - Callback to invoke with the paint start timestamp.
-	* @param reject - Callback to invoke if the frame is aborted.
-	* @param targetWindow - Optional window to use for requestAnimationFrame.
-	*   When the map is rendered in a popup window or iframe, pass the owning
-	*   window to ensure animation frames continue even when the main window
-	*   is not focused.
-	*/
-	frame(abortController, fn, reject, targetWindow) {
-		const win = targetWindow || window;
-		const frameId = win.requestAnimationFrame((paintStartTimestamp) => {
-			unsubscribe();
-			fn(paintStartTimestamp);
-		});
-		const { unsubscribe } = subscribe(abortController.signal, "abort", () => {
-			unsubscribe();
-			win.cancelAnimationFrame(frameId);
-			reject(new AbortError(abortController.signal.reason));
-		}, false);
-	},
-	/**
-	* Returns a promise that resolves on the next animation frame.
-	* @param abortController - Controller to abort the scheduled frame.
-	* @param targetWindow - Optional window to use for requestAnimationFrame.
-	* @see {@link browser.frame}
-	*/
-	frameAsync(abortController, targetWindow) {
-		return new Promise((resolve, reject) => {
-			this.frame(abortController, resolve, reject, targetWindow);
-		});
-	},
-	getImageData(img, padding = 0) {
-		return this.getImageCanvasContext(img).getImageData(-padding, -padding, img.width + 2 * padding, img.height + 2 * padding);
-	},
-	getImageCanvasContext(img) {
-		const canvas = window.document.createElement("canvas");
-		const context = canvas.getContext("2d", { willReadFrequently: true });
-		if (!context) throw new Error("failed to create canvas 2d context");
-		canvas.width = img.width;
-		canvas.height = img.height;
-		context.drawImage(img, 0, 0, img.width, img.height);
-		return context;
-	},
-	resolveURL(path) {
-		linkEl ||= document.createElement("a");
-		linkEl.href = path;
-		return linkEl.href;
-	},
-	get hardwareConcurrency() {
-		return typeof navigator !== "undefined" && navigator.hardwareConcurrency || 4;
-	},
-	get prefersReducedMotion() {
-		if (reducedMotionOverride !== void 0) return reducedMotionOverride;
-		if (!matchMedia) return false;
-		reducedMotionQuery ??= matchMedia("(prefers-reduced-motion: reduce)");
-		return reducedMotionQuery.matches;
-	},
-	set prefersReducedMotion(value) {
-		reducedMotionOverride = value;
-	}
-};
-//#endregion
 //#region src/util/style.ts
 /**
 * Takes a SpriteSpecification value and returns it in its array form. If `undefined` is passed as an input value, an
@@ -24870,117 +24477,6 @@ var LineAtlas = class {
 	}
 };
 //#endregion
-//#region src/util/time_control.ts
-/**
-* Manages time flow with optional freezing capability for deterministic rendering.
-*/
-var TimeManager = class {
-	constructor() {
-		this._frozenAt = null;
-	}
-	/**
-	* Gets the current time, either real or frozen.
-	* @returns Current time in milliseconds
-	*/
-	getCurrentTime() {
-		return this._frozenAt !== null ? this._frozenAt : performance.now();
-	}
-	/**
-	* Sets time at a specific timestamp.
-	* @param timestamp - Time in milliseconds to set
-	*/
-	setNow(timestamp) {
-		this._frozenAt = timestamp;
-	}
-	/**
-	* Restores normal time flow.
-	*/
-	restoreNow() {
-		this._frozenAt = null;
-	}
-	/**
-	* Returns whether time is currently frozen.
-	* @returns True if time is frozen, false otherwise
-	*/
-	isFrozen() {
-		return this._frozenAt !== null;
-	}
-};
-const timeManager = new TimeManager();
-/**
-* Returns the current time in milliseconds.
-* When time is frozen via setNow(), returns the frozen timestamp.
-* Otherwise returns real browser time via performance.now().
-*
-* @returns Current time in milliseconds
-* @example
-* ```ts
-* // Measure elapsed time
-* const start = maplibregl.now();
-* // ... later ...
-* const elapsed = maplibregl.now() - start;
-*
-* // During frozen time
-* maplibregl.setNow(16.67);
-* console.log(maplibregl.now()); // 16.67
-* maplibregl.restoreNow();
-* console.log(maplibregl.now()); // real time
-* ```
-*/
-function now() {
-	return timeManager.getCurrentTime();
-}
-/**
-* Freezes time at a specific timestamp for deterministic rendering.
-* Useful for frame-by-frame video capture where each frame needs
-* a consistent time value.
-*
-* @param timestamp - Time in milliseconds to freeze at
-* @example
-* ```ts
-* // Freeze time for video export at 60fps
-* setNow(0);           // First frame
-* // ... render frame ...
-* setNow(16.67);       // Second frame
-* // ... render frame ...
-* setNow(33.34);       // Third frame
-* // ... done ...
-* restoreNow();        // Resume normal time
-* ```
-*/
-function setNow(timestamp) {
-	timeManager.setNow(timestamp);
-}
-/**
-* Restores normal time flow after freezing with setNow().
-* Call this after finishing deterministic rendering operations.
-*
-* @example
-* ```ts
-* // After video export, resume normal time
-* setNow(0);
-* // ... export frames ...
-* restoreNow(); // Map animations resume normally
-* ```
-*/
-function restoreNow() {
-	timeManager.restoreNow();
-}
-/**
-* Returns whether time is currently frozen.
-* @returns True if time is frozen via setNow(), false otherwise
-* @example
-* ```ts
-* setNow(1000);
-* console.log(isTimeFrozen()); // true
-* restoreNow();
-* console.log(isTimeFrozen()); // false
-* ```
-*/
-function isTimeFrozen() {
-	return timeManager.isFrozen();
-}
-//#endregion
 //#region src/util/throttled_invoker.ts
 /**
 * Invokes the wrapped function in a non-blocking way when trigger() is called.
@@ -25880,10 +25376,10 @@ var TileBounds = class {
 	contains(tileID) {
 		const worldSize = Math.pow(2, tileID.z);
 		const level = {
-			minX: Math.floor(mercatorXfromLng$1(this.bounds.getWest()) * worldSize),
-			minY: Math.floor(mercatorYfromLat$1(this.bounds.getNorth()) * worldSize),
-			maxX: Math.ceil(mercatorXfromLng$1(this.bounds.getEast()) * worldSize),
-			maxY: Math.ceil(mercatorYfromLat$1(this.bounds.getSouth()) * worldSize)
+			minX: Math.floor(mercatorXfromLng(this.bounds.getWest()) * worldSize),
+			minY: Math.floor(mercatorYfromLat(this.bounds.getNorth()) * worldSize),
+			maxX: Math.ceil(mercatorXfromLng(this.bounds.getEast()) * worldSize),
+			maxY: Math.ceil(mercatorYfromLat(this.bounds.getSouth()) * worldSize)
 		};
 		return tileID.x >= level.minX && tileID.x < level.maxX && tileID.y >= level.minY && tileID.y < level.maxY;
 	}
@@ -26325,6 +25821,256 @@ var RasterTileSource = class extends Evented {
 	}
 };
 //#endregion
+//#region src/util/world_bounds.ts
+/**
+* Returns true if a given tile zoom (Z), X, and Y are in the bounds of the world.
+* Zoom bounds are the minimum zoom (inclusive) through the maximum zoom (inclusive).
+* X and Y bounds are 0 (inclusive) to their respective zoom-dependent maxima (exclusive).
+*
+* @param zoom - the tile zoom (Z)
+* @param x - the tile X
+* @param y - the tile Y
+* @returns `true` if a given tile zoom, X, and Y are in the bounds of the world.
+*/
+function isInBoundsForTileZoomXY(zoom, x, y) {
+	return !(zoom < 0 || zoom > 25 || y < 0 || y >= Math.pow(2, zoom) || x < 0 || x >= Math.pow(2, zoom));
+}
+/**
+* Returns true if a given zoom and `LngLat` are in the bounds of the world.
+* Does not wrap `LngLat` when checking if in bounds.
+* Zoom bounds are the minimum zoom (inclusive) through the maximum zoom (inclusive).
+* `LngLat` bounds are the mercator world's north-west corner (inclusive) to its south-east corner (exclusive).
+*
+* @param zoom - the tile zoom (Z)
+* @param LngLat - the `LngLat` object containing the longitude and latitude
+* @returns `true` if a given zoom and `LngLat` are in the bounds of the world.
+*/
+function isInBoundsForZoomLngLat(zoom, lnglat) {
+	const { x, y } = MercatorCoordinate.fromLngLat(lnglat);
+	return !(zoom < 0 || zoom > 25 || y < 0 || y >= 1 || x < 0 || x >= 1);
+}
+//#endregion
+//#region src/tile/tile_id.ts
+/**
+* A canonical way to define a tile ID
+*/
+var CanonicalTileID = class {
+	constructor(z, x, y) {
+		if (!isInBoundsForTileZoomXY(z, x, y)) throw new Error(`x=${x}, y=${y}, z=${z} outside of bounds. 0<=x<${Math.pow(2, z)}, 0<=y<${Math.pow(2, z)} 0<=z<=25 `);
+		this.z = z;
+		this.x = x;
+		this.y = y;
+		this.key = calculateTileKey(0, z, z, x, y);
+	}
+	equals(id) {
+		return this.z === id.z && this.x === id.x && this.y === id.y;
+	}
+	/**
+	* given a list of urls, choose a url template and return a tile URL
+	*/
+	url(urls, pixelRatio, scheme) {
+		const bbox = getTileBBox(this.x, this.y, this.z);
+		const quadkey = getQuadkey(this.z, this.x, this.y);
+		return urls[(this.x + this.y) % urls.length].replace(/{prefix}/g, (this.x % 16).toString(16) + (this.y % 16).toString(16)).replace(/{z}/g, String(this.z)).replace(/{x}/g, String(this.x)).replace(/{y}/g, String(scheme === "tms" ? Math.pow(2, this.z) - this.y - 1 : this.y)).replace(/{ratio}/g, pixelRatio > 1 ? "@2x" : "").replace(/{quadkey}/g, quadkey).replace(/{bbox-epsg-3857}/g, bbox);
+	}
+	isChildOf(parent) {
+		const dz = this.z - parent.z;
+		return dz > 0 && parent.x === this.x >> dz && parent.y === this.y >> dz;
+	}
+	getTilePoint(coord) {
+		const tilesAtZoom = Math.pow(2, this.z);
+		return new Point((coord.x * tilesAtZoom - this.x) * EXTENT, (coord.y * tilesAtZoom - this.y) * EXTENT);
+	}
+	toString() {
+		return `${this.z}/${this.x}/${this.y}`;
+	}
+};
+/**
+* @internal
+* An unwrapped tile identifier
+*/
+var UnwrappedTileID = class {
+	constructor(wrap, canonical) {
+		this.wrap = wrap;
+		this.canonical = canonical;
+		this.key = calculateTileKey(wrap, canonical.z, canonical.z, canonical.x, canonical.y);
+	}
+};
+/**
+* An overscaled tile identifier
+*/
+var OverscaledTileID = class OverscaledTileID {
+	constructor(overscaledZ, wrap, z, x, y) {
+		this.terrainRttPosMatrix32f = null;
+		if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
+		this.overscaledZ = overscaledZ;
+		this.wrap = wrap;
+		this.canonical = new CanonicalTileID(z, +x, +y);
+		this.key = calculateTileKey(wrap, overscaledZ, z, x, y);
+	}
+	clone() {
+		return new OverscaledTileID(this.overscaledZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
+	}
+	equals(id) {
+		return this.overscaledZ === id.overscaledZ && this.wrap === id.wrap && this.canonical.equals(id.canonical);
+	}
+	/**
+	* Returns a new `OverscaledTileID` representing the tile at the target zoom level.
+	* When targetZ is greater than the current canonical z, the canonical coordinates are unchanged.
+	* When targetZ is less than the current canonical z, the canonical coordinates are updated.
+	* @param targetZ - the zoom level to scale to. Must be less than or equal to this.overscaledZ
+	* @returns a new OverscaledTileID representing the tile at the target zoom level
+	* @throws if targetZ is greater than this.overscaledZ
+	*/
+	scaledTo(targetZ) {
+		if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
+		const zDifference = this.canonical.z - targetZ;
+		if (targetZ > this.canonical.z) return new OverscaledTileID(targetZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
+		else return new OverscaledTileID(targetZ, this.wrap, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
+	}
+	isOverscaled() {
+		return this.overscaledZ > this.canonical.z;
+	}
+	calculateScaledKey(targetZ, withWrap) {
+		if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
+		const zDifference = this.canonical.z - targetZ;
+		if (targetZ > this.canonical.z) return calculateTileKey(this.wrap * +withWrap, targetZ, this.canonical.z, this.canonical.x, this.canonical.y);
+		else return calculateTileKey(this.wrap * +withWrap, targetZ, targetZ, this.canonical.x >> zDifference, this.canonical.y >> zDifference);
+	}
+	isChildOf(parent) {
+		if (parent.wrap !== this.wrap) return false;
+		if (this.overscaledZ - parent.overscaledZ <= 0) return false;
+		if (parent.overscaledZ === 0) return this.overscaledZ > 0;
+		const dz = this.canonical.z - parent.canonical.z;
+		if (dz < 0) return false;
+		return parent.canonical.x === this.canonical.x >> dz && parent.canonical.y === this.canonical.y >> dz;
+	}
+	children(sourceMaxZoom) {
+		if (this.overscaledZ >= sourceMaxZoom) return [new OverscaledTileID(this.overscaledZ + 1, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y)];
+		const z = this.canonical.z + 1;
+		const x = this.canonical.x * 2;
+		const y = this.canonical.y * 2;
+		return [
+			new OverscaledTileID(z, this.wrap, z, x, y),
+			new OverscaledTileID(z, this.wrap, z, x + 1, y),
+			new OverscaledTileID(z, this.wrap, z, x, y + 1),
+			new OverscaledTileID(z, this.wrap, z, x + 1, y + 1)
+		];
+	}
+	isLessThan(rhs) {
+		if (this.wrap < rhs.wrap) return true;
+		if (this.wrap > rhs.wrap) return false;
+		if (this.overscaledZ < rhs.overscaledZ) return true;
+		if (this.overscaledZ > rhs.overscaledZ) return false;
+		if (this.canonical.x < rhs.canonical.x) return true;
+		if (this.canonical.x > rhs.canonical.x) return false;
+		return this.canonical.y < rhs.canonical.y;
+	}
+	wrapped() {
+		return new OverscaledTileID(this.overscaledZ, 0, this.canonical.z, this.canonical.x, this.canonical.y);
+	}
+	unwrapTo(wrap) {
+		return new OverscaledTileID(this.overscaledZ, wrap, this.canonical.z, this.canonical.x, this.canonical.y);
+	}
+	overscaleFactor() {
+		return Math.pow(2, this.overscaledZ - this.canonical.z);
+	}
+	toUnwrapped() {
+		return new UnwrappedTileID(this.wrap, this.canonical);
+	}
+	toString() {
+		return `${this.overscaledZ}/${this.canonical.x}/${this.canonical.y}`;
+	}
+	getTilePoint(coord) {
+		return this.canonical.getTilePoint(new MercatorCoordinate(coord.x - this.wrap, coord.y));
+	}
+	/**
+	* Maps tile-local coordinates that may fall outside the `[0, extent)` range
+	* to the correct neighbor tile and the corresponding in-tile position.
+	*
+	* Coordinates can exceed tile bounds when geometry (e.g. symbol labels along
+	* lines) extends across tile edges. This method resolves such coordinates to
+	* the appropriate adjacent tile, wrapping horizontally across world boundaries
+	* and returning `null` when the target falls beyond the polar tile-grid limits.
+	*
+	* When the coordinates are already in bounds, the original tile ID is returned.
+	*
+	* @param x - x coordinate relative to this tile, may be outside `[0, extent)`
+	* @param y - y coordinate relative to this tile, may be outside `[0, extent)`
+	* @param extent - tile coordinate extent, default {@link EXTENT}
+	* @returns the resolved tile ID and in-tile coordinates, or `null` if the
+	*          target is beyond the tile grid (e.g. past the poles)
+	*/
+	normalizeCoordinates(x, y, extent = EXTENT) {
+		if (x >= 0 && x < extent && y >= 0 && y < extent) return {
+			tileID: this,
+			x,
+			y
+		};
+		const tileOffsetX = Math.floor(x / extent);
+		const tileOffsetY = Math.floor(y / extent);
+		const newX = x - tileOffsetX * extent;
+		const newY = y - tileOffsetY * extent;
+		const z = this.canonical.z;
+		const dim = 1 << z;
+		const newCanonicalY = this.canonical.y + tileOffsetY;
+		if (newCanonicalY < 0 || newCanonicalY >= dim) return null;
+		let newCanonicalX = this.canonical.x + tileOffsetX;
+		let newWrap = this.wrap;
+		if (newCanonicalX < 0) {
+			newWrap -= Math.ceil(-newCanonicalX / dim);
+			newCanonicalX = (newCanonicalX % dim + dim) % dim;
+		} else if (newCanonicalX >= dim) {
+			newWrap += Math.floor(newCanonicalX / dim);
+			newCanonicalX = newCanonicalX % dim;
+		}
+		return {
+			tileID: new OverscaledTileID(this.overscaledZ, newWrap, z, newCanonicalX, newCanonicalY),
+			x: newX,
+			y: newY
+		};
+	}
+};
+function calculateTileKey(wrap, overscaledZ, z, x, y) {
+	wrap *= 2;
+	if (wrap < 0) wrap = wrap * -1 - 1;
+	const dim = 1 << z;
+	return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
+}
+const EPSG3857_HALF_CIRCUMFERENCE = Math.PI * 6378137;
+/**
+* Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
+* box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
+*
+* Inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
+*/
+function getTileBBox(x, y, z) {
+	y = Math.pow(2, z) - y - 1;
+	const min = getEpsg3857Coords(x * 256, y * 256, z);
+	const max = getEpsg3857Coords((x + 1) * 256, (y + 1) * 256, z);
+	return `${min[0]},${min[1]},${max[0]},${max[1]}`;
+}
+/** Projects tile pixel coordinates to EPSG:3857 meters. */
+function getEpsg3857Coords(x, y, z) {
+	const resolution = 2 * EPSG3857_HALF_CIRCUMFERENCE / 256 / Math.pow(2, z);
+	return [x * resolution - EPSG3857_HALF_CIRCUMFERENCE, y * resolution - EPSG3857_HALF_CIRCUMFERENCE];
+}
+function getQuadkey(z, x, y) {
+	let quadkey = "";
+	for (let i = z; i > 0; i--) {
+		const mask = 1 << i - 1;
+		quadkey += (x & mask ? 1 : 0) + (y & mask ? 2 : 0);
+	}
+	return quadkey;
+}
+function compareTileId(a, b) {
+	const aWrap = Math.abs(a.wrap * 2) - +(a.wrap < 0);
+	const bWrap = Math.abs(b.wrap * 2) - +(b.wrap < 0);
+	return a.overscaledZ - b.overscaledZ || bWrap - aWrap || b.canonical.y - a.canonical.y || b.canonical.x - a.canonical.x;
+}
+register$1("CanonicalTileID", CanonicalTileID);
+register$1("OverscaledTileID", OverscaledTileID, { omit: ["terrainRttPosMatrix32f"] });
+//#endregion
 //#region src/source/raster_dem_tile_source.ts
 /**
 * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -26692,9 +26438,9 @@ function getGeoJSONBounds(data) {
 //#region src/tile/tile_id_to_lng_lat_bounds.ts
 function tileIdToLngLatBounds({ x, y, z }, buffer = 0) {
 	const lngMin = lngFromMercatorX((x - buffer) / Math.pow(2, z));
-	const latMin = latFromMercatorY$1((y + 1 + buffer) / Math.pow(2, z));
+	const latMin = latFromMercatorY((y + 1 + buffer) / Math.pow(2, z));
 	const lngMax = lngFromMercatorX((x + 1 + buffer) / Math.pow(2, z));
-	const latMax = latFromMercatorY$1((y - buffer) / Math.pow(2, z));
+	const latMax = latFromMercatorY((y - buffer) / Math.pow(2, z));
 	return new LngLatBounds([lngMin, latMin], [lngMax, latMax]);
 }
 //#endregion
@@ -38731,13 +38477,13 @@ var MercatorTransform = class MercatorTransform {
 			const { x: screenWidth, y: screenHeight } = this.size;
 			if (this._helper._latRange) {
 				const latRange = this._helper._latRange;
-				minY = mercatorYfromLat$1(latRange[1]) * worldSize;
-				maxY = mercatorYfromLat$1(latRange[0]) * worldSize;
+				minY = mercatorYfromLat(latRange[1]) * worldSize;
+				maxY = mercatorYfromLat(latRange[0]) * worldSize;
 				if (maxY - minY < screenHeight) scaleY = screenHeight / (maxY - minY);
 			}
 			if (lngRange) {
-				minX = wrap(mercatorXfromLng$1(lngRange[0]) * worldSize, 0, worldSize);
-				maxX = wrap(mercatorXfromLng$1(lngRange[1]) * worldSize, 0, worldSize);
+				minX = wrap(mercatorXfromLng(lngRange[0]) * worldSize, 0, worldSize);
+				maxX = wrap(mercatorXfromLng(lngRange[1]) * worldSize, 0, worldSize);
 				if (maxX < minX) maxX += worldSize;
 				if (maxX - minX < screenWidth) scaleX = screenWidth / (maxX - minX);
 			}
@@ -43016,383 +42762,6 @@ var Style = class extends Evented {
 		this._oneTimeListeners = {};
 	}
 };
-//#endregion
-//#region src/render/glyph_atlas.ts
-const padding = 1;
-var GlyphAtlas = class {
-	constructor(stacks) {
-		const positions = {};
-		const bins = [];
-		for (const stack in stacks) {
-			const glyphs = stacks[stack];
-			const stackPositions = positions[stack] = {};
-			for (const id in glyphs) {
-				const src = glyphs[+id];
-				if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
-				const bin = {
-					x: 0,
-					y: 0,
-					w: src.bitmap.width + 2,
-					h: src.bitmap.height + 2
-				};
-				bins.push(bin);
-				stackPositions[id] = {
-					rect: bin,
-					metrics: src.metrics
-				};
-			}
-		}
-		const { w, h } = potpack(bins);
-		const image = new AlphaImage({
-			width: w || 1,
-			height: h || 1
-		});
-		for (const stack in stacks) {
-			const glyphs = stacks[stack];
-			for (const id in glyphs) {
-				const src = glyphs[+id];
-				if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
-				const bin = positions[stack][id].rect;
-				AlphaImage.copy(src.bitmap, image, {
-					x: 0,
-					y: 0
-				}, {
-					x: bin.x + padding,
-					y: bin.y + padding
-				}, src.bitmap);
-			}
-		}
-		this.image = image;
-		this.positions = positions;
-	}
-};
-register$1("GlyphAtlas", GlyphAtlas);
-//#endregion
-//#region src/source/worker_tile.ts
-var WorkerTile = class {
-	constructor(params) {
-		this.tileID = new OverscaledTileID(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
-		this.uid = params.uid;
-		this.zoom = params.zoom;
-		this.pixelRatio = params.pixelRatio;
-		this.tileSize = params.tileSize;
-		this.source = params.source;
-		this.overscaling = this.tileID.overscaleFactor();
-		this.showCollisionBoxes = params.showCollisionBoxes;
-		this.collectResourceTiming = !!params.collectResourceTiming;
-		this.returnDependencies = !!params.returnDependencies;
-		this.promoteId = params.promoteId;
-		this.inFlightDependencies = [];
-	}
-	async parse(data, layerIndex, availableImages, actor, subdivisionGranularity) {
-		this.data = data;
-		this.collisionBoxArray = new CollisionBoxArray();
-		const sourceLayerCoder = new DictionaryCoder(Object.keys(data.layers).sort());
-		const featureIndex = new FeatureIndex(this.tileID, this.promoteId);
-		featureIndex.bucketLayerIDs = [];
-		const buckets = {};
-		const options = {
-			featureIndex,
-			iconDependencies: {},
-			patternDependencies: {},
-			glyphDependencies: {},
-			dashDependencies: {},
-			availableImages,
-			subdivisionGranularity
-		};
-		const layerFamilies = layerIndex.familiesBySource[this.source];
-		for (const sourceLayerId in layerFamilies) {
-			const sourceLayer = data.layers[sourceLayerId];
-			if (!sourceLayer) continue;
-			if (sourceLayer.version === 1) warnOnce(`Vector tile source "${this.source}" layer "${sourceLayerId}" does not use vector tile spec v2 and therefore may have some rendering errors.`);
-			const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
-			const features = [];
-			for (let index = 0; index < sourceLayer.length; index++) {
-				const feature = sourceLayer.feature(index);
-				const id = featureIndex.getId(feature, sourceLayerId);
-				features.push({
-					feature,
-					id,
-					index,
-					sourceLayerIndex
-				});
-			}
-			for (const family of layerFamilies[sourceLayerId]) {
-				const layer = family[0];
-				if (layer.source !== this.source) warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
-				if (layer.isHidden(this.zoom, true)) continue;
-				recalculateLayers(family, this.zoom, availableImages);
-				(buckets[layer.id] = layer.createBucket({
-					index: featureIndex.bucketLayerIDs.length,
-					layers: family,
-					zoom: this.zoom,
-					pixelRatio: this.pixelRatio,
-					overscaling: this.overscaling,
-					collisionBoxArray: this.collisionBoxArray,
-					sourceLayerIndex,
-					sourceID: this.source
-				})).populate(features, options, this.tileID.canonical);
-				featureIndex.bucketLayerIDs.push(family.map((l) => l.id));
-			}
-		}
-		const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
-		for (const request of this.inFlightDependencies) request?.abort();
-		this.inFlightDependencies = [];
-		let getGlyphsPromise = Promise.resolve({});
-		if (Object.keys(stacks).length) {
-			const abortController = new AbortController();
-			this.inFlightDependencies.push(abortController);
-			getGlyphsPromise = actor.sendAsync({
-				type: "GG",
-				data: {
-					stacks,
-					source: this.source,
-					tileID: this.tileID,
-					type: "glyphs"
-				}
-			}, abortController);
-		}
-		const icons = Object.keys(options.iconDependencies);
-		let getIconsPromise = Promise.resolve({});
-		if (icons.length) {
-			const abortController = new AbortController();
-			this.inFlightDependencies.push(abortController);
-			getIconsPromise = actor.sendAsync({
-				type: "GI",
-				data: {
-					icons,
-					source: this.source,
-					tileID: this.tileID,
-					type: "icons"
-				}
-			}, abortController);
-		}
-		const patterns = Object.keys(options.patternDependencies);
-		let getPatternsPromise = Promise.resolve({});
-		if (patterns.length) {
-			const abortController = new AbortController();
-			this.inFlightDependencies.push(abortController);
-			getPatternsPromise = actor.sendAsync({
-				type: "GI",
-				data: {
-					icons: patterns,
-					source: this.source,
-					tileID: this.tileID,
-					type: "patterns"
-				}
-			}, abortController);
-		}
-		const dashes = options.dashDependencies;
-		let getDashesPromise = Promise.resolve({});
-		if (Object.keys(dashes).length) {
-			const abortController = new AbortController();
-			this.inFlightDependencies.push(abortController);
-			getDashesPromise = actor.sendAsync({
-				type: "GDA",
-				data: { dashes }
-			}, abortController);
-		}
-		const [glyphMap, iconMap, patternMap, dashPositions] = await Promise.all([
-			getGlyphsPromise,
-			getIconsPromise,
-			getPatternsPromise,
-			getDashesPromise
-		]);
-		const glyphAtlas = new GlyphAtlas(glyphMap);
-		const imageAtlas = new ImageAtlas(iconMap, patternMap);
-		for (const key in buckets) {
-			const bucket = buckets[key];
-			if (bucket instanceof SymbolBucket) {
-				recalculateLayers(bucket.layers, this.zoom, availableImages);
-				performSymbolLayout({
-					bucket,
-					glyphMap,
-					glyphPositions: glyphAtlas.positions,
-					imageMap: iconMap,
-					imagePositions: imageAtlas.iconPositions,
-					showCollisionBoxes: this.showCollisionBoxes,
-					canonical: this.tileID.canonical,
-					subdivisionGranularity: options.subdivisionGranularity
-				});
-			} else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
-				recalculateLayers(bucket.layers, this.zoom, availableImages);
-				bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
-			}
-		}
-		return {
-			buckets: Object.values(buckets).filter((b) => !b.isEmpty()),
-			featureIndex,
-			collisionBoxArray: this.collisionBoxArray,
-			glyphAtlasImage: glyphAtlas.image,
-			imageAtlas,
-			dashPositions,
-			glyphMap: this.returnDependencies ? glyphMap : null,
-			iconMap: this.returnDependencies ? iconMap : null,
-			glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
-		};
-	}
-};
-function recalculateLayers(layers, zoom, availableImages) {
-	const parameters = new EvaluationParameters(zoom);
-	for (const layer of layers) layer.recalculate(parameters, availableImages);
-}
-//#endregion
-//#region src/style/style_layer_index.ts
-var StyleLayerIndex = class {
-	constructor(layerConfigs, globalState) {
-		this.keyCache = {};
-		if (layerConfigs) this.replace(layerConfigs, globalState);
-	}
-	replace(layerConfigs, globalState) {
-		this._layerConfigs = {};
-		this._layers = {};
-		this.update(layerConfigs, [], globalState);
-	}
-	update(layerConfigs, removedIds, globalState) {
-		for (const layerConfig of layerConfigs) {
-			this._layerConfigs[layerConfig.id] = layerConfig;
-			const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
-			layer._featureFilter = featureFilter(layer.filter, `layers[${layerConfig.id}].filter`, globalState);
-			if (this.keyCache[layerConfig.id]) delete this.keyCache[layerConfig.id];
-		}
-		for (const id of removedIds) {
-			delete this.keyCache[id];
-			delete this._layerConfigs[id];
-			delete this._layers[id];
-		}
-		this.familiesBySource = {};
-		const groups = groupByLayout(Object.values(this._layerConfigs), this.keyCache);
-		for (const layerConfigs of groups) {
-			const layers = layerConfigs.map((layerConfig) => this._layers[layerConfig.id]);
-			const layer = layers[0];
-			if (layer.isHidden()) continue;
-			const sourceId = layer.source || "";
-			let sourceGroup = this.familiesBySource[sourceId];
-			sourceGroup ||= this.familiesBySource[sourceId] = {};
-			const sourceLayerId = layer.sourceLayer || "_geojsonTileLayer";
-			let sourceLayerFamilies = sourceGroup[sourceLayerId];
-			sourceLayerFamilies ||= sourceGroup[sourceLayerId] = [];
-			sourceLayerFamilies.push(layers);
-		}
-	}
-};
-//#endregion
-//#region test/bench/lib/tile_parser.ts
-var StubMap = class extends Evented {
-	constructor() {
-		super();
-		this._requestManager = new RequestManager();
-		this.transform = new MercatorTransform();
-	}
-	getPixelRatio() {
-		return devicePixelRatio;
-	}
-	setTerrain() {}
-	_getMapId() {
-		return 1;
-	}
-	migrateProjection() {}
-};
-function createStyle(styleJSON) {
-	return new Promise((resolve, reject) => {
-		const mapStub = new StubMap();
-		const style = new Style(mapStub);
-		mapStub.style = style;
-		style.loadJSON(styleJSON);
-		style.on("style.load", () => resolve(style));
-		style.on("error", reject);
-	});
-}
-var TileParser = class {
-	constructor(styleJSON, sourceID) {
-		this.styleJSON = styleJSON;
-		this.sourceID = sourceID;
-		this.layerIndex = new StyleLayerIndex(derefLayers(this.styleJSON.layers));
-		this.glyphs = {};
-		this.icons = {};
-	}
-	async loadImages(params) {
-		const key = JSON.stringify(params);
-		if (!this.icons[key]) this.icons[key] = await this.style.getImages("", params);
-		return this.icons[key];
-	}
-	async loadGlyphs(params) {
-		const key = JSON.stringify(params);
-		if (!this.glyphs[key]) this.glyphs[key] = await this.style.getGlyphs("", params);
-		return this.glyphs[key];
-	}
-	async loadDashes(params) {
-		const key = JSON.stringify(params);
-		if (!this.dashes[key]) this.dashes[key] = await this.style.getDashes("", params);
-		return this.dashes[key];
-	}
-	setup() {
-		const parser = this;
-		this.actor = { sendAsync(rawMessage) {
-			const message = rawMessage;
-			if (message.type === "GI") return parser.loadImages(message.data);
-			if (message.type === "GG") return parser.loadGlyphs(message.data);
-			if (message.type === "GDA") return parser.loadDashes(message.data);
-			throw new Error(`Invalid action ${message.type}`);
-		} };
-		return Promise.all([createStyle(this.styleJSON), fetch(this.styleJSON.sources[this.sourceID].url).then((response) => response.json())]).then(([style, tileJSON]) => {
-			this.style = style;
-			this.tileJSON = tileJSON;
-		});
-	}
-	fetchTile(tileID) {
-		return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio)).then((response) => response.arrayBuffer()).then((buffer) => ({
-			tileID,
-			buffer
-		}));
-	}
-	parseTile(tile, returnDependencies) {
-		const workerTile = new WorkerTile({
-			type: "benchmark",
-			tileID: tile.tileID,
-			zoom: tile.tileID.overscaledZ,
-			tileSize: 512,
-			showCollisionBoxes: false,
-			source: this.sourceID,
-			uid: "0",
-			maxZoom: 22,
-			pixelRatio: 1,
-			request: { url: "" },
-			returnDependencies,
-			promoteId: void 0,
-			subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
-		});
-		const vectorTile = new VectorTile(new PbfReader(tile.buffer));
-		return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
-	}
-};
-//#endregion
-//#region test/bench/benchmarks/layout.ts
-var Layout = class extends Benchmark {
-	constructor(style, tileIDs) {
-		super();
-		this.style = style;
-		this.tileIDs = tileIDs || [
-			new OverscaledTileID(12, 0, 12, 655, 1583),
-			new OverscaledTileID(8, 0, 8, 40, 98),
-			new OverscaledTileID(4, 0, 4, 3, 6),
-			new OverscaledTileID(0, 0, 0, 0, 0)
-		];
-	}
-	async setup() {
-		const styleJSON = await fetchStyle(this.style);
-		this.parser = new TileParser(styleJSON, "openmaptiles");
-		await this.parser.setup();
-		this.tiles = await Promise.all(this.tileIDs.map((tileID) => this.parser.fetchTile(tileID)));
-		await Promise.all(this.tiles.map((tile) => this.parser.parseTile(tile)));
-	}
-	async bench() {
-		for (const tile of this.tiles) await this.parser.parseTile(tile);
-	}
-};
-//#endregion
-//#region package.json
-var version$4 = "6.2.0";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
 const rasterBoundsAttributes = createLayout([{
@@ -55261,27 +54630,358 @@ var Paint$1 = class extends Benchmark {
 	}
 };
 //#endregion
-//#region test/bench/benchmarks/symbol_layout.ts
-var SymbolLayout = class extends Layout {
-	constructor(style, locations) {
-		super(style, locations);
-		this.parsedTiles = [];
+//#region test/bench/lib/fetch_style.ts
+function fetchStyle(value) {
+	return typeof value === "string" ? fetch(value).then((response) => response.json()) : Promise.resolve(value);
+}
+//#endregion
+//#region src/render/glyph_atlas.ts
+const padding = 1;
+var GlyphAtlas = class {
+	constructor(stacks) {
+		const positions = {};
+		const bins = [];
+		for (const stack in stacks) {
+			const glyphs = stacks[stack];
+			const stackPositions = positions[stack] = {};
+			for (const id in glyphs) {
+				const src = glyphs[+id];
+				if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
+				const bin = {
+					x: 0,
+					y: 0,
+					w: src.bitmap.width + 2,
+					h: src.bitmap.height + 2
+				};
+				bins.push(bin);
+				stackPositions[id] = {
+					rect: bin,
+					metrics: src.metrics
+				};
+			}
+		}
+		const { w, h } = potpack(bins);
+		const image = new AlphaImage({
+			width: w || 1,
+			height: h || 1
+		});
+		for (const stack in stacks) {
+			const glyphs = stacks[stack];
+			for (const id in glyphs) {
+				const src = glyphs[+id];
+				if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
+				const bin = positions[stack][id].rect;
+				AlphaImage.copy(src.bitmap, image, {
+					x: 0,
+					y: 0
+				}, {
+					x: bin.x + padding,
+					y: bin.y + padding
+				}, src.bitmap);
+			}
+		}
+		this.image = image;
+		this.positions = positions;
 	}
-	async setup() {
-		await super.setup();
-		for (const tile of this.tiles) this.parsedTiles.push(await this.parser.parseTile(tile, true));
+};
+register$1("GlyphAtlas", GlyphAtlas);
+//#endregion
+//#region src/source/worker_tile.ts
+var WorkerTile = class {
+	constructor(params) {
+		this.tileID = new OverscaledTileID(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
+		this.uid = params.uid;
+		this.zoom = params.zoom;
+		this.pixelRatio = params.pixelRatio;
+		this.tileSize = params.tileSize;
+		this.source = params.source;
+		this.overscaling = this.tileID.overscaleFactor();
+		this.showCollisionBoxes = params.showCollisionBoxes;
+		this.collectResourceTiming = !!params.collectResourceTiming;
+		this.returnDependencies = !!params.returnDependencies;
+		this.promoteId = params.promoteId;
+		this.inFlightDependencies = [];
 	}
-	async bench() {
-		for (const tileResult of this.parsedTiles) for (const bucket of tileResult.buckets) if (bucket instanceof SymbolBucket) await performSymbolLayout({
-			bucket,
-			glyphMap: tileResult.glyphMap,
-			glyphPositions: tileResult.glyphPositions,
-			imageMap: tileResult.iconMap,
-			imagePositions: tileResult.imageAtlas.iconPositions,
+	async parse(data, layerIndex, availableImages, actor, subdivisionGranularity) {
+		this.data = data;
+		this.collisionBoxArray = new CollisionBoxArray();
+		const sourceLayerCoder = new DictionaryCoder(Object.keys(data.layers).sort());
+		const featureIndex = new FeatureIndex(this.tileID, this.promoteId);
+		featureIndex.bucketLayerIDs = [];
+		const buckets = {};
+		const options = {
+			featureIndex,
+			iconDependencies: {},
+			patternDependencies: {},
+			glyphDependencies: {},
+			dashDependencies: {},
+			availableImages,
+			subdivisionGranularity
+		};
+		const layerFamilies = layerIndex.familiesBySource[this.source];
+		for (const sourceLayerId in layerFamilies) {
+			const sourceLayer = data.layers[sourceLayerId];
+			if (!sourceLayer) continue;
+			if (sourceLayer.version === 1) warnOnce(`Vector tile source "${this.source}" layer "${sourceLayerId}" does not use vector tile spec v2 and therefore may have some rendering errors.`);
+			const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
+			const features = [];
+			for (let index = 0; index < sourceLayer.length; index++) {
+				const feature = sourceLayer.feature(index);
+				const id = featureIndex.getId(feature, sourceLayerId);
+				features.push({
+					feature,
+					id,
+					index,
+					sourceLayerIndex
+				});
+			}
+			for (const family of layerFamilies[sourceLayerId]) {
+				const layer = family[0];
+				if (layer.source !== this.source) warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
+				if (layer.isHidden(this.zoom, true)) continue;
+				recalculateLayers(family, this.zoom, availableImages);
+				(buckets[layer.id] = layer.createBucket({
+					index: featureIndex.bucketLayerIDs.length,
+					layers: family,
+					zoom: this.zoom,
+					pixelRatio: this.pixelRatio,
+					overscaling: this.overscaling,
+					collisionBoxArray: this.collisionBoxArray,
+					sourceLayerIndex,
+					sourceID: this.source
+				})).populate(features, options, this.tileID.canonical);
+				featureIndex.bucketLayerIDs.push(family.map((l) => l.id));
+			}
+		}
+		const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+		for (const request of this.inFlightDependencies) request?.abort();
+		this.inFlightDependencies = [];
+		let getGlyphsPromise = Promise.resolve({});
+		if (Object.keys(stacks).length) {
+			const abortController = new AbortController();
+			this.inFlightDependencies.push(abortController);
+			getGlyphsPromise = actor.sendAsync({
+				type: "GG",
+				data: {
+					stacks,
+					source: this.source,
+					tileID: this.tileID,
+					type: "glyphs"
+				}
+			}, abortController);
+		}
+		const icons = Object.keys(options.iconDependencies);
+		let getIconsPromise = Promise.resolve({});
+		if (icons.length) {
+			const abortController = new AbortController();
+			this.inFlightDependencies.push(abortController);
+			getIconsPromise = actor.sendAsync({
+				type: "GI",
+				data: {
+					icons,
+					source: this.source,
+					tileID: this.tileID,
+					type: "icons"
+				}
+			}, abortController);
+		}
+		const patterns = Object.keys(options.patternDependencies);
+		let getPatternsPromise = Promise.resolve({});
+		if (patterns.length) {
+			const abortController = new AbortController();
+			this.inFlightDependencies.push(abortController);
+			getPatternsPromise = actor.sendAsync({
+				type: "GI",
+				data: {
+					icons: patterns,
+					source: this.source,
+					tileID: this.tileID,
+					type: "patterns"
+				}
+			}, abortController);
+		}
+		const dashes = options.dashDependencies;
+		let getDashesPromise = Promise.resolve({});
+		if (Object.keys(dashes).length) {
+			const abortController = new AbortController();
+			this.inFlightDependencies.push(abortController);
+			getDashesPromise = actor.sendAsync({
+				type: "GDA",
+				data: { dashes }
+			}, abortController);
+		}
+		const [glyphMap, iconMap, patternMap, dashPositions] = await Promise.all([
+			getGlyphsPromise,
+			getIconsPromise,
+			getPatternsPromise,
+			getDashesPromise
+		]);
+		const glyphAtlas = new GlyphAtlas(glyphMap);
+		const imageAtlas = new ImageAtlas(iconMap, patternMap);
+		for (const key in buckets) {
+			const bucket = buckets[key];
+			if (bucket instanceof SymbolBucket) {
+				recalculateLayers(bucket.layers, this.zoom, availableImages);
+				performSymbolLayout({
+					bucket,
+					glyphMap,
+					glyphPositions: glyphAtlas.positions,
+					imageMap: iconMap,
+					imagePositions: imageAtlas.iconPositions,
+					showCollisionBoxes: this.showCollisionBoxes,
+					canonical: this.tileID.canonical,
+					subdivisionGranularity: options.subdivisionGranularity
+				});
+			} else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
+				recalculateLayers(bucket.layers, this.zoom, availableImages);
+				bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
+			}
+		}
+		return {
+			buckets: Object.values(buckets).filter((b) => !b.isEmpty()),
+			featureIndex,
+			collisionBoxArray: this.collisionBoxArray,
+			glyphAtlasImage: glyphAtlas.image,
+			imageAtlas,
+			dashPositions,
+			glyphMap: this.returnDependencies ? glyphMap : null,
+			iconMap: this.returnDependencies ? iconMap : null,
+			glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
+		};
+	}
+};
+function recalculateLayers(layers, zoom, availableImages) {
+	const parameters = new EvaluationParameters(zoom);
+	for (const layer of layers) layer.recalculate(parameters, availableImages);
+}
+//#endregion
+//#region src/style/style_layer_index.ts
+var StyleLayerIndex = class {
+	constructor(layerConfigs, globalState) {
+		this.keyCache = {};
+		if (layerConfigs) this.replace(layerConfigs, globalState);
+	}
+	replace(layerConfigs, globalState) {
+		this._layerConfigs = {};
+		this._layers = {};
+		this.update(layerConfigs, [], globalState);
+	}
+	update(layerConfigs, removedIds, globalState) {
+		for (const layerConfig of layerConfigs) {
+			this._layerConfigs[layerConfig.id] = layerConfig;
+			const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
+			layer._featureFilter = featureFilter(layer.filter, `layers[${layerConfig.id}].filter`, globalState);
+			if (this.keyCache[layerConfig.id]) delete this.keyCache[layerConfig.id];
+		}
+		for (const id of removedIds) {
+			delete this.keyCache[id];
+			delete this._layerConfigs[id];
+			delete this._layers[id];
+		}
+		this.familiesBySource = {};
+		const groups = groupByLayout(Object.values(this._layerConfigs), this.keyCache);
+		for (const layerConfigs of groups) {
+			const layers = layerConfigs.map((layerConfig) => this._layers[layerConfig.id]);
+			const layer = layers[0];
+			if (layer.isHidden()) continue;
+			const sourceId = layer.source || "";
+			let sourceGroup = this.familiesBySource[sourceId];
+			sourceGroup ||= this.familiesBySource[sourceId] = {};
+			const sourceLayerId = layer.sourceLayer || "_geojsonTileLayer";
+			let sourceLayerFamilies = sourceGroup[sourceLayerId];
+			sourceLayerFamilies ||= sourceGroup[sourceLayerId] = [];
+			sourceLayerFamilies.push(layers);
+		}
+	}
+};
+//#endregion
+//#region test/bench/lib/tile_parser.ts
+var StubMap = class extends Evented {
+	constructor() {
+		super();
+		this._requestManager = new RequestManager();
+		this.transform = new MercatorTransform();
+	}
+	getPixelRatio() {
+		return devicePixelRatio;
+	}
+	setTerrain() {}
+	_getMapId() {
+		return 1;
+	}
+	migrateProjection() {}
+};
+function createStyle(styleJSON) {
+	return new Promise((resolve, reject) => {
+		const mapStub = new StubMap();
+		const style = new Style(mapStub);
+		mapStub.style = style;
+		style.loadJSON(styleJSON);
+		style.on("style.load", () => resolve(style));
+		style.on("error", reject);
+	});
+}
+var TileParser = class {
+	constructor(styleJSON, sourceID) {
+		this.styleJSON = styleJSON;
+		this.sourceID = sourceID;
+		this.layerIndex = new StyleLayerIndex(derefLayers(this.styleJSON.layers));
+		this.glyphs = {};
+		this.icons = {};
+	}
+	async loadImages(params) {
+		const key = JSON.stringify(params);
+		if (!this.icons[key]) this.icons[key] = await this.style.getImages("", params);
+		return this.icons[key];
+	}
+	async loadGlyphs(params) {
+		const key = JSON.stringify(params);
+		if (!this.glyphs[key]) this.glyphs[key] = await this.style.getGlyphs("", params);
+		return this.glyphs[key];
+	}
+	async loadDashes(params) {
+		const key = JSON.stringify(params);
+		if (!this.dashes[key]) this.dashes[key] = await this.style.getDashes("", params);
+		return this.dashes[key];
+	}
+	setup() {
+		const parser = this;
+		this.actor = { sendAsync(rawMessage) {
+			const message = rawMessage;
+			if (message.type === "GI") return parser.loadImages(message.data);
+			if (message.type === "GG") return parser.loadGlyphs(message.data);
+			if (message.type === "GDA") return parser.loadDashes(message.data);
+			throw new Error(`Invalid action ${message.type}`);
+		} };
+		return Promise.all([createStyle(this.styleJSON), fetch(this.styleJSON.sources[this.sourceID].url).then((response) => response.json())]).then(([style, tileJSON]) => {
+			this.style = style;
+			this.tileJSON = tileJSON;
+		});
+	}
+	fetchTile(tileID) {
+		return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio)).then((response) => response.arrayBuffer()).then((buffer) => ({
+			tileID,
+			buffer
+		}));
+	}
+	parseTile(tile, returnDependencies) {
+		const workerTile = new WorkerTile({
+			type: "benchmark",
+			tileID: tile.tileID,
+			zoom: tile.tileID.overscaledZ,
+			tileSize: 512,
 			showCollisionBoxes: false,
-			canonical: tileResult.featureIndex.tileID.canonical,
+			source: this.sourceID,
+			uid: "0",
+			maxZoom: 22,
+			pixelRatio: 1,
+			request: { url: "" },
+			returnDependencies,
+			promoteId: void 0,
 			subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
 		});
+		const vectorTile = new VectorTile(new PbfReader(tile.buffer));
+		return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
 	}
 };
 //#endregion
@@ -59322,10 +59022,9 @@ var RoundPolygonCorners = class extends Benchmark {
 };
 //#endregion
 //#region test/bench/versions/index.ts
-const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 871bb78 (local)` : "main 871bb78";
+const version = new URL(import.meta.url).origin === location.origin ? `main 8ee0ba3 (local)` : "main 8ee0ba3";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
@@ -59348,7 +59047,6 @@ register("QueryPoint", new QueryPoint(style, locations));
 register("QueryBox", new QueryBox(style, locations));
 register("GeoJSONSourceUpdateData", new GeoJSONSourceUpdateData());
 register("GeoJSONSourceSetData", new GeoJSONSourceSetData());
-register("Layout", new Layout(style));
 register("Placement", new Paint$1(style, locations));
 register("WorkerTransfer", new WorkerTransfer(style));
 register("PaintStates", new PaintStates(center));
@@ -59372,7 +59070,6 @@ register("LayerSymbolWithIcons", new LayerSymbolWithIcons());
 register("LayerTextWithVariableAnchor", new LayerTextWithVariableAnchor());
 register("LayerSymbolWithSortKey", new LayerSymbolWithSortKey());
 register("Load", new MapLoad());
-register("SymbolLayout", new SymbolLayout(style, styleLocations.map((location) => location.tileID[0])));
 register("HillshadeLoad", new HillshadeLoad());
 register("ColorReliefLoad", new ColorReliefLoad());
 register("CustomLayer", new CustomLayer());
