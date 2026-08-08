@@ -411,13 +411,13 @@ export class GlobeTransform implements ITransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
         if (!this.isGlobeRendering) {
-            this._mercatorTransform.setLocationAtPoint(lnglat, point);
+            this._mercatorTransform.setLocationAtPoint(lnglat, point, elevation);
             this.apply(this._mercatorTransform, false);
             return;
         }
-        this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point);
+        this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point, elevation);
         this.apply(this._verticalPerspectiveTransform, false);
         return;
     }
@@ -432,6 +432,10 @@ export class GlobeTransform implements ITransform {
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         return this.currentTransform.screenPointToLocation(p, terrain);
+    }
+
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
+        return this.currentTransform.screenPointToLocationAtElevation(p, elevation);
     }
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {

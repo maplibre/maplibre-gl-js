@@ -120,7 +120,8 @@ describe('shapeIcon', () => {
         stretchY: undefined,
         paddedRect: Object.freeze({x: 0, y: 0, w: 22, h: 22}),
         pixelRatio: 1,
-        version: 1
+        version: 1,
+        needsFirstWebGLRender: false
     });
 
     test('text-anchor: center', () => {
