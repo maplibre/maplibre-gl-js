@@ -181,6 +181,52 @@ Pick your setup:
     const map = new Map({/* … */});
     ```
 
+=== "Next.js"
+
+    Next.js inlines the entry module, so `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` does not resolve to the worker. The webpack recipe above does not work here, under either of Next's bundlers. Serve the worker from `public/` instead and point `setWorkerUrl` at it:
+
+    ```js
+    // scripts/copy-maplibre-worker.mjs
+    import {copyFileSync, mkdirSync} from 'node:fs';
+    import {createRequire} from 'node:module';
+    import path from 'node:path';
+
+    const dist = path.join(path.dirname(createRequire(import.meta.url).resolve('maplibre-gl/package.json')), 'dist');
+    const dest = path.join(process.cwd(), 'public', 'maplibre');
+
+    mkdirSync(dest, {recursive: true});
+    for (const file of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
+        copyFileSync(path.join(dist, file), path.join(dest, file));
+    }
+    ```
+
+    ```json
+    // package.json
+    {
+        "scripts": {
+            "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
+            "predev": "node ./scripts/copy-maplibre-worker.mjs"
+        }
+    }
+    ```
+
+    ```ts
+    'use client';
+
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
+
+    setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
+
+    const map = new Map({/* … */});
+    ```
+
+    Copy both files, not just the worker: the worker imports its sibling `maplibre-gl-shared.mjs` by relative path, so the two must end up in the same directory.
+
+    Copy at build time rather than committing the files, so they cannot fall out of step with the installed version. A committed copy keeps working after an upgrade while running the old worker against the new entry.
+
+    Works with both `next build` (Turbopack) and `next build --webpack`.
+
 === "CDN / No bundler"
 
     Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
