@@ -223,7 +223,11 @@ Pick your setup:
 
     Copy both files, not just the worker: the worker imports its sibling `maplibre-gl-shared.mjs` by relative path, so the two must end up in the same directory.
 
-    Copy at build time rather than committing the files, so they cannot fall out of step with the installed version. A committed copy keeps working after an upgrade while running the old worker against the new entry.
+    Copy at build time rather than committing the files, so they cannot fall out of step with the installed version. A committed copy keeps working after an upgrade while running the old worker against the new entry, which fails silently in the same way. If you do add the destination to `.gitignore`, make sure the files were never committed: git ignores that rule for paths already tracked.
+
+    npm lifecycle prefixes match the exact script name, so `prebuild` runs before `build` and **not** before a custom script such as `build:local`. Add a matching `pre` hook for every script that builds or serves the app.
+
+    `postinstall` looks like a tidier place for this, since the copy's only input is `node_modules`, but it is not sufficient on its own: package managers skip lifecycle scripts when an install has no work to do. With dependencies already current and the destination deleted, neither `pnpm install` nor `pnpm install --force` restores it; only a fresh `node_modules` does. It also does not run under `--ignore-scripts`. A `pre` hook runs at the moment the file is needed, so use that, and add `postinstall` as well if you want it refreshed on install too.
 
     Works with both `next build` (Turbopack) and `next build --webpack`.
 
