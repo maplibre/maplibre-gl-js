@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Add 3D terrain from quantized-mesh tiles</title>
+<meta property="og:description" content="Use 3D Tiles quantized-mesh terrain as a raster-dem source via the maplibre-gl-3dtiles-terrain plugin, then drape an OpenStreetMap basemap and hillshade with map.setTerrain()." />
+<meta property="og:category" content="Terrain & Hillshade" />
+<meta property="og:created" content="2026-07-15" />
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+<link rel='icon' href='data:,' />
+<style>
+    body { margin: 0; padding: 0; }
+    html, body, #map { height: 100%; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+import decode from 'https://unpkg.com/@here/quantized-mesh-decoder@1.2.8/src/index.js';
+import {loadQuantizedMeshDataset, registerQuantizedMeshTerrain} from 'https://unpkg.com/maplibre-gl-3dtiles-terrain@0.1.0/src/index.js';
+
+// Live swisstopo quantized-mesh terrain (open, no key). Its layer.json omits
+// `available`, so availability is synthesized over its extent up to z14.
+const dataset = await loadQuantizedMeshDataset(
+    'https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/layer.json',
+    {attribution: 'Terrain: &copy; swisstopo', boundsOverride: {west: 5.6, south: 45.5, east: 11.0, north: 48.2}, maxZoom: 14}
+);
+
+const {sourceSpec} = registerQuantizedMeshTerrain(maplibregl, {dataset, decode});
+
+const map = new maplibregl.Map({
+    container: 'map',
+    // A plain OpenStreetMap raster basemap, to show that ordinary 2D layers
+    // drape over the quantized-mesh terrain like any raster-dem terrain.
+    style: {
+        version: 8,
+        sources: {
+            osm: {type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '© OpenStreetMap contributors'}
+        },
+        layers: [
+            {id: 'sky', type: 'background', paint: {'background-color': '#bfe0f5'}},
+            {id: 'osm', type: 'raster', source: 'osm'}
+        ]
+    },
+    center: [7.74, 45.96],
+    zoom: 10.6,
+    pitch: 60,
+    bearing: -15,
+    maxPitch: 85,
+    canvasContextAttributes: {antialias: true}
+});
+
+map.on('load', () => {
+    map.addSource('qm-terrain', sourceSpec);
+    map.setTerrain({source: 'qm-terrain', exaggeration: 1.2});
+    // A separate source for hillshade (recommended over reusing the terrain
+    // source) avoids tile-cache contention between the two consumers.
+    map.addSource('qm-hillshade-source', {...sourceSpec});
+    map.addLayer({id: 'qm-hillshade', type: 'hillshade', source: 'qm-hillshade-source', paint: {'hillshade-exaggeration': 0.4}});
+});
+</script>
+</body>
+</html>
