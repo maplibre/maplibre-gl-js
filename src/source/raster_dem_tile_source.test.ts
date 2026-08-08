@@ -3,6 +3,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
+import {ImageRequest} from '../util/image_request.ts';
 import {type Tile} from '../tile/tile.ts';
 import {getMockDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
@@ -33,6 +34,7 @@ describe('RasterDEMTileSource', () => {
 
     afterEach(() => {
         server.restore();
+        vi.restoreAllMocks();
     });
 
     test('transforms request for TileJSON URL', () => {
@@ -127,6 +129,36 @@ describe('RasterDEMTileSource', () => {
         await promise;
         expect(server.requests[0].url).toBe('http://example.com/10/5/5.png');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
+    test('loadTile requests DEM images without color-space conversion', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        source.map._refreshExpiredTiles = false;
+
+        // Mock the decode and set tile.actor so loadTile returns after requesting the
+        // image; we assert only how the image is requested, not the decode itself.
+        const image = {width: 256, height: 256} as ImageBitmap;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        vi.spyOn(source, 'readImageNow').mockResolvedValue({} as any);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {},
+            actor: 1
+        } as any as Tile;
+
+        await source.loadTile(tile);
+
+        expect(getImageSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.any(AbortController),
+            false,
+            {colorSpaceConversion: 'none'}
+        );
     });
 
     test('populates neighboringTiles', async () => {
