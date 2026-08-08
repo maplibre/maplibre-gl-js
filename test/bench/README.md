@@ -73,11 +73,11 @@ Chrome needs to load a worker from a different origin. To avoid a security error
 
 To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/versions/index.html`](http://localhost:9966/test/bench/versions/index.html).
 
-To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions/index.html#Layout`](http://localhost:9966/test/bench/versions/index.html#Layout).
+To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/versions/index.html#Paint`](http://localhost:9966/test/bench/versions/index.html#Paint).
 
 The page measures the benchmark build of your checkout. To compare a change against a release, use the [end-to-end benchmarks](#end-to-end-benchmarks), which measure the shipped library.
 
-To run all benchmarks in headless chromium use `npm run benchmark`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Layout Paint`.
+To run all benchmarks in headless chromium use `npm run benchmark`. You can also run only specific benchmarks by passing their names as positional arguments, e.g. `npm run benchmark -- Paint Placement`.
 
 ## Running Style Benchmarks
 
@@ -90,9 +90,9 @@ Note: `MAPLIBRE_STYLES` takes a comma-separated list of up to 3 MapLibre styles 
 
 To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/styles/index.html`](http://localhost:9966/test/bench/styles/index.html).
 
-To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/styles/index.html#Layout`](http://localhost:9966/test/bench/styles/index.html#Layout).
+To run a specific benchmark, add its name to the url hash, for example [`http://localhost:9966/test/bench/styles/index.html#Paint`](http://localhost:9966/test/bench/styles/index.html#Paint).
 
-By default, the style benchmark page will run its benchmarks against `https://tiles.openfreemap.org/styles/liberty`. `Layout` and `Paint` styles will run one instance of the test for each tile/location in an internal list of tiles. This behavior helps visualize the ways in which a style performs given various conditions present in each tile (CJK text, dense urban areas, rural areas, etc). `QueryBox` and `QueryPoint` use the internal list of tiles but otherwise run the same as their non-style benchmark equivalents. `StyleLayerCreate` and `StyleValidate` are not tile/location dependent and run the same way as their non-style benchmark equivalents. All other benchmark tests from the non-style suite are not used when benchmarking styles.
+By default, the style benchmark page will run its benchmarks against `https://tiles.openfreemap.org/styles/liberty`. `Paint` will run one instance of the test for each tile/location in an internal list of tiles. This behavior helps visualize the ways in which a style performs given various conditions present in each tile (CJK text, dense urban areas, rural areas, etc). `QueryBox` and `QueryPoint` use the internal list of tiles but otherwise run the same as their non-style benchmark equivalents. All other benchmark tests from the non-style suite are not used when benchmarking styles.
 
 ## Generating gl statistics
 
