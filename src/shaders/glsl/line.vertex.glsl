@@ -7,7 +7,7 @@
 #define scale 0.015873016
 
 layout(location = 0) in ivec2 a_pos_normal;
-layout(location = 1) in ivec4 a_data;
+layout(location = 1) in uvec4 a_data;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
@@ -47,10 +47,10 @@ void main() {
     // Retina devices need a smaller distance to avoid aliasing.
     float ANTIALIASING = 1.0 / u_device_pixel_ratio / 2.0;
 
-    vec2 a_extrude = vec2(a_data.xy - 128);
-    float a_direction = float((a_data.z & 3) - 1);
+    vec2 a_extrude = vec2(ivec2(a_data.xy) - 128);
+    float a_direction = float(int(a_data.z & 3u) - 1);
 
-    v_linesofar = float((a_data.z >> 2) + a_data.w * 64) * 2.0;
+    v_linesofar = float((a_data.z >> 2u) + a_data.w * 64u) * 2.0;
 
     vec2 pos = vec2(a_pos_normal >> 1);
 
