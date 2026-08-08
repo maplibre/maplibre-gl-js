@@ -55,11 +55,6 @@ const waitForBenchmarks = async (webPage) => {
     }
 };
 
-if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
-    for (const compare of [].concat(argv.compare))
-        url.searchParams.append('compare', compare || '');
-}
-
 console.log(`Starting headless chrome at: ${url.toString()}`);
 
 const browser = await puppeteer.launch({headless: true});
@@ -76,7 +71,6 @@ try {
     await waitForBenchmarks(webPage);
     const allNames = await webPage.evaluate(() => Object.keys((window as any).maplibreglBenchmarks));
     const versions = await webPage.evaluate((name) => Object.keys((window as any).maplibreglBenchmarks[name]), allNames[0]);
-    const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
 
     // The following will run all the tests if no arguments are passed, will run only the tests passed as arguments otherwise
     const toRun = argv._.length > 0 ? argv._ : allNames;
@@ -84,7 +78,7 @@ try {
     const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
     const timeWidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(nameWidth), ...versions.map((v, i) =>  `${(versionsDisplayName[i]).padStart(timeWidth)} `));
+    console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
 
     const merger = new PDFMerger();
     for (const name of toRun) {
@@ -105,11 +99,6 @@ try {
                 return ''.padStart(timeWidth + 1);
             }
         });
-        if (versions.length === 2) {
-            const [main, current] = versions;
-            const delta = results[current]?.summary?.trimmedMean - results[main]?.summary?.trimmedMean;
-            output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
-        }
         console.log(...output);
 
         await merger.add(await webPage.pdf({
