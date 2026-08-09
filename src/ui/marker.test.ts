@@ -96,20 +96,20 @@ describe('marker', () => {
             .addTo(map);
 
         const markerElement = marker.getElement();
-        expect(markerElement.classList.contains('some')).toBeTruthy();
-        expect(markerElement.classList.contains('classes')).toBeTruthy();
+        expect(markerElement.classList).toContain('some');
+        expect(markerElement.classList).toContain('classes');
 
         marker.addClassName('addedClass');
-        expect(markerElement.classList.contains('addedClass')).toBeTruthy();
+        expect(markerElement.classList).toContain('addedClass');
 
         marker.removeClassName('addedClass');
-        expect(!markerElement.classList.contains('addedClass')).toBeTruthy();
+        expect(markerElement.classList).not.toContain('addedClass');
 
         marker.toggleClassName('toggle');
-        expect(markerElement.classList.contains('toggle')).toBeTruthy();
+        expect(markerElement.classList).toContain('toggle');
 
         marker.toggleClassName('toggle');
-        expect(!markerElement.classList.contains('toggle')).toBeTruthy();
+        expect(markerElement.classList).not.toContain('toggle');
 
         expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
@@ -123,19 +123,19 @@ describe('marker', () => {
     test('Marker provides LngLat accessors', () => {
         expect(new Marker().getLngLat()).toBeUndefined();
 
-        expect(new Marker().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Marker().setLngLat([1, 2]).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Marker().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-        expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     });
 
     test('Marker provides offset accessors', () => {
-        expect(new Marker().setOffset([1, 2]).getOffset() instanceof Point).toBeTruthy();
+        expect(new Marker().setOffset([1, 2]).getOffset()).toBeInstanceOf(Point);
         expect(new Marker().setOffset([1, 2]).getOffset()).toEqual(new Point(1, 2));
 
-        expect(new Marker().setOffset(new Point(1, 2)).getOffset() instanceof Point).toBeTruthy();
+        expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toBeInstanceOf(Point);
         expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toEqual(new Point(1, 2));
 
     });
@@ -343,7 +343,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-anchor-center')).toBeTruthy();
+        expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-center');
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,-50%\)/);
 
         map.remove();
@@ -355,7 +355,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-anchor-top')).toBeTruthy();
+        expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-top');
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,0\)/);
 
         map.remove();
@@ -407,51 +407,35 @@ describe('marker', () => {
         Object.defineProperty(marker.getPopup()._container, 'offsetHeight', {value: 100});
 
         // marker should default to above since it has enough space
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom');
 
         // move marker to the top forcing the popup to below
         marker.setLngLat(map.unproject([mapHeight / 2, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top');
 
         // move marker to the right forcing the popup to the left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight / 2]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-right');
 
         // move marker to the left forcing the popup to the right
         marker.setLngLat(map.unproject([markerRight, mapHeight / 2]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-left');
 
         // move marker to the top left forcing the popup to the bottom right
         marker.setLngLat(map.unproject([markerRight, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top-left');
 
         // move marker to the top right forcing the popup to the bottom left
         marker.setLngLat(map.unproject([mapHeight - markerRight, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top-right');
 
         // move marker to the bottom left forcing the popup to the top right
         marker.setLngLat(map.unproject([markerRight, mapHeight]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom-left');
 
         // move marker to the bottom right forcing the popup to the top left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom-right');
 
         map.remove();
     });
@@ -1352,7 +1336,7 @@ describe('marker', () => {
         map.fire('terrain');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1368,13 +1352,13 @@ describe('marker', () => {
         map.fire('terrain');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
         map.terrain.depthAtPoint = () => .95; // Terrain no longer blocking marker
         map.fire('moveend');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1389,7 +1373,7 @@ describe('marker', () => {
         map.setProjection({type: 'globe'});
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1404,12 +1388,12 @@ describe('marker', () => {
         map.setProjection({type: 'globe'});
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
         marker.setLngLat([0, 0]);
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
         map.remove();
     });
 });

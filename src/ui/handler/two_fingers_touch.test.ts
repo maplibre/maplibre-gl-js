@@ -312,11 +312,11 @@ describe('touch zoom rotate', () => {
         const map = createMap();
 
         const className = 'maplibregl-touch-zoom-rotate';
-        expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
+        expect(map.getCanvasContainer().classList).toContain(className);
         map.touchZoomRotate.disable();
-        expect(map.getCanvasContainer().classList.contains(className)).toBeFalsy();
+        expect(map.getCanvasContainer().classList).not.toContain(className);
         map.touchZoomRotate.enable();
-        expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
+        expect(map.getCanvasContainer().classList).toContain(className);
     });
 
     test('TwoFingersTouchZoomRotateHandler zooms when touching two markers on the same map', () => {

@@ -14,7 +14,7 @@ describe('loadTile', () => {
             dim: 256
         } as any as WorkerDEMTileParameters);
         expect(Object.keys(source.loaded)).toEqual(['0']);
-        expect(data instanceof DEMData).toBeTruthy();
+        expect(data).toBeInstanceOf(DEMData);
     });
 });
 
