@@ -46,7 +46,7 @@
         </tr>
         <tr>
             <td><label for="extrusion-opacity">Opacity</label></td>
-            <td><input type="range" id="extrusion-opacity" min="0" max="1" step="0.05" value="0.8" /></td>
+            <td><input type="range" id="extrusion-opacity" min="0" max="100" step="5" value="80" /></td>
             <td><span>80</span>%</td>
         </tr>
     </table>
@@ -100,8 +100,8 @@
         });
         document.getElementById('extrusion-opacity').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            e.target.closest('tr').querySelector('span').textContent = Math.round(val * 100);
-            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', val);
+            e.target.closest('tr').querySelector('span').textContent = val;
+            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', val / 100);
         });
     });
 </script>
