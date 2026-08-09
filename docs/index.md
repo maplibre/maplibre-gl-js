@@ -103,8 +103,7 @@ Pick your setup:
 
     If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
-    ```ts
-    // vite.config.ts
+    ```ts title="vite.config.ts"
     export default defineConfig({
         ssr: {noExternal: ['maplibre-gl']}
     });
@@ -127,8 +126,7 @@ Pick your setup:
 
 === "esbuild"
 
-    ```js
-    // build.js
+    ```js title="build.js"
     import * as esbuild from 'esbuild';
     import {copyFileSync} from 'fs';
 
@@ -145,8 +143,7 @@ Pick your setup:
     );
     ```
 
-    ```ts
-    // src/main.ts
+    ```ts title="src/main.ts"
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -157,8 +154,7 @@ Pick your setup:
 
 === "Rollup"
 
-    ```ts
-    // rollup.config.js
+    ```ts title="rollup.config.js"
     import copy from 'rollup-plugin-copy';
 
     export default {
@@ -173,8 +169,7 @@ Pick your setup:
     };
     ```
 
-    ```ts
-    // src/main.ts
+    ```ts title="src/main.ts"
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
