@@ -59024,7 +59024,7 @@ var RoundPolygonCorners = class extends Benchmark {
 //#region test/bench/versions/index.ts
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 8ee0ba3 (local)` : "main 8ee0ba3";
+const version = new URL(import.meta.url).origin === location.origin ? `main aea5b5d (local)` : "main aea5b5d";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
