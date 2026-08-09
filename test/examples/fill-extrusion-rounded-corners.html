@@ -21,13 +21,16 @@
             background-color: rgba(50, 50, 50, 0.85);
             padding: 12px 16px;
             border-radius: 6px;
-            min-width: 280px;
+            box-sizing: border-box;
+            min-width: min(280px, 100%);
+            max-width: calc(100% - 20px);
         }
         #controls table { border-collapse: collapse; width: 100%; }
         #controls td { padding: 4px 6px; vertical-align: middle; }
+        #controls td:nth-child(2) { width: 120px; }
         #controls td:last-child { text-align: right; width: 3em; }
         #controls label { white-space: nowrap; }
-        #controls input[type=range] { width: 120px; }
+        #controls input[type=range] { width: 100%; min-width: 0; }
     </style>
 </head>
 <body>
