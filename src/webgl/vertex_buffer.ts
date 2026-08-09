@@ -66,9 +66,9 @@ export class VertexBuffer {
 
     enableAttributes(gl: WebGL2RenderingContext, program: Program<any>): void {
         for (const member of this.attributes) {
-            const attribIndex: number | void = program.attributes[member.name];
-            if (attribIndex !== undefined) {
-                gl.enableVertexAttribArray(attribIndex);
+            const attribute = program.attributes[member.name];
+            if (attribute !== undefined) {
+                gl.enableVertexAttribArray(attribute.location);
             }
         }
     }
@@ -81,13 +81,13 @@ export class VertexBuffer {
      */
     setVertexAttribPointers(gl: WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null): void {
         for (const member of this.attributes) {
-            const attribIndex: number | void = program.attributes[member.name];
+            const attribute = program.attributes[member.name];
 
-            if (attribIndex !== undefined) {
+            if (attribute !== undefined) {
                 const offset = member.offset + (this.itemSize * (vertexOffset || 0));
-                if (program.integerAttributes[member.name]) {
+                if (attribute.isInteger) {
                     gl.vertexAttribIPointer(
-                        attribIndex,
+                        attribute.location,
                         member.components,
                         gl[AttributeType[member.type]],
                         this.itemSize,
@@ -95,7 +95,7 @@ export class VertexBuffer {
                     );
                 } else {
                     gl.vertexAttribPointer(
-                        attribIndex,
+                        attribute.location,
                         member.components,
                         gl[AttributeType[member.type]],
                         false,
