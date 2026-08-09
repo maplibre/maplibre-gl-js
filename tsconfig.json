@@ -47,6 +47,7 @@
     "test/integration/bundler/vite-rolldown/**",
     "test/integration/bundler/webpack/**",
     "test/integration/bundler/esbuild/**",
-    "test/integration/bundler/rollup/**"
+    "test/integration/bundler/rollup/**",
+    "test/integration/bundler/nextjs/**"
   ]
 }

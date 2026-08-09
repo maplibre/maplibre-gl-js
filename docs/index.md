@@ -72,7 +72,7 @@ See the [ESM](#esm) section below for setting up the worker URL with your bundle
 
 MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
 
-For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
+For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup, Next.js), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
 Upgrading from v5? See the [v5 to v6 migration guide](./guides/v5-to-v6-migration-guide.md).
 
