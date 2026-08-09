@@ -123,6 +123,8 @@ Pick your setup:
 
     rspack and rsbuild use the same pattern.
 
+    Next.js is an exception, including in its `next build --webpack` mode. See the Next.js tab.
+
 === "esbuild"
 
     ```js
@@ -183,7 +185,7 @@ Pick your setup:
 
 === "Next.js"
 
-    Next.js inlines the entry module, so `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` does not resolve to the worker. Serve the worker from `public/` instead and point `setWorkerUrl` at it:
+    Both of Next's bundlers turn `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
 
     ```js title="scripts/copy-maplibre-worker.mjs"
     import {copyFileSync, mkdirSync} from 'node:fs';
