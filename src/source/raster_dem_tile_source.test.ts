@@ -76,7 +76,7 @@ describe('RasterDEMTileSource', () => {
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
 
-    test('transforms tile urls before requesting', async () => {
+    test('transforms tile urls and requests them without color space conversion', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -86,6 +86,8 @@ describe('RasterDEMTileSource', () => {
         }));
         const source = createSource({url: '/source.json'});
         const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
+        const image = await createImageBitmap(new ImageData(16, 16));
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
         const promise = waitForMetadataEvent(source);
         await sleep(0);
         server.respond();
@@ -94,13 +96,16 @@ describe('RasterDEMTileSource', () => {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData () {},
-            setExpiryData() {}
+            setExpiryData() {},
+            actor: 1
         } as any as Tile;
-        source.loadTile(tile);
+        await source.loadTile(tile);
 
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
         expect(transformSpy.mock.calls[0][1]).toBe('Tile');
+        // DEM tiles hold elevation data, so they must not be color managed.
+        expect(getImageSpy.mock.calls[0][3]).toEqual({colorSpaceConversion: 'none'});
     });
 
     test('can asynchronously transform tile request', async () => {
@@ -129,36 +134,6 @@ describe('RasterDEMTileSource', () => {
         await promise;
         expect(server.requests[0].url).toBe('http://example.com/10/5/5.png');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
-    });
-
-    test('loadTile requests DEM images without color-space conversion', async () => {
-        const source = createSource({
-            tiles: ['http://example.com/{z}/{x}/{y}.png']
-        });
-        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
-        source.map._refreshExpiredTiles = false;
-
-        // Mock the decode and set tile.actor so loadTile returns after requesting the
-        // image; we assert only how the image is requested, not the decode itself.
-        const image = {width: 256, height: 256} as ImageBitmap;
-        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
-        vi.spyOn(source, 'readImageNow').mockResolvedValue({} as any);
-
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            setExpiryData() {},
-            actor: 1
-        } as any as Tile;
-
-        await source.loadTile(tile);
-
-        expect(getImageSpy).toHaveBeenCalledWith(
-            expect.anything(),
-            expect.any(AbortController),
-            false,
-            {colorSpaceConversion: 'none'}
-        );
     });
 
     test('populates neighboringTiles', async () => {
