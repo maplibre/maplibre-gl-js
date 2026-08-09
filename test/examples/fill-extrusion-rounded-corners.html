@@ -100,8 +100,8 @@
         });
         document.getElementById('extrusion-opacity').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            e.target.closest('tr').querySelector('span').textContent = val;
-            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', Math.round(val * 100));
+            e.target.closest('tr').querySelector('span').textContent = Math.round(val * 100);
+            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', val);
         });
     });
 </script>
