@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix projective rendering for non-parallelogram image source quads ([#7887](https://github.com/maplibre/maplibre-gl-js/pull/7887)) (by [@i4innovationnet](https://github.com/i4innovationnet))
 - Fix terrain pan/zoom gestures losing the grabbed terrain point: gestures are now solved against the elevation of the terrain under the gesture instead of the frozen center elevation, so terrain under the pointer/fingers no longer slips during moving-centroid pinches and drags ([#8067](https://github.com/maplibre/maplibre-gl-js/pull/8067)) (by [@StrawberryJam22](https://github.com/StrawberryJam22))
 - Fix `ImageSource`, `VideoSource` and `CanvasSource` leaking a GPU texture on every image update and on removal, and a resized texture losing its wrap and filter settings ([#8094](https://github.com/maplibre/maplibre-gl-js/pull/8094)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix `map.queryRenderedFeatures()` sometimes causing "Out of bounds" error due to race condition while loading tile data ([#8064](https://github.com/maplibre/maplibre-gl-js/issues/8064)) (by [@smvjohansenbouvet](https://github.com/smvjohansenbouvet))
@@ -35,7 +36,6 @@
 - Show a grab cursor over draggable markers, including on non-interactive maps ([#8019](https://github.com/maplibre/maplibre-gl-js/issues/8019)) (by [@hugosmoreira](https://github.com/hugosmoreira))
 
 ### 🐞 Bug fixes
-- Fix projective rendering for non-parallelogram image source quads ([#7887](https://github.com/maplibre/maplibre-gl-js/pull/7887)) (by [@i4innovationnet](https://github.com/i4innovationnet))
 - Use `role=img` for non-interactive default markers and `role=button` when they become interactive ([#7790](https://github.com/maplibre/maplibre-gl-js/issues/7790)) (by [@cat0825](https://github.com/cat0825))
 - Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
 - Fix renderer crash when `RasterTileSource.setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
