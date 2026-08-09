@@ -418,7 +418,7 @@ describe('GeolocateControl with no options', () => {
         geolocate.trigger();
         geolocation.sendError({code: 2, message: 'error message'});
         expect(geolocate._watchState).toBe('ACTIVE_ERROR');
-        expect(geolocate._geolocateButton.classList.contains('maplibregl-ctrl-geolocate-active-error')).toBeTruthy();
+        expect(geolocate._geolocateButton.classList).toContain('maplibregl-ctrl-geolocate-active-error');
     });
 
     test('trigger before added to map', () => {
@@ -549,7 +549,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.changeError({code: 2, message: 'position unavailable'});
         await errorPromise;
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-        expect(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')).toBeTruthy();
+        expect(geolocate._userLocationDotMarker._element.classList).toContain('maplibregl-user-location-dot-stale');
     });
 
     /**

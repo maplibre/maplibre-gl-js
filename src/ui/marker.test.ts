@@ -96,20 +96,20 @@ describe('marker', () => {
             .addTo(map);
 
         const markerElement = marker.getElement();
-        expect(markerElement.classList.contains('some')).toBeTruthy();
-        expect(markerElement.classList.contains('classes')).toBeTruthy();
+        expect(markerElement.classList).toContain('some');
+        expect(markerElement.classList).toContain('classes');
 
         marker.addClassName('addedClass');
-        expect(markerElement.classList.contains('addedClass')).toBeTruthy();
+        expect(markerElement.classList).toContain('addedClass');
 
         marker.removeClassName('addedClass');
-        expect(!markerElement.classList.contains('addedClass')).toBeTruthy();
+        expect(!markerElement.classList).toContain('addedClass');
 
         marker.toggleClassName('toggle');
-        expect(markerElement.classList.contains('toggle')).toBeTruthy();
+        expect(markerElement.classList).toContain('toggle');
 
         marker.toggleClassName('toggle');
-        expect(!markerElement.classList.contains('toggle')).toBeTruthy();
+        expect(!markerElement.classList).toContain('toggle');
 
         expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
@@ -343,7 +343,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-anchor-center')).toBeTruthy();
+        expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-center');
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,-50%\)/);
 
         map.remove();
@@ -355,7 +355,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-anchor-top')).toBeTruthy();
+        expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-top');
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,0\)/);
 
         map.remove();
@@ -1352,7 +1352,7 @@ describe('marker', () => {
         map.fire('terrain');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1368,13 +1368,13 @@ describe('marker', () => {
         map.fire('terrain');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
         map.terrain.depthAtPoint = () => .95; // Terrain no longer blocking marker
         map.fire('moveend');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1389,7 +1389,7 @@ describe('marker', () => {
         map.setProjection({type: 'globe'});
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1404,12 +1404,12 @@ describe('marker', () => {
         map.setProjection({type: 'globe'});
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
         marker.setLngLat([0, 0]);
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
         map.remove();
     });
 });
