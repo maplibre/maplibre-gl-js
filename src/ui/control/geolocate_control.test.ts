@@ -538,9 +538,7 @@ describe('GeolocateControl with no options', () => {
 
         expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '10.0000', lng: '20.0000'});
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-        expect(
-            geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
-        ).toBeFalsy();
+        expect(geolocate._userLocationDotMarker._element.classList).not.toContain('maplibregl-user-location-dot-stale');
         const secontMoveEnd = map.once('moveend');
         geolocation.change({latitude: 40, longitude: 50, accuracy: 60});
         await secontMoveEnd;

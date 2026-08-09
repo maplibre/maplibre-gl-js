@@ -571,14 +571,14 @@ describe('popup', () => {
         expect(addClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         const removeClassNameMethodPopupInstance = popup.removeClassName('addedClass');
-        expect(!popupContainer.classList).toContain('addedClass');
+        expect(popupContainer.classList).not.toContain('addedClass');
         expect(removeClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         popup.toggleClassName('toggle');
         expect(popupContainer.classList).toContain('toggle');
 
         popup.toggleClassName('toggle');
-        expect(!popupContainer.classList).toContain('toggle');
+        expect(popupContainer.classList).not.toContain('toggle');
 
         expect(() => popup.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => popup.removeClassName('should throw exception')).toThrow(window.DOMException);

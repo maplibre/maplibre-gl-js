@@ -103,13 +103,13 @@ describe('marker', () => {
         expect(markerElement.classList).toContain('addedClass');
 
         marker.removeClassName('addedClass');
-        expect(!markerElement.classList).toContain('addedClass');
+        expect(markerElement.classList).not.toContain('addedClass');
 
         marker.toggleClassName('toggle');
         expect(markerElement.classList).toContain('toggle');
 
         marker.toggleClassName('toggle');
-        expect(!markerElement.classList).toContain('toggle');
+        expect(markerElement.classList).not.toContain('toggle');
 
         expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
@@ -407,51 +407,35 @@ describe('marker', () => {
         Object.defineProperty(marker.getPopup()._container, 'offsetHeight', {value: 100});
 
         // marker should default to above since it has enough space
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom');
 
         // move marker to the top forcing the popup to below
         marker.setLngLat(map.unproject([mapHeight / 2, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top');
 
         // move marker to the right forcing the popup to the left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight / 2]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-right');
 
         // move marker to the left forcing the popup to the right
         marker.setLngLat(map.unproject([markerRight, mapHeight / 2]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-left');
 
         // move marker to the top left forcing the popup to the bottom right
         marker.setLngLat(map.unproject([markerRight, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top-left');
 
         // move marker to the top right forcing the popup to the bottom left
         marker.setLngLat(map.unproject([mapHeight - markerRight, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top-right');
 
         // move marker to the bottom left forcing the popup to the top right
         marker.setLngLat(map.unproject([markerRight, mapHeight]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom-left');
 
         // move marker to the bottom right forcing the popup to the top left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom-right');
 
         map.remove();
     });
