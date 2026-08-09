@@ -308,10 +308,18 @@ export class MercatorTransform implements ITransform {
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+    /**
+     * Moves the center so that `lnglat`, on the ground at `elevation` meters, renders
+     * at the screen `point`. Both rays are cast through the same inverse pixel matrix
+     * so its inversion error cancels out of their difference; the current-center ray
+     * must be intersected at the center's own elevation (z=0) — intersecting it with
+     * the elevated plane would land `(elevation - centerElevation)·tan(pitch)` away
+     * from the center and make repeated calls drift.
+     */
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this.elevation): void {
+        const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
-        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
+        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
         const loc = MercatorCoordinate.fromLngLat(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
@@ -332,6 +340,10 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
+        return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
+    }
+
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
@@ -343,10 +355,14 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
-    screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {
+    /**
+     * Intersects the ray through a screen point with the horizontal plane at `z`,
+     * given in meters relative to the plane at the center's elevation (not mercator units).
+     */
+    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
 
         // calculate point-coordinate on flat earth
-        const targetZ = mercatorZ ? mercatorZ : 0;
+        const targetZ = z ? z : 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
         // line with z=0
@@ -748,6 +764,7 @@ export class MercatorTransform implements ITransform {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
             fallbackMatrix: mainMatrix,
+            clipAntimeridian: false,
         };
     }
 

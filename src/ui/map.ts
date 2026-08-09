@@ -31,6 +31,7 @@ import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
@@ -2951,29 +2952,37 @@ export class Map extends Evented<MapEventType> {
             this._camera.terrain = this.terrain;
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._terrainDataCallback = e => {
-                if (e.dataType === 'style') {
-                    this.terrain.tileManager.releaseAllRTT();
-                } else if (e.dataType === 'source' && e.tile) {
-                    if (e.sourceId === options.source && !this._camera.elevationFreeze) {
-                        this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        if (this.getCenterClampedToGround()) {
-                            this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        }
-                    }
-
-                    if (e.source?.type === 'image') {
-                        this.terrain.tileManager.releaseAllRTT();
-                    } else {
-                        this.terrain.tileManager.releaseRTT(e.tile.tileID);
-                    }
-                }
-            };
+            this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
 
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
+    }
+
+    private _handleTerrainDataEvent(event: MapStyleDataEvent | MapSourceDataEvent, terrainSourceId: string): void {
+        if (event.dataType === 'style') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+
+        const isTerrainSourceEvent = event.sourceId === terrainSourceId;
+        if (isTerrainSourceEvent) {
+            this.terrain.resetElevationCache();
+        }
+        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
+            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            if (this.getCenterClampedToGround()) {
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            }
+        }
+
+        if (!event.tile) return;
+        if (event.source?.type === 'image') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+        this.terrain.tileManager.releaseRTT(event.tile.tileID);
     }
 
     /**
@@ -3200,9 +3209,11 @@ export class Map extends Evented<MapEventType> {
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
+            const isWebGLImage = isStyleImageWebGLData(userImage.data);
 
             return {
-                data: new RGBAImage({width, height}, new Uint8Array(data)),
+                // A WebGL image paints its own slot, so its pixels are only ever transparent padding.
+                data: isWebGLImage ? new RGBAImage({width, height}) : new RGBAImage({width, height}, new Uint8Array(data)),
                 pixelRatio,
                 stretchX,
                 stretchY,
@@ -3211,6 +3222,7 @@ export class Map extends Evented<MapEventType> {
                 textFitHeight,
                 sdf,
                 version,
+                isWebGLImage,
                 userImage
             };
         }
@@ -3259,8 +3271,13 @@ export class Map extends Evented<MapEventType> {
                 'The width and height of the updated image must be that same as the previous version of the image')));
         }
 
-        const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
-        existingImage.data.replace(data, copy);
+        existingImage.isWebGLImage = isStyleImageWebGLData(data);
+        if (existingImage.isWebGLImage) {
+            existingImage.userImage = image as StyleImageInterface;
+        } else {
+            const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
+            existingImage.data.replace(data as Uint8Array | Uint8ClampedArray, copy);
+        }
 
         this.style.updateImage(id, existingImage);
         return this;
@@ -4138,6 +4155,11 @@ export class Map extends Evented<MapEventType> {
 
         if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
+            // The atlas textures died with the old context, so images that render themselves with WebGL owe every atlas a fresh render.
+            for (const id in this._lostContextStyle.images) {
+                const image = this._lostContextStyle.images[id];
+                if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
+            }
         }
 
         this._lostContextStyle = {style: null, images: null};
@@ -4271,6 +4293,8 @@ export class Map extends Evented<MapEventType> {
         // update terrain stuff
         if (this.terrain) {
             this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            // Tile selection can change with the transform or cache state without a data event.
+            this.terrain.resetElevationCache();
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
                 this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));

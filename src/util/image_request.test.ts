@@ -57,8 +57,9 @@ describe('ImageRequest', () => {
 
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+            const request = ImageRequest.getImage({url: ''}, abortController);
             abortController.abort();
+            await expect(request).rejects.toSatisfy(isAbortError);
             await sleep(0);
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
@@ -79,7 +80,7 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+        const queuedRequestPromise = ImageRequest.getImage({url: queuedURL}, abortController);
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);
@@ -95,11 +96,12 @@ describe('ImageRequest', () => {
         expect((queuedRequest as any).aborted).toBeUndefined();
         abortController.abort();
         expect((queuedRequest as any).aborted).toBe(true);
+        await expect(queuedRequestPromise).rejects.toSatisfy(isAbortError);
     });
 
     test('getImage sends accept/webp header', async () => {
         server.respondWith((request) => {
-            expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
+            expect(request.requestHeaders.accept).toContain('image/webp');
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
 
@@ -140,7 +142,7 @@ describe('ImageRequest', () => {
 
         server.respond();
 
-        await expect(promise).rejects.toThrow();
+        await expect(promise).rejects.toThrow('error');
     });
 
     test('getImage uses HTMLImageElement when createImageBitmap is not supported', async () => {

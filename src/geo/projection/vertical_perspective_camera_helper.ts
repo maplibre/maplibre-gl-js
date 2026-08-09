@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
@@ -11,6 +11,45 @@ import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
+
+/**
+ * Zoom movement slowing starts when the mouse ray passes further than this above the planet surface,
+ * so a cursor off the globe does not move the map unnaturally. Globe radius is 1, so 0.3 is ~2000 km.
+ */
+const RAY_SURFACE_DISTANCE_FOR_SLOWING_START = 0.3;
+
+/** How sharply zoom movement slows as the mouse ray rises above the planet surface. Lower is more gradual. */
+const SLOWING_MULTIPLIER = 0.5;
+
+/** Longitude difference between zoom location and map center at which the blend from exact to heuristic zooming starts, in degrees. */
+const INTERPOLATE_TO_HEURISTIC_START_LNG = 45;
+
+/** Longitude difference at which the blend to heuristic zooming is complete, in degrees. */
+const INTERPOLATE_TO_HEURISTIC_END_LNG = 85;
+
+/** Exponent applied to the blend factor: below 1, so the blend leans towards heuristic zooming and flattens as it completes. */
+const INTERPOLATE_TO_HEURISTIC_EXPONENT = 0.25;
+
+/**
+ * Distance of the mouse ray from the globe center at which the blend from exact to heuristic zooming
+ * starts. Globe radius is 1, so 1 is a ray grazing the horizon.
+ */
+const INTERPOLATE_TO_HEURISTIC_START_HORIZON = 0.95;
+
+/** Ray distance at which the blend to heuristic zooming is complete. */
+const INTERPOLATE_TO_HEURISTIC_END_HORIZON = 0.999;
+
+/**
+ * Globe radius relative to the smaller viewport dimension below which zoom movement near the horizon
+ * starts being inhibited, avoiding unnatural movements when the map is zoomed out a lot.
+ */
+const SLOWING_RADIUS_START = 0.9;
+
+/** Globe radius relative to the smaller viewport dimension at which that inhibition is at full strength. */
+const SLOWING_RADIUS_STOP = 0.5;
+
+/** Fraction of the zoom movement that remains once the globe has shrunk to `SLOWING_RADIUS_STOP`. */
+const SLOWING_RADIUS_SLOW_FACTOR = 0.25;
 
 /**
  * @internal
@@ -36,6 +75,13 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         };
     }
 
+    /**
+     * Zooms around the pointer.
+     *
+     * `setLocationAtPoint` is exact but degenerates when called repeatedly for a
+     * location whose longitude is far from the center's, or one near the horizon,
+     * so those cases blend towards a heuristic.
+     */
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
         const zoomPixel = deltas.around;
         const zoomLoc = tr.screenPointToLocation(zoomPixel);
@@ -51,28 +97,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             return;
         }
 
-        // Problem: `setLocationAtPoint` for globe works when it is called a single time, but is a little glitchy in practice when used repeatedly for zooming.
-        // - `setLocationAtPoint` repeatedly called at a location behind a pole will eventually glitch out
-        // - `setLocationAtPoint` at location the longitude of which is more than 90° different from current center will eventually glitch out
-        // But otherwise works fine at higher zooms, or when the target is somewhat near the current map center.
-        // Solution: use a heuristic zooming in the problematic cases and interpolate to `setLocationAtPoint` when possible.
-
-        // Magic numbers that control:
-        // - when zoom movement slowing starts for cursor not on globe (avoid unnatural map movements)
-        // - when we interpolate from exact zooming to heuristic zooming based on longitude difference of target location to current center
-        // - when we interpolate from exact zooming to heuristic zooming based on globe being too small on screen
-        // - when zoom movement slowing starts for globe being too small on viewport (avoids unnatural/unwanted map movements when map is zoomed out a lot)
-        const raySurfaceDistanceForSlowingStart = 0.3; // Zoom movement slowing will start when the planet surface to ray distance is greater than this number (globe radius is 1, so 0.3 is ~2000km form the surface).
-        const slowingMultiplier = 0.5; // The lower this value, the slower will the "zoom movement slowing" occur.
-        const interpolateToHeuristicStartLng = 45; // When zoom location longitude is this many degrees away from map center, we start interpolating from exact zooming to heuristic zooming.
-        const interpolateToHeuristicEndLng = 85; // Longitude difference at which interpolation to heuristic zooming ends.
-        const interpolateToHeuristicExponent = 0.25; // Makes interpolation smoother.
-        const interpolateToHeuristicStartRadius = 0.75; // When globe is this many times larger than the smaller viewport dimension, we start interpolating from exact zooming to heuristic zooming.
-        const interpolateToHeuristicEndRadius = 0.35; // Globe size at which interpolation to heuristic zooming ends.
-        const slowingRadiusStart = 0.9; // If globe is this many times larger than the smaller viewport dimension, start inhibiting map movement while zooming
-        const slowingRadiusStop = 0.5;
-        const slowingRadiusSlowFactor = 0.25; // How much is movement slowed when globe is too small
-
         const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
         const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
         const dLat = differenceOfAnglesDegrees(tr.center.lat, zoomLoc.lat);
@@ -87,15 +111,21 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             rayDirection[1] * distanceToClosestPoint,
             rayDirection[2] * distanceToClosestPoint
         ]);
-        const distanceFromSurface = vec3.length(closestPoint) - 1;
-        const distanceFactor = Math.exp(-Math.max(distanceFromSurface - raySurfaceDistanceForSlowingStart, 0) * slowingMultiplier);
+        const rayDistanceFromGlobeCenter = vec3.length(closestPoint); // 0 for a ray straight under the camera, 1 for one grazing the horizon.
+        const distanceFromSurface = rayDistanceFromGlobeCenter - 1;
+        const distanceFactor = Math.exp(-Math.max(distanceFromSurface - RAY_SURFACE_DISTANCE_FOR_SLOWING_START, 0) * SLOWING_MULTIPLIER);
+
+        // Near the horizon a pixel is worth degrees of arc and `setLocationAtPoint` can have no solution at all.
+        const interpolationFactorHorizon = remapSaturate(rayDistanceFromGlobeCenter, INTERPOLATE_TO_HEURISTIC_START_HORIZON, INTERPOLATE_TO_HEURISTIC_END_HORIZON, 0, 1);
 
         // Slow zoom movement down if the globe is too small on viewport
-        const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height); // Radius relative to larger viewport dimension
-        const radiusFactor = remapSaturate(radius, slowingRadiusStart, slowingRadiusStop, 1.0, slowingRadiusSlowFactor);
+        const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height); // Radius relative to smaller viewport dimension
+        const radiusFactor = remapSaturate(radius, SLOWING_RADIUS_START, SLOWING_RADIUS_STOP, 1.0, SLOWING_RADIUS_SLOW_FACTOR);
+        // Globe size only stands in for how close the zoom location is to the horizon, so apply the slowdown where that is actually the case.
+        const slowingFactor = Math.min(distanceFactor, lerp(1.0, radiusFactor, interpolationFactorHorizon));
 
         // Compute how much to move towards the zoom location
-        const factor = (1.0 - zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
+        const factor = (1.0 - zoomScale(-actualZoomDelta)) * slowingFactor;
 
         const oldCenterLat = tr.center.lat;
         const oldZoom = tr.zoom;
@@ -109,9 +139,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const exactCenter = tr.center;
 
         // Interpolate between exact zooming and heuristic zooming depending on the longitude difference between current center and zoom location.
-        const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), interpolateToHeuristicStartLng, interpolateToHeuristicEndLng, 0, 1);
-        const interpolationFactorRadius = remapSaturate(radius, interpolateToHeuristicStartRadius, interpolateToHeuristicEndRadius, 0, 1);
-        const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorRadius), interpolateToHeuristicExponent);
+        const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), INTERPOLATE_TO_HEURISTIC_START_LNG, INTERPOLATE_TO_HEURISTIC_END_LNG, 0, 1);
+        const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorHorizon), INTERPOLATE_TO_HEURISTIC_EXPONENT);
 
         const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
         const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);

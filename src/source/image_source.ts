@@ -150,6 +150,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
+    private _imageDirty: boolean = false;
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -184,7 +185,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
             this._loaded = true;
 
             if (image?.data) {
-                this.image = image.data;
+                this._setImage(image.data);
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
                 }
@@ -222,11 +223,10 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         if ('image' in options) {
             // Use the already-decoded image directly, skipping the network request.
             this._loaded = true;
-            this.image = options.image;
+            this._setImage(options.image);
             if (options.coordinates) {
                 this.coordinates = options.coordinates;
             }
-            this.texture = null;
             this._finishLoading();
             return this;
         }
@@ -236,8 +236,20 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         }
 
         this.options.url = options.url;
-        this.load(options.coordinates).finally(() => this.texture = null);
+        this.load(options.coordinates);
         return this;
+    }
+
+    /** Loaded tiles hold `this.texture`, so the wrapper has to outlive the images in it. */
+    private _setImage(image: ImageSourceImage): void {
+        this.image = image;
+        this._imageDirty = true;
+    }
+
+    /** Teardown only: dropping the reference alone leaves the allocation to the GC. */
+    private _disposeTexture(): void {
+        this.texture?.destroy();
+        this.texture = null;
     }
 
     _finishLoading(): void {
@@ -257,6 +269,9 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
             this._request.abort();
             this._request = null;
         }
+        this._disposeTexture();
+        this.image = null;
+        this.tiles = {};
     }
 
     /**
@@ -311,7 +326,11 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         if (!this.texture) {
             this.texture = new Texture(context, this.image, gl.RGBA);
             this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        } else if (this._imageDirty) {
+            this.texture.update(this.image);
+            this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
+        this._imageDirty = false;
 
         let newTilesLoaded = false;
         for (const w in this.tiles) {

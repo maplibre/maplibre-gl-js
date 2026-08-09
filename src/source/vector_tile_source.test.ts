@@ -454,7 +454,7 @@ describe('VectorTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(server.requests.length).toBe(2);
+        expect(server.requests).toHaveLength(2);
         expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'vector',

@@ -1,8 +1,4 @@
-import locationsWithTileID from '../lib/locations_with_tile_id.ts';
-import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import Layout from '../benchmarks/layout.ts';
 import Placement from '../benchmarks/placement.ts';
-import SymbolLayout from '../benchmarks/symbol_layout.ts';
 import WorkerTransfer from '../benchmarks/worker_transfer.ts';
 import Paint from '../benchmarks/paint.ts';
 import PaintStates from '../benchmarks/paint_states.ts';
@@ -12,36 +8,30 @@ import LayerLineFilteredOpacity from '../benchmarks/layer_line_filtered_opacity.
 import Load from '../benchmarks/map_load.ts';
 import HillshadeLoad from '../benchmarks/hillshade_load.ts';
 import ColorReliefLoad from '../benchmarks/color_relief_load.ts';
-import Validate from '../benchmarks/style_validate.ts';
-import StyleLayerCreate from '../benchmarks/style_layer_create.ts';
 import QueryPoint from '../benchmarks/query_point.ts';
 import QueryBox from '../benchmarks/query_box.ts';
-import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} from '../benchmarks/expressions.ts';
-import FilterCreate from '../benchmarks/filter_create.ts';
-import FilterEvaluate from '../benchmarks/filter_evaluate.ts';
 import CustomLayer from '../benchmarks/customlayer.ts';
 import MapIdle from '../benchmarks/map_idle.ts';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool.ts';
 import {setWorkerUrl} from '../../../src/index.ts';
-import SymbolCollisionBox from '../benchmarks/symbol_collision_box.ts';
-import CrossTileSymbolIndexBench from '../benchmarks/cross_tile_symbol_index.ts';
-import Subdivide from '../benchmarks/subdivide.ts';
-import LoadMatchingFeature from '../benchmarks/feature_index.ts';
-import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe.ts';
-import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator.ts';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data.ts';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data.ts';
 import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain.ts';
-
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
+import RoundPolygonCorners from '../benchmarks/round_polygon_corners.ts';
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
 // Resolve the worker URL relative to this bundle's own URL (set by rollup ESM output).
 setWorkerUrl(new URL('./benchmarks_worker.mjs', import.meta.url).toString());
 
-const version = process.env.BENCHMARK_VERSION;
+/*
+ * Published bundles load cross-origin from gh-pages, the working-directory bundle from the page's own origin.
+ * Both bake their version from `git describe`, so a local checkout sitting on a published bundle's commit
+ * would otherwise register under the same id and silently replace it.
+ * Tagging the same-origin bundle keeps them apart.
+ */
+const version = new URL(import.meta.url).origin === location.origin ? `${process.env.BENCHMARK_VERSION} (local)` : process.env.BENCHMARK_VERSION;
 
 function register(name, bench) {
     (window as any).maplibreglBenchmarks[name] = (window as any).maplibreglBenchmarks[name] || {};
@@ -58,14 +48,7 @@ register('QueryPoint', new QueryPoint(style, locations));
 register('QueryBox', new QueryBox(style, locations));
 register('GeoJSONSourceUpdateData', new GeoJSONSourceUpdateData());
 register('GeoJSONSourceSetData', new GeoJSONSourceSetData());
-register('Layout', new Layout(style));
 register('Placement', new Placement(style, locations));
-register('Validate', new Validate(style));
-register('StyleLayerCreate', new StyleLayerCreate(style));
-register('FunctionCreate', new FunctionCreate(style));
-register('FunctionEvaluate', new FunctionEvaluate(style));
-register('ExpressionCreate', new ExpressionCreate(style));
-register('ExpressionEvaluate', new ExpressionEvaluate(style));
 register('WorkerTransfer', new WorkerTransfer(style));
 register('PaintStates', new PaintStates(center));
 register('PropertyLevelRemove', new PropertyLevelRemove(center));
@@ -88,26 +71,15 @@ register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
 register('Load', new Load());
-register('LoadMatchingFeature', new LoadMatchingFeature());
-register('SymbolLayout', new SymbolLayout(style, styleLocations.map(location => location.tileID[0])));
-register('FilterCreate', new FilterCreate());
-register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 register('ColorReliefLoad', new ColorReliefLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
-register('SymbolCollisionBox', new SymbolCollisionBox(false));
-register('SymbolCollisionBoxGlobe', new SymbolCollisionBox(true));
-register('CrossTileSymbolIndex', new CrossTileSymbolIndexBench());
-register('Subdivide', new Subdivide());
-register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
-register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
-register('CoveringTilesMercator', new CoveringTilesMercator(0));
-register('CoveringTilesMercatorPitched', new CoveringTilesMercator(60));
 register('Terrain3DGlobe', new Terrain3DGlobe());
 register('Terrain3DMercator', new Terrain3DMercator());
 register('Terrain2DGlobe', new Terrain2DGlobe());
 register('Terrain2DMercator', new Terrain2DMercator());
+register('RoundPolygonCorners', new RoundPolygonCorners());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

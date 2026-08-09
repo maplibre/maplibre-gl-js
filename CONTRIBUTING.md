@@ -140,7 +140,7 @@ cd maplibre-gl-js &&
 npm install
 ```
 
-Before you can [run the docs](./docs/README.md), you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
+Before you can [run the docs](./developer-guides/README-docs.md), you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
 
 
 ### Windows
@@ -175,16 +175,9 @@ npm run build-dist
 ```
 Once that finishes, you will have a standalone build at `dist/maplibre-gl.mjs`, `dist/maplibre-gl-worker.mjs` and `dist/maplibre-gl.css`. Load it via `<script type="module">`; the worker URL is auto-detected as a sibling of the loaded module.
 
-## Analyze your Standalone Build
-
-MapLibre seeks to keep production bundle sizes small. If your changes involve substantial additions or changes to dependencies, the effects on bundle size can be visualized by running
-```bash
-npm run bundle-stats
-```
-
 ## Testing changes and Writing Documentation
 
-See [`docs/README.md`](./docs/README.md)
+See [`developer-guides/README-docs.md`](./developer-guides/README-docs.md)
 
 ## Writing & Running Tests
 
@@ -193,6 +186,8 @@ See [`test/README.md`](./test/README.md).
 ## Writing & Running Benchmarks
 
 See [`test/bench/README.md`](./test/bench/README.md).
+
+Micro benchmarks live next to the code they measure (`src/**/*.bench.ts`) and run with `npm run bench`; the browser-based version-comparison harness lives in `test/bench/`. If your PR claims a performance effect, include a before/after table from `npm run bench -- --compare` in the description.
 
 ## Further guides
 

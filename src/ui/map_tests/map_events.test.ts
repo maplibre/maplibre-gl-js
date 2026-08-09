@@ -3,9 +3,9 @@ import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {type StyleLayer} from '../../style/style_layer.ts';
 import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
-import {type MapLibreEvent} from '../events.ts';
+import {type MapLibreEvent, MapSourceDataEvent} from '../events.ts';
 import {Map} from '../map.ts';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented.ts';
+import {ErrorEvent} from '../../util/evented.ts';
 import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
@@ -247,7 +247,7 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.on allows a listener to infer the event type ', () => {
+    test('Map.on allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -411,7 +411,7 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(0);
     });
 
-    test('Map.off allows a listener to infer the event type ', () => {
+    test('Map.off allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -440,7 +440,7 @@ describe('map events', () => {
         expect(handler.onMoveOnce).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.once allows a listener to infer the event type ', () => {
+    test('Map.once allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -964,7 +964,7 @@ describe('map events', () => {
         map.on('load', loadHandler);
         await sleep(1);
 
-        expect(loadHandler).toThrowError();
+        expect(loadHandler).toThrow('Error in load handler');
     });
 
     test('no idle event during move', async () => {
@@ -980,8 +980,8 @@ describe('map events', () => {
     test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
         const sourcePromise = map.once('sourcedataabort');
-        map.fire(new EventedEvent('dataabort'));
-        await sourcePromise;
+        map.fire(new MapSourceDataEvent('dataabort'));
+        await expect(sourcePromise).resolves.toBeDefined();
     });
 
     test('getZoom on moveend is the same as after the map end moving, with terrain on', async () => {
