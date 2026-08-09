@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Make fired/listened map events typed. This means that `map.on("something", ...)` (and `once`, `listens`) will now give you an typescript error and better autocomplete. If you relied on firing/listening custom events via the map, this still works via the escape hatches `map.fire("something" as any)` -> `map.on("something" as any, ...)` ([#8072](https://github.com/maplibre/maplibre-gl-js/issues/8072)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Let a `StyleImageInterface` give a `{renderWithWebGL}` callback as its `data`, an escape hatch for plugin developers and advanced users that renders a style image on the GPU instead of moving its pixels through the CPU. Nothing new is possible that pixels could not already express, but an image that changes often, such as an animated icon, gets more performant ([#7954](https://github.com/maplibre/maplibre-gl-js/pull/7954)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Use integer vertex attributes for packed line data instead of float conversion ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
