@@ -183,10 +183,9 @@ Pick your setup:
 
 === "Next.js"
 
-    Next.js inlines the entry module, so `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` does not resolve to the worker. The webpack recipe above does not work here, under either of Next's bundlers. Serve the worker from `public/` instead and point `setWorkerUrl` at it:
+    Next.js inlines the entry module, so `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` does not resolve to the worker. Serve the worker from `public/` instead and point `setWorkerUrl` at it:
 
-    ```js
-    // scripts/copy-maplibre-worker.mjs
+    ```js title="scripts/copy-maplibre-worker.mjs"
     import {copyFileSync, mkdirSync} from 'node:fs';
     import {createRequire} from 'node:module';
     import path from 'node:path';
@@ -200,8 +199,7 @@ Pick your setup:
     }
     ```
 
-    ```json
-    // package.json
+    ```json title="package.json"
     {
         "scripts": {
             "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
@@ -210,7 +208,7 @@ Pick your setup:
     }
     ```
 
-    ```ts
+    ```ts title="app/map.tsx"
     'use client';
 
     import {Map, setWorkerUrl} from 'maplibre-gl';
@@ -221,15 +219,14 @@ Pick your setup:
     const map = new Map({/* … */});
     ```
 
-    Copy both files, not just the worker: the worker imports its sibling `maplibre-gl-shared.mjs` by relative path, so the two must end up in the same directory.
+    The script copies both files, not just the worker.
+    This is because the worker imports `maplibre-gl-shared.mjs` by relative path, so both have to land in the same directory.
 
-    Copy at build time rather than committing the files, so they cannot fall out of step with the installed version. A committed copy keeps working after an upgrade while running the old worker against the new entry, which fails silently in the same way. If you do add the destination to `.gitignore`, make sure the files were never committed: git ignores that rule for paths already tracked.
+    The copy happens at build time, from `node_modules`, so it always matches the installed version.
+    npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary.
+    `postinstall` alone won't do it since package managers skip lifecycle scripts when an install has no work to do, and `--ignore-scripts` skips them entirely.
 
-    npm lifecycle prefixes match the exact script name, so `prebuild` runs before `build` and **not** before a custom script such as `build:local`. Add a matching `pre` hook for every script that builds or serves the app.
-
-    `postinstall` looks like a tidier place for this, since the copy's only input is `node_modules`, but it is not sufficient on its own: package managers skip lifecycle scripts when an install has no work to do. With dependencies already current and the destination deleted, neither `pnpm install` nor `pnpm install --force` restores it; only a fresh `node_modules` does. It also does not run under `--ignore-scripts`. A `pre` hook runs at the moment the file is needed, so use that, and add `postinstall` as well if you want it refreshed on install too.
-
-    Works with both `next build` (Turbopack) and `next build --webpack`.
+    Copying works with both `next build` (Turbopack) and `next build --webpack`.
 
 === "CDN / No bundler"
 
