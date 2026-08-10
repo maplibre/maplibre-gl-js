@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
