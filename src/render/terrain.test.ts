@@ -1,6 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {mat4} from 'gl-matrix';
 import {Terrain} from './terrain.ts';
 import {Context} from '../webgl/context.ts';
 import {RGBAImage} from '../util/image.ts';
@@ -248,31 +247,66 @@ describe('Terrain', () => {
         expect(actualVertexArray).toStrictEqual([0, 0, 0, 2048, 0, 0, 4096, 0, 0, 6144, 0, 0, 8192, 0, 0, 0, 2048, 0, 2048, 2048, 0, 4096, 2048, 0, 6144, 2048, 0, 8192, 2048, 0, 0, 4096, 0, 2048, 4096, 0, 4096, 4096, 0, 6144, 4096, 0, 8192, 4096, 0, 0, 6144, 0, 2048, 6144, 0, 4096, 6144, 0, 6144, 6144, 0, 8192, 6144, 0, 0, 8192, 0, 2048, 8192, 0, 4096, 8192, 0, 6144, 8192, 0, 8192, 8192, 0, 0, 0, 1, 2048, 0, 1, 4096, 0, 1, 6144, 0, 1, 8192, 0, 1, 0, 8192, 1, 2048, 8192, 1, 4096, 8192, 1, 6144, 8192, 1, 8192, 8192, 1, 0, 0, 0, 0, 0, 1, 0, 2048, 0, 0, 2048, 1, 0, 4096, 0, 0, 4096, 1, 0, 6144, 0, 0, 6144, 1, 0, 8192, 0, 0, 8192, 1, 8192, 0, 0, 8192, 0, 1, 8192, 2048, 0, 8192, 2048, 1, 8192, 4096, 0, 8192, 4096, 1, 8192, 6144, 0, 8192, 6144, 1, 8192, 8192, 0, 8192, 8192, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     });
 
-    test('interpolation works', () => {
-        const mockTerrain = {
-            getDEMElevation: Terrain.prototype.getDEMElevation,
-            getTerrainData() {
-                return {
-                    u_terrain_matrix: mat4.create(),
-                    tile: {
-                        dem: {
-                            dim: 1,
-                            sampleBilinear(x: number, y: number) {
-                                return 100 * x + 10 * y;
-                            }
-                        }
-                    }
-                };
+    test('getElevation interpolates and reuses DEM sampling setup until reset', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 2} as any);
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const sourceTile = {
+            tileID,
+            dem: {
+                dim: 1,
+                sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
             }
-        };
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        expect(mockTerrain.getDEMElevation(tileID, 0, 0)).toBeCloseTo(0);
-        expect(mockTerrain.getDEMElevation(tileID, 1, 1)).toBeCloseTo(110);
-        expect(mockTerrain.getDEMElevation(tileID, 0, 0.5)).toBeCloseTo(5);
-        expect(mockTerrain.getDEMElevation(tileID, 1, 0.5)).toBeCloseTo(105);
-        expect(mockTerrain.getDEMElevation(tileID, 0.5, 0)).toBeCloseTo(50);
-        expect(mockTerrain.getDEMElevation(tileID, 0.5, 1)).toBeCloseTo(60);
-        expect(mockTerrain.getDEMElevation(tileID, 0.4, 0.2)).toBeCloseTo(42);
+        } as any as Tile;
+        terrain.tileManager.getSourceTile = vi.fn(() => sourceTile);
+        terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
+
+        expect(terrain.getDEMElevation(tileID, EXTENT * 0.4, EXTENT * 0.2)).toBeCloseTo(42);
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
+        expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(1);
+
+        terrain.resetElevationCache();
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
+
+        expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
+    });
+
+    test('getDEMElevation samples the correct part of a parent DEM tile', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const childTileID = new OverscaledTileID(2, 0, 2, 3, 3);
+        const parentTileID = new OverscaledTileID(1, 0, 1, 1, 1);
+        const sampleBilinear = vi.fn(() => 42);
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID: parentTileID,
+            dem: {dim: 4, sampleBilinear}
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 22}) as any);
+
+        expect(terrain.getDEMElevation(childTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
+        // The center of the bottom-right child is at 75% of both parent axes.
+        expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
+    });
+
+    test('getElevation retries sampling setup when DEM data becomes available', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 1} as any);
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        let tileHasDem = false;
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID,
+            dem: tileHasDem ? {
+                dim: 1,
+                sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
+            } : undefined
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
+
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBe(0);
+
+        tileHasDem = true;
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(55);
+        expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
@@ -323,15 +357,15 @@ describe('Terrain', () => {
 
     test('getDEMElevation normalizes out-of-bounds coordinates to neighbor tile', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
-        const spy = vi.fn().mockReturnValue({tile: null});
-        terrain.getTerrainData = spy;
+        const getSourceTile = vi.fn();
+        terrain.tileManager.getSourceTile = getSourceTile;
 
         // tile (0,0,1) with x beyond EXTENT should normalize to tile (1,0,1)
         const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
         terrain.getDEMElevation(tileID, EXTENT + 100, 50);
 
-        expect(spy).toHaveBeenCalledOnce();
-        const [calledTileID] = spy.mock.calls[0];
+        expect(getSourceTile).toHaveBeenCalledTimes(1);
+        const [calledTileID] = getSourceTile.mock.calls[0];
         expect(calledTileID.canonical.x).toBe(1);
         expect(calledTileID.canonical.y).toBe(0);
         expect(calledTileID.canonical.z).toBe(1);
@@ -339,15 +373,15 @@ describe('Terrain', () => {
 
     test('getDEMElevation returns 0 for coordinates beyond tile grid', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
-        const spy = vi.fn();
-        terrain.getTerrainData = spy;
+        const getSourceTile = vi.fn();
+        terrain.tileManager.getSourceTile = getSourceTile;
 
         // tile (0,0,0) with y beyond EXTENT — no tile exists below at z=0
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const result = terrain.getDEMElevation(tileID, 100, EXTENT + 100);
 
         expect(result).toBe(0);
-        expect(spy).not.toHaveBeenCalled();
+        expect(getSourceTile).not.toHaveBeenCalled();
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {
@@ -361,11 +395,11 @@ describe('Terrain', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(0, 88), 0)).toBe(0);
         });
 
-        test('zoom', () => {
+        test('zoom below the minimum', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MIN_TILE_ZOOM - 1)).toBe(0);
         });
 
-        test('zoom', () => {
+        test('zoom above the maximum', () => {
             expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MAX_TILE_ZOOM + 1)).toBe(0);
         });
     });

@@ -15,7 +15,7 @@ import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
-import {Evented, ErrorEvent, Event, type Listener} from './util/evented.ts';
+import {Evented, ErrorEvent, Event, type ErrorEventType, type EventedParentData, type EventTypeMap, type Listener} from './util/evented.ts';
 import {type AddProtocolAction, config} from './util/config.ts';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
@@ -57,7 +57,7 @@ import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
 import type {TransformConstrainFunction} from './geo/transform_interface.ts';
-import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image.ts';
+import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff.ts';
@@ -297,6 +297,9 @@ export {
     type CanonicalTileRange,
     type Tile,
     type Listener,
+    type EventTypeMap,
+    type ErrorEventType,
+    type EventedParentData,
     type Coordinates,
     type ImageSourceImage,
     type UpdateImageOptions,
@@ -308,6 +311,8 @@ export {
     type GeolocateControlOptions,
     type LogoControlOptions,
     type StyleImageInterface,
+    type StyleImageWebGLData,
+    type StyleImageWebGLTarget,
     type AddLayerObject,
     type StyleSetterOptions,
     type CameraForBoundsOptions,

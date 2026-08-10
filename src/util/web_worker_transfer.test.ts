@@ -39,8 +39,8 @@ describe('web worker transfer', () => {
         const serializableMock = new SerializableMock(10);
         const transferables = [];
         const deserialized = deserialize(serialize(serializableMock, transferables)) as SerializableMock;
-        expect(deserialize(serialize(serializableMock, transferables)) instanceof SerializableMock).toBeTruthy();
-        expect(serializableMock.dataView instanceof DataView).toBeTruthy();
+        expect(deserialize(serialize(serializableMock, transferables))).toBeInstanceOf(SerializableMock);
+        expect(serializableMock.dataView).toBeInstanceOf(DataView);
 
         expect(serializableMock !== deserialized).toBeTruthy();
         expect(deserialized.constructor === SerializableMock).toBeTruthy();
@@ -51,7 +51,7 @@ describe('web worker transfer', () => {
         expect(transferables[1] === serializableMock.dataView.buffer).toBeTruthy();
         expect(deserialized._cached === undefined).toBeTruthy();
         expect(deserialized.squared() === 100).toBeTruthy();
-        expect(deserialized.dataView instanceof DataView).toBeTruthy();
+        expect(deserialized.dataView).toBeInstanceOf(DataView);
         expect(deserialized.array).toEqual(serializableMock.array);
     });
 
@@ -61,7 +61,7 @@ describe('web worker transfer', () => {
         register('Anon', Klass);
         const x = new Klass();
         const deserialized = deserialize(serialize(x));
-        expect(deserialized instanceof Klass).toBeTruthy();
+        expect(deserialized).toBeInstanceOf(Klass);
     });
 
     test('null', () => {
@@ -94,7 +94,7 @@ describe('web worker transfer', () => {
         expect(!customSerialization._deserialized).toBeTruthy();
 
         const deserialized = deserialize(serialize(customSerialization)) as CustomSerialization;
-        expect(deserialize(serialize(customSerialization)) instanceof CustomSerialization).toBeTruthy();
+        expect(deserialize(serialize(customSerialization))).toBeInstanceOf(CustomSerialization);
         expect(deserialized.id).toBe(customSerialization.id);
         expect(deserialized._deserialized).toBeTruthy();
     });
@@ -119,7 +119,7 @@ describe('web worker transfer', () => {
         const trySerialize = () => {
             serialize(new BadClass());
         };
-        expect(trySerialize).toThrow();
+        expect(trySerialize).toThrow('can\'t serialize object of unregistered class BadClass');
     });
     test('serialize can not used reserved property #name', () => {
         class BadClass {
@@ -133,7 +133,7 @@ describe('web worker transfer', () => {
         const badObject = new BadClass();
         expect(() => {
             serialize(badObject);
-        }).toThrow();
+        }).toThrow('$name property is reserved for worker serialization logic.');
     });
     test('deserialize Object has $name', () => {
         const badObject = {
@@ -142,18 +142,18 @@ describe('web worker transfer', () => {
         const tryDeserialize = () => {
             deserialize(badObject);
         };
-        expect(tryDeserialize).toThrow();
+        expect(tryDeserialize).toThrow('can\'t deserialize unregistered class foo');
     });
 
     test('some objects can not be serialized', () => {
         expect(() => {
             serialize(BigInt(123));
-        }).toThrow();
+        }).toThrow('can\'t serialize object of type bigint');
     });
     test('some objects can not be deserialized', () => {
         expect(() => {
             deserialize(BigInt(123) as unknown);
-        }).toThrow();
+        }).toThrow('can\'t deserialize object of type bigint');
     });
 
     test('"has" filter returns false for undefined or missing properties after serialization', () => {

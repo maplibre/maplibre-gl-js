@@ -5,10 +5,18 @@ import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type Point from '@mapbox/point-geometry';
 
+export type RasterPerspectiveTransform = [number, number, number];
+
+/**
+ * Affine texture coordinates represented as a homogeneous transform.
+ */
+export const identityPerspectiveTransform: RasterPerspectiveTransform = [0, 0, 1];
+
 export type RasterUniformsType = {
     'u_tl_parent': Uniform2f;
     'u_scale_parent': Uniform1f;
     'u_buffer_scale': Uniform1f;
+    'u_perspective_transform': Uniform3f;
     'u_fade_t': Uniform1f;
     'u_opacity': Uniform1f;
     'u_image0': Uniform1i;
@@ -26,6 +34,7 @@ const rasterUniforms = (context: Context, locations: UniformLocations): RasterUn
     'u_tl_parent': new Uniform2f(context, locations.u_tl_parent),
     'u_scale_parent': new Uniform1f(context, locations.u_scale_parent),
     'u_buffer_scale': new Uniform1f(context, locations.u_buffer_scale),
+    'u_perspective_transform': new Uniform3f(context, locations.u_perspective_transform),
     'u_fade_t': new Uniform1f(context, locations.u_fade_t),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_image0': new Uniform1i(context, locations.u_image0),
@@ -48,6 +57,7 @@ const rasterUniformValues = (
     },
     layer: RasterStyleLayer,
     cornerCoords: Point[],
+    perspectiveTransform: RasterPerspectiveTransform,
 ): UniformValues<RasterUniformsType> => ({
     'u_tl_parent': parentTL,
     'u_scale_parent': parentScaleBy,
@@ -56,6 +66,7 @@ const rasterUniformValues = (
     // so that the texture coordinares for poles always lie beyond the edge of the texture.
     // Right now the coordinates are placed right at the texture border.
     'u_buffer_scale': 1,
+    'u_perspective_transform': perspectiveTransform,
     'u_fade_t': fade.mix,
     'u_opacity': fade.opacity * layer.paint.get('raster-opacity'),
     'u_image0': 0,

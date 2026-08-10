@@ -26,9 +26,8 @@ vec2 unpack_float(const float packedValue) {
     return vec2(v0, packedIntValue - v0 * 256);
 }
 
-vec2 unpack_opacity(const float packedOpacity) {
-    int intOpacity = int(packedOpacity) / 2;
-    return vec2(float(intOpacity) / 127.0, mod(packedOpacity, 2.0));
+vec2 unpack_opacity(const uint packedOpacity) {
+    return vec2(float(packedOpacity >> 1u) / 127.0, float(packedOpacity & 1u));
 }
 
 // To minimize the number of ins needed, we encode a 4-component

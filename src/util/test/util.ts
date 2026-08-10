@@ -5,6 +5,7 @@ import {extend} from '../../util/util.ts';
 import {type Dispatcher} from '../../util/dispatcher.ts';
 import {type IActor} from '../actor.ts';
 import {Evented} from '../evented.ts';
+import {type SourceEventType} from '../../ui/events.ts';
 import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
@@ -197,7 +198,7 @@ export const sleep: (milliseconds?: number) => Promise<void> = (milliseconds: nu
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 };
 
-export function waitForMetadataEvent(source: Evented): Promise<void> {
+export function waitForMetadataEvent(source: Evented<SourceEventType>): Promise<void> {
     return new Promise((resolve) => {
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
@@ -242,6 +243,7 @@ export function createTerrain(): Terrain {
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
+        resetElevationCache: () => {},
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,

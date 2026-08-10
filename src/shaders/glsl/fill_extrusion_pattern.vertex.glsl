@@ -12,7 +12,7 @@ uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
 
 layout(location = 0) in vec2 a_pos;
-layout(location = 1) in vec4 a_normal_ed;
+layout(location = 1) in ivec4 a_normal_ed;
 
 #ifdef TERRAIN3D
     layout(location = 2) in vec2 a_centroid;
@@ -50,8 +50,8 @@ void main() {
     float fromScale = u_scale.y;
     float toScale = u_scale.z;
 
-    vec3 normal = a_normal_ed.xyz;
-    float edgedistance = a_normal_ed.w;
+    vec3 normal = vec3(a_normal_ed.xyz);
+    float edgedistance = float(a_normal_ed.w);
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
@@ -72,7 +72,7 @@ void main() {
     base = max(0.0, base) + base_terrain3d_offset;
     height = max(0.0, height) + height_terrain3d_offset;
 
-    float t = mod(normal.x, 2.0);
+    float t = float(a_normal_ed.x & 1);
     float elevation = t > 0.0 ? height : base;
     vec2 posInTile = a_pos + u_fill_translate;
 
@@ -85,7 +85,7 @@ void main() {
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
     #endif
 
-    vec2 pos = normal.x == 1.0 && normal.y == 0.0 && normal.z == 16384.0
+    vec2 pos = a_normal_ed.x == 1 && a_normal_ed.y == 0 && a_normal_ed.z == 16384
         ? a_pos // extrusion top - note the lack of u_fill_translate, because translation should not affect the pattern
         : vec2(edgedistance, elevation * u_height_factor); // extrusion side
 

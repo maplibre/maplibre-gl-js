@@ -304,6 +304,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             clippingPlane: this._cachedClippingPlane as [number, number, number, number],
             projectionTransition: applyGlobeMatrix ? 1 : 0,
             fallbackMatrix: this._globeViewProjMatrix32f,
+            clipAntimeridian: overscaledTileID?.canonical.z === 0,
         };
     }
 
@@ -661,7 +662,8 @@ export class VerticalPerspectiveTransform implements ITransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point, _elevation?: number): void {
+        // The elevation is ignored: this transform solves on the planet's surface.
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
@@ -798,6 +800,11 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+    }
+
+    screenPointToLocationAtElevation(p: Point, _elevation: number): LngLat {
+        // No flat ground plane to intersect at an elevation: use the planet surface.
+        return this.screenPointToLocation(p);
     }
 
     isPointOnMapSurface(p: Point, _terrain?: Terrain): boolean {
