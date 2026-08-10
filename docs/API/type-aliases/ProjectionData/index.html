@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4290,6 +4290,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ExpiryData/" class="md-nav__link">
         
   
@@ -4837,7 +4918,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6059,6 +6140,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7520,6 +7655,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10604,7 +10774,7 @@
 <blockquote>
 <p><strong>ProjectionData</strong>&lt;<code>MainMatrix</code>, <code>FallbackMatrix</code>&gt; = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L24">geo/projection/projection_data.ts:24</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L24">geo/projection/projection_data.ts:24</a></p>
 <p>This type contains all data necessary to project a tile to screen in MapLibre's shader system.
 Contains data used for both mercator and globe projection.</p>
 <h2 id="type-parameters">Type Parameters</h2>
@@ -10631,7 +10801,7 @@ Contains data used for both mercator and globe projection.</p>
 <blockquote>
 <p><strong>clipAntimeridian</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L70">geo/projection/projection_data.ts:70</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L70">geo/projection/projection_data.ts:70</a></p>
 <p>Whether line fragments outside the tile's X extent should be discarded: true for the zoom 0 tile under globe projection, false otherwise.
 The z0 tile covers the whole world, so its buffer wraps around the planet onto the tile itself,
 drawing geometry near the antimeridian twice. Stencil clipping cannot remove this same-pixel overlap,
@@ -10642,7 +10812,7 @@ Uniform name: <code>u_projection_clip_antimeridian</code>.</p>
 <blockquote>
 <p><strong>clippingPlane</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L50">geo/projection/projection_data.ts:50</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L50">geo/projection/projection_data.ts:50</a></p>
 <p>The plane equation for a plane that intersects the planet's horizon.
 Assumes the planet to be a unit sphere.
 Used by globe projection for clipping.
@@ -10652,7 +10822,7 @@ Uniform name: <code>u_projection_clipping_plane</code>.</p>
 <blockquote>
 <p><strong>fallbackMatrix</strong>: <code>FallbackMatrix</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L62">geo/projection/projection_data.ts:62</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L62">geo/projection/projection_data.ts:62</a></p>
 <p>Fallback matrix that projects the current tile according to mercator projection.
 Used by globe projection to fall back to mercator projection in an animated way.
 Uniform name: <code>u_projection_fallback_matrix</code>.</p>
@@ -10661,7 +10831,7 @@ Uniform name: <code>u_projection_fallback_matrix</code>.</p>
 <blockquote>
 <p><strong>mainMatrix</strong>: <code>MainMatrix</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L30">geo/projection/projection_data.ts:30</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L30">geo/projection/projection_data.ts:30</a></p>
 <p>The main projection matrix. For mercator projection, it usually projects in-tile coordinates 0..EXTENT to screen,
 for globe projection, it projects a unit sphere planet to screen.
 Uniform name: <code>u_projection_matrix</code>.</p>
@@ -10670,7 +10840,7 @@ Uniform name: <code>u_projection_matrix</code>.</p>
 <blockquote>
 <p><strong>projectionTransition</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L56">geo/projection/projection_data.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L56">geo/projection/projection_data.ts:56</a></p>
 <p>A value in range 0..1 indicating interpolation between mercator (0) and globe (1) projections.
 Used by globe projection to hide projection transition at high zooms.
 Uniform name: <code>u_projection_transition</code>.</p>
@@ -10679,7 +10849,7 @@ Uniform name: <code>u_projection_transition</code>.</p>
 <blockquote>
 <p><strong>tileMercatorCoords</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/geo/projection/projection_data.ts#L43">geo/projection/projection_data.ts:43</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/geo/projection/projection_data.ts#L43">geo/projection/projection_data.ts:43</a></p>
 <p>The extent of current tile in the mercator square.
 Used by globe projection.
 First two components are X and Y offset, last two are X and Y scale.

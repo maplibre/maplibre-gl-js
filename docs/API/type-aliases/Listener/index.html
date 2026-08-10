@@ -27,7 +27,7 @@
     
     
       
-        <title>Listener - MapLibre GL JS</title>
+        <title>Listener<E> - MapLibre GL JS</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#listener" class="md-skip">
+        <a href="#listenere" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Listener
+              Listener&lt;E&gt;
             
           </span>
         </div>
@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4290,6 +4290,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ExpiryData/" class="md-nav__link">
         
   
@@ -4846,7 +4927,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -4863,7 +4944,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -4887,6 +4968,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#type-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Type Parameters
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
@@ -5987,6 +6079,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7448,6 +7594,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10417,6 +10598,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#type-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Type Parameters
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10456,12 +10648,27 @@
   
 
 
-<h1 id="listener">Listener</h1>
+<h1 id="listenere">Listener&lt;E&gt;</h1>
 <blockquote>
-<p><strong>Listener</strong> = (<code>a</code>: <code>any</code>) =&gt; <code>any</code></p>
+<p><strong>Listener</strong>&lt;<code>E</code>&gt; = (<code>event</code>: <code>E</code>) =&gt; <code>any</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L6">util/evented.ts:6</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L6">util/evented.ts:6</a></p>
 <p>A listener method used as a callback to events</p>
+<h2 id="type-parameters">Type Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Type Parameter</th>
+<th>Default type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>E</code> <em>extends</em> <a href="../../classes/Event/"><code>Event</code></a></td>
+<td><a href="../../classes/Event/"><code>Event</code></a></td>
+</tr>
+</tbody>
+</table>
 <h2 id="parameters">Parameters</h2>
 <table>
 <thead>
@@ -10472,8 +10679,8 @@
 </thead>
 <tbody>
 <tr>
-<td><code>a</code></td>
-<td><code>any</code></td>
+<td><code>event</code></td>
+<td><code>E</code></td>
 </tr>
 </tbody>
 </table>

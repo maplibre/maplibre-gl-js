@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -3458,6 +3458,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        data
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#onadd" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4409,6 +4420,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../../type-aliases/ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../type-aliases/ExpiryData/" class="md-nav__link">
         
   
@@ -4956,7 +5048,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6037,6 +6129,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7498,6 +7644,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10501,6 +10682,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        data
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#onadd" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10557,7 +10749,7 @@
 
 
 <h1 id="styleimageinterface">StyleImageInterface</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_image.ts#L148">style/style_image.ts:148</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_image.ts#L191">style/style_image.ts:191</a></p>
 <p>Interface for dynamically generated style images. This is a specification for
 implementers to model: it is not an exported method or class.</p>
 <p>Images implementing this interface can be redrawn for every frame. They can be used to animate
@@ -10607,11 +10799,21 @@ can be used to update the image.</p>
 </span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w"> </span><span class="nx">map</span><span class="p">.</span><span class="nx">addImage</span><span class="p">(</span><span class="s1">&#39;flashing_square&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">flashingSquare</span><span class="p">);</span>
 </span></code></pre></div>
 <h2 id="properties">Properties</h2>
+<h3 id="data">data</h3>
+<blockquote>
+<p><strong>data</strong>: <code>Uint8Array</code>&lt;<code>ArrayBufferLike</code>&gt; | <code>Uint8ClampedArray</code>&lt;<code>ArrayBufferLike</code>&gt; | <a href="../../type-aliases/StyleImageWebGLData/"><code>StyleImageWebGLData</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_image.ts#L200">style/style_image.ts:200</a></p>
+<p>The image's pixels, in the same format as <code>ImageData</code>, or a <a href="../../type-aliases/StyleImageWebGLData/">StyleImageWebGLData</a>
+callback that renders them with WebGL. A WebGL image renders straight into its slot of the
+shared icon atlas. Nothing new is possible that pixels could not express, but an image that
+changes often, such as an animated icon, gets much cheaper: no CPU pixel work and no upload.</p>
+<hr />
 <h3 id="onadd">onAdd?</h3>
 <blockquote>
 <p><code>optional</code> <strong>onAdd?</strong>: (<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>, <code>id</code>: <code>string</code>) =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_image.ts#L170">style/style_image.ts:170</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_image.ts#L222">style/style_image.ts:222</a></p>
 <p>Optional method called when the layer has been added to the Map with <a href="../../classes/Map/#addimage">Map.addImage</a>.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -10642,9 +10844,12 @@ can be used to update the image.</p>
 <blockquote>
 <p><code>optional</code> <strong>onRemove?</strong>: () =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_image.ts#L175">style/style_image.ts:175</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_image.ts#L231">style/style_image.ts:231</a></p>
 <p>Optional method called when the icon is removed from the map with <a href="../../classes/Map/#removeimage">Map.removeImage</a>.
 This gives the image a chance to clean up resources and event listeners.</p>
+<p>This also fires when the WebGL context is lost, after which the same image is added back
+without a matching <code>onAdd</code>, so the image has to be able to build again whatever it
+released here.</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
 <hr />
@@ -10652,11 +10857,13 @@ This gives the image a chance to clean up resources and event listeners.</p>
 <blockquote>
 <p><code>optional</code> <strong>render?</strong>: () =&gt; <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_image.ts#L164">style/style_image.ts:164</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_image.ts#L216">style/style_image.ts:216</a></p>
 <p>This method is called once before every frame where the icon will be used.
 The method can optionally update the image's <code>data</code> member with a new image.</p>
 <p>If the method updates the image it must return <code>true</code> to commit the change.
 If the method returns <code>false</code> or nothing the image is assumed to not have changed.</p>
+<p>An image whose <code>data</code> renders with WebGL has nothing to update here; returning <code>true</code> is how
+it asks for <a href="../../type-aliases/StyleImageWebGLData/#renderwithwebgl">StyleImageWebGLData.renderWithWebGL</a> to be called again.</p>
 <p>If updates are infrequent it maybe easier to use <a href="../../classes/Map/#updateimage">Map.updateImage</a> to update
 the image instead of implementing this method.</p>
 <h4 id="returns_2">Returns</h4>

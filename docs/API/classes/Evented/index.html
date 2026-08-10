@@ -867,7 +867,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -978,6 +978,17 @@
   
     <nav class="md-nav" aria-label="Methods">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fire" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        fire()
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#listens" class="md-nav__link">
@@ -4431,6 +4442,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../../type-aliases/ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../type-aliases/ExpiryData/" class="md-nav__link">
         
   
@@ -4978,7 +5070,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6059,6 +6151,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7520,6 +7666,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10523,6 +10704,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fire" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        fire()
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#listens" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10601,7 +10793,7 @@
 
 
 <h1 id="eventedeventtype">Evented&lt;EventType&gt;</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L64">util/evented.ts:64</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L86">util/evented.ts:86</a></p>
 <p>Methods mixed in to other classes for event capabilities.</p>
 <h2 id="extended-by">Extended by</h2>
 <ul>
@@ -10627,19 +10819,73 @@
 </thead>
 <tbody>
 <tr>
-<td><code>EventType</code> <em>extends</em> <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;</td>
-<td><code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;</td>
+<td><code>EventType</code> <em>extends</em> <a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a></td>
+<td><a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a></td>
 </tr>
 </tbody>
 </table>
 <h2 id="methods">Methods</h2>
+<h3 id="fire">fire()</h3>
+<h4 id="call-signature">Call Signature</h4>
+<blockquote>
+<p><strong>fire</strong>(<code>event</code>: <code>EventType</code>[<code>Extract</code>&lt;keyof <code>EventType</code>, <code>string</code>&gt;]): <code>this</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L156">util/evented.ts:156</a></p>
+<p>Calls every listener registered for the event's type.</p>
+<h5 id="parameters">Parameters</h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>event</code></td>
+<td><code>EventType</code>[<code>Extract</code>&lt;keyof <code>EventType</code>, <code>string</code>&gt;]</td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns">Returns</h5>
+<p><code>this</code></p>
+<h4 id="call-signature_1">Call Signature</h4>
+<blockquote>
+<p><strong>fire</strong>(<code>type</code>: <code>Extract</code>&lt;keyof <code>EventType</code>&gt;, <code>properties?</code>: <code>object</code>): <code>this</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L162">util/evented.ts:162</a></p>
+<p>Compatibility with the (type: string, properties: Object) signature from previous versions.
+See https://github.com/mapbox/mapbox-gl-js/issues/6522,
+    https://github.com/mapbox/mapbox-gl-draw/issues/766</p>
+<h5 id="parameters_1">Parameters</h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td><code>Extract</code>&lt;keyof <code>EventType</code>&gt;</td>
+</tr>
+<tr>
+<td><code>properties?</code></td>
+<td><code>object</code></td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_1">Returns</h5>
+<p><code>this</code></p>
+<hr />
 <h3 id="listens">listens()</h3>
 <blockquote>
-<p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
+<p><strong>listens</strong>(<code>type</code>: <code>Extract</code>&lt;keyof <code>EventType</code>&gt;): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L180">util/evented.ts:180</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L206">util/evented.ts:206</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
-<h4 id="parameters">Parameters</h4>
+<h4 id="parameters_2">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -10651,12 +10897,12 @@
 <tbody>
 <tr>
 <td><code>type</code></td>
-<td><code>string</code></td>
+<td><code>Extract</code>&lt;keyof <code>EventType</code>&gt;</td>
 <td>The event type</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns</h4>
+<h4 id="returns_2">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
 <hr />
@@ -10664,7 +10910,7 @@
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <code>EventType</code>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L95">util/evented.ts:95</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L117">util/evented.ts:117</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="type-parameters_1">Type Parameters</h4>
 <table>
@@ -10675,11 +10921,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>T</code> <em>extends</em> <code>string</code> | <code>number</code> | <code>symbol</code></td>
+<td><code>T</code> <em>extends</em> <code>string</code></td>
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_1">Parameters</h4>
+<h4 id="parameters_3">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -10701,14 +10947,14 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="on">on()</h3>
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <code>EventType</code>[<code>T</code>]) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L78">util/evented.ts:78</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L100">util/evented.ts:100</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="type-parameters_2">Type Parameters</h4>
 <table>
@@ -10719,11 +10965,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>T</code> <em>extends</em> <code>string</code> | <code>number</code> | <code>symbol</code></td>
+<td><code>T</code> <em>extends</em> <code>string</code></td>
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_2">Parameters</h4>
+<h4 id="parameters_4">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -10745,15 +10991,15 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 <hr />
 <h3 id="once">once()</h3>
-<h4 id="call-signature">Call Signature</h4>
+<h4 id="call-signature_2">Call Signature</h4>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>): <code>Promise</code>&lt;<code>EventType</code>[<code>T</code>]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L110">util/evented.ts:110</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L132">util/evented.ts:132</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_3">Type Parameters</h5>
@@ -10765,11 +11011,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>T</code> <em>extends</em> <code>string</code> | <code>number</code> | <code>symbol</code></td>
+<td><code>T</code> <em>extends</em> <code>string</code></td>
 </tr>
 </tbody>
 </table>
-<h5 id="parameters_3">Parameters</h5>
+<h5 id="parameters_5">Parameters</h5>
 <table>
 <thead>
 <tr>
@@ -10786,14 +11032,14 @@
 </tr>
 </tbody>
 </table>
-<h5 id="returns_3">Returns</h5>
+<h5 id="returns_5">Returns</h5>
 <p><code>Promise</code>&lt;<code>EventType</code>[<code>T</code>]&gt;</p>
 <p>a promise that resolves with the event</p>
-<h4 id="call-signature_1">Call Signature</h4>
+<h4 id="call-signature_3">Call Signature</h4>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <code>EventType</code>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L120">util/evented.ts:120</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L142">util/evented.ts:142</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_4">Type Parameters</h5>
@@ -10805,11 +11051,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>T</code> <em>extends</em> <code>string</code> | <code>number</code> | <code>symbol</code></td>
+<td><code>T</code> <em>extends</em> <code>string</code></td>
 </tr>
 </tbody>
 </table>
-<h5 id="parameters_4">Parameters</h5>
+<h5 id="parameters_6">Parameters</h5>
 <table>
 <thead>
 <tr>
@@ -10831,17 +11077,17 @@
 </tr>
 </tbody>
 </table>
-<h5 id="returns_4">Returns</h5>
+<h5 id="returns_6">Returns</h5>
 <p><code>this</code></p>
 <p><code>this</code> when a listener is provided</p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
-<p><strong>setEventedParent</strong>(<code>parent?</code>: <code>Evented</code>&lt;<code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;&gt;, <code>data?</code>: <code>any</code>): <code>this</code></p>
+<p><strong>setEventedParent</strong>(<code>parent?</code>: <code>Evented</code>&lt;<a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a>&gt;, <code>data?</code>: <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a> | (() =&gt; <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a>)): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/util/evented.ts#L191">util/evented.ts:191</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/util/evented.ts#L217">util/evented.ts:217</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
-<h4 id="parameters_5">Parameters</h4>
+<h4 id="parameters_7">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -10852,15 +11098,15 @@
 <tbody>
 <tr>
 <td><code>parent?</code></td>
-<td><code>Evented</code>&lt;<code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;&gt;</td>
+<td><code>Evented</code>&lt;<a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a>&gt;</td>
 </tr>
 <tr>
 <td><code>data?</code></td>
-<td><code>any</code></td>
+<td><a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a> | (() =&gt; <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a>)</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns</h4>
+<h4 id="returns_7">Returns</h4>
 <p><code>this</code></p>
 
 

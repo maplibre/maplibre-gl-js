@@ -985,7 +985,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4396,6 +4396,87 @@
   
   
     <li class="md-nav__item">
+      <a href="./API/type-aliases/ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./API/type-aliases/EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./API/type-aliases/EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="./API/type-aliases/ExpiryData/" class="md-nav__link">
         
   
@@ -4943,7 +5024,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6024,6 +6105,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./API/type-aliases/StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./API/type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7482,6 +7617,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10558,10 +10728,10 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <h2 id="quickstart">Quickstart</h2>
 <iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
-<div class="language-html highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^6.2.0/dist/maplibre-gl.css&quot;</span> <span class="p">/&gt;</span>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.css&quot;</span> <span class="p">/&gt;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;map&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;height: 400px&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;module&quot;</span><span class="p">&gt;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;https://unpkg.com/maplibre-gl@^6.2.0/dist/maplibre-gl.mjs&#39;</span><span class="p">;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.mjs&#39;</span><span class="p">;</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;map&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// container id</span>
@@ -10698,10 +10868,10 @@ works with either.</p>
 </div>
 <div class="tabbed-block">
 <p>Load MapLibre directly from UNPKG as an ES module via a <code>&lt;script type="module"&gt;</code> tag. See <a href="https://unpkg.com">unpkg.com</a> for instructions on selecting specific versions and semver ranges.</p>
-<div class="language-html highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^6.2.0/dist/maplibre-gl.css&quot;</span> <span class="p">/&gt;</span>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.css&quot;</span> <span class="p">/&gt;</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;map&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;height: 400px&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;module&quot;</span><span class="p">&gt;</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;https://unpkg.com/maplibre-gl@^6.2.0/dist/maplibre-gl.mjs&#39;</span><span class="p">;</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.mjs&#39;</span><span class="p">;</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">        </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;map&#39;</span><span class="p">,</span>

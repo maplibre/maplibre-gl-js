@@ -867,7 +867,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4398,6 +4398,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../../type-aliases/ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../type-aliases/ExpiryData/" class="md-nav__link">
         
   
@@ -4945,7 +5026,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6026,6 +6107,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7487,6 +7622,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10535,7 +10705,7 @@
 
 
 <h1 id="mapboxzoomevent">MapBoxZoomEvent</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/events.ts#L802">ui/events.ts:802</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/events.ts#L802">ui/events.ts:802</a></p>
 <p>A <code>MapBoxZoomEvent</code> is the event type for the boxzoom-related map events emitted by the <a href="../BoxZoomHandler/">BoxZoomHandler</a>.</p>
 <h2 id="extends">Extends</h2>
 <ul>
@@ -10546,7 +10716,7 @@
 <blockquote>
 <p><strong>originalEvent</strong>: <code>MouseEvent</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/events.ts#L814">ui/events.ts:814</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/events.ts#L814">ui/events.ts:814</a></p>
 <p>The DOM event that triggered the boxzoom event. Can be a <code>MouseEvent</code> or <code>KeyboardEvent</code></p>
 <h4 id="overrides">Overrides</h4>
 <p><code>MapLibreEvent.originalEvent</code></p>
@@ -10555,7 +10725,7 @@
 <blockquote>
 <p><strong>target</strong>: <a href="../Map/"><code>Map</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/events.ts#L810">ui/events.ts:810</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/events.ts#L810">ui/events.ts:810</a></p>
 <p>The <code>Map</code> instance that triggered the event</p>
 <h4 id="overrides_1">Overrides</h4>
 <p><a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>.<a href="../MapLibreEvent/#target"><code>target</code></a></p>
@@ -10564,7 +10734,7 @@
 <blockquote>
 <p><strong>type</strong>: <code>"boxzoomcancel"</code> | <code>"boxzoomstart"</code> | <code>"boxzoomend"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/events.ts#L806">ui/events.ts:806</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/events.ts#L806">ui/events.ts:806</a></p>
 <p>The type of boxzoom event. One of <code>boxzoomstart</code>, <code>boxzoomend</code> or <code>boxzoomcancel</code></p>
 <h4 id="overrides_2">Overrides</h4>
 <p><code>MapLibreEvent.type</code></p>

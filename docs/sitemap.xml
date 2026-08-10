@@ -397,6 +397,15 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/ErrorEventType/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/ExpiryData/</loc>
       </url>
       <url>
@@ -580,6 +589,12 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageSource/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageWebGLData/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageWebGLTarget/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleOptions/</loc>
       </url>
       <url>
@@ -725,6 +740,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-a-series-of-images/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-an-icon-on-the-gpu/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-map-camera-around-a-point/</loc>

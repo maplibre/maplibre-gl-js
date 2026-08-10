@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4415,6 +4415,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../../type-aliases/ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../type-aliases/ExpiryData/" class="md-nav__link">
         
   
@@ -4962,7 +5043,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6043,6 +6124,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7504,6 +7639,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10569,7 +10739,7 @@
 
 
 <h1 id="icontrol">IControl</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/control/control.ts#L37">ui/control/control.ts:37</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/control/control.ts#L37">ui/control/control.ts:37</a></p>
 <p>Interface for interactive controls added to the map. This is a
 specification for implementers to model: it is not
 an exported method or class.</p>
@@ -10598,7 +10768,7 @@ node.</p>
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/control/control.ts#L49">ui/control/control.ts:49</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/control/control.ts#L49">ui/control/control.ts:49</a></p>
 <p>Register a control on the map and give it a chance to register event listeners
 and resources. This method is called by <a href="../../classes/Map/#addcontrol">Map.addControl</a>
 internally.</p>
@@ -10630,7 +10800,7 @@ as necessary.</p>
 <blockquote>
 <p><strong>onRemove</strong>(<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/control/control.ts#L57">ui/control/control.ts:57</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/control/control.ts#L57">ui/control/control.ts:57</a></p>
 <p>Unregister a control on the map and give it a chance to detach event listeners
 and resources. This method is called by <a href="../../classes/Map/#removecontrol">Map.removeControl</a>
 internally.</p>
@@ -10658,7 +10828,7 @@ internally.</p>
 <blockquote>
 <p><code>readonly</code> <code>optional</code> <strong>getDefaultPosition?</strong>: () =&gt; <a href="../../type-aliases/ControlPosition/"><code>ControlPosition</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/control/control.ts#L66">ui/control/control.ts:66</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/control/control.ts#L66">ui/control/control.ts:66</a></p>
 <p>Optionally provide a default position for this control. If this method
 is implemented and <a href="../../classes/Map/#addcontrol">Map.addControl</a> is called without the <code>position</code>
 parameter, the value returned by getDefaultPosition will be used as the

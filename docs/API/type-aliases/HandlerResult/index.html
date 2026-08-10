@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4290,6 +4290,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ExpiryData/" class="md-nav__link">
         
   
@@ -4967,7 +5048,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6048,6 +6129,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7509,6 +7644,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10582,21 +10752,21 @@
 <blockquote>
 <p><strong>HandlerResult</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L88">ui/handler_manager.ts:88</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L94">ui/handler_manager.ts:94</a></p>
 <p>All handler methods that are called with events can optionally return a <code>HandlerResult</code>.</p>
 <h2 id="properties">Properties</h2>
 <h3 id="around">around?</h3>
 <blockquote>
 <p><code>optional</code> <strong>around?</strong>: <code>Point</code> | <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L97">ui/handler_manager.ts:97</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L103">ui/handler_manager.ts:103</a></p>
 <p>the point to not move when changing the camera</p>
 <hr />
 <h3 id="cameraanimation">cameraAnimation?</h3>
 <blockquote>
 <p><code>optional</code> <strong>cameraAnimation?</strong>: (<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>) =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L105">ui/handler_manager.ts:105</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L111">ui/handler_manager.ts:111</a></p>
 <p>A method that can fire a one-off easing by directly changing the map's camera.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -10620,21 +10790,21 @@
 <blockquote>
 <p><code>optional</code> <strong>needsRenderFrame?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L114">ui/handler_manager.ts:114</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L120">ui/handler_manager.ts:120</a></p>
 <p>Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).</p>
 <hr />
 <h3 id="noinertia">noInertia?</h3>
 <blockquote>
 <p><code>optional</code> <strong>noInertia?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L118">ui/handler_manager.ts:118</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L124">ui/handler_manager.ts:124</a></p>
 <p>The camera changes won't get recorded for inertial zooming.</p>
 <hr />
 <h3 id="originalevent">originalEvent?</h3>
 <blockquote>
 <p><code>optional</code> <strong>originalEvent?</strong>: <a href="../../classes/Event/"><code>Event</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L110">ui/handler_manager.ts:110</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L116">ui/handler_manager.ts:116</a></p>
 <p>The last three properties are needed by only one handler: scrollzoom.
 The DOM event to be used as the <code>originalEvent</code> on any camera change events.</p>
 <hr />
@@ -10642,7 +10812,7 @@ The DOM event to be used as the <code>originalEvent</code> on any camera change 
 <blockquote>
 <p><code>optional</code> <strong>pinchAround?</strong>: <code>Point</code> | <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L101">ui/handler_manager.ts:101</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L107">ui/handler_manager.ts:107</a></p>
 <p>same as above, except for pinch actions, which are given higher priority</p>
 
 

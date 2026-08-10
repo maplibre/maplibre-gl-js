@@ -7,7 +7,7 @@
     <meta property="og:created" content="2026-07-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.2.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -21,13 +21,16 @@
             background-color: rgba(50, 50, 50, 0.85);
             padding: 12px 16px;
             border-radius: 6px;
-            min-width: 280px;
+            box-sizing: border-box;
+            min-width: min(280px, 100%);
+            max-width: calc(100% - 20px);
         }
         #controls table { border-collapse: collapse; width: 100%; }
         #controls td { padding: 4px 6px; vertical-align: middle; }
+        #controls td:nth-child(2) { width: 120px; }
         #controls td:last-child { text-align: right; width: 3em; }
         #controls label { white-space: nowrap; }
-        #controls input[type=range] { width: 120px; }
+        #controls input[type=range] { width: 100%; min-width: 0; }
     </style>
 </head>
 <body>
@@ -46,13 +49,13 @@
         </tr>
         <tr>
             <td><label for="extrusion-opacity">Opacity</label></td>
-            <td><input type="range" id="extrusion-opacity" min="0" max="1" step="0.05" value="0.8" /></td>
+            <td><input type="range" id="extrusion-opacity" min="0" max="100" step="5" value="80" /></td>
             <td><span>80</span>%</td>
         </tr>
     </table>
 </div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.2.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         style: 'https://tiles.openfreemap.org/styles/bright',
@@ -101,7 +104,7 @@
         document.getElementById('extrusion-opacity').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
             e.target.closest('tr').querySelector('span').textContent = val;
-            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', Math.round(val * 100));
+            map.setPaintProperty('building-extrusion', 'fill-extrusion-opacity', val / 100);
         });
     });
 </script>

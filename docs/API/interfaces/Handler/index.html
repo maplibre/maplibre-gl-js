@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4404,6 +4404,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../../type-aliases/ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../type-aliases/ExpiryData/" class="md-nav__link">
         
   
@@ -4951,7 +5032,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6032,6 +6113,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7493,6 +7628,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10547,7 +10717,7 @@
 
 
 <h1 id="handler">Handler</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L47">ui/handler_manager.ts:47</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L53">ui/handler_manager.ts:53</a></p>
 <p>Handlers interpret dom events and return camera changes that should be
 applied to the map (<code>HandlerResult</code>s). The camera changes are all deltas.
 The handler itself should have no knowledge of the map's current state.
@@ -10559,7 +10729,7 @@ would return a <code>panDelta</code> on the mousemove.</p>
 <blockquote>
 <p><strong>isActive</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L56">ui/handler_manager.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L62">ui/handler_manager.ts:62</a></p>
 <p>This is used to indicate if the handler is currently active or not.
 In case a handler is active, it will block other handlers from getting the relevant events.
 There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
@@ -10570,7 +10740,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>reset</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L60">ui/handler_manager.ts:60</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L66">ui/handler_manager.ts:66</a></p>
 <p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
@@ -10579,7 +10749,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><code>readonly</code> <code>optional</code> <strong>renderFrame?</strong>: () =&gt; <code>void</code> | <a href="../../type-aliases/HandlerResult/"><code>HandlerResult</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/ui/handler_manager.ts#L82">ui/handler_manager.ts:82</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/ui/handler_manager.ts#L88">ui/handler_manager.ts:88</a></p>
 <p><code>renderFrame</code> is the only non-dom event. It is called during render
 frames and can be used to smooth camera changes (see scroll handler).</p>
 <h4 id="returns_2">Returns</h4>

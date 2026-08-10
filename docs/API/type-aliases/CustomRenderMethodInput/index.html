@@ -865,7 +865,7 @@
   <span class="md-ellipsis">
     
   
-  Event
+  Event&lt;TType&gt;
 
     
   </span>
@@ -4442,6 +4442,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../ErrorEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ErrorEventType
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventTypeMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventTypeMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EventedParentData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  EventedParentData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ExpiryData/" class="md-nav__link">
         
   
@@ -4989,7 +5070,7 @@
   <span class="md-ellipsis">
     
   
-  Listener
+  Listener&lt;E&gt;
 
     
   </span>
@@ -6070,6 +6151,60 @@
     
   
   StyleImageSource
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLData/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLData
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../StyleImageWebGLTarget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  StyleImageWebGLTarget
 
     
   </span>
@@ -7531,6 +7666,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Animate an icon on the GPU
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10626,14 +10796,14 @@
 <blockquote>
 <p><strong>CustomRenderMethodInput</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L55">style/style_layer/custom_style_layer.ts:55</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L55">style/style_layer/custom_style_layer.ts:55</a></p>
 <p>Input arguments exposed by custom render function.</p>
 <h2 id="properties">Properties</h2>
 <h3 id="defaultprojectiondata">defaultProjectionData</h3>
 <blockquote>
 <p><strong>defaultProjectionData</strong>: <a href="../CustomLayerProjectionData/"><code>CustomLayerProjectionData</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L152">style/style_layer/custom_style_layer.ts:152</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L152">style/style_layer/custom_style_layer.ts:152</a></p>
 <p>Uniforms that should be passed to the vertex shader, if MapLibre's projection code is used.
 For more details of this object's internals, see its doc comments in <code>src/geo/projection/projection_data.ts</code>.</p>
 <p>These uniforms are set so that <code>projectTile</code> in shader accepts a vec2 in range 0..1 in web mercator coordinates.
@@ -10655,7 +10825,7 @@ or more accurately for globe, elevation above the surface of the perfect sphere 
 <blockquote>
 <p><strong>farZ</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L61">style/style_layer/custom_style_layer.ts:61</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L61">style/style_layer/custom_style_layer.ts:61</a></p>
 <p>This value represents the distance from the camera to the far clipping plane.
 It is used in the calculation of the projection matrix to determine which objects are visible.
 farZ should be larger than nearZ.</p>
@@ -10664,14 +10834,14 @@ farZ should be larger than nearZ.</p>
 <blockquote>
 <p><strong>fov</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L71">style/style_layer/custom_style_layer.ts:71</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L71">style/style_layer/custom_style_layer.ts:71</a></p>
 <p>Vertical field of view in radians.</p>
 <hr />
 <h3 id="getprojectiondata">getProjectionData</h3>
 <blockquote>
 <p><strong>getProjectionData</strong>: (<code>params</code>: <a href="../CustomLayerProjectionDataParams/"><code>CustomLayerProjectionDataParams</code></a>) =&gt; <a href="../RendererProjectionData/"><code>RendererProjectionData</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L161">style/style_layer/custom_style_layer.ts:161</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L161">style/style_layer/custom_style_layer.ts:161</a></p>
 <p>Generates a <a href="../ProjectionData/">ProjectionData</a> instance to be used while rendering a given tile.
 In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.</p>
 <h4 id="parameters">Parameters</h4>
@@ -10700,7 +10870,7 @@ In custom layers, this function is only needed when rendering tiles in a complet
 <blockquote>
 <p><strong>modelViewProjectionMatrix</strong>: <code>mat4</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L77">style/style_layer/custom_style_layer.ts:77</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L77">style/style_layer/custom_style_layer.ts:77</a></p>
 <p>Model view projection matrix.
 Represents the matrix converting from world space to clip space.
 https://learnopengl.com/Getting-started/Coordinate-Systems
@@ -10710,7 +10880,7 @@ https://learnopengl.com/Getting-started/Coordinate-Systems
 <blockquote>
 <p><strong>nearZ</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L67">style/style_layer/custom_style_layer.ts:67</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L67">style/style_layer/custom_style_layer.ts:67</a></p>
 <p>This value represents the distance from the camera to the near clipping plane.
 It is used in the calculation of the projection matrix to determine which objects are visible.
 nearZ should be smaller than farZ.</p>
@@ -10719,7 +10889,7 @@ nearZ should be smaller than farZ.</p>
 <blockquote>
 <p><strong>projectionMatrix</strong>: <code>mat4</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L83">style/style_layer/custom_style_layer.ts:83</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L83">style/style_layer/custom_style_layer.ts:83</a></p>
 <p>Projection matrix.
 Represents the matrix converting from view space to clip space.
 https://learnopengl.com/Getting-started/Coordinate-Systems</p>
@@ -10728,7 +10898,7 @@ https://learnopengl.com/Getting-started/Coordinate-Systems</p>
 <blockquote>
 <p><strong>shaderData</strong>: <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/5bba02df84eaa2e31cd6881588fc9bcac8282a8f/src/style/style_layer/custom_style_layer.ts#L87">style/style_layer/custom_style_layer.ts:87</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/2ebfa18959ae7e737f14da4d565a6c56bb2a6d44/src/style/style_layer/custom_style_layer.ts#L87">style/style_layer/custom_style_layer.ts:87</a></p>
 <p>Data required for picking and compiling a custom shader for the current projection.</p>
 <h4 id="define">define</h4>
 <blockquote>
