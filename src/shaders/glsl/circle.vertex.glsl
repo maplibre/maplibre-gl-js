@@ -6,7 +6,7 @@ uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform vec2 u_translate;
 
-layout(location = 0) in vec2 a_pos;
+layout(location = 0) in ivec2 a_pos;
 
 out vec3 v_data;
 flat out float v_visibility;
@@ -29,12 +29,12 @@ void main(void) {
     #pragma maplibre: initialize lowp float stroke_opacity
 
     // decode the extrusion vector that we snuck into the a_pos vector
-    vec2 pos_raw = a_pos + 32768.0;
-    vec2 extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
+    ivec2 pos_raw = a_pos + 32768;
+    vec2 extrude = vec2(pos_raw & 7) / 7.0 * 2.0 - 1.0;
 
     // Divide a_pos by 8, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(pos_raw / 8.0) + u_translate;
+    vec2 circle_center = vec2(pos_raw >> 3) + u_translate;
     float ele = get_elevation(circle_center);
     v_visibility = calculate_visibility(projectTileWithElevation(circle_center, ele));
 
