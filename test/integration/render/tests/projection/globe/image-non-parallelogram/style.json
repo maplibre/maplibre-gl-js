@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Tests projective image source texture mapping on globe projection.",
+      "description": "Tests rendering of a non-parallelogram image source on globe projection.",
       "width": 512,
       "height": 512
     }
