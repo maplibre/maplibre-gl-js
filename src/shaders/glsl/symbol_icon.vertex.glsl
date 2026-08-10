@@ -1,8 +1,8 @@
 layout(location = 0) in vec4 a_pos_offset;
-layout(location = 1) in vec4 a_data;
+layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec4 a_pixeloffset;
 layout(location = 3) in vec3 a_projected_pos;
-layout(location = 4) in float a_fade_opacity;
+layout(location = 4) in uint a_fade_opacity;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -35,10 +35,10 @@ void main() {
     vec2 a_pos = a_pos_offset.xy;
     vec2 a_offset = a_pos_offset.zw;
 
-    vec2 a_tex = a_data.xy;
-    vec2 a_size = a_data.zw;
+    vec2 a_tex = vec2(a_data.xy);
+    vec2 a_size = vec2(a_data.zw);
 
-    float a_size_min = floor(a_size[0] * 0.5);
+    float a_size_min = float(a_data.z >> 1u);
     vec2 a_pxoffset = a_pixeloffset.xy;
     vec2 a_minFontScale = a_pixeloffset.zw / 256.0;
 
