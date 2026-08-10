@@ -2,7 +2,7 @@ layout(location = 0) in vec4 a_pos_offset;
 layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec4 a_pixeloffset;
 layout(location = 3) in vec3 a_projected_pos;
-layout(location = 4) in float a_fade_opacity;
+layout(location = 4) in uint a_fade_opacity;
 
 // contents of a_size vary based on the type of property value
 // used for {text,icon}-size.
