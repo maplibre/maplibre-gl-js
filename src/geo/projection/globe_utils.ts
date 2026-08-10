@@ -163,20 +163,15 @@ const PAN_MAX_ANGLE = Math.PI * 0.98;
  * Returns the point on the globe that a drag towards `point` should aim at.
  *
  * A ray at angle `a` off the view axis meets the globe at `asin(D sin a) - a`, whose slope runs
- * away to infinity as the ray goes tangent: at the silhouette a pixel is worth degrees of arc, and
- * past it there is no intersection at all. `screenPointToLocation` copes by snapping missing pixels
- * onto the horizon circle, but that collapses the radial dimension, so cursor motion along the
- * horizon turns into a twist about the view axis and the bearing spins away.
+ * away to infinity as the ray goes tangent, and past the silhouette there is no intersection at
+ * all. So the exact curve is left a band of {@link PAN_FALLOFF_BAND} before tangency and continued
+ * with a hyperbola matching it in value and slope, decelerating and saturating short of the far
+ * side. This follows Bell's virtual trackball, from SGI's `trackball.c`, described in Henriksen,
+ * Sporring and Hornbæk, "Virtual Trackballs Revisited", IEEE TVCG 10(2):206-216, 2004,
+ * doi:10.1109/TVCG.2004.1260772.
  *
- * So the exact curve is left a band of {@link PAN_FALLOFF_BAND} before tangency, and continued
- * with a hyperbola that matches it in both value and slope there and then decelerates, saturating
- * short of the far side. This follows Bell's virtual trackball, which likewise blends the sphere
- * into a hyperbolic sheet before reaching the rim; the band is much narrower here so that dragging
- * on the globe stays exact almost everywhere. Bell's construction was never published on its own,
- * it comes from SGI's `trackball.c`, but it is described and compared with the alternatives in
- * Henriksen, Sporring and Hornbæk, "Virtual Trackballs Revisited", IEEE Transactions on
- * Visualization and Computer Graphics 10(2):206-216, 2004, doi:10.1109/TVCG.2004.1260772.
- *
+ * The angle is taken with atan2, so a ray pointing away from the globe is just a wide angle that
+ * the falloff saturates, rather than a case this has to reject.
  * @param tr - The transform being dragged.
  * @param point - The cursor position.
  */
@@ -184,16 +179,9 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
     const origin = tr.cameraPosition;
     const distance = vec3.length(origin);
     if (distance <= 1) {
-        // Camera on or inside the globe, so every ray meets it and the frame below is undefined.
         return tr.screenPointToLocation(point);
     }
 
-    // Work in the frame of the sub-camera point `u`, where a view ray splits into `-c*u + s*e`,
-    // `e` being the lateral direction and atan2(s, c) the ray's angle off the view axis. Taking
-    // that angle with atan2 rather than asin covers rays pointing away from the globe as just a
-    // wide angle, which the falloff below saturates. Nothing reaches that today, since it needs a
-    // ray more than 90 degrees off the view axis and the pitch limit keeps every ray well inside
-    // that, but it costs nothing here and avoids a branch that could only ignore the drag.
     const u = createVec3f64();
     vec3.normalize(u, origin);
     const direction = tr.getRayDirectionFromPixel(point);
@@ -202,7 +190,6 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
     vec3.scaleAndAdd(lateral, direction, u, c);
     const s = vec3.length(lateral);
     if (s < 1e-9) {
-        // Ray straight down the view axis, which meets the globe, and `e` below would be degenerate.
         return tr.screenPointToLocation(point);
     }
 
@@ -232,38 +219,22 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
 /**
  * Rotates the globe so that the given location appears at the given screen point, using a
  * quaternion rotation. Unlike the bearing-preserving {@link ITransform.setLocationAtPoint}, this
- * stays smooth when dragging near and across the poles.
+ * stays smooth near and across the poles, and keeps panning once the cursor leaves the globe.
  *
- * The `(lng, lat)` extracted from the orientation is the swing (center) target, independent of the
- * twist about the view axis, and `bearing` is that twist, so `fixedBearing` selects whether the
- * twist is applied.
- *
- * Panning continues once the cursor leaves the globe, using {@link panSurfaceLocation} for the
- * location to drag towards, easing off as it goes rather than stopping.
- *
- * The delta rotation's axis is computed in the surface-vector frame of
- * {@link angularCoordinatesToSurfaceVector} (x = sin(lng)·cos(lat), y = sin(lat),
- * z = cos(lng)·cos(lat)) while the orientation quaternion uses the Euler frame of
- * {@link orientationFromLngLatBearing}, hence the component swizzle and sign flip when the two
- * are combined.
- *
- * Note: automatically adjusts zoom to keep planet size consistent
- * (same size before and after a call), like `setLocationAtPoint` does.
+ * Note: the delta rotation's axis is in the surface-vector frame of
+ * {@link angularCoordinatesToSurfaceVector}, while the orientation quaternion uses the Euler frame
+ * of {@link orientationFromLngLatBearing}, hence the component swizzle where they combine. Zoom is
+ * adjusted to keep the planet the same size, as `setLocationAtPoint` does.
  * @param tr - The transform to rotate.
  * @param lnglat - The location to bring under `point`.
  * @param point - The screen point that `lnglat` should appear at.
- * @param fixedBearing - When `true`, applies the swing only and keeps the bearing fixed, so the
- * globe still moves smoothly across the poles without rotating the map. When `false` (the default),
- * applies the full rotation, so the grabbed location tracks the cursor exactly and the bearing drifts.
- * @param panDelta - The drag's pixel delta, used by the near-pole handling of the fixed-bearing
- * mode. Omitting it skips that handling.
+ * @param fixedBearing - Applies the swing only, keeping the bearing fixed. When `false`, applies
+ * the twist about the view axis too, so the grabbed location tracks the cursor exactly.
+ * @param panDelta - The drag's pixel delta. Used to re-derive the previous cursor location through
+ * {@link panSurfaceLocation}, since both ends of the rotation must come from the same mapping.
  */
 export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
     const pointLngLat = panSurfaceLocation(tr, point);
-    // Both ends of the rotation have to come from the same mapping. The caller derives `lnglat`
-    // with `screenPointToLocation`, which snaps to the horizon once the cursor is off the globe,
-    // so pairing the two would rotate between unrelated points and spin the globe. Re-derive the
-    // previous cursor location the same way instead, when the drag tells us where it was.
     let sourceLngLat = lnglat;
     if (panDelta) {
         sourceLngLat = panSurfaceLocation(tr, point.sub(panDelta));
@@ -296,12 +267,12 @@ export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, poi
  * Returns the center longitude for a bearing-preserving drag.
  *
  * The swing longitude becomes ill-conditioned near the pole and the grabbed location slips away
- * from the cursor. Within the last ~12 degrees of latitude the cursor is therefore treated as
- * turning a dial around the pole: its angular motion drives longitude, blended in with a
- * smoothstep anchored on {@link MAX_VALID_LATITUDE}, the highest latitude the center can reach.
- * The angle comes from the raw pixel delta rather than a round-tripped previous cursor position,
- * which would suffer catastrophic cancellation at the pole, and is skipped within ~20px of the
- * pole, where it is noise.
+ * from the cursor, so within the last ~12 degrees of latitude the cursor is treated as turning a
+ * dial around the pole, blended in with a smoothstep anchored on {@link MAX_VALID_LATITUDE}, the
+ * highest latitude the center can reach. The sweep comes from the raw pixel delta rather than a
+ * round-tripped previous cursor position, which would lose its sign to cancellation at the pole,
+ * and is damped within {@link DIAL_MIN_RADIUS_PIXELS} so it eases to nothing there instead of
+ * being dropped, which would leave a spot where the drag could not move at all.
  * @param tr - The transform being dragged.
  * @param point - The cursor position.
  * @param panDelta - The drag's pixel delta, or undefined to use the swing longitude only.
@@ -322,11 +293,6 @@ function fixedBearingLongitude(tr: ITransform, point: Point, panDelta: Point | u
 
     let dLngDial = 0;
     if (dial > 0 && panDelta) {
-        // Softening the radius rather than ignoring the sweep below it keeps this continuous: the
-        // numerator vanishes with the radius while the denominator levels off, so the dial eases to
-        // nothing at the pole instead of switching off. Ignoring it left a dead spot where, with
-        // the center latitude already clamped, the drag stopped moving at all, and a step at the
-        // edge of that spot where the sweep reappeared at full size.
         const dTheta = (rx * panDelta.y - ry * panDelta.x) / Math.max(r2, DIAL_MIN_RADIUS_PIXELS * DIAL_MIN_RADIUS_PIXELS);
         dLngDial = (poleLat > 0 ? 1 : -1) * dTheta * 180 / Math.PI;
     }
