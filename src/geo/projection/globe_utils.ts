@@ -149,6 +149,13 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  */
 const PAN_FALLOFF_BAND = 0.1;
 
+/**
+ * Radius around the pole's screen position, in pixels, within which the cursor's sweep around it
+ * stops being trusted at face value: the angle a given drag subtends grows without bound as the
+ * cursor closes on the pole, and at the pole itself there is no angle at all.
+ */
+const DIAL_MIN_RADIUS_PIXELS = 20;
+
 /** Kept just below a half turn so the center cannot land exactly on the far side of the globe. */
 const PAN_MAX_ANGLE = Math.PI * 0.98;
 
@@ -314,8 +321,13 @@ function fixedBearingLongitude(tr: ITransform, point: Point, panDelta: Point | u
     const dLngSwing = mod(newCenterLng - oldLng + 180, 360) - 180;
 
     let dLngDial = 0;
-    if (dial > 0 && panDelta && r2 > 400) {
-        const dTheta = (rx * panDelta.y - ry * panDelta.x) / r2;
+    if (dial > 0 && panDelta) {
+        // Softening the radius rather than ignoring the sweep below it keeps this continuous: the
+        // numerator vanishes with the radius while the denominator levels off, so the dial eases to
+        // nothing at the pole instead of switching off. Ignoring it left a dead spot where, with
+        // the center latitude already clamped, the drag stopped moving at all, and a step at the
+        // edge of that spot where the sweep reappeared at full size.
+        const dTheta = (rx * panDelta.y - ry * panDelta.x) / Math.max(r2, DIAL_MIN_RADIUS_PIXELS * DIAL_MIN_RADIUS_PIXELS);
         dLngDial = (poleLat > 0 ? 1 : -1) * dTheta * 180 / Math.PI;
     }
 
