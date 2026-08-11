@@ -1,5 +1,5 @@
 {
-  "name": "maplibre-gl-nextjs-example",
+  "name": "maplibre-gl-turbopack-example",
   "version": "0.0.0",
   "private": true,
   "description": "Next.js app exercising maplibre-gl's ESM build, package subpaths, and worker setup under Turbopack.",

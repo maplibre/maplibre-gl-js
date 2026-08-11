@@ -9,7 +9,7 @@ Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. E
 | `webpack/` | webpack | `setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString())` |
 | `rollup/` | Rollup | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle via `rollup-plugin-copy`) |
 | `esbuild/` | esbuild | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle in `build.js`) |
-| `nextjs/` | Next.js (Turbopack) | `setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')` (worker copied into `public/` by a `prebuild` hook) |
+| `turbopack/` | Turbopack (via Next.js) | `setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')` (worker copied into `public/` by a `prebuild` hook) |
 
 All six use the same library imports: `import {Map} from 'maplibre-gl'`, `import 'maplibre-gl/dist/maplibre-gl.css'`. The differences are in how each bundler resolves the worker URL.
 

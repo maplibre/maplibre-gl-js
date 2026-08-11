@@ -72,7 +72,7 @@ See the [ESM](#esm) section below for setting up the worker URL with your bundle
 
 MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
 
-For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup, Next.js), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
+For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup, Turbopack), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
 Upgrading from v5? See the [v5 to v6 migration guide](./guides/v5-to-v6-migration-guide.md).
 
@@ -122,7 +122,7 @@ Pick your setup:
 
     rspack and rsbuild use the same pattern.
 
-    Next.js is an exception, including in its `next build --webpack` mode. See the Next.js tab.
+    Next.js is an exception, including in its `next build --webpack` mode. See the Turbopack tab.
 
 === "esbuild"
 
@@ -178,9 +178,11 @@ Pick your setup:
     const map = new Map({/* … */});
     ```
 
-=== "Next.js"
+=== "Turbopack"
 
-    Both of Next's bundlers turn `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
+    Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
+
+    Turbopack turns `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
 
     ```js title="scripts/copy-maplibre-worker.mjs"
     import {copyFileSync, mkdirSync} from 'node:fs';
@@ -223,7 +225,7 @@ Pick your setup:
     npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary.
     `postinstall` alone won't do it since package managers skip lifecycle scripts when an install has no work to do, and `--ignore-scripts` skips them entirely.
 
-    Copying works with both `next build` (Turbopack) and `next build --webpack`.
+    Next.js needs this in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`, since the asset handling above is Next's rather than Turbopack's alone.
 
 === "CDN / No bundler"
 
