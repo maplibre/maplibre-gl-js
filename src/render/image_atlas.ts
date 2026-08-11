@@ -1,6 +1,7 @@
 /* eslint-disable key-spacing */
 import {RGBAImage} from '../util/image.ts';
 import {register} from '../util/web_worker_transfer.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 import potpack from 'potpack';
 
 import type {StyleImage} from '../style/style_image.ts';
@@ -17,6 +18,7 @@ export class ImagePosition {
     paddedRect: Rect;
     pixelRatio: number;
     version: number;
+    needsFirstWebGLRender: boolean;
     stretchY: Array<[number, number]>;
     stretchX: Array<[number, number]>;
     content: [number, number, number, number];
@@ -26,6 +28,7 @@ export class ImagePosition {
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
+        isWebGLImage = false,
         stretchX,
         stretchY,
         content,
@@ -38,6 +41,7 @@ export class ImagePosition {
         this.stretchY = stretchY;
         this.content = content;
         this.version = version;
+        this.needsFirstWebGLRender = isWebGLImage;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
     }
@@ -102,6 +106,7 @@ export class ImageAtlas {
 
         for (const id in icons) {
             const src = icons[id];
+            if (src.isWebGLImage) continue;
             const bin = iconPositions[id].paddedRect;
             RGBAImage.copy(src.data, image, {x: 0, y: 0}, {x: bin.x + IMAGE_PADDING, y: bin.y + IMAGE_PADDING}, src.data);
         }
@@ -176,11 +181,21 @@ export class ImageAtlas {
     patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void {
         if (!position || !image) return;
 
-        if (position.version === image.version) return;
+        if (!position.needsFirstWebGLRender && position.version === image.version) return;
 
+        position.needsFirstWebGLRender = false;
         position.version = image.version;
         const [x, y] = position.tl;
-        texture.update(image.data, undefined, {x, y});
+        const data = image.userImage?.data;
+        if (!isStyleImageWebGLData(data)) {
+            texture.update(image.data, undefined, {x, y});
+            return;
+        }
+
+        const {width, height} = image.data;
+        texture.context.setCustomLayerDefaults();
+        data.renderWithWebGL({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+        texture.context.setDirty();
     }
 
 }

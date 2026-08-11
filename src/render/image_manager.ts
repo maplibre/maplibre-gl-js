@@ -9,12 +9,17 @@ import type {GetImagesResponse} from '../util/actor_messages.ts';
 
 export type MissingImageRequestHandler = (id: string) => void | Promise<void>;
 
+type ImageManagerEventType = {
+    error: ErrorEvent;
+    styleimagemissing: MapStyleImageMissingEvent;
+};
+
 /**
  * Owns every image of the style - the ones the sprites bring in as well as the ones added at
  * runtime - and tracks requests for them from the tile workers, sending responses when the
  * requests are fulfilled.
 */
-export class ImageManager extends Evented {
+export class ImageManager extends Evented<ImageManagerEventType> {
     images: Record<string, StyleImage>;
     /**
      * Incremented on every {@link ImageManager.updateImage} call. {@link ImageAtlas} instances
@@ -107,6 +112,7 @@ export class ImageManager extends Evented {
         if (this._validate(id, image)) {
             this.images[id] = image;
             this._imagesIds = null;
+            if (image.isWebGLImage) this.updateImage(id, image, false);
         }
     }
 
@@ -300,7 +306,7 @@ export class ImageManager extends Evented {
         const resolver = this.missingImageResolver;
 
         if (resolver) {
-            await Promise.all(Array.from(unresolvedIds, (id) => resolver(id)));
+            await Promise.allSettled(Array.from(unresolvedIds, (id) => resolver(id)));
         }
 
         const response: GetImagesResponse = {};
@@ -321,7 +327,8 @@ export class ImageManager extends Evented {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage?.render)
+                    hasRenderCallback: Boolean(image.userImage?.render),
+                    isWebGLImage: image.isWebGLImage
                 };
             }
         }

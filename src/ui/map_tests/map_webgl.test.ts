@@ -93,6 +93,37 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
+test('a WebGL style image is told to release its GPU resources on context loss, and survives it', async () => {
+    const map = createMap();
+    const canvas = map.getCanvas();
+    await map.once('load');
+
+    const userImage = {
+        width: 2, height: 2,
+        data: {renderWithWebGL: vi.fn()},
+        onRemove: vi.fn()
+    };
+    map.addImage('gpu-image', userImage);
+    const versionBeforeContextLoss = map.getImage('gpu-image').version;
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    expect(userImage.onRemove).toHaveBeenCalled();
+
+    const contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    expect(map.hasImage('gpu-image')).toBe(true);
+    expect(map.getImage('gpu-image').userImage).toBe(userImage);
+    // adding it back bumped its version, which is how it owes every atlas a render again
+    expect(map.getImage('gpu-image').version).toBeGreaterThan(versionBeforeContextLoss);
+
+    map.remove();
+});
+
 test('WebGL2 context creation error fires ErrorEvent with structured GPUInitializationError', () => {
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2') {

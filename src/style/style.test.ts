@@ -3,8 +3,9 @@ import {Style} from './style.ts';
 import {TileManager} from '../tile/tile_manager.ts';
 import {StyleLayer} from './style_layer.ts';
 import {extend} from '../util/util.ts';
-import {Event} from '../util/evented.ts';
+import {ErrorEvent, Event} from '../util/evented.ts';
 import {type AJAXError} from '../util/ajax.ts';
+import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
 import {browser} from '../util/browser.ts';
@@ -379,7 +380,7 @@ describe('Style.loadJSON', () => {
         }));
 
         await style.once('style.load');
-        expect(style.tileManagers['mapLibre'] instanceof TileManager).toBeTruthy();
+        expect(style.tileManagers['mapLibre']).toBeInstanceOf(TileManager);
     });
 
     test('creates layers', async () => {
@@ -401,7 +402,7 @@ describe('Style.loadJSON', () => {
         });
 
         await style.once('style.load');
-        expect(style.getLayer('fill') instanceof StyleLayer).toBeTruthy();
+        expect(style.getLayer('fill')).toBeInstanceOf(StyleLayer);
     });
 
     test('transforms sprite json and image URLs before request', async () => {
@@ -465,7 +466,7 @@ describe('Style.loadJSON', () => {
         const errorPromise = style.once('error');
 
         await style.once('style.load');
-        style._layers.background.fire(new Event('error', {mapLibre: true}));
+        style._layers.background.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
 
         const e = await errorPromise;
         expect((e as any).layer).toEqual({id: 'background'});
@@ -1352,8 +1353,8 @@ describe('Style.addSource', () => {
         });
 
         style.addSource('source-id', source); // fires data twice
-        style.tileManagers['source-id'].fire(new Event('error'));
-        style.tileManagers['source-id'].fire(new Event('data'));
+        style.tileManagers['source-id'].fire(new ErrorEvent(new Error('test')));
+        style.tileManagers['source-id'].fire(new MapSourceDataEvent('data'));
 
         await expect(Promise.all(promises)).resolves.toBeDefined();
     });
@@ -1451,8 +1452,8 @@ describe('Style.removeSource', () => {
 
         style.on('data', () => expect(false).toBeTruthy());
         style.on('error', () => expect(false).toBeTruthy());
-        tileManager.fire(new Event('data'));
-        tileManager.fire(new Event('error'));
+        tileManager.fire(new MapSourceDataEvent('data'));
+        tileManager.fire(new ErrorEvent(new Error('test')));
     });
 });
 
@@ -2364,7 +2365,7 @@ describe('Style.addLayer', () => {
             type: 'background'
         });
 
-        style._layers.background.fire(new Event('error', {mapLibre: true}));
+        style._layers.background.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
 
         const e = await errorPromise;
         expect((e as any).layer).toEqual({id: 'background'});
@@ -2681,7 +2682,7 @@ describe('Style.removeLayer', () => {
         // Bind a listener to prevent fallback Evented error reporting.
         layer.on('error', () => {});
 
-        layer.fire(new Event('error', {mapLibre: true}));
+        layer.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
 
         expect(styleErrorListener).not.toHaveBeenCalled();
     });

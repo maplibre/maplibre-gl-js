@@ -66,9 +66,9 @@ export class VertexBuffer {
 
     enableAttributes(gl: WebGL2RenderingContext, program: Program<any>): void {
         for (const member of this.attributes) {
-            const attribIndex: number | void = program.attributes[member.name];
-            if (attribIndex !== undefined) {
-                gl.enableVertexAttribArray(attribIndex);
+            const attribute = program.attributes[member.name];
+            if (attribute !== undefined) {
+                gl.enableVertexAttribArray(attribute.location);
             }
         }
     }
@@ -81,17 +81,28 @@ export class VertexBuffer {
      */
     setVertexAttribPointers(gl: WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null): void {
         for (const member of this.attributes) {
-            const attribIndex: number | void = program.attributes[member.name];
+            const attribute = program.attributes[member.name];
 
-            if (attribIndex !== undefined) {
-                gl.vertexAttribPointer(
-                    attribIndex,
-                    member.components,
-                    gl[AttributeType[member.type]],
-                    false,
-                    this.itemSize,
-                    member.offset + (this.itemSize * (vertexOffset || 0))
-                );
+            if (attribute !== undefined) {
+                const offset = member.offset + (this.itemSize * (vertexOffset || 0));
+                if (attribute.isInteger) {
+                    gl.vertexAttribIPointer(
+                        attribute.location,
+                        member.components,
+                        gl[AttributeType[member.type]],
+                        this.itemSize,
+                        offset
+                    );
+                } else {
+                    gl.vertexAttribPointer(
+                        attribute.location,
+                        member.components,
+                        gl[AttributeType[member.type]],
+                        false,
+                        this.itemSize,
+                        offset
+                    );
+                }
             }
         }
     }
