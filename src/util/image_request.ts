@@ -102,6 +102,8 @@ export namespace ImageRequest {
      * @param requestParameters - Request parameters.
      * @param abortController - allows to abort the request.
      * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @param imageBitmapOptions - Options for `createImageBitmap`. Pass `{colorSpaceConversion: 'none'}` for images
+     * whose pixels hold data rather than color, such as raster-DEM tiles, so the browser does not color manage them.
      * @returns - A promise resolved when the image is loaded.
      */
     export const getImage = (
