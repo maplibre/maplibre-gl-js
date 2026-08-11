@@ -1,99 +1,13 @@
-import {readdirSync, readFileSync} from 'fs';
 import {bench} from 'vitest';
-import {PbfReader} from 'pbf';
-import {VectorTile} from '@mapbox/vector-tile';
-import {derefLayers} from '@maplibre/maplibre-gl-style-spec';
 import {performSymbolLayout} from './symbol_layout.ts';
-import {WorkerTile} from '../source/worker_tile.ts';
 import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
-import {StyleLayerIndex} from '../style/style_layer_index.ts';
-import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
-import {LineAtlas} from '../render/line_atlas.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
-import {MessageType} from '../util/actor_messages.ts';
+import {fixtureTiles, parseTile} from '../../test/bench/lib/parse_tile.ts';
 
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {StyleGlyph} from '../style/style_glyph.ts';
-import type {IActor} from '../util/actor.ts';
-import type {ActorMessage, GetDashesResponse, GetGlyphsResponse} from '../util/actor_messages.ts';
 import type {WorkerTileWithData} from '../source/worker_source.ts';
 
-type AnyActorMessage = {[K in MessageType]: ActorMessage<K>}[MessageType];
-
-const assets = new URL('../../test/integration/assets/', import.meta.url);
-const fallbackFontStack = 'Open Sans Semibold,Arial Unicode MS Bold';
-const availableFontStacks = new Set(['Open Sans Bold,Arial Unicode MS Bold', fallbackFontStack]);
-
-function loadGlyphs(stack: string): {[id: number]: StyleGlyph} {
-    const directory = new URL(`glyphs/${availableFontStacks.has(stack) ? stack : fallbackFontStack}/`, assets);
-    const glyphs: {[id: number]: StyleGlyph} = {};
-    for (const file of readdirSync(directory).filter(name => name.endsWith('.pbf'))) {
-        for (const glyph of parseGlyphPbf(readFileSync(new URL(file, directory)))) {
-            glyphs[glyph.id] = glyph;
-        }
-    }
-    return glyphs;
-}
-
-const glyphCache: {[stack: string]: {[id: number]: StyleGlyph}} = {};
-const lineAtlas = new LineAtlas(256, 512);
-
-const actor = {
-    sendAsync(rawMessage) {
-        const message = rawMessage as AnyActorMessage;
-        if (message.type === MessageType.getGlyphs) {
-            const {stacks} = message.data;
-            const response: GetGlyphsResponse = {};
-            for (const stack in stacks) {
-                glyphCache[stack] ||= loadGlyphs(stack);
-                response[stack] = {};
-                for (const id of stacks[stack]) {
-                    response[stack][id] = glyphCache[stack][id];
-                }
-            }
-            return Promise.resolve(response);
-        }
-        if (message.type === MessageType.getDashes) {
-            const {dashes} = message.data;
-            const response: GetDashesResponse = {};
-            for (const key in dashes) {
-                response[key] = lineAtlas.getDash(dashes[key].dasharray, dashes[key].round);
-            }
-            return Promise.resolve(response);
-        }
-        return Promise.resolve({});
-    }
-} as IActor;
-
-const styleJSON = JSON.parse(readFileSync(new URL('styles/bright-v9.json', assets), 'utf8')) as StyleSpecification;
-const layerIndex = new StyleLayerIndex(derefLayers(styleJSON.layers));
-
-const tileIDs = [
-    new OverscaledTileID(0, 0, 0, 0, 0),
-    new OverscaledTileID(4, 0, 4, 4, 7),
-    new OverscaledTileID(10, 0, 10, 175, 409),
-    new OverscaledTileID(16, 0, 16, 11235, 26208)
-];
-
-const parsedTiles = await Promise.all(tileIDs.map(async (tileID): Promise<WorkerTileWithData> => {
-    const workerTile = new WorkerTile({
-        type: 'benchmark',
-        tileID,
-        zoom: tileID.overscaledZ,
-        tileSize: 512,
-        showCollisionBoxes: false,
-        source: 'maplibre',
-        uid: '0',
-        maxZoom: 22,
-        pixelRatio: 1,
-        request: {url: ''},
-        returnDependencies: true,
-        promoteId: undefined,
-        subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
-    });
-    const buffer = readFileSync(new URL(`tiles/streets-v7/${tileID.canonical.z}-${tileID.canonical.x}-${tileID.canonical.y}.mvt`, assets));
-    return await workerTile.parse(new VectorTile(new PbfReader(buffer)), layerIndex, [], actor, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+const parsedTiles = await Promise.all(fixtureTiles.map(async (tile): Promise<WorkerTileWithData> => {
+    return await parseTile(tile, true) as WorkerTileWithData;
 }));
 
 bench('performSymbolLayout', () => {
