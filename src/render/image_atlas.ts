@@ -77,6 +77,7 @@ export class ImagePosition {
  * worker so that the symbol layout can bake the positions within it straight into the vertex
  * buffers. Each tile owns one, along with the texture it is uploaded to - as opposed to
  * {@link ImageManager}, which owns the images of the whole style.
+ * @internal
  */
 export class ImageAtlas {
     image: RGBAImage;
