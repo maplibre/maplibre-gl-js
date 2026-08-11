@@ -5,6 +5,7 @@ import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
 import {ImageManager, type MissingImageRequestHandler} from '../render/image_manager.ts';
+import {PatternAtlas} from '../render/pattern_atlas.ts';
 import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
@@ -205,6 +206,7 @@ export class Style extends Evented<MapEventType> {
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
     imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
@@ -229,10 +231,6 @@ export class Style extends Evented<MapEventType> {
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
-    // image ids of images loaded from style's sprite
-    _spritesImagesIds: {[spriteId: string]: string[]};
-    // image ids of all images loaded (sprite + user)
-    _availableImages: string[];
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -256,6 +254,7 @@ export class Style extends Evented<MapEventType> {
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.imageManager.setMissingImageResolver(map._missingStyleImageResolver);
+        this.patternAtlas = new PatternAtlas(this.imageManager);
         const glyphLang = map._container?.lang || (typeof document !== 'undefined' && document.documentElement?.lang) || undefined;
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, glyphLang);
         this.lineAtlas = new LineAtlas(256, 512);
@@ -293,12 +292,10 @@ export class Style extends Evented<MapEventType> {
     }
 
     private _setInitialValues() {
-        this._spritesImagesIds = {};
         this._layers = {};
         this._order = [];
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
-        this._availableImages = [];
         this._imagesListDirty = false;
         this._globalState = {};
         this._serializedLayers = {};
@@ -537,32 +534,12 @@ export class Style extends Evented<MapEventType> {
         let err: Error;
         loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
             this._spriteRequest = null;
-            if (images) {
-                for (const spriteId in images) {
-                    this._spritesImagesIds[spriteId] = [];
-
-                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
-                    const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
-                    for (const id of imagesToRemove) {
-                        this.imageManager.removeImage(id);
-                        this._changedImages[id] = true;
-                    }
-
-                    for (const id in images[spriteId]) {
-                        // don't prefix images of the "default" sprite
-                        const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
-                        // save all the sprite's images' ids to be able to delete them in `removeSprite`
-                        this._spritesImagesIds[spriteId].push(imageId);
-                        if (imageId in this.imageManager.images) {
-                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
-                        } else {
-                            this.imageManager.addImage(imageId, images[spriteId][id]);
-                        }
-
-                        if (isUpdate) {
-                            this._changedImages[imageId] = true;
-                        }
-                    }
+            if (!images) return;
+            for (const spriteId in images) {
+                const {loaded, removed} = this.imageManager.setSpriteImages(spriteId, images[spriteId]);
+                this._markImagesChanged(removed);
+                if (isUpdate) {
+                    this._markImagesChanged(loaded);
                 }
             }
         }).catch((error) => {
@@ -573,13 +550,12 @@ export class Style extends Evented<MapEventType> {
             }
         }).finally(() => {
             this.imageManager.setLoaded(true);
-            this._availableImages = this.imageManager.listImages();
 
             if (isUpdate) {
                 this._changed = true;
             }
 
-            this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+            this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
             this.fire(new MapStyleDataEvent('data'));
 
             if (completion) {
@@ -589,13 +565,8 @@ export class Style extends Evented<MapEventType> {
     }
 
     _unloadSprite(): void {
-        for (const id of Object.values(this._spritesImagesIds).flat()) {
-            this.imageManager.removeImage(id);
-            this._changedImages[id] = true;
-        }
+        this._markImagesChanged(this.imageManager.removeAllSpriteImages());
 
-        this._spritesImagesIds = {};
-        this._availableImages = this.imageManager.listImages();
         this._imagesListDirty = true;
         this._changed = true;
         this.fire(new MapStyleDataEvent('data'));
@@ -731,7 +702,7 @@ export class Style extends Evented<MapEventType> {
         const changed = this._changed;
         if (changed) {
             if (this._imagesListDirty) {
-                this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+                this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
                 this._imagesListDirty = false;
             }
 
@@ -779,10 +750,11 @@ export class Style extends Evented<MapEventType> {
 
         // loop all layers and find layers that are not hidden at parameters.zoom
         // and set used to true in tileManagers dictionary for the sources of these layers
+        const availableImages = this.imageManager.listImages();
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
 
-            layer.recalculate(parameters, this._availableImages);
+            layer.recalculate(parameters, availableImages);
             if (!layer.isHidden(parameters.zoom) && layer.source) {
                 this.tileManagers[layer.source].used = true;
             }
@@ -1005,8 +977,17 @@ export class Style extends Evented<MapEventType> {
         this._afterImageUpdated(id);
     }
 
+    /**
+     * Queues the tiles that depend on these images to be reloaded on the next update, which is
+     * needed whenever an image appears, disappears or changes size.
+     */
+    _markImagesChanged(ids: string[]): void {
+        for (const id of ids) {
+            this._changedImages[id] = true;
+        }
+    }
+
     _afterImageUpdated(id: string): void {
-        this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
         this._imagesListDirty = true;
         this._changed = true;
@@ -1616,7 +1597,7 @@ export class Style extends Evented<MapEventType> {
 
         const sourceResults: QueryRenderedFeaturesResults[] = [];
 
-        params.availableImages = this._availableImages;
+        params.availableImages = this.imageManager.listImages();
 
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
         const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
@@ -2000,18 +1981,12 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
-        if (this._spritesImagesIds[id]) {
-            for (const imageId of this._spritesImagesIds[id]) {
-                this.imageManager.removeImage(imageId);
-                this._changedImages[imageId] = true;
-            }
-        }
+        const changedImages = this.imageManager.removeSpriteImages(id);
+        this._markImagesChanged(changedImages);
 
         internalSpriteRepresentation.splice(internalSpriteRepresentation.findIndex(sprite => sprite.id === id), 1);
         this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : undefined;
 
-        delete this._spritesImagesIds[id];
-        this._availableImages = this.imageManager.listImages();
         this._imagesListDirty = true;
         this._changed = true;
         this.fire(new MapStyleDataEvent('data'));
@@ -2082,8 +2057,7 @@ export class Style extends Evented<MapEventType> {
         if (this.imageManager) {
             this.imageManager.setEventedParent(null);
             this.imageManager.destroy();
-            this._availableImages = [];
-            this._spritesImagesIds = {};
+            this.patternAtlas.destroy();
         }
 
         // Destroy glyphManager

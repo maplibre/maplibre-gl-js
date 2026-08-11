@@ -69,18 +69,28 @@ export class ImagePosition {
 }
 
 /**
- * A class holding all the images
+ * A single tile's packed copy of the icons and patterns its features reference, built in the
+ * worker so that the symbol layout can bake the positions within it straight into the vertex
+ * buffers. Each tile owns one, along with the texture it is uploaded to - as opposed to
+ * {@link ImageManager}, which owns the images of the whole style.
  */
 export class ImageAtlas {
     image: RGBAImage;
-    iconPositions: {[_: string]: ImagePosition};
-    patternPositions: {[_: string]: ImagePosition};
+    iconPositions: Record<string, ImagePosition>;
+    patternPositions: Record<string, ImagePosition>;
     haveRenderCallbacks: string[];
     uploaded: boolean;
+    /**
+     * The {@link ImageManager.updateVersion} this atlas' texture was last patched against.
+     * Starts out at `-1` so that a freshly transferred atlas always patches once: images may have
+     * been updated between the moment the worker snapshotted them and the moment the atlas arrives.
+     */
+    patchedUpdateVersion: number;
 
     constructor(icons: GetImagesResponse, patterns: GetImagesResponse) {
         const iconPositions = {}, patternPositions = {};
         this.haveRenderCallbacks = [];
+        this.patchedUpdateVersion = -1;
 
         const bins = [];
 
@@ -135,10 +145,30 @@ export class ImageAtlas {
         }
     }
 
+    /**
+     * Brings this atlas' texture back in sync with the images it was built from, re-uploading the
+     * ones that were replaced in the meantime.
+     *
+     * This runs for every in-view tile on every frame, so the common case of nothing having
+     * changed has to cost nothing: a single comparison against {@link ImageManager.updateVersion}
+     * ends the call. When something did change, only the images this atlas actually holds are
+     * looked at - a handful per tile - and {@link ImageAtlas.patchUpdatedImage} then skips the
+     * ones whose version still matches, leaving just the genuinely stale ones to upload.
+     *
+     * The render callbacks are dispatched first because they may update images themselves, and
+     * those updates have to be part of the version this call catches up with - otherwise an
+     * animated image would always be uploaded a frame late.
+     */
     patchUpdatedImages(imageManager: ImageManager, texture: Texture): void {
         imageManager.dispatchRenderCallbacks(this.haveRenderCallbacks);
-        for (const name in imageManager.updatedImages) {
+
+        if (this.patchedUpdateVersion === imageManager.updateVersion) return;
+        this.patchedUpdateVersion = imageManager.updateVersion;
+
+        for (const name in this.iconPositions) {
             this.patchUpdatedImage(this.iconPositions[name], imageManager.getImage(name), texture);
+        }
+        for (const name in this.patternPositions) {
             this.patchUpdatedImage(this.patternPositions[name], imageManager.getImage(name), texture);
         }
     }
