@@ -120,7 +120,6 @@ test('a WebGL image the manager only learns about later still gets its first ren
     const atlas = new ImageAtlas({}, {});
     atlas.iconPositions.webgl = new ImagePosition({x: 0, y: 0, w: 4, h: 4}, {version: 0, isWebGLImage: true} as StyleImage);
 
-    // there is nothing to render into the slot yet, and the atlas catches up with the manager anyway
     atlas.patchUpdatedImages(imageManager, texture);
     expect(renderWithWebGL).not.toHaveBeenCalled();
 
@@ -137,7 +136,6 @@ describe('ImageAtlas.patchUpdatedImages', () => {
 
     beforeEach(() => {
         imageManager = new ImageManager();
-        // a sprite with many images, of which this tile's atlas only uses one
         for (let i = 0; i < SPRITE_IMAGE_COUNT; i++) {
             imageManager.addImage(`icon-${i}`, createStyleImage());
         }

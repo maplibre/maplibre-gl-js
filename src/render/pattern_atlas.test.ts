@@ -46,7 +46,6 @@ describe('PatternAtlas', () => {
         imageManager.addImage('pattern', createStyleImage(4));
         patternAtlas.getPattern('pattern');
 
-        // a sprite reload updates without validating the new size against the old one
         imageManager.updateImage('pattern', createStyleImage(8), false);
 
         expect(patternAtlas.getPattern('pattern').displaySize).toEqual([8, 8]);
@@ -86,7 +85,6 @@ describe('PatternAtlas', () => {
 
         expect(patternAtlas.getPattern('removedPattern')).toBeNull();
 
-        // the slot is only reclaimed by the next re-packing, which must not trip over its entry
         imageManager.updateImage('keptPattern', createStyleImage(4), false);
         expect(patternAtlas.getPattern('keptPattern').displaySize).toEqual([4, 4]);
         expect(patternAtlas.getPixelSize()).toEqual(sizeInAtlas(4));
@@ -99,7 +97,6 @@ describe('PatternAtlas', () => {
         patternAtlas.getPattern('pattern');
 
         patternAtlas.bind(context);
-        // the texture is created from the atlas as it stands, so binding it again uploads nothing
         const uploadsToCreateTheTexture = update.mock.calls.length;
         patternAtlas.bind(context);
         expect(update).toHaveBeenCalledTimes(uploadsToCreateTheTexture);
