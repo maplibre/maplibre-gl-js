@@ -95,6 +95,7 @@ export class PatternAtlas {
         const gl = context.gl;
         if (!this._texture) {
             this._texture = new Texture(context, this._image, gl.RGBA);
+            this._dirty = false;
         } else if (this._dirty) {
             this._texture.update(this._image);
             this._dirty = false;
