@@ -7,38 +7,17 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
-import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, RaySegment, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
-
-/**
- * Describes the intersection of ray and sphere.
- * When null, no intersection occurred.
- * When both "t" values are the same, the ray just touched the sphere's surface.
- * When both value are different, a full intersection occurred.
- */
-type RaySphereIntersection = {
-    /**
-     * The ray parameter for intersection that is "less" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
-     * The intersection point can be computed as `origin + direction * tMin`.
-     */
-    tMin: number;
-    /**
-     * The ray parameter for intersection that is "more" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
-     * The intersection point can be computed as `origin + direction * tMax`.
-     */
-    tMax: number;
-} | null;
 
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
@@ -811,9 +790,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
 
-        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+        const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         return !!intersection;
+    }
+
+    getRaySegmentFromPixel(_p: Point): RaySegment {
+        throw new Error('Not implemented.'); // The globe has no flat world plane to build a ray segment in
     }
 
     /**
@@ -869,46 +852,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * Returns the two intersection points of the ray and the planet's sphere,
-     * or null if no intersection occurs.
-     * The intersections are encoded as the parameter for parametric ray equation,
-     * with `tMin` being the first intersection and `tMax` being the second.
-     * Eg. the nearer intersection point can then be computed as `origin + direction * tMin`.
-     * @param origin - The ray origin.
-     * @param direction - The normalized ray direction.
-     */
-    private rayPlanetIntersection(origin: vec3, direction: vec3): RaySphereIntersection {
-        const originDotDirection = vec3.dot(origin, direction);
-        const planetRadiusSquared = 1.0; // planet is a unit sphere, so its radius squared is 1
-
-        // Ray-sphere intersection involves a quadratic equation.
-        // However solving it in the traditional schoolbook way leads to floating point precision issues.
-        // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
-        // https://www.realtimerendering.com/raytracinggems/rtg/index.html
-        const inner = createVec3f64();
-        const scaledDir = createVec3f64();
-        vec3.scale(scaledDir, direction, originDotDirection);
-        vec3.sub(inner, origin, scaledDir);
-        const discriminant = planetRadiusSquared - vec3.dot(inner, inner);
-
-        if (discriminant < 0) {
-            return null;
-        }
-
-        const c = vec3.dot(origin, origin) - planetRadiusSquared;
-        const q = -originDotDirection + (originDotDirection < 0 ? 1 : -1) * Math.sqrt(discriminant);
-        const t0 = c / q;
-        const t1 = q;
-        // Assume the ray origin is never inside the sphere
-        const tMin = Math.min(t0, t1);
-        const tMax = Math.max(t0, t1);
-        return {
-            tMin,
-            tMax
-        };
-    }
-
-    /**
      * @internal
      * Returns a {@link LngLat} representing geographical coordinates that correspond to the specified pixel coordinates.
      * Note: if the point does not lie on the globe, returns a location on the visible globe horizon (edge) that is
@@ -922,7 +865,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
-        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+        const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         if (intersection) {
             // Ray intersects the sphere -> compute intersection LngLat.

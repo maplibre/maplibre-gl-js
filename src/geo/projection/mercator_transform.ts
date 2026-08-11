@@ -15,7 +15,7 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, RaySegment, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -355,18 +355,7 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
-    /**
-     * Intersects the ray through a screen point with the horizontal plane at `z`,
-     * given in meters relative to the plane at the center's elevation (not mercator units).
-     */
-    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
-
-        // calculate point-coordinate on flat earth
-        const targetZ = z ? z : 0;
-        // since we don't know the correct projected z value for the point,
-        // unproject two points to get a line and then find the point on that
-        // line with z=0
-
+    getRaySegmentFromPixel(p: Point): RaySegment {
         const coord0 = [p.x, p.y, 0, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
 
@@ -375,18 +364,28 @@ export class MercatorTransform implements ITransform {
 
         const w0 = coord0[3];
         const w1 = coord1[3];
-        const x0 = coord0[0] / w0;
-        const x1 = coord1[0] / w1;
-        const y0 = coord0[1] / w0;
-        const y1 = coord1[1] / w1;
-        const z0 = coord0[2] / w0;
-        const z1 = coord1[2] / w1;
+        // The pixel matrix is built before the elevation translate, so unprojected z is relative to the center's elevation.
+        const elevation = this.elevation;
 
-        const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
+        return {
+            near: [coord0[0] / w0, coord0[1] / w0, coord0[2] / w0 + elevation],
+            far: [coord1[0] / w1, coord1[1] / w1, coord1[2] / w1 + elevation]
+        };
+    }
+
+    /**
+     * Intersects the ray through a screen point with the horizontal plane at `z`,
+     * given in meters relative to the plane at the center's elevation (not mercator units).
+     */
+    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
+        const targetZ = z ? z : 0;
+        const {near, far} = this.getRaySegmentFromPixel(p);
+
+        const t = near[2] === far[2] ? 0 : (targetZ + this.elevation - near[2]) / (far[2] - near[2]);
 
         return new MercatorCoordinate(
-            interpolates.number(x0, x1, t) / this.worldSize,
-            interpolates.number(y0, y1, t) / this.worldSize,
+            interpolates.number(near[0], far[0], t) / this.worldSize,
+            interpolates.number(near[1], far[1], t) / this.worldSize,
             targetZ);
     }
 

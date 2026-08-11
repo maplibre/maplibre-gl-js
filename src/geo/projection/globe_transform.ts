@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, RaySegment, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -447,6 +447,10 @@ export class GlobeTransform implements ITransform {
      */
     getRayDirectionFromPixel(p: Point): vec3 {
         return this._verticalPerspectiveTransform.getRayDirectionFromPixel(p);
+    }
+
+    getRaySegmentFromPixel(p: Point): RaySegment {
+        return this._mercatorTransform.getRaySegmentFromPixel(p);
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {

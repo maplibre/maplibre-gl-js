@@ -437,3 +437,61 @@ export function interpolateLngLatForGlobe(start: LngLat, deltaLng: number, delta
         );
     }
 }
+
+/**
+ * Describes the intersection of ray and sphere.
+ * When null, no intersection occurred.
+ * When both "t" values are the same, the ray just touched the sphere's surface.
+ * When both value are different, a full intersection occurred.
+ */
+export type RaySphereIntersection = {
+    /**
+     * The ray parameter for intersection that is "less" along the ray direction.
+     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
+     * The intersection point can be computed as `origin + direction * tMin`.
+     */
+    tMin: number;
+    /**
+     * The ray parameter for intersection that is "more" along the ray direction.
+     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
+     * The intersection point can be computed as `origin + direction * tMax`.
+     */
+    tMax: number;
+} | null;
+
+/**
+ * Returns the two intersection points of the ray and a sphere centered at the origin,
+ * or null if no intersection occurs.
+ * The intersections are encoded as the parameter for parametric ray equation,
+ * with `tMin` being the first intersection and `tMax` being the second.
+ * @param origin - The ray origin.
+ * @param direction - The normalized ray direction.
+ * @param radius - The sphere radius, defaults to the unit sphere of the planet.
+ */
+export function raySphereIntersection(origin: vec3, direction: vec3, radius: number = 1.0): RaySphereIntersection {
+    const originDotDirection = vec3.dot(origin, direction);
+    const radiusSquared = radius * radius;
+
+    // Ray-sphere intersection involves a quadratic equation.
+    // However solving it in the traditional schoolbook way leads to floating point precision issues.
+    // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
+    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
+    const inner = createVec3f64();
+    const scaledDir = createVec3f64();
+    vec3.scale(scaledDir, direction, originDotDirection);
+    vec3.sub(inner, origin, scaledDir);
+    const discriminant = radiusSquared - vec3.dot(inner, inner);
+
+    if (discriminant < 0) {
+        return null;
+    }
+
+    const c = vec3.dot(origin, origin) - radiusSquared;
+    const q = -originDotDirection + (originDotDirection < 0 ? 1 : -1) * Math.sqrt(discriminant);
+    const t0 = c / q;
+    const t1 = q;
+    return {
+        tMin: Math.min(t0, t1),
+        tMax: Math.max(t0, t1)
+    };
+}
