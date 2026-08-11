@@ -25,6 +25,13 @@ let maplibregl: typeof MapLibreGL;
  */
 const DEFAULT_TEST_TIMEOUT = 60000;
 
+/**
+ * Timeout for the `beforeAll` and `afterAll` hooks, which launch and tear down the browser, the test
+ * servers and the coverage reporting. Vitest defaults to 10 seconds, which is not enough on the CI
+ * Windows runners.
+ */
+const HOOK_TIMEOUT = 60000;
+
 type TestData = {
     id: string;
     width: number;
@@ -877,7 +884,7 @@ describe('Render tests', () => {
         workers = await startCoverage(page);
         await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
         await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
-    }, 30000);
+    }, HOOK_TIMEOUT);
 
     beforeEach((ctx) => {
         if (ctx.task.result?.retryCount > 0) {
@@ -899,7 +906,7 @@ describe('Render tests', () => {
         server.close();
         mvtServer.close();
         await browser.close();
-    }, 60000);
+    }, HOOK_TIMEOUT);
 
     for (const style of testStyles) {
         test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async () => {
