@@ -1757,7 +1757,7 @@ describe('Style._loadSprite', () => {
         expect(style.imageManager.listImages()).toEqual([]);
     });
 
-    test('only marks the images shared with the previous sprite as updated, so that returning to a sprite does not accumulate per-frame patching work - see https://github.com/maplibre/maplibre-gl-js/issues/8052', async () => {
+    test('only marks the images shared with the previous sprite as updated, so that returning to a sprite does not accumulate per-frame patching work', async () => {
         const style = await createLoadedStyle();
         await loadSprite(style, FIRST_SPRITE_URL);
         const updateVersionAfterFirstLoad = style.imageManager.updateVersion;
