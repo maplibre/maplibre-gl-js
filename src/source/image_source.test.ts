@@ -160,6 +160,112 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
+    test('sets perspective transform for non-parallelogram coordinates', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.545, 37.735]
+        ]);
+
+        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
+        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+    });
+
+    test('sets perspective transform when initial coordinates are loaded', async () => {
+        const source = createSource({
+            url: '/image.png',
+            coordinates: [
+                [-122.52, 37.815],
+                [-122.355, 37.8],
+                [-122.325, 37.7],
+                [-122.545, 37.735]
+            ]
+        });
+        const promise = waitForEvent(source, 'data', (e) => e.sourceDataType === 'content');
+
+        source.onAdd(map);
+        await sleep(0);
+        server.respond();
+        await promise;
+
+        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
+        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+    });
+
+    test('keeps projective transform when its constant coefficient is zero', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-67.5, 55.77657301866769],
+            [-22.5, 55.77657301866769],
+            [0, 40.97989806962013],
+            [-90, 40.97989806962013]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 1, 0]);
+    });
+
+    test('sets identity perspective transform for parallelogram coordinates', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.431640625, 37.857507156],
+            [-122.409667969, 37.857507156],
+            [-122.409667969, 37.840156836],
+            [-122.431640625, 37.840156836]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
+    test('sets identity perspective transform for collinear destination coordinates', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.431640625, 37.857507156],
+            [-122.409667969, 37.857507156],
+            [-122.387695312, 37.857507156],
+            [-122.365722656, 37.857507156]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
+    test('sets identity perspective transform when the inverse basis is singular', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.431640625, 37.857507156],
+            [-122.431640625, 37.840156836],
+            [-122.431640625, 37.822802434],
+            [-122.409667969, 37.857507156]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
+    test('sets identity perspective transform for a cancellation-degenerate quad', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [96.85546875, 79.36770077764092],
+            [-127.265625, 79.36770077764092],
+            [88.06640625, 79.36770077764092],
+            [-17.40234375, 59.534318001095585]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
+    test('sets identity perspective transform when its denominator crosses zero inside the quad', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-90, 66.51326044311186],
+            [0, 66.51326044311186],
+            [-78.75, 61.606396371386275],
+            [-90, 0]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
     test('sets coordinates via updateImage', async () => {
         const source = createSource({url: '/image.png'});
         source.onAdd(map);

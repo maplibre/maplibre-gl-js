@@ -70,6 +70,16 @@ export class NullWebGL2RenderingContext {
     INT: number = 0x1404;
     UNSIGNED_INT: number = 0x1405;
     FLOAT: number = 0x1406;
+    FLOAT_VEC2: number = 0x8B50;
+    FLOAT_VEC3: number = 0x8B51;
+    FLOAT_VEC4: number = 0x8B52;
+    INT_VEC2: number = 0x8B53;
+    INT_VEC3: number = 0x8B54;
+    INT_VEC4: number = 0x8B55;
+    UNSIGNED_INT_VEC2: number = 0x8DC6;
+    UNSIGNED_INT_VEC3: number = 0x8DC7;
+    UNSIGNED_INT_VEC4: number = 0x8DC8;
+    ACTIVE_ATTRIBUTES: number = 0x8B89;
     ALPHA: number = 0x1906;
     RGB: number = 0x1907;
     RGBA: number = 0x1908;

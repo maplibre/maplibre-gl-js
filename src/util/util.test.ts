@@ -78,7 +78,7 @@ describe('util', () => {
 
     test('bezier', () => {
         const curve = bezier(0, 0, 0.25, 1);
-        expect(curve instanceof Function).toBeTruthy();
+        expect(curve).toBeInstanceOf(Function);
         expect(curve(0)).toBe(0);
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
