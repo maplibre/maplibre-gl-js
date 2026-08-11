@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Make default draggable markers keyboard-focusable and movable with the arrow keys (1 px per press, 10 px with Shift); custom marker elements stay application-owned ([#8020](https://github.com/maplibre/maplibre-gl-js/issues/8020)) (by [@smmariquit](https://github.com/smmariquit))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -47,7 +48,6 @@
 - Support `global-state` expressions in `sky.*`, `light.*` and `projection.type` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966), [#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967), [#7968](https://github.com/maplibre/maplibre-gl-js/pull/7968)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Show a grab cursor over draggable markers, including on non-interactive maps ([#8019](https://github.com/maplibre/maplibre-gl-js/issues/8019)) (by [@hugosmoreira](https://github.com/hugosmoreira))
-- Make default draggable markers keyboard-focusable and movable with the arrow keys (1 px per press, 10 px with Shift); custom marker elements stay application-owned ([#8020](https://github.com/maplibre/maplibre-gl-js/issues/8020)) (by [@smmariquit](https://github.com/smmariquit))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
