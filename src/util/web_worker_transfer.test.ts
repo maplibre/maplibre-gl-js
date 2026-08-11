@@ -39,8 +39,8 @@ describe('web worker transfer', () => {
         const serializableMock = new SerializableMock(10);
         const transferables = [];
         const deserialized = deserialize(serialize(serializableMock, transferables)) as SerializableMock;
-        expect(deserialize(serialize(serializableMock, transferables)) instanceof SerializableMock).toBeTruthy();
-        expect(serializableMock.dataView instanceof DataView).toBeTruthy();
+        expect(deserialize(serialize(serializableMock, transferables))).toBeInstanceOf(SerializableMock);
+        expect(serializableMock.dataView).toBeInstanceOf(DataView);
 
         expect(serializableMock !== deserialized).toBeTruthy();
         expect(deserialized.constructor === SerializableMock).toBeTruthy();
@@ -51,7 +51,7 @@ describe('web worker transfer', () => {
         expect(transferables[1] === serializableMock.dataView.buffer).toBeTruthy();
         expect(deserialized._cached === undefined).toBeTruthy();
         expect(deserialized.squared() === 100).toBeTruthy();
-        expect(deserialized.dataView instanceof DataView).toBeTruthy();
+        expect(deserialized.dataView).toBeInstanceOf(DataView);
         expect(deserialized.array).toEqual(serializableMock.array);
     });
 
@@ -61,7 +61,7 @@ describe('web worker transfer', () => {
         register('Anon', Klass);
         const x = new Klass();
         const deserialized = deserialize(serialize(x));
-        expect(deserialized instanceof Klass).toBeTruthy();
+        expect(deserialized).toBeInstanceOf(Klass);
     });
 
     test('null', () => {
@@ -94,7 +94,7 @@ describe('web worker transfer', () => {
         expect(!customSerialization._deserialized).toBeTruthy();
 
         const deserialized = deserialize(serialize(customSerialization)) as CustomSerialization;
-        expect(deserialize(serialize(customSerialization)) instanceof CustomSerialization).toBeTruthy();
+        expect(deserialize(serialize(customSerialization))).toBeInstanceOf(CustomSerialization);
         expect(deserialized.id).toBe(customSerialization.id);
         expect(deserialized._deserialized).toBeTruthy();
     });

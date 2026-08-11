@@ -7,7 +7,7 @@ uniform lowp float u_opacity;
 uniform vec2 u_fill_translate;
 
 layout(location = 0) in vec2 a_pos;
-layout(location = 1) in vec4 a_normal_ed;
+layout(location = 1) in ivec4 a_normal_ed;
 
 #ifdef TERRAIN3D
     layout(location = 2) in vec2 a_centroid;
@@ -26,7 +26,7 @@ void main() {
     #pragma maplibre: initialize highp float height
     #pragma maplibre: initialize highp vec4 color
 
-    vec3 normal = a_normal_ed.xyz;
+    vec3 normal = vec3(a_normal_ed.xyz);
 
     #ifdef TERRAIN3D
 	    // Raise the "ceiling" of elements by the elevation of the centroid, in meters.
@@ -45,7 +45,7 @@ void main() {
     base = base + base_terrain3d_offset;
     height = max(base, height + height_terrain3d_offset);
 
-    float t = mod(normal.x, 2.0);
+    float t = float(a_normal_ed.x & 1);
     float elevation = t > 0.0 ? height : base;
     vec2 posInTile = a_pos + u_fill_translate;
 

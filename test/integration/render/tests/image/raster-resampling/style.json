@@ -2,13 +2,14 @@
   "version": 8,
   "metadata": {
     "test": {
+      "description": "Tests nearest-neighbor resampling on a projectively mapped image source over a high-contrast region.",
       "width": 64,
       "height": 64
     }
   },
   "center": [
-    -122.514526,
-    37.562984
+    -122.5152017,
+    37.562688978
   ],
   "zoom": 20,
   "sources": {

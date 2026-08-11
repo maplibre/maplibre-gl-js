@@ -418,7 +418,7 @@ describe('GeolocateControl with no options', () => {
         geolocate.trigger();
         geolocation.sendError({code: 2, message: 'error message'});
         expect(geolocate._watchState).toBe('ACTIVE_ERROR');
-        expect(geolocate._geolocateButton.classList.contains('maplibregl-ctrl-geolocate-active-error')).toBeTruthy();
+        expect(geolocate._geolocateButton.classList).toContain('maplibregl-ctrl-geolocate-active-error');
     });
 
     test('trigger before added to map', () => {
@@ -538,9 +538,7 @@ describe('GeolocateControl with no options', () => {
 
         expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '10.0000', lng: '20.0000'});
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-        expect(
-            geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
-        ).toBeFalsy();
+        expect(geolocate._userLocationDotMarker._element.classList).not.toContain('maplibregl-user-location-dot-stale');
         const secontMoveEnd = map.once('moveend');
         geolocation.change({latitude: 40, longitude: 50, accuracy: 60});
         await secontMoveEnd;
@@ -549,7 +547,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.changeError({code: 2, message: 'position unavailable'});
         await errorPromise;
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-        expect(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')).toBeTruthy();
+        expect(geolocate._userLocationDotMarker._element.classList).toContain('maplibregl-user-location-dot-stale');
     });
 
     /**
