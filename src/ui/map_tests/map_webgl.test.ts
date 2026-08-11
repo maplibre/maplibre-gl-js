@@ -118,7 +118,7 @@ test('a WebGL style image is told to release its GPU resources on context loss, 
 
     expect(map.hasImage('gpu-image')).toBe(true);
     expect(map.getImage('gpu-image').userImage).toBe(userImage);
-    expect(map.getImage('gpu-image').version).toBeGreaterThan(versionBeforeContextLoss);
+    expect(map.getImage('gpu-image').version).toBe(versionBeforeContextLoss + 1);
 
     map.remove();
 });
