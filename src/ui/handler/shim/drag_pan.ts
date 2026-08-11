@@ -26,12 +26,6 @@ export type DragPanOptions = {
      * @defaultValue 2500
      */
     maxSpeed?: number;
-    /**
-     * in globe mode, whether the bearing is kept fixed while panning. When `false`, the globe
-     * rotates so the grabbed location tracks the cursor exactly, which lets the bearing drift.
-     * @defaultValue true
-     */
-    fixedBearing?: boolean;
 };
 
 /**
@@ -52,14 +46,6 @@ export class DragPanHandler {
         this._el = el;
         this._mousePan = mousePan;
         this._touchPan = touchPan;
-    }
-
-    /**
-     * Returns the current {@link DragPanOptions.fixedBearing} setting, or `undefined` when the
-     * handler was enabled without an options object.
-     */
-    get fixedBearing(): boolean | undefined {
-        return typeof this._inertiaOptions === 'object' ? this._inertiaOptions.fixedBearing : undefined;
     }
 
     /**

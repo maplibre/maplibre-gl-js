@@ -159,15 +159,13 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
      * @param deltas - The deltas accumulated for this frame.
      * @param tr - The transform to pan.
      * @param preZoomAroundLoc - The location that was under the cursor before this frame.
-     * @param fixedBearing - Whether to keep the bearing fixed, the default. When `false`, the
-     * bearing is free to drift so that the grabbed location tracks the cursor exactly.
      */
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, fixedBearing !== false, deltas.panDelta);
+        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, true, deltas.panDelta);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
