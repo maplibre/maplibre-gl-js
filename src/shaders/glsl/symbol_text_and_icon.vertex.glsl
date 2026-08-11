@@ -1,7 +1,7 @@
 layout(location = 0) in vec4 a_pos_offset;
-layout(location = 1) in vec4 a_data;
+layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec3 a_projected_pos;
-layout(location = 3) in float a_fade_opacity;
+layout(location = 3) in uint a_fade_opacity;
 
 // contents of a_size vary based on the type of property value
 // used for {text,icon}-size.
@@ -51,11 +51,11 @@ void main() {
     vec2 a_pos = a_pos_offset.xy;
     vec2 a_offset = a_pos_offset.zw;
 
-    vec2 a_tex = a_data.xy;
-    vec2 a_size = a_data.zw;
+    vec2 a_tex = vec2(a_data.xy);
+    vec2 a_size = vec2(a_data.zw);
 
-    float a_size_min = floor(a_size[0] * 0.5);
-    float is_sdf = a_size[0] - 2.0 * a_size_min;
+    float a_size_min = float(a_data.z >> 1u);
+    float is_sdf = float(a_data.z & 1u);
 
     float ele = get_elevation(a_pos);
     highp float segment_angle = -a_projected_pos[2];
