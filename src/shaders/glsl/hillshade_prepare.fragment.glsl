@@ -10,15 +10,15 @@ uniform vec2 u_dimension;
 uniform float u_zoom;
 uniform vec4 u_unpack;
 
-float getElevation(vec2 coord, float bias) {
+float getElevation(ivec2 texel) {
     // Convert encoded elevation value to meters
-    vec4 data = texture(u_image, coord) * 255.0;
+    vec4 data = texelFetch(u_image, texel, 0) * 255.0;
     data.a = -1.0;
     return dot(data, u_unpack);
 }
 
 void main() {
-    vec2 epsilon = 1.0 / u_dimension;
+    ivec2 pos = ivec2(gl_FragCoord.xy) + ivec2(1);
     float tileSize = u_dimension.x - 2.0;
 
     // queried pixels:
@@ -36,15 +36,15 @@ void main() {
     // |   |   |   |
     // +-----------+
 
-    float a = getElevation(v_pos + vec2(-epsilon.x, -epsilon.y), 0.0);
-    float b = getElevation(v_pos + vec2(0, -epsilon.y), 0.0);
-    float c = getElevation(v_pos + vec2(epsilon.x, -epsilon.y), 0.0);
-    float d = getElevation(v_pos + vec2(-epsilon.x, 0), 0.0);
-    float e = getElevation(v_pos, 0.0);
-    float f = getElevation(v_pos + vec2(epsilon.x, 0), 0.0);
-    float g = getElevation(v_pos + vec2(-epsilon.x, epsilon.y), 0.0);
-    float h = getElevation(v_pos + vec2(0, epsilon.y), 0.0);
-    float i = getElevation(v_pos + vec2(epsilon.x, epsilon.y), 0.0);
+    float a = getElevation(pos + ivec2(-1, -1));
+    float b = getElevation(pos + ivec2(0, -1));
+    float c = getElevation(pos + ivec2(1, -1));
+    float d = getElevation(pos + ivec2(-1, 0));
+    float e = getElevation(pos);
+    float f = getElevation(pos + ivec2(1, 0));
+    float g = getElevation(pos + ivec2(-1, 1));
+    float h = getElevation(pos + ivec2(0, 1));
+    float i = getElevation(pos + ivec2(1, 1));
 
     // Here we divide the x and y slopes by 8 * pixel size
     // where pixel size (aka meters/pixel) is:
