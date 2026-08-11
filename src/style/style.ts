@@ -526,15 +526,16 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
-    _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined): void {
+    async _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined): Promise<void> {
         this.imageManager.setLoaded(false);
 
         const abortController = new AbortController();
         this._spriteRequest = abortController;
         let err: Error;
-        loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
-            this._spriteRequest = null;
+        try {
+            const images = await loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), abortController);
             if (!images) return;
+
             for (const spriteId in images) {
                 const {loaded, removed} = this.imageManager.setSpriteImages(spriteId, images[spriteId]);
                 this._markImagesChanged(removed);
@@ -542,13 +543,13 @@ export class Style extends Evented<MapEventType> {
                     this._markImagesChanged(loaded);
                 }
             }
-        }).catch((error) => {
-            this._spriteRequest = null;
+        } catch (error) {
             err = error;
             if (!abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(err));
             }
-        }).finally(() => {
+        } finally {
+            this._spriteRequest = null;
             this.imageManager.setLoaded(true);
 
             if (isUpdate) {
@@ -558,10 +559,8 @@ export class Style extends Evented<MapEventType> {
             this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
             this.fire(new MapStyleDataEvent('data'));
 
-            if (completion) {
-                completion(err);
-            }
-        });
+            completion?.(err);
+        }
     }
 
     _unloadSprite(): void {
