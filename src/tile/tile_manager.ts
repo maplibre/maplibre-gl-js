@@ -16,7 +16,7 @@ import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
@@ -55,7 +55,7 @@ type TileResult = {
  *  - unloading cached tiles not needed to render a given viewport
  *  - managing tile state and feature state
  */
-export class TileManager extends Evented {
+export class TileManager extends Evented<SourceEventType> {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -253,7 +253,7 @@ export class TileManager extends Evented {
 
     /**
      * Reload tiles based on the current state of the source.
-     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired' (errored tiles use 'loading' since they have nothing to show yet), otherwise reload only non-errored tiles using state of 'reloading'.
      * @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
      */
     reload(
@@ -272,7 +272,7 @@ export class TileManager extends Evented {
             if (shouldReloadTileOptions && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
-                this._reloadTile(id, 'expired');
+                this._reloadTile(id, tile.state === 'errored' ? 'loading' : 'expired');
             } else if (tile.state !== 'errored') {
                 this._reloadTile(id, 'reloading');
             }

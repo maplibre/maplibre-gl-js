@@ -7,6 +7,7 @@ import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
+import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
@@ -30,6 +31,7 @@ import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
@@ -356,6 +358,17 @@ export type MapOptions = {
      */
     rollEnabled?: boolean;
     /**
+     * Degrees the map's bearing changes per pixel of horizontal drag when rotating.
+     * @defaultValue 0.8
+     */
+    rotateSpeed?: number;
+    /**
+     * Degrees the map's pitch changes per pixel of vertical drag. Negative, so that
+     * dragging up pitches the map toward the horizon.
+     * @defaultValue -0.5
+     */
+    pitchSpeed?: number;
+    /**
      * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
      * @defaultValue undefined
      */
@@ -530,6 +543,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    rotateSpeed: 0.8,
+    pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
@@ -2891,8 +2906,12 @@ export class Map extends Evented<MapEventType> {
      * map.setTerrain({ source: 'terrain' });
      * ```
      */
-    setTerrain(options: TerrainSpecification | null): this {
+    setTerrain(options: TerrainSpecification | null, styleOptions: StyleSetterOptions = {}): this {
         this.style._checkLoaded();
+
+        if (options && validateAndEmit(this, validateStyle.terrain, {value: options}, styleOptions)) {
+            return this;
+        }
 
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
@@ -2925,34 +2944,45 @@ export class Map extends Evented<MapEventType> {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.terrain = this.terrain;
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._terrainDataCallback = e => {
-                if (e.dataType === 'style') {
-                    this.terrain.tileManager.releaseAllRTT();
-                } else if (e.dataType === 'source' && e.tile) {
-                    if (e.sourceId === options.source && !this._camera.elevationFreeze) {
-                        this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        if (this.getCenterClampedToGround()) {
-                            this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        }
-                    }
-
-                    if (e.source?.type === 'image') {
-                        this.terrain.tileManager.releaseAllRTT();
-                    } else {
-                        this.terrain.tileManager.releaseRTT(e.tile.tileID);
-                    }
-                }
-            };
+            this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
 
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
+    }
+
+    private _handleTerrainDataEvent(event: MapStyleDataEvent | MapSourceDataEvent, terrainSourceId: string): void {
+        if (event.dataType === 'style') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+
+        const isTerrainSourceEvent = event.sourceId === terrainSourceId;
+        if (isTerrainSourceEvent) {
+            this.terrain.resetElevationCache();
+        }
+        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
+            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            if (this.getCenterClampedToGround()) {
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            }
+        }
+
+        if (!event.tile) return;
+        if (event.source?.type === 'image') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+        this.terrain.tileManager.releaseRTT(event.tile.tileID);
     }
 
     /**
@@ -3179,9 +3209,11 @@ export class Map extends Evented<MapEventType> {
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
+            const isWebGLImage = isStyleImageWebGLData(userImage.data);
 
             return {
-                data: new RGBAImage({width, height}, new Uint8Array(data)),
+                // A WebGL image paints its own slot, so its pixels are only ever transparent padding.
+                data: isWebGLImage ? new RGBAImage({width, height}) : new RGBAImage({width, height}, new Uint8Array(data)),
                 pixelRatio,
                 stretchX,
                 stretchY,
@@ -3190,6 +3222,7 @@ export class Map extends Evented<MapEventType> {
                 textFitHeight,
                 sdf,
                 version,
+                isWebGLImage,
                 userImage
             };
         }
@@ -3238,8 +3271,13 @@ export class Map extends Evented<MapEventType> {
                 'The width and height of the updated image must be that same as the previous version of the image')));
         }
 
-        const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
-        existingImage.data.replace(data, copy);
+        existingImage.isWebGLImage = isStyleImageWebGLData(data);
+        if (existingImage.isWebGLImage) {
+            existingImage.userImage = image as StyleImageInterface;
+        } else {
+            const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
+            existingImage.data.replace(data as Uint8Array | Uint8ClampedArray, copy);
+        }
 
         this.style.updateImage(id, existingImage);
         return this;
@@ -4117,6 +4155,11 @@ export class Map extends Evented<MapEventType> {
 
         if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
+            // The atlas textures died with the old context, so images that render themselves with WebGL owe every atlas a fresh render.
+            for (const id in this._lostContextStyle.images) {
+                const image = this._lostContextStyle.images[id];
+                if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
+            }
         }
 
         this._lostContextStyle = {style: null, images: null};
@@ -4237,8 +4280,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-        this.style.projection?.setErrorQueryLatitudeDegrees(this._camera.transform.center.lat);
-        this._camera.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
+        this._camera.transform.setTransitionState(this.style.projection?.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we
@@ -4251,6 +4293,8 @@ export class Map extends Evented<MapEventType> {
         // update terrain stuff
         if (this.terrain) {
             this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            // Tile selection can change with the transform or cache state without a data event.
+            this.terrain.resetElevationCache();
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
                 this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));

@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, type Mock} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
@@ -11,16 +11,16 @@ import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
 import {type CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 
-vi.mock('../../render/painter');
-vi.mock('../program');
-vi.mock('../../tile/tile_manager');
-vi.mock('../../tile/tile');
-vi.mock('../../data/bucket/symbol_bucket', () => {
+vi.mock(import('../../render/painter'));
+vi.mock(import('../program'));
+vi.mock(import('../../tile/tile_manager'));
+vi.mock(import('../../tile/tile'));
+vi.mock(import('../../data/bucket/symbol_bucket'), () => {
     return {
         SymbolBucket: vi.fn()
-    };
+    } as any;
 });
-vi.mock('../../symbol/projection');
+vi.mock(import('../../symbol/projection'));
 
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
@@ -53,7 +53,7 @@ describe('drawCustom', () => {
             bind: () => { }
         } as any;
         const tileManagerMock = new TileManager(null, null, null);
-        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         let result: {
@@ -82,10 +82,10 @@ describe('drawCustom', () => {
         expectToBeCloseToArray(result.args.defaultProjectionData.tileMercatorCoords, [0, 0, 1, 1]);
         expect(result.args.defaultProjectionData.mainMatrix).toBeInstanceOf(Float64Array);
         expect(result.args.defaultProjectionData.fallbackMatrix).toBeInstanceOf(Float64Array);
-        expect(result.args.defaultProjectionData.mainMatrix[0]).toEqual(1536);
-        expect(result.args.defaultProjectionData.mainMatrix[5]).toEqual(-1512.6647086267515);
+        expect(result.args.defaultProjectionData.mainMatrix[0]).toBe(1536);
+        expect(result.args.defaultProjectionData.mainMatrix[5]).toBe(-1512.6647086267515);
         expect(result.args.defaultProjectionData.mainMatrix[15]).toEqual(794.4539334827342);
-        expect(result.args.defaultProjectionData.projectionTransition).toEqual(0);
+        expect(result.args.defaultProjectionData.projectionTransition).toBe(0);
         expect(result.args.defaultProjectionData.mainMatrix).toEqual(result.args.defaultProjectionData.fallbackMatrix);
         const tileProjectionData = result.args.getProjectionData({
             tileID: {
@@ -103,7 +103,7 @@ describe('drawCustom', () => {
         expect(tileProjectionData.mainMatrix[0]).toBeCloseTo(0.09375, 6);
         expect(tileProjectionData.mainMatrix[5]).toBeCloseTo(-0.09232572466135025, 6);
         expect(tileProjectionData.mainMatrix[15]).toBeCloseTo(794.4539184570312, 6);
-        expect(tileProjectionData.projectionTransition).toEqual(0);
+        expect(tileProjectionData.projectionTransition).toBe(0);
         expect(tileProjectionData.mainMatrix).toEqual(tileProjectionData.fallbackMatrix);
     });
 });

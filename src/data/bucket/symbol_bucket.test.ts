@@ -10,13 +10,13 @@ import {FeatureIndex} from '../../data/feature_index.ts';
 import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
 import {RGBAImage} from '../../util/image.ts';
 import {ImagePosition} from '../../render/image_atlas.ts';
-import {type IndexedFeature, type PopulateParameters} from '../bucket.ts';
-import {type StyleImage} from '../../style/style_image.ts';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
-import {type StyleGlyph} from '../../style/style_glyph.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
+import type {StyleImage} from '../../style/style_image.ts';
+import type {StyleGlyph} from '../../style/style_glyph.ts';
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
@@ -110,7 +110,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket integer overflow', () => {
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         SymbolBucket.MAX_GLYPHS = 5;
 
         const bucket = bucketSetup();
@@ -126,11 +126,11 @@ describe('SymbolBucket', () => {
         } as any);
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0].includes('Too many glyphs being rendered in a tile.')).toBeTruthy();
+        expect(spy.mock.calls[0][0]).toContain('Too many glyphs being rendered in a tile.');
     });
 
     test('SymbolBucket image undefined sdf', () => {
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         spy.mockReset();
 
         const imageMap = {

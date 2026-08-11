@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {EXTENT} from '../../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
@@ -9,7 +9,6 @@ import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
-import {globeConstants} from './vertical_perspective_projection.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -35,9 +34,6 @@ function createGlobeTransform() {
 }
 
 describe('GlobeTransform', () => {
-    // Force faster animations so we can use shorter sleeps when testing them
-    globeConstants.errorTransitionTimeSeconds = 0.1;
-
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform();
         test('mercator tile extents are set', () => {
@@ -404,6 +400,31 @@ describe('GlobeTransform', () => {
                     expect(globeTransform.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
                 });
             });
+
+            test('ignores the elevation parameter when rendering the globe', () => {
+                const transform = createGlobeTransform();
+                transform.setZoom(1);
+                coords = new LngLat(5, 10);
+                point = new Point(320, 240);
+                transform.setLocationAtPoint(coords, point, 1000);
+                unprojected = transform.screenPointToLocationAtElevation(point, 1000);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('solves on the plane at the given elevation when rendering mercator', () => {
+                const transform = createGlobeTransform();
+                transform.setZoom(5);
+                transform.setPitch(40);
+                transform.setTransitionState(0); // rendering mercator
+                coords = new LngLat(5, 10);
+                point = new Point(320, 200);
+                transform.setLocationAtPoint(coords, point, 500);
+                unprojected = transform.screenPointToLocationAtElevation(point, 500);
+                // exact up to the center-latitude change the solve itself causes (~1e-5 deg)
+                expect(unprojected.lng).toBeCloseTo(coords.lng, 3);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, 3);
+            });
         });
     });
 
@@ -605,8 +626,9 @@ describe('GlobeTransform', () => {
     });
 
     test('recalculateZoomAndCenter does not jump center on globe + terrain (#7025)', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const globeTransform = createGlobeTransform();
-        globeTransform.setTransitionState(1, 0);
+        globeTransform.setTransitionState(1);
         globeTransform.setCenter(new LngLat(10, 50));
         const originalLng = globeTransform.center.lng;
         const originalLat = globeTransform.center.lat;

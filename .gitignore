@@ -2,7 +2,6 @@
 /types/
 /dist/
 /dist_type/
-/test/bench/results/
 /docs/assets/examples/*.webp
 /docs/API
 /docs/examples
@@ -17,13 +16,7 @@ node_modules
 coverage
 .DS_Store
 .nyc_output
-*_generated.js
-*_generated.js.map
-*_generated.mjs
-*_generated.mjs.map
-test/bench/**/benchmarks_worker.mjs
-test/bench/**/benchmarks_worker.mjs.map
-test/bench/data.json.gz
+bench-baseline.json
 test/integration/**/results*.html
 test/integration/**/actual.png
 test/integration/**/actual.json

@@ -7,6 +7,7 @@ import {MessageType} from '../../util/actor_messages.ts';
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 test('listImages', async () => {
@@ -89,9 +90,35 @@ test('map fires `styleimagemissing` when missing style image resolver returns no
     const generatedImage = await map.style.imageManager.getImages([id]);
     expect(resolver).toHaveBeenCalledWith(id);
     expect(generatedImage[id]).toBeUndefined();
-    expect(missingImageEventSpy).toHaveBeenCalledOnce();
+    expect(missingImageEventSpy).toHaveBeenCalledTimes(1);
     expect(missingImageEventSpy.mock.calls[0][0].id).toBe(id);
     expect(map.hasImage(id)).toBeFalsy();
+});
+
+test('map preserves resolved images when missing style image resolver rejects another image', async () => {
+    const map = createMap();
+
+    const resolvedId = 'resolved-style-image';
+    const rejectedId = 'rejected-style-image';
+    const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
+    const missingImageEventSpy = vi.fn();
+
+    map.setMissingStyleImageResolver(async (imageId) => {
+        if (imageId === rejectedId) {
+            throw new Error('Failed to resolve image');
+        }
+        map.addImage(imageId, sampleImage);
+    });
+    map.on('styleimagemissing', missingImageEventSpy);
+
+    const generatedImages = await map.style.imageManager.getImages([resolvedId, rejectedId]);
+
+    expect(generatedImages[resolvedId].data.width).toEqual(sampleImage.width);
+    expect(generatedImages[rejectedId]).toBeUndefined();
+    expect(missingImageEventSpy).toHaveBeenCalledTimes(1);
+    expect(missingImageEventSpy.mock.calls[0][0].id).toBe(rejectedId);
+    expect(map.hasImage(resolvedId)).toBeTruthy();
+    expect(map.hasImage(rejectedId)).toBeFalsy();
 });
 
 test('map keeps missing style image resolver after replacing the style', async () => {
@@ -214,6 +241,35 @@ test('map getImage matches addImage, StyleImageInterface SDF', () => {
     expect(gotImage.sdf).toBe(true);
 });
 
+test('map addImage packs a placeholder for a WebGL image, which brings its own pixels', () => {
+    const map = createMap();
+    const id = 'add-get-webgl-style-image';
+    const onAdd = vi.fn();
+    const inputImage: StyleImageInterface = {width: 3, height: 2, data: {renderWithWebGL: vi.fn()}, onAdd};
+
+    map.addImage(id, inputImage);
+
+    const gotImage = map.getImage(id);
+    expect(gotImage.data.width).toBe(3);
+    expect(gotImage.data.height).toBe(2);
+    expect([...gotImage.data.data]).toEqual(new Array(3 * 2 * 4).fill(0));
+    expect(gotImage.isWebGLImage).toBe(true);
+    expect(gotImage.userImage).toBe(inputImage);
+    expect(onAdd).toHaveBeenCalledWith(map, id);
+});
+
+test('map updateImage swaps a WebGL image\'s renderWithWebGL callback instead of copying pixels', () => {
+    const map = createMap();
+    const replacement: StyleImageInterface = {width: 1, height: 1, data: {renderWithWebGL: vi.fn()}};
+
+    map.addImage('webgl', {width: 1, height: 1, data: {renderWithWebGL: vi.fn()}});
+    const version = map.getImage('webgl').version;
+    map.updateImage('webgl', replacement);
+
+    expect(map.getImage('webgl').userImage).toBe(replacement);
+    expect(map.getImage('webgl').version).toBe(version + 1);
+});
+
 test('map does not fire `styleimagemissing` for empty icon values', async () => {
     const map = createMap();
 
@@ -244,7 +300,7 @@ test('setImages broadcasts even when getImages is called between addImage and up
 
     await map.once('load');
 
-    const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
+    const broadcastSpy = vi.fn().mockResolvedValue({});
     map.style.dispatcher.broadcast = broadcastSpy;
 
     map.addImage('new-image', {width: 1, height: 1, data: new Uint8Array(4)});
@@ -270,7 +326,7 @@ test('setImages broadcasts after missing style image resolver adds an image', as
 
     await map.once('load');
 
-    const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
+    const broadcastSpy = vi.fn().mockResolvedValue({});
     map.style.dispatcher.broadcast = broadcastSpy;
 
     map.setMissingStyleImageResolver((id) => {

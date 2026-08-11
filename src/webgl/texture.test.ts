@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {Context} from './context.ts';
 import {Texture} from './texture.ts';
 import {premultiplyAlpha, RGBAImage} from '../util/image.ts';
@@ -15,7 +15,7 @@ describe('Texture', () => {
             return new Context(createNullGL());
         }
 
-        function checkPixelStoreState(context: Context): void {
+        function expectPixelStoreState(context: Context): void {
             expect(context.pixelStoreUnpack.current).toEqual(context.pixelStoreUnpack.default);
             expect(context.pixelStoreUnpackFlipY.current).toEqual(context.pixelStoreUnpackFlipY.default);
             expect(context.pixelStoreUnpackPremultiplyAlpha.current).toEqual(context.pixelStoreUnpackPremultiplyAlpha.default);
@@ -26,7 +26,7 @@ describe('Texture', () => {
             // We test the Texture constructor's side effects
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _texture = new Texture(context, testImage, context.gl.RGBA, {premultiply: false});
-            checkPixelStoreState(context);
+            expectPixelStoreState(context);
         });
 
         test('premultiply=true', () => {
@@ -34,7 +34,7 @@ describe('Texture', () => {
             // We test the Texture constructor's side effects
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _texture = new Texture(context, testImage, context.gl.RGBA, {premultiply: true});
-            checkPixelStoreState(context);
+            expectPixelStoreState(context);
         });
     });
 
@@ -66,6 +66,21 @@ describe('Texture', () => {
         expect(texture.size).toEqual([4, 4]);
         expect(texture.texture).not.toBe(firstHandle);
         expect(gl.deleteTexture).toHaveBeenCalled();
+    });
+
+    test('resizing re-applies filter and wrap to the new handle', () => {
+        const gl = createNullGL();
+        const context = new Context(gl);
+        const texture = new Texture(context, new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4)), gl.RGBA);
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+
+        texture.update(new RGBAImage({width: 4, height: 4}, new Uint8Array(4 * 4 * 4)));
+        vi.mocked(gl.texParameteri).mockClear();
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+
+        // Same values as before, but on a new handle, so both have to be written again.
+        expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     });
 
     test('premultiplyAlpha produces correct output', () => {

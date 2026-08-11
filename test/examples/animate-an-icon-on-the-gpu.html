@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Animate an icon on the GPU</title>
+    <meta property="og:description" content="Draw an animated icon straight into the icon atlas with WebGL, without moving its pixels through the CPU." />
+    <meta property="og:category" content="Icons & Symbols" />
+    <meta property="og:created" content="2026-08-03" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({container: 'map', style: 'https://demotiles.maplibre.org/style.json'});
+
+    // corner hues that cycle once a second, as cosines of time so that they never jump
+    const vertexSource = `#version 300 es
+    const vec2 corners[3] = vec2[3](vec2(0.0, 0.9), vec2(-0.8, -0.5), vec2(0.8, -0.5));
+    uniform float u_time;
+    out vec3 v_color;
+    void main() {
+        float hue = u_time + float(gl_VertexID) / 3.0;
+        v_color = 0.4 + cos(6.2832 * (hue + vec3(0.0, 1.0 / 3.0, 2.0 / 3.0)));
+        // the atlas holds its rows top to bottom and a framebuffer writes them bottom to top
+        gl_Position = vec4(corners[gl_VertexID].x, -corners[gl_VertexID].y, 0.0, 1.0);
+    }`;
+
+    const fragmentSource = `#version 300 es
+    precision highp float;
+    in vec3 v_color;
+    out vec4 fragColor;
+    void main() {
+        fragColor = vec4(v_color, 1.0);
+    }`;
+
+    // a StyleImageInterface whose `data` renders the icon with WebGL instead of listing its pixels
+    // Search for StyleImageWebGLData in https://maplibre.org/maplibre-gl-js/docs/API/
+    const rainbowTriangle = {
+        width: 128, height: 128,
+
+        // called once a frame: keep the frames coming, and report that the icon has changed
+        render () {
+            map.triggerRepaint();
+            return true;
+        },
+
+        data: {
+            // `this` is the data object, so the icon's own state is reached by name
+            renderWithWebGL ({gl, texture, x, y, width, height}) {
+                if (!rainbowTriangle.program) rainbowTriangle.setup(gl);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, rainbowTriangle.framebuffer);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+                // the viewport confines this draw to the icon's own slot, which it repaints in full
+                gl.viewport(x, y, width, height);
+                gl.useProgram(rainbowTriangle.program);
+                gl.uniform1f(rainbowTriangle.uTime, performance.now() / 1000);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+            }
+        },
+
+        setup (gl) {
+            this.program = gl.createProgram();
+            for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]]) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                gl.attachShader(this.program, shader);
+            }
+            gl.linkProgram(this.program);
+            this.uTime = gl.getUniformLocation(this.program, 'u_time');
+            this.framebuffer = gl.createFramebuffer();
+            this.gl = gl;
+        },
+
+        // also called when the WebGL context is lost, so setup has to be repeatable
+        onRemove () {
+            if (!this.program) return;
+            this.gl.deleteProgram(this.program);
+            this.gl.deleteFramebuffer(this.framebuffer);
+            this.program = undefined;
+        }
+    };
+
+    map.on('load', () => {
+        map.addImage('rainbow-triangle', rainbowTriangle, {pixelRatio: 2});
+        map.addSource('points', {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]}});
+        map.addLayer({id: 'points', type: 'symbol', source: 'points', layout: {'icon-image': 'rainbow-triangle'}});
+    });
+</script>
+</body>
+</html>

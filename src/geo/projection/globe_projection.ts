@@ -5,7 +5,7 @@ import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
-import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './projection.ts';
+import {type Projection, type TileMeshUsage} from './projection.ts';
 import {type PreparedShader} from '../../shaders/shaders.ts';
 import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {type Context} from '../../webgl/context.ts';
@@ -20,9 +20,9 @@ export class GlobeProjection extends Evented implements Projection {
     _mercatorProjection: MercatorProjection;
     _verticalPerspectiveProjection: VerticalPerspectiveProjection;
 
-    constructor(projection?: ProjectionSpecification) {
+    constructor(projection: ProjectionSpecification | undefined, globalState: Record<string, any>) {
         super();
-        this._transitionable = new Transitionable(getProperties(), 'projection', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'projection', globalState);
         this.setProjection(projection);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
@@ -39,6 +39,9 @@ export class GlobeProjection extends Evented implements Projection {
             return 1;
         }
         if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+            if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) {
+                return currentProjectionSpecValue.from === 'mercator' ? 0 : 1;
+            }
             if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
                 return 1 - currentProjectionSpecValue.transition;
             }
@@ -52,8 +55,6 @@ export class GlobeProjection extends Evented implements Projection {
     get useGlobeRendering(): boolean {
         return this.transitionState > 0;
     }
-
-    get latitudeErrorCorrectionRadians(): number { return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians; }
 
     private get currentProjection(): Projection {
         return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
@@ -96,11 +97,6 @@ export class GlobeProjection extends Evented implements Projection {
         this._verticalPerspectiveProjection.destroy();
     }
 
-    public updateGPUdependent(context: ProjectionGPUContext): void {
-        this._mercatorProjection.updateGPUdependent(context);
-        this._verticalPerspectiveProjection.updateGPUdependent(context);
-    }
-
     public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean, _usage: TileMeshUsage): Mesh {
         return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
     }
@@ -119,10 +115,5 @@ export class GlobeProjection extends Evented implements Projection {
 
     recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
-    }
-
-    setErrorQueryLatitudeDegrees(value: number): void {
-        this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
-        this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }
 }

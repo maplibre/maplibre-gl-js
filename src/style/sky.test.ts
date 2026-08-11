@@ -7,7 +7,7 @@ import {type TransitionParameters} from './properties.ts';
 const spec = styleSpec.sky;
 
 test('Sky with defaults', () => {
-    const sky = new Sky({});
+    const sky = new Sky({}, {});
     sky.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(sky.properties.get('atmosphere-blend')).toEqual(spec['atmosphere-blend'].default);
@@ -16,7 +16,7 @@ test('Sky with defaults', () => {
 test('Sky with options', () => {
     const sky = new Sky({
         'atmosphere-blend': 0.4
-    });
+    }, {});
     sky.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(sky.properties.get('atmosphere-blend')).toBe(0.4);
@@ -32,7 +32,7 @@ test('Sky with interpolate function', () => {
             5, 1,
             7, 0
         ]
-    });
+    }, {});
     sky.recalculate({zoom: 6, zoomHistory: {}} as EvaluationParameters);
 
     expect(sky.properties.get('atmosphere-blend')).toBe(0.5);
@@ -41,12 +41,12 @@ test('Sky with interpolate function', () => {
 test('Sky.getSky', () => {
     const defaults = {'atmosphere-blend': 0.8};
 
-    expect(new Sky(defaults).getSky()).toEqual(defaults);
+    expect(new Sky(defaults, {}).getSky()).toEqual(defaults);
 });
 
 describe('Sky.setSky', () => {
     test('sets Sky', () => {
-        const sky = new Sky({});
+        const sky = new Sky({}, {});
         sky.setSky({'atmosphere-blend': 1});
         sky.updateTransitions({
             now: 0,
@@ -60,9 +60,9 @@ describe('Sky.setSky', () => {
     });
 
     test('validates by default', () => {
-        const sky = new Sky({});
+        const sky = new Sky({}, {});
         const skySpy = vi.spyOn(sky, '_validate');
-        vi.spyOn(console, 'error').mockImplementation(() => { });
+        vi.spyOn(console, 'error').mockImplementation(() => {});
         sky.setSky({'atmosphere-blend': -1});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
@@ -72,7 +72,7 @@ describe('Sky.setSky', () => {
     });
 
     test('respects validation option', () => {
-        const sky = new Sky({});
+        const sky = new Sky({}, {});
 
         const skySpy = vi.spyOn(sky, '_validate');
         sky.setSky({'atmosphere-blend': -1}, {validate: false});
@@ -93,7 +93,7 @@ describe('Sky runtime error logging', () => {
     test('warns with the sky property location when an expression errors at runtime', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-        const sky = new Sky({});
+        const sky = new Sky({}, {});
         // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
         sky.setSky({'sky-color': ['to-color', ['global-state', 'missing']]} as any, {validate: false});
         sky.updateTransitions({transition: false} as any as TransitionParameters);

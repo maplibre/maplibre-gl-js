@@ -1,13 +1,14 @@
 uniform vec2 u_tl_parent;
 uniform float u_scale_parent;
 uniform float u_buffer_scale;
+uniform vec3 u_perspective_transform;
 uniform vec4 u_coords_top; // xy = left, zw = right
 uniform vec4 u_coords_bottom;
 
 layout(location = 0) in vec2 a_pos;
 
-out vec2 v_pos0;
-out vec2 v_pos1;
+out vec3 v_pos0;
+out vec3 v_pos1;
 
 void main() {
     // in a_pos always forms a (sometimes subdivided) quad in 0..EXTENT, but actual corner coords may be different.
@@ -21,19 +22,23 @@ void main() {
     // as an arbitrarily high number to preserve adequate precision when rendering.
     // This is also the same value as the EXTENT we are using for our tile buffer pos coordinates,
     // so math for modifying either is consistent.
-    v_pos0 = ((fractionalPos - 0.5) / u_buffer_scale) + 0.5;
+    vec2 texturePos = ((fractionalPos - 0.5) / u_buffer_scale) + 0.5;
 
      // When globe rendering is enabled, pole vertices need special handling to get nice texture coordinates.
     #ifdef GLOBE
     // North pole
     if (a_pos.y < -32767.5) {
-        v_pos0.y = 0.0;
+        texturePos.y = 0.0;
     }
     // South pole
     if (a_pos.y > 32766.5) {
-        v_pos0.y = 1.0;
+        texturePos.y = 1.0;
     }
     #endif
 
-    v_pos1 = (v_pos0 * u_scale_parent) + u_tl_parent;
+    float perspectiveRatio = dot(u_perspective_transform, vec3(position, 1.0));
+    v_pos0 = vec3(texturePos * perspectiveRatio, perspectiveRatio);
+
+    vec2 parentPos = (texturePos * u_scale_parent) + u_tl_parent;
+    v_pos1 = vec3(parentPos * perspectiveRatio, perspectiveRatio);
 }

@@ -204,8 +204,10 @@ interface ITransformMutators {
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
+     * @param elevation - Optional ground elevation in meters above sea level at `lnglat`,
+     * defaults to the elevation at the map's center. Ignored when rendering the globe.
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void;
 
     /**
      * Sets or clears the map's geographical constraints.
@@ -232,9 +234,8 @@ interface ITransformMutators {
      * @internal
      * Sets the transform's transition state from one projection to another.
      * @param value - The transition state value.
-     * @param error - The error value.
      */
-    setTransitionState(value: number, error: number): void;
+    setTransitionState(value: number): void;
 }
 
 /**
@@ -331,6 +332,16 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @returns lnglat location
      */
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat;
+
+    /**
+     * @internal
+     * Given a point on screen, return its LngLat location assuming the ground there
+     * lies at the given elevation. When rendering the globe the elevation is ignored.
+     * @param p - screen point
+     * @param elevation - ground elevation in meters above sea level
+     * @returns lnglat location
+     */
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat;
 
     /**
      * @internal

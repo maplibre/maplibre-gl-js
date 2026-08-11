@@ -29,6 +29,11 @@ type Pattern = {
  */
 const padding = 1;
 
+type ImageManagerEventType = {
+    error: ErrorEvent;
+    styleimagemissing: MapStyleImageMissingEvent;
+};
+
 /**
  * ImageManager does three things:
  *
@@ -40,7 +45,7 @@ const padding = 1;
  * data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
  * to refactor this.
 */
-export class ImageManager extends Evented {
+export class ImageManager extends Evented<ImageManagerEventType> {
     images: {[_: string]: StyleImage};
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
@@ -131,6 +136,7 @@ export class ImageManager extends Evented {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
+            if (image.isWebGLImage) this.updateImage(id, image, false);
         }
     }
 
@@ -231,7 +237,7 @@ export class ImageManager extends Evented {
         const resolver = this.missingImageResolver;
 
         if (resolver) {
-            await Promise.all(Array.from(unresolvedIds, (id) => resolver(id)));
+            await Promise.allSettled(Array.from(unresolvedIds, (id) => resolver(id)));
         }
 
         const response: GetImagesResponse = {};
@@ -252,7 +258,8 @@ export class ImageManager extends Evented {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage?.render)
+                    hasRenderCallback: Boolean(image.userImage?.render),
+                    isWebGLImage: image.isWebGLImage
                 };
             }
         }

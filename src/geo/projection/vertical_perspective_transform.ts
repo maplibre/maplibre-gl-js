@@ -245,12 +245,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _cachedFrustum: Frustum;
     private _projectionMatrix: mat4 = createIdentityMat4f64();
     private _globeViewProjMatrix32f: Mat4f32 = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
-    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
-    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrixF64: mat4 = createIdentityMat4f64();
+    private _globeViewProjMatrixF64Inverted: mat4 = createIdentityMat4f64();
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
-    private _globeLatitudeErrorCorrectionRadians: number = 0;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
@@ -272,14 +271,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, constrain: boolean, globeLatitudeErrorCorrectionRadians?: number): void {
-        this._globeLatitudeErrorCorrectionRadians = globeLatitudeErrorCorrectionRadians || 0;
+    public apply(that: IReadonlyTransform, constrain: boolean): void {
         this._helper.apply(that, constrain);
     }
 
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
 
-    public get modelViewProjectionMatrix(): mat4 { return this._globeViewProjMatrixNoCorrection; }
+    public get modelViewProjectionMatrix(): mat4 { return this._globeViewProjMatrixF64; }
 
     public get inverseProjectionMatrix(): mat4 { return this._globeProjMatrixInverted; }
 
@@ -306,6 +304,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             clippingPlane: this._cachedClippingPlane as [number, number, number, number],
             projectionTransition: applyGlobeMatrix ? 1 : 0,
             fallbackMatrix: this._globeViewProjMatrix32f,
+            clipAntimeridian: overscaledTileID?.canonical.z === 0,
         };
     }
 
@@ -427,7 +426,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
-        vec4.transformMat4(pos, pos, this._globeViewProjMatrixNoCorrection);
+        vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64);
 
         // Also check whether the point projects to the backfacing side of the sphere.
         const plane = this._cachedClippingPlane;
@@ -451,7 +450,6 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
-        const globeMatrixUncorrected = createMat4f64();
         if (this._helper.autoCalculateNearFarZ) {
             this._helper._nearZ = 0.5;
             this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
@@ -478,19 +476,14 @@ export class VerticalPerspectiveTransform implements ITransform {
         scaleVec[1] = globeRadiusPixels;
         scaleVec[2] = globeRadiusPixels;
 
-        // Keep a atan-correction-free matrix for transformations done on the CPU with accurate math
-        mat4.rotateX(globeMatrixUncorrected, globeMatrix, this.center.lat * Math.PI / 180.0);
-        mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -this.center.lng * Math.PI / 180.0);
-        mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
-        this._globeViewProjMatrixNoCorrection = globeMatrixUncorrected;
-
-        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
+        this._globeViewProjMatrixF64 = globeMatrix;
         this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
 
-        this._globeViewProjMatrixNoCorrectionInverted = createMat4f64();
-        mat4.invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
+        this._globeViewProjMatrixF64Inverted = createMat4f64();
+        mat4.invert(this._globeViewProjMatrixF64Inverted, globeMatrix);
 
         const zero = createVec3f64();
         this._cameraPosition = createVec3f64();
@@ -504,7 +497,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
 
-        const matrix = mat4.clone(this._globeViewProjMatrixNoCorrectionInverted);
+        const matrix = mat4.clone(this._globeViewProjMatrixF64Inverted);
         mat4.scale(matrix, matrix, [1, 1, -1]);
         this._cachedFrustum = Frustum.fromInvProjectionMatrix(matrix, 1, 0, this._cachedClippingPlane, true);
     }
@@ -557,13 +550,13 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        if (!this._globeViewProjMatrixNoCorrection) {
+        if (!this._globeViewProjMatrixF64) {
             return 1.0; // _calcMatrices hasn't run yet
         }
         const vec = angularCoordinatesToSurfaceVector(lngLat);
         vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
         const result = createVec4f64();
-        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixNoCorrection);
+        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixF64);
         return result[2] / result[3];
     }
 
@@ -669,7 +662,8 @@ export class VerticalPerspectiveTransform implements ITransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point, _elevation?: number): void {
+        // The elevation is ignored: this transform solves on the planet's surface.
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
@@ -783,7 +777,7 @@ export class VerticalPerspectiveTransform implements ITransform {
      */
     private _projectSurfacePointToScreen(pos: vec3): Point {
         const projected = createVec4f64();
-        vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
+        vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixF64);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         return new Point(
@@ -808,6 +802,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
+    screenPointToLocationAtElevation(p: Point, _elevation: number): LngLat {
+        // No flat ground plane to intersect at an elevation: use the planet surface.
+        return this.screenPointToLocation(p);
+    }
+
     isPointOnMapSurface(p: Point, _terrain?: Terrain): boolean {
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
@@ -826,7 +825,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
         pos[2] = 1;
         pos[3] = 1;
-        vec4.transformMat4(pos, pos, this._globeViewProjMatrixNoCorrectionInverted);
+        vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64Inverted);
         pos[0] /= pos[3];
         pos[1] /= pos[3];
         pos[2] /= pos[3];
@@ -860,7 +859,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         }
 
         const projected = createVec4f64();
-        vec4.transformMat4(projected, [...vec, 1] as vec4, this._globeViewProjMatrixNoCorrection);
+        vec4.transformMat4(projected, [...vec, 1] as vec4, this._globeViewProjMatrixF64);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         projected[2] /= projected[3];

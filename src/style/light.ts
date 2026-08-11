@@ -1,12 +1,6 @@
-import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-
 import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
-import {
-    validateStyle,
-    validateLight,
-    emitValidationErrors
-} from './validate_style.ts';
+import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
 
 import type {vec3} from 'gl-matrix';
@@ -25,9 +19,9 @@ export class Light extends Evented {
     _transitioning: Transitioning<LightProps>;
     properties: PossiblyEvaluated<LightProps, LightPropsPossiblyEvaluated>;
 
-    constructor(lightOptions?: LightSpecification) {
+    constructor(lightOptions: LightSpecification, globalState: Record<string, any>) {
         super();
-        this._transitionable = new Transitionable(getProperties(), 'light', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'light', globalState);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }
@@ -43,8 +37,8 @@ export class Light extends Evented {
         return sphericalToCartesian(this.properties.get('position'));
     }
 
-    setLight(light?: LightSpecification, options: StyleSetterOptions = {}): void {
-        if (this._validate(validateLight, light, options)) {
+    setLight(light: LightSpecification, options: StyleSetterOptions = {}): void {
+        if (this._validate(validateStyle.light, light, options)) {
             return;
         }
 
@@ -70,18 +64,7 @@ export class Light extends Evented {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown, options?: {
-        validate?: boolean;
-    }): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-
-        return emitValidationErrors(this, validate.call(validateStyle, {
-            value,
-            // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
-            style: {glyphs: true, sprite: true},
-            styleSpec
-        }));
+    _validate(validate: Validator, value: unknown, options?: StyleSetterOptions): boolean {
+        return validateAndEmit(this, validate, {value}, options);
     }
 }

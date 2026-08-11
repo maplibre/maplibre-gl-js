@@ -102,10 +102,11 @@ describe('GeoJSONSource.setData', () => {
         const source = createSource();
         const loadPromise = source.once('data');
         source.load();
-        await loadPromise;
+        await expect(loadPromise).resolves.toBeDefined();
+
         const setDataPromise = source.once('data');
         source.setData({} as GeoJSON.GeoJSON);
-        await setDataPromise;
+        await expect(setDataPromise).resolves.toBeDefined();
     });
 
     test('fires "dataloading" event', async () => {
@@ -545,8 +546,8 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(false);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(diff);
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
-        expect(spy.mock.calls[1][0].data.data).not.toBeDefined();
-        expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
+        expect(spy.mock.calls[1][0].data.data).toBeUndefined();
+        expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {
@@ -1310,5 +1311,32 @@ describe('GeoJSONSource.getClusterLeaves', () => {
         expect(spy.mock.calls[0][0].type).toBe(MessageType.getClusterLeaves);
         expect((spy.mock.calls[0][0].data as ClusterIDAndSource).clusterId).toBe(1);
         vi.resetAllMocks();
+    });
+});
+
+describe('GeoJSONSource.getClusterOptions', () => {
+    test('returns the cluster options configured on the source', () => {
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: true,
+            clusterMaxZoom: 12,
+            clusterRadius: 80
+        }, mockDispatcher, undefined);
+
+        expect(source.getClusterOptions()).toEqual({cluster: true, clusterMaxZoom: 12, clusterRadius: 80});
+    });
+
+    test('reflects options updated via setClusterOptions', async () => {
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: false
+        }, mockDispatcher, undefined);
+
+        const options = {cluster: true, clusterMaxZoom: 9, clusterRadius: 40};
+        await source.setClusterOptions(options);
+
+        expect(source.getClusterOptions()).toEqual(options);
     });
 });

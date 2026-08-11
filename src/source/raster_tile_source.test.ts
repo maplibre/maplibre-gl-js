@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -216,15 +216,21 @@ describe('RasterTileSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
-    test('supports updating tiles', () => {
+    test('supports updating tiles', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+        }));
         const source = createSource({url: '/source.json'});
-        source.setTiles(['http://example.com/{z}/{x}/{y}.png?updated=true']);
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
-            }
-        });
+        server.respondImmediately = true;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        source.setTiles(['http://example.com/{z}/{x}/{y}.png?updated=true']);
+        await promise;
+
+        expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
     });
 
     test('cancels TileJSON request if removed', async () => {
@@ -256,7 +262,7 @@ describe('RasterTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(server.requests.length).toBe(2);
+        expect(server.requests).toHaveLength(2);
         expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'raster',
@@ -265,7 +271,7 @@ describe('RasterTileSource', () => {
         expect(errorHandler).not.toHaveBeenCalled();
     });
 
-    it('serializes options', () => {
+    test('serializes options', () => {
         const source = createSource({
             tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
             minzoom: 2,
@@ -437,6 +443,55 @@ describe('RasterTileSource', () => {
         await tilePromise;
         expect(tile.state).toBe('loaded');
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('passes a live AbortController to ImageRequest when the tile is aborted during an async transformRequest', async () => {
+        let transformStarted: () => void;
+        const transformCalled = new Promise<void>((resolve) => {
+            transformStarted = resolve;
+        });
+        let releaseTransform: (params: {url: string}) => void;
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, (url, type) => {
+            if (type !== 'Tile') return {url};
+            transformStarted();
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+
+        const image = {width: 256, height: 256} as ImageBitmap;
+        let requestController: AbortController;
+        let tileControllerAtRequestTime: AbortController;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
+            requestController = abortController;
+            tileControllerAtRequestTime = tile.abortController;
+            return {data: image};
+        });
+        source.map.painter = {
+            context: {gl: {}},
+            getTileTexture: () => ({update: vi.fn()})
+        } as any;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const loadPromise = source.loadTile(tile);
+        await transformCalled; // loadTile is suspended in the transform
+        await source.abortTile(tile); // the abort lands during that suspension
+        releaseTransform({url: 'http://example.com/10/5/5.png'});
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        expect(getImageSpy).toHaveBeenCalledTimes(1);
+        // The request must carry the tile's own live controller, so an abort
+        // arriving while it is in flight reaches exactly this request.
+        expect(requestController).toBeInstanceOf(AbortController);
+        expect(requestController).toBe(tileControllerAtRequestTime);
     });
 
     test('does not throw when tile is aborted', async () => {

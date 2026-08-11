@@ -1,7 +1,8 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map.ts';
 import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
-import {Event as EventedEvent} from '../../util/evented.ts';
+import {ErrorEvent} from '../../util/evented.ts';
+import {MapSourceDataEvent, MapStyleDataEvent} from '../events.ts';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
 import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -42,9 +43,9 @@ describe('setStyle', () => {
         map.on('data', recordEvent);
         map.on('dataloading', recordEvent);
 
-        map.style.fire(new EventedEvent('error'));
-        map.style.fire(new EventedEvent('data'));
-        map.style.fire(new EventedEvent('dataloading'));
+        map.style.fire(new ErrorEvent(new Error('test')));
+        map.style.fire(new MapSourceDataEvent('data'));
+        map.style.fire(new MapSourceDataEvent('dataloading'));
 
         expect(events).toEqual([
             'error',
@@ -65,10 +66,10 @@ describe('setStyle', () => {
         map.on('sourcedata', recordEvent);
         map.on('sourcedataloading', recordEvent);
 
-        map.style.fire(new EventedEvent('data', {dataType: 'style'}));
-        map.style.fire(new EventedEvent('dataloading', {dataType: 'style'}));
-        map.style.fire(new EventedEvent('data', {dataType: 'source'}));
-        map.style.fire(new EventedEvent('dataloading', {dataType: 'source'}));
+        map.style.fire(new MapStyleDataEvent('data'));
+        map.style.fire(new MapStyleDataEvent('dataloading'));
+        map.style.fire(new MapSourceDataEvent('data'));
+        map.style.fire(new MapSourceDataEvent('dataloading'));
 
         expect(events).toEqual([
             'styledata',
@@ -78,12 +79,14 @@ describe('setStyle', () => {
         ]);
     });
 
-    test('can be called more than once', () => {
+    test('can be called more than once', async () => {
         const map = createMap();
 
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        await map.once('style.load');
 
+        expect(map.getStyle()).toEqual({version: 8, sources: {}, layers: []});
     });
 
     test('setStyle back to the first style should work', async () => {
@@ -477,12 +480,16 @@ describe('getStyle', () => {
             type: 'background'
         } as LayerSpecification;
         map.addLayer(layer);
+
+        expect(map.getLayer('background')).toBeDefined();
     });
 
     test('a source can be added even if a map is created without a style', () => {
         const map = createMap({deleteStyle: true});
         const source = createStyleSource();
         map.addSource('fill', source);
+
+        expect(map.getSource('fill')).toBeDefined();
     });
 
     test('a layer can be added with an embedded source specification', () => {
@@ -496,6 +503,8 @@ describe('getStyle', () => {
             type: 'symbol',
             source
         });
+
+        expect(map.getLayer('foo')).toBeDefined();
     });
 
     test('returns the style with added source and layer', async () => {

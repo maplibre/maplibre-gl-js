@@ -1,16 +1,34 @@
 services:
   docs:
-    image: zensical/zensical:0.0.50
+    image: zensical/zensical:0.0.53
     volumes:
       - .:/docs
     working_dir: /docs
     command: build --strict
 
   docs-serve:
-    image: zensical/zensical:0.0.50
+    image: zensical/zensical:0.0.53
     volumes:
       - .:/docs
     working_dir: /docs
     ports:
       - "8000:8000"
     command: serve --open --dev-addr=0.0.0.0:8000
+
+  # One command to build the library and serve the examples, without a local
+  # Node.js setup: `docker compose run --rm --service-ports dev`, then open
+  # http://localhost:9966/test/examples/ . node_modules lives in a named
+  # volume so the host tree (and any host-native builds) are left untouched.
+  dev:
+    # Node version should be kept in sync with .nvmrc.
+    image: node:26.7
+    working_dir: /app
+    volumes:
+      - .:/app
+      - dev-node-modules:/app/node_modules
+    ports:
+      - "9966:9966"
+    command: sh -c "npm ci && npm run build-dist && npx st --no-cache -H 0.0.0.0 --port 9966 ."
+
+volumes:
+  dev-node-modules:
