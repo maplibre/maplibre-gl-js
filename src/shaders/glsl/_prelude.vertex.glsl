@@ -26,9 +26,8 @@ vec2 unpack_float(const float packedValue) {
     return vec2(v0, packedIntValue - v0 * 256);
 }
 
-vec2 unpack_opacity(const float packedOpacity) {
-    int intOpacity = int(packedOpacity) / 2;
-    return vec2(float(intOpacity) / 127.0, mod(packedOpacity, 2.0));
+vec2 unpack_opacity(const uint packedOpacity) {
+    return vec2(float(packedOpacity >> 1u) / 127.0, float(packedOpacity & 1u));
 }
 
 // To minimize the number of ins needed, we encode a 4-component
@@ -133,9 +132,9 @@ float calculate_visibility(vec4 pos) {
 }
 
 // grab an elevation value from a raster-dem texture
-float ele(vec2 pos) {
+float ele(ivec2 pos) {
     #ifdef TERRAIN3D
-        vec4 rgb = (texture(u_terrain, pos) * 255.0) * u_terrain_unpack;
+        vec4 rgb = (texelFetch(u_terrain, pos, 0) * 255.0) * u_terrain_unpack;
         return rgb.r + rgb.g + rgb.b - u_terrain_unpack.a;
     #else
         return 0.0;
@@ -152,12 +151,12 @@ float get_elevation(vec2 pos) {
         #endif
         vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
         vec2 f = fract(coord);
-        vec2 c = (floor(coord) + 0.5) / (u_terrain_dim + 2.0); // get the pixel center
-        float d = 1.0 / (u_terrain_dim + 2.0);
-        float tl = ele(c);
-        float tr = ele(c + vec2(d, 0.0));
-        float bl = ele(c + vec2(0.0, d));
-        float br = ele(c + vec2(d, d));
+        ivec2 c = ivec2(floor(coord)); // get the pixel center
+        ivec2 hi = textureSize(u_terrain, 0) - 1;
+        float tl = ele(clamp(c, ivec2(0), hi));
+        float tr = ele(clamp(c + ivec2(1, 0), ivec2(0), hi));
+        float bl = ele(clamp(c + ivec2(0, 1), ivec2(0), hi));
+        float br = ele(clamp(c + ivec2(1, 1), ivec2(0), hi));
         float elevation = mix(mix(tl, tr, f.x), mix(bl, br, f.x), f.y);
         return elevation * u_terrain_exaggeration;
     #else

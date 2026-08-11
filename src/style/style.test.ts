@@ -375,7 +375,7 @@ describe('Style.loadJSON', () => {
         }));
 
         await style.once('style.load');
-        expect(style.tileManagers['mapLibre'] instanceof TileManager).toBeTruthy();
+        expect(style.tileManagers['mapLibre']).toBeInstanceOf(TileManager);
     });
 
     test('creates layers', async () => {
@@ -397,7 +397,7 @@ describe('Style.loadJSON', () => {
         });
 
         await style.once('style.load');
-        expect(style.getLayer('fill') instanceof StyleLayer).toBeTruthy();
+        expect(style.getLayer('fill')).toBeInstanceOf(StyleLayer);
     });
 
     test('transforms sprite json and image URLs before request', async () => {
