@@ -118,7 +118,6 @@ test('a WebGL style image is told to release its GPU resources on context loss, 
 
     expect(map.hasImage('gpu-image')).toBe(true);
     expect(map.getImage('gpu-image').userImage).toBe(userImage);
-    // adding it back bumped its version, which is how it owes every atlas a render again
     expect(map.getImage('gpu-image').version).toBeGreaterThan(versionBeforeContextLoss);
 
     map.remove();
