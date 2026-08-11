@@ -74,9 +74,6 @@ let mockConsoleError: MockInstance;
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
-    // ImageRequest keeps its pending requests in module level state, which outlives a test just
-    // like the fake server does - a test that leaves a sprite request unanswered would otherwise
-    // hold on to one of the parallel request slots for the rest of the file
     ImageRequest.resetRequestQueue();
     mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 });

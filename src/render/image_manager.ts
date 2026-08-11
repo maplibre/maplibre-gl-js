@@ -164,9 +164,9 @@ export class ImageManager extends Evented<ImageManagerEventType> {
      *
      * The old record is read directly rather than through {@link ImageManager.getImage}, which
      * would force a synchronous decode of the sprite data of the very image being replaced. Its
-     * version is defaulted because images start out without one, and `undefined + 1` would give a
-     * version of `NaN` - which, since `NaN !== NaN`, would leave every atlas holding this image
-     * considering itself outdated forever.
+     * size therefore comes from whichever of the two the pixels are still in, since an image that
+     * came from a sprite and was never rendered has not been decoded yet, and its version is
+     * defaulted, since images start out without one.
      *
      * @param validate - whether to reject an image of a different size than the one it replaces
      */
@@ -174,9 +174,8 @@ export class ImageManager extends Evented<ImageManagerEventType> {
         const oldImage = this.images[id];
         if (validate) {
             const oldData = oldImage.data || oldImage.spriteData;
-            const newData = image.data || image.spriteData;
-            if (oldData.width !== newData.width || oldData.height !== newData.height) {
-                throw new Error(`size mismatch between old image (${oldData.width}x${oldData.height}) and new image (${newData.width}x${newData.height}).`);
+            if (oldData.width !== image.data.width || oldData.height !== image.data.height) {
+                throw new Error(`size mismatch between old image (${oldData.width}x${oldData.height}) and new image (${image.data.width}x${image.data.height}).`);
             }
         }
         image.version = (oldImage.version ?? 0) + 1;
