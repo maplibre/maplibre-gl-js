@@ -12,6 +12,7 @@
 - Let an abort reach an image or raster tile load that is still awaiting its `transformRequest`, so `ImageSource.updateImage` no longer loses the image it was just handed and an aborted tile is no longer fetched ([#8071](https://github.com/maplibre/maplibre-gl-js/pull/8071)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix raster tiles fading in again when they are reloaded, briefly flashing the map background, most visibly when switching projection ([#8106](https://github.com/maplibre/maplibre-gl-js/pull/8106)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix globe panning inverting and stalling near and across the poles by rotating the globe with a versor, keeping the drag direction consistent at every latitude. Panning also eases off as the cursor approaches the edge of the globe and continues past it, instead of stopping. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
+- Fix a gesture which was slowed down or held still before being released still flinging the map with the velocity it had earlier: inertia is now measured from the movement the gesture ended with and over the time up to the release ([#1303](https://github.com/maplibre/maplibre-gl-js/issues/1303)) (by [@zdila](https://github.com/zdila))
 - _...Add new stuff here..._
 
 ## 6.3.0

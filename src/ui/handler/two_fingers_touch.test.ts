@@ -1,9 +1,10 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, test, expect, vi, onTestFinished} from 'vitest';
 import {Map} from '../map.ts';
 import {Marker} from '../marker.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
+import {restoreNow, setNow} from '../../util/time_control.ts';
 
 function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)});
@@ -96,28 +97,40 @@ describe('touch zoom rotate', () => {
         map.on('rotate',      rotate);
         map.on('rotateend',   rotateend);
 
+        // Frozen time, so that the inertia of the gesture does not depend on how long the
+        // test itself takes: without it a pause longer than the inertia buffer keeps the
+        // rotation from continuing.
+        setNow(1000);
+        onTestFinished(restoreNow);
         simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(0);
         expect(rotate).toHaveBeenCalledTimes(0);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
+        setNow(1016);
         simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: -50, clientY: 0}, {target, identifier: 1, clientX: 50, clientY: 0}]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
+        setNow(1032);
         simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(2);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
+        setNow(1048);
         simulate.touchend(map.getCanvas(), {touches: []});
         map._renderTaskQueue.run();
-        expect(rotatestart).toHaveBeenCalledTimes(1);
-        expect(rotate).toHaveBeenCalledTimes(2);
+
+        // incremented because inertia starts a second rotation: the gesture was rotating
+        // when it ended, even though it ended at the bearing it started from
+        expect(rotatestart).toHaveBeenCalledTimes(2);
+        map._renderTaskQueue.run();
+        expect(rotate).toHaveBeenCalledTimes(3);
         expect(rotateend).toHaveBeenCalledTimes(1);
 
         map.remove();
