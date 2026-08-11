@@ -95,6 +95,32 @@ test('map fires `styleimagemissing` when missing style image resolver returns no
     expect(map.hasImage(id)).toBeFalsy();
 });
 
+test('map preserves resolved images when missing style image resolver rejects another image', async () => {
+    const map = createMap();
+
+    const resolvedId = 'resolved-style-image';
+    const rejectedId = 'rejected-style-image';
+    const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
+    const missingImageEventSpy = vi.fn();
+
+    map.setMissingStyleImageResolver(async (imageId) => {
+        if (imageId === rejectedId) {
+            throw new Error('Failed to resolve image');
+        }
+        map.addImage(imageId, sampleImage);
+    });
+    map.on('styleimagemissing', missingImageEventSpy);
+
+    const generatedImages = await map.style.imageManager.getImages([resolvedId, rejectedId]);
+
+    expect(generatedImages[resolvedId].data.width).toEqual(sampleImage.width);
+    expect(generatedImages[rejectedId]).toBeUndefined();
+    expect(missingImageEventSpy).toHaveBeenCalledTimes(1);
+    expect(missingImageEventSpy.mock.calls[0][0].id).toBe(rejectedId);
+    expect(map.hasImage(resolvedId)).toBeTruthy();
+    expect(map.hasImage(rejectedId)).toBeFalsy();
+});
+
 test('map keeps missing style image resolver after replacing the style', async () => {
     const map = createMap();
 

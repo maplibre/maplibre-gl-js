@@ -237,7 +237,7 @@ export class ImageManager extends Evented<ImageManagerEventType> {
         const resolver = this.missingImageResolver;
 
         if (resolver) {
-            await Promise.all(Array.from(unresolvedIds, (id) => resolver(id)));
+            await Promise.allSettled(Array.from(unresolvedIds, (id) => resolver(id)));
         }
 
         const response: GetImagesResponse = {};
