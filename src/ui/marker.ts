@@ -21,15 +21,15 @@ export type Alignment = 'map' | 'viewport' | 'auto';
 /**
  * Screen-pixel deltas applied when a focused draggable marker is moved with the arrow keys.
  */
-const arrowKeyDeltas: {[key: string]: [number, number]} = {
+const arrowKeyDeltas: Partial<Record<KeyboardEvent['key'], [number, number]>> = {
     ArrowLeft: [-1, 0],
     ArrowRight: [1, 0],
     ArrowUp: [0, -1],
     ArrowDown: [0, 1]
 };
 
-const keyboardDragStep = 1;
-const keyboardDragShiftStep = 10;
+const keyboardDragSmallStep = 1;
+const keyboardDragLargeStep = 10;
 
 /**
  * The {@link Marker} options object
@@ -624,7 +624,7 @@ export class Marker extends Evented<MarkerEventType> {
         // map's KeyboardHandler would also pan (or rotate/pitch with Shift) the camera.
         e.stopPropagation();
 
-        const step = e.shiftKey ? keyboardDragShiftStep : keyboardDragStep;
+        const step = e.shiftKey ? keyboardDragLargeStep : keyboardDragSmallStep;
         const pos = this._map.project(this._lngLat);
         this.setLngLat(this._map.unproject(new Point(pos.x + delta[0] * step, pos.y + delta[1] * step)));
 
