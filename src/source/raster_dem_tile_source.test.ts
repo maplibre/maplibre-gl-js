@@ -104,7 +104,6 @@ describe('RasterDEMTileSource', () => {
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
         expect(transformSpy.mock.calls[0][1]).toBe('Tile');
-        // DEM tiles hold elevation data, so they must not be color managed.
         expect(getImageSpy.mock.calls[0][3]).toEqual({colorSpaceConversion: 'none'});
     });
 
