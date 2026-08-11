@@ -5,7 +5,7 @@
 
 ### 🐞 Bug fixes
 - Prevent a rejected missing style image resolver from blocking successfully resolved images in the same batch ([#8146](https://github.com/maplibre/maplibre-gl-js/pull/8146/)) (by @birkskyum)
-- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is still preserved while panning, as before; set `DragPanOptions.fixedBearing` to `false` to instead let the globe rotate so the grabbed location tracks the cursor exactly ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
+- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
 - _...Add new stuff here..._
 
 ## 6.3.0
