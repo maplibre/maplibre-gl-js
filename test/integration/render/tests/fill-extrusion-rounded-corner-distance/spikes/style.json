@@ -5,7 +5,7 @@
       "height": 512,
       "width": 512,
       "allowed": 0.001,
-      "description": "Corner arcs must land on the tile grid. A real building whose courtyard runs diagonally to the grid used to be triangulated into spikes, because the triangulator snaps and merges vertices that are not on the grid. See https://github.com/maplibre/maplibre-gl-js/issues/8153"
+      "description": "Corner arcs have to land on the integer tile grid, because triangulation, subdivision and the vertex buffers all snap and deduplicate vertices there. Arc points between grid positions get merged and rewire the triangulation, which slices a spike across this courtyard. Geometry is the building from https://github.com/maplibre/maplibre-gl-js/issues/8153, taken verbatim out of its z14 tile. The small `buffer` keeps it in that one tile, so the neighbouring tile's copy does not draw over the artifact."
     }
   },
   "sources": {
@@ -13,6 +13,7 @@
       "type": "geojson",
       "maxzoom": 14,
       "tolerance": 0,
+      "buffer": 1,
       "data": {
         "type": "Feature",
         "properties": {},
@@ -20,30 +21,33 @@
           "type": "Polygon",
           "coordinates": [
             [
-              [-73.9991373, 40.7298849],
-              [-73.9991319, 40.729893],
-              [-73.9989924, 40.729828],
-              [-73.9993948, 40.7293524],
-              [-73.9999795, 40.729641],
-              [-73.9996308, 40.7300556],
-              [-73.9991373, 40.7298849]
+              [-73.99913728, 40.73069791],
+              [-73.99913192, 40.73070604],
+              [-73.99899244, 40.730641],
+              [-73.99939477, 40.73016538],
+              [-73.9999795, 40.730454],
+              [-73.99963081, 40.73086864],
+              [-73.99945378, 40.73086864],
+              [-73.99944305, 40.73086051],
+              [-73.99944842, 40.73085238],
+              [-73.99913728, 40.73069791]
             ],
             [
-              [-73.9993358, 40.7297223],
-              [-73.9991963, 40.7298808],
-              [-73.9994323, 40.7299946],
-              [-73.9995664, 40.7298361],
-              [-73.9993358, 40.7297223]
+              [-73.99933577, 40.73053531],
+              [-73.99919629, 40.73069384],
+              [-73.99943233, 40.73080767],
+              [-73.99956644, 40.73064913],
+              [-73.99933577, 40.73053531]
             ]
           ]
         }
       }
     }
   },
-  "pitch": 30,
-  "bearing": 0,
-  "zoom": 18,
-  "center": [-73.999486, 40.729704],
+  "pitch": 10,
+  "bearing": 45,
+  "zoom": 18.4,
+  "center": [-73.99938405, 40.73060848],
   "layers": [
     {
       "id": "background",
@@ -57,7 +61,7 @@
       "type": "fill-extrusion",
       "source": "geojson",
       "layout": {
-        "fill-extrusion-rounded-corner-distance": 1
+        "fill-extrusion-rounded-corner-distance": 3
       },
       "paint": {
         "fill-extrusion-color": "blue",
