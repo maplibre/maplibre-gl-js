@@ -300,6 +300,7 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     _tileLoaded(tile: Tile, id: string, previousState: TileState, hadData: boolean, result: LoadTileResult): void {
+        // If the tile was already showing do not restart its fade-in animation
         if (!hadData) {
             tile.timeAdded = now();
             // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
