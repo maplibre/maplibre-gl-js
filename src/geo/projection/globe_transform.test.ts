@@ -437,20 +437,6 @@ describe('GlobeTransform', () => {
         });
     });
 
-    describe('getRaySegmentFromPixel', () => {
-        test('returns the underlying mercator transform ray segment', () => {
-            const globeTransform = createGlobeTransform();
-            globeTransform.setZoom(3);
-            const spy = vi.spyOn(globeTransform['_mercatorTransform'], 'getRaySegmentFromPixel');
-            const p = new Point(320, 150);
-
-            const segment = globeTransform.getRaySegmentFromPixel(p);
-
-            expect(spy).toHaveBeenCalledWith(p);
-            expect(segment).toBe(spy.mock.results[0].value);
-        });
-    });
-
     describe('isPointOnMapSurface', () => {
         const globeTransform = new GlobeTransform();
         globeTransform.resize(640, 480);

@@ -67,6 +67,23 @@ describe('Terrain', () => {
         expect(coordinate.y).toBeCloseTo(0.5, 10);
     });
 
+    test('pointCoordinate hits the terrain through a globe transform that renders mercator', () => {
+        const terrain = createFlatTerrain();
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(2048, 512);
+        globeTransform.setZoom(0);
+        globeTransform.setTransitionState(0);
+        (terrain.painter as any).transform = globeTransform;
+        (terrain.painter as any).style = {projection: {transitionState: 0}};
+
+        const coordinate = terrain.pointCoordinate(new Point(1024, 256));
+
+        expect(coordinate).not.toBeNull();
+        expect(coordinate.x).toBeCloseTo(0.5, 10);
+        expect(coordinate.y).toBeCloseTo(0.5, 10);
+        expect(coordinate.z).toBeCloseTo(0, 10);
+    });
+
     test('pointCoordinate uses the globe raycast during a globe transition', () => {
         const terrain = createFlatTerrain();
         const globeTransform = new GlobeTransform();
