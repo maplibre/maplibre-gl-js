@@ -112,18 +112,18 @@ export namespace ImageRequest {
      * whose pixels hold data rather than color, such as raster-DEM tiles, so the browser does not color manage them.
      * @returns - A promise resolved when the image is loaded.
      */
-    export const transformAndGetImage = async (
+    export async function transformAndGetImage(
         requestManager: RequestManager,
         url: string,
         resourceType: ResourceType,
         abortController: AbortController,
         supportImageRefresh: boolean = true,
         imageBitmapOptions?: ImageBitmapOptions
-    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
+    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> {
         const requestParameters = await requestManager.transformRequest(url, resourceType);
         throwIfAborted(abortController.signal);
         return ImageRequest.getImage(requestParameters, abortController, supportImageRefresh, imageBitmapOptions);
-    };
+    }
 
     /**
      * Request to load an image.
