@@ -165,7 +165,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             return;
         }
 
-        versorSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, true, deltas.panDelta);
+        versorSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, deltas.panDelta);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {

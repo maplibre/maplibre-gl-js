@@ -657,7 +657,7 @@ describe('GlobeTransform', () => {
         test('round-trip accuracy', () => {
             coords = new LngLat(20, 30);
             point = new Point(280, 200);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point, undefined, false);
             unprojected = globeTransform.screenPointToLocation(point);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
@@ -691,11 +691,11 @@ describe('GlobeTransform', () => {
             expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
         });
 
-        test('bearing changes when panning off-center', () => {
+        test('bearing changes when panning off-center without a fixed bearing', () => {
             const bearingBefore = globeTransform.bearing;
             coords = new LngLat(20, 30);
             point = new Point(250, 180);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point, undefined, false);
             expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
         });
 
@@ -726,7 +726,7 @@ describe('GlobeTransform', () => {
             point = new Point(620, 240);
             expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
             coords = freshTransform.screenPointToLocation(point);
-            versorSetLocationAtPoint(freshTransform, coords, point, true, new Point(20, 0));
+            versorSetLocationAtPoint(freshTransform, coords, point, new Point(20, 0));
             expect(freshTransform.center.lng).not.toBe(lngBefore);
             expect(isNaN(freshTransform.center.lng)).toBe(false);
             expect(isNaN(freshTransform.center.lat)).toBe(false);
@@ -745,7 +745,7 @@ describe('GlobeTransform', () => {
             const panDelta = new Point(0, 8); // tangential, so it sweeps around the pole
             const lngBefore = tr.center.lng;
             const location = tr.screenPointToLocation(cursor.sub(panDelta));
-            versorSetLocationAtPoint(tr, location, cursor, true, panDelta);
+            versorSetLocationAtPoint(tr, location, cursor, panDelta);
             expect(Math.abs(differenceOfAnglesDegrees(lngBefore, tr.center.lng))).toBeGreaterThan(1);
         });
 
@@ -757,7 +757,7 @@ describe('GlobeTransform', () => {
                 tr.setCenter(new LngLat(0, 0));
                 const panDelta = new Point(20, 0);
                 const location = tr.screenPointToLocation(screenPoint.sub(panDelta));
-                versorSetLocationAtPoint(tr, location, screenPoint, true, panDelta);
+                versorSetLocationAtPoint(tr, location, screenPoint, panDelta);
                 return Math.abs(differenceOfAnglesDegrees(0, tr.center.lng));
             };
             const onGlobe = new Point(340, 240);

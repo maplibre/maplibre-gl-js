@@ -229,12 +229,13 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
  * @param tr - The transform to rotate.
  * @param lnglat - The location to bring under `point`.
  * @param point - The screen point that `lnglat` should appear at.
- * @param fixedBearing - Applies the swing only, keeping the bearing fixed. When `false`, applies
- * the twist about the view axis too, so the grabbed location tracks the cursor exactly.
  * @param panDelta - The drag's pixel delta. Used to re-derive the previous cursor location through
  * {@link panSurfaceLocation}, since both ends of the rotation must come from the same mapping.
+ * @param fixedBearing - Applies the swing only, keeping the bearing fixed, which is what dragging
+ * the globe does. Pass `false` to apply the twist about the view axis as well, so that the grabbed
+ * location tracks the cursor exactly and the bearing drifts with it.
  */
-export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
+export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true): void {
     const pointLngLat = panSurfaceLocation(tr, point);
     let sourceLngLat = lnglat;
     if (panDelta) {
@@ -255,12 +256,13 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
 
     const oldLat = tr.center.lat;
-    const oldBearing = tr.bearing;
     const finalLat = clamp(newCenterLat, -90, 90);
     const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
 
     tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
-    tr.setBearing(fixedBearing ? oldBearing : newBearing);
+    if (!fixedBearing) {
+        tr.setBearing(newBearing);
+    }
     tr.setZoom(tr.zoom + getZoomAdjustment(oldLat, tr.center.lat));
 }
 
