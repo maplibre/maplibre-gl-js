@@ -6,6 +6,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     addListeners: EventListener[];
     postListeners: EventListener[];
     target: MessageBus;
+    eventListeners: Record<string, EventListener[]>;
 
     registerWorkerSource: any;
     registerRTLTextPlugin: any;
@@ -17,19 +18,27 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     constructor(addListeners: EventListener[], postListeners: EventListener[]) {
         this.addListeners = addListeners;
         this.postListeners = postListeners;
+        this.eventListeners = {message: addListeners};
     }
 
-    addEventListener(event: 'message', callback: EventListener): void {
-        if (event === 'message') {
-            this.addListeners.push(callback);
-        }
+    addEventListener(event: string, callback: EventListener): void {
+        this.eventListeners[event] ||= [];
+        this.eventListeners[event].push(callback);
     }
 
-    removeEventListener(event: 'message', callback: EventListener): void {
-        const i = this.addListeners.indexOf(callback);
+    removeEventListener(event: string, callback: EventListener): void {
+        const listeners = this.eventListeners[event] || [];
+        const i = listeners.indexOf(callback);
         if (i >= 0) {
-            this.addListeners.splice(i, 1);
+            listeners.splice(i, 1);
         }
+    }
+
+    dispatchEvent(event: Event): boolean {
+        for (const listener of this.eventListeners[event.type] || []) {
+            listener(event);
+        }
+        return true;
     }
 
     postMessage(data: unknown): void {
@@ -45,7 +54,9 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     }
 
     terminate(): void {
-        this.addListeners.splice(0, this.addListeners.length);
+        for (const listeners of Object.values(this.eventListeners)) {
+            listeners.splice(0, listeners.length);
+        }
         this.postListeners.splice(0, this.postListeners.length);
     }
 
@@ -69,4 +80,3 @@ function setGlobalWorker(MockWorker: { new(...args: any): any}) {
 }
 
 setGlobalWorker(MapLibreWorker);
-

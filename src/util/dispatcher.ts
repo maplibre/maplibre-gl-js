@@ -1,6 +1,9 @@
 import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
+import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
+import {type Subscription, subscribe} from './util.ts';
+import {getWorkerUrl} from './web_worker.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
@@ -9,20 +12,23 @@ import {MessageType} from './actor_messages.ts';
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
  */
-export class Dispatcher {
+export class Dispatcher extends Evented<ErrorEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
     actorsPromise: Promise<Actor[]>;
     currentActor: number;
     id: string | number;
     private removed: boolean;
+    private workerErrorSubscriptions: Subscription[];
 
     constructor(workerPool: WorkerPool, mapId: string | number) {
+        super();
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
         this.removed = false;
+        this.workerErrorSubscriptions = [];
         this.actorsPromise = this.initActors(mapId);
     }
 
@@ -30,12 +36,33 @@ export class Dispatcher {
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
+            this.workerErrorSubscriptions.push(
+                subscribe(worker, 'error', (event: globalThis.ErrorEvent) => {
+                    const details = event.message ? `${event.message}. ` : '';
+                    this.fireWorkerError(
+                        worker,
+                        'Failed to load or execute the MapLibre worker script',
+                        `${details}If you use a bundler, call setWorkerUrl() with the emitted worker URL. ` +
+                        'See the v5 to v6 migration guide.'
+                    );
+                }, false),
+                subscribe(worker, 'messageerror', () => {
+                    this.fireWorkerError(worker, 'Failed to deserialize a message from the MapLibre worker script');
+                }, false)
+            );
             const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
             return actor;
         });
         if (!this.actors.length) throw new Error('No actors found');
         return this.actors;
+    }
+
+    private fireWorkerError(worker: ActorTarget, summary: string, details?: string): void {
+        const url = getWorkerUrl(worker as Worker);
+        const location = url ? ` at ${url}` : '';
+        const message = `${summary}${location}.${details ? ` ${details}` : ''}`;
+        this.fire(new ErrorEvent(new Error(message)));
     }
 
     /**
@@ -72,6 +99,10 @@ export class Dispatcher {
         for (const actor of this.actors) {
             actor.remove();
         }
+        for (const subscription of this.workerErrorSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.workerErrorSubscriptions = [];
         this.actors = [];
         if (mapRemoved) this.workerPool.release(this.id);
     }

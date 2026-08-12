@@ -18,6 +18,19 @@ beforeEach(() => {
 
 describe('map events', () => {
 
+    test('worker script errors fire on the map', async () => {
+        const map = createMap();
+        await map.style.dispatcher.actorsPromise;
+        const errorPromise = map.once('error');
+
+        const worker = map.style.dispatcher.actors[0].target as Worker;
+        worker.dispatchEvent(new globalThis.ErrorEvent('error', {message: 'Script failed to load'}));
+
+        const {error} = await errorPromise;
+        expect(error.message).toContain('Failed to load or execute the MapLibre worker script');
+        map.remove();
+    });
+
     test('Map.on adds a non-delegated event listener', () => {
         const map = createMap();
         const spy = vi.fn(function (e) {

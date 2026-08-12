@@ -12,6 +12,12 @@ export interface WorkerGlobalScopeInterface {
     worker: MaplibreWorker;
 }
 
+const workerUrls = new WeakMap<Worker, string>();
+
+export function getWorkerUrl(worker: Worker): string | undefined {
+    return workerUrls.get(worker);
+}
+
 function isCrossOrigin(url: string): boolean {
     if (!url) return false;
     const loc = (globalThis as any).location;
@@ -32,15 +38,18 @@ function defaultWorkerUrl(): string {
     return new URL(`./${workerName}`, moduleUrl).href;
 }
 
-function createWorker(url: string, asModule: boolean): Worker {
+function createWorker(url: string, asModule: boolean, sourceUrl: string = url): Worker {
+    let worker: Worker | undefined;
     if (asModule) {
         try {
-            return new Worker(url, {type: 'module'});
+            worker = new Worker(url, {type: 'module'});
         } catch (e) {
             console.warn('Module worker not supported, falling back to classic worker', e);
         }
     }
-    return new Worker(url);
+    worker ||= new Worker(url);
+    workerUrls.set(worker, sourceUrl);
+    return worker;
 }
 
 async function fetchAsBlobUrl(url: string): Promise<string> {
@@ -69,7 +78,7 @@ export async function workerFactory(): Promise<Worker> {
     if (asModule) {
         const blobUrl = importAsBlobUrl(url);
         try {
-            return createWorker(blobUrl, asModule);
+            return createWorker(blobUrl, asModule, url);
         } finally {
             URL.revokeObjectURL(blobUrl);
         }
@@ -77,7 +86,7 @@ export async function workerFactory(): Promise<Worker> {
 
     const blobUrl = await fetchAsBlobUrl(url);
     try {
-        return createWorker(blobUrl, asModule);
+        return createWorker(blobUrl, asModule, url);
     } finally {
         URL.revokeObjectURL(blobUrl);
     }

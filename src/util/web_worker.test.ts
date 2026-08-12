@@ -1,6 +1,10 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
-import {workerFactory} from './web_worker.ts';
+import {getWorkerUrl, workerFactory} from './web_worker.ts';
 import {config} from './config.ts';
+
+function createWorkerStub() {
+    return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
+}
 
 describe('workerFactory', () => {
     const originalWorker = (globalThis as any).Worker;
@@ -17,17 +21,18 @@ describe('workerFactory', () => {
     });
 
     test('creates a module worker when WORKER_URL is empty', async () => {
-        const WorkerSpy = vi.fn();
+        const WorkerSpy = vi.fn(createWorkerStub);
         (globalThis as any).Worker = WorkerSpy;
 
-        await workerFactory();
+        const worker = await workerFactory();
 
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
         expect(WorkerSpy.mock.calls[0]).toEqual(['', {type: 'module'}]);
+        expect(getWorkerUrl(worker)).toBe('');
     });
 
     test('creates a classic worker when WORKER_URL ends with .cjs', async () => {
-        const WorkerSpy = vi.fn();
+        const WorkerSpy = vi.fn(createWorkerStub);
         (globalThis as any).Worker = WorkerSpy;
         config.WORKER_URL = '/path/to/worker.cjs';
 
@@ -38,7 +43,7 @@ describe('workerFactory', () => {
     });
 
     test('creates a module worker when WORKER_URL ends with .mjs', async () => {
-        const WorkerSpy = vi.fn();
+        const WorkerSpy = vi.fn(createWorkerStub);
         (globalThis as any).Worker = WorkerSpy;
         config.WORKER_URL = '/path/to/worker.mjs';
 
@@ -50,7 +55,8 @@ describe('workerFactory', () => {
 
     test('falls back to classic worker if module worker construction throws', async () => {
         const WorkerSpy = vi.fn()
-            .mockImplementationOnce(() => { throw new Error('module workers not supported'); });
+            .mockImplementationOnce(() => { throw new Error('module workers not supported'); })
+            .mockImplementation(createWorkerStub);
         (globalThis as any).Worker = WorkerSpy;
         config.WORKER_URL = '/path/to/worker.mjs';
 
@@ -68,9 +74,7 @@ describe('workerFactory', () => {
     });
 
     test('cross-origin module worker URL is converted to an import script and the worker is constructed from a Blob URL', async () => {
-        const WorkerSpy = vi.fn(function() {
-            return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
-        });
+        const WorkerSpy = vi.fn(createWorkerStub);
         (globalThis as any).Worker = WorkerSpy;
 
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -83,7 +87,7 @@ describe('workerFactory', () => {
 
         config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
 
-        await workerFactory();
+        const worker = await workerFactory();
 
         expect(fetchSpy).toHaveBeenCalledTimes(0);
         expect(BlobSpy).toHaveBeenCalledWith(['import "https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs"'], {type: 'text/javascript'});
@@ -91,12 +95,11 @@ describe('workerFactory', () => {
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
         expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc', {type: 'module'}]);
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+        expect(getWorkerUrl(worker)).toBe('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs');
     });
 
     test('cross-origin classic worker URL is fetched and the worker is constructed from a Blob URL', async () => {
-        const WorkerSpy = vi.fn(function() {
-            return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
-        });
+        const WorkerSpy = vi.fn(createWorkerStub);
         (globalThis as any).Worker = WorkerSpy;
 
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({

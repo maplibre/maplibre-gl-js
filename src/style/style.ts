@@ -242,6 +242,7 @@ export class Style extends Evented<MapEventType> {
 
         this.map = map;
         this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
+        this.dispatcher.setEventedParent(this);
         this.dispatcher.registerMessageHandler(MessageType.getGlyphs, (mapId, params) => {
             return this.getGlyphs(mapId, params);
         });

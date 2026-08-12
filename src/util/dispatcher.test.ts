@@ -71,4 +71,47 @@ describe('Dispatcher', () => {
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
     });
+
+    test('fires worker script errors and removes the listener on removal', async () => {
+        const worker = await workerFactory();
+        const workerPool = {
+            acquire() {
+                return Promise.resolve([worker]);
+            },
+            release() {}
+        } as any as WorkerPool;
+        const dispatcher = new Dispatcher(workerPool, 1);
+        await dispatcher.actorsPromise;
+        const listener = vi.fn();
+        dispatcher.on('error', listener);
+
+        worker.dispatchEvent(new globalThis.ErrorEvent('error', {message: 'Script failed to load'}));
+
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect(listener.mock.calls[0][0].error.message).toContain('Failed to load or execute the MapLibre worker script');
+        expect(listener.mock.calls[0][0].error.message).toContain('Script failed to load');
+
+        dispatcher.remove();
+        worker.dispatchEvent(new globalThis.ErrorEvent('error', {message: 'Another error'}));
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('fires worker message deserialization errors', async () => {
+        const worker = await workerFactory();
+        const workerPool = {
+            acquire() {
+                return Promise.resolve([worker]);
+            },
+            release() {}
+        } as any as WorkerPool;
+        const dispatcher = new Dispatcher(workerPool, 1);
+        await dispatcher.actorsPromise;
+        const errorPromise = dispatcher.once('error');
+
+        worker.dispatchEvent(new MessageEvent('messageerror'));
+
+        const {error} = await errorPromise;
+        expect(error.message).toContain('Failed to deserialize a message from the MapLibre worker script');
+        dispatcher.remove();
+    });
 });
