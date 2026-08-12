@@ -1,8 +1,10 @@
 import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax.ts';
 import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util.ts';
 import {config} from './config.ts';
-import {AbortError} from './abort_error.ts';
+import {AbortError, throwIfAborted} from './abort_error.ts';
 import {getProtocol} from '../source/protocol_crud.ts';
+
+import type {RequestManager, ResourceType} from './request_manager.ts';
 
 type ImageQueueThrottleControlCallback = () => boolean;
 
@@ -96,6 +98,32 @@ export namespace ImageRequest {
         }
         return false;
     };
+
+    /**
+     * Transform `url` through {@link RequestManager.transformRequest} and load the image.
+     * The transform may be async; if `abortController` aborts while it is pending, the
+     * request is never issued and the returned promise rejects with an `AbortError`.
+     * @param requestManager - The request manager whose transform to apply.
+     * @param url - The image URL, before transformation.
+     * @param resourceType - The resource type to pass to the transform.
+     * @param abortController - allows to abort the request.
+     * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @param imageBitmapOptions - Options for `createImageBitmap`. Pass `{colorSpaceConversion: 'none'}` for images
+     * whose pixels hold data rather than color, such as raster-DEM tiles, so the browser does not color manage them.
+     * @returns - A promise resolved when the image is loaded.
+     */
+    export async function transformAndGetImage(
+        requestManager: RequestManager,
+        url: string,
+        resourceType: ResourceType,
+        abortController: AbortController,
+        supportImageRefresh: boolean = true,
+        imageBitmapOptions?: ImageBitmapOptions
+    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> {
+        const requestParameters = await requestManager.transformRequest(url, resourceType);
+        throwIfAborted(abortController.signal);
+        return ImageRequest.getImage(requestParameters, abortController, supportImageRefresh, imageBitmapOptions);
+    }
 
     /**
      * Request to load an image.
