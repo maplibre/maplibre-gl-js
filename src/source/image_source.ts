@@ -191,8 +191,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
                 this._finishLoading();
             }
         } catch (err) {
-            // Whoever aborted this load owns `_request` and `_loaded` now; a load that ran
-            // on and cleared them would leave its successor uncancellable.
+            // In case of abort error, the aborter may have started a new request so we don't want to clear its abort controller.
             if (isAbortError(err)) return;
             this._request = null;
             this._loaded = true;
