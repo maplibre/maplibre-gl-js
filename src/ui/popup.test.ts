@@ -32,7 +32,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(popup.isOpen()).toBeTruthy();
-        expect(popup.getElement().classList.contains('maplibregl-popup')).toBeTruthy();
+        expect(popup.getElement().classList).toContain('maplibregl-popup');
     });
 
     test('Popup.addTo adds a .maplibregl-popup element', () => {
@@ -258,10 +258,10 @@ describe('popup', () => {
     test('Popup provides LngLat accessors', () => {
         expect(new Popup().getLngLat()).toBeUndefined();
 
-        expect(new Popup().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Popup().setLngLat([1, 2]).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Popup().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-        expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     });
@@ -382,7 +382,7 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top-left')).toBeTruthy();
+        expect(popup.getElement().classList).toContain('maplibregl-popup-anchor-top-left');
     });
 
     const cases =  [
@@ -413,7 +413,7 @@ describe('popup', () => {
             vi.spyOn(map, 'project').mockReturnValue(point);
             popup.setLngLat([0, 0]);
 
-            expect(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`)).toBeTruthy();
+            expect(popup.getElement().classList).toContain(`maplibregl-popup-anchor-${anchor}`);
         });
 
     const transformCases = cases.map(([anchor, _point, transform]) => [anchor, transform] as const);
@@ -449,7 +449,7 @@ describe('popup', () => {
         vi.spyOn(map, 'project').mockReturnValue(point);
         popup.setLngLat([0, 0]);
 
-        expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top')).toBeTruthy();
+        expect(popup.getElement().classList).toContain('maplibregl-popup-anchor-top');
     });
 
     test('Popup is offset via a PointLike offset option', () => {
@@ -563,22 +563,22 @@ describe('popup', () => {
             .addTo(map);
 
         const popupContainer = popup.getElement();
-        expect(popupContainer.classList.contains('some')).toBeTruthy();
-        expect(popupContainer.classList.contains('classes')).toBeTruthy();
+        expect(popupContainer.classList).toContain('some');
+        expect(popupContainer.classList).toContain('classes');
 
         const addClassNameMethodPopupInstance = popup.addClassName('addedClass');
-        expect(popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(popupContainer.classList).toContain('addedClass');
         expect(addClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         const removeClassNameMethodPopupInstance = popup.removeClassName('addedClass');
-        expect(!popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(popupContainer.classList).not.toContain('addedClass');
         expect(removeClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         popup.toggleClassName('toggle');
-        expect(popupContainer.classList.contains('toggle')).toBeTruthy();
+        expect(popupContainer.classList).toContain('toggle');
 
         popup.toggleClassName('toggle');
-        expect(!popupContainer.classList.contains('toggle')).toBeTruthy();
+        expect(popupContainer.classList).not.toContain('toggle');
 
         expect(() => popup.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => popup.removeClassName('should throw exception')).toThrow(window.DOMException);
@@ -1063,8 +1063,8 @@ describe('popup', () => {
                 .trackPointer()
                 .addTo(map);
 
-            expect(popup.getElement().classList.contains('maplibregl-popup-track-pointer')).toBeTruthy();
-            expect(map._canvasContainer.classList.contains('maplibregl-track-pointer')).toBeTruthy();
+            expect(popup.getElement().classList).toContain('maplibregl-popup-track-pointer');
+            expect(map._canvasContainer.classList).toContain('maplibregl-track-pointer');
 
             popup.remove();
         });

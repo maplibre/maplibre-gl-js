@@ -96,20 +96,20 @@ describe('marker', () => {
             .addTo(map);
 
         const markerElement = marker.getElement();
-        expect(markerElement.classList.contains('some')).toBeTruthy();
-        expect(markerElement.classList.contains('classes')).toBeTruthy();
+        expect(markerElement.classList).toContain('some');
+        expect(markerElement.classList).toContain('classes');
 
         marker.addClassName('addedClass');
-        expect(markerElement.classList.contains('addedClass')).toBeTruthy();
+        expect(markerElement.classList).toContain('addedClass');
 
         marker.removeClassName('addedClass');
-        expect(!markerElement.classList.contains('addedClass')).toBeTruthy();
+        expect(markerElement.classList).not.toContain('addedClass');
 
         marker.toggleClassName('toggle');
-        expect(markerElement.classList.contains('toggle')).toBeTruthy();
+        expect(markerElement.classList).toContain('toggle');
 
         marker.toggleClassName('toggle');
-        expect(!markerElement.classList.contains('toggle')).toBeTruthy();
+        expect(markerElement.classList).not.toContain('toggle');
 
         expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
@@ -123,19 +123,19 @@ describe('marker', () => {
     test('Marker provides LngLat accessors', () => {
         expect(new Marker().getLngLat()).toBeUndefined();
 
-        expect(new Marker().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Marker().setLngLat([1, 2]).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Marker().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-        expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Marker().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     });
 
     test('Marker provides offset accessors', () => {
-        expect(new Marker().setOffset([1, 2]).getOffset() instanceof Point).toBeTruthy();
+        expect(new Marker().setOffset([1, 2]).getOffset()).toBeInstanceOf(Point);
         expect(new Marker().setOffset([1, 2]).getOffset()).toEqual(new Point(1, 2));
 
-        expect(new Marker().setOffset(new Point(1, 2)).getOffset() instanceof Point).toBeTruthy();
+        expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toBeInstanceOf(Point);
         expect(new Marker().setOffset(new Point(1, 2)).getOffset()).toEqual(new Point(1, 2));
 
     });
@@ -343,7 +343,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-anchor-center')).toBeTruthy();
+        expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-center');
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,-50%\)/);
 
         map.remove();
@@ -355,7 +355,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-anchor-top')).toBeTruthy();
+        expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-top');
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,0\)/);
 
         map.remove();
@@ -407,51 +407,35 @@ describe('marker', () => {
         Object.defineProperty(marker.getPopup()._container, 'offsetHeight', {value: 100});
 
         // marker should default to above since it has enough space
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom');
 
         // move marker to the top forcing the popup to below
         marker.setLngLat(map.unproject([mapHeight / 2, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top');
 
         // move marker to the right forcing the popup to the left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight / 2]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-right');
 
         // move marker to the left forcing the popup to the right
         marker.setLngLat(map.unproject([markerRight, mapHeight / 2]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-left');
 
         // move marker to the top left forcing the popup to the bottom right
         marker.setLngLat(map.unproject([markerRight, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top-left');
 
         // move marker to the top right forcing the popup to the bottom left
         marker.setLngLat(map.unproject([mapHeight - markerRight, markerTop]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-top-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-top-right');
 
         // move marker to the bottom left forcing the popup to the top right
         marker.setLngLat(map.unproject([markerRight, mapHeight]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-left')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom-left');
 
         // move marker to the bottom right forcing the popup to the top left
         marker.setLngLat(map.unproject([mapHeight - markerRight, mapHeight]));
-        expect(
-            marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
-        ).toBeTruthy();
+        expect(marker.getPopup()._container.classList).toContain('maplibregl-popup-anchor-bottom-right');
 
         map.remove();
     });
@@ -825,6 +809,157 @@ describe('marker', () => {
         expect(Math.round(endPos.x)).toBe(startPos.x + 10);
         expect(Math.round(endPos.y)).toBe(startPos.y + 10);
 
+        map.remove();
+    });
+
+    test('Marker with draggable:true is keyboard-focusable, and stops being focusable when dragging is disabled', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('0');
+        marker.setDraggable(false);
+        expect(marker.getElement().hasAttribute('tabindex')).toBe(false);
+        map.remove();
+    });
+
+    test('Marker.setDraggable preserves an application-provided tabindex', () => {
+        const marker = new Marker();
+        marker.getElement().setAttribute('tabindex', '5');
+
+        marker.setDraggable(true);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker keeps a tabindex the application overrode after the marker managed it', () => {
+        const marker = new Marker({draggable: true});
+        marker.setDraggable(true);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('0');
+
+        marker.getElement().setAttribute('tabindex', '5');
+        marker.setDraggable(false);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker starts a fresh keyboard gesture after being removed mid-drag and re-added', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        const el = marker.getElement();
+        const dragstart = vi.fn();
+        marker.on('dragstart', dragstart);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        expect(dragstart).toHaveBeenCalledTimes(1);
+
+        // removed mid-gesture (no keyup), then re-added
+        marker.remove();
+        marker.addTo(map);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        expect(dragstart).toHaveBeenCalledTimes(2);
+        map.remove();
+    });
+
+    test('Marker keeps its tabindex while either dragging or a popup keeps it interactive', () => {
+        const marker = new Marker({draggable: true}).setPopup(new Popup());
+
+        marker.setPopup();
+        expect(marker.getElement().getAttribute('tabindex')).toBe('0');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().hasAttribute('tabindex')).toBe(false);
+    });
+
+    test('Marker with a custom element leaves focusability and keyboard handling to the application', () => {
+        const map = createMap();
+        const element = window.document.createElement('div');
+        const marker = new Marker({draggable: true, element}).setLngLat([0, 0]).addTo(map);
+        const startLngLat = marker.getLngLat();
+        const event = new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true});
+
+        element.dispatchEvent(event);
+
+        expect(element.hasAttribute('tabindex')).toBe(false);
+        expect(marker.getLngLat()).toEqual(startLngLat);
+        expect(event.defaultPrevented).toBe(false);
+        map.remove();
+    });
+
+    test('Marker with draggable:true moves with arrow keys and fires drag events', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        const el = marker.getElement();
+        const startPos = map.project(marker.getLngLat());
+        const events: string[] = [];
+        const positionsAtDragstart: Point[] = [];
+        marker.on('dragstart', () => {
+            events.push('dragstart');
+            positionsAtDragstart.push(map.project(marker.getLngLat()));
+        });
+        marker.on('drag', () => events.push('drag'));
+        marker.on('dragend', () => events.push('dragend'));
+
+        const ignoredEvent = new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true});
+        el.dispatchEvent(ignoredEvent);
+        expect(map.project(marker.getLngLat())).toEqual(startPos);
+        expect(ignoredEvent.defaultPrevented).toBe(false);
+
+        const nestedElement = window.document.createElement('button');
+        el.attachShadow({mode: 'open'}).appendChild(nestedElement);
+        const nestedEvent = new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, composed: true, cancelable: true});
+        nestedElement.dispatchEvent(nestedEvent);
+        expect(map.project(marker.getLngLat())).toEqual(startPos);
+        expect(nestedEvent.defaultPrevented).toBe(false);
+
+        const easeTo = vi.spyOn(map, 'easeTo');
+        const containerHandler = vi.fn();
+        map.getCanvasContainer().addEventListener('keydown', containerHandler);
+        const event = new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true});
+        el.dispatchEvent(event);
+
+        expect(map.project(marker.getLngLat()).x).toBeCloseTo(startPos.x + 1);
+        expect(map.project(marker.getLngLat()).y).toBeCloseTo(startPos.y);
+        expect(event.defaultPrevented).toBe(true);
+        expect(containerHandler).not.toHaveBeenCalled();
+        expect(easeTo).not.toHaveBeenCalled();
+        expect(events).toEqual(['dragstart', 'drag']);
+        expect(positionsAtDragstart[0].x).toBeCloseTo(startPos.x + 1);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', repeat: true, bubbles: true, cancelable: true}));
+        el.dispatchEvent(new KeyboardEvent('keyup', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        expect(events).toEqual(['dragstart', 'drag', 'drag', 'dragend']);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        el.dispatchEvent(new FocusEvent('blur'));
+        expect(events).toEqual(['dragstart', 'drag', 'drag', 'dragend', 'dragstart', 'drag', 'dragend']);
+
+        el.dispatchEvent(new KeyboardEvent('keyup', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        expect(events).toEqual(['dragstart', 'drag', 'drag', 'dragend', 'dragstart', 'drag', 'dragend']);
+        map.remove();
+    });
+
+    test('Marker with draggable:true moves ten pixels per Shift+arrow keydown', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        const startPos = map.project(marker.getLngLat());
+
+        marker.getElement().dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', shiftKey: true, bubbles: true, cancelable: true}));
+
+        const endPos = map.project(marker.getLngLat());
+        expect(endPos.x).toBeCloseTo(startPos.x);
+        expect(endPos.y).toBeCloseTo(startPos.y + 10);
+        map.remove();
+    });
+
+    test('Marker stops responding to arrow keys after dragging is disabled', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map).setDraggable(false);
+        const startLngLat = marker.getLngLat();
+
+        marker.getElement().dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+
+        expect(marker.getLngLat()).toEqual(startLngLat);
         map.remove();
     });
 
@@ -1352,7 +1487,7 @@ describe('marker', () => {
         map.fire('terrain');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1368,13 +1503,13 @@ describe('marker', () => {
         map.fire('terrain');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
         map.terrain.depthAtPoint = () => .95; // Terrain no longer blocking marker
         map.fire('moveend');
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1389,7 +1524,7 @@ describe('marker', () => {
         map.setProjection({type: 'globe'});
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
         map.remove();
     });
 
@@ -1404,12 +1539,12 @@ describe('marker', () => {
         map.setProjection({type: 'globe'});
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
         marker.setLngLat([0, 0]);
         await sleep(100);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-covered')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
         map.remove();
     });
 });

@@ -39,7 +39,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
-        painter.imageManager.bind(painter.context);
+        painter.patternAtlas.bind(painter.context);
     }
 
     const crossfade = layer.getCrossfadeParameters();

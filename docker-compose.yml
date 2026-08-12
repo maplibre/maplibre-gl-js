@@ -1,13 +1,13 @@
 services:
   docs:
-    image: zensical/zensical:0.0.52
+    image: zensical/zensical:0.0.53
     volumes:
       - .:/docs
     working_dir: /docs
     command: build --strict
 
   docs-serve:
-    image: zensical/zensical:0.0.52
+    image: zensical/zensical:0.0.53
     volumes:
       - .:/docs
     working_dir: /docs
@@ -21,7 +21,7 @@ services:
   # volume so the host tree (and any host-native builds) are left untouched.
   dev:
     # Node version should be kept in sync with .nvmrc.
-    image: node:26.5
+    image: node:26.7
     working_dir: /app
     volumes:
       - .:/app

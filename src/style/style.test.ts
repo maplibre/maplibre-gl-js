@@ -11,6 +11,7 @@ import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.
 import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
+import {ImageRequest} from '../util/image_request.ts';
 
 import {type EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -73,6 +74,7 @@ let mockConsoleError: MockInstance;
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
+    ImageRequest.resetRequestQueue();
     mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
@@ -375,7 +377,7 @@ describe('Style.loadJSON', () => {
         }));
 
         await style.once('style.load');
-        expect(style.tileManagers['mapLibre'] instanceof TileManager).toBeTruthy();
+        expect(style.tileManagers['mapLibre']).toBeInstanceOf(TileManager);
     });
 
     test('creates layers', async () => {
@@ -397,7 +399,7 @@ describe('Style.loadJSON', () => {
         });
 
         await style.once('style.load');
-        expect(style.getLayer('fill') instanceof StyleLayer).toBeTruthy();
+        expect(style.getLayer('fill')).toBeInstanceOf(StyleLayer);
     });
 
     test('transforms sprite json and image URLs before request', async () => {
@@ -1702,6 +1704,68 @@ describe('Style.setSprite', () => {
 
         const {error} = await errorPromise;
         expect(error.message).toBe('AJAXError: Not Found (404): https://example.com/sprite.json');
+    });
+});
+
+describe('Style._loadSprite', () => {
+    const FIRST_SPRITE_URL = 'http://example.com/sprite1';
+    const SECOND_SPRITE_URL = 'http://example.com/sprite2';
+
+    const spriteJSON = (...imageIds: string[]) => JSON.stringify(
+        Object.fromEntries(imageIds.map(id => [id, {width: 1, height: 1, x: 0, y: 0, pixelRatio: 1}]))
+    );
+
+    /** Loads a sprite through `setSprite` and resolves once it has been applied to the image manager */
+    function loadSprite(style: Style, url: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            style.setSprite(url, {}, (err) => err ? reject(err) : resolve());
+            sleep(0).then(() => server.respond());
+        });
+    }
+
+    async function createLoadedStyle(): Promise<Style> {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        return style;
+    }
+
+    beforeEach(() => {
+        vi.spyOn(browser, 'getImageData');
+        server.respondWith('GET', /sprite\d\.png$/, new ArrayBuffer(8) as any);
+        server.respondWith('GET', `${FIRST_SPRITE_URL}.json`, spriteJSON('sharedImage', 'firstSpriteOnlyImage'));
+        server.respondWith('GET', `${SECOND_SPRITE_URL}.json`, spriteJSON('sharedImage', 'secondSpriteOnlyImage'));
+    });
+
+    test('removes the images of the previous sprite that are absent from the new one', async () => {
+        const style = await createLoadedStyle();
+
+        await loadSprite(style, FIRST_SPRITE_URL);
+        expect(style.imageManager.listImages().sort()).toEqual(['firstSpriteOnlyImage', 'sharedImage']);
+
+        await loadSprite(style, SECOND_SPRITE_URL);
+        expect(style.imageManager.listImages().sort()).toEqual(['secondSpriteOnlyImage', 'sharedImage']);
+    });
+
+    test('leaves no image behind when the sprite is unset after having been replaced', async () => {
+        const style = await createLoadedStyle();
+        await loadSprite(style, FIRST_SPRITE_URL);
+        await loadSprite(style, SECOND_SPRITE_URL);
+
+        style.setSprite(undefined);
+
+        expect(style.imageManager.listImages()).toEqual([]);
+    });
+
+    test('only marks the images shared with the previous sprite as updated, so that returning to a sprite does not accumulate per-frame patching work', async () => {
+        const style = await createLoadedStyle();
+        await loadSprite(style, FIRST_SPRITE_URL);
+        const updateVersionAfterFirstLoad = style.imageManager.updateVersion;
+
+        await loadSprite(style, SECOND_SPRITE_URL);
+        await loadSprite(style, FIRST_SPRITE_URL);
+
+        expect(style.imageManager.updateVersion - updateVersionAfterFirstLoad).toBe(2);
     });
 });
 
