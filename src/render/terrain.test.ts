@@ -9,6 +9,8 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {GlobeTransform} from '../geo/projection/globe_transform.ts';
+import {raycastTerrainGlobe} from './terrain_raycast.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {DEMData} from '../data/dem_data.ts';
@@ -63,6 +65,35 @@ describe('Terrain', () => {
         expect(coordinate).not.toBeNull();
         expect(coordinate.x).toBeCloseTo(0.5, 10);
         expect(coordinate.y).toBeCloseTo(0.5, 10);
+    });
+
+    test('pointCoordinate uses the globe raycast during a globe transition', () => {
+        const terrain = createFlatTerrain();
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(2048, 512);
+        globeTransform.setZoom(1);
+        (terrain.painter as any).transform = globeTransform;
+        (terrain.painter as any).style = {projection: {transitionState: 1}};
+        const p = new Point(1100, 280);
+
+        const coordinate = terrain.pointCoordinate(p);
+        const expected = raycastTerrainGlobe(globeTransform, terrain, p);
+
+        expect(expected).not.toBeNull();
+        expect(coordinate).not.toBeNull();
+        expect(coordinate.x).toBeCloseTo(expected.x, 12);
+        expect(coordinate.y).toBeCloseTo(expected.y, 12);
+        expect(coordinate.z).toBeCloseTo(expected.z, 12);
+    });
+
+    test('depthAtPoint decodes the depth framebuffer readback', () => {
+        const terrain = createFlatTerrain();
+        vi.spyOn(terrain, 'getFramebuffer').mockReturnValue({framebuffer: null} as any);
+        vi.spyOn(terrain.painter.context.gl, 'readPixels').mockImplementation((_x, _y, _w, _h, _f, _t, rgba) => {
+            (rgba as Uint8Array).set([0, 0, 0, 128]);
+        });
+
+        expect(terrain.depthAtPoint(new Point(10, 20))).toBeCloseTo(0.5, 10);
     });
 
     test('pointCoordinate returns null when nothing is rendered', () => {

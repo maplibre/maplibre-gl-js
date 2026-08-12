@@ -295,6 +295,13 @@ describe('raycastTerrainGlobe', () => {
         expect(raycastTerrainGlobe(transform, terrain, new Point(256, 256))).toBeNull();
     });
 
+    test('returns null for a ray that hits the planet outside the renderable tiles', () => {
+        const terrain = createTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], createDEM(() => 0));
+        const transform = createGlobeTransform(new LngLat(90, -45), 1);
+
+        expect(raycastTerrainGlobe(transform, terrain, new Point(256, 256))).toBeNull();
+    });
+
     test('hits a renderable tile whose DEM has not loaded at elevation zero', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], null);
         const transform = createGlobeTransform(new LngLat(0, 0), 1);
