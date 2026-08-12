@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
-import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, quaternionSetLocationAtPoint} from './globe_utils.ts';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, versorSetLocationAtPoint} from './globe_utils.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
@@ -645,7 +645,7 @@ describe('GlobeTransform', () => {
         expect(globeTransform.center.lat).toBeCloseTo(originalLat, 10);
     });
 
-    describe('quaternionSetLocationAtPoint', () => {
+    describe('versorSetLocationAtPoint', () => {
         const precisionDigits = 4;
         const globeTransform = createGlobeTransform();
         globeTransform.setZoom(1);
@@ -657,7 +657,7 @@ describe('GlobeTransform', () => {
         test('round-trip accuracy', () => {
             coords = new LngLat(20, 30);
             point = new Point(280, 200);
-            quaternionSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point);
             unprojected = globeTransform.screenPointToLocation(point);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
@@ -666,7 +666,7 @@ describe('GlobeTransform', () => {
         test('round-trip accuracy at center', () => {
             coords = new LngLat(10, 15);
             point = new Point(320, 240);
-            quaternionSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point);
             unprojected = globeTransform.screenPointToLocation(point);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
@@ -676,7 +676,7 @@ describe('GlobeTransform', () => {
             globeTransform.setCenter(new LngLat(0, 80));
             coords = new LngLat(10, 85);
             point = new Point(300, 230);
-            quaternionSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point);
             expect(isNaN(globeTransform.center.lng)).toBe(false);
             expect(isNaN(globeTransform.center.lat)).toBe(false);
             expect(isNaN(globeTransform.bearing)).toBe(false);
@@ -686,7 +686,7 @@ describe('GlobeTransform', () => {
             const centerBefore = globeTransform.center;
             point = new Point(320, 240);
             coords = globeTransform.screenPointToLocation(point);
-            quaternionSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point);
             expect(globeTransform.center.lng).toBeCloseTo(centerBefore.lng, precisionDigits);
             expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
         });
@@ -695,7 +695,7 @@ describe('GlobeTransform', () => {
             const bearingBefore = globeTransform.bearing;
             coords = new LngLat(20, 30);
             point = new Point(250, 180);
-            quaternionSetLocationAtPoint(globeTransform, coords, point);
+            versorSetLocationAtPoint(globeTransform, coords, point);
             expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
         });
 
@@ -710,7 +710,7 @@ describe('GlobeTransform', () => {
             point = new Point(620, 240);
             expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
             coords = freshTransform.screenPointToLocation(point);
-            quaternionSetLocationAtPoint(freshTransform, coords, point);
+            versorSetLocationAtPoint(freshTransform, coords, point);
             expect(freshTransform.center.lng).toBe(lngBefore);
             expect(freshTransform.center.lat).toBe(latBefore);
             expect(freshTransform.bearing).toBe(bearingBefore);
@@ -726,7 +726,7 @@ describe('GlobeTransform', () => {
             point = new Point(620, 240);
             expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
             coords = freshTransform.screenPointToLocation(point);
-            quaternionSetLocationAtPoint(freshTransform, coords, point, true, new Point(20, 0));
+            versorSetLocationAtPoint(freshTransform, coords, point, true, new Point(20, 0));
             expect(freshTransform.center.lng).not.toBe(lngBefore);
             expect(isNaN(freshTransform.center.lng)).toBe(false);
             expect(isNaN(freshTransform.center.lat)).toBe(false);
@@ -745,7 +745,7 @@ describe('GlobeTransform', () => {
             const panDelta = new Point(0, 8); // tangential, so it sweeps around the pole
             const lngBefore = tr.center.lng;
             const location = tr.screenPointToLocation(cursor.sub(panDelta));
-            quaternionSetLocationAtPoint(tr, location, cursor, true, panDelta);
+            versorSetLocationAtPoint(tr, location, cursor, true, panDelta);
             expect(Math.abs(differenceOfAnglesDegrees(lngBefore, tr.center.lng))).toBeGreaterThan(1);
         });
 
@@ -757,7 +757,7 @@ describe('GlobeTransform', () => {
                 tr.setCenter(new LngLat(0, 0));
                 const panDelta = new Point(20, 0);
                 const location = tr.screenPointToLocation(screenPoint.sub(panDelta));
-                quaternionSetLocationAtPoint(tr, location, screenPoint, true, panDelta);
+                versorSetLocationAtPoint(tr, location, screenPoint, true, panDelta);
                 return Math.abs(differenceOfAnglesDegrees(0, tr.center.lng));
             };
             const onGlobe = new Point(340, 240);

@@ -217,9 +217,10 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
 }
 
 /**
- * Rotates the globe so that the given location appears at the given screen point, using a
- * quaternion rotation. Unlike the bearing-preserving {@link ITransform.setLocationAtPoint}, this
- * stays smooth near and across the poles, and keeps panning once the cursor leaves the globe.
+ * Rotates the globe so that the given location appears at the given screen point, by composing
+ * versors, the unit quaternions that represent rotations. Unlike the bearing-preserving
+ * {@link ITransform.setLocationAtPoint}, this stays smooth near and across the poles, and keeps
+ * panning once the cursor leaves the globe.
  *
  * Note: the delta rotation's axis is in the surface-vector frame of
  * {@link angularCoordinatesToSurfaceVector}, while the orientation quaternion uses the Euler frame
@@ -233,7 +234,7 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
  * @param panDelta - The drag's pixel delta. Used to re-derive the previous cursor location through
  * {@link panSurfaceLocation}, since both ends of the rotation must come from the same mapping.
  */
-export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
+export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
     const pointLngLat = panSurfaceLocation(tr, point);
     let sourceLngLat = lnglat;
     if (panDelta) {
