@@ -185,10 +185,10 @@ export class TileManager extends Evented<SourceEventType> {
         if (this.transform) this.update(this.transform, this.terrain);
     }
 
-    async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
+    async _loadTile(tile: Tile, id: string, state: TileState, hadData: boolean): Promise<void> {
         try {
             const result = await this._source.loadTile(tile) as LoadTileResult;
-            this._tileLoaded(tile, id, state, result);
+            this._tileLoaded(tile, id, state, hadData, result);
         } catch (err) {
             tile.state = 'errored';
 
@@ -287,6 +287,8 @@ export class TileManager extends Evented<SourceEventType> {
         // - hard to tell without repro steps
         if (!tile) return;
 
+        const hadData = tile.hasData();
+
         // The difference between "loading" tiles and "reloading" or "expired"
         // tiles is that "reloading"/"expired" tiles are "renderable".
         // Therefore, a "loading" tile cannot become a "reloading" tile without
@@ -294,14 +296,17 @@ export class TileManager extends Evented<SourceEventType> {
         if (tile.state !== 'loading') {
             tile.state = state;
         }
-        await this._loadTile(tile, id, state);
+        await this._loadTile(tile, id, state, hadData);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState, result: LoadTileResult): void {
-        tile.timeAdded = now();
-        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
-        if (tile.selfFading) {
-            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, hadData: boolean, result: LoadTileResult): void {
+        // If the tile was already showing do not restart its fade-in animation
+        if (!hadData) {
+            tile.timeAdded = now();
+            // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
+            if (tile.selfFading) {
+                tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+            }
         }
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
@@ -708,7 +713,7 @@ export class TileManager extends Evented<SourceEventType> {
 
         if (!tile) {
             tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
-            this._loadTile(tile, tileID.key, tile.state);
+            this._loadTile(tile, tileID.key, tile.state, false);
         }
 
         tile.uses++;

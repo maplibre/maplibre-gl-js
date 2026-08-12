@@ -8,6 +8,7 @@
 - Fix a permanent frame rate degradation after switching styles: every sprite reload marked its images as updated forever, making every in-view tile re-check and re-upload them on every frame. Also stop leaking the images of a replaced sprite, which were never removed from the image manager ([#8052](https://github.com/maplibre/maplibre-gl-js/issues/8052)) (by [@HarelM](https://github.com/HarelM))
 - Prevent a rejected missing style image resolver from blocking successfully resolved images in the same batch ([#8146](https://github.com/maplibre/maplibre-gl-js/pull/8146/)) (by @birkskyum)
 - Explicitly request no browser color management when decoding raster-DEM tiles so their RGB-encoded elevation values are not changed (what would otherwise happen with `gfx.color_management.mode = 1` in Firefox) ([#8125](https://github.com/maplibre/maplibre-gl-js/pull/8125)) (by [@tnikkel](https://github.com/tnikkel))
+- Fix raster tiles fading in again when they are reloaded, briefly flashing the map background, most visibly when switching projection ([#8106](https://github.com/maplibre/maplibre-gl-js/pull/8106)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
 ## 6.3.0
