@@ -130,22 +130,13 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
 
 /**
  * How much of the angle between the view axis and the horizon is given over to easing off, measured
- * inward from the horizon, so the handover sits at `1 - this` of that angle. It happens a little
- * before the silhouette rather than at it, which is what lets the two curves meet in slope as well
- * as position. Only the outermost sliver of the globe is affected, where a pixel is already worth
- * degrees of arc.
+ * inward from the horizon. Only the outermost sliver of the globe is affected, where a pixel is
+ * already worth degrees of arc.
  *
- * This is the one number here open to taste, and it sets two things at once. Narrowing it keeps
- * the drag exact over more of the globe, and, because the slope of the exact curve steepens
- * towards tangency, it also hands over at a higher rate and so eases off faster. The two cannot be
- * moved apart: the falloff rate is not free, it is whatever the exact curve is doing where the
- * hyperbola picks it up.
- *
- * Bell's trackball hands over at `1/sqrt(2)` of the ball radius, the outer 29% or so, which his
- * geometry forces rather than chooses: a hyperbola of the form `k/d` can meet a sphere in both
- * value and slope at exactly one radius. Fitting the hyperbola to a slope computed on the spot
- * instead leaves the handover free, so this one can be narrower and keep dragging on the globe
- * exact almost everywhere.
+ * This is the one number here open to taste, and it sets two things at once: narrowing it keeps the
+ * drag exact over more of the globe, and, since the exact curve steepens towards tangency, hands
+ * over at a higher rate too. Bell has no such freedom, as a hyperbola of the fixed form `k/d` meets
+ * a sphere in both value and slope at exactly one radius.
  */
 const PAN_FALLOFF_BAND = 0.1;
 
@@ -162,16 +153,16 @@ const PAN_MAX_ANGLE = Math.PI * 0.98;
 /**
  * Returns the point on the globe that a drag towards `point` should aim at.
  *
- * A ray at angle `a` off the view axis meets the globe at `asin(D sin a) - a`, whose slope runs
- * away to infinity as the ray goes tangent, and past the silhouette there is no intersection at
- * all. So the exact curve is left a band of {@link PAN_FALLOFF_BAND} before tangency and continued
- * with a hyperbola matching it in value and slope, decelerating and saturating short of the far
- * side. This follows Bell's virtual trackball, from SGI's `trackball.c`, described in Henriksen,
- * Sporring and Hornbæk, "Virtual Trackballs Revisited", IEEE TVCG 10(2):206-216, 2004,
- * doi:10.1109/TVCG.2004.1260772.
+ * Exact tracking breaks down at the silhouette: the ray meets the globe at `asin(D sin a) - a`,
+ * whose slope runs away to infinity as the ray goes tangent, and past it there is no intersection
+ * at all. So the exact curve is left {@link PAN_FALLOFF_BAND} early and continued with a hyperbola
+ * matching it in value and slope, easing off and saturating short of the far side. Bell's virtual
+ * trackball takes the same idea of easing a sphere into a hyperbola before the rim, though it fits
+ * the curve differently: SGI's `trackball.c`, described in Henriksen, Sporring and Hornbæk,
+ * "Virtual Trackballs Revisited", IEEE TVCG 10(2):206-216, 2004.
  *
- * The angle is taken with atan2, so a ray pointing away from the globe is just a wide angle that
- * the falloff saturates, rather than a case this has to reject.
+ * The angle comes from atan2, so a ray pointing away from the globe is a wide angle the falloff
+ * saturates rather than a case to reject.
  * @param tr - The transform being dragged.
  * @param point - The cursor position.
  */
