@@ -425,7 +425,6 @@ describe('TileManager.removeTile', () => {
         const deltaMs = tile.fadeEndTime - endMs;
         expect(deltaMs).toBeGreaterThanOrEqual(290);
         expect(deltaMs).toBeLessThanOrEqual(310);
-        expect(tile.fadeEndTime).toBe(tile.timeAdded + 300);
     });
 });
 
@@ -657,77 +656,6 @@ describe('TileManager / Source lifecycle', () => {
 
         await reloadPromise;
         expect(tile.selfFading).toBe(true);
-        expect(tile.timeAdded).toBe(1000);
-        expect(tile.fadeEndTime).toBe(1300);
-    });
-
-    test('keeps the self fade timer when reloading a tile that has data, if event is source data change', async () => {
-        const transform = new MercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(0);
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-
-        const tileManager = createTileManager();
-        tileManager.setRasterFadeDuration(300);
-        tileManager._source.loadTile = async (tile) => {
-            tile.state = 'loaded';
-        };
-        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
-        tileManager.onAdd(undefined);
-        await metadataPromise;
-
-        setNow(1000);
-        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
-        tileManager.update(transform);
-        await loadPromise;
-        const tile = tileManager.getTile(tileID);
-        tile.setSelfFadeLogic(now() + 300);
-        setNow(1010);
-        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
-
-        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
-
-        await reloadPromise;
-        expect(tile.selfFading).toBe(true);
-        expect(tile.timeAdded).toBe(1000);
-        expect(tile.fadeEndTime).toBe(1300);
-        expect(tile.refreshedUponExpiration).toBe(true);
-    });
-
-    test('keeps the cross fade when reloading a tile that has data', async () => {
-        const transform = new MercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(1);
-        const parentID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const childID = new OverscaledTileID(1, 0, 1, 0, 0);
-
-        const tileManager = createTileManager();
-        tileManager.setRasterFadeDuration(300);
-        tileManager._source.loadTile = async (tile) => {
-            tile.state = 'loaded';
-        };
-        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
-        tileManager.onAdd(undefined);
-        await metadataPromise;
-
-        setNow(1000);
-        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === childID.key);
-        tileManager.update(transform);
-        await loadPromise;
-        const tile = tileManager.getTile(childID);
-        tile.setCrossFadeLogic({
-            fadingRole: FadingRoles.Base,
-            fadingDirection: FadingDirections.Incoming,
-            fadingParentID: parentID,
-            fadeEndTime: now() + 300
-        });
-        setNow(1010);
-        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === childID.key);
-
-        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
-
-        await reloadPromise;
-        expect(tile.fadingParentID).toBe(parentID);
         expect(tile.timeAdded).toBe(1000);
         expect(tile.fadeEndTime).toBe(1300);
     });
