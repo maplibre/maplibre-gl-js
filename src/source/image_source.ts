@@ -177,10 +177,9 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
 
         this.url = this.options.url;
 
-        const request = await this.map._requestManager.transformRequest(this.url, ResourceType.Image);
         this._request = new AbortController();
         try {
-            const image = await ImageRequest.getImage(request, this._request);
+            const image = await ImageRequest.transformAndGetImage(this.map._requestManager, this.url, ResourceType.Image, this._request);
             this._request = null;
             this._loaded = true;
 
@@ -192,11 +191,12 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
                 this._finishLoading();
             }
         } catch (err) {
+            // Whoever aborted this load owns `_request` and `_loaded` now; a load that ran
+            // on and cleared them would leave its successor uncancellable.
+            if (isAbortError(err)) return;
             this._request = null;
             this._loaded = true;
-            if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(ensureError(err)));
-            }
+            this.fire(new ErrorEvent(ensureError(err)));
         }
     }
 
