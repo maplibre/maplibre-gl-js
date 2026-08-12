@@ -501,7 +501,7 @@ describe('ImageSource', () => {
             map.on('error', () => {});
             source = createSource({url: '/image.png', eventedParent: map});
             // onAdd starts the initial load synchronously up to its first await, so
-            // this._request is set and transformRequest is called once. Clear that call
+            // this._abortController is set and transformRequest is called once. Clear that call
             // so tests can assert the image path issues no further request.
             source.onAdd(map);
             transformRequest.mockClear();
@@ -534,7 +534,7 @@ describe('ImageSource', () => {
         });
 
         test('cancels a pending request', () => {
-            const spy = vi.spyOn(source._request, 'abort');
+            const spy = vi.spyOn(source._abortController, 'abort');
             source.updateImage({image: new ImageBitmap()});
             expect(spy).toHaveBeenCalled();
         });
