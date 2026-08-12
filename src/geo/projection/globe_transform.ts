@@ -450,7 +450,7 @@ export class GlobeTransform implements ITransform {
     }
 
     getRaySegmentFromPixel(p: Point): RaySegment {
-        return this._mercatorTransform.getRaySegmentFromPixel(p);
+        return this.currentTransform.getRaySegmentFromPixel(p);
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {

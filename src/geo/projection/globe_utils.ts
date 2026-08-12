@@ -464,6 +464,9 @@ export type RaySphereIntersection = {
  * or null if no intersection occurs.
  * The intersections are encoded as the parameter for parametric ray equation,
  * with `tMin` being the first intersection and `tMax` being the second.
+ * The quadratic is solved as suggested in Ray Tracing Gems, chapter 7, since the
+ * schoolbook approach leads to floating point precision issues:
+ * https://www.realtimerendering.com/raytracinggems/rtg/index.html
  * @param origin - The ray origin.
  * @param direction - The normalized ray direction.
  * @param radius - The sphere radius, defaults to the unit sphere of the planet.
@@ -472,10 +475,6 @@ export function raySphereIntersection(origin: vec3, direction: vec3, radius: num
     const originDotDirection = vec3.dot(origin, direction);
     const radiusSquared = radius * radius;
 
-    // Ray-sphere intersection involves a quadratic equation.
-    // However solving it in the traditional schoolbook way leads to floating point precision issues.
-    // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
-    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
     const inner = createVec3f64();
     const scaledDir = createVec3f64();
     vec3.scale(scaledDir, direction, originDotDirection);
