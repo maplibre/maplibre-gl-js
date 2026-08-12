@@ -18,6 +18,20 @@ import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
 
+/**
+ * Fallback timeout for a single render test, used when the test does not set `metadata.test.timeout`.
+ * It is generous on purpose: the heavier tests (mostly terrain) take ~15-20 seconds on the CI Windows
+ * runners, where software rendering makes the run times vary by a factor of two or three.
+ */
+const DEFAULT_TEST_TIMEOUT = 60000;
+
+/**
+ * Timeout for the `beforeAll` and `afterAll` hooks, which launch and tear down the browser, the test
+ * servers and the coverage reporting. Vitest defaults to 10 seconds, which is not enough on the CI
+ * Windows runners.
+ */
+const HOOK_TIMEOUT = 60000;
+
 type TestData = {
     id: string;
     width: number;
@@ -31,6 +45,10 @@ type TestData = {
     threshold: number;
     ok: boolean;
     difference: number;
+    /**
+     * Timeout of a single test in milliseconds, only needed to deviate from the default
+     * @defaultValue 60000
+     */
     timeout: number;
     addFakeCanvas: {
         id: string;
@@ -853,8 +871,9 @@ describe('Render tests', () => {
     const directory = path.join(__dirname);
     let testStyles = getTestStyles(directory);
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
-        const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
-        testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
+        const splitCount = +process.env.SPLIT_COUNT;
+        const currentSplitIndex = +process.env.CURRENT_SPLIT_INDEX;
+        testStyles = testStyles.filter((_, index) => index % splitCount === currentSplitIndex);
     }
 
     beforeAll(async () => {
@@ -865,7 +884,7 @@ describe('Render tests', () => {
         workers = await startCoverage(page);
         await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
         await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
-    }, 30000);
+    }, HOOK_TIMEOUT);
 
     beforeEach((ctx) => {
         if (ctx.task.result?.retryCount > 0) {
@@ -887,10 +906,10 @@ describe('Render tests', () => {
         server.close();
         mvtServer.close();
         await browser.close();
-    });
+    }, HOOK_TIMEOUT);
 
     for (const style of testStyles) {
-        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || 40000}, async () => {
+        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async () => {
             const serverPort = (server.address() as any).port;
             localizeURLs(style, serverPort, path.join(__dirname, '../'));
             const data = await getImageFromStyle(style, page);

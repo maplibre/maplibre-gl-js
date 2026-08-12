@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper.ts';
@@ -152,19 +152,20 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat): void {
+    /**
+     * Pans the globe by rotating it with a single quaternion that brings the grabbed location back
+     * under the cursor. This stays consistent near and across the poles, where the previous
+     * bearing-preserving mapping inverted and stalled (#5296).
+     * @param deltas - The deltas accumulated for this frame.
+     * @param tr - The transform to pan.
+     * @param preZoomAroundLoc - The location that was under the cursor before this frame.
+     */
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        // These are actually very similar to mercator controls, and should converge to them at high zooms.
-        // We avoid using the "grab a place and move it around" approach from mercator here,
-        // since it is not a very pleasant way to pan a globe.
-        const oldLat = tr.center.lat;
-        const oldZoom = tr.zoom;
-        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
-        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        versorSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, deltas.panDelta);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {

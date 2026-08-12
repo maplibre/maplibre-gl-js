@@ -206,11 +206,12 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const premultiply = this._premultiplyAlpha;
         const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(
-                request,
+            const response = await ImageRequest.transformAndGetImage(
+                this.map._requestManager,
+                url,
+                ResourceType.Tile,
                 tile.abortController,
                 this.map._refreshExpiredTiles,
                 imageBitmapOptions

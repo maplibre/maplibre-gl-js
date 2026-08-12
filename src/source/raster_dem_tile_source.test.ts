@@ -317,6 +317,34 @@ describe('RasterDEMTileSource', () => {
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('does not request a tile that was aborted while its request was being transformed', async () => {
+        let releaseTransform: (params: {url: string}) => void;
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, (url, type) => {
+            if (type !== 'Tile') return {url};
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const loadPromise = source.loadTile(tile);
+        tile.aborted = true;
+        await source.abortTile(tile);
+        releaseTransform({url: 'http://example.com/10/5/5.png'});
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        expect(server.requests).toHaveLength(0);
+        expect(tile.state).toBe('unloaded');
+    });
+
     test('does not throw when tile is aborted', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
