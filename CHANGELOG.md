@@ -6,7 +6,7 @@
 ### 🐞 Bug fixes
 - Prevent a rejected missing style image resolver from blocking successfully resolved images in the same batch ([#8146](https://github.com/maplibre/maplibre-gl-js/pull/8146/)) (by @birkskyum)
 - Explicitly request no browser color management when decoding raster-DEM tiles so their RGB-encoded elevation values are not changed (what would otherwise happen with `gfx.color_management.mode = 1` in Firefox) ([#8125](https://github.com/maplibre/maplibre-gl-js/pull/8125)) (by [@tnikkel](https://github.com/tnikkel))
-- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
+- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. Panning also eases off as the cursor approaches the edge of the globe and continues past it, instead of stopping. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
 - _...Add new stuff here..._
 
 ## 6.3.0
