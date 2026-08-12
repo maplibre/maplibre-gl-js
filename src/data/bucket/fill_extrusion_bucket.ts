@@ -4,7 +4,7 @@ import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_
 import {type Segment, SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../index_array_type.ts';
-import {EXTENT} from '../extent.ts';
+import {isBoundaryEdge, isEntirelyOutside} from '../extent_bounds.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
@@ -335,15 +335,3 @@ function accumulatePointsToCentroid(centroid: CentroidAccumulator, geometry: Poi
 }
 
 register('FillExtrusionBucket', FillExtrusionBucket, {omit: ['layers', 'features']});
-
-function isBoundaryEdge(p1, p2) {
-    return (p1.x === p2.x && (p1.x < 0 || p1.x > EXTENT)) ||
-        (p1.y === p2.y && (p1.y < 0 || p1.y > EXTENT));
-}
-
-function isEntirelyOutside(ring) {
-    return ring.every(p => p.x < 0) ||
-        ring.every(p => p.x > EXTENT) ||
-        ring.every(p => p.y < 0) ||
-        ring.every(p => p.y > EXTENT);
-}
