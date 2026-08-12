@@ -8,15 +8,24 @@ import type {EaseToOptions} from './camera.ts';
 import {HandlerInertia} from './handler_inertia.ts';
 
 type PanGesture = {
-    // Pixels panned in each recorded frame, oldest first. `null` records a frame without any
-    // delta, which is what a terrain gesture does while the camera is not moving.
+    /**
+     * The pixels panned in each recorded frame, oldest first. `null` records a frame without
+     * any delta, which is what a terrain gesture does while the camera is not moving.
+     */
     frames: Array<number | null>;
+    /**
+     * The milliseconds between the recorded frames.
+     */
     frameTime?: number;
-    // Milliseconds the gesture is held still between the last recorded frame and the release.
+    /**
+     * The milliseconds the gesture is held still between the last recorded frame and the release.
+     */
     holdTime?: number;
 };
 
-// Records a horizontal pan gesture and returns the inertial ease it produces, if any.
+/**
+ * Records a horizontal pan gesture and returns the inertial ease it produces, if any.
+ */
 function panAndRelease(inertia: HandlerInertia, {frames, frameTime = 16, holdTime = 0}: PanGesture) {
     let time = 1000;
     setNow(time);
@@ -28,7 +37,9 @@ function panAndRelease(inertia: HandlerInertia, {frames, frameTime = 16, holdTim
     return inertia._onMoveEnd();
 }
 
-// The horizontal distance the map keeps panning after the gesture ended.
+/**
+ * Returns the horizontal distance the map keeps panning after the gesture ended.
+ */
 function panOnDistance(ease: EaseToOptions) {
     return (ease.offset as Point).x;
 }

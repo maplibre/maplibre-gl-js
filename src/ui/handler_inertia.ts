@@ -3,6 +3,7 @@ import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {DragPanOptions} from './handler/shim/drag_pan.ts';
+import type {HandlerResult} from './handler_manager.ts';
 import type {EaseToOptions} from './camera.ts';
 import type {Map} from './map.ts';
 
@@ -43,12 +44,19 @@ export type InertiaOptions = {
     maxSpeed: number;
 };
 
-const bufferCutoff = 160;   //msec
-const velocityWindow = 60;  //msec
+/**
+ * The maximum age of a recorded gesture update, in milliseconds.
+ */
+const BUFFER_CUTOFF = 160;
+
+/**
+ * The time window the gesture velocity is measured over, in milliseconds.
+ */
+const VELOCITY_WINDOW = 60;
 
 type InertiaBufferEntry = {
     time: number;
-    settings: any;
+    settings: HandlerResult;
 };
 
 export class HandlerInertia {
@@ -64,7 +72,7 @@ export class HandlerInertia {
         this._inertiaBuffer = [];
     }
 
-    record(settings: any): void {
+    record(settings: HandlerResult): void {
         this._drainInertiaBuffer();
         this._inertiaBuffer.push({time: now(), settings});
     }
@@ -73,15 +81,18 @@ export class HandlerInertia {
         const inertia = this._inertiaBuffer,
             currentTime = now();
 
-        while (inertia.length > 0 && currentTime - inertia[0].time > bufferCutoff)
+        while (inertia.length > 0 && currentTime - inertia[0].time > BUFFER_CUTOFF)
             inertia.shift();
     }
 
-    // Everything recorded within velocityWindow before now, but never fewer than the last
-    // two entries, so that inertia also works below two recorded updates per window.
+    /**
+     * Returns the entries the velocity is measured from: everything recorded within
+     * {@link VELOCITY_WINDOW} before now, but never fewer than the last two, so that
+     * inertia also works below two recorded updates per window.
+     */
     _getVelocityEntries(): InertiaBufferEntry[] {
         const inertia = this._inertiaBuffer;
-        const windowStart = now() - velocityWindow;
+        const windowStart = now() - VELOCITY_WINDOW;
 
         let firstIndex = Math.max(0, inertia.length - 2);
         while (firstIndex > 0 && inertia[firstIndex - 1].time >= windowStart) {
@@ -91,6 +102,19 @@ export class HandlerInertia {
         return inertia.slice(firstIndex);
     }
 
+    /**
+     * Returns the ease which continues the gesture that has just ended.
+     *
+     * The velocity is measured over the time up to the release and not up to the last
+     * recorded movement, so that a gesture held still before being released has a lower
+     * velocity, down to no inertia at all. The delta of an entry happened before it was
+     * recorded, so the first entry only marks the start of the measured interval; anchors
+     * are the exception, as they describe the state at the moment of their entry.
+     *
+     * @param panInertiaOptions - overrides for the pan inertia defaults
+     * @returns the ease options, or `undefined` when the measured interval holds no
+     * movement, which terrain gestures produce by recording updates without any delta
+     */
     _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
         this._drainInertiaBuffer();
         const entries = this._getVelocityEntries();
@@ -109,14 +133,11 @@ export class HandlerInertia {
             around: undefined
         };
 
-        // Unlike a delta, an anchor describes the state at the moment of its entry.
         for (const {settings} of entries) {
             if (settings.around) deltas.around = settings.around;
             if (settings.pinchAround) deltas.pinchAround = settings.pinchAround;
         }
 
-        // The delta of an entry happened before it was recorded, so the first entry only
-        // marks the start of the measured interval.
         for (const {settings} of entries.slice(1)) {
             deltas.zoom += settings.zoomDelta || 0;
             deltas.bearing += settings.bearingDelta || 0;
@@ -125,14 +146,11 @@ export class HandlerInertia {
             if (settings.panDelta) deltas.pan._add(settings.panDelta);
         }
 
-        // Terrain gestures record entries without any delta, which would ease nowhere.
         if (!deltas.pan.mag() && !deltas.zoom && !deltas.bearing && !deltas.pitch && !deltas.roll) {
             this.clear();
             return;
         }
 
-        // Up to the release and not up to the last recorded movement, so that a gesture held
-        // still before being released has a lower velocity.
         const duration = now() - entries[0].time;
 
         const easeOptions = {} as any;
