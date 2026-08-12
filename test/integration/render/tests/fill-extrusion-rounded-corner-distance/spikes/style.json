@@ -1,0 +1,68 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "allowed": 0.001,
+      "description": "Corner arcs must land on the tile grid. A real building whose courtyard runs diagonally to the grid used to be triangulated into spikes, because the triangulator snaps and merges vertices that are not on the grid. See https://github.com/maplibre/maplibre-gl-js/issues/8153"
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "maxzoom": 14,
+      "tolerance": 0,
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.9991373, 40.7298849],
+              [-73.9991319, 40.729893],
+              [-73.9989924, 40.729828],
+              [-73.9993948, 40.7293524],
+              [-73.9999795, 40.729641],
+              [-73.9996308, 40.7300556],
+              [-73.9991373, 40.7298849]
+            ],
+            [
+              [-73.9993358, 40.7297223],
+              [-73.9991963, 40.7298808],
+              [-73.9994323, 40.7299946],
+              [-73.9995664, 40.7298361],
+              [-73.9993358, 40.7297223]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "pitch": 30,
+  "bearing": 0,
+  "zoom": 18,
+  "center": [-73.999486, 40.729704],
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "layout": {
+        "fill-extrusion-rounded-corner-distance": 1
+      },
+      "paint": {
+        "fill-extrusion-color": "blue",
+        "fill-extrusion-height": 30
+      }
+    }
+  ]
+}
