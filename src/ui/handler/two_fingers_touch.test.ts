@@ -97,9 +97,7 @@ describe('touch zoom rotate', () => {
         map.on('rotate',      rotate);
         map.on('rotateend',   rotateend);
 
-        // Frozen time, so that the inertia of the gesture does not depend on how long the
-        // test itself takes: without it a pause longer than the inertia buffer keeps the
-        // rotation from continuing.
+        // Frozen time, so that the inertia does not depend on how long the test itself takes.
         setNow(1000);
         onTestFinished(restoreNow);
         simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
@@ -126,8 +124,8 @@ describe('touch zoom rotate', () => {
         simulate.touchend(map.getCanvas(), {touches: []});
         map._renderTaskQueue.run();
 
-        // incremented because inertia starts a second rotation: the gesture was rotating
-        // when it ended, even though it ended at the bearing it started from
+        // incremented because inertia starts a second rotation: the gesture was still
+        // rotating when it ended, even though it ended at the bearing it started from
         expect(rotatestart).toHaveBeenCalledTimes(2);
         map._renderTaskQueue.run();
         expect(rotate).toHaveBeenCalledTimes(3);

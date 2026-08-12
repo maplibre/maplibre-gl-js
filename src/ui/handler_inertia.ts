@@ -43,22 +43,10 @@ export type InertiaOptions = {
     maxSpeed: number;
 };
 
-/**
- * Maximum age of a recorded gesture update, in milliseconds. Older entries are dropped.
- */
-const bufferCutoff = 160;
+const bufferCutoff = 160;   //msec
+const velocityWindow = 60;  //msec
 
-/**
- * The gesture velocity is measured over this time window, in milliseconds, ending at the
- * moment the gesture was released. Keeping the window short makes the estimate follow the
- * velocity the gesture actually had when it was released, so that slowing down or stopping
- * right before the release does not fling the map. At least the last two recorded updates
- * are always used, so that inertia also works at frame rates where fewer than two updates
- * fit into the window - their age is accounted for by the measured duration.
- */
-const velocityWindow = 60;
-
-export type InertiaBufferEntry = {
+type InertiaBufferEntry = {
     time: number;
     settings: any;
 };
@@ -89,10 +77,8 @@ export class HandlerInertia {
             inertia.shift();
     }
 
-    /**
-     * Returns the buffer entries the velocity is measured from: everything recorded within
-     * {@link velocityWindow} before now, but never fewer than the last two entries.
-     */
+    // Everything recorded within velocityWindow before now, but never fewer than the last
+    // two entries, so that inertia also works below two recorded updates per window.
     _getVelocityEntries(): InertiaBufferEntry[] {
         const inertia = this._inertiaBuffer;
         const windowStart = now() - velocityWindow;
@@ -108,7 +94,6 @@ export class HandlerInertia {
     _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
         this._drainInertiaBuffer();
         const entries = this._getVelocityEntries();
-        // The gesture is over, so whatever is left in the buffer must not leak into the next one.
         if (entries.length < 2) {
             this.clear();
             return;
@@ -124,16 +109,14 @@ export class HandlerInertia {
             around: undefined
         };
 
-        // Unlike the deltas, an anchor describes the state at the moment its entry was
-        // recorded, so it counts even when it comes from the entry the interval starts at.
+        // Unlike a delta, an anchor describes the state at the moment of its entry.
         for (const {settings} of entries) {
             if (settings.around) deltas.around = settings.around;
             if (settings.pinchAround) deltas.pinchAround = settings.pinchAround;
         }
 
-        // The delta of an entry describes the movement which happened before it was recorded,
-        // so the first entry only marks the start of the measured interval and its delta
-        // belongs to the time before it.
+        // The delta of an entry happened before it was recorded, so the first entry only
+        // marks the start of the measured interval.
         for (const {settings} of entries.slice(1)) {
             deltas.zoom += settings.zoomDelta || 0;
             deltas.bearing += settings.bearingDelta || 0;
@@ -142,17 +125,14 @@ export class HandlerInertia {
             if (settings.panDelta) deltas.pan._add(settings.panDelta);
         }
 
-        // Entries without any delta are recorded during terrain gestures, so the measured
-        // interval can hold no movement at all. Returning ease options for that would start a
-        // camera animation which moves nothing and only delays `moveend`.
+        // Terrain gestures record entries without any delta, which would ease nowhere.
         if (!deltas.pan.mag() && !deltas.zoom && !deltas.bearing && !deltas.pitch && !deltas.roll) {
             this.clear();
             return;
         }
 
-        // Measure up to the moment of the release and not up to the last recorded movement:
-        // a gesture which was held still before being released has a longer duration and
-        // therefore a lower velocity, down to no inertia at all.
+        // Up to the release and not up to the last recorded movement, so that a gesture held
+        // still before being released has a lower velocity.
         const duration = now() - entries[0].time;
 
         const easeOptions = {} as any;
