@@ -12,7 +12,7 @@
   },
   "center": [11.52517, 47.34487],
   "zoom": 13,
-  "pitch": 80,
+  "pitch": 75,
   "bearing": 0,
   "sources": {
     "terrain": {
@@ -29,12 +29,12 @@
           {
             "type": "Feature",
             "properties": {"label": "ground", "elevation": 0},
-            "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
+            "geometry": {"type": "Point", "coordinates": [11.52517, 47.4]}
           },
           {
             "type": "Feature",
             "properties": {"label": "aircraft", "elevation": 1000},
-            "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
+            "geometry": {"type": "Point", "coordinates": [11.52517, 47.4]}
           }
         ]
       }
