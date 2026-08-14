@@ -679,6 +679,59 @@ describe('ImageSource', () => {
         });
     });
 
+    describe('source created without a url', () => {
+        let source: ImageSource;
+        let transformRequest: Mock<(url: string, resourceType?: string) => any>;
+
+        beforeEach(() => {
+            transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
+            map.setTransformRequest(transformRequest);
+            source = createSource({eventedParent: map});
+        });
+
+        test('fires metadata without an error or a request', async () => {
+            const errorHandler = vi.fn();
+            source.on('error', errorHandler);
+            const metadata = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+            source.onAdd(map);
+
+            await metadata;
+            expect(source.loaded()).toBe(true);
+            expect(errorHandler).not.toHaveBeenCalled();
+            expect(transformRequest).not.toHaveBeenCalled();
+        });
+
+        test('displays an image handed to updateImage', async () => {
+            source.onAdd(map);
+            const {z, x, y} = source.tileID;
+            const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
+            await source.loadTile(tile);
+            const image = new ImageData(1, 1);
+
+            source.updateImage({image});
+            source.prepare();
+
+            expect(tile.state).toBe('loaded');
+            expect(tile.texture).toBe(source.texture);
+        });
+
+        test('loads a url handed to updateImage', async () => {
+            source.onAdd(map);
+            server.respondImmediately = true;
+            const metadata = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+            source.updateImage({url: '/image.png'});
+
+            await metadata;
+            expect(transformRequest).toHaveBeenCalledTimes(1);
+        });
+
+        test('serializes without a url key', () => {
+            expect(source.serialize()).not.toHaveProperty('url');
+        });
+    });
+
     describe('terrainTileRanges', () => {
         test('sets tile ranges for all zoom levels', () => {
             const source = createSource({url: '/image.png'});
