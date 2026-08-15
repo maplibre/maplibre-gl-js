@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {charIsWhitespace, charAllowsLetterSpacing, charInComplexShapingScript, charInRTLScript} from './script_detection.ts';
 
 describe('charIsWhitespace', () => {
@@ -17,7 +17,7 @@ describe('charAllowsLetterSpacing', () => {
         expect(charAllowsLetterSpacing('A'.codePointAt(0))).toBe(true);
     });
 
-    test('disallows ideographic breaking of Arabic text', () => {
+    test('disallows letter spacing of Arabic text', () => {
         // Arabic
         expect(charAllowsLetterSpacing('۳'.codePointAt(0))).toBe(false);
         // Arabic Supplement
@@ -30,6 +30,11 @@ describe('charAllowsLetterSpacing', () => {
         expect(charAllowsLetterSpacing('ﰤ'.codePointAt(0))).toBe(false);
         // Arabic Presentation Forms-B
         expect(charAllowsLetterSpacing('ﺽ'.codePointAt(0))).toBe(false);
+    });
+
+    test('disallows letter spacing in supplementary-plane cursive scripts', () => {
+        expect(charAllowsLetterSpacing(0x1BC00)).toBe(false); // Duployan
+        expect(charAllowsLetterSpacing(0x10F70)).toBe(false); // Old Uyghur
     });
 });
 
@@ -82,5 +87,37 @@ describe('charInRTLScript', () => {
     test('identifies Thaana text as right-to-left', () => {
         // Thaana
         expect(charInRTLScript('ޘ'.codePointAt(0))).toBe(true);
+    });
+
+    test('preserves configured detection for Garay and Todhri', () => {
+        expect(charInRTLScript(0x10D40)).toBe(true); // Garay
+        expect(charInRTLScript(0x105C0)).toBe(true); // Todhri
+    });
+});
+
+describe('module initialization', () => {
+    test('does not probe Unicode script support with RegExp constructors', async () => {
+        const NativeRegExp = globalThis.RegExp;
+        let scriptPropertyAttempts = 0;
+
+        class ScriptPropertyRegExp extends NativeRegExp {
+            constructor(pattern?: string | RegExp, flags?: string) {
+                if (typeof pattern === 'string' && pattern.includes('\\p{sc=')) {
+                    scriptPropertyAttempts++;
+                    throw new SyntaxError('Unicode script property is unsupported');
+                }
+                super(pattern, flags);
+            }
+        }
+
+        vi.resetModules();
+        vi.stubGlobal('RegExp', ScriptPropertyRegExp);
+        try {
+            await import('./script_detection.ts');
+            expect(scriptPropertyAttempts).toBe(0);
+        } finally {
+            vi.unstubAllGlobals();
+            vi.resetModules();
+        }
     });
 });

@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Avoid probing Unicode script support with caught exceptions during module loading by using generated cursive and right-to-left character sets instead ([#5807](https://github.com/maplibre/maplibre-gl-js/issues/5807)) (by [@fallenmi](https://github.com/fallenmi))
 - _...Add new stuff here..._
 
 ## 6.4.0
