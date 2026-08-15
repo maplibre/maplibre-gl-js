@@ -11,7 +11,7 @@ import {extend} from '../util/util.ts';
 import {type Dispatcher} from '../util/dispatcher.ts';
 import {TileBounds} from './tile_bounds.ts';
 import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
-import {now} from '../util/time_control.ts';
+import {now, restoreNow, setNow} from '../util/time_control.ts';
 
 import {type Map} from '../ui/map.ts';
 import {type TileCache} from './tile_cache.ts';
@@ -118,6 +118,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.clearAllMocks();
+    restoreNow();
 });
 
 describe('TileManager.addTile', () => {
@@ -625,6 +626,73 @@ describe('TileManager / Source lifecycle', () => {
         const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
         expect(renderableZooms).toEqual([0]);
 
+    });
+
+    test('keeps the self fade timer when reloading a tile that has data', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+        tileManager.update(transform);
+        await loadPromise;
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        setNow(1010);
+        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        await reloadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1000);
+        expect(tile.fadeEndTime).toBe(1300);
+    });
+
+    test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        let respond: () => void;
+        const responded = new Promise<void>(resolve => { respond = resolve; });
+        tileManager._source.loadTile = async (tile) => {
+            await responded;
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        tileManager.update(transform);
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        expect(tile.state).toBe('loading');
+        setNow(1010);
+        respond();
+        await loadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1010);
+        expect(tile.fadeEndTime).toBe(1310);
     });
 
 });

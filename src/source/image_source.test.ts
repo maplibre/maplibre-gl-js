@@ -5,7 +5,6 @@ import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {ImageRequest} from '../util/image_request.ts';
 import type {Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -71,40 +70,24 @@ describe('ImageSource', () => {
         expect(source.image).toBeTruthy();
     });
 
-    test('passes a live AbortController to ImageRequest when the source is aborted during an async transformRequest', async () => {
+    test('does not request the image when the source is removed while its request is being transformed', async () => {
+        server.respondImmediately = true;
         const source = createSource({url: '/image.png'});
-        let transformStarted: () => void;
-        const transformCalled = new Promise<void>((resolve) => {
-            transformStarted = resolve;
-        });
+        const errorHandler = vi.fn();
+        source.on('error', errorHandler);
         let releaseTransform: (params: {url: string}) => void;
-        map.setTransformRequest(() => {
-            transformStarted();
-            return new Promise<{url: string}>((resolve) => {
-                releaseTransform = resolve;
-            });
-        });
-        const image = {width: 1, height: 1} as ImageBitmap;
-        let requestController: AbortController;
-        let sourceControllerAtRequestTime: AbortController;
-        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
-            requestController = abortController;
-            sourceControllerAtRequestTime = source._request;
-            return {data: image};
-        });
+        map.setTransformRequest(() => new Promise<{url: string}>((resolve) => {
+            releaseTransform = resolve;
+        }));
+        const load = vi.spyOn(source, 'load');
 
         source.onAdd(map);
-        await transformCalled; // load() is suspended in the transform
-        source.onRemove(); // the abort lands during that suspension
-        const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        source.onRemove();
         releaseTransform({url: '/image.png'});
-        await loaded;
+        await load.mock.results[0].value;
 
-        expect(getImageSpy).toHaveBeenCalledTimes(1);
-        // The request must carry the source's own live controller, so an abort
-        // arriving while it is in flight reaches exactly this request.
-        expect(requestController).toBeInstanceOf(AbortController);
-        expect(requestController).toBe(sourceControllerAtRequestTime);
+        expect(server.requests).toHaveLength(0);
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 
     test('transforms url request', () => {
@@ -393,6 +376,19 @@ describe('ImageSource', () => {
         expect(source.image).toBeTruthy();
     });
 
+    test('keeps the image handed to updateImage instead of the url load it replaced', async () => {
+        const source = createSource({url: '/image.png', eventedParent: map});
+        const bitmap = new ImageBitmap();
+        const load = vi.spyOn(source, 'load');
+
+        source.onAdd(map);
+        source.updateImage({image: bitmap});
+        server.respondImmediately = true;
+        await load.mock.results[0].value;
+
+        expect(source.image).toBe(bitmap);
+    });
+
     test('cancels request if updateImage is used', async () => {
         const source = createSource({url: '/image.png', eventedParent: map});
 
@@ -405,6 +401,20 @@ describe('ImageSource', () => {
 
         source.updateImage({url: '/image2.png'});
         expect(spy).toHaveBeenCalled();
+    });
+
+    test('cancels the request updateImage started when updateImage is used again', async () => {
+        const source = createSource({url: '/image.png', eventedParent: map});
+        const load = vi.spyOn(source, 'load');
+
+        source.onAdd(map);
+        source.updateImage({url: '/image2.png'});
+        await load.mock.results[0].value;
+
+        const spy = vi.spyOn(server.requests[0] as any, 'abort');
+
+        source.updateImage({url: '/image3.png'});
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     test('marks the source as loaded when the request has received a response', async () => {
@@ -491,7 +501,7 @@ describe('ImageSource', () => {
             map.on('error', () => {});
             source = createSource({url: '/image.png', eventedParent: map});
             // onAdd starts the initial load synchronously up to its first await, so
-            // this._request is set and transformRequest is called once. Clear that call
+            // this._abortController is set and transformRequest is called once. Clear that call
             // so tests can assert the image path issues no further request.
             source.onAdd(map);
             transformRequest.mockClear();
@@ -524,7 +534,7 @@ describe('ImageSource', () => {
         });
 
         test('cancels a pending request', () => {
-            const spy = vi.spyOn(source._request, 'abort');
+            const spy = vi.spyOn(source._abortController, 'abort');
             source.updateImage({image: new ImageBitmap()});
             expect(spy).toHaveBeenCalled();
         });
