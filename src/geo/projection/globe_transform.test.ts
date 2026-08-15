@@ -4,11 +4,12 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
-import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, versorSetLocationAtPoint} from './globe_utils.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {differenceOfAnglesDegrees, MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -642,5 +643,132 @@ describe('GlobeTransform', () => {
 
         expect(globeTransform.center.lng).toBeCloseTo(originalLng, 10);
         expect(globeTransform.center.lat).toBeCloseTo(originalLat, 10);
+    });
+
+    describe('versorSetLocationAtPoint', () => {
+        const precisionDigits = 4;
+        const globeTransform = createGlobeTransform();
+        globeTransform.setZoom(1);
+        globeTransform.setTransitionState(1);
+        let coords: LngLat;
+        let point: Point;
+        let unprojected: LngLat;
+
+        test('round-trip accuracy', () => {
+            coords = new LngLat(20, 30);
+            point = new Point(280, 200);
+            versorSetLocationAtPoint(globeTransform, coords, point, undefined, false);
+            unprojected = globeTransform.screenPointToLocation(point);
+            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+        });
+
+        test('round-trip accuracy at center', () => {
+            coords = new LngLat(10, 15);
+            point = new Point(320, 240);
+            versorSetLocationAtPoint(globeTransform, coords, point);
+            unprojected = globeTransform.screenPointToLocation(point);
+            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+        });
+
+        test('near-pole panning stays finite', () => {
+            globeTransform.setCenter(new LngLat(0, 80));
+            coords = new LngLat(10, 85);
+            point = new Point(300, 230);
+            versorSetLocationAtPoint(globeTransform, coords, point);
+            expect(isNaN(globeTransform.center.lng)).toBe(false);
+            expect(isNaN(globeTransform.center.lat)).toBe(false);
+            expect(isNaN(globeTransform.bearing)).toBe(false);
+        });
+
+        test('identical source and target points leave the center unchanged', () => {
+            const centerBefore = globeTransform.center;
+            point = new Point(320, 240);
+            coords = globeTransform.screenPointToLocation(point);
+            versorSetLocationAtPoint(globeTransform, coords, point);
+            expect(globeTransform.center.lng).toBeCloseTo(centerBefore.lng, precisionDigits);
+            expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
+        });
+
+        test('bearing changes when panning off-center without a fixed bearing', () => {
+            const bearingBefore = globeTransform.bearing;
+            coords = new LngLat(20, 30);
+            point = new Point(250, 180);
+            versorSetLocationAtPoint(globeTransform, coords, point, undefined, false);
+            expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
+        });
+
+        test('target points that miss the globe are ignored without a pan delta', () => {
+            const freshTransform = createGlobeTransform();
+            freshTransform.setZoom(1);
+            freshTransform.setTransitionState(1);
+            freshTransform.setCenter(new LngLat(5, 10));
+            const lngBefore = freshTransform.center.lng;
+            const latBefore = freshTransform.center.lat;
+            const bearingBefore = freshTransform.bearing;
+            point = new Point(620, 240);
+            expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
+            coords = freshTransform.screenPointToLocation(point);
+            versorSetLocationAtPoint(freshTransform, coords, point);
+            expect(freshTransform.center.lng).toBe(lngBefore);
+            expect(freshTransform.center.lat).toBe(latBefore);
+            expect(freshTransform.bearing).toBe(bearingBefore);
+        });
+
+        test('panning continues once the cursor leaves the globe', () => {
+            const freshTransform = createGlobeTransform();
+            freshTransform.setZoom(1);
+            freshTransform.setTransitionState(1);
+            freshTransform.setCenter(new LngLat(5, 10));
+            const lngBefore = freshTransform.center.lng;
+            const bearingBefore = freshTransform.bearing;
+            point = new Point(620, 240);
+            expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
+            coords = freshTransform.screenPointToLocation(point);
+            versorSetLocationAtPoint(freshTransform, coords, point, new Point(20, 0));
+            expect(freshTransform.center.lng).not.toBe(lngBefore);
+            expect(isNaN(freshTransform.center.lng)).toBe(false);
+            expect(isNaN(freshTransform.center.lat)).toBe(false);
+            expect(freshTransform.bearing).toBe(bearingBefore);
+        });
+
+        test('panning does not freeze near a centred pole', () => {
+            // With the pole centred the dial supplies all of the longitude change, and the center
+            // latitude is already clamped, so if the dial gives up the drag stops moving entirely.
+            const tr = createGlobeTransform();
+            tr.setZoom(1);
+            tr.setTransitionState(1);
+            tr.setCenter(new LngLat(0, MAX_VALID_LATITUDE));
+            const pole = tr.locationToScreenPoint(new LngLat(0, 90));
+            const cursor = new Point(pole.x + 10, pole.y);
+            const panDelta = new Point(0, 8); // tangential, so it sweeps around the pole
+            const lngBefore = tr.center.lng;
+            const location = tr.screenPointToLocation(cursor.sub(panDelta));
+            versorSetLocationAtPoint(tr, location, cursor, panDelta);
+            expect(Math.abs(differenceOfAnglesDegrees(lngBefore, tr.center.lng))).toBeGreaterThan(1);
+        });
+
+        test('panning off the globe is slower than on it', () => {
+            const travel = (screenPoint: Point) => {
+                const tr = createGlobeTransform();
+                tr.setZoom(1);
+                tr.setTransitionState(1);
+                tr.setCenter(new LngLat(0, 0));
+                const panDelta = new Point(20, 0);
+                const location = tr.screenPointToLocation(screenPoint.sub(panDelta));
+                versorSetLocationAtPoint(tr, location, screenPoint, panDelta);
+                return Math.abs(differenceOfAnglesDegrees(0, tr.center.lng));
+            };
+            const onGlobe = new Point(340, 240);
+            const offGlobe = new Point(620, 240);
+            const reference = createGlobeTransform();
+            reference.setZoom(1);
+            reference.setTransitionState(1);
+            reference.setCenter(new LngLat(0, 0));
+            expect(reference.isPointOnMapSurface(onGlobe)).toBe(true);
+            expect(reference.isPointOnMapSurface(offGlobe)).toBe(false);
+            expect(travel(offGlobe)).toBeLessThan(travel(onGlobe));
+        });
     });
 });

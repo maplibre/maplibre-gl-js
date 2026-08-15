@@ -236,6 +236,37 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         expect(childInstances[0].crossTileID).toBe(1);
 
     });
+
+    test('claims the lowest-index match among coincident symbols', () => {
+        const index = new CrossTileSymbolIndex();
+
+        const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
+        const childID = new OverscaledTileID(7, 0, 7, 16, 16);
+
+        // more instances than KDBUSH_THRESHHOLD to exercise the KDBush-indexed path
+        const count = KDBUSH_THRESHHOLD + 2;
+        const mainInstances: any[] = [];
+        const childInstances: any[] = [];
+        for (let i = 0; i < count; i++) {
+            // all symbols are coincident and share the same key
+            mainInstances.push(makeSymbolInstance(1000, 1000, 'Dense'));
+            childInstances.push(makeSymbolInstance(2000, 2000, 'Dense'));
+        }
+
+        const mainTile = makeTile(mainID, mainInstances);
+        const childTile = makeTile(childID, childInstances);
+
+        index.addLayer(styleLayer, [mainTile], 0);
+        index.addLayer(styleLayer, [mainTile, childTile], 0);
+
+        // Each child symbol should claim the lowest-index unclaimed parent
+        // symbol, so parents are claimed in symbol-instance order. (A
+        // lexicographic ordering of the candidate indexes would instead claim
+        // parent 10 for child 2 once 0 and 1 are taken, because '10' < '2'.)
+        for (let i = 0; i < 12; i++) {
+            expect(childInstances[i].crossTileID).toBe(mainInstances[i].crossTileID);
+        }
+    });
 });
 
 test('CrossTileSymbolIndex.pruneUnusedLayers', () => {
