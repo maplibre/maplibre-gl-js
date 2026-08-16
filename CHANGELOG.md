@@ -5,21 +5,16 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- fix: rounded corner spikes ([#8155](https://github.com/maplibre/maplibre-gl-js/pull/8155)) (by [@HarelM](https://github.com/HarelM))
-- chore: exclude benchmark files from coverage reports ([#8159](https://github.com/maplibre/maplibre-gl-js/pull/8159)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- chore: improve render test stability ([#8152](https://github.com/maplibre/maplibre-gl-js/pull/8152)) (by [@HarelM](https://github.com/HarelM))
-- Globe: pan with a versor so dragging stays consistent near the poles ([#8154](https://github.com/maplibre/maplibre-gl-js/pull/8154)) (by [@jcolot](https://github.com/jcolot))
-- fix: improve images update performance on style switch ([#8151](https://github.com/maplibre/maplibre-gl-js/pull/8151)) (by [@HarelM](https://github.com/HarelM))
-- feat(marker): keyboard focus and arrow-key drag for draggable markers ([#8045](https://github.com/maplibre/maplibre-gl-js/pull/8045)) (by [@smmariquit](https://github.com/smmariquit))
-- Add a Next.js tab to the ESM bundler setup ([#8128](https://github.com/maplibre/maplibre-gl-js/pull/8128)) (by [@martinfrancois](https://github.com/martinfrancois))
-- GM1.7 Use texelFetch for exact elevation texel lookups ([#8145](https://github.com/maplibre/maplibre-gl-js/pull/8145)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 ## 6.4.0
+
 ### ✨ Features and improvements
+
 - Avoid a per-query `Array.sort()` in cross-tile symbol matching (`TileLayerIndex.findMatches`), claiming the lowest-index unclaimed candidate in a single pass instead; reduces main-thread symbol-placement cost on dense/coincident symbol layers ([#7797](https://github.com/maplibre/maplibre-gl-js/pull/7797)) (by [@pholmstr](https://github.com/pholmstr))
 - Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Make default draggable markers keyboard-focusable and movable with the arrow keys (1 px per press, 10 px with Shift); custom marker elements stay application-owned ([#8020](https://github.com/maplibre/maplibre-gl-js/issues/8020)) (by [@smmariquit](https://github.com/smmariquit))
 
 ### 🐞 Bug fixes
+
 - Fix a permanent frame rate degradation after switching styles: every sprite reload marked its images as updated forever, making every in-view tile re-check and re-upload them on every frame. Also stop leaking the images of a replaced sprite, which were never removed from the image manager ([#8052](https://github.com/maplibre/maplibre-gl-js/issues/8052)) (by [@HarelM](https://github.com/HarelM))
 - Prevent a rejected missing style image resolver from blocking successfully resolved images in the same batch ([#8146](https://github.com/maplibre/maplibre-gl-js/pull/8146/)) (by @birkskyum)
 - Explicitly request no browser color management when decoding raster-DEM tiles so their RGB-encoded elevation values are not changed (what would otherwise happen with `gfx.color_management.mode = 1` in Firefox) ([#8125](https://github.com/maplibre/maplibre-gl-js/pull/8125)) (by [@tnikkel](https://github.com/tnikkel))
