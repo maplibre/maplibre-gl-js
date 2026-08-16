@@ -13,7 +13,7 @@
       "type": "geojson",
       "maxzoom": 14,
       "tolerance": 0,
-      "buffer": 1,
+      "buffer": 2,
       "data": {
         "type": "Feature",
         "properties": {},
