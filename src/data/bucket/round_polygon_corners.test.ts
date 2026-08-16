@@ -115,10 +115,19 @@ describe('roundPolygonCorners', () => {
         const output = roundPolygonCorners(input, 1000, canonical);
         const points = output[0].map(round);
 
-        expect(points).toContainEqual([1000, -100]);
-        expect(points).toContainEqual([3000, -100]);
-        expect(points).not.toContainEqual([3000, 4000]);
-        expect(points).not.toContainEqual([1000, 4000]);
+        expect(points).toEqual([
+            [ 1000, -100 ],
+            [ 3000, -100 ],
+            [ 3000, 3600 ],
+            [ 2946, 3800 ],
+            [ 2800, 3946 ],
+            [ 2600, 4000 ],
+            [ 1400, 4000 ],
+            [ 1200, 3946 ],
+            [ 1054, 3800 ],
+            [ 1000, 3600 ],
+            [ 1000, -100 ]
+        ]);
     });
 
     test('rounds a corner of the feature that sits in the buffer, since only a cut stays sharp', () => {
