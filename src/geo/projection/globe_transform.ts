@@ -458,7 +458,7 @@ export class GlobeTransform implements ITransform {
 
         const globeData = this._verticalPerspectiveTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
         globeData.fallbackMatrix = mercatorData.mainMatrix;
-        globeData.projectionTransition = applyGlobeMatrix ? this._globeness : 0;
+        globeData.projectionTransition = this._globeness;
         return globeData;
     }
 

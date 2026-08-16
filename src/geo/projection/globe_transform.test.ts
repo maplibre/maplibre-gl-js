@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test, vi} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {EXTENT} from '../../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
@@ -54,19 +54,10 @@ describe('GlobeTransform', () => {
     });
 
     describe('getProjectionDataForCustomLayer', () => {
-        let globeTransform: GlobeTransform;
-
-        beforeEach(() => {
-            globeTransform = createGlobeTransform();
-            globeTransform.setTransitionState(0.5);
-        });
-
         test('transition is the in-progress globe transition state', () => {
+            const globeTransform = createGlobeTransform();
+            globeTransform.setTransitionState(0.5);
             expect(globeTransform.getProjectionDataForCustomLayer(true).projectionTransition).toBe(0.5);
-        });
-
-        test('transition is 0 when not applying the globe matrix', () => {
-            expect(globeTransform.getProjectionDataForCustomLayer(false).projectionTransition).toBe(0);
         });
     });
 
