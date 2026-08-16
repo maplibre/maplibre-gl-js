@@ -43,8 +43,6 @@ const SUBDIVIDED_QUAD_GRANULARITY = 16;
  */
 const MAX_PERSPECTIVE_RATIO = 4;
 
-const PERSPECTIVE_EPSILON = Number.EPSILON;
-
 /** Allows for accumulated rounding error in the three-term homogeneous dot products. */
 const PERSPECTIVE_ERROR_FACTOR = 8;
 
@@ -565,7 +563,7 @@ function calculatePerspectiveTerms(cornerCoords: Point[]): [number, number] | nu
     const basis: mat2 = [dx1, dy1, dx2, dy2];
     const determinant = mat2.determinant(basis);
 
-    if (Math.abs(determinant) < PERSPECTIVE_EPSILON) {
+    if (Math.abs(determinant) < Number.EPSILON) {
         return null;
     }
 
@@ -575,7 +573,7 @@ function calculatePerspectiveTerms(cornerCoords: Point[]): [number, number] | nu
     const forwardDenominators = [1, 1 + perspectiveX, 1 + perspectiveX + perspectiveY, 1 + perspectiveY];
     const forwardDenominatorScale = Math.max(...forwardDenominators.map(value => Math.abs(value)));
     const hasInvalidForwardDenominator = forwardDenominators.some(value =>
-        !Number.isFinite(value) || value <= PERSPECTIVE_ERROR_FACTOR * PERSPECTIVE_EPSILON * forwardDenominatorScale);
+        !Number.isFinite(value) || value <= PERSPECTIVE_ERROR_FACTOR * Number.EPSILON * forwardDenominatorScale);
     if (!Number.isFinite(forwardDenominatorScale) || forwardDenominatorScale === 0 || hasInvalidForwardDenominator) {
         return null;
     }
@@ -608,7 +606,7 @@ function calculateInverseDenominator(cornerCoords: Point[], [perspectiveX, persp
  */
 function isDenominatorSingularInQuad(inverseDenominator: RasterPerspectiveTransform, cornerCoords: Point[], cornerDenominators: number[]): boolean {
     const cornerDenominatorErrors = cornerCoords.map(({x, y}) =>
-        PERSPECTIVE_ERROR_FACTOR * PERSPECTIVE_EPSILON * (
+        PERSPECTIVE_ERROR_FACTOR * Number.EPSILON * (
             Math.abs(inverseDenominator[0] * x) +
             Math.abs(inverseDenominator[1] * y) +
             Math.abs(inverseDenominator[2])));
@@ -618,7 +616,7 @@ function isDenominatorSingularInQuad(inverseDenominator: RasterPerspectiveTransf
     return !Number.isFinite(denominatorScale) || denominatorScale === 0 ||
         cornerDenominators.some((value, index) =>
             !Number.isFinite(value) ||
-            Math.abs(value) <= Math.max(PERSPECTIVE_EPSILON * denominatorScale, cornerDenominatorErrors[index]) ||
+            Math.abs(value) <= Math.max(Number.EPSILON * denominatorScale, cornerDenominatorErrors[index]) ||
             Math.sign(value) !== denominatorSign);
 }
 
@@ -653,6 +651,6 @@ function normalizeDenominator(inverseDenominator: RasterPerspectiveTransform): R
 
 function isParallelogram(cornerCoords: Point[]) {
     const [tl, tr, br, bl] = cornerCoords;
-    return Math.abs(tl.x + br.x - tr.x - bl.x) < PERSPECTIVE_EPSILON &&
-        Math.abs(tl.y + br.y - tr.y - bl.y) < PERSPECTIVE_EPSILON;
+    return Math.abs(tl.x + br.x - tr.x - bl.x) < Number.EPSILON &&
+        Math.abs(tl.y + br.y - tr.y - bl.y) < Number.EPSILON;
 }
