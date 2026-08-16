@@ -27,6 +27,63 @@ async function createSet(blocks: string[], scripts: string[]): Promise<regenerat
     return set;
 }
 
+async function isInCursiveScript(): Promise<string> {
+    // In general, cursive scripts are incompatible with letter spacing.
+    const set = await createSet([], [
+        'Arabic',
+        'Duployan',
+        'Mongolian',
+        'Old Uyghur',
+        'Syriac',
+    ]);
+
+    return set.toString();
+}
+
+async function isInRTLScript(): Promise<string> {
+    // Scripts in the existing right-to-left detection heuristic.
+    const set = await createSet([], [
+        'Adlam',
+        'Arabic',
+        'Imperial Aramaic',
+        'Avestan',
+        'Chorasmian',
+        'Cypriot',
+        'Egyptian Hieroglyphs',
+        'Elymaic',
+        'Garay',
+        'Hatran',
+        'Hebrew',
+        'Old Hungarian',
+        'Kharoshthi',
+        'Lydian',
+        'Mandaic',
+        'Manichaean',
+        'Mende Kikakui',
+        'Meroitic Cursive',
+        'Meroitic Hieroglyphs',
+        'Old North Arabian',
+        'Nabataean',
+        'Nko',
+        'Old Turkic',
+        'Palmyrene',
+        'Inscriptional Pahlavi',
+        'Psalter Pahlavi',
+        'Phoenician',
+        'Inscriptional Parthian',
+        'Hanifi Rohingya',
+        'Samaritan',
+        'Old South Arabian',
+        'Old Sogdian',
+        'Syriac',
+        'Thaana',
+        'Todhri',
+        'Yezidi',
+    ]);
+
+    return set.toString();
+}
+
 async function usesLocalIdeographFontFamily(): Promise<string> {
     // Local rendering is preferred for Unicode code blocks that represent
     // writing systems for which TinySDF produces optimal results and greatly
@@ -315,6 +372,21 @@ async function requiresComplexTextShaping(): Promise<string> {
 
 fs.writeFileSync('src/util/unicode_properties.g.ts',
     `// This file is generated. Edit build/generate-unicode-data.ts, then run \`npm run generate-unicode-data\`.
+
+/**
+ * Returns whether the given codepoint belongs to a cursive script.
+ */
+export function codePointIsInCursiveScript(codePoint: number): boolean {
+    return /${await isInCursiveScript()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether the given codepoint belongs to a script in the right-to-left
+ * detection heuristic.
+ */
+export function codePointIsInRTLScript(codePoint: number): boolean {
+    return /${await isInRTLScript()}/gim.test(String.fromCodePoint(codePoint));
+}
 
 /**
  * Returns whether the fallback fonts specified by the

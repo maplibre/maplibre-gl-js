@@ -8,7 +8,7 @@
         "gzip": 5865
     },
     "dist/maplibre-gl-shared.mjs": {
-        "raw": 482364,
-        "gzip": 134507
+        "raw": 484414,
+        "gzip": 135075
     }
 }
