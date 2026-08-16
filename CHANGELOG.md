@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix an image source whose coordinates are close to a triangle squeezing the whole image into a sliver along one edge and smearing a few texels over the rest of the quad. Such a quad is now warped bilinearly over a subdivided mesh, which also removes the seam that the affine fallback of a collinear or concave quad had along the diagonal of its two triangles ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
+- Fix an image source whose coordinates are close to a triangle squeezing the whole image into a sliver along one edge and smearing over the rest of the quad. ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.4.0
