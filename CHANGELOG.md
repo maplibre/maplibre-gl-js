@@ -3,6 +3,7 @@
 - Avoid a per-query `Array.sort()` in cross-tile symbol matching (`TileLayerIndex.findMatches`), claiming the lowest-index unclaimed candidate in a single pass instead; reduces main-thread symbol-placement cost on dense/coincident symbol layers ([#7797](https://github.com/maplibre/maplibre-gl-js/pull/7797)) (by [@pholmstr](https://github.com/pholmstr))
 - Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Make default draggable markers keyboard-focusable and movable with the arrow keys (1 px per press, 10 px with Shift); custom marker elements stay application-owned ([#8020](https://github.com/maplibre/maplibre-gl-js/issues/8020)) (by [@smmariquit](https://github.com/smmariquit))
+- Allow adding an image source without a `url`. The source starts empty and makes no network request; call `updateImage({image})` or `updateImage({url})` later to show an image ([#8167](https://github.com/maplibre/maplibre-gl-js/pull/8167))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
