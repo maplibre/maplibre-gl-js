@@ -188,15 +188,15 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     tileID: CanonicalTileID;
     tileCoords: Point[];
     perspectiveTransform: RasterPerspectiveTransform = identityPerspectiveTransform;
-    /**
-     * Whether the image has to be warped over a subdivided mesh instead of a pair of triangles,
-     * because {@link perspectiveTransform} is affine and the quad is not a parallelogram.
-     */
-    subdividedQuad: boolean = false;
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _abortController: AbortController;
     private _imageDirty: boolean = false;
+    /**
+     * Whether the image has to be warped over a subdivided mesh instead of a pair of triangles,
+     * because {@link perspectiveTransform} is affine and the quad is not a parallelogram.
+     */
+    private _subdividedQuad: boolean = false;
     private _subdividedMesh: Mesh | null = null;
 
     /** @internal */
@@ -306,7 +306,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
      * A projection that subdivides its own tile meshes already does this, so it keeps them.
      */
     getMesh(context: Context, projectionSubdividesTiles: boolean): Mesh | null {
-        if (!this.subdividedQuad || projectionSubdividesTiles) {
+        if (!this._subdividedQuad || projectionSubdividesTiles) {
             return null;
         }
         this._subdividedMesh ??= createTileMeshWithBuffers(context, {granularity: SUBDIVIDED_QUAD_GRANULARITY});
@@ -379,7 +379,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
         const mapping = calculateRasterQuadMapping(this.tileCoords);
         this.perspectiveTransform = mapping.perspectiveTransform;
-        this.subdividedQuad = mapping.subdivided;
+        this._subdividedQuad = mapping.subdivided;
         this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
 
         this.fire(new MapSourceDataEvent('data', {sourceDataType: 'content'}));

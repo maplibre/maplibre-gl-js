@@ -282,7 +282,7 @@ describe('ImageSource', () => {
         ]);
 
         expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-        expect(source.subdividedQuad).toBe(true);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
     });
 
     test('keeps a pair of triangles for a quad that is mapped projectively', () => {
@@ -295,7 +295,7 @@ describe('ImageSource', () => {
         ]);
 
         expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
-        expect(source.subdividedQuad).toBe(false);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
     test('keeps a pair of triangles for a parallelogram, whose affine mapping has no seam', () => {
@@ -308,7 +308,7 @@ describe('ImageSource', () => {
         ]);
 
         expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-        expect(source.subdividedQuad).toBe(false);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
     test('warps every quad that falls back to an affine mapping bilinearly', () => {
@@ -329,7 +329,7 @@ describe('ImageSource', () => {
             source.setCoordinates(coordinates);
 
             expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-            expect(source.subdividedQuad).toBe(true);
+            expect(source.getMesh(map.painter.context, false)).not.toBeNull();
         }
     });
 
