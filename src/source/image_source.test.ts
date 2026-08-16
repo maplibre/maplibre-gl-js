@@ -162,8 +162,7 @@ describe('ImageSource', () => {
             [-122.545, 37.735]
         ]);
 
-        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
-        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+        expect(source.perspectiveTransform).toEqual([0.00009445006607092777, 0.0006583289182209894, 1]);
     });
 
     test('sets perspective transform when initial coordinates are loaded', async () => {
@@ -183,8 +182,7 @@ describe('ImageSource', () => {
         server.respond();
         await promise;
 
-        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
-        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+        expect(source.perspectiveTransform).toEqual([0.00009445006607092777, 0.0006583289182209894, 1]);
     });
 
     test('keeps projective transform when its constant coefficient is zero', () => {
@@ -294,7 +292,7 @@ describe('ImageSource', () => {
             [-122.545, 37.735]
         ]);
 
-        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
+        expect(source.perspectiveTransform).toEqual([0.00009445006607092777, 0.0006583289182209894, 1]);
         expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
