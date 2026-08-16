@@ -1,0 +1,120 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "allowed": 0.001,
+      "description": "Same building as the `spikes` case, close enough that one tile unit is a few pixels wide. Corner arcs have to land on the integer tile grid: triangulation, subdivision and the vertex buffers snap and deduplicate vertices there, so arcs that sit between grid positions get merged and leave the roof and the walls disagreeing about where the courtyard edge is - hairline cracks and overlapping triangles. See https://github.com/maplibre/maplibre-gl-js/issues/8153"
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "maxzoom": 14,
+      "tolerance": 0,
+      "buffer": 2,
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -73.99913728,
+                40.73069791
+              ],
+              [
+                -73.99913192,
+                40.73070604
+              ],
+              [
+                -73.99899244,
+                40.730641
+              ],
+              [
+                -73.99939477,
+                40.73016538
+              ],
+              [
+                -73.9999795,
+                40.730454
+              ],
+              [
+                -73.99963081,
+                40.73086864
+              ],
+              [
+                -73.99945378,
+                40.73086864
+              ],
+              [
+                -73.99944305,
+                40.73086051
+              ],
+              [
+                -73.99944842,
+                40.73085238
+              ],
+              [
+                -73.99913728,
+                40.73069791
+              ]
+            ],
+            [
+              [
+                -73.99933577,
+                40.73053531
+              ],
+              [
+                -73.99919629,
+                40.73069384
+              ],
+              [
+                -73.99943233,
+                40.73080767
+              ],
+              [
+                -73.99956644,
+                40.73064913
+              ],
+              [
+                -73.99933577,
+                40.73053531
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "pitch": 10,
+  "bearing": 45,
+  "zoom": 19.5,
+  "center": [
+    -73.99938405,
+    40.73060848
+  ],
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "layout": {
+        "fill-extrusion-rounded-corner-distance": 3
+      },
+      "paint": {
+        "fill-extrusion-color": "blue",
+        "fill-extrusion-height": 30
+      }
+    }
+  ]
+}
