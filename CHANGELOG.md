@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Stop `TerrainTileManager._getTerrainCoordsForRegularTile` allocating a tile ID and a matrix for every renderable terrain tile before discarding most of them; the matrix is now a reused scratch and the clone happens only for tiles that are kept ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

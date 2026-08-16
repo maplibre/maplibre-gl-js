@@ -9,7 +9,7 @@ import type {Source} from '../source/source.ts';
 import {type Terrain} from '../render/terrain.ts';
 import {now} from '../util/time_control.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
-import {createMat4f64} from '../util/util.ts';
+import {createMat4f64, type Mat4f64} from '../util/util.ts';
 import {type CanonicalTileRange} from '../source/image_source.ts';
 
 /**
@@ -59,6 +59,11 @@ export class TerrainTileManager extends Evented {
      * used to determine whether depth & coord framebuffers need updating
      */
     _lastTilesetChange: number = now();
+    /**
+     * scratch matrix reused by {@link _getTerrainCoordsForRegularTile}. Only the Float32Array copy
+     * of it escapes that loop, so it never needs to be allocated per tile.
+     */
+    _scratchMat: Mat4f64 = createMat4f64();
 
     constructor(tileManager: TileManager) {
         super();
@@ -186,10 +191,9 @@ export class TerrainTileManager extends Evented {
      */
     _getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords: Record<string, OverscaledTileID> = {};
+        const mat = this._scratchMat;
         for (const key of this._renderableTilesKeys) {
             const terrainTileID = this._tiles[key].tileID;
-            const coord = tileID.clone();
-            const mat = createMat4f64();
             if (terrainTileID.canonical.equals(tileID.canonical)) {
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
             } else if (terrainTileID.canonical.isChildOf(tileID.canonical)) {
@@ -210,6 +214,7 @@ export class TerrainTileManager extends Evented {
             } else {
                 continue;
             }
+            const coord = tileID.clone();
             coord.terrainRttPosMatrix32f = new Float32Array(mat);
             coords[key] = coord;
         }

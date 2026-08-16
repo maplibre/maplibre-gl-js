@@ -135,6 +135,42 @@ describe('TerrainTileManager', () => {
                 expect(result[terrainRenderableTile.key]).toBeTruthy();
                 expect(result[terrainNonRenderableTile.key]).toBeFalsy();
             });
+
+            test('builds the right matrix for each relationship', () => {
+                // All four terrain tiles go through a single call, so a matrix left over from an
+                // earlier iteration would surface here rather than in a one-tile fixture.
+                const testTile = new OverscaledTileID(2, 0, 2, 1, 1);
+                const terrainChildTile = new OverscaledTileID(3, 0, 3, 3, 2);
+                const terrainParentTile = new OverscaledTileID(1, 0, 1, 0, 0);
+                const terrainSameTile = new OverscaledTileID(2, 0, 2, 1, 1);
+                const terrainNonOverlappingTile = new OverscaledTileID(3, 0, 3, 0, 0);
+
+                tsc._tiles = {
+                    [terrainChildTile.key]: new Tile(terrainChildTile, 256),
+                    [terrainParentTile.key]: new Tile(terrainParentTile, 256),
+                    [terrainSameTile.key]: new Tile(terrainSameTile, 256),
+                    [terrainNonOverlappingTile.key]: new Tile(terrainNonOverlappingTile, 256),
+                };
+                tsc._renderableTilesKeys = [
+                    terrainChildTile.key,
+                    terrainParentTile.key,
+                    terrainSameTile.key,
+                    terrainNonOverlappingTile.key
+                ];
+
+                const result = tsc.getTerrainCoords(testTile);
+
+                expect(Array.from(result[terrainSameTile.key].terrainRttPosMatrix32f)).toEqual([
+                    0.000244140625, 0, 0, 0, 0, -0.000244140625, 0, 0, 0, 0, -2, 0, -1, 1, -1, 1
+                ]);
+                expect(Array.from(result[terrainChildTile.key].terrainRttPosMatrix32f)).toEqual([
+                    0.00048828125, 0, 0, 0, 0, -0.00048828125, 0, 0, 0, 0, -2, 0, -3, 1, -1, 1
+                ]);
+                expect(Array.from(result[terrainParentTile.key].terrainRttPosMatrix32f)).toEqual([
+                    // index 10 is a signed zero: the parent branch scales z by 0, so -2 becomes -0.
+                    0.0001220703125, 0, 0, 0, 0, -0.0001220703125, 0, 0, 0, 0, -0, 0, 0, 0, -1, 1
+                ]);
+            });
         });
 
         describe('tile with custom range', () => {
