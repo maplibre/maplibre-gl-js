@@ -1,9 +1,23 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- fix: rounded corner spikes ([#8155](https://github.com/maplibre/maplibre-gl-js/pull/8155)) (by [@HarelM](https://github.com/HarelM))
+- chore: exclude benchmark files from coverage reports ([#8159](https://github.com/maplibre/maplibre-gl-js/pull/8159)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- chore: improve render test stability ([#8152](https://github.com/maplibre/maplibre-gl-js/pull/8152)) (by [@HarelM](https://github.com/HarelM))
+- Globe: pan with a versor so dragging stays consistent near the poles ([#8154](https://github.com/maplibre/maplibre-gl-js/pull/8154)) (by [@jcolot](https://github.com/jcolot))
+- fix: improve images update performance on style switch ([#8151](https://github.com/maplibre/maplibre-gl-js/pull/8151)) (by [@HarelM](https://github.com/HarelM))
+- feat(marker): keyboard focus and arrow-key drag for draggable markers ([#8045](https://github.com/maplibre/maplibre-gl-js/pull/8045)) (by [@smmariquit](https://github.com/smmariquit))
+- Add a Next.js tab to the ESM bundler setup ([#8128](https://github.com/maplibre/maplibre-gl-js/pull/8128)) (by [@martinfrancois](https://github.com/martinfrancois))
+- GM1.7 Use texelFetch for exact elevation texel lookups ([#8145](https://github.com/maplibre/maplibre-gl-js/pull/8145)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+## 6.4.0
+### ✨ Features and improvements
 - Avoid a per-query `Array.sort()` in cross-tile symbol matching (`TileLayerIndex.findMatches`), claiming the lowest-index unclaimed candidate in a single pass instead; reduces main-thread symbol-placement cost on dense/coincident symbol layers ([#7797](https://github.com/maplibre/maplibre-gl-js/pull/7797)) (by [@pholmstr](https://github.com/pholmstr))
 - Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Make default draggable markers keyboard-focusable and movable with the arrow keys (1 px per press, 10 px with Shift); custom marker elements stay application-owned ([#8020](https://github.com/maplibre/maplibre-gl-js/issues/8020)) (by [@smmariquit](https://github.com/smmariquit))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix a permanent frame rate degradation after switching styles: every sprite reload marked its images as updated forever, making every in-view tile re-check and re-upload them on every frame. Also stop leaking the images of a replaced sprite, which were never removed from the image manager ([#8052](https://github.com/maplibre/maplibre-gl-js/issues/8052)) (by [@HarelM](https://github.com/HarelM))
@@ -14,7 +28,6 @@
 - Fix globe panning inverting and stalling near and across the poles by rotating the globe with a versor, keeping the drag direction consistent at every latitude. Panning also eases off as the cursor approaches the edge of the globe and continues past it, instead of stopping. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
 - Fix `fill-extrusion-rounded-corner-distance` producing spikes: corner arcs now land on the integer tile grid, and corners created by tile clipping are left sharp ([#8153](https://github.com/maplibre/maplibre-gl-js/issues/8153)) (by [@HarelM](https://github.com/HarelM))
 - Fix a gesture which was held still before being released still flinging the map ([#1303](https://github.com/maplibre/maplibre-gl-js/issues/1303)) (by [@zdila](https://github.com/zdila))
-- _...Add new stuff here..._
 
 ## 6.3.0
 
@@ -56,7 +69,6 @@
 - Support `global-state` expressions in `sky.*`, `light.*` and `projection.type` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966), [#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967), [#7968](https://github.com/maplibre/maplibre-gl-js/pull/7968)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Show a grab cursor over draggable markers, including on non-interactive maps ([#8019](https://github.com/maplibre/maplibre-gl-js/issues/8019)) (by [@hugosmoreira](https://github.com/hugosmoreira))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Use `role=img` for non-interactive default markers and `role=button` when they become interactive ([#7790](https://github.com/maplibre/maplibre-gl-js/issues/7790)) (by [@cat0825](https://github.com/cat0825))
