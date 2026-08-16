@@ -55,11 +55,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.transformAndGetImage(this.map._requestManager, url, ResourceType.Tile, tile.abortController, this.map._refreshExpiredTiles, {colorSpaceConversion: 'none'});
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';

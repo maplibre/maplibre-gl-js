@@ -1,12 +1,29 @@
 ## main
 ### ✨ Features and improvements
-- Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Allow negative `fill-extrusion-base` and `fill-extrusion-height` to extrude below ground level, for example underground floor levels ([#8051](https://github.com/maplibre/maplibre-gl-js/issues/8051)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Prevent a rejected missing style image resolver from blocking successfully resolved images in the same batch ([#8146](https://github.com/maplibre/maplibre-gl-js/pull/8146/)) (by @birkskyum)
 - _...Add new stuff here..._
+
+## 6.4.0
+
+### ✨ Features and improvements
+
+- Avoid a per-query `Array.sort()` in cross-tile symbol matching (`TileLayerIndex.findMatches`), claiming the lowest-index unclaimed candidate in a single pass instead; reduces main-thread symbol-placement cost on dense/coincident symbol layers ([#7797](https://github.com/maplibre/maplibre-gl-js/pull/7797)) (by [@pholmstr](https://github.com/pholmstr))
+- Use `texelFetch` for exact DEM and color-relief elevation stop lookups instead of normalized texture coordinate arithmetic ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Make default draggable markers keyboard-focusable and movable with the arrow keys (1 px per press, 10 px with Shift); custom marker elements stay application-owned ([#8020](https://github.com/maplibre/maplibre-gl-js/issues/8020)) (by [@smmariquit](https://github.com/smmariquit))
+
+### 🐞 Bug fixes
+
+- Fix a permanent frame rate degradation after switching styles: every sprite reload marked its images as updated forever, making every in-view tile re-check and re-upload them on every frame. Also stop leaking the images of a replaced sprite, which were never removed from the image manager ([#8052](https://github.com/maplibre/maplibre-gl-js/issues/8052)) (by [@HarelM](https://github.com/HarelM))
+- Prevent a rejected missing style image resolver from blocking successfully resolved images in the same batch ([#8146](https://github.com/maplibre/maplibre-gl-js/pull/8146/)) (by @birkskyum)
+- Explicitly request no browser color management when decoding raster-DEM tiles so their RGB-encoded elevation values are not changed (what would otherwise happen with `gfx.color_management.mode = 1` in Firefox) ([#8125](https://github.com/maplibre/maplibre-gl-js/pull/8125)) (by [@tnikkel](https://github.com/tnikkel))
+- Let an abort reach an image or raster tile load that is still awaiting its `transformRequest`, so `ImageSource.updateImage` no longer loses the image it was just handed and an aborted tile is no longer fetched ([#8071](https://github.com/maplibre/maplibre-gl-js/pull/8071)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix raster tiles fading in again when they are reloaded, briefly flashing the map background, most visibly when switching projection ([#8106](https://github.com/maplibre/maplibre-gl-js/pull/8106)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix globe panning inverting and stalling near and across the poles by rotating the globe with a versor, keeping the drag direction consistent at every latitude. Panning also eases off as the cursor approaches the edge of the globe and continues past it, instead of stopping. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
+- Fix `fill-extrusion-rounded-corner-distance` producing spikes: corner arcs now land on the integer tile grid, and corners created by tile clipping are left sharp ([#8153](https://github.com/maplibre/maplibre-gl-js/issues/8153)) (by [@HarelM](https://github.com/HarelM))
+- Fix a gesture which was held still before being released still flinging the map ([#1303](https://github.com/maplibre/maplibre-gl-js/issues/1303)) (by [@zdila](https://github.com/zdila))
 
 ## 6.3.0
 

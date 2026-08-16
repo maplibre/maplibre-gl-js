@@ -149,7 +149,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     perspectiveTransform: RasterPerspectiveTransform = identityPerspectiveTransform;
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
-    _request: AbortController;
+    _abortController: AbortController;
     private _imageDirty: boolean = false;
 
     /** @internal */
@@ -177,11 +177,10 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
 
         this.url = this.options.url;
 
-        const request = await this.map._requestManager.transformRequest(this.url, ResourceType.Image);
-        this._request = new AbortController();
+        this._abortController = new AbortController();
         try {
-            const image = await ImageRequest.getImage(request, this._request);
-            this._request = null;
+            const image = await ImageRequest.transformAndGetImage(this.map._requestManager, this.url, ResourceType.Image, this._abortController);
+            this._abortController = null;
             this._loaded = true;
 
             if (image?.data) {
@@ -192,11 +191,11 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
                 this._finishLoading();
             }
         } catch (err) {
-            this._request = null;
+            // In case of abort error, the aborter may have started a new request so we don't want to clear its abort controller.
+            if (isAbortError(err)) return;
+            this._abortController = null;
             this._loaded = true;
-            if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(ensureError(err)));
-            }
+            this.fire(new ErrorEvent(ensureError(err)));
         }
     }
 
@@ -215,9 +214,9 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
      * @param options - The options object.
      */
     updateImage(options: UpdateImageOptions): this {
-        if (this._request) {
-            this._request.abort();
-            this._request = null;
+        if (this._abortController) {
+            this._abortController.abort();
+            this._abortController = null;
         }
 
         if ('image' in options) {
@@ -265,9 +264,9 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     onRemove(): void {
-        if (this._request) {
-            this._request.abort();
-            this._request = null;
+        if (this._abortController) {
+            this._abortController.abort();
+            this._abortController = null;
         }
         this._disposeTexture();
         this.image = null;
