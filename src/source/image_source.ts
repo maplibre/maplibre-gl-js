@@ -24,6 +24,47 @@ import {
     type RasterPerspectiveTransform
 } from '../webgl/program/raster_program.ts';
 import {mat2, vec3} from 'gl-matrix';
+import {createTileMeshWithBuffers} from '../util/create_tile_mesh.ts';
+
+import type {Context} from '../webgl/context.ts';
+import type {Mesh} from '../render/mesh.ts';
+
+/**
+ * How many grid cells per axis the mesh of a subdivided quad has. Within a cell the bilinear warp
+ * is still approximated by one mapping per triangle, so the error falls off with the cell size.
+ */
+const SUBDIVIDED_QUAD_GRANULARITY = 16;
+
+/**
+ * Largest ratio between the biggest and the smallest homogeneous denominator over the quad, which is
+ * how much perspective foreshortening the mapping may apply, above which the image is warped
+ * bilinearly instead. Ordinary oblique imagery stays well below it; only a quad that is within a few
+ * percent of being a triangle reaches it.
+ */
+const MAX_PERSPECTIVE_RATIO = 4;
+
+const PERSPECTIVE_EPSILON = Number.EPSILON;
+
+/** Allows for accumulated rounding error in the three-term homogeneous dot products. */
+const PERSPECTIVE_ERROR_FACTOR = 8;
+
+type RasterQuadMapping = {
+    perspectiveTransform: RasterPerspectiveTransform;
+    /**
+     * Whether the image has to be warped over a subdivided mesh. A pair of triangles is enough for
+     * a projective mapping, which keeps straight lines straight across the diagonal between them,
+     * and for a parallelogram, whose affine mapping is the same in both triangles. Any other quad
+     * falls back to an affine mapping, which would otherwise be textured as two independently
+     * warped halves with a visible seam along that diagonal.
+     */
+    subdivided: boolean;
+};
+
+/** An affine mapping, exact over a pair of triangles. */
+const PARALLELOGRAM_MAPPING: RasterQuadMapping = {perspectiveTransform: identityPerspectiveTransform, subdivided: false};
+
+/** An affine mapping per grid cell of a subdivided mesh, which warps the image bilinearly. */
+const BILINEAR_MAPPING: RasterQuadMapping = {perspectiveTransform: identityPerspectiveTransform, subdivided: true};
 
 /**
  * Four geographical coordinates,
@@ -147,10 +188,16 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     tileID: CanonicalTileID;
     tileCoords: Point[];
     perspectiveTransform: RasterPerspectiveTransform = identityPerspectiveTransform;
+    /**
+     * Whether the image has to be warped over a subdivided mesh instead of a pair of triangles,
+     * because {@link perspectiveTransform} is affine and the quad is not a parallelogram.
+     */
+    subdividedQuad: boolean = false;
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _abortController: AbortController;
     private _imageDirty: boolean = false;
+    private _subdividedMesh: Mesh | null = null;
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -245,6 +292,26 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         this._imageDirty = true;
     }
 
+    /**
+     * The mesh the image is drawn with, or null to use the tile mesh of the current projection.
+     *
+     * The raster vertex shader interpolates the image corners from the vertex position, so a pair
+     * of triangles warps the image with one mapping per triangle. That is exact for a projective
+     * {@link perspectiveTransform} and for the affine one of a parallelogram, but any other quad
+     * would be textured as two independently warped halves with a visible seam along the diagonal
+     * between them. Subdividing evaluates the corner interpolation once per grid cell instead,
+     * which warps the image bilinearly.
+     *
+     * A projection that subdivides its own tile meshes already does this, so it keeps them.
+     */
+    getMesh(context: Context, projectionSubdividesTiles: boolean): Mesh | null {
+        if (!this.subdividedQuad || projectionSubdividesTiles) {
+            return null;
+        }
+        this._subdividedMesh ??= createTileMeshWithBuffers(context, {granularity: SUBDIVIDED_QUAD_GRANULARITY});
+        return this._subdividedMesh;
+    }
+
     /** Teardown only: dropping the reference alone leaves the allocation to the GC. */
     private _disposeTexture(): void {
         this.texture?.destroy();
@@ -269,6 +336,8 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
             this._abortController = null;
         }
         this._disposeTexture();
+        this._subdividedMesh?.destroy();
+        this._subdividedMesh = null;
         this.image = null;
         this.tiles = {};
     }
@@ -307,7 +376,9 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         // Transform the corner coordinates into the coordinate space of our
         // tile.
         this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
-        this.perspectiveTransform = calculateRasterPerspectiveTransform(this.tileCoords);
+        const mapping = calculateRasterQuadMapping(this.tileCoords);
+        this.perspectiveTransform = mapping.perspectiveTransform;
+        this.subdividedQuad = mapping.subdivided;
         this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
 
         this.fire(new MapSourceDataEvent('data', {sourceDataType: 'content'}));
@@ -444,15 +515,12 @@ function hasWrongWindingOrder(coords: Point[]) {
     return crossProduct < 0;
 }
 
-const perspectiveEpsilon = Number.EPSILON;
-// Allows for accumulated rounding error in the three-term homogeneous dot products.
-const perspectiveErrorFactor = 8;
-
 /**
  * Calculates the inverse-homography denominator used to sample non-affine
- * image-source texture coordinates. Image source tile coordinates are rounded
- * to integers before this runs, so singularity checks use exact zero or
- * Number.EPSILON scaled to the corner denominators.
+ * image-source texture coordinates, and whether it can be used at all. Image
+ * source tile coordinates are rounded to integers before this runs, so
+ * singularity checks use exact zero or Number.EPSILON scaled to the corner
+ * denominators.
  *
  * Based on Paul S. Heckbert, "Fundamentals of Texture Mapping and Image
  * Warping", UCB/CSD-89-516, 1989, section 2.2.3 and appendix A.2.
@@ -460,9 +528,9 @@ const perspectiveErrorFactor = 8;
  * @see https://www2.eecs.berkeley.edu/Pubs/TechRpts/1989/5504.html
  * @see https://www.cs.cmu.edu/~ph/texfund/texfund.pdf
  */
-function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPerspectiveTransform {
+function calculateRasterQuadMapping(cornerCoords: Point[]): RasterQuadMapping {
     if (isParallelogram(cornerCoords)) {
-        return identityPerspectiveTransform;
+        return PARALLELOGRAM_MAPPING;
     }
 
     const [topLeft, topRight, bottomRight, bottomLeft] = cornerCoords;
@@ -475,8 +543,8 @@ function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPersp
     const basis: mat2 = [dx1, dy1, dx2, dy2];
     const determinant = mat2.determinant(basis);
 
-    if (Math.abs(determinant) < perspectiveEpsilon) {
-        return identityPerspectiveTransform;
+    if (Math.abs(determinant) < PERSPECTIVE_EPSILON) {
+        return BILINEAR_MAPPING;
     }
 
     const perspectiveX = (sx * dy2 - dx2 * sy) / determinant;
@@ -487,9 +555,9 @@ function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPersp
     const forwardDenominators = [1, 1 + perspectiveX, 1 + perspectiveX + perspectiveY, 1 + perspectiveY];
     const forwardDenominatorScale = Math.max(...forwardDenominators.map(value => Math.abs(value)));
     const hasInvalidForwardDenominator = forwardDenominators.some(value =>
-        !Number.isFinite(value) || value <= perspectiveErrorFactor * perspectiveEpsilon * forwardDenominatorScale);
+        !Number.isFinite(value) || value <= PERSPECTIVE_ERROR_FACTOR * PERSPECTIVE_EPSILON * forwardDenominatorScale);
     if (!Number.isFinite(forwardDenominatorScale) || forwardDenominatorScale === 0 || hasInvalidForwardDenominator) {
-        return identityPerspectiveTransform;
+        return BILINEAR_MAPPING;
     }
 
     const a = topRight.x - topLeft.x + perspectiveX * topRight.x;
@@ -502,7 +570,7 @@ function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPersp
     const cornerDenominators = cornerCoords.map(({x, y}) =>
         vec3.dot(inverseDenominator, [x, y, 1]));
     const cornerDenominatorErrors = cornerCoords.map(({x, y}) =>
-        perspectiveErrorFactor * perspectiveEpsilon * (
+        PERSPECTIVE_ERROR_FACTOR * PERSPECTIVE_EPSILON * (
             Math.abs(inverseDenominator[0] * x) +
             Math.abs(inverseDenominator[1] * y) +
             Math.abs(inverseDenominator[2])));
@@ -513,21 +581,34 @@ function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPersp
     // transform that reaches or crosses zero anywhere inside the quad.
     const hasInvalidDenominator = cornerDenominators.some((value, index) =>
         !Number.isFinite(value) ||
-        Math.abs(value) <= Math.max(perspectiveEpsilon * denominatorScale, cornerDenominatorErrors[index]) ||
+        Math.abs(value) <= Math.max(PERSPECTIVE_EPSILON * denominatorScale, cornerDenominatorErrors[index]) ||
         Math.sign(value) !== denominatorSign);
     if (!Number.isFinite(normalizationScale) || normalizationScale === 0 || !Number.isFinite(denominatorScale) ||
         denominatorScale === 0 || hasInvalidDenominator) {
-        return identityPerspectiveTransform;
+        return BILINEAR_MAPPING;
+    }
+
+    // The denominator vanishes on the mapping's vanishing line, and that line touches the quad
+    // exactly when the quad degenerates into a triangle. A quad that is merely close to a triangle
+    // therefore still has a valid, but wildly lopsided, mapping: nearly the whole image is squeezed
+    // into a sliver along one edge and a handful of texels are magnified over the rest of the quad,
+    // which reads as a smeared blob near the corner opposite the degenerate one. Warp those
+    // bilinearly instead, which is also where the mapping is heading as the quad reaches a triangle.
+    const magnitudes = cornerDenominators.map(value => value * denominatorSign);
+    if (Math.max(...magnitudes) > MAX_PERSPECTIVE_RATIO * Math.min(...magnitudes)) {
+        return BILINEAR_MAPPING;
     }
 
     // The denominator is homogeneous, so normalize by its largest coefficient
     // instead of assuming that its constant coefficient is nonzero.
     const transform = inverseDenominator.map(value => value / normalizationScale) as RasterPerspectiveTransform;
-    return transform.every(Number.isFinite) ? transform : identityPerspectiveTransform;
+    return transform.every(Number.isFinite) ?
+        {perspectiveTransform: transform, subdivided: false} :
+        BILINEAR_MAPPING;
 }
 
 function isParallelogram(cornerCoords: Point[]) {
     const [tl, tr, br, bl] = cornerCoords;
-    return Math.abs(tl.x + br.x - tr.x - bl.x) < perspectiveEpsilon &&
-        Math.abs(tl.y + br.y - tr.y - bl.y) < perspectiveEpsilon;
+    return Math.abs(tl.x + br.x - tr.x - bl.x) < PERSPECTIVE_EPSILON &&
+        Math.abs(tl.y + br.y - tr.y - bl.y) < PERSPECTIVE_EPSILON;
 }

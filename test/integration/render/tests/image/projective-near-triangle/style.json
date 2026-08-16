@@ -1,0 +1,98 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "The bottom-left corner sits just short of the diagonal between the other two neighbouring corners, so the quad is very close to a triangle. The projective mapping is flattened towards the affine one there, instead of squeezing the image into a sliver along the bottom-left edge and smearing a few texels over the rest of the quad.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "center": [
+    -122.435,
+    37.76
+  ],
+  "zoom": 11,
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          -122.52,
+          37.815
+        ],
+        [
+          -122.355,
+          37.8
+        ],
+        [
+          -122.325,
+          37.7
+        ],
+        [
+          -122.4237,
+          37.7573
+        ]
+      ],
+      "url": "local://image/projective-grid.png"
+    },
+    "outline": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -122.52,
+              37.815
+            ],
+            [
+              -122.355,
+              37.8
+            ],
+            [
+              -122.325,
+              37.7
+            ],
+            [
+              -122.4237,
+              37.7573
+            ],
+            [
+              -122.52,
+              37.815
+            ]
+          ]
+        },
+        "properties": {}
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "outline",
+      "type": "line",
+      "source": "outline",
+      "paint": {
+        "line-color": "#111827",
+        "line-width": 3,
+        "line-opacity": 0.65
+      }
+    }
+  ]
+}

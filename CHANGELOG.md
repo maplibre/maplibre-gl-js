@@ -14,6 +14,7 @@
 - Fix globe panning inverting and stalling near and across the poles by rotating the globe with a versor, keeping the drag direction consistent at every latitude. Panning also eases off as the cursor approaches the edge of the globe and continues past it, instead of stopping. The bearing is preserved while panning, as before ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
 - Fix `fill-extrusion-rounded-corner-distance` producing spikes: corner arcs now land on the integer tile grid, and corners created by tile clipping are left sharp ([#8153](https://github.com/maplibre/maplibre-gl-js/issues/8153)) (by [@HarelM](https://github.com/HarelM))
 - Fix a gesture which was held still before being released still flinging the map ([#1303](https://github.com/maplibre/maplibre-gl-js/issues/1303)) (by [@zdila](https://github.com/zdila))
+- Fix an image source whose coordinates are close to a triangle squeezing the whole image into a sliver along one edge and smearing a few texels over the rest of the quad. Such a quad is now warped bilinearly over a subdivided mesh, which also removes the seam that the affine fallback of a collinear or concave quad had along the diagonal of its two triangles (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.3.0

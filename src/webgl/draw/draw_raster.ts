@@ -19,6 +19,7 @@ import type {TileManager} from '../../tile/tile_manager.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Tile} from '../../tile/tile.ts';
+import type {Mesh} from '../../render/mesh.ts';
 
 type FadeProperties = {
     parentTile: Tile;
@@ -63,7 +64,7 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.perspectiveTransform, source.flippedWindingOrder, isRenderingToTexture);
+        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.perspectiveTransform, source.flippedWindingOrder, isRenderingToTexture, source.getMesh(painter.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
@@ -87,7 +88,8 @@ function drawTiles(
     corners: Point[],
     perspectiveTransform: RasterPerspectiveTransform,
     flipCullfaceMode: boolean = false,
-    isRenderingToTexture: boolean = false) {
+    isRenderingToTexture: boolean = false,
+    sourceMesh: Mesh | null = null) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
     const context = painter.context;
@@ -140,7 +142,7 @@ function drawTiles(
         const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, perspectiveTransform);
 
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
+        const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,

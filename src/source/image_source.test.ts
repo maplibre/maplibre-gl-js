@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vitest';
-import {ImageSource} from './image_source.ts';
+import {ImageSource, type Coordinates} from './image_source.ts';
 import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
@@ -29,6 +29,16 @@ async function createLoadedSourceWithTile(map: Map, server: FakeServer) {
     const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
     await source.loadTile(tile);
     return {source, tile};
+}
+
+/**
+ * Ratio between the biggest and the smallest homogeneous denominator the transform produces over
+ * the image quad. It is 1 for an affine mapping and grows as the quad approaches a triangle.
+ */
+function perspectiveRatio(source: ImageSource) {
+    const [a, b, c] = source.perspectiveTransform;
+    const denominators = source.tileCoords.map(({x, y}) => Math.abs(a * x + b * y + c));
+    return Math.max(...denominators) / Math.min(...denominators);
 }
 
 describe('ImageSource', () => {
@@ -247,6 +257,80 @@ describe('ImageSource', () => {
         ]);
 
         expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
+    test('keeps the perspective transform of a moderately foreshortened quad', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.545, 37.735]
+        ]);
+
+        expect(perspectiveRatio(source)).toBeCloseTo(1.542, 3);
+    });
+
+    test('warps a quad that is close to a triangle bilinearly', () => {
+        const source = createSource({url: '/image.png'});
+        // The bottom-left corner is just short of the diagonal between its two neighbours.
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.4237, 37.7573]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.subdividedQuad).toBe(true);
+    });
+
+    test('keeps a pair of triangles for a quad that is mapped projectively', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.545, 37.735]
+        ]);
+
+        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
+        expect(source.subdividedQuad).toBe(false);
+    });
+
+    test('keeps a pair of triangles for a parallelogram, whose affine mapping has no seam', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.431640625, 37.857507156],
+            [-122.409667969, 37.857507156],
+            [-122.409667969, 37.840156836],
+            [-122.431640625, 37.840156836]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.subdividedQuad).toBe(false);
+    });
+
+    test('warps every quad that falls back to an affine mapping bilinearly', () => {
+        const source = createSource({url: '/image.png'});
+        const fallbacks: Coordinates[] = [
+            // Collinear destination coordinates.
+            [[-122.431640625, 37.857507156], [-122.409667969, 37.857507156], [-122.387695312, 37.857507156], [-122.365722656, 37.857507156]],
+            // Singular inverse basis.
+            [[-122.431640625, 37.857507156], [-122.431640625, 37.840156836], [-122.431640625, 37.822802434], [-122.409667969, 37.857507156]],
+            // Denominator crossing zero inside the quad.
+            [[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]],
+            // Ever closer to a triangle.
+            [[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.423, 37.7573]],
+            [[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.42215, 37.7573]]
+        ];
+
+        for (const coordinates of fallbacks) {
+            source.setCoordinates(coordinates);
+
+            expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+            expect(source.subdividedQuad).toBe(true);
+        }
     });
 
     test('sets coordinates via updateImage', async () => {
