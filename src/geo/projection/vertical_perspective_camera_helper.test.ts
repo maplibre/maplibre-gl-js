@@ -21,4 +21,35 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
         expect(tr.bearing).toBe(0);
         expect(tr.center.lat).not.toBe(20);
     });
+
+    describe('anchor', () => {
+        function panFrom(around: Point) {
+            const tr = new GlobeTransform();
+            tr.resize(512, 512);
+            tr.setZoom(1);
+            tr.setCenter(new LngLat(0, 0));
+            tr.setTransitionState(1);
+            new VerticalPerspectiveCameraHelper().handleMapControlsPan(
+                {panDelta: new Point(50, 30), around} as MapControlsDeltas,
+                tr, tr.center);
+            return tr;
+        }
+
+        const centerPoint = new Point(256, 256);
+        const offSphere = new Point(500, 30);
+
+        test('a grab off the sphere pans from the center point', () => {
+            const dragged = panFrom(offSphere);
+            const centered = panFrom(centerPoint);
+
+            expect(dragged.center.lng).toBe(centered.center.lng);
+            expect(dragged.center.lat).toBe(centered.center.lat);
+        });
+
+        test('a grab on the sphere pans from the grab', () => {
+            const dragged = panFrom(new Point(300, 256));
+
+            expect(dragged.center.lng).not.toBe(panFrom(centerPoint).center.lng);
+        });
+    });
 });
