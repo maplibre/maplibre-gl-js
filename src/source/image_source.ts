@@ -293,6 +293,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
+     * @internal
      * The mesh the image is drawn with, or null to use the tile mesh of the current projection.
      *
      * The raster vertex shader interpolates the image corners from the vertex position, so a pair
@@ -516,11 +517,8 @@ function hasWrongWindingOrder(coords: Point[]) {
 }
 
 /**
- * Calculates the inverse-homography denominator used to sample non-affine
- * image-source texture coordinates, and whether it can be used at all. Image
- * source tile coordinates are rounded to integers before this runs, so
- * singularity checks use exact zero or Number.EPSILON scaled to the corner
- * denominators.
+ * Decides how the image is mapped onto its quad: projectively where the quad has a usable
+ * inverse homography, bilinearly where it does not.
  *
  * Based on Paul S. Heckbert, "Fundamentals of Texture Mapping and Image
  * Warping", UCB/CSD-89-516, 1989, section 2.2.3 and appendix A.2.
@@ -533,6 +531,30 @@ function calculateRasterQuadMapping(cornerCoords: Point[]): RasterQuadMapping {
         return PARALLELOGRAM_MAPPING;
     }
 
+    const perspectiveTerms = calculatePerspectiveTerms(cornerCoords);
+    if (!perspectiveTerms) {
+        return BILINEAR_MAPPING;
+    }
+
+    const inverseDenominator = calculateInverseDenominator(cornerCoords, perspectiveTerms);
+    const cornerDenominators = cornerCoords.map(({x, y}) => vec3.dot(inverseDenominator, [x, y, 1]));
+    if (isDenominatorSingularInQuad(inverseDenominator, cornerCoords, cornerDenominators) ||
+        isForeshorteningExtreme(cornerDenominators)) {
+        return BILINEAR_MAPPING;
+    }
+
+    const perspectiveTransform = normalizeDenominator(inverseDenominator);
+    return perspectiveTransform ? {perspectiveTransform, subdivided: false} : BILINEAR_MAPPING;
+}
+
+/**
+ * The perspective terms of the homography that maps the unit square onto the quad, or null when the
+ * quad has no finite such mapping.
+ *
+ * A finite image of the unit square has positive homogeneous denominators at all four corners after
+ * normalizing the top-left denominator to one.
+ */
+function calculatePerspectiveTerms(cornerCoords: Point[]): [number, number] | null {
     const [topLeft, topRight, bottomRight, bottomLeft] = cornerCoords;
     const sx = topLeft.x - topRight.x + bottomRight.x - bottomLeft.x;
     const sy = topLeft.y - topRight.y + bottomRight.y - bottomLeft.y;
@@ -544,31 +566,47 @@ function calculateRasterQuadMapping(cornerCoords: Point[]): RasterQuadMapping {
     const determinant = mat2.determinant(basis);
 
     if (Math.abs(determinant) < PERSPECTIVE_EPSILON) {
-        return BILINEAR_MAPPING;
+        return null;
     }
 
     const perspectiveX = (sx * dy2 - dx2 * sy) / determinant;
     const perspectiveY = (dx1 * sy - sx * dy1) / determinant;
 
-    // A finite image of the unit square has positive homogeneous denominators
-    // at all four corners after normalizing the top-left denominator to one.
     const forwardDenominators = [1, 1 + perspectiveX, 1 + perspectiveX + perspectiveY, 1 + perspectiveY];
     const forwardDenominatorScale = Math.max(...forwardDenominators.map(value => Math.abs(value)));
     const hasInvalidForwardDenominator = forwardDenominators.some(value =>
         !Number.isFinite(value) || value <= PERSPECTIVE_ERROR_FACTOR * PERSPECTIVE_EPSILON * forwardDenominatorScale);
     if (!Number.isFinite(forwardDenominatorScale) || forwardDenominatorScale === 0 || hasInvalidForwardDenominator) {
-        return BILINEAR_MAPPING;
+        return null;
     }
 
+    return [perspectiveX, perspectiveY];
+}
+
+/**
+ * The homogeneous denominator of the inverse homography, as the coefficients of
+ * `denominator(x, y) = ax + by + c` over tile coordinates. It is homogeneous, so only its direction
+ * is meaningful; {@link normalizeDenominator} picks the scale.
+ */
+function calculateInverseDenominator(cornerCoords: Point[], [perspectiveX, perspectiveY]: [number, number]): RasterPerspectiveTransform {
+    const [topLeft, topRight, , bottomLeft] = cornerCoords;
     const a = topRight.x - topLeft.x + perspectiveX * topRight.x;
     const b = bottomLeft.x - topLeft.x + perspectiveY * bottomLeft.x;
     const d = topRight.y - topLeft.y + perspectiveX * topRight.y;
     const e = bottomLeft.y - topLeft.y + perspectiveY * bottomLeft.y;
     const inverseDenominator: RasterPerspectiveTransform = [0, 0, 0];
     vec3.cross(inverseDenominator, [a, d, perspectiveX], [b, e, perspectiveY]);
-    const normalizationScale = Math.max(...inverseDenominator.map(value => Math.abs(value)));
-    const cornerDenominators = cornerCoords.map(({x, y}) =>
-        vec3.dot(inverseDenominator, [x, y, 1]));
+    return inverseDenominator;
+}
+
+/**
+ * Whether the denominator reaches or crosses zero anywhere inside the quad, which is where the
+ * mapping is singular. The denominator is affine within each rendered triangle, so the four corners
+ * cover the whole quad. Image source tile coordinates are rounded to integers before this runs, so
+ * each corner is compared against the accumulated rounding error of its own dot product rather than
+ * against zero.
+ */
+function isDenominatorSingularInQuad(inverseDenominator: RasterPerspectiveTransform, cornerCoords: Point[], cornerDenominators: number[]): boolean {
     const cornerDenominatorErrors = cornerCoords.map(({x, y}) =>
         PERSPECTIVE_ERROR_FACTOR * PERSPECTIVE_EPSILON * (
             Math.abs(inverseDenominator[0] * x) +
@@ -577,34 +615,40 @@ function calculateRasterQuadMapping(cornerCoords: Point[]): RasterQuadMapping {
     const denominatorScale = Math.max(...cornerDenominators.map(value => Math.abs(value)));
     const denominatorSign = Math.sign(cornerDenominators[0]);
 
-    // The denominator is affine within each rendered triangle. Reject a
-    // transform that reaches or crosses zero anywhere inside the quad.
-    const hasInvalidDenominator = cornerDenominators.some((value, index) =>
-        !Number.isFinite(value) ||
-        Math.abs(value) <= Math.max(PERSPECTIVE_EPSILON * denominatorScale, cornerDenominatorErrors[index]) ||
-        Math.sign(value) !== denominatorSign);
-    if (!Number.isFinite(normalizationScale) || normalizationScale === 0 || !Number.isFinite(denominatorScale) ||
-        denominatorScale === 0 || hasInvalidDenominator) {
-        return BILINEAR_MAPPING;
+    return !Number.isFinite(denominatorScale) || denominatorScale === 0 ||
+        cornerDenominators.some((value, index) =>
+            !Number.isFinite(value) ||
+            Math.abs(value) <= Math.max(PERSPECTIVE_EPSILON * denominatorScale, cornerDenominatorErrors[index]) ||
+            Math.sign(value) !== denominatorSign);
+}
+
+/**
+ * Whether the mapping foreshortens the image by more than {@link MAX_PERSPECTIVE_RATIO}.
+ *
+ * The denominator vanishes on the mapping's vanishing line, and that line touches the quad exactly
+ * when the quad degenerates into a triangle. A quad that is merely close to a triangle therefore
+ * still has a valid, but wildly lopsided, mapping: nearly the whole image is squeezed into a sliver
+ * along one edge and a handful of texels are magnified over the rest of the quad, which reads as a
+ * smeared blob near the corner opposite the degenerate one.
+ */
+function isForeshorteningExtreme(cornerDenominators: number[]): boolean {
+    const magnitudes = cornerDenominators.map(value => Math.abs(value));
+    return Math.max(...magnitudes) > MAX_PERSPECTIVE_RATIO * Math.min(...magnitudes);
+}
+
+/**
+ * The denominator scaled to the transform handed to the shader, or null when it has no usable scale.
+ * The denominator is homogeneous, so it is normalized by its largest coefficient instead of by
+ * assuming that its constant coefficient is nonzero.
+ */
+function normalizeDenominator(inverseDenominator: RasterPerspectiveTransform): RasterPerspectiveTransform | null {
+    const normalizationScale = Math.max(...inverseDenominator.map(value => Math.abs(value)));
+    if (!Number.isFinite(normalizationScale) || normalizationScale === 0) {
+        return null;
     }
 
-    // The denominator vanishes on the mapping's vanishing line, and that line touches the quad
-    // exactly when the quad degenerates into a triangle. A quad that is merely close to a triangle
-    // therefore still has a valid, but wildly lopsided, mapping: nearly the whole image is squeezed
-    // into a sliver along one edge and a handful of texels are magnified over the rest of the quad,
-    // which reads as a smeared blob near the corner opposite the degenerate one. Warp those
-    // bilinearly instead, which is also where the mapping is heading as the quad reaches a triangle.
-    const magnitudes = cornerDenominators.map(value => value * denominatorSign);
-    if (Math.max(...magnitudes) > MAX_PERSPECTIVE_RATIO * Math.min(...magnitudes)) {
-        return BILINEAR_MAPPING;
-    }
-
-    // The denominator is homogeneous, so normalize by its largest coefficient
-    // instead of assuming that its constant coefficient is nonzero.
     const transform = inverseDenominator.map(value => value / normalizationScale) as RasterPerspectiveTransform;
-    return transform.every(Number.isFinite) ?
-        {perspectiveTransform: transform, subdivided: false} :
-        BILINEAR_MAPPING;
+    return transform.every(Number.isFinite) ? transform : null;
 }
 
 function isParallelogram(cornerCoords: Point[]) {
