@@ -53,6 +53,14 @@ describe('GlobeTransform', () => {
         });
     });
 
+    describe('getProjectionDataForCustomLayer', () => {
+        test('transition is the in-progress globe transition state', () => {
+            const globeTransform = createGlobeTransform();
+            globeTransform.setTransitionState(0.5);
+            expect(globeTransform.getProjectionDataForCustomLayer(true).projectionTransition).toBe(0.5);
+        });
+    });
+
     describe('clipping plane', () => {
         const globeTransform = createGlobeTransform();
 
