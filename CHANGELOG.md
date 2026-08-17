@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Give custom layers the live globe transition in `CustomRenderMethodInput.defaultProjectionData.projectionTransition`, which was hardcoded to 1 for the whole globe/mercator transition, so a custom layer jumped straight to the fully bent globe while every other layer eased ([#8169](https://github.com/maplibre/maplibre-gl-js/pull/8169)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix labels briefly appearing too large when zooming out several levels at once (e.g. a scroll-wheel or pinch fling) with a zoom-dependent `text-size`/`icon-size` ([#8175](https://github.com/maplibre/maplibre-gl-js/pull/8175)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
 ## 6.4.0
