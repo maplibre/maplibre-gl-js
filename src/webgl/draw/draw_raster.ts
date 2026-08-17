@@ -6,9 +6,9 @@ import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {
-    identityPerspectiveTransform,
+    bilinearImageWarp,
     rasterUniformValues,
-    type RasterPerspectiveTransform
+    type RasterImageWarp
 } from '../program/raster_program.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
@@ -64,16 +64,16 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.perspectiveTransform, source.flippedWindingOrder, isRenderingToTexture, source.getMesh(painter.context, useSubdivision));
+        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, isRenderingToTexture, source.getMesh(painter.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, identityPerspectiveTransform, false, isRenderingToTexture); // draw without borders
-        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, identityPerspectiveTransform, false, isRenderingToTexture); // draw with borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, isRenderingToTexture); // draw without borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, isRenderingToTexture); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, identityPerspectiveTransform, false, isRenderingToTexture);
+        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, isRenderingToTexture);
     }
 }
 
@@ -86,7 +86,7 @@ function drawTiles(
     useBorder: boolean,
     allowPoles: boolean,
     corners: Point[],
-    perspectiveTransform: RasterPerspectiveTransform,
+    imageWarp: RasterImageWarp,
     flipCullfaceMode: boolean = false,
     isRenderingToTexture: boolean = false,
     sourceMesh: Mesh | null = null) {
@@ -140,7 +140,7 @@ function drawTiles(
 
         const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
         const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
-        const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, perspectiveTransform);
+        const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 
         const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;

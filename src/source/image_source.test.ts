@@ -31,14 +31,9 @@ async function createLoadedSourceWithTile(map: Map, server: FakeServer) {
     return {source, tile};
 }
 
-/**
- * Ratio between the biggest and the smallest homogeneous denominator the transform produces over
- * the image quad. It is 1 for an affine mapping and grows as the quad approaches a triangle.
- */
-function perspectiveRatio(source: ImageSource) {
-    const [a, b, c] = source.perspectiveTransform;
-    const denominators = source.tileCoords.map(({x, y}) => Math.abs(a * x + b * y + c));
-    return Math.max(...denominators) / Math.min(...denominators);
+/** How far the projective warp of the source has been blended towards the bilinear one. */
+function bilinearBlend(source: ImageSource) {
+    return source.imageWarp[2];
 }
 
 describe('ImageSource', () => {
@@ -153,7 +148,7 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('sets perspective transform for non-parallelogram coordinates', () => {
+    test('warps an oblique quad projectively', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-122.52, 37.815],
@@ -162,10 +157,11 @@ describe('ImageSource', () => {
             [-122.545, 37.735]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0.00009445006607092777, 0.0006583289182209894, 1]);
+        expect(source.imageWarp).toEqual([-0.11771290465577058, -0.2338506983311776, 0]);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
-    test('sets perspective transform when initial coordinates are loaded', async () => {
+    test('warps an oblique quad projectively once the initial coordinates are loaded', async () => {
         const source = createSource({
             url: '/image.png',
             coordinates: [
@@ -182,22 +178,10 @@ describe('ImageSource', () => {
         server.respond();
         await promise;
 
-        expect(source.perspectiveTransform).toEqual([0.00009445006607092777, 0.0006583289182209894, 1]);
+        expect(bilinearBlend(source)).toBe(0);
     });
 
-    test('keeps projective transform when its constant coefficient is zero', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-67.5, 55.77657301866769],
-            [-22.5, 55.77657301866769],
-            [0, 40.97989806962013],
-            [-90, 40.97989806962013]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 1, 0]);
-    });
-
-    test('sets identity perspective transform for parallelogram coordinates', () => {
+    test('warps a parallelogram bilinearly, which is also its affine mapping', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-122.431640625, 37.857507156],
@@ -206,129 +190,63 @@ describe('ImageSource', () => {
             [-122.431640625, 37.840156836]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-    });
-
-    test('sets identity perspective transform for collinear destination coordinates', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-122.431640625, 37.857507156],
-            [-122.409667969, 37.857507156],
-            [-122.387695312, 37.857507156],
-            [-122.365722656, 37.857507156]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-    });
-
-    test('sets identity perspective transform when the inverse basis is singular', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-122.431640625, 37.857507156],
-            [-122.431640625, 37.840156836],
-            [-122.431640625, 37.822802434],
-            [-122.409667969, 37.857507156]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-    });
-
-    test('sets identity perspective transform for a cancellation-degenerate quad', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [96.85546875, 79.36770077764092],
-            [-127.265625, 79.36770077764092],
-            [88.06640625, 79.36770077764092],
-            [-17.40234375, 59.534318001095585]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-    });
-
-    test('sets identity perspective transform when its denominator crosses zero inside the quad', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-90, 66.51326044311186],
-            [0, 66.51326044311186],
-            [-78.75, 61.606396371386275],
-            [-90, 0]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-    });
-
-    test('keeps the perspective transform of a moderately foreshortened quad', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-122.52, 37.815],
-            [-122.355, 37.8],
-            [-122.325, 37.7],
-            [-122.545, 37.735]
-        ]);
-
-        expect(perspectiveRatio(source)).toBeCloseTo(1.542, 3);
-    });
-
-    test('warps a quad that is close to a triangle bilinearly', () => {
-        const source = createSource({url: '/image.png'});
-        // The bottom-left corner is just short of the diagonal between its two neighbours.
-        source.setCoordinates([
-            [-122.52, 37.815],
-            [-122.355, 37.8],
-            [-122.325, 37.7],
-            [-122.4237, 37.7573]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
-    });
-
-    test('keeps a pair of triangles for a quad that is mapped projectively', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-122.52, 37.815],
-            [-122.355, 37.8],
-            [-122.325, 37.7],
-            [-122.545, 37.735]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0.00009445006607092777, 0.0006583289182209894, 1]);
+        expect(source.imageWarp).toEqual([0, 0, 1]);
         expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
-    test('keeps a pair of triangles for a parallelogram, whose affine mapping has no seam', () => {
+    test('warps a quad with no perspective interpretation bilinearly', () => {
         const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-122.431640625, 37.857507156],
-            [-122.409667969, 37.857507156],
-            [-122.409667969, 37.840156836],
-            [-122.431640625, 37.840156836]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
-        expect(source.getMesh(map.painter.context, false)).toBeNull();
-    });
-
-    test('warps every quad that falls back to an affine mapping bilinearly', () => {
-        const source = createSource({url: '/image.png'});
-        const fallbacks: Coordinates[] = [
-            // Collinear destination coordinates.
+        const quads: Coordinates[] = [
+            // Collinear coordinates.
             [[-122.431640625, 37.857507156], [-122.409667969, 37.857507156], [-122.387695312, 37.857507156], [-122.365722656, 37.857507156]],
-            // Singular inverse basis.
+            // Three coordinates on one edge.
             [[-122.431640625, 37.857507156], [-122.431640625, 37.840156836], [-122.431640625, 37.822802434], [-122.409667969, 37.857507156]],
-            // Denominator crossing zero inside the quad.
-            [[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]],
-            // Ever closer to a triangle.
-            [[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.423, 37.7573]],
-            [[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.42215, 37.7573]]
+            // Self-crossing.
+            [[96.85546875, 79.36770077764092], [-127.265625, 79.36770077764092], [88.06640625, 79.36770077764092], [-17.40234375, 59.534318001095585]],
+            // Concave.
+            [[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]]
         ];
 
-        for (const coordinates of fallbacks) {
+        for (const coordinates of quads) {
             source.setCoordinates(coordinates);
 
-            expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+            expect(source.imageWarp).toEqual([0, 0, 1]);
             expect(source.getMesh(map.painter.context, false)).not.toBeNull();
         }
+    });
+
+    test('blends the warp towards bilinear as the quad approaches a triangle', () => {
+        const source = createSource({url: '/image.png'});
+        const blends = [-122.545, -122.4245, -122.4237, -122.423, -122.42225].map((bottomLeftLng) => {
+            source.setCoordinates([
+                [-122.52, 37.815],
+                [-122.355, 37.8],
+                [-122.325, 37.7],
+                [bottomLeftLng, 37.7573]
+            ]);
+            return bilinearBlend(source);
+        });
+
+        // Nothing changes while the corner is far from the diagonal between its two neighbours, and
+        // the blend then rises continuously to a fully bilinear warp as it approaches it.
+        expect(blends[0]).toBe(0);
+        expect(blends[1]).toBeGreaterThan(0);
+        for (let i = 2; i < blends.length; i++) {
+            expect(blends[i]).toBeGreaterThan(blends[i - 1]);
+        }
+        expect(blends.at(-1)).toBeCloseTo(1, 2);
+    });
+
+    test('needs a subdivided mesh only while the warp is a blend of the two mappings', () => {
+        const source = createSource({url: '/image.png'});
+
+        // Purely projective: straight lines survive a pair of triangles.
+        source.setCoordinates([[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.545, 37.735]]);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
+
+        // A blend of the two is neither, and would seam along the diagonal of a pair of triangles.
+        source.setCoordinates([[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.4237, 37.7573]]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
     });
 
     test('sets coordinates via updateImage', async () => {

@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "The bottom-left corner sits just short of the diagonal between the other two neighbouring corners, so the quad is very close to a triangle. The projective mapping is flattened towards the affine one there, instead of squeezing the image into a sliver along the bottom-left edge and smearing a few texels over the rest of the quad.",
+      "description": "The bottom-left corner has been dragged halfway from the rectangle towards the diagonal between its two neighbours, which is where the projective warp is still used in full. Straight lines in the image stay straight and the foreshortening is preserved.",
       "width": 512,
       "height": 512
     }
@@ -29,8 +29,8 @@
           37.7
         ],
         [
-          -122.4237,
-          37.7573
+          -122.48375,
+          37.74625
         ]
       ],
       "url": "local://image/projective-grid.png"
@@ -55,8 +55,8 @@
               37.7
             ],
             [
-              -122.4237,
-              37.7573
+              -122.48375,
+              37.74625
             ],
             [
               -122.52,
