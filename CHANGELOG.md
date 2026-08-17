@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Give custom layers the live globe transition in `CustomRenderMethodInput.defaultProjectionData.projectionTransition`, which was hardcoded to 1 for the whole globe/mercator transition, so a custom layer jumped straight to the fully bent globe while every other layer eased ([#8169](https://github.com/maplibre/maplibre-gl-js/pull/8169)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix terrain close under a high-pitched camera loading at too low a detail level ([#4703](https://github.com/maplibre/maplibre-gl-js/issues/4703)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
