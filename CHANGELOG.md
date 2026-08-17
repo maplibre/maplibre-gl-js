@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix an image source whose coordinates are close to a triangle squeezing the whole image into a sliver along one edge and smearing over the rest of the quad. ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
+- Give custom layers the live globe transition in `CustomRenderMethodInput.defaultProjectionData.projectionTransition`, which was hardcoded to 1 for the whole globe/mercator transition, so a custom layer jumped straight to the fully bent globe while every other layer eased ([#8169](https://github.com/maplibre/maplibre-gl-js/pull/8169)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
 ## 6.4.0
