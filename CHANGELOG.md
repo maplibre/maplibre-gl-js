@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Give custom layers the live globe transition in `CustomRenderMethodInput.defaultProjectionData.projectionTransition`, which was hardcoded to 1 for the whole globe/mercator transition, so a custom layer jumped straight to the fully bent globe while every other layer eased ([#8169](https://github.com/maplibre/maplibre-gl-js/pull/8169)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix tile selection on the globe projection measuring per-tile distances from a point that is not the camera. `coveringTiles` recovered the camera position by unprojecting the screen point the camera's nadir ray passes through, which is exact against mercator's ground plane but lands progressively farther out against the globe's sphere, so at a narrow field of view and high pitch some views were refined several zoom levels past what was requested and others left coarser than it. Mercator is unaffected.
 - _...Add new stuff here..._
 
 ## 6.4.0

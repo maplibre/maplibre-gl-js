@@ -6,7 +6,7 @@ import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import type {IReadonlyTransform} from '../transform_interface.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
-import {maxMercatorHorizonAngle} from './mercator_utils.ts';
+import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
 
 type CoveringTilesResult = {
@@ -217,7 +217,9 @@ function getElevationForTileCulling(transform: IReadonlyTransform): number {
 export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     const frustum = transform.getCameraFrustum();
     const plane = transform.getClippingPlane();
-    const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
+    // Not `screenPointToMercatorCoordinate(getCameraPoint())`: unprojecting the camera's nadir ray
+    // is exact against mercator's ground plane, but lands away from the camera on globe's sphere.
+    const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
     cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
     const elevationForTileCulling = getElevationForTileCulling(transform);

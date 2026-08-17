@@ -96,6 +96,26 @@ export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, el
     return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 }
 
+/**
+ * Returns the camera's own position in mercator coordinates.
+ *
+ * Convert this result to get a location, never the reverse: past roughly +/-5 in mercator y a
+ * latitude saturates at +/-90 degrees, and converting it back returns +/-Infinity.
+ */
+export function cameraMercatorCoordinate(transform: {
+    center: LngLat;
+    elevation: number;
+    pitch: number;
+    bearing: number;
+    cameraToCenterDistance: number;
+    worldSize: number;
+}): MercatorCoordinate {
+    const pixelPerMeter = mercatorZfromAltitude(1, transform.center.lat) * transform.worldSize;
+    return cameraMercatorCoordinateFromCenterAndRotation(
+        transform.center, transform.elevation, transform.pitch, transform.bearing,
+        transform.cameraToCenterDistance / pixelPerMeter);
+}
+
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {
     const pitchRadians = degreesToRadians(pitch);
     const bearingRadians = degreesToRadians(bearing);
