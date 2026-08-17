@@ -36,3 +36,14 @@ describe('Map.coveringTiles', () => {
         expect(tiles.every(tile => tile.canonical.z === 4)).toBeTruthy();
     });
 });
+
+describe('Map.getCameraTransform', () => {
+    test('returns the camera transform', () => {
+        expect(map.getCameraTransform()).toBe(map._camera.transform);
+    });
+
+    test('reflects the current view state', () => {
+        map.setZoom(5);
+        expect(map.getCameraTransform().zoom).toBe(5);
+    });
+});

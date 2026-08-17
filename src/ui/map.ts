@@ -1014,6 +1014,13 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Returns the map's camera transform.
+     *
+     * @returns The map's current camera transform.
+     */
+    getCameraTransform(): ITransform { return this._camera.transform; }
+
+    /**
      * Sets the callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
      */
