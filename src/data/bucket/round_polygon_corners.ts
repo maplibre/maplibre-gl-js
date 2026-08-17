@@ -1,8 +1,8 @@
-import Point from '@mapbox/point-geometry';
-import {vec2} from 'gl-matrix';
 import {EXTENT} from '../extent.ts';
+import {isBoundaryEdge} from '../extent_bounds.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from '../../geo/projection/mercator_utils.ts';
+import type Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
 /**
@@ -32,6 +32,19 @@ function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTil
     return distanceInMeters * meterInMercator * tileUnitsPerMercator;
 }
 
+/**
+ * Rounds the corners of a single ring.
+ *
+ * Corners that tile clipping created are left sharp: they belong to the cut rather than to the
+ * feature, and the neighbouring tile cuts the same feature elsewhere, so rounding them would leave
+ * the two halves out of step. Every vertex ends up on the integer tile grid, because triangulation,
+ * subdivision and the vertex buffers snap and deduplicate vertices there - arcs finer than a tile
+ * unit would otherwise be merged only after they were triangulated, turning the mesh into spikes.
+ *
+ * A ring that collapses into fewer than three distinct vertices is returned unchanged.
+ * @param ring - Ring to round, closed or open
+ * @param distanceInTileUnits - Corner rounding distance, already converted to tile units
+ */
 function roundRing(ring: Point[], distanceInTileUnits: number): Point[] {
     if (!ring || ring.length < 3) {
         return ring;
@@ -44,49 +57,94 @@ function roundRing(ring: Point[], distanceInTileUnits: number): Point[] {
         return ring;
     }
 
-    const vertices: vec2[] = ring.map(p => vec2.fromValues(p.x,p.y));
-    const newRing: vec2[] = [];
+    const newRing: Point[] = [];
 
     for (let i = 0; i < vertexCount; i++) {
-        const prev = vertices[(i - 1 + vertexCount) % vertexCount];
-        const current = vertices[i];
-        const next = vertices[(i + 1) % vertexCount];
+        const previous = ring[(i - 1 + vertexCount) % vertexCount];
+        const current = ring[i];
+        const next = ring[(i + 1) % vertexCount];
 
-        appendRoundCorner(newRing, prev, current, next, distanceInTileUnits);
+        if (isBoundaryEdge(previous, current) || isBoundaryEdge(current, next)) {
+            newRing.push(current.clone());
+            continue;
+        }
+
+        appendRoundCorner(newRing, previous, current, next, distanceInTileUnits);
     }
 
-    if (isClosed && newRing.length > 0) {
-        newRing.push(vec2.clone(newRing[0]));
+    const snapped = snapToIntegerGrid(newRing);
+
+    if (snapped.length < 3) {
+        return ring;
     }
 
-    return newRing.map(p => new Point(p[0], p[1]));
+    if (isClosed) {
+        snapped.push(snapped[0].clone());
+    }
+
+    return snapped;
 }
 
+/**
+ * Rounds every vertex to the integer tile grid, dropping vertices that collapse onto their neighbour.
+ * The ring is treated as closed, so the wrap-around duplicate is dropped as well.
+ * @param ring - Ring to snap
+ */
+function snapToIntegerGrid(ring: Point[]): Point[] {
+    const snapped: Point[] = [];
+
+    for (const p of ring) {
+        const point = p.round();
+        const previous = snapped[snapped.length - 1];
+
+        if (previous?.x === point.x && previous?.y === point.y) {
+            continue;
+        }
+
+        snapped.push(point);
+    }
+
+    while (snapped.length > 1 && snapped[0].x === snapped[snapped.length - 1].x && snapped[0].y === snapped[snapped.length - 1].y) {
+        snapped.pop();
+    }
+
+    return snapped;
+}
+
+/**
+ * Appends the arc that replaces one corner, or the corner itself when it is too shallow or too sharp
+ * to round.
+ * @param newRing - Ring being built, the arc points are appended to it
+ * @param prev - Vertex before the corner
+ * @param current - The corner
+ * @param next - Vertex after the corner
+ * @param distanceInTileUnits - Corner rounding distance, already converted to tile units
+ */
 function appendRoundCorner(
-    newRing: vec2[],
-    prev: vec2,
-    current: vec2,
-    next: vec2,
+    newRing: Point[],
+    prev: Point,
+    current: Point,
+    next: Point,
     distanceInTileUnits: number
 ): void {
     // Unit edge vectors from the current vertex towards its neighbours
-    const ua = vec2.sub(vec2.create(), prev, current);
-    const ub = vec2.sub(vec2.create(), next, current);
-    const lenA = vec2.length(ua);
-    const lenB = vec2.length(ub);
+    const ua = prev.sub(current);
+    const ub = next.sub(current);
+    const lenA = ua.mag();
+    const lenB = ub.mag();
 
     if (lenA < 1e-6 || lenB < 1e-6) {
-        newRing.push(vec2.clone(current));
+        newRing.push(current.clone());
         return;
     }
 
-    vec2.scale(ua, ua, 1 / lenA);
-    vec2.scale(ub, ub, 1 / lenB);
+    ua._div(lenA);
+    ub._div(lenB);
 
     // Straight lines or zero-degree turns
-    const dot = vec2.dot(ua, ub);
+    const dot = ua.x * ub.x + ua.y * ub.y;
     if (Math.abs(dot) > Math.cos(5 * Math.PI / 180)) {
-        newRing.push(vec2.clone(current));
+        newRing.push(current.clone());
         return;
     }
 
@@ -95,27 +153,20 @@ function appendRoundCorner(
     const r = Math.min(distanceInTileUnits, lenA * maxEdgeLenPercent, lenB * maxEdgeLenPercent);
 
     // Tangent points on edges to prevPoint and nextPoint
-    const tangentA = vec2.scaleAndAdd(vec2.create(), current, ua, r);
-    const tangentB = vec2.scaleAndAdd(vec2.create(), current, ub, r);
-
-    const bisector = vec2.add(vec2.create(), ua, ub);
-    vec2.normalize(bisector, bisector);
+    const tangentA = current.add(ua.mult(r));
+    const tangentB = current.add(ub.mult(r));
 
     // Center of the rounding arc, at r / cos(theta/2) along the bisector
     const cosHalfTheta = Math.sqrt((1 + dot) / 2);
-    const center = vec2.scaleAndAdd(vec2.create(), current, bisector, r / cosHalfTheta);
+    const center = current.add(ua.add(ub)._unit()._mult(r / cosHalfTheta));
 
-    // Both tangent points lie on the arc circle.
-    // Rotating tangent A around the center traces the fillet onto tangent B along the shortest arc.
-    const radiusA = vec2.sub(vec2.create(), tangentA, center);
-    const radiusB = vec2.sub(vec2.create(), tangentB, center);
-    const sweepAngle = vec2.angle(radiusA, radiusB);
-    const direction = Math.sign(radiusA[0] * radiusB[1] - radiusA[1] * radiusB[0]); // 2D cross product -> winding direction
+    // Both tangent points lie on the arc circle, so rotating tangent A around the center by the angle
+    // between the two radii traces the fillet onto tangent B along the shortest arc.
+    const sweepAngle = tangentA.sub(center).angleWith(tangentB.sub(center));
 
     // ~30 deg per segment; epsilon keeps fp noise from adding one at exact multiples.
-    const numSegments = Math.max(2, Math.ceil(sweepAngle / (Math.PI / 6) - 1e-6));
+    const numSegments = Math.max(2, Math.ceil(Math.abs(sweepAngle) / (Math.PI / 6) - 1e-6));
     for (let s = 0; s <= numSegments; s++) {
-        const angle = direction * sweepAngle * (s / numSegments);
-        newRing.push(vec2.rotate(vec2.create(), tangentA, center, angle));
+        newRing.push(tangentA.rotateAround(sweepAngle * (s / numSegments), center));
     }
 }
