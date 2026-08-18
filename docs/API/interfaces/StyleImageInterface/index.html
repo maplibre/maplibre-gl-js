@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -10722,7 +10722,7 @@
 
 
 <h1 id="styleimageinterface">StyleImageInterface</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/4529c6e451f0e5607ef42ad0ed81aa76a14a0f43/src/style/style_image.ts#L191">style/style_image.ts:191</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/style/style_image.ts#L191">style/style_image.ts:191</a></p>
 <p>Interface for dynamically generated style images. This is a specification for
 implementers to model: it is not an exported method or class.</p>
 <p>Images implementing this interface can be redrawn for every frame. They can be used to animate
@@ -10776,7 +10776,7 @@ can be used to update the image.</p>
 <blockquote>
 <p><strong>data</strong>: <code>Uint8Array</code>&lt;<code>ArrayBufferLike</code>&gt; | <code>Uint8ClampedArray</code>&lt;<code>ArrayBufferLike</code>&gt; | <a href="../../type-aliases/StyleImageWebGLData/"><code>StyleImageWebGLData</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/4529c6e451f0e5607ef42ad0ed81aa76a14a0f43/src/style/style_image.ts#L200">style/style_image.ts:200</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/style/style_image.ts#L200">style/style_image.ts:200</a></p>
 <p>The image's pixels, in the same format as <code>ImageData</code>, or a <a href="../../type-aliases/StyleImageWebGLData/">StyleImageWebGLData</a>
 callback that renders them with WebGL. A WebGL image renders straight into its slot of the
 shared icon atlas. Nothing new is possible that pixels could not express, but an image that
@@ -10786,7 +10786,7 @@ changes often, such as an animated icon, gets much cheaper: no CPU pixel work an
 <blockquote>
 <p><code>optional</code> <strong>onAdd?</strong>: (<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>, <code>id</code>: <code>string</code>) =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/4529c6e451f0e5607ef42ad0ed81aa76a14a0f43/src/style/style_image.ts#L222">style/style_image.ts:222</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/style/style_image.ts#L222">style/style_image.ts:222</a></p>
 <p>Optional method called when the layer has been added to the Map with <a href="../../classes/Map/#addimage">Map.addImage</a>.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -10817,7 +10817,7 @@ changes often, such as an animated icon, gets much cheaper: no CPU pixel work an
 <blockquote>
 <p><code>optional</code> <strong>onRemove?</strong>: () =&gt; <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/4529c6e451f0e5607ef42ad0ed81aa76a14a0f43/src/style/style_image.ts#L231">style/style_image.ts:231</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/style/style_image.ts#L231">style/style_image.ts:231</a></p>
 <p>Optional method called when the icon is removed from the map with <a href="../../classes/Map/#removeimage">Map.removeImage</a>.
 This gives the image a chance to clean up resources and event listeners.</p>
 <p>This also fires when the WebGL context is lost, after which the same image is added back
@@ -10830,7 +10830,7 @@ released here.</p>
 <blockquote>
 <p><code>optional</code> <strong>render?</strong>: () =&gt; <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/4529c6e451f0e5607ef42ad0ed81aa76a14a0f43/src/style/style_image.ts#L216">style/style_image.ts:216</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/style/style_image.ts#L216">style/style_image.ts:216</a></p>
 <p>This method is called once before every frame where the icon will be used.
 The method can optionally update the image's <code>data</code> member with a new image.</p>
 <p>If the method updates the image it must return <code>true</code> to commit the change.
@@ -10975,7 +10975,7 @@ the image instead of implementing this method.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>
