@@ -31,6 +31,20 @@ export type RaySegment = {
     far: vec3;
 };
 
+const TARGET_SCREEN_STEP_PX = 4;
+const MAX_SAMPLES = 512;
+const MERCATOR_BISECT_EPSILON_PX = 1e-3;
+
+type MercatorRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    near: vec3;
+    dx: number;
+    dy: number;
+    dz: number;
+    worldSize: number;
+};
+
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
 
@@ -911,20 +925,6 @@ export class MercatorTransform implements ITransform {
         return this.calculatePosMatrix(tileID);
     }
 }
-
-const TARGET_SCREEN_STEP_PX = 4;
-const MAX_SAMPLES = 512;
-const MERCATOR_BISECT_EPSILON_PX = 1e-3;
-
-type MercatorRay = {
-    index: TerrainCoverageIndex;
-    exaggeration: number;
-    near: vec3;
-    dx: number;
-    dy: number;
-    dz: number;
-    worldSize: number;
-};
 
 function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
     return sampleAt(ray.index, ray.exaggeration, (ray.near[0] + t * ray.dx) / ray.worldSize, (ray.near[1] + t * ray.dy) / ray.worldSize);
