@@ -40,6 +40,26 @@ export type TerrainData = {
 
 export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
 
+const MAX_BISECTIONS = 40;
+/** Absorbs rounding when a bracket endpoint lands exactly on the terrain surface. */
+export const HIT_EPSILON_M = 1e-6;
+/** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
+const BRACKET_PADDING_M = 10;
+/** `DEMData.sampleBilinear` throws on the far tile edge, so samples stop just short of it. */
+const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
+
+export type TerrainSample = {
+    covered: boolean;
+    elevation: number;
+};
+
+export type TerrainCoverageIndex = {
+    zooms: number[];
+    tiles: Map<string, TerrainElevationSampler | null>;
+    minElevation: number;
+    maxElevation: number;
+};
+
 /**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
@@ -521,26 +541,6 @@ export class Terrain {
         }
     }
 }
-
-const MAX_BISECTIONS = 40;
-/** Absorbs rounding when a bracket endpoint lands exactly on the terrain surface. */
-export const HIT_EPSILON_M = 1e-6;
-/** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
-const BRACKET_PADDING_M = 10;
-/** `DEMData.sampleBilinear` throws on the far tile edge, so samples stop just short of it. */
-const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
-
-export type TerrainSample = {
-    covered: boolean;
-    elevation: number;
-};
-
-export type TerrainCoverageIndex = {
-    zooms: number[];
-    tiles: Map<string, TerrainElevationSampler | null>;
-    minElevation: number;
-    maxElevation: number;
-};
 
 const NOT_COVERED: TerrainSample = {covered: false, elevation: 0};
 
