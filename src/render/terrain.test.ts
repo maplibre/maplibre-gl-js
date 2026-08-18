@@ -28,7 +28,7 @@ describe('Terrain', () => {
         vi.restoreAllMocks();
     });
 
-    const createFlatTerrain = (pixelRatio: number = 1) => {
+    const createFlatTerrain = (pixelRatio: number = 1, elevation: number = 0) => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(2048, 512);
         transform.setCenter(new LngLat(0, 0));
@@ -44,8 +44,10 @@ describe('Terrain', () => {
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
         const stride = 3;
         const pixels = new Uint8Array(stride * stride * 4);
+        const encoded = elevation + 32768;
         for (let i = 0; i < pixels.length; i += 4) {
-            pixels[i] = 128;
+            pixels[i] = Math.floor(encoded / 256);
+            pixels[i + 1] = encoded % 256;
             pixels[i + 3] = 255;
         }
         const dem = new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
@@ -64,6 +66,14 @@ describe('Terrain', () => {
         expect(coordinate).not.toBeNull();
         expect(coordinate.x).toBeCloseTo(0.5, 10);
         expect(coordinate.y).toBeCloseTo(0.5, 10);
+    });
+
+    test('screenPointToMercatorCoordinate returns the terrain hit instead of the flat plane', () => {
+        const terrain = createFlatTerrain(1, 1000);
+        const p = new Point(1024, 256);
+
+        expect(terrain.painter.transform.screenPointToMercatorCoordinate(p).z).toBe(0);
+        expect(terrain.painter.transform.screenPointToMercatorCoordinate(p, terrain).z).toBeCloseTo(1000, 6);
     });
 
     test('pointCoordinate hits the terrain through a globe transform that renders mercator', () => {
