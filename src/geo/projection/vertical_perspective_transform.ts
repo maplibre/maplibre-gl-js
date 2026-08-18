@@ -10,7 +10,7 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
-import {raycastTerrainGlobe} from '../../render/terrain_raycast.ts';
+import {bisect, sampleAt, HIT_EPSILON_M, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_raycast.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
@@ -928,4 +928,73 @@ export class VerticalPerspectiveTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
         return undefined;
     }
+}
+
+const GLOBE_SAMPLES = 256;
+const GLOBE_BISECT_EPSILON_T = 1e-12;
+/** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
+const MAX_MERCATOR_Y = 1 - 1e-9;
+
+type GlobeRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    origin: vec3;
+    direction: vec3;
+};
+
+function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
+    const position = createVec3f64();
+    vec3.scaleAndAdd(position, ray.origin, ray.direction, t);
+    const radius = vec3.length(position);
+    const surface = createVec3f64();
+    vec3.scale(surface, position, 1 / radius);
+    const lngLat = sphereSurfacePointToCoordinates(surface);
+    const projected = MercatorCoordinate.fromLngLat(lngLat);
+    const mercator = new MercatorCoordinate(projected.x, clamp(projected.y, 0, MAX_MERCATOR_Y));
+    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y);
+    // The globe mesh caps the poles at elevation zero, matching the GLOBE branch of get_elevation.
+    const elevation = Math.abs(lngLat.lat) > MAX_VALID_LATITUDE ? 0 : sample.elevation;
+    return {sample: {covered: sample.covered, elevation}, radius, mercator};
+}
+
+function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
+    const {sample, radius} = globeSampleAt(ray, t);
+    return sample.covered && (radius - 1) * earthRadius <= sample.elevation + HIT_EPSILON_M;
+}
+
+/**
+ * Intersects the ray through a screen pixel with the rendered terrain surface under a globe transform.
+ * @param transform - the transform the terrain is rendered with
+ * @param terrain - the terrain
+ * @param p - screen coordinate
+ * @returns the mercator coordinate of the nearest hit with z in meters, or null when the ray misses the terrain
+ */
+export function raycastTerrainGlobe(transform: IReadonlyTransform, terrain: Terrain, p: Point): MercatorCoordinate | null {
+    const index = terrain.getCoverageIndex();
+    if (!index) return null;
+
+    const origin = transform.cameraPosition;
+    const direction = transform.getRayDirectionFromPixel(p);
+    const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
+    if (!outer) return null;
+    const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
+
+    const tStart = Math.max(outer.tMin, 0);
+    const tEnd = inner ? inner.tMin : outer.tMax;
+    if (tEnd <= tStart) return null;
+
+    const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
+
+    let previousT = 0;
+    for (let i = 0; i <= GLOBE_SAMPLES; i++) {
+        const t = tStart + (tEnd - tStart) * i / GLOBE_SAMPLES;
+        if (globeIsBelowTerrain(ray, t)) {
+            const {hi} = bisect(ray, globeIsBelowTerrain, previousT, t, GLOBE_BISECT_EPSILON_T);
+            const {sample, mercator} = globeSampleAt(ray, hi);
+            return new MercatorCoordinate(mercator.x, mercator.y, sample.elevation);
+        }
+        previousT = t;
+    }
+
+    return null;
 }
