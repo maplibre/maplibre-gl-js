@@ -108,22 +108,7 @@ describe('coveringTiles', () => {
             ]);
         });
     
-        // The two `pitched` tests above sit at cameraToCenterDistance / worldSize = 0.0015, where the
-        // camera is close enough to the surface that every way of locating it agrees - so they pass
-        // whether or not the camera is located correctly. A full-window canvas at a narrow field of
-        // view puts that ratio two orders of magnitude higher, and the two tests below select there.
-        //
-        // They assert bounds rather than a tile list, because a mislocated camera surfaces in two
-        // different ways depending on where in the camera space it is used, and each test isolates
-        // one of them at a camera where the correct answer is not in doubt:
-        //
-        //   max(z) <= nominal + 1  - part of the frame refined far past what it asked for
-        //   min(z) <= nominal      - the WHOLE frame refined deeper than it asked for
-        //
-        // A test asserting only the first passes on half the defect. Neither is claimed as a bound
-        // that holds at every camera; both are what these two cameras should return.
-
-        test('pitched at a narrow field of view, part of the frame refined past the nominal zoom', () => {
+        test('far camera at high pitch: no tile is refined past the nominal zoom', () => {
             const transform = new GlobeTransform();
             transform.resize(2560, 1265);
             transform.setCenter(new LngLat(-140, -52));
@@ -141,9 +126,7 @@ describe('coveringTiles', () => {
             expect(Math.min(...levels)).toBeLessThanOrEqual(nominalZ);
         });
 
-        test('pitched at a narrow field of view, whole frame one level too deep', () => {
-            // Every tile here lands one level below the nominal zoom, so the ceiling assertion is
-            // satisfied and only the floor catches it.
+        test('far camera at a narrow field of view: the whole frame is not refined past the nominal zoom', () => {
             const transform = new GlobeTransform();
             transform.resize(2560, 1265);
             transform.setCenter(new LngLat(-140, 0));
@@ -445,16 +428,7 @@ describe('coveringTiles', () => {
         transform.resize(200, 200);
 
         test('terminates when the camera is far outside the mercator square', () => {
-            // A camera can sit well outside [0, 1] in mercator y - here at y = 5.4, from a steep
-            // pitch at a narrow field of view and a low zoom. Any camera position that reaches this
-            // function by way of a longitude/latitude saturates there, comes back as +/-Infinity, and
-            // yields a NaN desired zoom that the refinement loop's `>=` test can never satisfy: the
-            // quadtree then descends to `maxzoom` over the whole world and exhausts memory.
-            //
-            // A regression shows up as this test running out of heap rather than as a failed
-            // assertion. `allowVariableZoom` is what gates the arithmetic, and on this projection it
-            // is also unconditionally true whenever `terrain` is set - so no unusual pitch is needed
-            // to reach it in a terrain style.
+            // A regression exhausts the heap rather than failing an assertion.
             const distantCameraTransform = new MercatorTransform();
             distantCameraTransform.resize(2560, 1265);
             distantCameraTransform.setCenter(new LngLat(0, 0));

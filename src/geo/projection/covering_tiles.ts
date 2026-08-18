@@ -217,8 +217,6 @@ function getElevationForTileCulling(transform: IReadonlyTransform): number {
 export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     const frustum = transform.getCameraFrustum();
     const plane = transform.getClippingPlane();
-    // Not `screenPointToMercatorCoordinate(getCameraPoint())`: unprojecting the camera's nadir ray
-    // is exact against mercator's ground plane, but lands away from the camera on globe's sphere.
     const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
     cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;

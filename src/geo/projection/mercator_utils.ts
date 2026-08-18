@@ -99,8 +99,8 @@ export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, el
 /**
  * Returns the camera's own position in mercator coordinates.
  *
- * Convert this result to get a location, never the reverse: past roughly +/-5 in mercator y a
- * latitude saturates at +/-90 degrees, and converting it back returns +/-Infinity.
+ * Unprojecting `getCameraPoint()` gives the ground point below the camera instead, which is the
+ * camera's position only on mercator's ground plane, not on globe's sphere.
  */
 export function cameraMercatorCoordinate(transform: {
     center: LngLat;
