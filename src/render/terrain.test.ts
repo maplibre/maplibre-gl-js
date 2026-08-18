@@ -103,7 +103,7 @@ describe('Terrain', () => {
         const coordinate = terrain.pointCoordinate(p);
         const verticalPerspective = new VerticalPerspectiveTransform();
         verticalPerspective.apply(globeTransform, false);
-        const expected = verticalPerspective.screenPointToTerrainCoordinate(p, terrain);
+        const expected = verticalPerspective.screenTerrainPointToMercatorCoordinate(p, terrain);
 
         expect(expected).not.toBeNull();
         expect(coordinate).not.toBeNull();

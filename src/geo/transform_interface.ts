@@ -359,7 +359,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param terrain - the terrain
      * @returns the hit with z in meters, or null when the ray misses the terrain
      */
-    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
 
     /**
      * @internal

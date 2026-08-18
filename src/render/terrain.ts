@@ -377,7 +377,7 @@ export class Terrain {
      * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
     pointCoordinate(p: Point): MercatorCoordinate {
-        return this.painter.transform.screenPointToTerrainCoordinate(p, this);
+        return this.painter.transform.screenTerrainPointToMercatorCoordinate(p, this);
     }
 
     /**

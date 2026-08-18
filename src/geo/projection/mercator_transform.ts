@@ -357,7 +357,7 @@ export class MercatorTransform implements ITransform {
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         if (terrain) {
-            const coordinate = this.screenPointToTerrainCoordinate(p, terrain);
+            const coordinate = this.screenTerrainPointToMercatorCoordinate(p, terrain);
             if (coordinate != null) {
                 return coordinate;
             }
@@ -365,7 +365,7 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
-    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
         const index = terrain.getCoverageIndex();
         if (!index) return null;
 
@@ -479,7 +479,7 @@ export class MercatorTransform implements ITransform {
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (terrain) {
-            return this.screenPointToTerrainCoordinate(p, terrain) != null;
+            return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
         return (p.y > this.height / 2 - getMercatorHorizon(this));
     }

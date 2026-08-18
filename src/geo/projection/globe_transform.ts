@@ -430,8 +430,8 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.screenPointToMercatorCoordinate(p, terrain);
     }
 
-    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
-        return this.currentTransform.screenPointToTerrainCoordinate(p, terrain);
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        return this.currentTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {

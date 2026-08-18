@@ -768,7 +768,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         if (terrain) {
-            const coordinate = this.screenPointToTerrainCoordinate(p, terrain);
+            const coordinate = this.screenTerrainPointToMercatorCoordinate(p, terrain);
             if (coordinate) {
                 return coordinate;
             }
@@ -776,7 +776,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
     }
 
-    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
         const index = terrain.getCoverageIndex();
         if (!index) return null;
 

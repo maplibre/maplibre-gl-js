@@ -63,14 +63,14 @@ function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCo
     expect(Math.abs(actual.y - expected.y) * worldSize).toBeLessThan(1e-3);
 }
 
-describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
+describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     test('matches the plane intersection for a flat DEM', () => {
         const height = 500;
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => height));
         const transform = createMercatorTransform(new LngLat(0, 0), 4, 45);
 
         for (const p of [new Point(256, 256), new Point(100, 400), new Point(400, 300)]) {
-            const result = transform.screenPointToTerrainCoordinate(p, terrain);
+            const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
             expect(result).not.toBeNull();
             expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(p, height), transform.worldSize);
             expect(result.z).toBeCloseTo(height, 10);
@@ -82,7 +82,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => height), 2.5);
         const transform = createMercatorTransform(new LngLat(0, 0), 4, 30);
 
-        const result = transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain);
+        const result = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
         expect(result.z).toBeCloseTo(height * 2.5, 10);
         expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(new Point(256, 256), height * 2.5), transform.worldSize);
@@ -94,7 +94,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const transform = createMercatorTransform(new LngLat(0, 0), 3, 60);
 
         for (const p of [new Point(200, 300), new Point(256, 350), new Point(330, 420)]) {
-            const result = transform.screenPointToTerrainCoordinate(p, terrain);
+            const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
             expect(result).not.toBeNull();
             const elevation = terrain.getElevation(tileID, result.x * EXTENT, result.y * EXTENT, EXTENT);
             expect(elevation).toBeCloseTo(result.z, 6);
@@ -108,7 +108,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const crossed = new Set<number>();
 
         for (const p of [new Point(180, 300), new Point(256, 300), new Point(340, 300)]) {
-            const result = transform.screenPointToTerrainCoordinate(p, terrain);
+            const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
             expect(result).not.toBeNull();
             const tileX = Math.floor(result.x * 2);
             const tileY = Math.floor(result.y * 2);
@@ -125,14 +125,14 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
         const transform = createMercatorTransform(new LngLat(0, 0), 4, 80);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 0), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 0), terrain)).toBeNull();
     });
 
     test('returns null when nothing is renderable', () => {
         const terrain = createTerrain([], null);
         const transform = createMercatorTransform(new LngLat(0, 0), 4);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain)).toBeNull();
     });
 
     test('hits a renderable tile whose DEM has not loaded at elevation zero', () => {
@@ -140,7 +140,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const transform = createMercatorTransform(new LngLat(0, 0), 4, 40);
         const p = new Point(256, 300);
 
-        const result = transform.screenPointToTerrainCoordinate(p, terrain);
+        const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
 
         expect(result.z).toBe(0);
         expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(p, 0), transform.worldSize);
@@ -154,8 +154,8 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
 
         const leftPoint = new Point(600, 256);
         const rightPoint = new Point(1500, 256);
-        const left = transform.screenPointToTerrainCoordinate(leftPoint, terrain);
-        const right = transform.screenPointToTerrainCoordinate(rightPoint, terrain);
+        const left = transform.screenTerrainPointToMercatorCoordinate(leftPoint, terrain);
+        const right = transform.screenTerrainPointToMercatorCoordinate(rightPoint, terrain);
 
         expect(left.x).toBeLessThan(0);
         expect(right.x).toBeGreaterThan(1);
@@ -173,7 +173,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const center = new MercatorCoordinate((tileID.canonical.x + 0.5) / scale, (tileID.canonical.y + 0.5) / scale).toLngLat();
         const transform = createMercatorTransform(center, 15, 30);
 
-        const result = transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain);
+        const result = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
         expect(result).not.toBeNull();
         expect(result.z).toBeGreaterThan(0);
@@ -186,7 +186,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         expect(() => terrain.getElevation(tileID, EXTENT - 1e-9, EXTENT - 1e-9, EXTENT)).not.toThrow();
 
         const transform = createMercatorTransform(new LngLat(179.999, -85), 6, 0);
-        expect(() => transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain)).not.toThrow();
+        expect(() => transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain)).not.toThrow();
     });
 
     test('skips renderable tiles that have no terrain tile yet', () => {
@@ -195,7 +195,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         terrain.tileManager.getRenderableTiles = () => [null, ...tiles];
         const transform = createMercatorTransform(new LngLat(0, 0), 4, 30);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain).z).toBeCloseTo(100, 6);
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain).z).toBeCloseTo(100, 6);
     });
 
     test('samples the highest zoom tile covering the position', () => {
@@ -207,15 +207,15 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 1 ? childDEM : parentDEM}) as Tile;
         const transform = createMercatorTransform(new LngLat(0, 0), 1, 0);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(128, 128), terrain).z).toBeCloseTo(900, 6);
-        expect(transform.screenPointToTerrainCoordinate(new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(128, 128), terrain).z).toBeCloseTo(900, 6);
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
     });
 
     test('returns null for a ray leaving the world vertically', () => {
         const terrain = createTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], createDEM(() => 0));
         const transform = createMercatorTransform(new LngLat(0, 0), 1, 0);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(400, 400), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(400, 400), terrain)).toBeNull();
     });
 
     test('handles a ray with no vertical component', () => {
@@ -224,10 +224,10 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const worldSize = 512;
 
         const crossing = createRayTransform([0, 256, 500], [512, 256, 500], worldSize);
-        expect(crossing.screenPointToTerrainCoordinate(new Point(0, 0), terrain)).not.toBeNull();
+        expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
 
         const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
-        expect(aboveEverything.screenPointToTerrainCoordinate(new Point(0, 0), terrain)).toBeNull();
+        expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 
     test('returns null while the ray stays inside the terrain', () => {
@@ -235,7 +235,7 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([tileID], createDEM(() => 100));
         const transform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(0, 0), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 
     test('does not read the painter', () => {
@@ -245,11 +245,11 @@ describe('MercatorTransform.screenPointToTerrainCoordinate', () => {
         });
         const transform = createMercatorTransform(new LngLat(0, 0), 4, 30);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain)).not.toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain)).not.toBeNull();
     });
 });
 
-describe('VerticalPerspectiveTransform.screenPointToTerrainCoordinate', () => {
+describe('VerticalPerspectiveTransform.screenTerrainPointToMercatorCoordinate', () => {
     function createGlobeTransform(center: LngLat, zoom: number): GlobeTransform {
         const transform = new GlobeTransform();
         transform.resize(512, 512);
@@ -262,7 +262,7 @@ describe('VerticalPerspectiveTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
         const transform = createGlobeTransform(new LngLat(0, 0), 1);
 
-        const result = transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain);
+        const result = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
         expect(result).not.toBeNull();
         expect(result.z).toBeCloseTo(1000, 6);
@@ -274,16 +274,16 @@ describe('VerticalPerspectiveTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
         const transform = createGlobeTransform(new LngLat(0, 0), 0);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(0, 0), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 
     test('caps the poles at elevation zero', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 2000));
         const transform = createGlobeTransform(new LngLat(0, 90), 1);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain).z).toBeCloseTo(2000, 6);
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain).z).toBeCloseTo(2000, 6);
 
-        const beyondTheMercatorEdge = transform.screenPointToTerrainCoordinate(new Point(256, 200), terrain);
+        const beyondTheMercatorEdge = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 200), terrain);
 
         expect(beyondTheMercatorEdge).not.toBeNull();
         expect(beyondTheMercatorEdge.z).toBe(0);
@@ -293,21 +293,21 @@ describe('VerticalPerspectiveTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([], null);
         const transform = createGlobeTransform(new LngLat(0, 0), 1);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain)).toBeNull();
     });
 
     test('returns null for a ray that hits the planet outside the renderable tiles', () => {
         const terrain = createTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], createDEM(() => 0));
         const transform = createGlobeTransform(new LngLat(90, -45), 1);
 
-        expect(transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain)).toBeNull();
+        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain)).toBeNull();
     });
 
     test('hits a renderable tile whose DEM has not loaded at elevation zero', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], null);
         const transform = createGlobeTransform(new LngLat(0, 0), 1);
 
-        const result = transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain);
+        const result = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
         expect(result).not.toBeNull();
         expect(result.z).toBe(0);
@@ -319,7 +319,7 @@ describe('VerticalPerspectiveTransform.screenPointToTerrainCoordinate', () => {
         const terrain = createTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
         const transform = createGlobeTransform(new LngLat(0, 0), 1);
 
-        const result = transform.screenPointToTerrainCoordinate(new Point(256, 256), terrain);
+        const result = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
         expect(result).not.toBeNull();
         expect(result.z).toBe(0);
@@ -331,7 +331,7 @@ describe('VerticalPerspectiveTransform.screenPointToTerrainCoordinate', () => {
         const transform = createGlobeTransform(new LngLat(0, 0), 2);
 
         for (const p of [new Point(256, 256), new Point(230, 280), new Point(300, 220)]) {
-            const result = transform.screenPointToTerrainCoordinate(p, terrain);
+            const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
             expect(result).not.toBeNull();
             expect(terrain.getElevation(tileID, result.x * EXTENT, result.y * EXTENT, EXTENT)).toBeCloseTo(result.z, 3);
         }

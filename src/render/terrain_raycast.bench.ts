@@ -65,7 +65,7 @@ const sloped = (zoom: number) => createScene(zoom, (x, y) => 400 + 8 * x + 6 * y
 const sky = (zoom: number) => createScene(zoom, () => 0, 80);
 
 function pick(scene: {terrain: Terrain; transform: MercatorTransform}, p: Point): void {
-    scene.transform.screenPointToTerrainCoordinate(p, scene.terrain);
+    scene.transform.screenTerrainPointToMercatorCoordinate(p, scene.terrain);
 }
 
 describe('terrain raycast', () => {
