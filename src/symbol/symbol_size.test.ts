@@ -15,14 +15,6 @@ function createTextSizeValue(textSize: SymbolLayerSpecification['layout']['text-
 }
 
 describe('evaluateSizeForZoom', () => {
-    test('reports the size at the camera zoom for a bucket built past the last stop', () => {
-        const sizeData = getSizeData(6, createTextSizeValue(['interpolate', ['linear'], ['zoom'], 1, 9, 4, 17]));
-
-        const size = evaluateSizeForZoom(sizeData, 2);
-
-        expect(size.uSize).toBeCloseTo(11.666666, 5);
-    });
-
     test('reports the last stop\'s size above the last stop', () => {
         const sizeData = getSizeData(6, createTextSizeValue(['interpolate', ['linear'], ['zoom'], 1, 9, 4, 17]));
 

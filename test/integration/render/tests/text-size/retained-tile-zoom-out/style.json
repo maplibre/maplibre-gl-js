@@ -1,0 +1,53 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "comment": "Simulates a fast zoom-out: `pauseTiles` blocks tile loading, so after `setZoom` the map still draws the tiles from zoom 4. Their label must be sized for the current zoom 1 (17px), not for the zoom the tile was loaded at (24px).",
+      "operations": [
+        ["wait"],
+        ["pauseTiles", "geojson"],
+        ["setZoom", 1],
+        ["wait"]
+      ]
+    }
+  },
+  "zoom": 4,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "symbol",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "text-field": "ABC",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          0,
+          10,
+          2,
+          24
+        ]
+      }
+    }
+  ]
+}
