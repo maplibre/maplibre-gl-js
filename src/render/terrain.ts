@@ -41,8 +41,7 @@ export type TerrainData = {
 export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
 
 const MAX_BISECTIONS = 40;
-/** Absorbs rounding when a bracket endpoint lands exactly on the terrain surface. */
-export const HIT_EPSILON_M = 1e-6;
+const HIT_EPSILON_M = 1e-6;
 /** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
 const BRACKET_PADDING_M = 10;
 /** `DEMData.sampleBilinear` throws on the far tile edge, so samples stop just short of it. */
@@ -586,6 +585,14 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
         return {covered: true, elevation: sampler(x, y, EXTENT) * exaggeration};
     }
     return NOT_COVERED;
+}
+
+/**
+ * Whether a height in meters is at or below the sampled terrain surface.
+ * The epsilon absorbs rounding when a bracket endpoint lands exactly on the surface.
+ */
+export function isBelowTerrainSample(sample: TerrainSample, height: number): boolean {
+    return sample.covered && height <= sample.elevation + HIT_EPSILON_M;
 }
 
 /**

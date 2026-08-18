@@ -14,7 +14,7 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 
-import {bisect, sampleAt, HIT_EPSILON_M, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
@@ -931,6 +931,5 @@ function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
 }
 
 function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
-    const sample = mercatorSampleAt(ray, t);
-    return sample.covered && ray.near[2] + t * ray.dz <= sample.elevation + HIT_EPSILON_M;
+    return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
 }

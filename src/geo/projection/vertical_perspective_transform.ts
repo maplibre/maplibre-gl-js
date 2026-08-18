@@ -11,7 +11,7 @@ import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, 
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 
-import {bisect, sampleAt, HIT_EPSILON_M, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -984,5 +984,5 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
 
 function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
     const {sample, radius} = globeSampleAt(ray, t);
-    return sample.covered && (radius - 1) * earthRadius <= sample.elevation + HIT_EPSILON_M;
+    return isBelowTerrainSample(sample, (radius - 1) * earthRadius);
 }
