@@ -38,10 +38,6 @@ function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
             active = false;
             signal.removeEventListener('abort', abort);
         };
-        if (signal.aborted) {
-            abort();
-            return;
-        }
         signal.addEventListener('abort', abort, {once: true});
         promise.then((value) => {
             if (!active) return;
