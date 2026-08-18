@@ -777,7 +777,33 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
-        return raycastTerrainGlobe(this, terrain, p);
+        const index = terrain.getCoverageIndex();
+        if (!index) return null;
+
+        const origin = this.cameraPosition;
+        const direction = this.getRayDirectionFromPixel(p);
+        const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
+        if (!outer) return null;
+        const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
+
+        const tStart = Math.max(outer.tMin, 0);
+        const tEnd = inner ? inner.tMin : outer.tMax;
+        if (tEnd <= tStart) return null;
+
+        const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
+
+        let previousT = 0;
+        for (let i = 0; i <= GLOBE_SAMPLES; i++) {
+            const t = tStart + (tEnd - tStart) * i / GLOBE_SAMPLES;
+            if (globeIsBelowTerrain(ray, t)) {
+                const {hi} = bisect(ray, globeIsBelowTerrain, previousT, t, GLOBE_BISECT_EPSILON_T);
+                const {sample, mercator} = globeSampleAt(ray, hi);
+                return new MercatorCoordinate(mercator.x, mercator.y, sample.elevation);
+            }
+            previousT = t;
+        }
+
+        return null;
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
@@ -960,41 +986,4 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
 function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
     const {sample, radius} = globeSampleAt(ray, t);
     return sample.covered && (radius - 1) * earthRadius <= sample.elevation + HIT_EPSILON_M;
-}
-
-/**
- * Intersects the ray through a screen pixel with the rendered terrain surface under a globe transform.
- * @param transform - the transform the terrain is rendered with
- * @param terrain - the terrain
- * @param p - screen coordinate
- * @returns the mercator coordinate of the nearest hit with z in meters, or null when the ray misses the terrain
- */
-export function raycastTerrainGlobe(transform: IReadonlyTransform, terrain: Terrain, p: Point): MercatorCoordinate | null {
-    const index = terrain.getCoverageIndex();
-    if (!index) return null;
-
-    const origin = transform.cameraPosition;
-    const direction = transform.getRayDirectionFromPixel(p);
-    const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
-    if (!outer) return null;
-    const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
-
-    const tStart = Math.max(outer.tMin, 0);
-    const tEnd = inner ? inner.tMin : outer.tMax;
-    if (tEnd <= tStart) return null;
-
-    const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
-
-    let previousT = 0;
-    for (let i = 0; i <= GLOBE_SAMPLES; i++) {
-        const t = tStart + (tEnd - tStart) * i / GLOBE_SAMPLES;
-        if (globeIsBelowTerrain(ray, t)) {
-            const {hi} = bisect(ray, globeIsBelowTerrain, previousT, t, GLOBE_BISECT_EPSILON_T);
-            const {sample, mercator} = globeSampleAt(ray, hi);
-            return new MercatorCoordinate(mercator.x, mercator.y, sample.elevation);
-        }
-        previousT = t;
-    }
-
-    return null;
 }

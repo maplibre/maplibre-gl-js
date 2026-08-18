@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {DEMData} from '../data/dem_data.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
-import {MercatorTransform, raycastTerrainMercator} from '../geo/projection/mercator_transform.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RGBAImage} from '../util/image.ts';
 import {Terrain} from './terrain.ts';
@@ -65,7 +65,7 @@ const sloped = (zoom: number) => createScene(zoom, (x, y) => 400 + 8 * x + 6 * y
 const sky = (zoom: number) => createScene(zoom, () => 0, 80);
 
 function pick(scene: {terrain: Terrain; transform: MercatorTransform}, p: Point): void {
-    raycastTerrainMercator(scene.transform, scene.terrain, p);
+    scene.transform.screenPointToTerrainCoordinate(p, scene.terrain);
 }
 
 describe('terrain raycast', () => {

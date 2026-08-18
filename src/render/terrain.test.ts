@@ -10,7 +10,7 @@ import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
-import {raycastTerrainGlobe} from '../geo/projection/vertical_perspective_transform.ts';
+import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {DEMData} from '../data/dem_data.ts';
@@ -101,7 +101,9 @@ describe('Terrain', () => {
         const p = new Point(1100, 280);
 
         const coordinate = terrain.pointCoordinate(p);
-        const expected = raycastTerrainGlobe(globeTransform, terrain, p);
+        const verticalPerspective = new VerticalPerspectiveTransform();
+        verticalPerspective.apply(globeTransform, false);
+        const expected = verticalPerspective.screenPointToTerrainCoordinate(p, terrain);
 
         expect(expected).not.toBeNull();
         expect(coordinate).not.toBeNull();
