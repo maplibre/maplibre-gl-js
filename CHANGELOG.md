@@ -3,7 +3,6 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix the "Display HTML clusters with custom properties" example, where two loop variables were used without being declared and threw a `ReferenceError` in the module's strict mode, so no cluster marker was ever drawn ([#8193](https://github.com/maplibre/maplibre-gl-js/issues/8193)) (by [@lazerg](https://github.com/lazerg))
 - _...Add new stuff here..._
 
 ## 6.4.1
