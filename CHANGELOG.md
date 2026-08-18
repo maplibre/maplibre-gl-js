@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Pick terrain coordinates with a CPU raycast against the DEM instead of rendering a screen-sized coords framebuffer and reading a pixel back. Picking is sampled at full DEM resolution instead of 1024 steps per tile, no longer stalls the GPU pipeline on every mouse, touch and drag event, no longer silently aliases past 255 renderable tiles, and frees about 4MB of GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Pick terrain coordinates with a CPU raycast against the DEM instead of a coords framebuffer readback: full DEM resolution, no GPU stall on pointer events, and about 4MB less GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
