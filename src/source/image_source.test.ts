@@ -572,6 +572,26 @@ describe('ImageSource', () => {
         expect(source.tiles).toEqual({});
     });
 
+    test('deletes the mesh it warps the image over when the source is removed', async () => {
+        const {source} = await createLoadedSourceWithTile(map, server);
+        // Coordinates that need a subdivided mesh of the source's own.
+        source.setCoordinates([[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]]);
+        const mesh = source.getMesh(map.painter.context, false);
+        const destroy = vi.spyOn(mesh, 'destroy');
+
+        source.onRemove();
+
+        expect(destroy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not delete a mesh it never needed when the source is removed', async () => {
+        const {source} = await createLoadedSourceWithTile(map, server);
+        source.setCoordinates([[0, 0], [1, 0], [1, -1], [0, -1]]);
+
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
+        expect(() => source.onRemove()).not.toThrow();
+    });
+
     describe('updateImage with a decoded image', () => {
         let source: ImageSource;
         let transformRequest: Mock<(url: string, resourceType?: string) => any>;
