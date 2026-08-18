@@ -249,6 +249,88 @@ describe('ImageSource', () => {
         expect(source.getMesh(map.painter.context, false)).not.toBeNull();
     });
 
+    test('warps projectively however close the quad gets to a triangle when asked to', () => {
+        const source = createSource({url: '/image.png'});
+        source.setWarp('perspective');
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.4237, 37.7573]
+        ]);
+
+        expect(bilinearBlend(source)).toBe(0);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
+    });
+
+    test('warps flat however plain the quad is when asked to', () => {
+        const source = createSource({url: '/image.png'});
+        source.setWarp('flat');
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.545, 37.735]
+        ]);
+
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
+    });
+
+    test('warps a parallelogram affinely whichever warp is set', () => {
+        const source = createSource({url: '/image.png'});
+        const parallelogram: Coordinates = [
+            [-122.431640625, 37.857507156],
+            [-122.409667969, 37.857507156],
+            [-122.409667969, 37.840156836],
+            [-122.431640625, 37.840156836]
+        ];
+
+        for (const warp of ['auto', 'perspective', 'flat'] as const) {
+            source.setWarp(warp);
+            source.setCoordinates(parallelogram);
+
+            expect(source.imageWarp).toEqual([0, 0, 1]);
+            expect(source.getMesh(map.painter.context, false)).toBeNull();
+        }
+    });
+
+    test('falls back to a bilinear warp when the quad has no perspective view, even for perspective', () => {
+        const source = createSource({url: '/image.png'});
+        source.setWarp('perspective');
+        // Concave.
+        source.setCoordinates([[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]]);
+
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+    });
+
+    test('re-warps the existing coordinates when the warp changes', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.4237, 37.7573]
+        ]);
+        expect(bilinearBlend(source)).toBeGreaterThan(0);
+
+        source.setWarp('perspective');
+
+        expect(source.getWarp()).toBe('perspective');
+        expect(bilinearBlend(source)).toBe(0);
+    });
+
+    test('defaults to an automatic warp and keeps it when set again', () => {
+        const source = createSource({url: '/image.png'});
+        expect(source.getWarp()).toBe('auto');
+
+        const fired = vi.fn();
+        source.on('data', fired);
+        source.setWarp('auto');
+
+        expect(fired).not.toHaveBeenCalled();
+    });
+
     test('sets coordinates via updateImage', async () => {
         const source = createSource({url: '/image.png'});
         source.onAdd(map);
