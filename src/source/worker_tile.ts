@@ -31,7 +31,31 @@ type GlyphPromiseCache = Map<string, Map<number, GlyphPromise>>;
 
 const glyphPromiseCaches = new WeakMap<IActor, GlyphPromiseCache>();
 
-function getGlyphs(actor: IActor, stacks: {[stack: string]: number[]}, source: string, tileID: OverscaledTileID): Promise<GetGlyphsResponse> {
+function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+    return new Promise((resolve, reject) => {
+        let active = true;
+        const abort = () => {
+            active = false;
+            signal.removeEventListener('abort', abort);
+        };
+        if (signal.aborted) {
+            abort();
+            return;
+        }
+        signal.addEventListener('abort', abort, {once: true});
+        promise.then((value) => {
+            if (!active) return;
+            signal.removeEventListener('abort', abort);
+            resolve(value);
+        }, (error) => {
+            if (!active) return;
+            signal.removeEventListener('abort', abort);
+            reject(error);
+        });
+    });
+}
+
+function getGlyphs(actor: IActor, stacks: {[stack: string]: number[]}, source: string, tileID: OverscaledTileID, signal: AbortSignal): Promise<GetGlyphsResponse> {
     let cache = glyphPromiseCaches.get(actor);
     if (!cache) {
         cache = new Map();
@@ -76,7 +100,8 @@ function getGlyphs(actor: IActor, stacks: {[stack: string]: number[]}, source: s
     if (deferred.length) {
         // Glyphs are shared by concurrently parsed tiles, so this request must
         // outlive cancellation of any individual tile.
-        actor.sendAsync({type: MessageType.getGlyphs, data: {stacks: missing, source, tileID, type: 'glyphs'}})
+        const abortController = new AbortController();
+        actor.sendAsync({type: MessageType.getGlyphs, data: {stacks: missing, source, tileID, type: 'glyphs'}}, abortController)
             .then((response) => {
                 for (const entry of deferred) entry.resolve(response[entry.stack]?.[entry.id]);
             }, (error: unknown) => {
@@ -91,7 +116,7 @@ function getGlyphs(actor: IActor, stacks: {[stack: string]: number[]}, source: s
             });
     }
 
-    return Promise.all(requested.map(async ({stack, id, promise}) => ({stack, id, glyph: await promise})))
+    return abortable(Promise.all(requested.map(async ({stack, id, promise}) => ({stack, id, glyph: await promise}))), signal)
         .then((glyphs) => {
             const result: GetGlyphsResponse = {};
             for (const {stack, id, glyph} of glyphs) {
@@ -214,7 +239,9 @@ export class WorkerTile {
 
         let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
         if (Object.keys(stacks).length) {
-            getGlyphsPromise = getGlyphs(actor, stacks, this.source, this.tileID);
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            getGlyphsPromise = getGlyphs(actor, stacks, this.source, this.tileID, abortController.signal);
         }
 
         const icons = Object.keys(options.iconDependencies);
