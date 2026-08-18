@@ -19,6 +19,18 @@ import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
+const GLOBE_SAMPLES = 256;
+const GLOBE_BISECT_EPSILON_T = 1e-12;
+/** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
+const MAX_MERCATOR_Y = 1 - 1e-9;
+
+type GlobeRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    origin: vec3;
+    direction: vec3;
+};
+
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
 
@@ -954,18 +966,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return undefined;
     }
 }
-
-const GLOBE_SAMPLES = 256;
-const GLOBE_BISECT_EPSILON_T = 1e-12;
-/** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
-const MAX_MERCATOR_Y = 1 - 1e-9;
-
-type GlobeRay = {
-    index: TerrainCoverageIndex;
-    exaggeration: number;
-    origin: vec3;
-    direction: vec3;
-};
 
 function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
     const position = createVec3f64();
