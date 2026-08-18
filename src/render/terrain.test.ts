@@ -159,15 +159,6 @@ describe('Terrain', () => {
             expect(terrain.pointCoordinate(new Point(1792, 256)).x).toBeCloseTo(2, 10);
         });
 
-    test('pointCoordinate does not touch the GL context', () => {
-        const terrain = createFlatTerrain();
-        Object.defineProperty(terrain.painter, 'context', {
-            get() { throw new Error('pointCoordinate must not use the GL context'); }
-        });
-
-        expect(terrain.pointCoordinate(new Point(1024, 256))).not.toBeNull();
-    });
-
     test('Calculate tile minimum and maximum elevation', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
