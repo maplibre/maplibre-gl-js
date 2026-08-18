@@ -267,9 +267,31 @@ export class Terrain {
      */
     getCoverageIndex(): TerrainCoverageIndex | null {
         if (this._coverageIndex === undefined) {
-            this._coverageIndex = buildCoverageIndex(this);
+            this._coverageIndex = this._buildCoverageIndex();
         }
         return this._coverageIndex;
+    }
+
+    private _buildCoverageIndex(): TerrainCoverageIndex | null {
+        const zooms: number[] = [];
+        const tiles = new Map<string, TerrainElevationSampler | null>();
+        let minElevation = 0;
+        let maxElevation = 0;
+
+        for (const tile of this.tileManager.getRenderableTiles()) {
+            if (!tile) continue;
+            const {canonical, wrap} = tile.tileID;
+            if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
+            const sampler = this.getElevationSampler(tile.tileID);
+            tiles.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
+            const {minElevation: tileMin, maxElevation: tileMax} = this.getMinMaxElevation(tile.tileID);
+            minElevation = Math.min(minElevation, tileMin ?? 0);
+            maxElevation = Math.max(maxElevation, tileMax ?? 0);
+        }
+
+        if (tiles.size === 0) return null;
+        zooms.sort((a, b) => b - a);
+        return {zooms, tiles, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
     }
 
     /**
@@ -539,31 +561,6 @@ export class Terrain {
 }
 
 const NOT_COVERED: TerrainSample = {covered: false, elevation: 0};
-
-/**
- * Indexes the tiles the terrain currently renders so a ray can be tested against them without the GPU.
- */
-export function buildCoverageIndex(terrain: Terrain): TerrainCoverageIndex | null {
-    const zooms: number[] = [];
-    const tiles = new Map<string, TerrainElevationSampler | null>();
-    let minElevation = 0;
-    let maxElevation = 0;
-
-    for (const tile of terrain.tileManager.getRenderableTiles()) {
-        if (!tile) continue;
-        const {canonical, wrap} = tile.tileID;
-        if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
-        const sampler = terrain.getElevationSampler(tile.tileID);
-        tiles.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
-        const {minElevation: tileMin, maxElevation: tileMax} = terrain.getMinMaxElevation(tile.tileID);
-        minElevation = Math.min(minElevation, tileMin ?? 0);
-        maxElevation = Math.max(maxElevation, tileMax ?? 0);
-    }
-
-    if (tiles.size === 0) return null;
-    zooms.sort((a, b) => b - a);
-    return {zooms, tiles, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
-}
 
 /**
  * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
