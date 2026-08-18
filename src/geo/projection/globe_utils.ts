@@ -247,6 +247,7 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
 
     const oldLat = tr.center.lat;
+    const oldZoom = tr.zoom;
     const finalLat = clamp(newCenterLat, -90, 90);
     const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
 
@@ -254,7 +255,7 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
     if (!fixedBearing) {
         tr.setBearing(newBearing);
     }
-    tr.setZoom(tr.zoom + getZoomAdjustment(oldLat, tr.center.lat));
+    tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
 }
 
 /**
