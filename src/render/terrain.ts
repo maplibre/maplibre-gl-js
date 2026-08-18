@@ -14,7 +14,7 @@ import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
-import {raycastTerrainGlobe, raycastTerrainMercator} from './terrain_raycast.ts';
+import {buildCoverageIndex, raycastTerrainGlobe, raycastTerrainMercator, type TerrainCoverageIndex} from './terrain_raycast.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
@@ -39,7 +39,7 @@ export type TerrainData = {
     tile: Tile;
 };
 
-type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
+export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
 
 /**
  * @internal
@@ -128,6 +128,11 @@ export class Terrain {
      */
     _elevationSamplerCache: Map<string, TerrainElevationSampler>;
     /**
+     * Per-render index of the tiles the terrain draws, used by CPU raycasts.
+     * It is cleared together with the elevation sampler cache; undefined means not built yet.
+     */
+    _coverageIndex: TerrainCoverageIndex | null | undefined;
+    /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
      */
@@ -182,7 +187,7 @@ export class Terrain {
         const normalized = tileID.normalizeCoordinates(x, y, extent);
         if (!normalized) return 0;
 
-        const sampler = this._getElevationSampler(normalized.tileID);
+        const sampler = this.getElevationSampler(normalized.tileID);
         return sampler ? sampler(normalized.x, normalized.y, extent) : 0;
     }
 
@@ -233,9 +238,27 @@ export class Terrain {
      */
     resetElevationCache(): void {
         this._elevationSamplerCache.clear();
+        this._coverageIndex = undefined;
     }
 
-    _getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
+    /**
+     * Index of the tiles the terrain currently renders, for sampling the terrain surface on the CPU.
+     * Built on first use and kept until {@link resetElevationCache}.
+     * @returns the index, or null when no terrain tile is renderable
+     */
+    getCoverageIndex(): TerrainCoverageIndex | null {
+        if (this._coverageIndex === undefined) {
+            this._coverageIndex = buildCoverageIndex(this);
+        }
+        return this._coverageIndex;
+    }
+
+    /**
+     * Get a function that samples the raw DEM elevation of a tile, without exaggeration.
+     * @param tileID - the tile id
+     * @returns the sampler, or null when the tile's DEM data is not loaded
+     */
+    getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
         const key = tileID.key;
         const cachedSampler = this._elevationSamplerCache.get(key);
         if (cachedSampler) return cachedSampler;

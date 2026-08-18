@@ -6,7 +6,7 @@ import {raySphereIntersection, sphereSurfacePointToCoordinates} from '../geo/pro
 import {clamp, createVec3f64, MAX_VALID_LATITUDE} from '../util/util.ts';
 import type Point from '@mapbox/point-geometry';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {Terrain} from './terrain.ts';
+import type {Terrain, TerrainElevationSampler} from './terrain.ts';
 
 const TARGET_SCREEN_STEP_PX = 4;
 const MAX_SAMPLES = 512;
@@ -23,16 +23,14 @@ const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
 /** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
 const MAX_MERCATOR_Y = 1 - 1e-9;
 
-type ElevationSampler = (x: number, y: number, extent: number) => number;
-
 type TerrainSample = {
     covered: boolean;
     elevation: number;
 };
 
-type CoverageIndex = {
+export type TerrainCoverageIndex = {
     zooms: number[];
-    tiles: Map<string, ElevationSampler | null>;
+    tiles: Map<string, TerrainElevationSampler | null>;
     minElevation: number;
     maxElevation: number;
 };
@@ -42,9 +40,9 @@ const NOT_COVERED: TerrainSample = {covered: false, elevation: 0};
 /**
  * Indexes the tiles the terrain currently renders so a ray can be tested against them without the GPU.
  */
-function buildCoverageIndex(terrain: Terrain): CoverageIndex | null {
+export function buildCoverageIndex(terrain: Terrain): TerrainCoverageIndex | null {
     const zooms: number[] = [];
-    const tiles = new Map<string, ElevationSampler | null>();
+    const tiles = new Map<string, TerrainElevationSampler | null>();
     let minElevation = 0;
     let maxElevation = 0;
 
@@ -52,7 +50,7 @@ function buildCoverageIndex(terrain: Terrain): CoverageIndex | null {
         if (!tile) continue;
         const {canonical, wrap} = tile.tileID;
         if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
-        const sampler = terrain._getElevationSampler(tile.tileID);
+        const sampler = terrain.getElevationSampler(tile.tileID);
         tiles.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
         const {minElevation: tileMin, maxElevation: tileMax} = terrain.getMinMaxElevation(tile.tileID);
         minElevation = Math.min(minElevation, tileMin ?? 0);
@@ -68,7 +66,7 @@ function buildCoverageIndex(terrain: Terrain): CoverageIndex | null {
  * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
  * A covered tile whose DEM has not loaded yet is flat at zero, which is what the terrain mesh renders.
  */
-function sampleAt(index: CoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number): TerrainSample {
+function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number): TerrainSample {
     if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
     const wrap = Math.floor(mercatorX);
     const wrappedX = mercatorX - wrap;
@@ -98,7 +96,7 @@ function sampleAt(index: CoverageIndex, exaggeration: number, mercatorX: number,
  * @returns the mercator coordinate of the nearest hit with z in meters, or null when the ray misses the terrain
  */
 export function raycastTerrainMercator(transform: IReadonlyTransform, terrain: Terrain, p: Point): MercatorCoordinate | null {
-    const index = buildCoverageIndex(terrain);
+    const index = terrain.getCoverageIndex();
     if (!index) return null;
 
     const {near, far} = transform.getRaySegmentFromPixel(p);
@@ -160,7 +158,7 @@ export function raycastTerrainMercator(transform: IReadonlyTransform, terrain: T
     return null;
 }
 
-function globeSampleAt(index: CoverageIndex, exaggeration: number, position: vec3): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
+function globeSampleAt(index: TerrainCoverageIndex, exaggeration: number, position: vec3): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
     const radius = vec3.length(position);
     const surface = createVec3f64();
     vec3.scale(surface, position, 1 / radius);
@@ -181,7 +179,7 @@ function globeSampleAt(index: CoverageIndex, exaggeration: number, position: vec
  * @returns the mercator coordinate of the nearest hit with z in meters, or null when the ray misses the terrain
  */
 export function raycastTerrainGlobe(transform: IReadonlyTransform, terrain: Terrain, p: Point): MercatorCoordinate | null {
-    const index = buildCoverageIndex(terrain);
+    const index = terrain.getCoverageIndex();
     if (!index) return null;
 
     const origin = transform.cameraPosition;

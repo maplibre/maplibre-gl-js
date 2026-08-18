@@ -120,6 +120,19 @@ describe('Terrain', () => {
         expect(terrain.pointCoordinate(new Point(1024, 256))).toBeNull();
     });
 
+    test('pointCoordinate sees newly renderable tiles after resetElevationCache', () => {
+        const terrain = createFlatTerrain();
+        const renderableTiles = terrain.tileManager.getRenderableTiles;
+        terrain.tileManager.getRenderableTiles = () => [];
+        expect(terrain.pointCoordinate(new Point(1024, 256))).toBeNull();
+
+        terrain.tileManager.getRenderableTiles = renderableTiles;
+        expect(terrain.pointCoordinate(new Point(1024, 256))).toBeNull();
+
+        terrain.resetElevationCache();
+        expect(terrain.pointCoordinate(new Point(1024, 256))).not.toBeNull();
+    });
+
     test(
         `pointCoordinate should return negative mercator x
         if the point is on the LEFT outside the central globe`,
