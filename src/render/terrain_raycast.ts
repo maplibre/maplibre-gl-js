@@ -89,6 +89,37 @@ function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: 
     return NOT_COVERED;
 }
 
+type MercatorRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    near: vec3;
+    dx: number;
+    dy: number;
+    dz: number;
+    worldSize: number;
+};
+
+function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
+    return sampleAt(ray.index, ray.exaggeration, (ray.near[0] + t * ray.dx) / ray.worldSize, (ray.near[1] + t * ray.dy) / ray.worldSize);
+}
+
+function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
+    const sample = mercatorSampleAt(ray, t);
+    return sample.covered && ray.near[2] + t * ray.dz <= sample.elevation + HIT_EPSILON_M;
+}
+
+/**
+ * Narrows the bracket `[lo, hi]` around the surface crossing until it is shorter than `tolerance` in ray parameter units.
+ */
+function bisect<Ray>(ray: Ray, isBelowTerrain: (ray: Ray, t: number) => boolean, lo: number, hi: number, tolerance: number): {lo: number; hi: number} {
+    for (let j = 0; j < MAX_BISECTIONS && hi - lo > tolerance; j++) {
+        const mid = (lo + hi) / 2;
+        if (isBelowTerrain(ray, mid)) hi = mid;
+        else lo = mid;
+    }
+    return {lo, hi};
+}
+
 /**
  * Intersects the ray through a screen pixel with the rendered terrain surface under a mercator transform.
  * @param transform - the transform the terrain is rendered with
@@ -105,6 +136,7 @@ export function raycastTerrainMercator(transform: MercatorTransform, terrain: Te
     const dx = far[0] - near[0];
     const dy = far[1] - near[1];
     const dz = far[2] - near[2];
+    const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize};
 
     let tStart = 0;
     let tEnd = 1;
@@ -120,37 +152,26 @@ export function raycastTerrainMercator(transform: MercatorTransform, terrain: Te
 
     const horizontalLength = Math.hypot(dx, dy);
     const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_SCREEN_STEP_PX), 1, MAX_SAMPLES);
-    const sampleRay = (t: number) => sampleAt(index, terrain.exaggeration, (near[0] + t * dx) / worldSize, (near[1] + t * dy) / worldSize);
-    const isBelowTerrain = (t: number) => {
-        const sample = sampleRay(t);
-        return sample.covered && near[2] + t * dz <= sample.elevation + HIT_EPSILON_M;
-    };
 
     let previousT = 0;
-    let aboveTerrain = !isBelowTerrain(0);
+    let aboveTerrain = !mercatorIsBelowTerrain(ray, 0);
 
     for (let i = 0; i <= samples; i++) {
         const t = tStart + (tEnd - tStart) * i / samples;
 
         if (!aboveTerrain) {
-            aboveTerrain = !isBelowTerrain(t);
-        } else if (isBelowTerrain(t)) {
-            let lo = previousT;
-            let hi = t;
-            for (let j = 0; j < MAX_BISECTIONS && horizontalLength * (hi - lo) > MERCATOR_BISECT_EPSILON_PX; j++) {
-                const mid = (lo + hi) / 2;
-                if (isBelowTerrain(mid)) hi = mid;
-                else lo = mid;
-            }
-            const sampleLo = sampleRay(lo);
-            const sampleHi = sampleRay(hi);
+            aboveTerrain = !mercatorIsBelowTerrain(ray, t);
+        } else if (mercatorIsBelowTerrain(ray, t)) {
+            const {lo, hi} = bisect(ray, mercatorIsBelowTerrain, previousT, t, MERCATOR_BISECT_EPSILON_PX / horizontalLength);
+            const sampleLo = mercatorSampleAt(ray, lo);
+            const sampleHi = mercatorSampleAt(ray, hi);
             const fLo = near[2] + lo * dz - sampleLo.elevation;
             const fHi = near[2] + hi * dz - sampleHi.elevation;
             const hit = sampleLo.covered && fLo > fHi ? clamp(lo + fLo * (hi - lo) / (fLo - fHi), lo, hi) : hi;
             return new MercatorCoordinate(
                 (near[0] + hit * dx) / worldSize,
                 (near[1] + hit * dy) / worldSize,
-                sampleRay(hit).elevation);
+                mercatorSampleAt(ray, hit).elevation);
         }
 
         previousT = t;
@@ -159,17 +180,31 @@ export function raycastTerrainMercator(transform: MercatorTransform, terrain: Te
     return null;
 }
 
-function globeSampleAt(index: TerrainCoverageIndex, exaggeration: number, position: vec3): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
+type GlobeRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    origin: vec3;
+    direction: vec3;
+};
+
+function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
+    const position = createVec3f64();
+    vec3.scaleAndAdd(position, ray.origin, ray.direction, t);
     const radius = vec3.length(position);
     const surface = createVec3f64();
     vec3.scale(surface, position, 1 / radius);
     const lngLat = sphereSurfacePointToCoordinates(surface);
     const projected = MercatorCoordinate.fromLngLat(lngLat);
     const mercator = new MercatorCoordinate(projected.x, clamp(projected.y, 0, MAX_MERCATOR_Y));
-    const sample = sampleAt(index, exaggeration, mercator.x, mercator.y);
+    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y);
     // The globe mesh caps the poles at elevation zero, matching the GLOBE branch of get_elevation.
     const elevation = Math.abs(lngLat.lat) > MAX_VALID_LATITUDE ? 0 : sample.elevation;
     return {sample: {covered: sample.covered, elevation}, radius, mercator};
+}
+
+function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
+    const {sample, radius} = globeSampleAt(ray, t);
+    return sample.covered && (radius - 1) * earthRadius <= sample.elevation + HIT_EPSILON_M;
 }
 
 /**
@@ -193,28 +228,14 @@ export function raycastTerrainGlobe(transform: IReadonlyTransform, terrain: Terr
     const tEnd = inner ? inner.tMin : outer.tMax;
     if (tEnd <= tStart) return null;
 
-    const positionAt = (t: number): vec3 => {
-        const position = createVec3f64();
-        vec3.scaleAndAdd(position, origin, direction, t);
-        return position;
-    };
-    const isBelowTerrain = (t: number) => {
-        const {sample, radius} = globeSampleAt(index, terrain.exaggeration, positionAt(t));
-        return sample.covered && (radius - 1) * earthRadius <= sample.elevation + HIT_EPSILON_M;
-    };
+    const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
 
     let previousT = 0;
     for (let i = 0; i <= GLOBE_SAMPLES; i++) {
         const t = tStart + (tEnd - tStart) * i / GLOBE_SAMPLES;
-        if (isBelowTerrain(t)) {
-            let lo = previousT;
-            let hi = t;
-            for (let j = 0; j < MAX_BISECTIONS && hi - lo > GLOBE_BISECT_EPSILON_T; j++) {
-                const mid = (lo + hi) / 2;
-                if (isBelowTerrain(mid)) hi = mid;
-                else lo = mid;
-            }
-            const {sample, mercator} = globeSampleAt(index, terrain.exaggeration, positionAt(hi));
+        if (globeIsBelowTerrain(ray, t)) {
+            const {hi} = bisect(ray, globeIsBelowTerrain, previousT, t, GLOBE_BISECT_EPSILON_T);
+            const {sample, mercator} = globeSampleAt(ray, hi);
             return new MercatorCoordinate(mercator.x, mercator.y, sample.elevation);
         }
         previousT = t;
