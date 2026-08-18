@@ -643,8 +643,7 @@ describe('GlobeTransform', () => {
         const originalLat = globeTransform.center.lat;
 
         const terrain = {
-            getElevationForLngLatZoom: () => 200,
-            pointCoordinate: () => null
+            getElevationForLngLatZoom: () => 200
         } as any;
 
         globeTransform.recalculateZoomAndCenter(terrain);

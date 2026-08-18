@@ -395,10 +395,6 @@ export class Terrain {
      * @param p - Screen-Coordinate
      * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
-    pointCoordinate(p: Point): MercatorCoordinate {
-        return this.painter.transform.screenTerrainPointToMercatorCoordinate(p, this);
-    }
-
     /**
      * Reads the depth value from the depth-framebuffer at a given screen pixel
      * @param p - Screen coordinate

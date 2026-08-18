@@ -58,10 +58,10 @@ describe('Terrain', () => {
         return terrain;
     };
 
-    test('pointCoordinate hits the terrain under the map center', () => {
+    test('screenTerrainPointToMercatorCoordinate hits the terrain under the map center', () => {
         const terrain = createFlatTerrain();
 
-        const coordinate = terrain.pointCoordinate(new Point(1024, 256));
+        const coordinate = terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain);
 
         expect(coordinate).not.toBeNull();
         expect(coordinate.x).toBeCloseTo(0.5, 10);
@@ -76,15 +76,14 @@ describe('Terrain', () => {
         expect(terrain.painter.transform.screenPointToMercatorCoordinate(p, terrain).z).toBeCloseTo(1000, 6);
     });
 
-    test('pointCoordinate hits the terrain through a globe transform that renders mercator', () => {
+    test('a globe transform that renders mercator picks with the mercator raycast', () => {
         const terrain = createFlatTerrain();
         const globeTransform = new GlobeTransform();
         globeTransform.resize(2048, 512);
         globeTransform.setZoom(0);
         globeTransform.setTransitionState(0);
-        (terrain.painter as any).transform = globeTransform;
 
-        const coordinate = terrain.pointCoordinate(new Point(1024, 256));
+        const coordinate = globeTransform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain);
 
         expect(coordinate).not.toBeNull();
         expect(coordinate.x).toBeCloseTo(0.5, 10);
@@ -92,15 +91,14 @@ describe('Terrain', () => {
         expect(coordinate.z).toBeCloseTo(0, 10);
     });
 
-    test('pointCoordinate uses the globe raycast through a globe transform that renders the globe', () => {
+    test('a globe transform that renders the globe picks with the globe raycast', () => {
         const terrain = createFlatTerrain();
         const globeTransform = new GlobeTransform();
         globeTransform.resize(2048, 512);
         globeTransform.setZoom(1);
-        (terrain.painter as any).transform = globeTransform;
         const p = new Point(1100, 280);
 
-        const coordinate = terrain.pointCoordinate(p);
+        const coordinate = globeTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
         const verticalPerspective = new VerticalPerspectiveTransform();
         verticalPerspective.apply(globeTransform, false);
         const expected = verticalPerspective.screenTerrainPointToMercatorCoordinate(p, terrain);
@@ -122,53 +120,53 @@ describe('Terrain', () => {
         expect(terrain.depthAtPoint(new Point(10, 20))).toBeCloseTo(0.5, 10);
     });
 
-    test('pointCoordinate returns null when nothing is rendered', () => {
+    test('screenTerrainPointToMercatorCoordinate returns null when nothing is rendered', () => {
         const terrain = createFlatTerrain();
         terrain.tileManager.getRenderableTiles = () => [];
 
-        expect(terrain.pointCoordinate(new Point(1024, 256))).toBeNull();
+        expect(terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain)).toBeNull();
     });
 
-    test('pointCoordinate sees newly renderable tiles after resetElevationCache', () => {
+    test('screenTerrainPointToMercatorCoordinate sees newly renderable tiles after resetElevationCache', () => {
         const terrain = createFlatTerrain();
         const renderableTiles = terrain.tileManager.getRenderableTiles;
         terrain.tileManager.getRenderableTiles = () => [];
-        expect(terrain.pointCoordinate(new Point(1024, 256))).toBeNull();
+        expect(terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain)).toBeNull();
 
         terrain.tileManager.getRenderableTiles = renderableTiles;
-        expect(terrain.pointCoordinate(new Point(1024, 256))).toBeNull();
+        expect(terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain)).toBeNull();
 
         terrain.resetElevationCache();
-        expect(terrain.pointCoordinate(new Point(1024, 256))).not.toBeNull();
+        expect(terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain)).not.toBeNull();
     });
 
     test(
-        `pointCoordinate should return negative mercator x
+        `screenTerrainPointToMercatorCoordinate should return negative mercator x
         if the point is on the LEFT outside the central globe`,
         () => {
             const terrain = createFlatTerrain();
-            const coordinate = terrain.pointCoordinate(new Point(256, 256));
+            const coordinate = terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
             expect(coordinate.x).toBeCloseTo(-1, 10);
         });
 
     test(
-        `pointCoordinate should return mercator x greater than 1
+        `screenTerrainPointToMercatorCoordinate should return mercator x greater than 1
         if the point is on the RIGHT outside the central globe`,
         () => {
             const terrain = createFlatTerrain();
-            const coordinate = terrain.pointCoordinate(new Point(1792, 256));
+            const coordinate = terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1792, 256), terrain);
 
             expect(coordinate.x).toBeCloseTo(2, 10);
         });
 
     test(
-        'pointCoordinate should not depend on painter.pixelRatio',
+        'screenTerrainPointToMercatorCoordinate should not depend on painter.pixelRatio',
         () => {
             const terrain = createFlatTerrain(2);
 
-            expect(terrain.pointCoordinate(new Point(256, 256)).x).toBeCloseTo(-1, 10);
-            expect(terrain.pointCoordinate(new Point(1792, 256)).x).toBeCloseTo(2, 10);
+            expect(terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain).x).toBeCloseTo(-1, 10);
+            expect(terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1792, 256), terrain).x).toBeCloseTo(2, 10);
         });
 
     test('Calculate tile minimum and maximum elevation', () => {
