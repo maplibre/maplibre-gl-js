@@ -5,6 +5,8 @@
 
 ### 🐞 Bug fixes
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
+- Fix an empty tile response (e.g. HTTP 204 for a tile without content) being decoded into a fake 1×1 image for every image consumer; raster-DEM tiles now load without elevation data instead of building a degenerate DEM that broke terrain and hillshade with a "dem dimension mismatch" error, while empty raster tiles keep rendering as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
+- _...Add new stuff here..._
 
 ## 6.6.0
 

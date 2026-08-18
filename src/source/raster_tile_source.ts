@@ -8,6 +8,7 @@ import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {loadTileJson} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
 import {Texture} from '../webgl/texture.ts';
+import {RGBAImage} from '../util/image.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
@@ -221,13 +222,16 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 tile.state = 'unloaded';
                 return;
             }
-            if (response?.data) {
+            if (response) {
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const context = this.map.painter.context;
                 const gl = context.gl;
-                const img = response.data;
+                // An empty response (e.g. HTTP 204) is a tile that exists but has no content:
+                // it is drawn as fully transparent, which keeps it distinct from a missing
+                // tile (404), where the parent tile shows through instead.
+                const img = response.data ?? new RGBAImage({width: 1, height: 1}, new Uint8Array(4));
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
                     tile.texture.update(img, {useMipmap: true, premultiply});
