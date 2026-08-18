@@ -231,11 +231,11 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledTimes(4); // icons, patterns, glyphs, dashes
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GDA', data: expect.objectContaining({'dashes': expect.any(Object)})}), expect.any(Object));
     });
 
-    test('WorkerTile.parse would cancel and only event once on repeated reparsing', async () => {
+    test('WorkerTile.parse cancels tile-specific dependencies and shares an in-flight glyph request', async () => {
         const tile = createWorkerTile();
         const layerIndex = new StyleLayerIndex([{
             id: '1',
@@ -280,7 +280,7 @@ describe('worker tile', () => {
         } as any as VectorTileLike;
 
         let cancelCount = 0;
-        const sendAsync = vi.fn().mockImplementation((message: {type: string; data: unknown}, abortController: AbortController) => {
+        const sendAsync = vi.fn().mockImplementation((message: {type: string; data: unknown}, abortController?: AbortController) => {
             return new Promise((resolve, _reject) => {
                 const res = setTimeout(() => {
                     const response = message.type === 'getImages' ?
@@ -289,7 +289,7 @@ describe('worker tile', () => {
                     resolve(response);
                 }
                 );
-                abortController.signal.addEventListener('abort', () => {
+                abortController?.signal.addEventListener('abort', () => {
                     cancelCount += 1;
                     clearTimeout(res);
                 });
@@ -305,11 +305,12 @@ describe('worker tile', () => {
         const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
         expect(onSettled).not.toHaveBeenCalled();
         expect(result).toBeDefined();
-        expect(cancelCount).toBe(6);
-        expect(sendAsync).toHaveBeenCalledTimes(9);
+        expect(cancelCount).toBe(4);
+        expect(sendAsync).toHaveBeenCalledTimes(7);
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}));
+        expect(sendAsync.mock.calls.filter(([message]) => message.type === MessageType.getGlyphs)).toHaveLength(1);
     });
 
     test('WorkerTile.parse passes global-state to layout properties', async () => {
