@@ -1,34 +1,13 @@
 import {bench, describe} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {DEMData} from '../data/dem_data.ts';
-import {LngLat} from '../geo/lng_lat.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
-import {RGBAImage} from '../util/image.ts';
-import {Terrain} from './terrain.ts';
-import type {Tile} from '../tile/tile.ts';
-import type {Painter} from './painter.ts';
-import type {TileManager} from '../tile/tile_manager.ts';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LngLat} from '../lng_lat.ts';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
+import type {Terrain} from '../../render/terrain.ts';
 
 const DEM_DIM = 256;
-
-function createDEM(heightFn: (x: number, y: number) => number): DEMData {
-    const stride = DEM_DIM + 2;
-    const pixels = new Uint8Array(stride * stride * 4);
-    for (let y = 0; y < DEM_DIM; y++) {
-        for (let x = 0; x < DEM_DIM; x++) {
-            const value = heightFn(x, y) + 32768;
-            const index = ((y + 1) * stride + x + 1) * 4;
-            pixels[index] = Math.floor(value / 256);
-            pixels[index + 1] = Math.floor(value) % 256;
-            pixels[index + 2] = Math.round((value - Math.floor(value)) * 256);
-            pixels[index + 3] = 255;
-        }
-    }
-    return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
-}
 
 function createScene(zoom: number, heightFn: (x: number, y: number) => number, pitch: number): {terrain: Terrain; transform: MercatorTransform} {
     const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
@@ -52,11 +31,7 @@ function createScene(zoom: number, heightFn: (x: number, y: number) => number, p
         }
     }
 
-    const dem = createDEM(heightFn);
-    const terrain = new Terrain({} as Painter, {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager, {exaggeration: 1} as TerrainSpecification);
-    terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as Tile);
-    terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem}) as Tile;
-    terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
+    const terrain = createDEMTerrain(tileIDs, createDEM(heightFn, DEM_DIM));
     return {terrain, transform};
 }
 
