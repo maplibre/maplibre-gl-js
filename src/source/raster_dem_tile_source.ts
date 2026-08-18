@@ -64,11 +64,18 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response?.data) {
-                const img = response.data;
+            if (response) {
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
+                // An empty response (e.g. HTTP 204 for a missing DEM tile) carries no elevation
+                // data: treat the tile as loaded without a DEM instead of building a degenerate
+                // one that would fail against its neighbors in backfillBorder (#1551).
+                if (!response.data) {
+                    tile.state = 'loaded';
+                    return;
+                }
+                const img = response.data;
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : await this.readImageNow(img);
                 const params = {
