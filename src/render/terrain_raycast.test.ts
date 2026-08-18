@@ -11,7 +11,6 @@ import {RGBAImage} from '../util/image.ts';
 import {Terrain} from './terrain.ts';
 import {raycastTerrainGlobe, raycastTerrainMercator} from './terrain_raycast.ts';
 import type {Tile} from '../tile/tile.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Painter} from './painter.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -53,8 +52,8 @@ function createMercatorTransform(center: LngLat, zoom: number, pitch: number = 0
     return transform;
 }
 
-function createRayTransform(near: number[], far: number[], worldSize: number): IReadonlyTransform {
-    return {worldSize, getRaySegmentFromPixel: () => ({near, far})} as any as IReadonlyTransform;
+function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
+    return {worldSize, getRaySegmentFromPixel: () => ({near, far})} as any as MercatorTransform;
 }
 
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {

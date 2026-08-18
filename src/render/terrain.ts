@@ -14,7 +14,7 @@ import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
-import {buildCoverageIndex, raycastTerrainGlobe, raycastTerrainMercator, type TerrainCoverageIndex} from './terrain_raycast.ts';
+import {buildCoverageIndex, type TerrainCoverageIndex} from './terrain_raycast.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
@@ -377,10 +377,7 @@ export class Terrain {
      * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
     pointCoordinate(p: Point): MercatorCoordinate {
-        const transform = this.painter.transform;
-        return this.painter.style.projection?.transitionState > 0 ?
-            raycastTerrainGlobe(transform, this, p) :
-            raycastTerrainMercator(transform, this, p);
+        return this.painter.transform.screenPointToTerrainCoordinate(p, this);
     }
 
     /**

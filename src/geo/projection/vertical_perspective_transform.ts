@@ -10,10 +10,11 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
+import {raycastTerrainGlobe} from '../../render/terrain_raycast.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, RaySegment, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -767,14 +768,16 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         if (terrain) {
-            // Mercator has terrain handling implemented properly and since terrain
-            // simply draws tile coordinates into a special framebuffer, this works well even for globe.
-            const coordinate = terrain.pointCoordinate(p);
+            const coordinate = this.screenPointToTerrainCoordinate(p, terrain);
             if (coordinate) {
                 return coordinate;
             }
         }
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
+    }
+
+    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        return raycastTerrainGlobe(this, terrain, p);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
@@ -793,10 +796,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         return !!intersection;
-    }
-
-    getRaySegmentFromPixel(_p: Point): RaySegment {
-        throw new Error('Not implemented.'); // The globe has no flat world plane to build a ray segment in
     }
 
     /**

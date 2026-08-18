@@ -13,13 +13,24 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
+import {raycastTerrainMercator} from '../../render/terrain_raycast.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
-import type {IReadonlyTransform, ITransform, RaySegment, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+
+/**
+ * @internal
+ * The portion of a ray through a screen pixel that lies inside the view frustum.
+ * Both endpoints use world pixels for x and y, and meters above sea level for z.
+ */
+export type RaySegment = {
+    near: vec3;
+    far: vec3;
+};
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -345,9 +356,8 @@ export class MercatorTransform implements ITransform {
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p);
+            const coordinate = this.screenPointToTerrainCoordinate(p, terrain);
             if (coordinate != null) {
                 return coordinate;
             }
@@ -355,6 +365,13 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
+    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        return raycastTerrainMercator(this, terrain, p);
+    }
+
+    /**
+     * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
+     */
     getRaySegmentFromPixel(p: Point): RaySegment {
         const coord0 = [p.x, p.y, 0, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
@@ -413,8 +430,7 @@ export class MercatorTransform implements ITransform {
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p);
-            return coordinate != null;
+            return this.screenPointToTerrainCoordinate(p, terrain) != null;
         }
         return (p.y > this.height / 2 - getMercatorHorizon(this));
     }

@@ -240,6 +240,7 @@ export function expectToBeCloseToArray(actual: number[], expected: number[], pre
 export function createTerrain(): Terrain {
     return {
         pointCoordinate: () => null,
+        getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,

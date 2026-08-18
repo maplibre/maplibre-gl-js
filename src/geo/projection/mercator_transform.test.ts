@@ -3,12 +3,11 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
-import type {Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
-import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
 import {EXTENT} from '../../data/extent.ts';
 
 describe('transform', () => {
@@ -256,8 +255,8 @@ describe('transform', () => {
 
         // expect same values because of no elevation change
         const terrain = {
+            ...createTerrain(),
             getElevationForLngLatZoom: () => 200,
-            pointCoordinate: () => null
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
@@ -275,8 +274,8 @@ describe('transform', () => {
         expect(transform.center.lat).toBeCloseTo(82, 10);
 
         const terrain = {
+            ...createTerrain(),
             getElevationForLngLatZoom: () => 200 + 1,
-            pointCoordinate: () => null
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.center.lat).toBeCloseTo(82, 4);
@@ -301,8 +300,8 @@ describe('transform', () => {
 
         // expect new zoom and center because of elevation change
         const terrain = {
+            ...createTerrain(),
             getElevationForLngLatZoom: () => 400,
-            pointCoordinate: () => null
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(400);
@@ -334,8 +333,8 @@ describe('transform', () => {
 
         // expect new zoom because of elevation change to point below sea level
         const terrain = {
+            ...createTerrain(),
             getElevationForLngLatZoom: () => -200,
-            pointCoordinate: () => null
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(-200);
@@ -375,13 +374,10 @@ describe('transform', () => {
         expect(transform.zoom).toBeCloseTo(13.836362970131438, 10);
     });
 
-    test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
+    test('screenPointToMercatorCoordinate with terrain that covers nothing should fall back to 2D', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
-        const terrain = {
-            pointCoordinate: () => null
-        } as any as Terrain;
-        const coordinate = transform.screenPointToMercatorCoordinate(new Point(0, 0), terrain);
+        const coordinate = transform.screenPointToMercatorCoordinate(new Point(0, 0), createTerrain());
 
         expect(coordinate).toBeDefined();
     });

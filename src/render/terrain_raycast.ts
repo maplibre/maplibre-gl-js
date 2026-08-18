@@ -5,6 +5,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {raySphereIntersection, sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
 import {clamp, createVec3f64, MAX_VALID_LATITUDE} from '../util/util.ts';
 import type Point from '@mapbox/point-geometry';
+import type {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Terrain, TerrainElevationSampler} from './terrain.ts';
 
@@ -95,7 +96,7 @@ function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: 
  * @param p - screen coordinate
  * @returns the mercator coordinate of the nearest hit with z in meters, or null when the ray misses the terrain
  */
-export function raycastTerrainMercator(transform: IReadonlyTransform, terrain: Terrain, p: Point): MercatorCoordinate | null {
+export function raycastTerrainMercator(transform: MercatorTransform, terrain: Terrain, p: Point): MercatorCoordinate | null {
     const index = terrain.getCoverageIndex();
     if (!index) return null;
 

@@ -39,7 +39,6 @@ describe('Terrain', () => {
             height: 512,
             pixelRatio,
             transform,
-            style: {projection: null},
         } as any as Painter;
         const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
@@ -74,7 +73,6 @@ describe('Terrain', () => {
         globeTransform.setZoom(0);
         globeTransform.setTransitionState(0);
         (terrain.painter as any).transform = globeTransform;
-        (terrain.painter as any).style = {projection: {transitionState: 0}};
 
         const coordinate = terrain.pointCoordinate(new Point(1024, 256));
 
@@ -84,13 +82,12 @@ describe('Terrain', () => {
         expect(coordinate.z).toBeCloseTo(0, 10);
     });
 
-    test('pointCoordinate uses the globe raycast during a globe transition', () => {
+    test('pointCoordinate uses the globe raycast through a globe transform that renders the globe', () => {
         const terrain = createFlatTerrain();
         const globeTransform = new GlobeTransform();
         globeTransform.resize(2048, 512);
         globeTransform.setZoom(1);
         (terrain.painter as any).transform = globeTransform;
-        (terrain.painter as any).style = {projection: {transitionState: 1}};
         const p = new Point(1100, 280);
 
         const coordinate = terrain.pointCoordinate(p);

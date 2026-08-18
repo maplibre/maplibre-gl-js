@@ -23,16 +23,6 @@ export type TransformConstrainFunction =  (
     zoom: number;
 };
 
-/**
- * @internal
- * The portion of a ray through a screen pixel that lies inside the view frustum.
- * Both endpoints use world pixels for x and y, and meters above sea level for z.
- */
-export type RaySegment = {
-    near: vec3;
-    far: vec3;
-};
-
 export interface ITransformGetters {
     get tileSize(): number;
 
@@ -364,6 +354,15 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Given a point on screen, return the mercator coordinate where its ray hits the rendered terrain surface.
+     * @param p - the point
+     * @param terrain - the terrain
+     * @returns the hit with z in meters, or null when the ray misses the terrain
+     */
+    screenPointToTerrainCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
+
+    /**
+     * @internal
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
@@ -431,13 +430,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     getRayDirectionFromPixel(p: Point): vec3;
-
-    /**
-     * @internal
-     * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
-     * @param p - screen point
-     */
-    getRaySegmentFromPixel(p: Point): RaySegment;
 
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
