@@ -13,9 +13,8 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {bisect, sampleAt, HIT_EPSILON_M, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_raycast.ts';
 
-import type {Terrain} from '../../render/terrain.ts';
+import {bisect, sampleAt, HIT_EPSILON_M, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
