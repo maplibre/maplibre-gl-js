@@ -3,6 +3,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix the globe zooming itself in when panned away from a pole at the minimum zoom, where the latitude zoom compensation was applied on top of the constrain's own clamp ([#8182](https://github.com/maplibre/maplibre-gl-js/pull/8182)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix dragging the globe from the empty space around it, which barely moved the map and often in the wrong direction ([#8174](https://github.com/maplibre/maplibre-gl-js/pull/8174)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix terrain close under a high-pitched camera loading at too low a detail level ([#4703](https://github.com/maplibre/maplibre-gl-js/issues/4703)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
