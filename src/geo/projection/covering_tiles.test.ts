@@ -862,8 +862,6 @@ describe('terrain elevation and tile detail (#4703)', () => {
         transform.setZoom(13);
         transform.setMaxPitch(85);
         transform.setPitch(pitch);
-        // A mountain on the tiles around the point at the bottom of the screen,
-        // the ground closest to the camera.
         const near = MercatorCoordinate.fromLngLat(transform.screenPointToLocation(new Point(400, 599)));
         const terrain = {
             getMinMaxElevation(id: {canonical: {x: number; y: number; z: number}}) {
@@ -904,8 +902,6 @@ describe('terrain elevation and tile detail (#4703)', () => {
         }
         const unknownElevation = covering({minElevation: null, maxElevation: null});
         const flatZero = covering({minElevation: 0, maxElevation: 0});
-        // The culling volumes still differ slightly between the two cases; what must
-        // hold is that unknown elevations do not inflate the covering set.
         expect(unknownElevation.length).toBeLessThanOrEqual(flatZero.length + 4);
     });
 });

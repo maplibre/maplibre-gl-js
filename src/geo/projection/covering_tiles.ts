@@ -147,11 +147,8 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
             scaleZoom(Math.cos(degreesToRadians(maxMercatorHorizonAngle - cameraVerticalFOV)) /
                 Math.cos(degreesToRadians(maxMercatorHorizonAngle))) - 1);
 
-        // The foreshortening penalty estimates how compressed a tile appears on screen and is
-        // measured against the center's elevation plane (distanceToCenterZ). A tile raised close
-        // to the camera is also seen edge-on, but must not be penalized like a distant horizon
-        // tile: its elevation influences only the 3D distance ratio above, which grants close
-        // terrain the detail its proximity warrants (#4703).
+        // Measured against the center's elevation plane: a tile raised close to the camera is
+        // seen edge-on but must not be penalized like a distant horizon tile (#4703).
         const pitchReferenceZ = distanceToCenterZ ?? distanceToTileZ;
         const centerPitch = Math.acos(pitchReferenceZ / distanceToCenter3D);
         const tileCountPitch0 = 2 * integralOfCosXByP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
@@ -252,11 +249,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
-    // The raster-dem source's own covering is never refined: its selection controls which
-    // DEM tiles are loaded, and every DEM-derived covering input (elevation ranges, culling
-    // volumes, center elevation) would then feed back into the selection and oscillate,
-    // never letting the map reach idle. All other coverings (draped sources, RTT tiles)
-    // only consume DEM state, so refining them converges once the DEM set has loaded.
+    // The raster-dem source's own covering is never refined: it selects which DEM tiles
+    // load, so refining it would feed back into itself and never reach idle.
     const refineNearTerrain = options.terrain && !options.usedForTerrain && transform.pitch > maxConstantZoomPitch(transform);
     
     const desiredZ = coveringZoomLevel(transform, options);
@@ -315,33 +309,20 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
 
         const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, boundingVolume);
 
-        // With terrain (mercator only) at high pitch, measure the vertical distance to the
-        // tile's own elevation range instead of to the center's elevation plane, so a peak
-        // rising close under the camera is recognized as close and gets the detail its
-        // proximity warrants (#4703). Low-pitch views keep the center-plane distance: the
-        // problem this solves only appears near the camera in immersive views. The culling
-        // bounding volume is not used here: its elevation is deliberately overestimated (see
-        // getElevationForTileCulling), which would collapse this distance and explode tile
-        // counts. Tiles whose elevation range is not known yet keep the center-plane distance.
-        // Skipped at maxzoom and beyond: there the refinement cannot add real detail, only
-        // inflate the overscaled zoom, whose key would then shift as DEM tiles load in.
+        // Distance to the tile's own elevation range, so a peak close under the camera gets
+        // the detail its proximity warrants (#4703). The culling bounding volume overestimates
+        // elevation on purpose and cannot be used here.
         let distToTileZ = distanceZ;
         if (refineNearTerrain && it.zoom < maxZoom) {
-            // The elevation range is read from a fixed coarse level rather than the
-            // candidate's own: the covering selection drives which DEM tiles load, and
-            // reading the candidate's level feeds the selection back into itself (parent
-            // data selects deeper tiles, whose narrower own-level data then deselects
-            // them), which can oscillate forever and never let the map reach idle. A
-            // coarse ancestor's range is a superset of the candidate's, erring toward
-            // slightly more detail.
+            // Read from a fixed coarse level: reading the candidate's own level would feed the
+            // selection back into itself and oscillate as DEM tiles load.
             const qz = Math.min(tileID.z, Math.max(minZoom, desiredZ - 2));
             const {minElevation, maxElevation} = options.terrain.getMinMaxElevation(
                 new OverscaledTileID(qz, it.wrap, qz, tileID.x >> (tileID.z - qz), tileID.y >> (tileID.z - qz)));
             if (minElevation !== null && maxElevation !== null) {
                 const minZ = mercatorZfromAltitude(minElevation, transform.center.lat);
                 const maxZ = mercatorZfromAltitude(maxElevation, transform.center.lat);
-                // The distanceZ / 4 floor caps the extra detail near terrain at two zoom
-                // levels over the center-plane estimate, bounding the tile count.
+                // The floor caps the extra detail at two zoom levels, bounding the tile count.
                 distToTileZ = Math.max(minZ - cameraCoord.z, cameraCoord.z - maxZ, distanceZ / 4);
             }
         }
