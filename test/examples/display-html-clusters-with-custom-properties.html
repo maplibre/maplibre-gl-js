@@ -131,7 +131,7 @@
                 if (!markersOnScreen[id]) marker.addTo(map);
             }
             // for every marker we've added previously, remove those that are no longer visible
-            for (id in markersOnScreen) {
+            for (const id in markersOnScreen) {
                 if (!newMarkers[id]) markersOnScreen[id].remove();
             }
             markersOnScreen = newMarkers;
@@ -181,7 +181,7 @@
                 fontSize
             }px sans-serif; display: block">`;
 
-        for (i = 0; i < counts.length; i++) {
+        for (let i = 0; i < counts.length; i++) {
             html += donutSegment(
                 offsets[i] / total,
                 (offsets[i] + counts[i]) / total,

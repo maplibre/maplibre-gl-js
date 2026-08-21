@@ -5,8 +5,16 @@
 
 ### 🐞 Bug fixes
 - Fix an image source whose coordinates are close to a triangle smearing a few texels over most of the quad ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
-- Give custom layers the live globe transition in `CustomRenderMethodInput.defaultProjectionData.projectionTransition`, which was hardcoded to 1 for the whole globe/mercator transition, so a custom layer jumped straight to the fully bent globe while every other layer eased ([#8169](https://github.com/maplibre/maplibre-gl-js/pull/8169)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix the globe zooming itself in when panned away from a pole at the minimum zoom, where the latitude zoom compensation was applied on top of the constrain's own clamp ([#8182](https://github.com/maplibre/maplibre-gl-js/pull/8182)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix dragging the globe from the empty space around it, which barely moved the map and often in the wrong direction ([#8174](https://github.com/maplibre/maplibre-gl-js/pull/8174)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
+
+## 6.4.1
+
+### 🐞 Bug fixes
+
+- Fix `DOM.sanitize` leaving dangerous attributes behind when multiple consecutive attributes are present. Iterating the live `NamedNodeMap` from `elem.attributes` while calling `removeAttribute` skipped the attribute directly after a removed one, so a second dangerous attribute (for example an `ontoggle` on a `<details open>` element) could survive sanitisation and later execute ([#8189](https://github.com/maplibre/maplibre-gl-js/pull/8189)) (by [@0xKirisame](https://github.com/0xKirisame))
+- Give custom layers the live globe transition in `CustomRenderMethodInput.defaultProjectionData.projectionTransition`, which was hardcoded to 1 for the whole globe/mercator transition, so a custom layer jumped straight to the fully bent globe while every other layer eased ([#8169](https://github.com/maplibre/maplibre-gl-js/pull/8169)) (by [@mondsichtung](https://github.com/mondsichtung))
 
 ## 6.4.0
 
