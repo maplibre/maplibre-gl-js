@@ -60,17 +60,18 @@ void main() {
 	    // Raise the "ceiling" of elements by the elevation of the centroid, in meters.
         float height_terrain3d_offset = get_elevation(a_centroid);
         // To avoid having buildings "hang above a slope", create a "basement"
-        // by lowering the "floor" of ground-level (and below) elements.
+        // by lowering the "floor" of elements whose base is at ground level.
         // This is in addition to the elevation of the centroid, in meters.
-        float base_terrain3d_offset = height_terrain3d_offset - (base > 0.0 ? 0.0 : 10.0);
+        float base_terrain3d_offset = height_terrain3d_offset - (base == 0.0 ? 10.0 : 0.0);
     #else
         float height_terrain3d_offset = 0.0;
         float base_terrain3d_offset = 0.0;
     #endif
-    // Sub-terranian "floors and ceilings" are clamped to ground-level.
+    // Negative values extrude below ground level (e.g. underground floors).
+    // The top always stays at or above the base.
     // 3D Terrain offsets, if applicable, are applied on the result.
-    base = max(0.0, base) + base_terrain3d_offset;
-    height = max(0.0, height) + height_terrain3d_offset;
+    base = base + base_terrain3d_offset;
+    height = max(base, height + height_terrain3d_offset);
 
     float t = float(a_normal_ed.x & 1);
     float elevation = t > 0.0 ? height : base;
