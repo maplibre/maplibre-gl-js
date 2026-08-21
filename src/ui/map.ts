@@ -313,6 +313,13 @@ export type MapOptions = {
      */
     crossSourceCollisions?: boolean;
     /**
+     * If `true`, raster, hillshade and color-relief layers are snapped to the device pixel grid while the camera is idle, which keeps raster tiles crisp at rest.
+     * Because the snapping is disabled while the camera moves, it makes those layers shift by up to half a pixel relative to vector layers and markers
+     * whenever the camera starts or stops moving. Set to `false` to never snap them, trading a little crispness at rest for layers that stay in sync at all times.
+     * @defaultValue true
+     */
+    rasterPixelAlignment?: boolean;
+    /**
      * If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
      * @defaultValue false
      */
@@ -539,6 +546,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     transformConstrain: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
+    rasterPixelAlignment: true,
     clickTolerance: 3,
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
@@ -625,6 +633,7 @@ export class Map extends Evented<MapEventType> {
     _delegatedListeners: Record<keyof MapEventType, DelegatedListener[]>;
     _fadeDuration: number;
     _crossSourceCollisions: boolean;
+    _rasterPixelAlignment: boolean;
     _crossFadingFactor = 1;
     _collectResourceTiming: boolean;
     _renderTaskQueue: TaskQueue = new TaskQueue();
@@ -782,6 +791,7 @@ export class Map extends Evented<MapEventType> {
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
+        this._rasterPixelAlignment = resolvedOptions.rasterPixelAlignment === true;
         this._collectResourceTiming = resolvedOptions.collectResourceTiming === true;
         this._locale = {...defaultLocale, ...resolvedOptions.locale};
         this._clickTolerance = resolvedOptions.clickTolerance;
@@ -4315,6 +4325,7 @@ export class Map extends Evented<MapEventType> {
             rotating: this.isRotating(),
             zooming: this.isZooming(),
             moving: this.isMoving(),
+            rasterPixelAlignment: this._rasterPixelAlignment,
             fadeDuration,
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),

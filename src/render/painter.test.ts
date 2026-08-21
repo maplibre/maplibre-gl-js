@@ -15,6 +15,7 @@ describe('render', () => {
     const renderOptions = {
         fadeDuration: 0,
         moving: false,
+        rasterPixelAlignment: true,
         rotating: false,
         showOverdrawInspector: false,
         showPadding: false,
@@ -203,5 +204,25 @@ describe('RTT pool', () => {
         const destroyed = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
         expect(destroyed).toBe(10);
         expect(painter._rttSharedFbo).toBeNull();
+    });
+});
+
+describe('shouldAlignRasterToPixelGrid', () => {
+    function createPainter(options: {moving: boolean; rasterPixelAlignment: boolean}): Painter {
+        const gl = createNullGL();
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        const painter = new Painter(gl, transform);
+        painter.options = {...options} as any;
+        return painter;
+    }
+
+    test('allows the aligned matrix only while the camera is idle', () => {
+        expect(createPainter({moving: false, rasterPixelAlignment: true}).shouldAlignRasterToPixelGrid()).toBe(true);
+        expect(createPainter({moving: true, rasterPixelAlignment: true}).shouldAlignRasterToPixelGrid()).toBe(false);
+    });
+
+    test('never allows the aligned matrix when rasterPixelAlignment is disabled', () => {
+        expect(createPainter({moving: false, rasterPixelAlignment: false}).shouldAlignRasterToPixelGrid()).toBe(false);
+        expect(createPainter({moving: true, rasterPixelAlignment: false}).shouldAlignRasterToPixelGrid()).toBe(false);
     });
 });

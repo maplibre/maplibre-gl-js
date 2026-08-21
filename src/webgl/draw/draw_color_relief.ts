@@ -54,7 +54,7 @@ function renderColorRelief(
     const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('colorRelief');
-    const align = !painter.options.moving;
+    const align = painter.shouldAlignRasterToPixelGrid();
 
     const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
