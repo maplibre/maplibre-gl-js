@@ -58,4 +58,18 @@ describe('mapOptions', () => {
         map.zoomTo(0.5, {duration: 100});
         spy.mockRestore();
     });
+    test('rasterPixelAlignment: defaults to true and is forwarded to the painter', async () => {
+        const map = createMap();
+        await map.once('load');
+        expect(map._rasterPixelAlignment).toBe(true);
+        expect(map.painter.options.rasterPixelAlignment).toBe(true);
+    });
+
+    test('rasterPixelAlignment: can be disabled via map options', async () => {
+        const map = createMap({rasterPixelAlignment: false});
+        await map.once('load');
+        expect(map._rasterPixelAlignment).toBe(false);
+        expect(map.painter.options.rasterPixelAlignment).toBe(false);
+    });
+
 });

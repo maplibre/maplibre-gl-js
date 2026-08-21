@@ -100,7 +100,7 @@ function drawTiles(
     const projection = painter.style.projection;
 
     const colorMode = painter.colorModeForRenderPass();
-    const align = !painter.options.moving;
+    const align = painter.shouldAlignRasterToPixelGrid();
     const rasterOpacity = layer.paint.get('raster-opacity');
     const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
     const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
