@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Emit an error event when `Map#queryRenderedFeatures` receives more than two screen points ([#5685](https://github.com/maplibre/maplibre-gl-js/issues/5685)) (by [@isjiajia01](https://github.com/isjiajia01))
 - _...Add new stuff here..._
 
 ## 6.5.0
