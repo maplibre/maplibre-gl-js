@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -2309,6 +2309,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getwarp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        getWarp()
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#listens" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2434,6 +2445,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         setEventedParent()
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setwarp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        setWarp()
       </span>
     </span>
   </a>
@@ -5145,6 +5167,33 @@
     
   
   ImageSourceImage
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/ImageSourceWarp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ImageSourceWarp
 
     
   </span>
@@ -10892,6 +10941,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getwarp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        getWarp()
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#listens" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -11024,6 +11084,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#setwarp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        setWarp()
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#updateimage" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -11130,7 +11201,7 @@
 
 
 <h1 id="videosource">VideoSource</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/video_source.ts#L56">source/video_source.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/video_source.ts#L56">source/video_source.ts:56</a></p>
 <p>A data source containing video.
 (See the <a href="https://maplibre.org/maplibre-style-spec/#sources-video">Style Specification</a> for detailed documentation of options.)</p>
 <h2 id="example">Example</h2>
@@ -11175,7 +11246,7 @@ set the layer's <code>raster-fade-duration</code> property to <code>0</code>.</p
 <blockquote>
 <p><strong>fire</strong>(<code>event</code>: <a href="../ErrorEvent/"><code>ErrorEvent</code></a> | <a href="../MapSourceDataEvent/"><code>MapSourceDataEvent</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L156">util/evented.ts:156</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L156">util/evented.ts:156</a></p>
 <p>Calls every listener registered for the event's type.</p>
 <h5 id="parameters">Parameters</h5>
 <table>
@@ -11200,7 +11271,7 @@ set the layer's <code>raster-fade-duration</code> property to <code>0</code>.</p
 <blockquote>
 <p><strong>fire</strong>(<code>type</code>: keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>, <code>properties?</code>: <code>object</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L162">util/evented.ts:162</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L162">util/evented.ts:162</a></p>
 <p>Compatibility with the (type: string, properties: Object) signature from previous versions.
 See https://github.com/mapbox/mapbox-gl-js/issues/6522,
     https://github.com/mapbox/mapbox-gl-draw/issues/766</p>
@@ -11232,17 +11303,30 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 <blockquote>
 <p><strong>getVideo</strong>(): <code>HTMLVideoElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/video_source.ts#L139">source/video_source.ts:139</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/video_source.ts#L139">source/video_source.ts:139</a></p>
 <p>Returns the HTML <code>video</code> element.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>HTMLVideoElement</code></p>
 <p>The HTML <code>video</code> element.</p>
 <hr />
+<h3 id="getwarp">getWarp()</h3>
+<blockquote>
+<p><strong>getWarp</strong>(): <a href="../../type-aliases/ImageSourceWarp/"><code>ImageSourceWarp</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L387">source/image_source.ts:387</a></p>
+<p><strong><code>Experimental</code></strong></p>
+<p>Returns how the image is warped onto its coordinates.</p>
+<h4 id="returns_3">Returns</h4>
+<p><a href="../../type-aliases/ImageSourceWarp/"><code>ImageSourceWarp</code></a></p>
+<p>The warp in use, see <a href="../../type-aliases/ImageSourceWarp/">ImageSourceWarp</a>.</p>
+<h4 id="inherited-from_2">Inherited from</h4>
+<p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#getwarp"><code>getWarp</code></a></p>
+<hr />
 <h3 id="listens">listens()</h3>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L206">util/evented.ts:206</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L206">util/evented.ts:206</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -11261,28 +11345,28 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
-<h4 id="inherited-from_2">Inherited from</h4>
+<h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#listens"><code>listens</code></a></p>
 <hr />
 <h3 id="loaded">loaded()</h3>
 <blockquote>
 <p><strong>loaded</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L202">source/image_source.ts:202</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L259">source/image_source.ts:259</a></p>
 <p>True if the source is loaded, false otherwise.</p>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_5">Returns</h4>
 <p><code>boolean</code></p>
-<h4 id="inherited-from_3">Inherited from</h4>
+<h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#loaded"><code>loaded</code></a></p>
 <hr />
 <h3 id="loadtile">loadTile()</h3>
 <blockquote>
 <p><strong>loadTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L349">source/image_source.ts:349</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L468">source/image_source.ts:468</a></p>
 <p>This method does the heavy lifting of loading a tile.
 In most cases it will defer the work to the relevant worker source.</p>
 <h4 id="parameters_3">Parameters</h4>
@@ -11302,16 +11386,16 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns</h4>
+<h4 id="returns_6">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
-<h4 id="inherited-from_4">Inherited from</h4>
+<h4 id="inherited-from_5">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#loadtile"><code>loadTile</code></a></p>
 <hr />
 <h3 id="off">off()</h3>
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L117">util/evented.ts:117</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L117">util/evented.ts:117</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="type-parameters">Type Parameters</h4>
 <table>
@@ -11348,16 +11432,16 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns</h4>
+<h4 id="returns_7">Returns</h4>
 <p><code>this</code></p>
-<h4 id="inherited-from_5">Inherited from</h4>
+<h4 id="inherited-from_6">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#off"><code>off</code></a></p>
 <hr />
 <h3 id="on">on()</h3>
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L100">util/evented.ts:100</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L100">util/evented.ts:100</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="type-parameters_1">Type Parameters</h4>
 <table>
@@ -11394,9 +11478,9 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns</h4>
+<h4 id="returns_8">Returns</h4>
 <p><a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
-<h4 id="inherited-from_6">Inherited from</h4>
+<h4 id="inherited-from_7">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#on"><code>on</code></a></p>
 <hr />
 <h3 id="once">once()</h3>
@@ -11404,7 +11488,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>): <code>Promise</code>&lt;<a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L132">util/evented.ts:132</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L132">util/evented.ts:132</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_2">Type Parameters</h5>
@@ -11437,16 +11521,16 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_8">Returns</h5>
+<h5 id="returns_9">Returns</h5>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]&gt;</p>
 <p>a promise that resolves with the event</p>
-<h5 id="inherited-from_7">Inherited from</h5>
+<h5 id="inherited-from_8">Inherited from</h5>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#once"><code>once</code></a></p>
 <h4 id="call-signature_3">Call Signature</h4>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L142">util/evented.ts:142</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L142">util/evented.ts:142</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_3">Type Parameters</h5>
@@ -11484,37 +11568,37 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_9">Returns</h5>
+<h5 id="returns_10">Returns</h5>
 <p><code>this</code></p>
 <p><code>this</code> when a listener is provided</p>
-<h5 id="inherited-from_8">Inherited from</h5>
+<h5 id="inherited-from_9">Inherited from</h5>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#once"><code>once</code></a></p>
 <hr />
 <h3 id="pause">pause()</h3>
 <blockquote>
 <p><strong>pause</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/video_source.ts#L107">source/video_source.ts:107</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/video_source.ts#L107">source/video_source.ts:107</a></p>
 <p>Pauses the video.</p>
-<h4 id="returns_10">Returns</h4>
+<h4 id="returns_11">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="play">play()</h3>
 <blockquote>
 <p><strong>play</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/video_source.ts#L116">source/video_source.ts:116</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/video_source.ts#L116">source/video_source.ts:116</a></p>
 <p>Plays the video.</p>
-<h4 id="returns_11">Returns</h4>
+<h4 id="returns_12">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="prepare">prepare()</h3>
 <blockquote>
 <p><strong>prepare</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/video_source.ts#L164">source/video_source.ts:164</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/video_source.ts#L164">source/video_source.ts:164</a></p>
 <p>Sets the video's coordinates and re-renders the map.</p>
-<h4 id="returns_12">Returns</h4>
+<h4 id="returns_13">Returns</h4>
 <p><code>this</code></p>
 <h4 id="overrides">Overrides</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#prepare"><code>prepare</code></a></p>
@@ -11523,7 +11607,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>seek</strong>(<code>seconds</code>: <code>number</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/video_source.ts#L125">source/video_source.ts:125</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/video_source.ts#L125">source/video_source.ts:125</a></p>
 <p>Sets playback to a timestamp, in seconds.</p>
 <h4 id="parameters_8">Parameters</h4>
 <table>
@@ -11540,14 +11624,14 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_13">Returns</h4>
+<h4 id="returns_14">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="setcoordinates">setCoordinates()</h3>
 <blockquote>
 <p><strong>setCoordinates</strong>(<code>coordinates</code>: <a href="../../type-aliases/Coordinates/"><code>Coordinates</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L284">source/image_source.ts:284</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L399">source/image_source.ts:399</a></p>
 <p>Sets the image's coordinates and re-renders the map.</p>
 <h4 id="parameters_9">Parameters</h4>
 <table>
@@ -11566,16 +11650,16 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_14">Returns</h4>
+<h4 id="returns_15">Returns</h4>
 <p><code>this</code></p>
-<h4 id="inherited-from_9">Inherited from</h4>
+<h4 id="inherited-from_10">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#setcoordinates"><code>setCoordinates</code></a></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>&lt;<a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a>&gt;, <code>data?</code>: <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a> | (() =&gt; <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a>)): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/util/evented.ts#L217">util/evented.ts:217</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/util/evented.ts#L217">util/evented.ts:217</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_10">Parameters</h4>
 <table>
@@ -11596,22 +11680,57 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_15">Returns</h4>
+<h4 id="returns_16">Returns</h4>
 <p><code>this</code></p>
-<h4 id="inherited-from_10">Inherited from</h4>
+<h4 id="inherited-from_11">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#seteventedparent"><code>setEventedParent</code></a></p>
+<hr />
+<h3 id="setwarp">setWarp()</h3>
+<blockquote>
+<p><strong>setWarp</strong>(<code>warp</code>: <a href="../../type-aliases/ImageSourceWarp/"><code>ImageSourceWarp</code></a>): <code>this</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L370">source/image_source.ts:370</a></p>
+<p><strong><code>Experimental</code></strong></p>
+<p>Sets how the image is warped onto its coordinates and re-renders the map.</p>
+<p>This only has an effect while the coordinates do not form a rectangle, and it is not part of
+the style specification, so it does not survive <code>map.setStyle</code>.</p>
+<h4 id="parameters_11">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>warp</code></td>
+<td><a href="../../type-aliases/ImageSourceWarp/"><code>ImageSourceWarp</code></a></td>
+<td>The warp to use, see <a href="../../type-aliases/ImageSourceWarp/">ImageSourceWarp</a>.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_17">Returns</h4>
+<p><code>this</code></p>
+<h4 id="example_1">Example</h4>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Keep the image pinned to its corners while the user drags them around.</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nx">map</span><span class="p">.</span><span class="nx">getSource</span><span class="p">(</span><span class="s1">&#39;some id&#39;</span><span class="p">).</span><span class="nx">setWarp</span><span class="p">(</span><span class="s1">&#39;flat&#39;</span><span class="p">);</span>
+</span></code></pre></div>
+<h4 id="inherited-from_12">Inherited from</h4>
+<p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#setwarp"><code>setWarp</code></a></p>
 <hr />
 <h3 id="updateimage">updateImage()</h3>
 <blockquote>
 <p><strong>updateImage</strong>(<code>options</code>: <a href="../../type-aliases/UpdateImageOptions/"><code>UpdateImageOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L216">source/image_source.ts:216</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L273">source/image_source.ts:273</a></p>
 <p>Updates the image and, optionally, the coordinates. To avoid having the image flash after changing,
 set the <code>raster-fade-duration</code> paint property on the raster layer to 0.</p>
 <p>Provide exactly one of <code>url</code> (to fetch a new image over the network) or <code>image</code> (an
 already-decoded <code>HTMLImageElement</code>, <code>HTMLCanvasElement</code>, <code>ImageBitmap</code> or <code>ImageData</code> to
 display directly, without a network request).</p>
-<h4 id="parameters_11">Parameters</h4>
+<h4 id="parameters_12">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -11628,57 +11747,57 @@ display directly, without a network request).</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_16">Returns</h4>
+<h4 id="returns_18">Returns</h4>
 <p><code>this</code></p>
-<h4 id="inherited-from_11">Inherited from</h4>
+<h4 id="inherited-from_13">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#updateimage"><code>updateImage</code></a></p>
 <h2 id="properties">Properties</h2>
 <h3 id="id">id</h3>
 <blockquote>
 <p><strong>id</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L129">source/image_source.ts:129</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L179">source/image_source.ts:179</a></p>
 <p>The id for the source. Must not be used by any existing source.</p>
-<h4 id="inherited-from_12">Inherited from</h4>
+<h4 id="inherited-from_14">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#id"><code>id</code></a></p>
 <hr />
 <h3 id="maxzoom">maxzoom</h3>
 <blockquote>
 <p><strong>maxzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L131">source/image_source.ts:131</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L181">source/image_source.ts:181</a></p>
 <p>The maximum zoom level for the source.</p>
-<h4 id="inherited-from_13">Inherited from</h4>
+<h4 id="inherited-from_15">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#maxzoom"><code>maxzoom</code></a></p>
 <hr />
 <h3 id="minzoom">minzoom</h3>
 <blockquote>
 <p><strong>minzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L130">source/image_source.ts:130</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L180">source/image_source.ts:180</a></p>
 <p>The minimum zoom level for the source.</p>
-<h4 id="inherited-from_14">Inherited from</h4>
+<h4 id="inherited-from_16">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#minzoom"><code>minzoom</code></a></p>
 <hr />
 <h3 id="terraintileranges">terrainTileRanges</h3>
 <blockquote>
 <p><strong>terrainTileRanges</strong>: <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L138">source/image_source.ts:138</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L188">source/image_source.ts:188</a></p>
 <p>This object is used to store the range of terrain tiles that overlap with this tile.
 It is relevant for image tiles, as the image exceeds single tile boundaries.</p>
 <h4 id="index-signature">Index Signature</h4>
 <p>[<code>zoom</code>: <code>string</code>]: <code>CanonicalTileRange</code></p>
-<h4 id="inherited-from_15">Inherited from</h4>
+<h4 id="inherited-from_17">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#terraintileranges"><code>terrainTileRanges</code></a></p>
 <hr />
 <h3 id="tilesize">tileSize</h3>
 <blockquote>
 <p><strong>tileSize</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/37e08c1901bee38fb5103510436b590c0460b44f/src/source/image_source.ts#L132">source/image_source.ts:132</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/source/image_source.ts#L182">source/image_source.ts:182</a></p>
 <p>The tile size for the source.</p>
-<h4 id="inherited-from_16">Inherited from</h4>
+<h4 id="inherited-from_18">Inherited from</h4>
 <p><a href="../ImageSource/"><code>ImageSource</code></a>.<a href="../ImageSource/#tilesize"><code>tileSize</code></a></p>
 
 
