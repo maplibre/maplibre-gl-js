@@ -3,9 +3,19 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.5.0
+
+### ✨ Features and improvements
+
+- Add experimental `ImageSource.setWarp` and `ImageSource.getWarp`, choosing between a `auto`, `perspective` and a `flat` warp of the image ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Fixed incorrect image source on projection on globe view ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
 - Fix the globe zooming itself in when panned away from a pole at the minimum zoom, where the latitude zoom compensation was applied on top of the constrain's own clamp ([#8182](https://github.com/maplibre/maplibre-gl-js/pull/8182)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix dragging the globe from the empty space around it, which barely moved the map and often in the wrong direction ([#8174](https://github.com/maplibre/maplibre-gl-js/pull/8174)) (by [@mondsichtung](https://github.com/mondsichtung))
-- _...Add new stuff here..._
 
 ## 6.4.1
 
