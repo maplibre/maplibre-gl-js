@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add a `rasterPixelAlignment` map option to stop raster, hillshade and color-relief layers from snapping to the pixel grid, which prevents them from shifting relative to vector layers and markers when the camera starts or stops moving ([#PR](https://github.com/maplibre/maplibre-gl-js/pull/PR)) (by [@burmatov-step](https://github.com/burmatov-step))
+- Add a `rasterPixelAlignment` map option to stop raster, hillshade and color-relief layers from snapping to the pixel grid, which prevents them from shifting relative to vector layers and markers when the camera starts or stops moving ([#8206](https://github.com/maplibre/maplibre-gl-js/pull/8206)) (by [@burmatov-step](https://github.com/burmatov-step))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
