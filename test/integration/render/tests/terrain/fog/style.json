@@ -10,22 +10,6 @@
             "operations": [
                 [
                     "wait"
-                ],
-                [
-                    "setTerrain"
-                ],
-                [
-                    "wait"
-                ],
-                [
-                    "setTerrain",
-                    {
-                        "source": "terrain",
-                        "exaggeration": 1
-                    }
-                ],
-                [
-                    "wait"
                 ]
             ]
         }
