@@ -1,5 +1,6 @@
 import {
-    codePointHasUprightVerticalOrientation
+    codePointHasUprightVerticalOrientation,
+    codePointHasNeutralVerticalOrientation
 } from '../util/unicode_properties.g.ts';
 import {
     charIsWhitespace,
@@ -286,6 +287,40 @@ function isLineVertical(
         (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
+function charIsCombiningMark(codePoint: number): boolean {
+    return /\p{M}/u.test(String.fromCodePoint(codePoint));
+}
+
+function determineLineVerticals(line: TaggedString): boolean[] {
+    const codePoints: number[] = [];
+    for (const char of line.text) {
+        codePoints.push(char.codePointAt(0));
+    }
+    const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
+
+    // A rotated character is part of a run if it is neither whitespace nor an inline image.
+    const isRunCharacter = (i: number): boolean =>
+        !verticals[i] && !charIsWhitespace(codePoints[i]) && !('imageName' in line.getSection(i));
+
+    for (let start = 0; start < codePoints.length; start++) {
+        if (!isRunCharacter(start)) continue;
+        let end = start;
+        while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
+
+        const run = codePoints.slice(start, end + 1);
+        // Runs with combining marks stay rotated as a whole because upright
+        // glyphs advance a full em, which would detach a mark from its base.
+        if (!run.some(charIsCombiningMark)) {
+            for (let i = start; i <= end; i++) {
+                // Neutral-orientation characters (e.g. “ー”) have direction-dependent glyphs and must keep following the line.
+                verticals[i] = !codePointHasNeutralVerticalOrientation(codePoints[i]) && !charInComplexShapingScript(codePoints[i]);
+            }
+        }
+        start = end;
+    }
+    return verticals;
+}
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -335,12 +370,15 @@ function shapeLines(shaping: Shaping,
         }
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
+        const lineVerticals = writingMode === WritingMode.vertical && !allowVerticalPlacement ?
+            determineLineVerticals(line) : null;
 
-        let i = 0;
+        let i = -1;
         for (const char of line.text) {
+            i++;
             const section = line.getSection(i);
             const codePoint = char.codePointAt(0);
-            const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
+            const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
             const positionedGlyph: PositionedGlyph = {
                 glyph: codePoint,
                 imageName: null,
@@ -386,8 +424,6 @@ function shapeLines(shaping: Shaping,
                 const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
-
-            i++;
         }
 
         // Only justify if we placed at least one glyph
@@ -485,7 +521,7 @@ function shapeImageSection(
     // Difference between height of an image and one EM at max line scale.
     // Pushes current line down if an image size is over 1 EM at max line scale.
     const imageOffset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
-    
+
     return {rect, metrics, baselineOffset, imageOffset};
 }
 
