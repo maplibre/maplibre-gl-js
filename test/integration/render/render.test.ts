@@ -731,10 +731,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             fakeCanvas.parentNode.removeChild(fakeCanvas);
         }
 
-        return data;
+        return data.toBase64();
     }, styleForTest as any);
 
-    return new Uint8Array(Object.values(evaluatedArray as object) as number[]);
+    return new Uint8Array(Buffer.from(evaluatedArray, 'base64'));
 }
 
 function getReportItem(test: TestData) {
