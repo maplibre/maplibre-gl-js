@@ -62,6 +62,7 @@ const BILINEAR_FORESHORTENING = 512;
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
+ * @experimental
  * How an {@link ImageSource} warps its image onto its four coordinates, for the cases where the
  * coordinates do not form a rectangle.
  *
@@ -352,6 +353,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
+     * @experimental
      * Sets how the image is warped onto its coordinates and re-renders the map.
      *
      * This only has an effect while the coordinates do not form a rectangle, and it is not part of
@@ -377,6 +379,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
+     * @experimental
      * Returns how the image is warped onto its coordinates.
      *
      * @returns The warp in use, see {@link ImageSourceWarp}.
