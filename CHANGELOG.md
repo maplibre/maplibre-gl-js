@@ -72,6 +72,7 @@
 ### 🐞 Bug fixes
 
 - Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix anti-meridian wrapping error for globe and vertical projection ([#7672](https://github.com/maplibre/maplibre-gl-js/issues/7672)) (by [@thomfuhrmann](https://github.com/thomfuhrmann))
 - Improve terrain elevation sampling performance by caching DEM tile lookups and coordinate transforms within each render ([#8025](https://github.com/maplibre/maplibre-gl-js/pull/8025)) (by [@DoFabien](https://github.com/DoFabien))
 
 ## 6.1.0

@@ -41,4 +41,16 @@ export interface CoveringTilesDetailsProvider {
      * Prepare cache for the next frame.
      */
     prepareNextFrame(): void;
+
+    /**
+     * @internal
+     * Computes the horizontal distance of two points
+     * possibly wrapping coordinate differences across the anti-meridian
+     * based on active projection requirements.
+     *
+     * @param a - first point
+     * @param b - second point
+     * @returns The normalized distance between these two points
+     */
+    distance2d(a: MercatorCoordinate, b: MercatorCoordinate): number;
 }

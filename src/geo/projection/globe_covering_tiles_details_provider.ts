@@ -96,7 +96,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         }
         return 0;
     }
-    
+
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
         return coveringZoomLevel(transform, options) > 4;
     }
@@ -228,7 +228,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // /--                 --\
             //    -----       -----
             //         ---m---
-            
+
             if (tileID.y >= (1 << tileID.z) / 2) {
                 // South hemisphere - include the tile's north edge midpoint
                 extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
@@ -256,7 +256,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
 
             // North points
             if (tileID.y === 0) {
-                // If the tile borders a pole, then 
+                // If the tile borders a pole, then
                 points.push(
                     threePlaneIntersection(planeWest, planeEast, planeUp),
                     threePlaneIntersection(planeWest, planeEast, planeDown),
@@ -294,6 +294,15 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
                 planeWest
             ], aabbMin, aabbMax);
         }
+    }
+
+    /**
+     * account for wrapping of centerCoord/cameraCoord around the anti-meridian
+     * this ensures that the coordinate difference stays in the range [-0.5, 0.5]
+    */
+    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
+        const deltaX = a.x - b.x;
+        return Math.hypot(deltaX - Math.round(deltaX), a.y - b.y);
     }
 }
 
