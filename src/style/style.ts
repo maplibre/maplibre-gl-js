@@ -1851,12 +1851,11 @@ export class Style extends Evented<MapEventType> {
         // repaint triggered by something else (an animated icon, a custom layer) cost a
         // single frame instead of holding the render loop open for `fadeDuration`.
         //
-        // Placement inputs that live outside the transform (paint properties, global state)
-        // are folded in through `_placementRevision`, which their setters bump, so a newly
-        // added input defaults to re-placing rather than to being silently forgotten.
-        // `fadeDuration` needs no entry because setting it to 0 forces a full placement
-        // above. DEM data arriving under a terrain camera is proxied by the elevation pair,
-        // which `Map._render` refreshes from the DEM every frame.
+        // Placement inputs that live outside the transform (paint properties, global state,
+        // DEM tiles arriving) are folded in through `_placementRevision`, which their setters
+        // and event handlers bump, so a newly added input defaults to re-placing rather than
+        // to being silently forgotten. `fadeDuration` needs no entry because setting it to 0
+        // forces a full placement above.
         const padding = transform.padding;
         const placementInput: Array<number | boolean> = [
             showCollisionBoxes, crossSourceCollisions, this._placementRevision,

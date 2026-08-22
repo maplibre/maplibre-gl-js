@@ -2969,6 +2969,9 @@ export class Map extends Evented<MapEventType> {
         const isTerrainSourceEvent = event.sourceId === terrainSourceId;
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
+            // New DEM data moves and occludes symbols even when the camera has not moved,
+            // so the next placement must not be skipped as input-unchanged.
+            this.style._placementRevision++;
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));

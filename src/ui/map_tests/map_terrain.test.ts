@@ -107,6 +107,33 @@ describe('setTerrain', () => {
 
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
     });
+
+    test('invalidates the placement input guard when terrain source data changes', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.setTerrain({source: 'terrainrgb'});
+        const revision = map.style._placementRevision;
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'terrainrgb',
+            sourceDataType: 'content',
+            source: {type: 'raster-dem'}
+        } as any);
+        expect(map.style._placementRevision).toBe(revision + 1);
+
+        // Data arriving on some other source moves no symbols, so it must not re-place.
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'other',
+            sourceDataType: 'content',
+            source: {type: 'geojson'}
+        } as any);
+        expect(map.style._placementRevision).toBe(revision + 1);
+    });
 });
 
 describe('getTerrain', () => {
