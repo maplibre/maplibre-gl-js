@@ -231,6 +231,7 @@ export class Style extends Evented<MapEventType> {
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
+    _placementInput: string;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -1839,7 +1840,21 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom))) {
+        // Placement only depends on these inputs. When none of them changed since the last
+        // committed placement, re-running it would change nothing, so skipping it lets a
+        // repaint triggered by something else (an animated icon, a custom layer) cost a
+        // single frame instead of holding the render loop open for `fadeDuration`.
+        const placementInput = JSON.stringify([
+            showCollisionBoxes, crossSourceCollisions, this.map.terrain != null,
+            transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
+            transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
+        ]);
+        const placementInputChanged = symbolBucketsChanged || placementInput !== this._placementInput;
+
+        // A stale placement still needs its final re-run: committing the replacement is what
+        // clears staleness, even when the inputs have settled since the change that set it.
+        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom) && (placementInputChanged || this.placement.stale))) {
+            this._placementInput = placementInput;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
@@ -1848,8 +1863,8 @@ export class Style extends Evented<MapEventType> {
             // the last placement finished running, but the next one hasn’t
             // started yet because of the `stillRecent` check immediately
             // above, so mark it stale to ensure that we request another
-            // render frame
-            this.placement.setStale();
+            // render frame once it is due
+            if (placementInputChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
 
