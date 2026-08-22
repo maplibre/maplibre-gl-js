@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Skip symbol re-placement when the camera, collision settings, and symbol buckets are unchanged, so a repaint triggered by an animated style image or custom layer costs a single frame and the map fires `idle` in between (by [@lucaswoj](https://github.com/lucaswoj))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
