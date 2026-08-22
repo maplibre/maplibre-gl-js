@@ -19,6 +19,7 @@
 - Fix the style's `center`, `zoom`, `bearing`, `pitch` and `roll` being ignored when the map was created with a `minZoom` or `minPitch` option, since applying those limits marked the transform as modified ([#5932](https://github.com/maplibre/maplibre-gl-js/issues/5932))
 - Upload the `color-relief` DEM texture once per tile instead of on every frame ([#8209](https://github.com/maplibre/maplibre-gl-js/pull/8209))
 - Draw non-CJK characters (e.g. “21” in “반포대로21길”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+- Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - _...Add new stuff here..._
 
 ## 6.5.0
