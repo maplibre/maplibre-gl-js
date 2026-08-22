@@ -8,6 +8,7 @@ import {type AJAXError} from '../util/ajax.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {setNow, restoreNow} from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -3879,5 +3880,41 @@ describe('Style#setFeatureState', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].error.message).toMatch(/The feature state should not include one of the following keys/);
+    });
+});
+
+describe('Style#_updatePlacement', () => {
+    afterEach(() => {
+        restoreNow();
+    });
+
+    test('placement is not re-run while its inputs are unchanged', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            sources: {geojson: createGeoJSONSource()},
+            layers: [{id: 'symbol', type: 'symbol', source: 'geojson'}]
+        }));
+        await style.once('style.load');
+        const transform = new MercatorTransform();
+        transform.resize(100, 100);
+
+        setNow(0);
+        style._updatePlacement(transform, false, 300, false);
+        setNow(1000);
+        style._updatePlacement(transform, false, 300, false);
+        const settled = style.pauseablePlacement;
+
+        // Unchanged inputs: no re-placement, even after the recency window expires, so a
+        // repaint triggered by something else costs a single frame.
+        setNow(2000);
+        expect(style._updatePlacement(transform, false, 300, false)).toBe(false);
+        expect(style.pauseablePlacement).toBe(settled);
+
+        // A camera change still re-places, and then settles again instead of looping.
+        transform.setZoom(3);
+        style._updatePlacement(transform, false, 300, false);
+        expect(style.pauseablePlacement).not.toBe(settled);
+        setNow(3000);
+        expect(style._updatePlacement(transform, false, 300, false)).toBe(false);
     });
 });
