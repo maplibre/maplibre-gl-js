@@ -19,7 +19,9 @@ uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform highp float u_pitch;
-uniform bool u_rotate_symbol;
+// 0: never rotate with the map, 1: always rotate with the map,
+// 2: rotate per vertex, from a_rotate_symbol (data-driven icon-rotation-alignment)
+uniform int u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
@@ -105,7 +107,7 @@ void main() {
     float fontScale = size / 24.0;
 
     highp float symbol_rotation = 0.0;
-    if (u_rotate_symbol) {
+    if (u_rotate_symbol == 1) {
         // See comments in symbol_sdf.vertex
         vec4 offsetProjectedPoint = projectTileWithElevation(translated_a_pos + vec2(1, 0), ele);
 

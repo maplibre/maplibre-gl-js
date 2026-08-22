@@ -102,3 +102,64 @@ describe('hasPaintOverrides', () => {
     });
 
 });
+
+describe('icon-rotation-alignment', () => {
+    const feature = (align: string) => ({properties: {align}} as any);
+    const dataDriven = ['get', 'align'];
+
+    test('resolves `auto` to `viewport` for point placement', () => {
+        const layer = createSymbolLayer({layout: {'symbol-placement': 'point'}});
+        expect(layer.layout.get('icon-rotation-alignment').constantOr(null)).toBe('viewport');
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(false);
+    });
+
+    test('resolves `auto` to `map` for line placement', () => {
+        const layer = createSymbolLayer({layout: {'symbol-placement': 'line'}});
+        expect(layer.layout.get('icon-rotation-alignment').constantOr(null)).toBe('map');
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(false);
+    });
+
+    test('evaluates a data expression per feature', () => {
+        const layer = createSymbolLayer({layout: {'icon-rotation-alignment': dataDriven}});
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(true);
+        expect(layer.getIconRotateWithMap(feature('map'), null)).toBe(true);
+        expect(layer.getIconRotateWithMap(feature('viewport'), null)).toBe(false);
+    });
+
+    test('resolves a per-feature `auto` against `symbol-placement`', () => {
+        const point = createSymbolLayer({layout: {'icon-rotation-alignment': dataDriven}});
+        expect(point.getIconRotateWithMap(feature('auto'), null)).toBe(false);
+
+        // line placement falls back to the constant for rendering, but `auto` still means `map`
+        const line = createSymbolLayer({
+            layout: {'symbol-placement': 'line', 'icon-rotation-alignment': dataDriven}
+        });
+        expect(line.getIconRotateWithMap(feature('auto'), null)).toBe(true);
+    });
+
+    test('falls back to the constant value for line placement', () => {
+        const layer = createSymbolLayer({
+            layout: {'symbol-placement': 'line', 'icon-rotation-alignment': dataDriven}
+        });
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(false);
+    });
+
+    test('falls back to the constant value for `icon-pitch-alignment: map`', () => {
+        const layer = createSymbolLayer({
+            layout: {'icon-pitch-alignment': 'map', 'icon-rotation-alignment': dataDriven}
+        });
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(false);
+    });
+
+    test('`icon-pitch-alignment: auto` inherits a constant rotation alignment', () => {
+        const layer = createSymbolLayer({layout: {'icon-rotation-alignment': 'map'}});
+        expect(layer.layout.get('icon-pitch-alignment')).toBe('map');
+    });
+
+    test('`icon-pitch-alignment: auto` becomes `viewport` when rotation alignment is data-driven', () => {
+        const layer = createSymbolLayer({layout: {'icon-rotation-alignment': dataDriven}});
+        expect(layer.layout.get('icon-pitch-alignment')).toBe('viewport');
+        // and the data-driven value is still honoured
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(true);
+    });
+});

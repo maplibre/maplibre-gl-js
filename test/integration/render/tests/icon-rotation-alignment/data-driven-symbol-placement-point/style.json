@@ -1,0 +1,100 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128
+    }
+  },
+  "bearing": 45,
+  "sources": {
+    "points": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "align": "map"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "align": "viewport"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                30,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "line": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {
+          "align": "viewport"
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -60,
+              -50
+            ],
+            [
+              60,
+              -10
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "sprite": "local://sprites/sprite",
+  "layers": [
+    {
+      "id": "symbol",
+      "type": "symbol",
+      "source": "points",
+      "layout": {
+        "symbol-placement": "point",
+        "icon-rotation-alignment": [
+          "get",
+          "align"
+        ],
+        "icon-allow-overlap": true,
+        "icon-image": "oneway"
+      }
+    },
+    {
+      "id": "line-symbol",
+      "type": "symbol",
+      "source": "line",
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 40,
+        "icon-rotation-alignment": [
+          "get",
+          "align"
+        ],
+        "icon-allow-overlap": true,
+        "icon-image": "oneway"
+      }
+    }
+  ]
+}

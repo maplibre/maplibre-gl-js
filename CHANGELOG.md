@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add data-driven styling for `icon-rotation-alignment`, so features in a single layer can be aligned to the map or to the viewport individually instead of needing one layer per alignment. Supported for `symbol-placement: point` with viewport-aligned pitch. Other layer setups keep using the layer-wide value and log a warning ([#3461](https://github.com/maplibre/maplibre-gl-js/issues/3461))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

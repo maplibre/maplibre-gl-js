@@ -316,7 +316,6 @@ function addFeature(bucket: SymbolBucket,
         iconPadding = getIconPadding(layout, feature, canonical, bucket.tilePixelRatio),
         textMaxAngle = layout.get('text-max-angle') / 180 * Math.PI,
         textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point',
-        iconAlongLine = layout.get('icon-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
         symbolPlacement = layout.get('symbol-placement'),
         textRepeatDistance = symbolMinDistance / 2;
 
@@ -334,6 +333,10 @@ function addFeature(bucket: SymbolBucket,
         }
     }
 
+    const iconRotateWithMap = shapedIcon && bucket.icon.rotationAlignmentVertexArray ?
+        bucket.layers[0].getIconRotateWithMap(feature, canonical) :
+        false;
+
     const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
 
     const addSymbolAtAnchor = (line, anchor) => {
@@ -346,7 +349,7 @@ function addFeature(bucket: SymbolBucket,
         addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, imageMap, verticallyShapedIcon, bucket.layers[0],
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
-            iconBoxScale, iconPadding, iconAlongLine, iconOffset,
+            iconBoxScale, iconPadding, iconRotateWithMap, iconOffset,
             feature, sizes, isSDFIcon, canonical, layoutTextSize);
     };
 
@@ -523,7 +526,7 @@ function addSymbol(bucket: SymbolBucket,
     textOffset: [number, number],
     iconBoxScale: number,
     iconPadding: SymbolPadding,
-    iconAlongLine: boolean,
+    iconRotateWithMap: boolean,
     iconOffset: [number, number],
     feature: SymbolFeature,
     sizes: Sizes,
@@ -593,7 +596,7 @@ function addSymbol(bucket: SymbolBucket,
             iconQuads,
             iconSizeData,
             iconOffset,
-            iconAlongLine,
+            iconRotateWithMap,
             feature,
             WritingMode.none,
             anchor,
@@ -612,7 +615,7 @@ function addSymbol(bucket: SymbolBucket,
                 verticalIconQuads,
                 iconSizeData,
                 iconOffset,
-                iconAlongLine,
+                iconRotateWithMap,
                 feature,
                 WritingMode.vertical,
                 anchor,
