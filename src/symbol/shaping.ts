@@ -6,6 +6,7 @@ import {
     charInComplexShapingScript
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
 
 import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
@@ -286,6 +287,72 @@ function isLineVertical(
         (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
+function charIsDecimalDigit(codePoint: number): boolean {
+    return /\p{Nd}/u.test(String.fromCodePoint(codePoint));
+}
+
+function charIsUppercaseLatinLetter(codePoint: number): boolean {
+    const char = String.fromCodePoint(codePoint);
+    return /\p{sc=Latn}/u.test(char) && /\p{Lu}/u.test(char);
+}
+
+function charIsSymbolOrPunctuation(codePoint: number): boolean {
+    return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
+}
+
+// Uppercase runs longer than this are words (e.g. “ISHIKAWA” in a dual name),
+// which read better lying along the line; shorter ones are codes (“JR”, “A1”).
+const MAX_UPRIGHT_LETTER_RUN = 3;
+
+function determineLineVerticals(line: TaggedString): boolean[] {
+    const chars = [...line.text];
+    const codePoints = chars.map(char => char.codePointAt(0));
+    const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
+
+    // A rotated character is part of a run if it is neither whitespace nor an inline image.
+    const isRunCharacter = (i: number): boolean =>
+        !verticals[i] && !charIsWhitespace(codePoints[i]) && !('imageName' in line.getSection(i));
+
+    for (let start = 0; start < codePoints.length; start++) {
+        if (!isRunCharacter(start)) continue;
+        let end = start;
+        while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
+
+        const run = codePoints.slice(start, end + 1);
+        // Numbers of any length, optionally combined with symbols (“21”, “1-2”),
+        // and short uppercase codes (“JR”, “A1”) read well upright.
+        const isNumber = run.some(charIsDecimalDigit) &&
+            run.every(codePoint => charIsDecimalDigit(codePoint) || charIsSymbolOrPunctuation(codePoint));
+        const isShortUppercaseCode = run.length <= MAX_UPRIGHT_LETTER_RUN &&
+            run.every(codePoint => charIsUppercaseLatinLetter(codePoint) || charIsDecimalDigit(codePoint));
+        if (isNumber || isShortUppercaseCode) {
+            for (let i = start; i <= end; i++) {
+                verticals[i] = (charIsDecimalDigit(codePoints[i]) || charIsUppercaseLatinLetter(codePoints[i])) &&
+                    !charInComplexShapingScript(codePoints[i]);
+            }
+        }
+        start = end;
+    }
+
+    // Punctuation between characters that this pass made upright gets its
+    // vertical presentation form (e.g. “-” in “1-2” becomes “︲”) —
+    // verticalizePunctuation couldn't apply it, as digits look rotated to it.
+    let replaced = false;
+    for (let i = 0; i < chars.length; i++) {
+        if (verticals[i]) continue;
+        const verticalizedChar = verticalizedCharacterMap[chars[i]];
+        if (!verticalizedChar) continue;
+        if ((i === 0 || verticals[i - 1]) && (i === chars.length - 1 || verticals[i + 1])) {
+            chars[i] = verticalizedChar;
+            verticals[i] = true;
+            replaced = true;
+        }
+    }
+    if (replaced) line.text = chars.join('');
+
+    return verticals;
+}
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -335,12 +402,15 @@ function shapeLines(shaping: Shaping,
         }
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
+        const lineVerticals = writingMode === WritingMode.vertical && !allowVerticalPlacement ?
+            determineLineVerticals(line) : null;
 
-        let i = 0;
+        let i = -1;
         for (const char of line.text) {
+            i++;
             const section = line.getSection(i);
             const codePoint = char.codePointAt(0);
-            const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
+            const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
             const positionedGlyph: PositionedGlyph = {
                 glyph: codePoint,
                 imageName: null,
@@ -386,8 +456,6 @@ function shapeLines(shaping: Shaping,
                 const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
-
-            i++;
         }
 
         // Only justify if we placed at least one glyph
@@ -485,7 +553,7 @@ function shapeImageSection(
     // Difference between height of an image and one EM at max line scale.
     // Pushes current line down if an image size is over 1 EM at max line scale.
     const imageOffset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
-    
+
     return {rect, metrics, baselineOffset, imageOffset};
 }
 
