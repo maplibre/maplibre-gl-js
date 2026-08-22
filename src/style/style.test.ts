@@ -3884,37 +3884,79 @@ describe('Style#setFeatureState', () => {
 });
 
 describe('Style#_updatePlacement', () => {
-    afterEach(() => {
-        restoreNow();
-    });
+    let style: Style;
+    let transform: MercatorTransform;
+    let time: number;
 
-    test('placement is not re-run while its inputs are unchanged', async () => {
-        const style = createStyle();
+    const update = () => style._updatePlacement(transform, false, 300, false);
+    // Run placement, then step the clock past the recency window so it can settle.
+    const settle = () => {
+        update();
+        setNow(time += 1000);
+        update();
+        setNow(time += 1000);
+    };
+
+    beforeEach(async () => {
+        time = 0;
+        setNow(time);
+        style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {geojson: createGeoJSONSource()},
             layers: [{id: 'symbol', type: 'symbol', source: 'geojson'}]
         }));
         await style.once('style.load');
-        const transform = new MercatorTransform();
+        transform = new MercatorTransform();
         transform.resize(100, 100);
+    });
 
-        setNow(0);
-        style._updatePlacement(transform, false, 300, false);
-        setNow(1000);
-        style._updatePlacement(transform, false, 300, false);
+    afterEach(() => {
+        restoreNow();
+    });
+
+    test('placement is not re-run while its inputs are unchanged', () => {
+        settle();
         const settled = style.pauseablePlacement;
 
         // Unchanged inputs: no re-placement, even after the recency window expires, so a
         // repaint triggered by something else costs a single frame.
-        setNow(2000);
-        expect(style._updatePlacement(transform, false, 300, false)).toBe(false);
+        expect(update()).toBe(false);
         expect(style.pauseablePlacement).toBe(settled);
+    });
 
-        // A camera change still re-places, and then settles again instead of looping.
-        transform.setZoom(3);
-        style._updatePlacement(transform, false, 300, false);
+    test.each([
+        ['a zoom', () => transform.setZoom(3)],
+        ['a padding', () => transform.setPadding({top: 10, bottom: 0, left: 0, right: 0})],
+        ['an elevation', () => transform.setElevation(100)],
+        ['a paint property', () => style.setPaintProperty('symbol', 'icon-translate', [5, 5])],
+    ])('%s change re-places, and then settles again instead of looping', (_name, change) => {
+        settle();
+        const settled = style.pauseablePlacement;
+
+        change();
+        update();
         expect(style.pauseablePlacement).not.toBe(settled);
-        setNow(3000);
-        expect(style._updatePlacement(transform, false, 300, false)).toBe(false);
+
+        setNow(time += 1000);
+        update();
+        setNow(time += 1000);
+        expect(update()).toBe(false);
+    });
+
+    test('a stale placement gets its final re-run even after its inputs settled', () => {
+        settle();
+        const settled = style.pauseablePlacement;
+
+        // Symbol buckets changing mid-placement mark the result stale; committing the
+        // re-placement is the only thing that clears it, so it has to run even though no
+        // input changed since.
+        style.placement.setStale();
+        update();
+        expect(style.pauseablePlacement).not.toBe(settled);
+
+        const rerun = style.pauseablePlacement;
+        setNow(time += 1000);
+        expect(update()).toBe(false);
+        expect(style.pauseablePlacement).toBe(rerun);
     });
 });

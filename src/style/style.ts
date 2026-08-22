@@ -231,7 +231,8 @@ export class Style extends Evented<MapEventType> {
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
-    _placementInput: string;
+    _placementInput: Array<number | boolean> | undefined;
+    _placementRevision: number;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -315,6 +316,8 @@ export class Style extends Evented<MapEventType> {
         this._glyphsDidChange = false;
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
+        this._placementInput = undefined;
+        this._placementRevision = 0;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
         this.placement = undefined;
@@ -1364,6 +1367,9 @@ export class Style extends Evented<MapEventType> {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
+        // Only the translate properties feed symbol placement, but bumping on every paint
+        // change is cheap and keeps a future placement-affecting property from being missed.
+        this._placementRevision++;
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
@@ -1844,12 +1850,26 @@ export class Style extends Evented<MapEventType> {
         // committed placement, re-running it would change nothing, so skipping it lets a
         // repaint triggered by something else (an animated icon, a custom layer) cost a
         // single frame instead of holding the render loop open for `fadeDuration`.
-        const placementInput = JSON.stringify([
-            showCollisionBoxes, crossSourceCollisions, this.map.terrain != null,
+        //
+        // Placement inputs that live outside the transform (paint properties, global state)
+        // are folded in through `_placementRevision`, which their setters bump, so a newly
+        // added input defaults to re-placing rather than to being silently forgotten.
+        // `fadeDuration` needs no entry because setting it to 0 forces a full placement
+        // above. DEM data arriving under a terrain camera is proxied by the elevation pair,
+        // which `Map._render` refreshes from the DEM every frame.
+        const padding = transform.padding;
+        const placementInput: Array<number | boolean> = [
+            showCollisionBoxes, crossSourceCollisions, this._placementRevision,
+            this.map.terrain ? this.map.terrain.exaggeration : -1,
+            this.projection?.transitionState ?? -1,
             transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
             transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
-        ]);
-        const placementInputChanged = symbolBucketsChanged || placementInput !== this._placementInput;
+            transform.elevation, transform.minElevationForCurrentTile, transform.renderWorldCopies,
+            padding.top ?? 0, padding.bottom ?? 0, padding.left ?? 0, padding.right ?? 0,
+        ];
+        const previousInput = this._placementInput;
+        const placementInputChanged = symbolBucketsChanged || !previousInput ||
+            placementInput.some((value, i) => value !== previousInput[i]);
 
         // A stale placement still needs its final re-run: committing the replacement is what
         // clears staleness, even when the inputs have settled since the change that set it.
