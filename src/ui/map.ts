@@ -2956,8 +2956,7 @@ export class Map extends Evented<MapEventType> {
             this.style.on('data', this._terrainDataCallback);
         }
 
-        // Swapping to an already-loaded DEM source fires no data event, and the exaggeration
-        // may match too, so the next placement has to be told its elevations are stale.
+        // A swap to an already-loaded DEM source fires no data event, so invalidate here too.
         this.style._placementRevision++;
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
@@ -2972,8 +2971,7 @@ export class Map extends Evented<MapEventType> {
         const isTerrainSourceEvent = event.sourceId === terrainSourceId;
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
-            // New DEM data moves and occludes symbols even when the camera has not moved,
-            // so the next placement must not be skipped as input-unchanged.
+            // New DEM data moves symbols even when the camera has not.
             this.style._placementRevision++;
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {

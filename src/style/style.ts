@@ -1367,9 +1367,8 @@ export class Style extends Evented<MapEventType> {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
-        // Only the translate properties feed symbol placement, but bumping on every paint
-        // change is cheap and keeps a future placement-affecting property from being missed.
-        this._placementRevision++;
+        // Coarser than needed: only the translate properties actually feed placement.
+        if (layer.type === 'symbol') this._placementRevision++;
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
@@ -1846,32 +1845,22 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        // Placement only depends on these inputs. When none of them changed since the last
-        // committed placement, re-running it would change nothing, so skipping it lets a
-        // repaint triggered by something else (an animated icon, a custom layer) cost a
-        // single frame instead of holding the render loop open for `fadeDuration`.
-        //
-        // Placement inputs that live outside the transform (paint properties, global state,
-        // DEM tiles arriving) are folded in through `_placementRevision`, which their setters
-        // and event handlers bump, so a newly added input defaults to re-placing rather than
-        // to being silently forgotten. `fadeDuration` needs no entry because setting it to 0
-        // forces a full placement above.
+        // Placement only depends on these inputs, so when none of them changed since the last
+        // committed placement it is skipped, and a repaint triggered by something else (an
+        // animated icon, a custom layer) costs a single frame instead of a `fadeDuration` tail.
+        // Inputs that live outside the transform bump `_placementRevision` where they change.
         const padding = transform.padding;
         const placementInput: Array<number | boolean> = [
             showCollisionBoxes, crossSourceCollisions, this._placementRevision,
-            this.map.terrain ? this.map.terrain.exaggeration : -1,
             this.projection?.transitionState ?? -1,
             transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
             transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
             transform.elevation, transform.minElevationForCurrentTile, transform.renderWorldCopies,
-            padding.top ?? 0, padding.bottom ?? 0, padding.left ?? 0, padding.right ?? 0,
+            padding.top, padding.bottom, padding.left, padding.right,
         ];
-        const previousInput = this._placementInput;
-        const placementInputChanged = symbolBucketsChanged || !previousInput ||
-            placementInput.some((value, i) => value !== previousInput[i]);
+        const placementInputChanged = symbolBucketsChanged || !deepEqual(placementInput, this._placementInput);
 
-        // A stale placement still needs its final re-run: committing the replacement is what
-        // clears staleness, even when the inputs have settled since the change that set it.
+        // A stale placement still needs one final re-run: committing is what clears staleness.
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom) && (placementInputChanged || this.placement.stale))) {
             this._placementInput = placementInput;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);

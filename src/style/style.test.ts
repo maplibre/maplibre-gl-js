@@ -3918,18 +3918,16 @@ describe('Style#_updatePlacement', () => {
         settle();
         const settled = style.pauseablePlacement;
 
-        // Unchanged inputs: no re-placement, even after the recency window expires, so a
-        // repaint triggered by something else costs a single frame.
         expect(update()).toBe(false);
         expect(style.pauseablePlacement).toBe(settled);
     });
 
     test.each([
-        ['a zoom', () => transform.setZoom(3)],
-        ['a padding', () => transform.setPadding({top: 10, bottom: 0, left: 0, right: 0})],
-        ['an elevation', () => transform.setElevation(100)],
-        ['a paint property', () => style.setPaintProperty('symbol', 'icon-translate', [5, 5])],
-    ])('%s change re-places, and then settles again instead of looping', (_name, change) => {
+        ['zoom', () => transform.setZoom(3)],
+        ['padding', () => transform.setPadding({top: 10, bottom: 0, left: 0, right: 0})],
+        ['elevation', () => transform.setElevation(100)],
+        ['paint property', () => style.setPaintProperty('symbol', 'icon-translate', [5, 5])],
+    ])('a %s change re-places, and then settles again instead of looping', (_name, change) => {
         settle();
         const settled = style.pauseablePlacement;
 
@@ -3947,9 +3945,6 @@ describe('Style#_updatePlacement', () => {
         settle();
         const settled = style.pauseablePlacement;
 
-        // Symbol buckets changing mid-placement mark the result stale; committing the
-        // re-placement is the only thing that clears it, so it has to run even though no
-        // input changed since.
         style.placement.setStale();
         update();
         expect(style.pauseablePlacement).not.toBe(settled);

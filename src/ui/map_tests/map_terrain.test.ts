@@ -115,8 +115,6 @@ describe('setTerrain', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
 
-        // Setting terrain must invalidate too: swapping to an already-loaded DEM source
-        // fires no data event, and its exaggeration may match the previous source's.
         const beforeSet = map.style._placementRevision;
         map.setTerrain({source: 'terrainrgb'});
         expect(map.style._placementRevision).toBeGreaterThan(beforeSet);
@@ -130,7 +128,6 @@ describe('setTerrain', () => {
         } as any);
         expect(map.style._placementRevision).toBe(revision + 1);
 
-        // Data arriving on some other source moves no symbols, so it must not re-place.
         map._terrainDataCallback({
             dataType: 'source',
             sourceId: 'other',
