@@ -7,7 +7,7 @@ import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/til
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, versorSetLocationAtPoint} from './globe_utils.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {tileCoordinatesToLocation} from './mercator_utils.ts';
+import {cameraMercatorCoordinate, tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {differenceOfAnglesDegrees, MAX_VALID_LATITUDE} from '../../util/util.ts';
 
@@ -497,6 +497,35 @@ describe('GlobeTransform', () => {
         unprojectedCoordinates = globeTransform.screenPointToMercatorCoordinate(projected);
         expect(unprojectedCoordinates.x).toBeCloseTo(coordsMercator.x, precisionDigits);
         expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
+    });
+
+    test('cameraMercatorCoordinate', () => {
+        const precisionDigits = 10;
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(512, 512);
+        globeTransform.setZoom(5);
+        globeTransform.setCenter(new LngLat(15, 55));
+        globeTransform.setMaxPitch(60);
+        globeTransform.setPitch(55);
+        globeTransform.setBearing(75);
+
+        const mercatorTransform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        mercatorTransform.resize(512, 512);
+        mercatorTransform.setZoom(5);
+        mercatorTransform.setCenter(new LngLat(15, 55));
+        mercatorTransform.setPitch(55);
+        mercatorTransform.setBearing(75);
+
+        const cameraCoord = cameraMercatorCoordinate(globeTransform);
+        const mercatorCameraCoord = cameraMercatorCoordinate(mercatorTransform);
+
+        expect(cameraCoord.x).toBeCloseTo(mercatorCameraCoord.x, precisionDigits);
+        expect(cameraCoord.y).toBeCloseTo(mercatorCameraCoord.y, precisionDigits);
+        expect(cameraCoord.z).toBeCloseTo(mercatorCameraCoord.z, precisionDigits);
+
+        // The pixel under a pitched globe camera misses the sphere, so the screen round trip lands elsewhere.
+        const screenRoundTrip = globeTransform.screenPointToMercatorCoordinate(globeTransform.getCameraPoint());
+        expect(cameraCoord.toLngLat().distanceTo(screenRoundTrip.toLngLat())).toBeGreaterThan(50000);
     });
 
     describe('getBounds', () => {

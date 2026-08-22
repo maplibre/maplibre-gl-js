@@ -219,7 +219,6 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const plane = transform.getClippingPlane();
     const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
-    cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);

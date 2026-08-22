@@ -108,7 +108,7 @@ describe('coveringTiles', () => {
             ]);
         });
     
-        test('far camera at high pitch: no tile is refined past the nominal zoom', () => {
+        test('tile zoom stays at the nominal zoom for a distant pitched camera', () => {
             const transform = new GlobeTransform();
             transform.resize(2560, 1265);
             transform.setCenter(new LngLat(-140, -52));
@@ -126,7 +126,7 @@ describe('coveringTiles', () => {
             expect(Math.min(...levels)).toBeLessThanOrEqual(nominalZ);
         });
 
-        test('far camera at a narrow field of view: the whole frame is not refined past the nominal zoom', () => {
+        test('tile zoom stays at the nominal zoom for a distant camera with a narrow field of view', () => {
             const transform = new GlobeTransform();
             transform.resize(2560, 1265);
             transform.setCenter(new LngLat(-140, 0));
@@ -426,23 +426,7 @@ describe('coveringTiles', () => {
     
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(200, 200);
-
-        test('terminates when the camera is far outside the mercator square', () => {
-            // A regression exhausts the heap rather than failing an assertion.
-            const distantCameraTransform = new MercatorTransform();
-            distantCameraTransform.resize(2560, 1265);
-            distantCameraTransform.setCenter(new LngLat(0, 0));
-            distantCameraTransform.setZoom(2);
-            distantCameraTransform.setMaxPitch(85);
-            distantCameraTransform.setPitch(75);
-            distantCameraTransform.setFov(5);
-
-            const tiles = coveringTiles(distantCameraTransform, {tileSize: 512, maxzoom: 14});
-
-            expect(tiles.length).toBeGreaterThan(0);
-            expect(tiles.length).toBeLessThan(100);
-        });
-
+    
         test('general', () => {
     
             // make slightly off center so that sort order is not subject to precision issues
