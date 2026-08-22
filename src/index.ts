@@ -24,7 +24,7 @@ import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
 import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
 import {GeoJSONSource, type GetClusterOptions, type SetClusterOptions} from './source/geojson_source.ts';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
-import {type CanonicalTileRange, type Coordinates, type ImageSourceImage, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
+import {type CanonicalTileRange, type Coordinates, type ImageSourceImage, ImageSource, type ImageSourceWarp, type UpdateImageOptions} from './source/image_source.ts';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source.ts';
 import {RasterTileSource} from './source/raster_tile_source.ts';
 import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source.ts';
@@ -301,6 +301,7 @@ export {
     type ErrorEventType,
     type EventedParentData,
     type Coordinates,
+    type ImageSourceWarp,
     type ImageSourceImage,
     type UpdateImageOptions,
     type DragPanOptions,

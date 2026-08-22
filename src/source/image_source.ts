@@ -20,10 +20,38 @@ import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {
-    identityPerspectiveTransform,
-    type RasterPerspectiveTransform
+    bilinearImageWarp,
+    type RasterImageWarp
 } from '../webgl/program/raster_program.ts';
-import {mat2, vec3} from 'gl-matrix';
+import {mat2} from 'gl-matrix';
+import {createTileMeshWithBuffers} from '../util/create_tile_mesh.ts';
+
+import type {Context} from '../webgl/context.ts';
+import type {Mesh} from '../render/mesh.ts';
+
+/**
+ * How many grid cells per axis the mesh of a subdivided quad has. Within a cell the bilinear warp
+ * is still approximated by one mapping per triangle, so the error falls off with the cell size.
+ */
+const SUBDIVIDED_QUAD_GRANULARITY = 16;
+
+/**
+ * How much a warp may foreshorten the image, as the ratio between the largest and the smallest
+ * homogeneous denominator over the quad, while staying purely projective. Ordinary oblique imagery
+ * stays well below it.
+ */
+const PROJECTIVE_FORESHORTENING = 4;
+
+/**
+ * The foreshortening at which a warp is taken to be purely bilinear.
+ *
+ * The denominator vanishes on the warp's vanishing line, and that line touches the quad exactly when
+ * the quad degenerates into a triangle, so foreshortening grows without bound as a corner approaches
+ * the diagonal between its neighbours. Left alone, such a quad keeps a valid but wildly lopsided
+ * warp, squeezing nearly the whole image into a sliver along one edge and magnifying a handful of
+ * texels over the rest of the quad.
+ */
+const BILINEAR_FORESHORTENING = 512;
 
 /**
  * Four geographical coordinates,
@@ -32,6 +60,28 @@ import {mat2, vec3} from 'gl-matrix';
  * They do not have to represent a rectangle.
  */
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
+
+/**
+ * @experimental
+ * How an {@link ImageSource} warps its image onto its four coordinates, for the cases where the
+ * coordinates do not form a rectangle.
+ *
+ * - `perspective` maps the image as the perspective view of a plane, which is what georeferenced
+ *   photography and any other image of a flat scene wants: straight lines in the image stay
+ *   straight, and the image foreshortens towards its more distant edge.
+ * - `flat` interpolates the image between the four coordinates bilinearly, pinning it like a rubber
+ *   sheet, which is what an image being reshaped by hand wants: every corner moves the image only
+ *   near itself, and the result is stable no matter how far a corner is dragged. Straight lines in
+ *   the image only stay straight while they run parallel to its edges, and there is no
+ *   foreshortening, in the same sense as the CSS `transform-style: flat`.
+ * - `auto`, the default, is `perspective` while the coordinates plausibly describe a perspective
+ *   view, and blends continuously towards `flat` as they stop doing so, which they do as a corner
+ *   approaches the diagonal between its two neighbours.
+ *
+ * Coordinates with no perspective view at all - a concave, self-crossing or collinear quad - are
+ * always warped flat, whichever of these is set.
+ */
+export type ImageSourceWarp = 'auto' | 'perspective' | 'flat';
 
 /**
  * An already-decoded image that can be handed to an {@link ImageSource} directly,
@@ -146,11 +196,18 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     image: ImageSourceImage;
     tileID: CanonicalTileID;
     tileCoords: Point[];
-    perspectiveTransform: RasterPerspectiveTransform = identityPerspectiveTransform;
+    imageWarp: RasterImageWarp = bilinearImageWarp;
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _abortController: AbortController;
+    private _warp: ImageSourceWarp = 'auto';
     private _imageDirty: boolean = false;
+    /**
+     * Whether the image has to be warped over a subdivided mesh instead of a pair of triangles,
+     * because {@link imageWarp} is not the affine mapping that a parallelogram gets.
+     */
+    private _subdividedQuad: boolean = false;
+    private _subdividedMesh: Mesh | null = null;
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -245,6 +302,26 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         this._imageDirty = true;
     }
 
+    /**
+     * @internal
+     * The mesh the image is drawn with, or null to use the tile mesh of the current projection.
+     *
+     * The raster vertex shader evaluates {@link imageWarp} per vertex, so a pair of triangles only
+     * samples it at the four corners. That is enough for the affine mapping of a parallelogram, and
+     * for a purely projective mapping, whose straight lines survive linear interpolation across the
+     * diagonal. Anything in between is neither, and would be textured as two independently warped
+     * halves with a visible seam along that diagonal, so it needs the warp evaluated per grid cell.
+     *
+     * A projection that subdivides its own tile meshes already does this, so it keeps them.
+     */
+    getMesh(context: Context, projectionSubdividesTiles: boolean): Mesh | null {
+        if (!this._subdividedQuad || projectionSubdividesTiles) {
+            return null;
+        }
+        this._subdividedMesh ??= createTileMeshWithBuffers(context, {granularity: SUBDIVIDED_QUAD_GRANULARITY});
+        return this._subdividedMesh;
+    }
+
     /** Teardown only: dropping the reference alone leaves the allocation to the GC. */
     private _disposeTexture(): void {
         this.texture?.destroy();
@@ -269,8 +346,46 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
             this._abortController = null;
         }
         this._disposeTexture();
+        this._subdividedMesh?.destroy();
+        this._subdividedMesh = null;
         this.image = null;
         this.tiles = {};
+    }
+
+    /**
+     * @experimental
+     * Sets how the image is warped onto its coordinates and re-renders the map.
+     *
+     * This only has an effect while the coordinates do not form a rectangle, and it is not part of
+     * the style specification, so it does not survive `map.setStyle`.
+     *
+     * @param warp - The warp to use, see {@link ImageSourceWarp}.
+     *
+     * @example
+     * ```ts
+     * // Keep the image pinned to its corners while the user drags them around.
+     * map.getSource('some id').setWarp('flat');
+     * ```
+     */
+    setWarp(warp: ImageSourceWarp): this {
+        if (this._warp === warp) {
+            return this;
+        }
+        this._warp = warp;
+        if (this.tileCoords) {
+            this.setCoordinates(this.coordinates);
+        }
+        return this;
+    }
+
+    /**
+     * @experimental
+     * Returns how the image is warped onto its coordinates.
+     *
+     * @returns The warp in use, see {@link ImageSourceWarp}.
+     */
+    getWarp(): ImageSourceWarp {
+        return this._warp;
     }
 
     /**
@@ -307,7 +422,11 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         // Transform the corner coordinates into the coordinate space of our
         // tile.
         this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
-        this.perspectiveTransform = calculateRasterPerspectiveTransform(this.tileCoords);
+        this.imageWarp = calculateImageWarp(this.tileCoords, this._warp);
+        // A purely projective warp survives a pair of triangles, because its straight lines are
+        // straight in both, and so does any warp of a parallelogram, which is affine either way.
+        // Anything else is textured as two independently warped halves without a subdivided mesh.
+        this._subdividedQuad = this.imageWarp[2] > 0 && !isParallelogram(this.tileCoords);
         this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
 
         this.fire(new MapSourceDataEvent('data', {sourceDataType: 'content'}));
@@ -444,15 +563,11 @@ function hasWrongWindingOrder(coords: Point[]) {
     return crossProduct < 0;
 }
 
-const perspectiveEpsilon = Number.EPSILON;
-// Allows for accumulated rounding error in the three-term homogeneous dot products.
-const perspectiveErrorFactor = 8;
-
 /**
- * Calculates the inverse-homography denominator used to sample non-affine
- * image-source texture coordinates. Image source tile coordinates are rounded
- * to integers before this runs, so singularity checks use exact zero or
- * Number.EPSILON scaled to the corner denominators.
+ * How the image is warped onto its coordinates, given the corners in tile space and what the user
+ * asked for. The projective warp is the perspective view of a plane, so it is the one a photograph
+ * wants; the bilinear warp is a rubber sheet pinned at the corners, and is the only one left once
+ * the corners stop describing a perspective view at all.
  *
  * Based on Paul S. Heckbert, "Fundamentals of Texture Mapping and Image
  * Warping", UCB/CSD-89-516, 1989, section 2.2.3 and appendix A.2.
@@ -460,74 +575,55 @@ const perspectiveErrorFactor = 8;
  * @see https://www2.eecs.berkeley.edu/Pubs/TechRpts/1989/5504.html
  * @see https://www.cs.cmu.edu/~ph/texfund/texfund.pdf
  */
-function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPerspectiveTransform {
-    if (isParallelogram(cornerCoords)) {
-        return identityPerspectiveTransform;
+function calculateImageWarp(cornerCoords: Point[], warp: ImageSourceWarp): RasterImageWarp {
+    // A parallelogram is warped affinely either way, and skipping the math keeps the common case of
+    // a rectangle free of the signed zeroes that dividing an exactly zero numerator produces.
+    if (warp === 'flat' || isParallelogram(cornerCoords)) {
+        return bilinearImageWarp;
     }
 
     const [topLeft, topRight, bottomRight, bottomLeft] = cornerCoords;
-    const sx = topLeft.x - topRight.x + bottomRight.x - bottomLeft.x;
-    const sy = topLeft.y - topRight.y + bottomRight.y - bottomLeft.y;
-    const dx1 = topRight.x - bottomRight.x;
-    const dy1 = topRight.y - bottomRight.y;
-    const dx2 = bottomLeft.x - bottomRight.x;
-    const dy2 = bottomLeft.y - bottomRight.y;
-    const basis: mat2 = [dx1, dy1, dx2, dy2];
+    const sumX = topLeft.x - topRight.x + bottomRight.x - bottomLeft.x;
+    const sumY = topLeft.y - topRight.y + bottomRight.y - bottomLeft.y;
+    const basis: mat2 = [
+        topRight.x - bottomRight.x, topRight.y - bottomRight.y,
+        bottomLeft.x - bottomRight.x, bottomLeft.y - bottomRight.y
+    ];
+    const [rightX, rightY, downX, downY] = basis;
     const determinant = mat2.determinant(basis);
+    const perspectiveX = (sumX * downY - downX * sumY) / determinant;
+    const perspectiveY = (rightX * sumY - sumX * rightY) / determinant;
 
-    if (Math.abs(determinant) < perspectiveEpsilon) {
-        return identityPerspectiveTransform;
+    // The homogeneous denominator at the four corners of the unit square, normalized to one at the
+    // top left. Its spread is how much the warp foreshortens the image, and it stays finite and
+    // positive over the whole quad exactly while the quad is a perspective view of the image, so
+    // this one comparison also rejects a collinear, concave or self-crossing quad. A degenerate
+    // determinant reaches it as an infinite or not-a-number spread.
+    const denominators = [1, 1 + perspectiveX, 1 + perspectiveX + perspectiveY, 1 + perspectiveY];
+    const foreshortening = Math.max(...denominators) / Math.min(...denominators);
+    const blend = warp === 'perspective' ? 0 : bilinearBlend(foreshortening);
+    if (!(foreshortening >= 1 && foreshortening <= BILINEAR_FORESHORTENING) || blend >= 1) {
+        return bilinearImageWarp;
     }
 
-    const perspectiveX = (sx * dy2 - dx2 * sy) / determinant;
-    const perspectiveY = (dx1 * sy - sx * dy1) / determinant;
-
-    // A finite image of the unit square has positive homogeneous denominators
-    // at all four corners after normalizing the top-left denominator to one.
-    const forwardDenominators = [1, 1 + perspectiveX, 1 + perspectiveX + perspectiveY, 1 + perspectiveY];
-    const forwardDenominatorScale = Math.max(...forwardDenominators.map(value => Math.abs(value)));
-    const hasInvalidForwardDenominator = forwardDenominators.some(value =>
-        !Number.isFinite(value) || value <= perspectiveErrorFactor * perspectiveEpsilon * forwardDenominatorScale);
-    if (!Number.isFinite(forwardDenominatorScale) || forwardDenominatorScale === 0 || hasInvalidForwardDenominator) {
-        return identityPerspectiveTransform;
-    }
-
-    const a = topRight.x - topLeft.x + perspectiveX * topRight.x;
-    const b = bottomLeft.x - topLeft.x + perspectiveY * bottomLeft.x;
-    const d = topRight.y - topLeft.y + perspectiveX * topRight.y;
-    const e = bottomLeft.y - topLeft.y + perspectiveY * bottomLeft.y;
-    const inverseDenominator: RasterPerspectiveTransform = [0, 0, 0];
-    vec3.cross(inverseDenominator, [a, d, perspectiveX], [b, e, perspectiveY]);
-    const normalizationScale = Math.max(...inverseDenominator.map(value => Math.abs(value)));
-    const cornerDenominators = cornerCoords.map(({x, y}) =>
-        vec3.dot(inverseDenominator, [x, y, 1]));
-    const cornerDenominatorErrors = cornerCoords.map(({x, y}) =>
-        perspectiveErrorFactor * perspectiveEpsilon * (
-            Math.abs(inverseDenominator[0] * x) +
-            Math.abs(inverseDenominator[1] * y) +
-            Math.abs(inverseDenominator[2])));
-    const denominatorScale = Math.max(...cornerDenominators.map(value => Math.abs(value)));
-    const denominatorSign = Math.sign(cornerDenominators[0]);
-
-    // The denominator is affine within each rendered triangle. Reject a
-    // transform that reaches or crosses zero anywhere inside the quad.
-    const hasInvalidDenominator = cornerDenominators.some((value, index) =>
-        !Number.isFinite(value) ||
-        Math.abs(value) <= Math.max(perspectiveEpsilon * denominatorScale, cornerDenominatorErrors[index]) ||
-        Math.sign(value) !== denominatorSign);
-    if (!Number.isFinite(normalizationScale) || normalizationScale === 0 || !Number.isFinite(denominatorScale) ||
-        denominatorScale === 0 || hasInvalidDenominator) {
-        return identityPerspectiveTransform;
-    }
-
-    // The denominator is homogeneous, so normalize by its largest coefficient
-    // instead of assuming that its constant coefficient is nonzero.
-    const transform = inverseDenominator.map(value => value / normalizationScale) as RasterPerspectiveTransform;
-    return transform.every(Number.isFinite) ? transform : identityPerspectiveTransform;
+    return [perspectiveX, perspectiveY, blend];
 }
 
-function isParallelogram(cornerCoords: Point[]) {
-    const [tl, tr, br, bl] = cornerCoords;
-    return Math.abs(tl.x + br.x - tr.x - bl.x) < perspectiveEpsilon &&
-        Math.abs(tl.y + br.y - tr.y - bl.y) < perspectiveEpsilon;
+/**
+ * How far a warp of the given foreshortening is blended towards the bilinear one, ramping from
+ * purely projective at {@link PROJECTIVE_FORESHORTENING} to purely bilinear at
+ * {@link BILINEAR_FORESHORTENING}. Blending rather than switching keeps the image continuous as the
+ * quad is reshaped: the two warps only agree for a parallelogram, and diverge by roughly a tenth of
+ * the quad per unit of foreshortening, so a switch would visibly displace the image.
+ */
+function bilinearBlend(foreshortening: number): number {
+    const ramp = (1 - PROJECTIVE_FORESHORTENING / foreshortening) /
+        (1 - PROJECTIVE_FORESHORTENING / BILINEAR_FORESHORTENING);
+    return Math.max(0, ramp);
+}
+
+function isParallelogram(cornerCoords: Point[]): boolean {
+    const [topLeft, topRight, bottomRight, bottomLeft] = cornerCoords;
+    return topLeft.x + bottomRight.x === topRight.x + bottomLeft.x &&
+        topLeft.y + bottomRight.y === topRight.y + bottomLeft.y;
 }
