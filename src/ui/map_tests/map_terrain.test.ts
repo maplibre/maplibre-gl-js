@@ -114,7 +114,12 @@ describe('setTerrain', () => {
             type: 'raster-dem',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
+
+        // Setting terrain must invalidate too: swapping to an already-loaded DEM source
+        // fires no data event, and its exaggeration may match the previous source's.
+        const beforeSet = map.style._placementRevision;
         map.setTerrain({source: 'terrainrgb'});
+        expect(map.style._placementRevision).toBeGreaterThan(beforeSet);
         const revision = map.style._placementRevision;
 
         map._terrainDataCallback({

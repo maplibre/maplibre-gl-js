@@ -2956,6 +2956,9 @@ export class Map extends Evented<MapEventType> {
             this.style.on('data', this._terrainDataCallback);
         }
 
+        // Swapping to an already-loaded DEM source fires no data event, and the exaggeration
+        // may match too, so the next placement has to be told its elevations are stale.
+        this.style._placementRevision++;
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
     }
