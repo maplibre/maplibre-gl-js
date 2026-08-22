@@ -334,11 +334,8 @@ describe('terrain gesture anchoring', () => {
         const target = await setupGestureMap();
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
-        let raycastElevation = 1000;
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, raycastElevation),
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        const raycastSpy = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         // Start the pinch with the finger midpoint exactly where the grabbed point renders
         const start = map.project(anchor);
@@ -355,7 +352,7 @@ describe('terrain gesture anchoring', () => {
             halfSpread += 10;
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
             // terrain "loading" mid-gesture must not move the anchor plane
-            raycastElevation = 4000;
+            raycastSpy.mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 4000));
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
@@ -371,10 +368,8 @@ describe('terrain gesture anchoring', () => {
         const target = await setupGestureMap(60);
         const anchor = new LngLat(7.494, 45.904);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000),
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);
@@ -409,8 +404,8 @@ describe('terrain gesture anchoring', () => {
             ...createTerrain(),
             getElevationForLngLat: (lngLat: LngLat) => elevationAt(lngLat),
             getElevationForLngLatZoom: (lngLat: LngLat) => elevationAt(lngLat),
-            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 2000),
         } as any as Terrain;
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 2000));
         map._camera.transform.setElevation(300);
 
         const start = map.project(anchor);
@@ -436,10 +431,8 @@ describe('terrain gesture anchoring', () => {
         map.touchZoomRotate.enable({around: 'center'});
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000),
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);
@@ -461,10 +454,7 @@ describe('terrain gesture anchoring', () => {
 
     test('falls back to the center-elevation behavior when the terrain under the gesture is not loaded', async () => {
         const target = await setupGestureMap();
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => null,
-        } as any as Terrain;
+        map.terrain = createTerrain();
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);
@@ -486,10 +476,8 @@ describe('terrain gesture anchoring', () => {
 
     test('falls back to the center-elevation behavior when the grabbed terrain point is above the camera altitude', async () => {
         const target = await setupGestureMap();
-        map.terrain = {
-            ...createTerrain(),
-            pointCoordinate: () => new MercatorCoordinate(0.5, 0.35, 1e6),
-        } as any as Terrain;
+        map.terrain = createTerrain();
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(0.5, 0.35, 1e6));
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);

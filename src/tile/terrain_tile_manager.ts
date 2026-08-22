@@ -56,7 +56,7 @@ export class TerrainTileManager extends Evented {
      */
     deltaZoom: number;
     /**
-     * used to determine whether depth & coord framebuffers need updating
+     * used to determine whether the depth framebuffer needs updating
      */
     _lastTilesetChange: number = now();
 
@@ -306,7 +306,7 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update the depth framebuffer.
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */
