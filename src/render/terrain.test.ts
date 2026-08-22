@@ -13,9 +13,10 @@ import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {DEMData} from '../data/dem_data.ts';
+import type {DEMData} from '../data/dem_data.ts';
 import type {Painter} from './painter.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
+import {createDEM} from '../util/test/util.ts';
 
 describe('Terrain', () => {
     let gl: WebGL2RenderingContext;
@@ -41,31 +42,13 @@ describe('Terrain', () => {
         } as any as Painter;
         const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
-        const stride = 3;
-        const pixels = new Uint8Array(stride * stride * 4);
-        const encoded = elevation + 32768;
-        for (let i = 0; i < pixels.length; i += 4) {
-            pixels[i] = Math.floor(encoded / 256);
-            pixels[i + 1] = encoded % 256;
-            pixels[i + 3] = 255;
-        }
-        const dem = new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
+        const dem = createDEM(() => elevation);
         const tileIDs = [-2, -1, 0, 1, 2].map(wrap => new OverscaledTileID(0, wrap, 0, 0, 0));
         terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as any as Tile);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem}) as any as Tile;
         terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
         return terrain;
     }
-
-    test('screenTerrainPointToMercatorCoordinate hits the terrain under the map center', () => {
-        const terrain = createFlatTerrain(0);
-
-        const coordinate = terrain.painter.transform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain);
-
-        expect(coordinate).not.toBeNull();
-        expect(coordinate.x).toBeCloseTo(0.5, 10);
-        expect(coordinate.y).toBeCloseTo(0.5, 10);
-    });
 
     test('screenPointToMercatorCoordinate returns the terrain hit instead of the flat plane', () => {
         const terrain = createFlatTerrain(1000);

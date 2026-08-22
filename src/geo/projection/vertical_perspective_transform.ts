@@ -24,6 +24,11 @@ const GLOBE_BISECT_EPSILON_T = 1e-12;
 /** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
 const MAX_MERCATOR_Y = 1 - 1e-9;
 
+/**
+ * @internal
+ * A ray to intersect with the terrain surface, in globe coordinates:
+ * `origin` and the unit-length `direction` are on the unit sphere, and terrain elevations are in meters above sea level.
+ */
 type GlobeRay = {
     index: TerrainCoverageIndex;
     exaggeration: number;
@@ -787,6 +792,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
     }
 
+    /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
         const index = terrain.getCoverageIndex();
         if (!index) return null;

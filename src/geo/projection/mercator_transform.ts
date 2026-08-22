@@ -26,15 +26,20 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
  * The portion of a ray through a screen pixel that lies inside the view frustum.
  * Both endpoints use world pixels for x and y, and meters above sea level for z.
  */
-export type RaySegment = {
+type RaySegment = {
     near: vec3;
     far: vec3;
 };
 
-const TARGET_SCREEN_STEP_PX = 4;
+const TARGET_WORLD_STEP_PX = 4;
 const MAX_SAMPLES = 512;
-const MERCATOR_BISECT_EPSILON_PX = 1e-3;
+const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
 
+/**
+ * @internal
+ * A ray to intersect with the terrain surface, in world pixels:
+ * `near` is the segment start, `dx`/`dy`/`dz` span to the segment end, and z values are meters above sea level.
+ */
 type MercatorRay = {
     index: TerrainCoverageIndex;
     exaggeration: number;
@@ -404,7 +409,7 @@ export class MercatorTransform implements ITransform {
         }
 
         const horizontalLength = Math.hypot(dx, dy);
-        const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_SCREEN_STEP_PX), 1, MAX_SAMPLES);
+        const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_WORLD_STEP_PX), 1, MAX_SAMPLES);
 
         let previousT = 0;
         let aboveTerrain = !mercatorIsBelowTerrain(ray, 0);
@@ -415,7 +420,7 @@ export class MercatorTransform implements ITransform {
             if (!aboveTerrain) {
                 aboveTerrain = !mercatorIsBelowTerrain(ray, t);
             } else if (mercatorIsBelowTerrain(ray, t)) {
-                const {lo, hi} = bisect(ray, mercatorIsBelowTerrain, previousT, t, MERCATOR_BISECT_EPSILON_PX / horizontalLength);
+                const {lo, hi} = bisect(ray, mercatorIsBelowTerrain, previousT, t, MERCATOR_BISECT_EPSILON_WORLD_PX / horizontalLength);
                 const sampleLo = mercatorSampleAt(ray, lo);
                 const sampleHi = mercatorSampleAt(ray, hi);
                 const fLo = near[2] + lo * dz - sampleLo.elevation;

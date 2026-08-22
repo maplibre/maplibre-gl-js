@@ -334,9 +334,8 @@ describe('terrain gesture anchoring', () => {
         const target = await setupGestureMap();
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
-        let raycastElevation = 1000;
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, raycastElevation));
+        const raycastSpy = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         // Start the pinch with the finger midpoint exactly where the grabbed point renders
         const start = map.project(anchor);
@@ -353,7 +352,7 @@ describe('terrain gesture anchoring', () => {
             halfSpread += 10;
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
             // terrain "loading" mid-gesture must not move the anchor plane
-            raycastElevation = 4000;
+            raycastSpy.mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 4000));
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);

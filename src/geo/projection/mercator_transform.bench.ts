@@ -35,29 +35,21 @@ function createScene(zoom: number, heightFn: (x: number, y: number) => number, p
     return {terrain, transform};
 }
 
-const flat = (zoom: number) => createScene(zoom, () => 800, 50);
-const sloped = (zoom: number) => createScene(zoom, (x, y) => 400 + 8 * x + 6 * y, 50);
-const sky = (zoom: number) => createScene(zoom, () => 0, 80);
-
-function pick(scene: {terrain: Terrain; transform: MercatorTransform}, p: Point): void {
-    scene.transform.screenTerrainPointToMercatorCoordinate(p, scene.terrain);
-}
-
 describe('terrain raycast', () => {
     for (const zoom of [2, 10, 16]) {
-        const flatScene = flat(zoom);
+        const flatScene = createScene(zoom, () => 800, 50);
         bench(`flat hit z${zoom}`, () => {
-            pick(flatScene, new Point(512, 600));
+            flatScene.transform.screenTerrainPointToMercatorCoordinate(new Point(512, 600), flatScene.terrain);
         });
 
-        const slopedScene = sloped(zoom);
+        const slopedScene = createScene(zoom, (x, y) => 400 + 8 * x + 6 * y, 50);
         bench(`sloped hit z${zoom}`, () => {
-            pick(slopedScene, new Point(512, 600));
+            slopedScene.transform.screenTerrainPointToMercatorCoordinate(new Point(512, 600), slopedScene.terrain);
         });
 
-        const skyScene = sky(zoom);
+        const skyScene = createScene(zoom, () => 0, 80);
         bench(`sky miss z${zoom}`, () => {
-            pick(skyScene, new Point(512, 20));
+            skyScene.transform.screenTerrainPointToMercatorCoordinate(new Point(512, 20), skyScene.terrain);
         });
     }
 });

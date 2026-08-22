@@ -298,7 +298,7 @@ export class Terrain {
      * @param tileID - the tile id
      * @returns the sampler, or null when the tile's DEM data is not loaded
      */
-    getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
+    private getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
         const key = tileID.key;
         const cachedSampler = this._elevationSamplerCache.get(key);
         if (cachedSampler) return cachedSampler;
@@ -412,16 +412,10 @@ export class Terrain {
     }
 
     /**
-     * Intersects the ray through a screen pixel with the terrain surface, on the CPU.
-     * @param p - Screen-Coordinate
-     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
-     */
-    /**
      * Reads the depth value from the depth-framebuffer at a given screen pixel
      * @param p - Screen coordinate
      * @returns depth value in clip space (between 0 and 1)
      */
-
     depthAtPoint(p: Point): number {
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;
