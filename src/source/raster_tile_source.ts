@@ -221,9 +221,15 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 tile.state = 'unloaded';
                 return;
             }
-            if (response?.data) {
+            if (response) {
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
+                }
+                // An empty response (e.g. HTTP 204) means a tile without content: there is
+                // nothing to render, but the tile is done loading.
+                if (!response.data) {
+                    tile.state = 'loaded';
+                    return;
                 }
                 const context = this.map.painter.context;
                 const gl = context.gl;

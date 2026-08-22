@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix an empty tile response (e.g. HTTP 204 for a tile without content) being decoded into a fake 1×1 image; raster and raster-DEM sources now treat such tiles as loaded without content, which also fixes terrain and hillshade breaking with a "dem dimension mismatch" error next to empty DEM tiles ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ## 6.5.0

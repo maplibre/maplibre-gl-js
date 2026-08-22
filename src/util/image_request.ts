@@ -205,7 +205,12 @@ export namespace ImageRequest {
                 // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response);
-            } else if (response.data) {
+            } else if (!response.data || response.data.byteLength === 0) {
+                // An empty response (e.g. HTTP 204 for a tile without content) carries no image;
+                // resolve with null data so callers can handle the absence explicitly, keeping
+                // the expiry headers so the resource can be re-requested when they say so.
+                onSuccess({data: null, cacheControl: response.cacheControl, expires: response.expires});
+            } else {
                 const img = await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
             }
