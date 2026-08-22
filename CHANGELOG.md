@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+- Deduplicate concurrent worker glyph requests while parsing vector tiles.
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
