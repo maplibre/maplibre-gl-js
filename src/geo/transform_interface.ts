@@ -357,7 +357,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Given a point on screen, return the mercator coordinate where its ray hits the rendered terrain surface.
      * @param p - the point
      * @param terrain - the terrain
-     * @returns the hit with z in meters, or null when the ray misses the terrain
+     * @returns the hit with z in meters, or null when the terrain has no renderable tiles or the ray never crosses the terrain surface
      */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
 

@@ -54,7 +54,7 @@ export type TerrainSample = {
 
 export type TerrainCoverageIndex = {
     zooms: number[];
-    tiles: Map<string, TerrainElevationSampler | null>;
+    samplerPerTile: Map<string, TerrainElevationSampler | null>;
     minElevation: number;
     maxElevation: number;
 };
@@ -273,7 +273,7 @@ export class Terrain {
 
     private _buildCoverageIndex(): TerrainCoverageIndex | null {
         const zooms: number[] = [];
-        const tiles = new Map<string, TerrainElevationSampler | null>();
+        const samplerPerTile = new Map<string, TerrainElevationSampler | null>();
         let minElevation = 0;
         let maxElevation = 0;
 
@@ -282,15 +282,15 @@ export class Terrain {
             const {canonical, wrap} = tile.tileID;
             if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
             const sampler = this.getElevationSampler(tile.tileID);
-            tiles.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
+            samplerPerTile.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
             const {minElevation: tileMin, maxElevation: tileMax} = this.getMinMaxElevation(tile.tileID);
             minElevation = Math.min(minElevation, tileMin ?? 0);
             maxElevation = Math.max(maxElevation, tileMax ?? 0);
         }
 
-        if (tiles.size === 0) return null;
+        if (samplerPerTile.size === 0) return null;
         zooms.sort((a, b) => b - a);
-        return {zooms, tiles, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
+        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
     }
 
     /**
@@ -577,8 +577,8 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
         const tileX = Math.floor(scaledX);
         const tileY = Math.floor(scaledY);
         const key = `${wrap}/${z}/${tileX}/${tileY}`;
-        if (!index.tiles.has(key)) continue;
-        const sampler = index.tiles.get(key);
+        if (!index.samplerPerTile.has(key)) continue;
+        const sampler = index.samplerPerTile.get(key);
         if (!sampler) return {covered: true, elevation: 0};
         const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
         const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);

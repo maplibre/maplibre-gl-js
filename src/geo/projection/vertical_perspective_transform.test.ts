@@ -47,7 +47,7 @@ describe('VerticalPerspectiveTransform.screenTerrainPointToMercatorCoordinate', 
         expect(beyondTheMercatorEdge.z).toBe(0);
     });
 
-    test('returns null when nothing is renderable', () => {
+    test('returns null when the terrain has no renderable tiles', () => {
         const terrain = createDEMTerrain([], null);
         const transform = createTransform(new LngLat(0, 0), 1);
 

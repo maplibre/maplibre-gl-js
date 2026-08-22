@@ -378,7 +378,9 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
+    /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        // The index is built lazily by the terrain; null means it has no renderable tiles.
         const index = terrain.getCoverageIndex();
         if (!index) return null;
 
@@ -434,7 +436,7 @@ export class MercatorTransform implements ITransform {
     /**
      * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
      */
-    getRaySegmentFromPixel(p: Point): RaySegment {
+    private getRaySegmentFromPixel(p: Point): RaySegment {
         const coord0 = [p.x, p.y, 0, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
 

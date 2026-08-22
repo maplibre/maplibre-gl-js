@@ -713,14 +713,24 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         expect(crossed.size).toBe(2);
     });
 
-    test('returns null for a ray into the sky', () => {
+    test('returns null when the ray never crosses the terrain surface', () => {
+        // Into the sky.
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
-        const transform = createMercatorTransform(new LngLat(0, 0), 4, 80);
+        const skyTransform = createMercatorTransform(new LngLat(0, 0), 4, 80);
+        expect(skyTransform.screenTerrainPointToMercatorCoordinate(new Point(256, 0), terrain)).toBeNull();
 
-        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 0), terrain)).toBeNull();
+        // Leaving the world vertically past the covered tiles.
+        const edgeTerrain = createDEMTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], createDEM(() => 0));
+        const edgeTransform = createMercatorTransform(new LngLat(0, 0), 1, 0);
+        expect(edgeTransform.screenTerrainPointToMercatorCoordinate(new Point(400, 400), edgeTerrain)).toBeNull();
+
+        // Staying below the terrain surface the whole way.
+        const submergedTerrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
+        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
+        expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), submergedTerrain)).toBeNull();
     });
 
-    test('returns null when nothing is renderable', () => {
+    test('returns null when the terrain has no renderable tiles', () => {
         const terrain = createDEMTerrain([], null);
         const transform = createMercatorTransform(new LngLat(0, 0), 4);
 
@@ -803,13 +813,6 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         expect(transform.screenTerrainPointToMercatorCoordinate(new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
     });
 
-    test('returns null for a ray leaving the world vertically', () => {
-        const terrain = createDEMTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], createDEM(() => 0));
-        const transform = createMercatorTransform(new LngLat(0, 0), 1, 0);
-
-        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(400, 400), terrain)).toBeNull();
-    });
-
     test('handles a ray with no vertical component', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
@@ -820,14 +823,6 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
 
         const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
         expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
-    });
-
-    test('returns null while the ray stays inside the terrain', () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const terrain = createDEMTerrain([tileID], createDEM(() => 100));
-        const transform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
-
-        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 
     test('does not read the painter', () => {
