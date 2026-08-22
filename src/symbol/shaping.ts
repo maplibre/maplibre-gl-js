@@ -1,12 +1,12 @@
 import {
-    codePointHasUprightVerticalOrientation,
-    codePointHasNeutralVerticalOrientation
+    codePointHasUprightVerticalOrientation
 } from '../util/unicode_properties.g.ts';
 import {
     charIsWhitespace,
     charInComplexShapingScript
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
 
 import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
@@ -287,15 +287,26 @@ function isLineVertical(
         (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
-function charIsCombiningMark(codePoint: number): boolean {
-    return /\p{M}/u.test(String.fromCodePoint(codePoint));
+function charIsDecimalDigit(codePoint: number): boolean {
+    return /\p{Nd}/u.test(String.fromCodePoint(codePoint));
 }
 
+function charIsUppercaseLatinLetter(codePoint: number): boolean {
+    const char = String.fromCodePoint(codePoint);
+    return /\p{sc=Latn}/u.test(char) && /\p{Lu}/u.test(char);
+}
+
+function charIsSymbolOrPunctuation(codePoint: number): boolean {
+    return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
+}
+
+// Uppercase runs longer than this are words (e.g. “ISHIKAWA” in a dual name),
+// which read better lying along the line; shorter ones are codes (“JR”, “A1”).
+const MAX_UPRIGHT_LETTER_RUN = 3;
+
 function determineLineVerticals(line: TaggedString): boolean[] {
-    const codePoints: number[] = [];
-    for (const char of line.text) {
-        codePoints.push(char.codePointAt(0));
-    }
+    const chars = [...line.text];
+    const codePoints = chars.map(char => char.codePointAt(0));
     const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
 
     // A rotated character is part of a run if it is neither whitespace nor an inline image.
@@ -308,16 +319,37 @@ function determineLineVerticals(line: TaggedString): boolean[] {
         while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
 
         const run = codePoints.slice(start, end + 1);
-        // Runs with combining marks stay rotated as a whole because upright
-        // glyphs advance a full em, which would detach a mark from its base.
-        if (!run.some(charIsCombiningMark)) {
+        // Numbers of any length, optionally combined with symbols (“21”, “1-2”),
+        // and short uppercase codes (“JR”, “A1”) read well upright.
+        const isNumber = run.some(charIsDecimalDigit) &&
+            run.every(codePoint => charIsDecimalDigit(codePoint) || charIsSymbolOrPunctuation(codePoint));
+        const isShortUppercaseCode = run.length <= MAX_UPRIGHT_LETTER_RUN &&
+            run.every(codePoint => charIsUppercaseLatinLetter(codePoint) || charIsDecimalDigit(codePoint));
+        if (isNumber || isShortUppercaseCode) {
             for (let i = start; i <= end; i++) {
-                // Neutral-orientation characters (e.g. “ー”) have direction-dependent glyphs and must keep following the line.
-                verticals[i] = !codePointHasNeutralVerticalOrientation(codePoints[i]) && !charInComplexShapingScript(codePoints[i]);
+                verticals[i] = (charIsDecimalDigit(codePoints[i]) || charIsUppercaseLatinLetter(codePoints[i])) &&
+                    !charInComplexShapingScript(codePoints[i]);
             }
         }
         start = end;
     }
+
+    // Punctuation between characters that this pass made upright gets its
+    // vertical presentation form (e.g. “-” in “1-2” becomes “︲”) —
+    // verticalizePunctuation couldn't apply it, as digits look rotated to it.
+    let replaced = false;
+    for (let i = 0; i < chars.length; i++) {
+        if (verticals[i]) continue;
+        const verticalizedChar = verticalizedCharacterMap[chars[i]];
+        if (!verticalizedChar) continue;
+        if ((i === 0 || verticals[i - 1]) && (i === chars.length - 1 || verticals[i + 1])) {
+            chars[i] = verticalizedChar;
+            verticals[i] = true;
+            replaced = true;
+        }
+    }
+    if (replaced) line.text = chars.join('');
+
     return verticals;
 }
 

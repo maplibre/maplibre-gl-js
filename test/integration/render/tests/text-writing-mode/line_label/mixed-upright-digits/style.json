@@ -134,7 +134,7 @@
           {
             "type": "Feature",
             "properties": {
-              "name": "札幌21タワー"
+              "name": "東京21タワー"
             },
             "geometry": {
               "type": "LineString",
@@ -153,7 +153,7 @@
           {
             "type": "Feature",
             "properties": {
-              "name": "札幌21タワー"
+              "name": "東京21タワー"
             },
             "geometry": {
               "type": "LineString",
