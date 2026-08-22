@@ -1367,7 +1367,6 @@ export class Style extends Evented<MapEventType> {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
-        // Coarser than needed: only the translate properties actually feed placement.
         if (layer.type === 'symbol') this._placementRevision++;
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
