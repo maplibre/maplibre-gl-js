@@ -8,6 +8,7 @@ import {type AJAXError} from '../util/ajax.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {setNow, restoreNow} from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -3879,5 +3880,78 @@ describe('Style#setFeatureState', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].error.message).toMatch(/The feature state should not include one of the following keys/);
+    });
+});
+
+describe('Style#_updatePlacement', () => {
+    let style: Style;
+    let transform: MercatorTransform;
+    let time: number;
+
+    const update = () => style._updatePlacement(transform, false, 300, false);
+    // Run placement, then step the clock past the recency window so it can settle.
+    const settle = () => {
+        update();
+        setNow(time += 1000);
+        update();
+        setNow(time += 1000);
+    };
+
+    beforeEach(async () => {
+        time = 0;
+        setNow(time);
+        style = createStyle();
+        style.loadJSON(createStyleJSON({
+            sources: {geojson: createGeoJSONSource()},
+            layers: [{id: 'symbol', type: 'symbol', source: 'geojson'}]
+        }));
+        await style.once('style.load');
+        transform = new MercatorTransform();
+        transform.resize(100, 100);
+    });
+
+    afterEach(() => {
+        restoreNow();
+    });
+
+    test('placement is not re-run while its inputs are unchanged', () => {
+        settle();
+        const settled = style.pauseablePlacement;
+
+        expect(update()).toBe(false);
+        expect(style.pauseablePlacement).toBe(settled);
+    });
+
+    test.each([
+        ['zoom', () => transform.setZoom(3)],
+        ['padding', () => transform.setPadding({top: 10, bottom: 0, left: 0, right: 0})],
+        ['elevation', () => transform.setElevation(100)],
+        ['paint property', () => style.setPaintProperty('symbol', 'icon-translate', [5, 5])],
+    ])('a %s change re-places, and then settles again instead of looping', (_name, change) => {
+        settle();
+        const settled = style.pauseablePlacement;
+
+        change();
+        update();
+        expect(style.pauseablePlacement).not.toBe(settled);
+
+        setNow(time += 1000);
+        update();
+        setNow(time += 1000);
+        expect(update()).toBe(false);
+    });
+
+    test('a stale placement gets its final re-run even after its inputs settled', () => {
+        settle();
+        const settled = style.pauseablePlacement;
+
+        style.placement.setStale();
+        update();
+        expect(style.pauseablePlacement).not.toBe(settled);
+
+        const rerun = style.pauseablePlacement;
+        setNow(time += 1000);
+        expect(update()).toBe(false);
+        expect(style.pauseablePlacement).toBe(rerun);
     });
 });
