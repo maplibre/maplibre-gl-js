@@ -419,6 +419,14 @@ export type MapOptions = {
      */
     terrainSkirtLength?: 'none' | 'auto';
     /**
+     * If `true`, terrain rendering may reorder symbol layers between draped layers to reduce render-to-texture passes.
+     *
+     * Enable this only for styles where rendering those symbols after the combined terrain pass is acceptable.
+     *
+     * @defaultValue false
+     */
+    allowTerrainDrapedLayerReordering?: boolean;
+    /**
      * Defines the number of zoom level that will overscale instead of split tiles below (inclusive) a map's `maxZoom`.
      * When `undefined`, all zoom levels after source's max zoom will be overscaled.
      *
@@ -552,6 +560,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
     terrainSkirtLength: 'auto',
+    allowTerrainDrapedLayerReordering: false,
     zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
@@ -644,6 +653,7 @@ export class Map extends Evented<MapEventType> {
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
     _terrainSkirtLength: 'none' | 'auto';
+    _allowTerrainDrapedLayerReordering: boolean;
 
     /**
      * @internal
@@ -779,6 +789,7 @@ export class Map extends Evented<MapEventType> {
         this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._terrainSkirtLength = resolvedOptions.terrainSkirtLength;
+        this._allowTerrainDrapedLayerReordering = resolvedOptions.allowTerrainDrapedLayerReordering === true;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
