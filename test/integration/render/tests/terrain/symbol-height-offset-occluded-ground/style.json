@@ -29,7 +29,7 @@
         "features": [
           {
             "type": "Feature",
-            "properties": {"label": "ground", "elevation": 0},
+            "properties": {"label": "underground", "elevation": -500},
             "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
           },
           {
