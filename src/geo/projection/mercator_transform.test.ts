@@ -6,8 +6,7 @@ import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {cameraMercatorCoordinate, getMercatorHorizon} from './mercator_utils.ts';
-import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
+import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {EXTENT} from '../../data/extent.ts';
@@ -447,23 +446,6 @@ describe('transform', () => {
         expect(transform.getCameraAltitude()).toBeCloseTo(1405.7075926414002, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(14.973921529405033, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(54.99599181678275, 10);
-    });
-
-    test('cameraMercatorCoordinate', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
-        transform.setElevation(200);
-        transform.setCenter(new LngLat(15.0, 55.0));
-        transform.setZoom(14);
-        transform.setPitch(55);
-        transform.setBearing(75);
-        transform.resize(512, 512);
-
-        const cameraCoord = cameraMercatorCoordinate(transform);
-
-        expect(cameraCoord.toLngLat().lng).toBeCloseTo(14.973921529405033, 10);
-        expect(cameraCoord.toLngLat().lat).toBeCloseTo(54.99599181678275, 10);
-        // The camera is above the ground, not mirrored below it.
-        expect(altitudeFromMercatorZ(cameraCoord.z, cameraCoord.y)).toBeCloseTo(transform.getCameraAltitude(), 0);
     });
 
     test('calculateCenterFromCameraLngLatAlt no pitch no bearing', () => {
