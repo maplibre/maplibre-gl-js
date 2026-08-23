@@ -18,6 +18,15 @@ const POST_LOAD_WAIT_MS = 3000;
 const TILE_WAIT_MS = 15000;
 const TEST_TIMEOUT_MS = 300000;
 
+// Browser launch can take over a minute on a cold CI Windows runner (see HOOK_TIMEOUT in
+// the render runner).
+const LAUNCH_HOOK_TIMEOUT_MS = process.platform === 'win32' ? 180000 : 60000;
+
+// Navigating to the locally-served example takes under a second on a healthy machine. A cold
+// CI Windows runner, still digesting the example's `npm install` and build, has been seen to
+// take 15+. The per-test timeout still bounds the whole run.
+const NAVIGATION_TIMEOUT_MS = process.platform === 'win32' ? 60000 : 15000;
+
 // Headless-Chrome / SwiftShader quirks that aren't bundler bugs.
 const ENV_NOISE = [
     /webglcontextcreationerror/i,
@@ -42,7 +51,7 @@ const outputDirs = ['dist', 'out'];
 describe('Bundler examples', () => {
     beforeAll(async () => {
         browser = await launchPuppeteer();
-    }, 60000);
+    }, LAUNCH_HOOK_TIMEOUT_MS);
 
     afterAll(async () => {
         if (browser) await browser.close();
@@ -97,7 +106,7 @@ describe('Bundler examples', () => {
                 });
 
                 const url = `http://localhost:${port}/index.html`;
-                await page.goto(url, {timeout: 15000});
+                await page.goto(url, {timeout: NAVIGATION_TIMEOUT_MS});
                 await new Promise((r) => setTimeout(r, POST_LOAD_WAIT_MS));
 
                 const diagnostics = () => [

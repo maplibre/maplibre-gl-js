@@ -22,15 +22,20 @@ let maplibregl: typeof MapLibreGL;
  * Fallback timeout for a single render test, used when the test does not set `metadata.test.timeout`.
  * It is generous on purpose: the heavier tests (mostly terrain) take ~15-20 seconds on the CI Windows
  * runners, where software rendering makes the run times vary by a factor of two or three.
+ * Windows runs on double the budget, whether a test uses this default or sets its own:
+ * every render-test timeout on main in the 90 days of retained CI logs (May-Aug 2026) was a
+ * terrain-heavy test on a Windows runner, while the Linux shards never timed out once.
  */
 const DEFAULT_TEST_TIMEOUT = 60000;
 
 /**
- * Timeout for the `beforeAll` and `afterAll` hooks, which launch and tear down the browser, the test
+ * Timeout for the test hooks. `beforeAll` and `afterAll` launch and tear down the browser, the test
  * servers and the coverage reporting. Vitest defaults to 10 seconds, which is not enough on the CI
  * Windows runners: setup takes about a second on a warm machine, but a cold Windows runner has been
  * seen to spend more than a minute on the browser launch and the first page load alone. The hooks
  * run once per split, so a generous value costs nothing when everything is healthy.
+ * The per-test hooks get the same budget: their 10 second default killed three runs on main
+ * in Jul-Aug 2026 even though the hooks themselves do trivial work.
  */
 const HOOK_TIMEOUT = 180000;
 
@@ -895,14 +900,14 @@ describe('Render tests', () => {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
             addConsoleLogging(page);
         }
-    });
+    }, HOOK_TIMEOUT);
 
     afterEach(async () => {
         page.removeAllListeners('console');
         page.removeAllListeners('pageerror');
         page.removeAllListeners('response');
         page.removeAllListeners('requestfailed');
-    });
+    }, HOOK_TIMEOUT);
 
     afterAll(async () => {
         if (page) {
@@ -915,7 +920,8 @@ describe('Render tests', () => {
     }, HOOK_TIMEOUT);
 
     for (const style of testStyles) {
-        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async () => {
+        const timeout = (style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT) * (process.platform === 'win32' ? 2 : 1);
+        test(style.metadata.test.id, {retry: 1, timeout}, async () => {
             const serverPort = (server.address() as any).port;
             localizeURLs(style, serverPort, path.join(__dirname, '../'));
             const data = await getImageFromStyle(style, page);
