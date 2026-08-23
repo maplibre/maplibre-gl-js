@@ -1,5 +1,4 @@
 import {describe, test, expect} from 'vitest';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolStyleLayer} from './symbol_style_layer.ts';
 import {type EvaluationParameters} from '../evaluation_parameters.ts';
 
@@ -9,7 +8,7 @@ function createSymbolLayer(layout: Record<string, unknown> = {}) {
         type: 'symbol',
         source: 'source',
         layout
-    } as LayerSpecification, {});
+    }, {});
     layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, []);
     return layer;
 }
