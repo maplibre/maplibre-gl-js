@@ -64,7 +64,7 @@
       "source": "geometry",
       "layout": {
         "symbol-placement": "point",
-        "symbol-elevation": ["get", "elevation"],
+        "symbol-height-offset": ["get", "elevation"],
         "icon-image": "rocket-12",
         "icon-size": 2,
         "icon-allow-overlap": true,

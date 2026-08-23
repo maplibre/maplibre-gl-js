@@ -4,7 +4,7 @@ export const symbolLayoutAttributes: StructArrayLayout = createLayout([
     {name: 'a_pos_offset',  components: 4, type: 'Int16'},
     {name: 'a_data',        components: 4, type: 'Uint16'},
     {name: 'a_pixeloffset',        components: 4, type: 'Int16'},
-    {name: 'a_elevation',   components: 1, type: 'Float32'}
+    {name: 'a_height_offset',   components: 1, type: 'Float32'}
 ], 4);
 
 export const dynamicLayoutAttributes: StructArrayLayout = createLayout([
@@ -74,7 +74,7 @@ export const placement: StructArrayLayout = createLayout([
     {type: 'Uint8', name: 'hidden'},
     {type: 'Uint32', name: 'crossTileID'},
     {type: 'Int16', name: 'associatedIconIndex'},
-    {type: 'Float32', name: 'elevation'}
+    {type: 'Float32', name: 'heightOffset'}
 ]);
 
 export const symbolInstance: StructArrayLayout = createLayout([
@@ -106,7 +106,7 @@ export const symbolInstance: StructArrayLayout = createLayout([
     {type: 'Float32', name: 'collisionCircleDiameter'},
     {type: 'Uint16', name: 'textAnchorOffsetStartIndex'},
     {type: 'Uint16', name: 'textAnchorOffsetEndIndex'},
-    {type: 'Float32', name: 'elevation'}
+    {type: 'Float32', name: 'heightOffset'}
 ]);
 
 export const glyphOffset: StructArrayLayout = createLayout([

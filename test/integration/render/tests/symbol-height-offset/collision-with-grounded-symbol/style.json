@@ -44,7 +44,7 @@
             "source": "geometry",
             "layout": {
                 "symbol-placement": "point",
-                "symbol-elevation": ["get", "elevation"],
+                "symbol-height-offset": ["get", "elevation"],
                 "text-field": ["get", "label"],
                 "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
                 "text-size": 24

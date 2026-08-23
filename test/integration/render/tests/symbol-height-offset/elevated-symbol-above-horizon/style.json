@@ -59,7 +59,7 @@
       "source": "geometry",
       "layout": {
         "symbol-placement": "point",
-        "symbol-elevation": 250,
+        "symbol-height-offset": 250,
         "text-field": "250",
         "text-font": [
           "Open Sans Semibold",

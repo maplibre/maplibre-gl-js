@@ -334,7 +334,8 @@ export class Placement {
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
         getElevation?: (x: number, y: number) => number,
-        elevationOffset?: number,
+        heightOffset?: number,
+        heightAnchorGround?: boolean,
         simpleProjectionMatrix?: mat4,
     ): {
         shift: Point;
@@ -358,7 +359,8 @@ export class Placement {
             getElevation,
             shift,
             simpleProjectionMatrix,
-            elevationOffset,
+            heightOffset,
+            heightAnchorGround,
         );
 
         if (iconBox) {
@@ -375,7 +377,8 @@ export class Placement {
                 getElevation,
                 shift,
                 simpleProjectionMatrix,
-                elevationOffset,
+                heightOffset,
+                heightAnchorGround,
             );
             if (!placedIconBoxes.placeable) return;
         }
@@ -436,6 +439,7 @@ export class Placement {
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
         const zOrderByViewportY = layout.get('symbol-z-order') === 'viewport-y';
+        const heightAnchorGround = layout.get('symbol-height-anchor') === 'ground';
 
         // This logic is similar to the "defaultOpacityState" logic below in updateBucketOpacities
         // If we know a symbol is always supposed to show, force it to be marked visible even if
@@ -471,7 +475,7 @@ export class Placement {
                 return;
             }
 
-            const symbolElevation = symbolInstance.elevation;
+            const symbolHeightOffset = symbolInstance.heightOffset;
 
             let placeText = false;
             let placeIcon = false;
@@ -548,7 +552,8 @@ export class Placement {
                             getElevation,
                             undefined,
                             simpleProjectionMatrix,
-                            symbolElevation,
+                            symbolHeightOffset,
+                            heightAnchorGround,
                         );
                         if (placedFeature?.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
@@ -601,7 +606,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, symbolElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, symbolHeightOffset, heightAnchorGround);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -636,7 +641,8 @@ export class Placement {
                                 getElevation,
                                 undefined,
                                 simpleProjectionMatrix,
-                                symbolElevation,
+                                symbolHeightOffset,
+                                heightAnchorGround,
                             );
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
@@ -743,7 +749,8 @@ export class Placement {
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
                         simpleProjectionMatrix,
-                        symbolElevation,
+                        symbolHeightOffset,
+                        heightAnchorGround,
                     );
                 };
 

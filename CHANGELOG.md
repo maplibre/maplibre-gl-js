@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add support for `symbol-elevation` layout property ([#7827](https://github.com/maplibre/maplibre-gl-js/pull/7827)) (by [@HarelM](https://github.com/HarelM))
+- Add support for `symbol-height-offset` and `symbol-height-anchor` layout properties, which raise icons and text above the map. `symbol-height-anchor` selects whether the offset is measured from the terrain surface (`ground`, the default) or from the zero elevation datum (`absolute`) ([#7827](https://github.com/maplibre/maplibre-gl-js/pull/7827)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

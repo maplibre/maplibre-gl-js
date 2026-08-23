@@ -86,7 +86,7 @@
             "source": "marker",
             "layout": {
                 "symbol-placement": "point",
-                "symbol-elevation": 62,
+                "symbol-height-offset": 62,
                 "icon-image": "rocket-12",
                 "icon-size": 2,
                 "icon-allow-overlap": true,

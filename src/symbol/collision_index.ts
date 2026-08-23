@@ -113,16 +113,20 @@ export class CollisionIndex {
         getElevation?: (x: number, y: number) => number,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
-        elevationOffset: number = 0,
+        heightOffset: number = 0,
+        heightAnchorGround: boolean = true,
     ): PlacedBox {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
 
-        // `getElevation` is the feature's ground (terrain) elevation; the symbol is placed and
-        // drawn at the elevated position (ground + the `symbol-elevation` offset).
-        const getElevationWithOffset = elevationOffset !== 0 ?
-            (px: number, py: number) => (getElevation ? getElevation(px, py) : 0) + elevationOffset :
-            getElevation;
+        // `getElevation` is the feature's ground (terrain) elevation. The symbol is placed and drawn
+        // at its height-offset position, which `symbol-height-anchor` measures either from that ground
+        // elevation (`ground`) or from the zero elevation datum (`absolute`).
+        const getElevationWithOffset = !heightAnchorGround ?
+            () => heightOffset :
+            heightOffset !== 0 ?
+                (px: number, py: number) => (getElevation ? getElevation(px, py) : 0) + heightOffset :
+                getElevation;
         const projectedPoint = this.projectAndGetPerspectiveRatio(
             x,
             y,

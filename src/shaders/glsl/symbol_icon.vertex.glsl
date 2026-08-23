@@ -3,7 +3,7 @@ layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec4 a_pixeloffset;
 layout(location = 3) in vec3 a_projected_pos;
 layout(location = 4) in uint a_fade_opacity;
-layout(location = 5) in float a_elevation;
+layout(location = 5) in float a_height_offset;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -24,6 +24,7 @@ uniform bool u_is_variable_anchor;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
 uniform bool u_is_offset;
+uniform bool u_height_anchor_ground;
 
 out vec2 v_tex;
 flat out float v_total_opacity;
@@ -43,7 +44,7 @@ void main() {
     vec2 a_pxoffset = a_pixeloffset.xy;
     vec2 a_minFontScale = a_pixeloffset.zw / 256.0;
 
-    float ele = get_elevation(a_pos) + a_elevation;
+    float ele = a_height_offset + (u_height_anchor_ground ? get_elevation(a_pos) : 0.0);
     highp float segment_angle = -a_projected_pos[2];
     float size;
 
