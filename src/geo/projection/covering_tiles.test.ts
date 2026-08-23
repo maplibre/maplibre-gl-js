@@ -108,6 +108,42 @@ describe('coveringTiles', () => {
             ]);
         });
     
+        test('tile zoom stays at the nominal zoom for a distant pitched camera', () => {
+            const transform = new GlobeTransform();
+            transform.resize(2560, 1265);
+            transform.setCenter(new LngLat(-140, -52));
+            transform.setZoom(5.66);
+            transform.setMaxPitch(60);
+            transform.setPitch(60);
+            transform.setFov(15);
+
+            const tiles = coveringTiles(transform, {tileSize: 512});
+            const nominalZ = coveringZoomLevel(transform, {tileSize: 512});
+            const levels = tiles.map(tile => tile.canonical.z);
+
+            expect(nominalZ).toBe(5);
+            expect(Math.max(...levels)).toBeLessThanOrEqual(nominalZ + 1);
+            expect(Math.min(...levels)).toBeLessThanOrEqual(nominalZ);
+        });
+
+        test('tile zoom stays at the nominal zoom for a distant camera with a narrow field of view', () => {
+            const transform = new GlobeTransform();
+            transform.resize(2560, 1265);
+            transform.setCenter(new LngLat(-140, 0));
+            transform.setZoom(5.5);
+            transform.setMaxPitch(60);
+            transform.setPitch(15);
+            transform.setFov(5);
+
+            const tiles = coveringTiles(transform, {tileSize: 512});
+            const nominalZ = coveringZoomLevel(transform, {tileSize: 512});
+            const levels = tiles.map(tile => tile.canonical.z);
+
+            expect(nominalZ).toBe(5);
+            expect(Math.max(...levels)).toBeLessThanOrEqual(nominalZ + 1);
+            expect(Math.min(...levels)).toBeLessThanOrEqual(nominalZ);
+        });
+
         test('antimeridian1', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
