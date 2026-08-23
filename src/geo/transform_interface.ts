@@ -12,10 +12,6 @@ import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_det
 import type {Frustum} from '../util/primitives/frustum.ts';
 
 /**
- * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
- * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
- */
-/**
  * Samples the terrain elevation, in meters, at a point given in tile coordinates.
  *
  * Implementations are bound to a specific tile, so `x` and `y` are interpreted within that tile.
@@ -27,6 +23,10 @@ import type {Frustum} from '../util/primitives/frustum.ts';
  */
 export type GetElevation = (x: number, y: number) => number;
 
+/**
+ * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+ * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+ */
 export type TransformConstrainFunction =  (
     lngLat: LngLat,
     zoom: number
