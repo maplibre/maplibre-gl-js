@@ -423,9 +423,15 @@ describe('shapeText vertical glyph orientation', () => {
             .toEqual([true, true, false, false, true]);
     });
 
-    test('rotates single non-Latin letters mixed with CJK', () => {
+    test('rotates single lowercase letters mixed with CJK', () => {
         expect(verticalFlags(shape('国道α号', WritingMode.vertical)))
             .toEqual([true, true, false, true]);
+    });
+
+    test('keeps short uppercase codes of non-Latin scripts upright', () => {
+        // Cyrillic
+        expect(verticalFlags(shape('国道М1号', WritingMode.vertical)))
+            .toEqual([true, true, true, true, true]);
     });
 
     test('rotates complex-shaping script characters mixed with CJK', () => {

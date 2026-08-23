@@ -291,9 +291,8 @@ function charIsDecimalDigit(codePoint: number): boolean {
     return /\p{Nd}/u.test(String.fromCodePoint(codePoint));
 }
 
-function charIsUppercaseLatinLetter(codePoint: number): boolean {
-    const char = String.fromCodePoint(codePoint);
-    return /\p{sc=Latn}/u.test(char) && /\p{Lu}/u.test(char);
+function charIsUppercaseLetter(codePoint: number): boolean {
+    return /\p{Lu}/u.test(String.fromCodePoint(codePoint));
 }
 
 function charIsSymbolOrPunctuation(codePoint: number): boolean {
@@ -324,10 +323,10 @@ function determineLineVerticals(line: TaggedString): boolean[] {
         const isNumber = run.some(charIsDecimalDigit) &&
             run.every(codePoint => charIsDecimalDigit(codePoint) || charIsSymbolOrPunctuation(codePoint));
         const isShortUppercaseCode = run.length <= MAX_UPRIGHT_LETTER_RUN &&
-            run.every(codePoint => charIsUppercaseLatinLetter(codePoint) || charIsDecimalDigit(codePoint));
+            run.every(codePoint => charIsUppercaseLetter(codePoint) || charIsDecimalDigit(codePoint));
         if (isNumber || isShortUppercaseCode) {
             for (let i = start; i <= end; i++) {
-                verticals[i] = (charIsDecimalDigit(codePoints[i]) || charIsUppercaseLatinLetter(codePoints[i])) &&
+                verticals[i] = (charIsDecimalDigit(codePoints[i]) || charIsUppercaseLetter(codePoints[i])) &&
                     !charInComplexShapingScript(codePoints[i]);
             }
         }
