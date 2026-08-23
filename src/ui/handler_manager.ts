@@ -617,7 +617,7 @@ export class HandlerManager {
             return undefined;
         }
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            const anchor = terrain.pointCoordinate(around);
+            const anchor = tr.screenTerrainPointToMercatorCoordinate(around, terrain);
             this._terrainGestureAnchorElevation = anchor ? anchor.z : null;
         }
         if (this._terrainGestureAnchorElevation === null) {

@@ -11,10 +11,16 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
 import {type Style} from '../../style/style.ts';
-import {type Terrain} from '../../render/terrain.ts';
+import {Terrain} from '../../render/terrain.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
+import {DEMData} from '../../data/dem_data.ts';
+import {RGBAImage} from '../image.ts';
+import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {Painter} from '../../render/painter.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -239,13 +245,12 @@ export function expectToBeCloseToArray(actual: number[], expected: number[], pre
 
 export function createTerrain(): Terrain {
     return {
-        pointCoordinate: () => null,
+        getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
         resetElevationCache: () => {},
         getFramebuffer: () => ({}),
-        getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
         tileManager: {
             update: () => {},
@@ -293,4 +298,30 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     mat4.invert(invProj, proj);
 
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
+}
+
+export function createDEM(heightFn: (x: number, y: number) => number, dim: number = 8): DEMData {
+    const stride = dim + 2;
+    const pixels = new Uint8Array(stride * stride * 4);
+    for (let y = 0; y < dim; y++) {
+        for (let x = 0; x < dim; x++) {
+            const value = heightFn(x, y) + 32768;
+            const index = ((y + 1) * stride + x + 1) * 4;
+            pixels[index] = Math.floor(value / 256);
+            pixels[index + 1] = Math.floor(value) % 256;
+            pixels[index + 2] = Math.round((value - Math.floor(value)) * 256);
+            pixels[index + 3] = 255;
+        }
+    }
+    return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
+}
+
+export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | null, exaggeration: number = 1): Terrain {
+    const painter = {} as Painter;
+    const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
+    const terrain = new Terrain(painter, tileManager, {exaggeration} as TerrainSpecification);
+    terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as Tile);
+    terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
+    terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
+    return terrain;
 }
