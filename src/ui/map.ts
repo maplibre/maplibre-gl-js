@@ -40,6 +40,7 @@ import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
+import type {FontFaces} from '../render/font_face_manager.ts';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
@@ -3689,6 +3690,42 @@ export class Map extends Evented<MapEventType> {
      */
     getGlyphs(): string | null {
         return this.style.getGlyphsUrl();
+    }
+
+    /**
+     * Sets the value of the style's `font-faces` property, which points at the font files used to
+     * draw text that the style's `glyphs` URL does not cover. Pass a falsy value (null or undefined)
+     * to unset it.
+     *
+     * The files are handed to the browser's CSS Font Loading API, so any format the browser can
+     * render text with may be used, and requests for them go through `transformRequest` as glyph
+     * requests do. Text is still drawn one codepoint at a time, so scripts that need contextual
+     * shaping are not rendered any better than they are with the `localIdeographFontFamily` option.
+     *
+     * @param fontFaces - The font faces to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/root/#font-faces).
+     * @param options - Options object.
+     * @example
+     * ```ts
+     * map.setFontFaces({
+     *     'Noto Sans Regular': [
+     *         {url: 'https://example.com/NotoSansKhmer-Regular.ttf', 'unicode-range': ['U+1780-17FF']}
+     *     ]
+     * });
+     * ```
+     */
+    setFontFaces(fontFaces: FontFaces | null | undefined, options: StyleSetterOptions = {}): this {
+        this._lazyInitEmptyStyle();
+        this.style.setFontFaces(fontFaces, options);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's `font-faces` property.
+     *
+     * @returns The style's font faces, or `null` if it declares none.
+     */
+    getFontFaces(): FontFaces | null {
+        return this.style.getFontFaces();
     }
 
     /**

@@ -17,7 +17,7 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
-import {validateStyle, validateStyleAndEmit, validateAndEmit, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
+import {validateStyle, validateStyleAndEmit, validateAndEmit, validateFontFaces, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
 import {derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
@@ -59,6 +59,7 @@ import type {
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
+import type {FontFaces} from '../render/font_face_manager.ts';
 import {
     type GetDashesParameters,
     type GetDashesResponse,
@@ -486,6 +487,7 @@ export class Style extends Evented<MapEventType> {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
+        this.glyphManager.setFontFaces(nextState['font-faces']);
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
@@ -852,6 +854,12 @@ export class Style extends Evented<MapEventType> {
 
         if (operations.unimplemented.length > 0) {
             throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
+        }
+
+        // The specification's `diff` does not emit a command for `font-faces` yet, so the change is
+        // picked up here rather than in `_getOperationsToPerform`.
+        if (!deepEqual(serializedStyle['font-faces'], nextState['font-faces'])) {
+            operations.operations.push(() => this.setFontFaces(nextState['font-faces'], {validate: false}));
         }
 
         if (operations.operations.length === 0) {
@@ -1479,6 +1487,7 @@ export class Style extends Evented<MapEventType> {
             pitch: myStyleSheet.pitch,
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
+            'font-faces': myStyleSheet['font-faces'],
             transition: myStyleSheet.transition,
             projection: myStyleSheet.projection,
             sources,
@@ -1931,6 +1940,23 @@ export class Style extends Evented<MapEventType> {
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
+    }
+
+    getFontFaces(): FontFaces | null {
+        return this.stylesheet['font-faces'] || null;
+    }
+
+    setFontFaces(fontFaces: FontFaces | null | undefined, options: StyleSetterOptions = {}): void {
+        this._checkLoaded();
+
+        if (fontFaces && this._validate(validateFontFaces, 'font-faces', fontFaces, null, options)) {
+            return;
+        }
+
+        this._glyphsDidChange = true;
+        // The cast drops the list form of a declaration, which the specification's type omits.
+        this.stylesheet['font-faces'] = fontFaces as StyleSpecification['font-faces'];
+        this.glyphManager.setFontFaces(fontFaces);
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {

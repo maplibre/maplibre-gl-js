@@ -1527,6 +1527,82 @@ describe('Style.setGlyphs', () => {
     });
 });
 
+describe('Style.setFontFaces', () => {
+    const fontFaces = {
+        'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+    };
+
+    test('applies the font faces a loading style declares', async () => {
+        const style = new Style(getStubMap());
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('reports no font faces when the style declares none', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('hands the new font faces to the glyph manager and reloads the tiles that used the old ones', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+
+        style.setFontFaces(fontFaces);
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+        expect(style._glyphsDidChange).toBe(true);
+    });
+
+    test('allows font faces to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        style.setFontFaces(null);
+        expect(style.getFontFaces()).toBeNull();
+
+        style.setFontFaces(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+
+        style.setFontFaces(undefined);
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('rejects a font face declaration the specification does not allow', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const error = style.once('error');
+
+        style.setFontFaces({'Noto Sans Regular': [{'unicode-range': ['U+1780-17FF']}]} as any);
+
+        expect((await error).error.message).toMatch(/url/);
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('round-trips through serialize, so setState can tell that they changed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(style.serialize()['font-faces']).toEqual(fontFaces);
+
+        const nextFontFaces = {'Noto Sans Regular': 'https://example.com/noto.ttf'};
+        expect(style.setState(createStyleJSON({'font-faces': nextFontFaces} as any))).toBe(true);
+        expect(style.getFontFaces()).toEqual(nextFontFaces);
+    });
+});
+
 describe('Style.addSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());

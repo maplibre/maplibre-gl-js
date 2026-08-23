@@ -1,4 +1,5 @@
 import {loadGlyphRange} from '../style/load_glyph_range.ts';
+import {FontFaceManager} from './font_face_manager.ts';
 
 import TinySDF from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
@@ -8,6 +9,7 @@ import {ensureError, warnOnce} from '../util/util.ts';
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {GetGlyphsResponse} from '../util/actor_messages.ts';
+import type {FontFaces} from './font_face_manager.ts';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
@@ -24,6 +26,10 @@ type Entry = {
     };
     tinySDF?: Promise<TinySDF>;
     ideographTinySDF?: Promise<TinySDF>;
+    /**
+     * One TinySDF per `font-faces` file this stack draws with, keyed by the file's CSS family.
+     */
+    fontFaceTinySDFs?: {[family: string]: Promise<TinySDF>};
 };
 
 /**
@@ -48,6 +54,7 @@ export class GlyphManager {
     entries: {[stack: string]: Entry};
     url: string;
     lang?: string;
+    fontFaceManager: FontFaceManager;
 
     // exposed as statistics to enable stubbing in unit tests
     static loadGlyphRange: typeof loadGlyphRange = loadGlyphRange;
@@ -58,10 +65,20 @@ export class GlyphManager {
         this.localIdeographFontFamily = localIdeographFontFamily;
         this.entries = {};
         this.lang = lang;
+        this.fontFaceManager = new FontFaceManager(requestManager);
     }
 
     setURL(url?: string | null): void {
         this.url = url;
+    }
+
+    /**
+     * Replaces the font files the style declares in its `font-faces` property, dropping every glyph
+     * drawn with the previous ones.
+     */
+    setFontFaces(fontFaces?: FontFaces | null): void {
+        this.fontFaceManager.setFontFaces(fontFaces);
+        this.entries = {};
     }
 
     async getGlyphs(glyphs: {[stack: string]: number[]}): Promise<GetGlyphsResponse> {
@@ -99,6 +116,16 @@ export class GlyphManager {
         let glyph = entry.glyphs[id];
         if (glyph !== undefined) {
             return {stack, id, glyph};
+        }
+
+        // A font file the style declared for this codepoint wins over both the glyphs URL and the
+        // local fallback fonts: the style asked for this exact file, by name and by unicode range.
+        if (this.fontFaceManager.hasFontFaces()) {
+            const fontFaceFamily = await this.fontFaceManager.getFontFamily(stack, id);
+            if (fontFaceFamily) {
+                glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
+                return {stack, id, glyph};
+            }
         }
 
         // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
@@ -153,15 +180,11 @@ export class GlyphManager {
 
     /**
      * Draws a glyph offscreen using TinySDF, creating a TinySDF instance lazily.
+     *
+     * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
      */
-    async _drawGlyph(entry: Entry, stack: string, id: number): Promise<StyleGlyph> {
-        // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
-        const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id);
-
-        // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
-        const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
-        entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-        const tinySDF = await entry[tinySDFKey];
+    async _drawGlyph(entry: Entry, stack: string, id: number, fontFaceFamily?: string): Promise<StyleGlyph> {
+        const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
         const char = tinySDF.draw(String.fromCodePoint(id));
 
         /**
@@ -198,7 +221,30 @@ export class GlyphManager {
         };
     }
 
-    async _createTinySDF(stack: String | false): Promise<TinySDF> {
+    /**
+     * Returns the TinySDF that draws this codepoint in this fontstack, creating it lazily. A stack
+     * keeps one instance per font selection it draws with, so that a fallback applying to some
+     * codepoints does not bleed into the rest of the text.
+     */
+    _getTinySDF(entry: Entry, stack: string, id: number, fontFaceFamily?: string): Promise<TinySDF> {
+        if (fontFaceFamily) {
+            // The font file carries its own weight and style, so neither is sniffed out of the name
+            // -- doing so would ask the browser to synthesize a second helping of both.
+            entry.fontFaceTinySDFs ??= {};
+            entry.fontFaceTinySDFs[fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false);
+            return entry.fontFaceTinySDFs[fontFaceFamily];
+        }
+
+        // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
+        const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id);
+
+        // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
+        const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
+        entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
+        return entry[tinySDFKey];
+    }
+
+    async _createTinySDF(stack: String | false, sniffFontStyles: boolean = true): Promise<TinySDF> {
         // Escape and quote the font family list for use in CSS.
         const fontFamilies = stack ? stack.split(',') : [];
         fontFamilies.push(defaultGenericFontFamily);
@@ -207,8 +253,8 @@ export class GlyphManager {
         ).join(',');
 
         const fontSize = 24 * textureScale;
-        const fontWeight = this._fontWeight(fontFamilies[0]);
-        const fontStyle = this._fontStyle(fontFamilies[0]);
+        const fontWeight = sniffFontStyles ? this._fontWeight(fontFamilies[0]) : undefined;
+        const fontStyle = sniffFontStyles ? this._fontStyle(fontFamilies[0]) : 'normal';
 
         // Await web font load so TinySDF doesn't cache a fallback bitmap. See #7307.
         if (typeof document !== 'undefined' && document.fonts?.load) {
@@ -275,10 +321,12 @@ export class GlyphManager {
             const entry = this.entries[stack];
             entry.tinySDF = null;
             entry.ideographTinySDF = null;
+            entry.fontFaceTinySDFs = {};
             entry.glyphs = {};
             entry.requests = {};
             entry.ranges = {};
         }
         this.entries = {};
+        this.fontFaceManager.destroy();
     }
 }

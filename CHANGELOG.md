@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Pick terrain coordinates with a CPU raycast against the DEM instead of a coords framebuffer readback: full DEM resolution, no GPU stall on pointer events, and about 4MB less GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Add support for the style specification's `font-faces` property, along with `map.setFontFaces` and `map.getFontFaces`: a style can point at the font files to draw each `text-font` name with, optionally narrowed to a `unicode-range`, and codepoints no font face covers still fall back to the `glyphs` URL ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

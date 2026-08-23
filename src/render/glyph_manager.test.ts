@@ -3,6 +3,7 @@ import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 import {GlyphManager} from './glyph_manager.ts';
 import fs from 'fs';
 import {type RequestManager} from '../util/request_manager.ts';
+import {FontFaceManager} from './font_face_manager.ts';
 
 describe('GlyphManager', () => {
     const GLYPHS = {};
@@ -269,5 +270,94 @@ describe('GlyphManager', () => {
         await manager.getGlyphs({'Arial Unicode MS': [0x43]});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
+    });
+
+    describe('font-faces', () => {
+        const stubFontFaces = () => {
+            Object.defineProperty(document, 'fonts', {
+                configurable: true,
+                value: {load: () => Promise.resolve([]), add: () => {}, delete: () => {}}
+            });
+            (globalThis as any).FontFace = class {
+                family: string;
+                constructor(family: string) { this.family = family; }
+                load = () => Promise.resolve(this);
+            };
+            vi.spyOn(FontFaceManager, 'loadFontFile').mockResolvedValue(new ArrayBuffer(8));
+        };
+
+        afterEach(() => {
+            delete (globalThis as any).FontFace;
+        });
+
+        test('draws a covered codepoint with the declared font file instead of downloading a range', async () => {
+            stubFontFaces();
+            const rangeStub = vi.spyOn(GlyphManager, 'loadGlyphRange').mockResolvedValue(GLYPHS);
+            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+
+            const manager = createGlyphManager(true);
+            manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
+
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [0x1780]});
+
+            expect(returnedGlyphs['Arial Unicode MS'][0x1780]).toBeDefined();
+            expect(rangeStub).not.toHaveBeenCalled();
+            expect(tinySdfSpy).toHaveBeenCalledWith(expect.objectContaining({
+                fontFamily: expect.stringMatching(/^maplibre-gl-font-face-\d+,sans-serif$/)
+            }));
+        });
+
+        test('leaves a codepoint outside every declared range to the glyphs URL', async () => {
+            stubFontFaces();
+            const rangeStub = vi.spyOn(GlyphManager, 'loadGlyphRange').mockResolvedValue(GLYPHS);
+
+            const manager = createGlyphManager(true);
+            manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
+
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [55]});
+
+            expect(returnedGlyphs['Arial Unicode MS'][55].metrics.advance).toBe(12);
+            expect(rangeStub).toHaveBeenCalledTimes(1);
+        });
+
+        test('does not sniff a weight or a style out of the font name, which the file already carries', async () => {
+            stubFontFaces();
+            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+
+            const manager = createGlyphManager(false);
+            manager.setFontFaces({'Noto Sans Bold Italic': 'https://localhost/noto-bold-italic.ttf'});
+            await manager.getGlyphs({'Noto Sans Bold Italic': [0x41]});
+
+            expect(tinySdfSpy).toHaveBeenCalledWith(expect.objectContaining({fontWeight: undefined, fontStyle: 'normal'}));
+        });
+
+        test('keeps one TinySDF per declared file so a fallback cannot bleed into the rest of the text', async () => {
+            stubFontFaces();
+            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+
+            const manager = createGlyphManager(false);
+            manager.setFontFaces({'Arial Unicode MS': [
+                {url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']},
+                {url: 'https://localhost/devanagari.ttf', 'unicode-range': ['U+0900-097F']}
+            ]});
+
+            await manager.getGlyphs({'Arial Unicode MS': [0x1780, 0x1781, 0x0915]});
+
+            const families = tinySdfSpy.mock.calls.map(([options]) => options.fontFamily);
+            expect(new Set(families).size).toBe(2);
+        });
+
+        test('drops the glyphs drawn with the previous font faces', async () => {
+            stubFontFaces();
+            vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+
+            const manager = createGlyphManager(false);
+            manager.setFontFaces({'Arial Unicode MS': 'https://localhost/noto.ttf'});
+            await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+            expect(manager.entries['Arial Unicode MS'].glyphs[0x41]).toBeDefined();
+
+            manager.setFontFaces({'Arial Unicode MS': 'https://localhost/other.ttf'});
+            expect(manager.entries['Arial Unicode MS']).toBeUndefined();
+        });
     });
 });
