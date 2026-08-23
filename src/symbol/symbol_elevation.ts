@@ -9,7 +9,7 @@ import type {GetElevation} from '../geo/transform_interface.ts';
  * Call this where the elevation is needed, so that `getElevation` keeps returning the plain terrain
  * elevation and never has to be substituted with a wrapper.
  *
- * @param getElevation - the terrain elevation function, or null when the map has no terrain
+ * @param getElevation - the terrain elevation function, absent when the map has no terrain
  * @param x - the tile x coordinate to evaluate the elevation at
  * @param y - the tile y coordinate to evaluate the elevation at
  * @param heightOffset - the evaluated `symbol-height-offset` of the symbol, in meters
@@ -17,7 +17,7 @@ import type {GetElevation} from '../geo/transform_interface.ts';
  * @returns the elevation in meters, or undefined when the symbol sits at the zero elevation datum,
  * which lets the projection take its fast path that ignores the z coordinate
  */
-export function getSymbolElevation(getElevation: GetElevation | null | undefined, x: number, y: number, heightOffset: number, heightAnchorGround: boolean): number | undefined {
+export function getSymbolElevation(getElevation: GetElevation | undefined, x: number, y: number, heightOffset: number, heightAnchorGround: boolean): number | undefined {
     if (!heightAnchorGround) {
         return heightOffset;
     }

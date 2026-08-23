@@ -232,7 +232,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     viewportWidth: number,
     viewportHeight: number,
     translation: [number, number],
-    getElevation: GetElevation): void {
+    getElevation: GetElevation | undefined): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
     const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
@@ -595,11 +595,11 @@ export type SymbolProjectionContext = {
      */
     pitchedLabelPlaneMatrix: mat4;
     /**
-     * Function to get elevation at a point
+     * Function to get elevation at a point, absent when the map has no terrain
      * @param x - the x coordinate
      * @param y - the y coordinate
     */
-    getElevation: GetElevation;
+    getElevation: GetElevation | undefined;
     /**
      * The evaluated `symbol-height-offset` of the symbol being projected, in meters. Defaults to 0.
      */

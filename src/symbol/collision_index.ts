@@ -201,7 +201,7 @@ export class CollisionIndex {
         circlePixelDiameter: number,
         textPixelPadding: number,
         translation: [number, number],
-        getElevation: GetElevation
+        getElevation: GetElevation | undefined
     ): PlacedCircles {
         const placedCollisionCircles = [];
 

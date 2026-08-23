@@ -236,9 +236,9 @@ export class Placement {
         this.placedOrientations = {};
     }
 
-    private _getTerrainElevationFunc(tileID: OverscaledTileID) {
+    private _getTerrainElevationFunc(tileID: OverscaledTileID): GetElevation | undefined {
         const terrain = this.terrain;
-        if (!terrain) return null;
+        if (!terrain) return undefined;
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
