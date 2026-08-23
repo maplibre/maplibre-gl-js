@@ -139,14 +139,8 @@ export class TransformHelper implements ITransformGetters {
     _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
     /**
-     * Whether the camera is still where it was initialized and has never been placed somewhere on purpose.
-     * It starts out `true` and is cleared by every setter that moves the camera (center, zoom, bearing,
-     * pitch, roll, fov, padding), whether the move came from the API, a hash or a user gesture.
-     * The map reads it once, when a style finishes loading: only an unmodified transform adopts the
-     * style's `center`, `zoom`, `bearing`, `pitch` and `roll`, so that an explicitly positioned camera
-     * is not thrown away by the style. Updates that merely snap the camera back into a valid range -
-     * constraining, and applying a new min/max zoom or pitch - deliberately preserve the flag, since
-     * they are not the user asking for a particular camera position.
+     * Whether the camera was never deliberately positioned, in which case a loading style may apply its own camera.
+     * Cleared by the setters that move the camera, but not by ones that only snap it into a valid range.
      */
     _unmodified: boolean;
 
