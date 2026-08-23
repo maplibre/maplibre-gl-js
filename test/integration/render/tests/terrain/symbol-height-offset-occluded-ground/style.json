@@ -30,12 +30,12 @@
           {
             "type": "Feature",
             "properties": {"label": "ground", "elevation": 0},
-            "geometry": {"type": "Point", "coordinates": [11.52517, 47.4]}
+            "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
           },
           {
             "type": "Feature",
             "properties": {"label": "aircraft", "elevation": 1000},
-            "geometry": {"type": "Point", "coordinates": [11.52517, 47.4]}
+            "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
           }
         ]
       }
