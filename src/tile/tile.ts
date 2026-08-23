@@ -104,6 +104,7 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
+    needsColorReliefPrepare: boolean;
     abortController: AbortController;
     texture: any;
     fbo: Framebuffer;

@@ -83,19 +83,16 @@ function renderColorRelief(
 
         const textureStride = dem.stride;
 
-        const pixelData = dem.getPixels();
         context.activeTexture.set(gl.TEXTURE0);
 
-        context.pixelStoreUnpackPremultiplyAlpha.set(false);
-        tile.demTexture ||= painter.getTileTexture(textureStride);
-        if (tile.demTexture) {
-            const demTexture = tile.demTexture;
-            demTexture.update(pixelData, {premultiply: false});
-            demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
-        } else {
-            tile.demTexture = new Texture(context, pixelData, gl.RGBA, {premultiply: false});
-            tile.demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
+        if (!tile.demTexture || tile.needsColorReliefPrepare) {
+            context.pixelStoreUnpackPremultiplyAlpha.set(false);
+            tile.demTexture ||= painter.getTileTexture(textureStride) ??
+                new Texture(context, {width: textureStride, height: textureStride, data: null}, gl.RGBA);
+            tile.demTexture.update(dem.getPixels(), {premultiply: false});
+            tile.needsColorReliefPrepare = false;
         }
+        tile.demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
