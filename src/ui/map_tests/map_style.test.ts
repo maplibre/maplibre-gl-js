@@ -106,7 +106,7 @@ describe('setStyle', () => {
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', async () => {
+    test('style transform overrides unmodified map transform when max bounds are set for a large area', async () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 600});
         Object.defineProperty(container, 'clientHeight', {value: 400});
