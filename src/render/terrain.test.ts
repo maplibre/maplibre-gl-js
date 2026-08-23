@@ -299,6 +299,41 @@ describe('Terrain', () => {
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
+    function createTwoZoomTerrain(renderedElevation: number, coveringElevation: number | null) {
+        const terrain = createFlatTerrain(renderedElevation);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+        (terrain.painter.transform as MercatorTransform).setZoom(3);
+        const renderedDEM = createDEM(() => renderedElevation);
+        const coveringDEM = coveringElevation === null ? null : createDEM(() => coveringElevation);
+        terrain.tileManager.getSourceTile = (tileID) => {
+            const dem = tileID.canonical.z === 0 ? renderedDEM : coveringDEM;
+            return dem ? ({tileID, dem}) as any as Tile : undefined;
+        };
+        return terrain;
+    }
+
+    test('getElevationForLngLat samples the rendered tile where its DEM is loaded', () => {
+        const terrain = createTwoZoomTerrain(500, 100);
+
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), terrain.painter.transform)).toBeCloseTo(500, 6);
+    });
+
+    test('getElevationForLngLat traverses the covering tiles while the rendered tile\'s DEM is loading', () => {
+        const terrain = createTwoZoomTerrain(500, 100);
+        const renderedTileSourceTile = terrain.tileManager.getSourceTile;
+        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : renderedTileSourceTile(tileID);
+
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), terrain.painter.transform)).toBeCloseTo(100, 6);
+    });
+
+    test('getElevationForLngLat traverses the covering tiles outside the rendered tiles', () => {
+        const terrain = createTwoZoomTerrain(500, 100);
+        terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(1, 0, 1, 0, 0)}] as any as Tile[];
+
+        expect(terrain.getElevationForLngLat(new LngLat(90, -40), terrain.painter.transform)).toBeCloseTo(100, 6);
+    });
+
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
         const zoom = 10;
         const painter = {
