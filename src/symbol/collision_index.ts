@@ -2,10 +2,12 @@ import Point from '@mapbox/point-geometry';
 import {clipLine} from './clip_line.ts';
 import {PathInterpolator} from './path_interpolator.ts';
 import {getSymbolElevation} from './symbol_elevation.ts';
-
 import * as intersectionTests from '../util/intersection_tests.ts';
 import {GridIndex} from './grid_index.ts';
 import {mat4, vec4} from 'gl-matrix';
+import {clamp, getAABB} from '../util/util.ts';
+import {Bounds} from '../geo/bounds.ts';
+import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
 import ONE_EM from '../symbol/one_em.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -16,10 +18,8 @@ import type {
     SymbolLineVertexArray
 } from '../data/array_types.g.ts';
 import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
-import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id.ts';
-import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
-import {clamp, getAABB} from '../util/util.ts';
-import {Bounds} from '../geo/bounds.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import type {GetElevation} from '../util/elevation.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -111,7 +111,7 @@ export class CollisionIndex {
         rotateWithMap: boolean,
         translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
-        getElevation?: (x: number, y: number) => number,
+        getElevation?: GetElevation,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
         heightOffset: number = 0,
@@ -202,7 +202,7 @@ export class CollisionIndex {
         circlePixelDiameter: number,
         textPixelPadding: number,
         translation: [number, number],
-        getElevation: (x: number, y: number) => number
+        getElevation: GetElevation
     ): PlacedCircles {
         const placedCollisionCircles = [];
 
@@ -521,7 +521,7 @@ export class CollisionIndex {
         rotateWithMap: boolean,
         translation: [number, number],
         projectedPoint: {x: number; y: number; perspectiveRatio: number; signedDistanceFromCamera: number},
-        getElevation?: (x: number, y: number) => number,
+        getElevation?: GetElevation,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
         heightOffset: number = 0,

@@ -1,4 +1,4 @@
-type GetElevation = (x: number, y: number) => number;
+import {type GetElevation} from '../util/elevation.ts';
 
 /**
  * Resolves the elevation of a symbol at a tile coordinate, combining the terrain elevation with the

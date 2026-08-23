@@ -32,6 +32,7 @@ import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {Painter, RTTObject} from '../render/painter.ts';
+import type {GetElevation} from '../util/elevation.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -396,7 +397,7 @@ export class Tile {
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4,
-        getElevation: undefined | ((x: number, y: number) => number)
+        getElevation: GetElevation | undefined
     ): QueryResults {
         if (!this.latestFeatureIndex?.rawTileData)
             return {};

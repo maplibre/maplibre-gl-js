@@ -11,6 +11,8 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {addDynamicAttributes} from '../../data/bucket/symbol_bucket.ts';
 import {fastInvertTransformMat4} from '../../util/fast_maths.ts';
 import {getAnchorAlignment, WritingMode} from '../../symbol/shaping.ts';
+import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels, elevationAt} from '../../symbol/projection.ts';
+import {translatePosition} from '../../util/util.ts';
 import ONE_EM from '../../symbol/one_em.ts';
 
 import {
@@ -23,7 +25,7 @@ import {
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
-
+import type {GetElevation} from '../../util/elevation.ts';
 import type {Texture, TextureFilter} from '../texture.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import type {UniformValues} from '../uniform_binding.ts';
@@ -36,8 +38,6 @@ import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {Program} from '../program.ts';
 import type {TextAnchor} from '../../style/style_layer/variable_text_anchor.ts';
-import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels, elevationAt} from '../../symbol/projection.ts';
-import {translatePosition} from '../../util/util.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 type SymbolTileRenderState = {
@@ -202,7 +202,7 @@ function updateVariableAnchorsForBucket(
     updateTextFitIcon: boolean,
     translation: [number, number],
     unwrappedTileID: UnwrappedTileID,
-    getElevation: (x: number, y: number) => number,
+    getElevation: GetElevation,
     heightAnchorGround: boolean) {
     const placedSymbols = bucket.text.placedSymbolArray;
     const dynamicTextLayoutVertexArray = bucket.text.dynamicLayoutVertexArray;

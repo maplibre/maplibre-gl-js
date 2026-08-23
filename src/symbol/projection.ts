@@ -1,9 +1,11 @@
 import Point from '@mapbox/point-geometry';
-import {getSymbolElevation} from './symbol_elevation.ts';
-
 import {mat2, mat4, vec2, vec4} from 'gl-matrix';
+import {getSymbolElevation} from './symbol_elevation.ts';
 import * as symbolSize from './symbol_size.ts';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
+import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import {WritingMode} from '../symbol/shaping.ts';
+import {findLineIntersection} from '../util/util.ts';
 
 import type {Painter} from '../render/painter.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -14,11 +16,9 @@ import type {
     SymbolDynamicLayoutArray,
     PlacedSymbol,
 } from '../data/array_types.g.ts';
-import {WritingMode} from '../symbol/shaping.ts';
-import {findLineIntersection} from '../util/util.ts';
-import {type UnwrappedTileID} from '../tile/tile_id.ts';
-import {type StructArray} from '../util/struct_array.ts';
-import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
+import type {StructArray} from '../util/struct_array.ts';
+import type {GetElevation} from '../util/elevation.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation
@@ -233,7 +233,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     viewportWidth: number,
     viewportHeight: number,
     translation: [number, number],
-    getElevation: (x: number, y: number) => number): void {
+    getElevation: GetElevation): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
     const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
@@ -600,7 +600,7 @@ export type SymbolProjectionContext = {
      * @param x - the x coordinate
      * @param y - the y coordinate
     */
-    getElevation: (x: number, y: number) => number;
+    getElevation: GetElevation;
     /**
      * The evaluated `symbol-height-offset` of the symbol being projected, in meters. Defaults to 0.
      */

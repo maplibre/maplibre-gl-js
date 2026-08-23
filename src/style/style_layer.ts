@@ -1,10 +1,10 @@
 import {filterObject} from '../util/util.ts';
-
 import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {Evented, ErrorEvent, type ErrorEventType} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
+import type {mat4} from 'gl-matrix';
 import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
@@ -18,16 +18,15 @@ import type {
     AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {CrossfadeParameters} from './evaluation_parameters.ts';
-
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Map} from '../ui/map.ts';
 import type {StyleSetterOptions} from './style.ts';
-import {type mat4} from 'gl-matrix';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import type {GetElevation} from '../util/elevation.ts';
 
 export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
 
@@ -74,7 +73,7 @@ export type QueryIntersectsFeatureParams = {
     /**
      * A function to get the elevation of a point in tile coordinates.
      */
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
 };
 
 const ERROR_PAINT_NOT_LAYOUT = ' is a PAINT property not a LAYOUT property. Use get/setPaintProperty instead?';

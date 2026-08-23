@@ -1,12 +1,13 @@
 import Point from '@mapbox/point-geometry';
+import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
 
 import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
 import type {LineBucket} from '../data/bucket/line_bucket.ts';
-import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
+import type {GetElevation} from '../util/elevation.ts';
 
 export function getMaximumPaintValue(
     property: string,
@@ -102,7 +103,7 @@ type CircleIntersectionTestParams = {
     size: number;
     transform: IReadonlyTransform;
     unwrappedTileID: UnwrappedTileID;
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
     pitchAlignment?: 'map' | 'viewport';
     pitchScale?: 'map' | 'viewport';
 };
@@ -151,7 +152,7 @@ export function circleIntersection({
     return false;
 }
 
-function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point {
+function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point {
     // Convert `tilePoint` from tile coordinates to clip coordinates.
     const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation?.(tilePoint.x, tilePoint.y)).point;
     // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
@@ -161,7 +162,7 @@ function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrapped
     );
 }
 
-export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point[] {
+export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point[] {
     return queryGeometry.map((p) => {
         return projectPoint(p, transform, unwrappedTileID, getElevation);
     });
