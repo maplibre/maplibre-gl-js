@@ -13,6 +13,18 @@ test('setMinPitch', () => {
     expect(map.getPitch()).toBe(10);
 });
 
+test('setMinPitch raises the current pitch when it is below the new minimum', () => {
+    const map = createMap({pitch: 5});
+    map.setMinPitch(20);
+    expect(map.getPitch()).toBe(20);
+});
+
+test('setMaxPitch lowers the current pitch when it is above the new maximum', () => {
+    const map = createMap({pitch: 40});
+    map.setMaxPitch(20);
+    expect(map.getPitch()).toBe(20);
+});
+
 test('unset minPitch', () => {
     const map = createMap({minPitch: 20});
     map.setMinPitch(null);
