@@ -8,7 +8,7 @@ import {WritingMode} from '../symbol/shaping.ts';
 import {findLineIntersection} from '../util/util.ts';
 
 import type {Painter} from '../render/painter.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -18,7 +18,6 @@ import type {
 } from '../data/array_types.g.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {StructArray} from '../util/struct_array.ts';
-import type {GetElevation} from '../util/elevation.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation

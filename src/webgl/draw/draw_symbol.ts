@@ -25,7 +25,6 @@ import {
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
-import type {GetElevation} from '../../util/elevation.ts';
 import type {Texture, TextureFilter} from '../texture.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import type {UniformValues} from '../uniform_binding.ts';
@@ -34,7 +33,7 @@ import type {CrossTileID, VariableOffset} from '../../symbol/placement.ts';
 import type {SymbolBucket, SymbolBuffers} from '../../data/bucket/symbol_bucket.ts';
 import type {TerrainData} from '../../render/terrain.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../../geo/transform_interface.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {Program} from '../program.ts';
 import type {TextAnchor} from '../../style/style_layer/variable_text_anchor.ts';

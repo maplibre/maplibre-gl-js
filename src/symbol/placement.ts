@@ -12,7 +12,7 @@ import {translatePosition, warnOnce} from '../util/util.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, ITransform, GetElevation} from '../geo/transform_interface.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {PossiblyEvaluated} from '../style/properties.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
@@ -22,7 +22,6 @@ import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchor
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {GetElevation} from '../util/elevation.ts';
 
 class OpacityState {
     opacity: number;
