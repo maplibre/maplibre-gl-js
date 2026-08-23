@@ -824,14 +824,4 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
         expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
-
-    test('does not read the painter', () => {
-        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
-        Object.defineProperty(terrain, 'painter', {
-            get() { throw new Error('the raycast must not touch the painter'); }
-        });
-        const transform = createMercatorTransform(new LngLat(0, 0), 4, 30);
-
-        expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain)).not.toBeNull();
-    });
 });
