@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix globe tile selection measuring distances from the ground point below the camera instead of the camera itself, refining some views past the requested zoom and leaving others coarser ([#8187](https://github.com/maplibre/maplibre-gl-js/pull/8187)) (by [@Alchez](https://github.com/Alchez))
 - _...Add new stuff here..._
 
 ## 6.5.0
