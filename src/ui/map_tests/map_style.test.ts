@@ -141,8 +141,6 @@ describe('setStyle', () => {
         expect(fixedNum(map.getCenter().lng)).toBe(style.center[0]);
         expect(fixedNum(map.getBearing())).toBe(style.bearing);
         expect(fixedNum(map.getPitch())).toBe(style.pitch);
-        // The style's zoom is clamped by the map's maxZoom, and at that zoom the constrain cannot
-        // center on the style's latitude without showing past the pole, so it pulls it back
         expect(fixedNum(map.getZoom())).toBe(-1);
         expect(fixedNum(map.getCenter().lat)).toBe(36.5978911823);
     });
