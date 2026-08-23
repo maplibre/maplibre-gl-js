@@ -334,9 +334,9 @@ export class Placement {
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
         getElevation?: (x: number, y: number) => number,
+        simpleProjectionMatrix?: mat4,
         heightOffset?: number,
         heightAnchorGround?: boolean,
-        simpleProjectionMatrix?: mat4,
     ): {
         shift: Point;
         placedGlyphBoxes: PlacedBox;
@@ -606,7 +606,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, symbolHeightOffset, heightAnchorGround);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, simpleProjectionMatrix, symbolHeightOffset, heightAnchorGround);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;

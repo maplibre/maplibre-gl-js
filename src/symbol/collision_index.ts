@@ -1,6 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {clipLine} from './clip_line.ts';
 import {PathInterpolator} from './path_interpolator.ts';
+import {getSymbolElevation} from './symbol_elevation.ts';
 
 import * as intersectionTests from '../util/intersection_tests.ts';
 import {GridIndex} from './grid_index.ts';
@@ -118,20 +119,11 @@ export class CollisionIndex {
     ): PlacedBox {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
-
-        // `getElevation` is the feature's ground (terrain) elevation. The symbol is placed and drawn
-        // at its height-offset position, which `symbol-height-anchor` measures either from that ground
-        // elevation (`ground`) or from the zero elevation datum (`absolute`).
-        const getElevationWithOffset = !heightAnchorGround ?
-            () => heightOffset :
-            heightOffset !== 0 ?
-                (px: number, py: number) => (getElevation ? getElevation(px, py) : 0) + heightOffset :
-                getElevation;
         const projectedPoint = this.projectAndGetPerspectiveRatio(
             x,
             y,
             unwrappedTileID,
-            getElevationWithOffset,
+            getSymbolElevation(getElevation, x, y, heightOffset, heightAnchorGround),
             simpleProjectionMatrix
         );
 
@@ -161,9 +153,11 @@ export class CollisionIndex {
                 rotateWithMap,
                 translation,
                 projectedPoint,
-                getElevationWithOffset,
+                getElevation,
                 shift,
                 simpleProjectionMatrix,
+                heightOffset,
+                heightAnchorGround,
             );
         }
 
@@ -213,7 +207,7 @@ export class CollisionIndex {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation);
+        const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation?.(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y));
 
         const labelPlaneFontSize = pitchWithMap ? (fontSize * this.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
@@ -448,7 +442,7 @@ export class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number, simpleProjectionMatrix?: mat4): {
+    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number, simpleProjectionMatrix?: mat4): {
         x: number;
         y: number;
         perspectiveRatio: number;
@@ -460,8 +454,8 @@ export class CollisionIndex {
             // The code here is a copy of MercatorTransform.projectTileCoordinates, slightly modified for extra performance.
             // This has a huge impact for some reason.
             let pos;
-            if (getElevation) { // slow because of handle z-index
-                pos = [x, y, getElevation(x, y), 1] as vec4;
+            if (elevation != null) { // slow because of handle z-index
+                pos = [x, y, elevation, 1] as vec4;
                 vec4.transformMat4(pos, pos, simpleProjectionMatrix);
             } else { // fast because of ignore z-index
                 pos = [x, y, 0, 1] as vec4;
@@ -476,7 +470,7 @@ export class CollisionIndex {
                 signedDistanceFromCamera: w
             };
         } else {
-            const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+            const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
             return {
                 x: (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
                 y: (((-projected.point.y + 1) / 2) * this.transform.height) + viewportPadding,
@@ -490,9 +484,9 @@ export class CollisionIndex {
         }
     }
 
-    getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
+    getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): number {
         // We don't care about the actual projected point, just its W component.
-        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
@@ -530,6 +524,8 @@ export class CollisionIndex {
         getElevation?: (x: number, y: number) => number,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
+        heightOffset: number = 0,
+        heightAnchorGround: boolean = true,
     ): ProjectedBox {
         // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
         let vecEastX = 1;
@@ -546,7 +542,7 @@ export class CollisionIndex {
                 translatedAnchorX + 1,
                 translatedAnchorY,
                 unwrappedTileID,
-                getElevation,
+                getSymbolElevation(getElevation, translatedAnchorX + 1, translatedAnchorY, heightOffset, heightAnchorGround),
                 simpleProjectionMatrix,
             );
             const toEastX = projectedEast.x - projectedPoint.x;
@@ -636,7 +632,7 @@ export class CollisionIndex {
         let anyPointVisible = false;
 
         if (pitchWithMap) {
-            const projected = points.map(p => this.projectAndGetPerspectiveRatio(p.x, p.y, unwrappedTileID, getElevation, simpleProjectionMatrix));
+            const projected = points.map(p => this.projectAndGetPerspectiveRatio(p.x, p.y, unwrappedTileID, getSymbolElevation(getElevation, p.x, p.y, heightOffset, heightAnchorGround), simpleProjectionMatrix));
 
             // Is at least one of the projected points NOT behind the horizon?
             anyPointVisible = projected.some(p => !p.isOccluded);
