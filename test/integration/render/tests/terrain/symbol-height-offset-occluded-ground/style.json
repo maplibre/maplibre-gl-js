@@ -29,11 +29,6 @@
         "features": [
           {
             "type": "Feature",
-            "properties": {"label": "underground", "elevation": -500},
-            "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
-          },
-          {
-            "type": "Feature",
             "properties": {"label": "aircraft", "elevation": 1000},
             "geometry": {"type": "Point", "coordinates": [11.52517, 47.39]}
           }
