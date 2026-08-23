@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vitest';
-import {ImageSource} from './image_source.ts';
+import {ImageSource, type Coordinates} from './image_source.ts';
 import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
@@ -29,6 +29,11 @@ async function createLoadedSourceWithTile(map: Map, server: FakeServer) {
     const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
     await source.loadTile(tile);
     return {source, tile};
+}
+
+/** How far the projective warp of the source has been blended towards the bilinear one. */
+function bilinearBlend(source: ImageSource) {
+    return source.imageWarp[2];
 }
 
 describe('ImageSource', () => {
@@ -143,7 +148,7 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('sets perspective transform for non-parallelogram coordinates', () => {
+    test('warps an oblique quad projectively', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-122.52, 37.815],
@@ -152,11 +157,11 @@ describe('ImageSource', () => {
             [-122.545, 37.735]
         ]);
 
-        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
-        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+        expect(source.imageWarp).toEqual([-0.11771290465577058, -0.2338506983311776, 0]);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
-    test('sets perspective transform when initial coordinates are loaded', async () => {
+    test('warps an oblique quad projectively once the initial coordinates are loaded', async () => {
         const source = createSource({
             url: '/image.png',
             coordinates: [
@@ -173,23 +178,10 @@ describe('ImageSource', () => {
         server.respond();
         await promise;
 
-        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
-        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+        expect(bilinearBlend(source)).toBe(0);
     });
 
-    test('keeps projective transform when its constant coefficient is zero', () => {
-        const source = createSource({url: '/image.png'});
-        source.setCoordinates([
-            [-67.5, 55.77657301866769],
-            [-22.5, 55.77657301866769],
-            [0, 40.97989806962013],
-            [-90, 40.97989806962013]
-        ]);
-
-        expect(source.perspectiveTransform).toEqual([0, 1, 0]);
-    });
-
-    test('sets identity perspective transform for parallelogram coordinates', () => {
+    test('warps a parallelogram bilinearly, which is also its affine mapping', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-122.431640625, 37.857507156],
@@ -198,10 +190,11 @@ describe('ImageSource', () => {
             [-122.431640625, 37.840156836]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
     });
 
-    test('sets identity perspective transform for collinear destination coordinates', () => {
+    test('warps four collinear coordinates bilinearly', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-122.431640625, 37.857507156],
@@ -210,10 +203,11 @@ describe('ImageSource', () => {
             [-122.365722656, 37.857507156]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
     });
 
-    test('sets identity perspective transform when the inverse basis is singular', () => {
+    test('warps a quad with three coordinates on one edge bilinearly', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-122.431640625, 37.857507156],
@@ -222,10 +216,11 @@ describe('ImageSource', () => {
             [-122.409667969, 37.857507156]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
     });
 
-    test('sets identity perspective transform for a cancellation-degenerate quad', () => {
+    test('warps a self-crossing quad bilinearly', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [96.85546875, 79.36770077764092],
@@ -234,10 +229,11 @@ describe('ImageSource', () => {
             [-17.40234375, 59.534318001095585]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
     });
 
-    test('sets identity perspective transform when its denominator crosses zero inside the quad', () => {
+    test('warps a concave quad bilinearly', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
             [-90, 66.51326044311186],
@@ -246,7 +242,123 @@ describe('ImageSource', () => {
             [-90, 0]
         ]);
 
-        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
+    });
+
+    test('raises the blend continuously from zero to fully bilinear as the corner approaches the diagonal between its two neighbours', () => {
+        const source = createSource({url: '/image.png'});
+        const blends = [-122.545, -122.4245, -122.4237, -122.423, -122.42225].map((bottomLeftLng) => {
+            source.setCoordinates([
+                [-122.52, 37.815],
+                [-122.355, 37.8],
+                [-122.325, 37.7],
+                [bottomLeftLng, 37.7573]
+            ]);
+            return bilinearBlend(source);
+        });
+
+        expect(blends[0]).toBe(0);
+        expect(blends[1]).toBeGreaterThan(0);
+        for (let i = 2; i < blends.length; i++) {
+            expect(blends[i]).toBeGreaterThan(blends[i - 1]);
+        }
+        expect(blends.at(-1)).toBeCloseTo(1, 2);
+    });
+
+    test('needs no subdivided mesh for a purely projective warp, whose straight lines survive a pair of triangles', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.545, 37.735]]);
+
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
+    });
+
+    test('needs a subdivided mesh for a blended warp, which would seam along the diagonal of a pair of triangles', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([[-122.52, 37.815], [-122.355, 37.8], [-122.325, 37.7], [-122.4237, 37.7573]]);
+
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
+    });
+
+    test('warps projectively however close the quad gets to a triangle when asked to', () => {
+        const source = createSource({url: '/image.png'});
+        source.setWarp('perspective');
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.4237, 37.7573]
+        ]);
+
+        expect(bilinearBlend(source)).toBe(0);
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
+    });
+
+    test('warps flat however plain the quad is when asked to', () => {
+        const source = createSource({url: '/image.png'});
+        source.setWarp('flat');
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.545, 37.735]
+        ]);
+
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+        expect(source.getMesh(map.painter.context, false)).not.toBeNull();
+    });
+
+    test('warps a parallelogram affinely whichever warp is set', () => {
+        const source = createSource({url: '/image.png'});
+        const parallelogram: Coordinates = [
+            [-122.431640625, 37.857507156],
+            [-122.409667969, 37.857507156],
+            [-122.409667969, 37.840156836],
+            [-122.431640625, 37.840156836]
+        ];
+
+        for (const warp of ['auto', 'perspective', 'flat'] as const) {
+            source.setWarp(warp);
+            source.setCoordinates(parallelogram);
+
+            expect(source.imageWarp).toEqual([0, 0, 1]);
+            expect(source.getMesh(map.painter.context, false)).toBeNull();
+        }
+    });
+
+    test('falls back to a bilinear warp for a concave quad even when asked for perspective', () => {
+        const source = createSource({url: '/image.png'});
+        source.setWarp('perspective');
+        source.setCoordinates([[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]]);
+
+        expect(source.imageWarp).toEqual([0, 0, 1]);
+    });
+
+    test('re-warps the existing coordinates when the warp changes', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [-122.52, 37.815],
+            [-122.355, 37.8],
+            [-122.325, 37.7],
+            [-122.4237, 37.7573]
+        ]);
+        expect(bilinearBlend(source)).toBeGreaterThan(0);
+
+        source.setWarp('perspective');
+
+        expect(source.getWarp()).toBe('perspective');
+        expect(bilinearBlend(source)).toBe(0);
+    });
+
+    test('defaults to an automatic warp and keeps it when set again', () => {
+        const source = createSource({url: '/image.png'});
+        expect(source.getWarp()).toBe('auto');
+
+        const fired = vi.fn();
+        source.on('data', fired);
+        source.setWarp('auto');
+
+        expect(fired).not.toHaveBeenCalled();
     });
 
     test('sets coordinates via updateImage', async () => {
@@ -490,6 +602,25 @@ describe('ImageSource', () => {
         expect(source.tiles).toEqual({});
     });
 
+    test('deletes the subdivided mesh of a quad that needed one when the source is removed', async () => {
+        const {source} = await createLoadedSourceWithTile(map, server);
+        source.setCoordinates([[-90, 66.51326044311186], [0, 66.51326044311186], [-78.75, 61.606396371386275], [-90, 0]]);
+        const mesh = source.getMesh(map.painter.context, false);
+        const destroy = vi.spyOn(mesh, 'destroy');
+
+        source.onRemove();
+
+        expect(destroy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not delete a mesh it never needed when the source is removed', async () => {
+        const {source} = await createLoadedSourceWithTile(map, server);
+        source.setCoordinates([[0, 0], [1, 0], [1, -1], [0, -1]]);
+
+        expect(source.getMesh(map.painter.context, false)).toBeNull();
+        expect(() => source.onRemove()).not.toThrow();
+    });
+
     describe('updateImage with a decoded image', () => {
         let source: ImageSource;
         let transformRequest: Mock<(url: string, resourceType?: string) => any>;
@@ -514,7 +645,6 @@ describe('ImageSource', () => {
             const result = source.updateImage({image: bitmap});
 
             expect(result).toBe(source);
-            // The image path must not trigger a request.
             expect(transformRequest).not.toHaveBeenCalled();
             expect(source.image).toBe(bitmap);
             expect(source.loaded()).toBe(true);

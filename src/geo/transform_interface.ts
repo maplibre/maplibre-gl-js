@@ -354,6 +354,15 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Given a point on screen, return the mercator coordinate where its ray hits the rendered terrain surface.
+     * @param p - the point
+     * @param terrain - the terrain
+     * @returns the hit with z in meters, or null when the terrain has no renderable tiles or the ray never crosses the terrain surface
+     */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
+
+    /**
+     * @internal
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.

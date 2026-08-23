@@ -1,12 +1,24 @@
 ## main
 ### ✨ Features and improvements
+- Pick terrain coordinates with a CPU raycast against the DEM instead of a coords framebuffer readback: full DEM resolution, no GPU stall on pointer events, and about 4MB less GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix labels briefly appearing too large when zooming out several levels at once (e.g. a scroll-wheel or pinch fling) with a zoom-dependent `text-size`/`icon-size` ([#8175](https://github.com/maplibre/maplibre-gl-js/pull/8175)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix globe tile selection measuring distances from the ground point below the camera instead of the camera itself, refining some views past the requested zoom and leaving others coarser ([#8187](https://github.com/maplibre/maplibre-gl-js/pull/8187)) (by [@Alchez](https://github.com/Alchez))
+- _...Add new stuff here..._
+
+## 6.5.0
+
+### ✨ Features and improvements
+
+- Add experimental `ImageSource.setWarp` and `ImageSource.getWarp`, choosing between a `auto`, `perspective` and a `flat` warp of the image ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Fixed incorrect image source on projection on globe view ([#8172](https://github.com/maplibre/maplibre-gl-js/pull/8172)) (by [@HarelM](https://github.com/HarelM))
 - Fix the globe zooming itself in when panned away from a pole at the minimum zoom, where the latitude zoom compensation was applied on top of the constrain's own clamp ([#8182](https://github.com/maplibre/maplibre-gl-js/pull/8182)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix dragging the globe from the empty space around it, which barely moved the map and often in the wrong direction ([#8174](https://github.com/maplibre/maplibre-gl-js/pull/8174)) (by [@mondsichtung](https://github.com/mondsichtung))
-- _...Add new stuff here..._
 
 ## 6.4.1
 

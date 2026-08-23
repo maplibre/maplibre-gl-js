@@ -14,12 +14,41 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 
-import type {Terrain} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+
+/**
+ * @internal
+ * The portion of a ray through a screen pixel that lies inside the view frustum.
+ * Both endpoints use world pixels for x and y, and meters above sea level for z.
+ */
+type RaySegment = {
+    near: vec3;
+    far: vec3;
+};
+
+const TARGET_WORLD_STEP_PX = 4;
+const MAX_SAMPLES = 512;
+const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
+
+/**
+ * @internal
+ * A ray to intersect with the terrain surface, in world pixels:
+ * `near` is the segment start, `dx`/`dy`/`dz` span to the segment end, and z values are meters above sea level.
+ */
+type MercatorRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    near: vec3;
+    dx: number;
+    dy: number;
+    dz: number;
+    worldSize: number;
+};
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -345,9 +374,8 @@ export class MercatorTransform implements ITransform {
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p);
+            const coordinate = this.screenTerrainPointToMercatorCoordinate(p, terrain);
             if (coordinate != null) {
                 return coordinate;
             }
@@ -355,18 +383,64 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
+    /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        const index = terrain.getCoverageIndex();
+        if (!index) return null;
+
+        const {near, far} = this.getRaySegmentFromPixel(p);
+        const worldSize = this.worldSize;
+        const dx = far[0] - near[0];
+        const dy = far[1] - near[1];
+        const dz = far[2] - near[2];
+        const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize};
+
+        let tStart = 0;
+        let tEnd = 1;
+        if (dz === 0) {
+            if (near[2] > index.maxElevation || near[2] < index.minElevation) return null;
+        } else {
+            const tHigh = (index.maxElevation - near[2]) / dz;
+            const tLow = (index.minElevation - near[2]) / dz;
+            tStart = Math.max(tStart, Math.min(tHigh, tLow));
+            tEnd = Math.min(tEnd, Math.max(tHigh, tLow));
+            if (tStart > tEnd) return null;
+        }
+
+        const horizontalLength = Math.hypot(dx, dy);
+        const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_WORLD_STEP_PX), 1, MAX_SAMPLES);
+
+        let previousT = 0;
+        let aboveTerrain = !mercatorIsBelowTerrain(ray, 0);
+
+        for (let i = 0; i <= samples; i++) {
+            const t = tStart + (tEnd - tStart) * i / samples;
+
+            if (!aboveTerrain) {
+                aboveTerrain = !mercatorIsBelowTerrain(ray, t);
+            } else if (mercatorIsBelowTerrain(ray, t)) {
+                const {lo, hi} = bisect(ray, mercatorIsBelowTerrain, previousT, t, MERCATOR_BISECT_EPSILON_WORLD_PX / horizontalLength);
+                const sampleLo = mercatorSampleAt(ray, lo);
+                const sampleHi = mercatorSampleAt(ray, hi);
+                const fLo = near[2] + lo * dz - sampleLo.elevation;
+                const fHi = near[2] + hi * dz - sampleHi.elevation;
+                const hit = sampleLo.covered && fLo > fHi ? clamp(lo + fLo * (hi - lo) / (fLo - fHi), lo, hi) : hi;
+                return new MercatorCoordinate(
+                    (near[0] + hit * dx) / worldSize,
+                    (near[1] + hit * dy) / worldSize,
+                    mercatorSampleAt(ray, hit).elevation);
+            }
+
+            previousT = t;
+        }
+
+        return null;
+    }
+
     /**
-     * Intersects the ray through a screen point with the horizontal plane at `z`,
-     * given in meters relative to the plane at the center's elevation (not mercator units).
+     * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
      */
-    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
-
-        // calculate point-coordinate on flat earth
-        const targetZ = z ? z : 0;
-        // since we don't know the correct projected z value for the point,
-        // unproject two points to get a line and then find the point on that
-        // line with z=0
-
+    private getRaySegmentFromPixel(p: Point): RaySegment {
         const coord0 = [p.x, p.y, 0, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
 
@@ -375,18 +449,28 @@ export class MercatorTransform implements ITransform {
 
         const w0 = coord0[3];
         const w1 = coord1[3];
-        const x0 = coord0[0] / w0;
-        const x1 = coord1[0] / w1;
-        const y0 = coord0[1] / w0;
-        const y1 = coord1[1] / w1;
-        const z0 = coord0[2] / w0;
-        const z1 = coord1[2] / w1;
+        // The pixel matrix is built before the elevation translate, so unprojected z is relative to the center's elevation.
+        const elevation = this.elevation;
 
-        const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
+        return {
+            near: [coord0[0] / w0, coord0[1] / w0, coord0[2] / w0 + elevation],
+            far: [coord1[0] / w1, coord1[1] / w1, coord1[2] / w1 + elevation]
+        };
+    }
+
+    /**
+     * Intersects the ray through a screen point with the horizontal plane at `z`,
+     * given in meters relative to the plane at the center's elevation (not mercator units).
+     */
+    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
+        const targetZ = z ? z : 0;
+        const {near, far} = this.getRaySegmentFromPixel(p);
+
+        const t = near[2] === far[2] ? 0 : (targetZ + this.elevation - near[2]) / (far[2] - near[2]);
 
         return new MercatorCoordinate(
-            interpolates.number(x0, x1, t) / this.worldSize,
-            interpolates.number(y0, y1, t) / this.worldSize,
+            interpolates.number(near[0], far[0], t) / this.worldSize,
+            interpolates.number(near[1], far[1], t) / this.worldSize,
             targetZ);
     }
 
@@ -414,8 +498,7 @@ export class MercatorTransform implements ITransform {
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p);
-            return coordinate != null;
+            return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
         return (p.y > this.height / 2 - getMercatorHorizon(this));
     }
@@ -847,4 +930,12 @@ export class MercatorTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.calculatePosMatrix(tileID);
     }
+}
+
+function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
+    return sampleAt(ray.index, ray.exaggeration, (ray.near[0] + t * ray.dx) / ray.worldSize, (ray.near[1] + t * ray.dy) / ray.worldSize);
+}
+
+function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
+    return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
 }

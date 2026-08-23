@@ -77,7 +77,6 @@ describe('render to texture', () => {
         releaseRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
-            terrainCoords: vi.fn(),
         }
     } as any as Painter;
     const map = {painter} as Map;
