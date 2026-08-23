@@ -138,6 +138,16 @@ export class TransformHelper implements ITransformGetters {
     _minElevationForCurrentTile: number;
     _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
+    /**
+     * Whether the camera is still where it was initialized and has never been placed somewhere on purpose.
+     * It starts out `true` and is cleared by every setter that moves the camera (center, zoom, bearing,
+     * pitch, roll, fov, padding), whether the move came from the API, a hash or a user gesture.
+     * The map reads it once, when a style finishes loading: only an unmodified transform adopts the
+     * style's `center`, `zoom`, `bearing`, `pitch` and `roll`, so that an explicitly positioned camera
+     * is not thrown away by the style. Updates that merely snap the camera back into a valid range -
+     * constraining, and applying a new min/max zoom or pitch - deliberately preserve the flag, since
+     * they are not the user asking for a particular camera position.
+     */
     _unmodified: boolean;
 
     _constraining: boolean;
@@ -254,28 +264,36 @@ export class TransformHelper implements ITransformGetters {
     setMinZoom(zoom: number): void {
         if (this._minZoom === zoom) return;
         this._minZoom = zoom;
+        const unmodified = this._unmodified;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
+        this._unmodified = unmodified;
     }
 
     get maxZoom(): number { return this._maxZoom; }
     setMaxZoom(zoom: number): void {
         if (this._maxZoom === zoom) return;
         this._maxZoom = zoom;
+        const unmodified = this._unmodified;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
+        this._unmodified = unmodified;
     }
 
     get minPitch(): number { return this._minPitch; }
     setMinPitch(pitch: number): void {
         if (this._minPitch === pitch) return;
         this._minPitch = pitch;
+        const unmodified = this._unmodified;
         this.setPitch(Math.max(this.pitch, pitch));
+        this._unmodified = unmodified;
     }
 
     get maxPitch(): number { return this._maxPitch; }
     setMaxPitch(pitch: number): void {
         if (this._maxPitch === pitch) return;
         this._maxPitch = pitch;
+        const unmodified = this._unmodified;
         this.setPitch(Math.min(this.pitch, pitch));
+        this._unmodified = unmodified;
     }
 
     get renderWorldCopies(): boolean { return this._renderWorldCopies; }
