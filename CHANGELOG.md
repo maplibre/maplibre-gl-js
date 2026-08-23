@@ -5,7 +5,9 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix labels briefly appearing too large when zooming out several levels at once (e.g. a scroll-wheel or pinch fling) with a zoom-dependent `text-size`/`icon-size` ([#8175](https://github.com/maplibre/maplibre-gl-js/pull/8175)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Fix globe tile selection measuring distances from the ground point below the camera instead of the camera itself, refining some views past the requested zoom and leaving others coarser ([#8187](https://github.com/maplibre/maplibre-gl-js/pull/8187)) (by [@Alchez](https://github.com/Alchez))
+- Upload the `color-relief` DEM texture once per tile instead of on every frame ([#8209](https://github.com/maplibre/maplibre-gl-js/pull/8209))
 - _...Add new stuff here..._
 
 ## 6.5.0
