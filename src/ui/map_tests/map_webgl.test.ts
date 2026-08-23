@@ -123,7 +123,7 @@ test('a WebGL style image is told to release its GPU resources on context loss, 
     map.remove();
 });
 
-test('WebGL2 context creation error fires ErrorEvent with structured GPUInitializationError', () => {
+test('WebGL2 context creation failure throws a structured GPUInitializationError', () => {
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2') {
             const errorEvent = new Event('webglcontextcreationerror');
@@ -132,26 +132,45 @@ test('WebGL2 context creation error fires ErrorEvent with structured GPUInitiali
             return null;
         }
     };
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    createMap({canvasContextAttributes: {antialias: true}});
-    const err = consoleErrorSpy.mock.calls[0][0];
-    expect(err.constructor).toBe(GPUInitializationError);
+    const container = window.document.createElement('div');
+    let thrownError: unknown;
+
+    try {
+        createMap({container, canvasContextAttributes: {antialias: true}});
+    } catch (error) {
+        thrownError = error;
+    }
+
+    expect(thrownError).toBeInstanceOf(GPUInitializationError);
+    const err = thrownError as GPUInitializationError;
     expect(err.message).toBe('WebGL2 is required to display this map. We are sorry, but it seems that your browser does not support WebGL2, a technology for rendering 3D graphics on the web. Read more on https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL');
     expect(err.statusMessage).toBe('mocked webglcontextcreationerror message');
     expect(err.requestedAttributes.antialias).toBe(true);
-    consoleErrorSpy.mockRestore();
+    expect(container.children).toHaveLength(0);
+    expect(container.classList).not.toContain('maplibregl-map');
 });
 
 test('GPUInitializationError has null statusMessage when no webglcontextcreationerror is dispatched', () => {
     HTMLCanvasElement.prototype.getContext = function (_type: string) {
         return null;
     };
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    createMap();
-    const err = consoleErrorSpy.mock.calls[0][0];
-    expect(err.constructor).toBe(GPUInitializationError);
-    expect(err.statusMessage).toBeNull();
-    consoleErrorSpy.mockRestore();
+    const addEventListenerSpy = vi.spyOn(HTMLCanvasElement.prototype, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(HTMLCanvasElement.prototype, 'removeEventListener');
+    let thrownError: unknown;
+
+    try {
+        createMap();
+    } catch (error) {
+        thrownError = error;
+    }
+
+    expect(thrownError).toBeInstanceOf(GPUInitializationError);
+    expect((thrownError as GPUInitializationError).statusMessage).toBeNull();
+    const creationErrorListener = addEventListenerSpy.mock.calls.find(([type]) => type === 'webglcontextcreationerror')?.[1];
+    expect(creationErrorListener).toBeDefined();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('webglcontextcreationerror', creationErrorListener);
+    addEventListenerSpy.mockRestore();
+    removeEventListenerSpy.mockRestore();
 });
 
 test('Hit WebGL max drawing buffer limit', () => {
