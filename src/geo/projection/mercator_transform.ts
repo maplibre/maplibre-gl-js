@@ -385,7 +385,6 @@ export class MercatorTransform implements ITransform {
 
     /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
-        // The index is built lazily by the terrain; null means it has no renderable tiles.
         const index = terrain.getCoverageIndex();
         if (!index) return null;
 
