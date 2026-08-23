@@ -9,121 +9,111 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {GlobeTransform} from '../geo/projection/globe_transform.ts';
+import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data.ts';
 import type {Painter} from './painter.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
+import {createDEM} from '../util/test/util.ts';
 
 describe('Terrain', () => {
     let gl: WebGL2RenderingContext;
 
     beforeEach(() => {
         gl = createNullGL();
-        vi.spyOn(gl, 'readPixels').mockImplementation((_1, _2, _3, _4, _5, _6, rgba) => {
-            rgba[0] = 0;
-            rgba[1] = 0;
-            rgba[2] = 255;
-            rgba[3] = 255;
-        });
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    test('pointCoordinate should not return null', () => {
-        expect.assertions(3);
+    function createFlatTerrain(elevation: number) {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(2048, 512);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setZoom(0);
         const painter = {
             context: new Context(gl),
-            width: 1,
-            height: 1,
-            pixelRatio: 1,
-            transform: {center: {lng: 0}},
-            maybeDrawDepth: vi.fn(),
-            maybeDrawCoords: vi.fn(),
+            width: 2048,
+            height: 512,
+            transform,
         } as any as Painter;
-        const tileManager = {_source: {tileSize: 512}} as TileManager;
-        const getTileByID = (tileID) : Tile => {
-            if (tileID !== 'abcd') {
-                return null;
-            }
-            return {
-                tileID: new OverscaledTileID(0, 0, 0, 0, 0),
-            } as any as Tile;
-        };
+        const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
-        terrain.tileManager.getTileByID = getTileByID;
-        terrain.coordsIndex.push('abcd');
+        const dem = createDEM(() => elevation);
+        const tileIDs = [-2, -1, 0, 1, 2].map(wrap => new OverscaledTileID(0, wrap, 0, 0, 0));
+        terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as any as Tile);
+        terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem}) as any as Tile;
+        terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
+        return terrain;
+    }
 
-        const coordinate = terrain.pointCoordinate(new Point(0, 0));
+    test('screenPointToMercatorCoordinate returns the terrain hit instead of the flat plane', () => {
+        const terrain = createFlatTerrain(1000);
+        const p = new Point(1024, 256);
 
-        expect(coordinate).not.toBeNull();
-        expect(painter.maybeDrawDepth).toHaveBeenCalled();
-        expect(painter.maybeDrawCoords).toHaveBeenCalled();
-
+        expect(terrain.painter.transform.screenPointToMercatorCoordinate(p).z).toBe(0);
+        expect(terrain.painter.transform.screenPointToMercatorCoordinate(p, terrain).z).toBeCloseTo(1000, 6);
     });
 
-    const setupMercatorOverflow = (pixelRatio: number = 1) => {
-        const WORLD_WIDTH = 4;
-        const painter = {
-            context: new Context(gl),
-            width: WORLD_WIDTH,
-            height: 1,
-            maybeDrawDepth: vi.fn(),
-            maybeDrawCoords: vi.fn(),
-            pixelRatio,
-        } as any as Painter;
-        const tileManager = {_source: {tileSize: 512}} as TileManager;
-        const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
-        const tileIdsToWraps = {a: -1, b: 0, c: 1, d: 2};
-        terrain.tileManager.getTileByID = (id) => {
-            return {
-                tileID: {
-                    canonical: {x: 0, y: 0, z: 0},
-                    wrap: tileIdsToWraps[id]
-                }
-            } as any as Tile;
-        };
-        terrain.getElevation = () => 0;
-        terrain.coordsIndex = Object.keys(tileIdsToWraps);
-        vi.spyOn(gl, 'readPixels').mockImplementation((x, _2, _3, _4, _5, _6, rgba) => {
-            rgba[0] = 0;
-            rgba[1] = 0;
-            rgba[2] = 0;
-            rgba[3] = 255 - x / pixelRatio;
-        });
-        return terrain;
-    };
+    test('a globe transform that renders mercator picks with the mercator raycast', () => {
+        const terrain = createFlatTerrain(0);
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(2048, 512);
+        globeTransform.setZoom(0);
+        globeTransform.setTransitionState(0);
 
-    test(
-        `pointCoordinate should return negative mercator x
-        if the point is on the LEFT outside the central globe`,
-        () => {
-            const terrain = setupMercatorOverflow();
-            const coordinate = terrain.pointCoordinate(new Point(0, 0));
+        const coordinate = globeTransform.screenTerrainPointToMercatorCoordinate(new Point(1024, 256), terrain);
 
-            expect(coordinate.x).toBe(-1);
-        });
+        expect(coordinate).not.toBeNull();
+        expect(coordinate.x).toBeCloseTo(0.5, 10);
+        expect(coordinate.y).toBeCloseTo(0.5, 10);
+        expect(coordinate.z).toBeCloseTo(0, 10);
+    });
 
-    test(
-        `pointCoordinate should return mercator x greater than 1
-        if the point is on the RIGHT outside the central globe`,
-        () => {
-            const terrain = setupMercatorOverflow();
-            const coordinate = terrain.pointCoordinate(new Point(3, 0));
+    test('a globe transform that renders the globe picks with the globe raycast', () => {
+        const terrain = createFlatTerrain(0);
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(2048, 512);
+        globeTransform.setZoom(1);
+        const p = new Point(1100, 280);
 
-            expect(coordinate.x).toBe(2);
+        const coordinate = globeTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
+        const verticalPerspective = new VerticalPerspectiveTransform();
+        verticalPerspective.apply(globeTransform, false);
+        const expected = verticalPerspective.screenTerrainPointToMercatorCoordinate(p, terrain);
+
+        expect(expected).not.toBeNull();
+        expect(coordinate).not.toBeNull();
+        expect(coordinate.x).toBeCloseTo(expected.x, 12);
+        expect(coordinate.y).toBeCloseTo(expected.y, 12);
+        expect(coordinate.z).toBeCloseTo(expected.z, 12);
+    });
+
+    test('depthAtPoint decodes the depth framebuffer readback', () => {
+        const terrain = createFlatTerrain(0);
+        vi.spyOn(terrain, 'getFramebuffer').mockReturnValue({framebuffer: null} as any);
+        vi.spyOn(terrain.painter.context.gl, 'readPixels').mockImplementation((_x, _y, _w, _h, _f, _t, rgba) => {
+            (rgba as Uint8Array).set([0, 0, 0, 128]);
         });
 
-    test(
-        'pointCoordinate should respect painter.pixelRatio',
-        () => {
-            const terrain = setupMercatorOverflow(2);
+        expect(terrain.depthAtPoint(new Point(10, 20))).toBeCloseTo(0.5, 10);
+    });
 
-            expect(terrain.pointCoordinate(new Point(0, 0)).x).toBe(-1);
-            expect(terrain.pointCoordinate(new Point(3, 0)).x).toBe(2);
-        });
+    test('getCoverageIndex sees newly renderable tiles after resetElevationCache', () => {
+        const terrain = createFlatTerrain(0);
+        const renderableTiles = terrain.tileManager.getRenderableTiles;
+        terrain.tileManager.getRenderableTiles = () => [];
+        expect(terrain.getCoverageIndex()).toBeNull();
+
+        terrain.tileManager.getRenderableTiles = renderableTiles;
+        expect(terrain.getCoverageIndex()).toBeNull();
+
+        terrain.resetElevationCache();
+        expect(terrain.getCoverageIndex()).not.toBeNull();
+    });
 
     test('Calculate tile minimum and maximum elevation', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
@@ -416,8 +406,7 @@ describe('Terrain', () => {
         const tileManager = {_source: {tileSize: 512}, destruct: vi.fn()} as any as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
 
-        terrain.getCoordsTexture();
-        terrain.getFramebuffer('coords');
+        terrain.getFramebuffer();
         terrain.getTerrainMesh(new OverscaledTileID(0, 0, 0, 0, 0));
 
         expect(() => terrain.destroy()).not.toThrow();
