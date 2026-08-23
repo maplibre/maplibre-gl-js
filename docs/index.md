@@ -9,10 +9,10 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-15/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-15/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -72,7 +72,7 @@ See the [ESM](#esm) section below for setting up the worker URL with your bundle
 
 MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
 
-For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
+For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup, Turbopack), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
 Upgrading from v5? See the [v5 to v6 migration guide](./guides/v5-to-v6-migration-guide.md).
 
@@ -82,24 +82,28 @@ Pick your setup:
 
 === "Vite"
 
-    Use Vite's `?url` query to get the worker file's bundled URL:
+    Use Vite's `?worker&url` query to get a bundled, self-contained worker URL:
 
     ```ts
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
-    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
     setWorkerUrl(workerUrl);
 
     const map = new Map({/* … */});
     ```
 
-    Works in modern Vite, dev and production.
+    Use `?worker&url` rather than plain `?url`: the dist worker imports its
+    sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim
+    in production builds without that sibling — the worker then fails on its
+    first import and no vector tiles load. `?worker&url` routes the file
+    through Vite's worker pipeline, emitting a self-contained chunk. Dev mode
+    works with either.
 
     If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
-    ```ts
-    // vite.config.ts
+    ```ts title="vite.config.ts"
     export default defineConfig({
         ssr: {noExternal: ['maplibre-gl']}
     });
@@ -118,10 +122,11 @@ Pick your setup:
 
     rspack and rsbuild use the same pattern.
 
+    Next.js is an exception, including in its `next build --webpack` mode. See the Turbopack tab.
+
 === "esbuild"
 
-    ```js
-    // build.js
+    ```js title="build.js"
     import * as esbuild from 'esbuild';
     import {copyFileSync} from 'fs';
 
@@ -138,8 +143,7 @@ Pick your setup:
     );
     ```
 
-    ```ts
-    // src/main.ts
+    ```ts title="src/main.ts"
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -150,8 +154,7 @@ Pick your setup:
 
 === "Rollup"
 
-    ```ts
-    // rollup.config.js
+    ```ts title="rollup.config.js"
     import copy from 'rollup-plugin-copy';
 
     export default {
@@ -166,8 +169,7 @@ Pick your setup:
     };
     ```
 
-    ```ts
-    // src/main.ts
+    ```ts title="src/main.ts"
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -176,15 +178,64 @@ Pick your setup:
     const map = new Map({/* … */});
     ```
 
+=== "Turbopack"
+
+    Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
+
+    Turbopack turns `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
+
+    ```js title="scripts/copy-maplibre-worker.mjs"
+    import {copyFileSync, mkdirSync} from 'node:fs';
+    import {createRequire} from 'node:module';
+    import path from 'node:path';
+
+    const dist = path.join(path.dirname(createRequire(import.meta.url).resolve('maplibre-gl/package.json')), 'dist');
+    const dest = path.join(process.cwd(), 'public', 'maplibre');
+
+    mkdirSync(dest, {recursive: true});
+    for (const file of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
+        copyFileSync(path.join(dist, file), path.join(dest, file));
+    }
+    ```
+
+    ```json title="package.json"
+    {
+        "scripts": {
+            "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
+            "predev": "node ./scripts/copy-maplibre-worker.mjs"
+        }
+    }
+    ```
+
+    ```ts title="app/map.tsx"
+    'use client';
+
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
+
+    setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
+
+    const map = new Map({/* … */});
+    ```
+
+    The script copies both files, not just the worker.
+    This is because the worker imports `maplibre-gl-shared.mjs` by relative path, so both have to land in the same directory.
+
+    The copy happens at build time, from `node_modules`, so it always matches the installed version.
+    npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary.
+    `postinstall` alone won't do it since package managers skip lifecycle scripts when an install has no work to do, and `--ignore-scripts` skips them entirely.
+
+    Next.js needs this in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`, since the asset handling above is Next's rather than Turbopack's alone.
+
 === "CDN / No bundler"
 
     Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
 
     ```html
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-15/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.css" />
     <div id="map" style="height: 400px"></div>
     <script type="module">
-        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-15/dist/maplibre-gl.mjs';
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.mjs';
 
         const map = new maplibregl.Map({
             container: 'map',

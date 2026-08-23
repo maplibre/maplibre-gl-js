@@ -14,7 +14,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
-import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program.ts';
+import {type ProjectionPreludeUniformsType, projectionUniforms, projectionUniformValues} from './program/projection_program.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -30,13 +30,34 @@ function getTokenizedAttributesAndUniforms(array: string[]): string[] {
     return result;
 }
 
+function getIntegerAttributeNames(gl: WebGL2RenderingContext, program: WebGLProgram): Set<string> {
+    const integerTypes = new Set<number>([
+        gl.INT, gl.INT_VEC2, gl.INT_VEC3, gl.INT_VEC4,
+        gl.UNSIGNED_INT, gl.UNSIGNED_INT_VEC2, gl.UNSIGNED_INT_VEC3, gl.UNSIGNED_INT_VEC4
+    ]);
+    const names = new Set<string>();
+    const numActiveAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+    for (let i = 0; i < numActiveAttributes; i++) {
+        const attribute = gl.getActiveAttrib(program, i);
+        if (attribute && integerTypes.has(attribute.type)) {
+            names.add(attribute.name);
+        }
+    }
+    return names;
+}
+
+export type ProgramAttribute = {
+    location: number;
+    isInteger: boolean;
+};
+
 /**
  * @internal
  * A webgl program to execute in the GPU space
  */
 export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
-    attributes: {[_: string]: number};
+    attributes: {[_: string]: ProgramAttribute};
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
@@ -123,23 +144,19 @@ export class Program<Us extends UniformBindings> {
 
         this.numAttributes = allAttrInfo.length;
 
-        for (let i = 0; i < this.numAttributes; i++) {
-            if (allAttrInfo[i]) {
-                this.attributes[allAttrInfo[i]] = i;
-            }
-        }
-
         gl.linkProgram(this.program);
-
-        for (const name in this.attributes) {
-            const actual = gl.getAttribLocation(this.program, name);
-            if (actual >= 0) {
-                this.attributes[name] = actual;
-            }
-        }
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
+        }
+
+        const integerAttributeNames = getIntegerAttributeNames(gl, this.program);
+        for (const name of allAttrInfo) {
+            if (!name) continue;
+            const location = gl.getAttribLocation(this.program, name);
+            if (location >= 0) {
+                this.attributes[name] = {location, isInteger: integerAttributeNames.has(name)};
+            }
         }
 
         gl.deleteShader(vertexShader);
@@ -202,9 +219,9 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (projectionData) {
-            for (const fieldName in projectionData) {
-                const uniformName = projectionObjectToUniformMap[fieldName];
-                this.projectionUniforms[uniformName].set(projectionData[fieldName]);
+            const values = projectionUniformValues(projectionData);
+            for (const name in this.projectionUniforms) {
+                this.projectionUniforms[name].set(values[name]);
             }
         }
 

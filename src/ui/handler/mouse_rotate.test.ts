@@ -17,7 +17,7 @@ beforeEach(() => {
 describe('mouse rotate', () => {
     test('MouseRotateHandler.isActive', () => {
         const map = createMap({interactive: true});
-        const mouseRotate = map.handlers._handlersById.mouseRotate;
+        const mouseRotate = map._handlers._handlersById.mouseRotate;
 
         // Prevent inertial rotation.
         vi.spyOn(timeControl, 'now').mockReturnValue(0);
@@ -40,7 +40,7 @@ describe('mouse rotate', () => {
 
     test('MouseRotateHandler.isActive #4622 regression test', () => {
         const map = createMap({interactive: true});
-        const mouseRotate = map.handlers._handlersById.mouseRotate;
+        const mouseRotate = map._handlers._handlersById.mouseRotate;
 
         // Prevent inertial rotation.
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2});

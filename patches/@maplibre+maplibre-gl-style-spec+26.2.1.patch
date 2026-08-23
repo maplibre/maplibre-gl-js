@@ -1,0 +1,36 @@
+diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs
+index 4fd5a08..400ec0e 100644
+--- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs
++++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs
+@@ -545,6 +545,7 @@
+ 			}
+ 		},
+ 		layout_symbol: {
++"symbol-elevation": { "type": "number", "default": 0, "units": "meters", "doc": "Offsets the icon and text elevation, in meters above the ground or terrain surface. Negative values lower the symbol.", "requires": [ { "symbol-placement": [ "point" ] } ], "expression": { "interpolated": true, "parameters": [ "zoom", "feature" ] }, "property-type": "data-driven" },
+ 			"symbol-placement": {
+ 				"type": "enum",
+ 				"values": {
+diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
+index 1f8cb92..f046ae2 100644
+--- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
++++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
+@@ -541,6 +541,7 @@ var v8_default = {
+ 		}
+ 	},
+ 	layout_symbol: {
++"symbol-elevation": { "type": "number", "default": 0, "units": "meters", "doc": "Offsets the icon and text elevation, in meters above the ground or terrain surface. Negative values lower the symbol.", "requires": [ { "symbol-placement": [ "point" ] } ], "expression": { "interpolated": true, "parameters": [ "zoom", "feature" ] }, "property-type": "data-driven" },
+ 		"symbol-placement": {
+ 			"type": "enum",
+ 			"values": {
+diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json b/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json
+index 95de93c..c17964e 100644
+--- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json
++++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json
+@@ -1388,6 +1388,7 @@
+     }
+   },
+   "layout_symbol": {
++"symbol-elevation": { "type": "number", "default": 0, "units": "meters", "doc": "Offsets the icon and text elevation, in meters above the ground or terrain surface. Negative values lower the symbol.", "requires": [ { "symbol-placement": [ "point" ] } ], "expression": { "interpolated": true, "parameters": [ "zoom", "feature" ] }, "property-type": "data-driven" },
+     "symbol-placement": {
+       "type": "enum",
+       "values": {

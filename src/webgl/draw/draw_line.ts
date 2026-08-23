@@ -205,7 +205,7 @@ function drawLineTiles(
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = useTerrain ? painter.style.map.terrain?.getTerrainData(coord) : null;
+        const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, isRenderingToTexture) : null;
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);
@@ -258,4 +258,3 @@ function drawLineTiles(
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }
 }
-

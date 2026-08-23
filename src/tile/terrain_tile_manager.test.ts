@@ -1,4 +1,4 @@
-import {describe, beforeAll, afterAll, test, expect, vi, type Mock} from 'vitest';
+import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
 import {TerrainTileManager} from './terrain_tile_manager.ts';
 import {Style} from '../style/style.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -55,7 +55,7 @@ describe('TerrainTileManager', () => {
         await loadPromise;
         const source = createSource({url: '/source.json'});
         server.respond();
-        style.addSource('terrain', source as any);
+        style.addSource('terrain', source.serialize());
         tsc = new TerrainTileManager(style.tileManagers.terrain);
     });
 
@@ -248,7 +248,7 @@ describe('TerrainTileManager', () => {
 
             tsc.releaseAllRTT();
 
-            expect((painter.releaseRTT as Mock<typeof painter.releaseRTT>).mock.calls.length).toBe(Object.keys(tiles).length);
+            expect((vi.mocked(painter.releaseRTT))).toHaveBeenCalledTimes(Object.keys(tiles).length);
             for (const key in rttObjects) {
                 expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[key]);
                 expect(tiles[key].getRTT(0)).toBeUndefined();

@@ -41,7 +41,7 @@ describe('LngLatBounds', () => {
         const t1 = () => {
             bounds.getCenter();
         };
-        expect(t1).toThrow();
+        expect(t1).toThrow(TypeError);
     });
 
     test('extend with coordinate', () => {
@@ -336,25 +336,25 @@ describe('LngLatBounds', () => {
             test('point is in bounds', () => {
                 const llb = new LngLatBounds([-1, -1], [1, 1]);
                 const ll = {lng: 0, lat: 0};
-                expect(llb.contains(ll)).toBeTruthy();
+                expect(llb.contains(ll)).toBe(true);
             });
 
             test('point is not in bounds', () => {
                 const llb = new LngLatBounds([-1, -1], [1, 1]);
                 const ll = {lng: 3, lat: 3};
-                expect(llb.contains(ll)).toBeFalsy();
+                expect(llb.contains(ll)).toBe(false);
             });
 
             test('point is in bounds that spans dateline', () => {
                 const llb = new LngLatBounds([190, -10], [170, 10]);
                 const ll = {lng: 180, lat: 0};
-                expect(llb.contains(ll)).toBeTruthy();
+                expect(llb.contains(ll)).toBe(true);
             });
 
             test('point is not in bounds that spans dateline', () => {
                 const llb = new LngLatBounds([190, -10], [170, 10]);
                 const ll = {lng: 0, lat: 0};
-                expect(llb.contains(ll)).toBeFalsy();
+                expect(llb.contains(ll)).toBe(false);
             });
         });
     });

@@ -29,12 +29,14 @@ import type {StyleLayer} from '../style/style_layer.ts';
 import type {CrossFaded} from '../style/properties.ts';
 import type {LineAtlas} from './line_atlas.ts';
 import type {ImageManager} from './image_manager.ts';
+import type {PatternAtlas} from './pattern_atlas.ts';
 import type {GlyphManager} from './glyph_manager.ts';
 import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
 import type {IndexBuffer} from '../webgl/index_buffer.ts';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
+import type {TerrainData} from './terrain.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
@@ -139,6 +141,7 @@ export class Painter {
     options: PainterOptions;
     lineAtlas: LineAtlas;
     imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
     depthRangeFor3D: DepthRangeType;
     opaquePassCutoff: number;
@@ -283,6 +286,7 @@ export class Painter {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0,
             fallbackMatrix: matrix,
+            clipAntimeridian: false,
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
@@ -316,12 +320,14 @@ export class Painter {
             stencilRefs[tileID.key] = this.nextStencilID++;
         }
 
-        // A two-pass approach is needed. See comment in draw_raster.ts for more details.
-        // However, we use a simpler approach because we don't care about overdraw here.
+        // A two-pass approach is needed for subdivided projections. See comment in draw_raster.ts
+        // for more details. In non-subdivided projections the border flag does not change the mesh,
+        // so one pass produces the same stencil mask.
+        if (this.style.projection.useSubdivision) {
+            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+        }
 
-        // First pass - draw tiles with borders and with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
-        // Second pass - draw borderless tiles with GL_ALWAYS
+        // Final pass - draw borderless tiles with GL_ALWAYS
         this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
 
         this._tileClippingMaskIDs = stencilRefs;
@@ -338,7 +344,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
+            const terrainData = this.getTerrainDataForTile(tileID, renderToTexture);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -351,6 +357,11 @@ export class Painter {
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
+    }
+
+    getTerrainDataForTile(tileID: OverscaledTileID, isRenderingToTexture: boolean): TerrainData | null {
+        if (isRenderingToTexture && this.style.projection?.name === 'mercator') return null;
+        return this.style.map.terrain?.getTerrainData(tileID) || null;
     }
 
     /**
@@ -509,6 +520,7 @@ export class Painter {
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
+        this.patternAtlas = style.patternAtlas;
         this.glyphManager = style.glyphManager;
 
         this.symbolFadeChange = style.placement.symbolFadeChange(now());
@@ -566,12 +578,6 @@ export class Painter {
 
             this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
-
-        // Execute offscreen GPU tasks of the projection manager
-        this.style.projection?.updateGPUdependent({
-            context: this.context,
-            useProgram: (name: string) => this.useProgram(name)
-        });
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);
@@ -674,7 +680,7 @@ export class Painter {
         }
 
         mat4.copy(prevMatrix, currMatrix);
-        this.terrainFacilitator.renderTime = Date.now();
+        this.terrainFacilitator.renderTime = now();
         this.terrainFacilitator.depthDirty = false;
         this.terrainFacilitator.coordsDirty = true;
         this.drawFunctions.terrainDepth(this, this.style.map.terrain);
@@ -804,8 +810,8 @@ export class Painter {
     isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean {
         if (!image) return false;
         if (!image.from || !image.to) return true;
-        const imagePosA = this.imageManager.getPattern(image.from.toString());
-        const imagePosB = this.imageManager.getPattern(image.to.toString());
+        const imagePosA = this.patternAtlas.getPattern(image.from.toString());
+        const imagePosB = this.patternAtlas.getPattern(image.to.toString());
         return !imagePosA || !imagePosB;
     }
 
@@ -854,18 +860,7 @@ export class Painter {
      * in custom layers.
      */
     setCustomLayerDefaults(): void {
-        // Prevent custom layers from unintentionally modify the last VAO used.
-        // All other state is state is restored on it's own, but for VAOs it's
-        // simpler to unbind so that we don't have to track the state of VAOs.
-        this.context.unbindVAO();
-
-        // The default values for this state is meaningful and often expected.
-        // Leaving this state dirty could cause a lot of confusion for users.
-        this.context.cullFace.setDefault();
-        this.context.activeTexture.setDefault();
-        this.context.pixelStoreUnpack.setDefault();
-        this.context.pixelStoreUnpackPremultiplyAlpha.setDefault();
-        this.context.pixelStoreUnpackFlipY.setDefault();
+        this.context.setCustomLayerDefaults();
     }
 
     /*

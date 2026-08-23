@@ -1,13 +1,14 @@
 import {DOM} from '../util/dom.ts';
 import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
-import type {PositionAnchor} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
+import Point from '@mapbox/point-geometry';
+
+import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
-import {type Popup, type Offset} from './popup.ts';
+import type {Popup, Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {MapMouseEvent, MapTouchEvent} from './events.ts';
 import type {PointLike} from './camera.ts';
@@ -16,6 +17,19 @@ import type {PointLike} from './camera.ts';
  * Alignment options of rotation and pitch
  */
 export type Alignment = 'map' | 'viewport' | 'auto';
+
+/**
+ * Screen-pixel deltas applied when a focused draggable marker is moved with the arrow keys.
+ */
+const ARROW_KEY_DELTAS: Partial<Record<KeyboardEvent['key'], [number, number]>> = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1]
+};
+
+const KEYBOARD_DRAG_SMALL_STEP = 1;
+const KEYBOARD_DRAG_LARGE_STEP = 10;
 
 /**
  * The {@link Marker} options object
@@ -51,6 +65,10 @@ export type MarkerOptions = {
     scale?: number;
     /**
      * A boolean indicating whether or not a marker is able to be dragged to a new position on the map.
+     * A draggable default marker also becomes keyboard focusable and, while focused, moves by
+     * 1 screen pixel per arrow-key press (10 with Shift), firing the same `dragstart`/`drag`/`dragend`
+     * events as pointer dragging. Markers with a custom `element` keep their focusability and
+     * keyboard behavior application-owned.
      * @defaultValue false
      */
     draggable?: boolean;
@@ -221,11 +239,13 @@ export class Marker extends Evented<MarkerEventType> {
     _rotation: number;
     _pitchAlignment: Alignment;
     _rotationAlignment: Alignment;
-    _originalTabIndex: string; // original tabindex of _element
     _opacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
+    _roleManaged: boolean;
+    _tabIndexManaged: boolean;
+    _keyboardDragActive: boolean;
 
     /**
      * @param options - the options
@@ -240,6 +260,9 @@ export class Marker extends Evented<MarkerEventType> {
         this._clickTolerance = options?.clickTolerance || 0;
         this._subpixelPositioning = options?.subpixelPositioning || false;
         this._isDragging = false;
+        this._roleManaged = false;
+        this._tabIndexManaged = false;
+        this._keyboardDragActive = false;
         this._state = 'inactive';
         this._rotation = options?.rotation || 0;
         this._rotationAlignment = options?.rotationAlignment || 'auto';
@@ -392,15 +415,11 @@ export class Marker extends Evented<MarkerEventType> {
         this.remove();
         this._map = map;
 
-        if (!this._element.hasAttribute('aria-label')) {
+        if (this._defaultMarker && !this._element.hasAttribute('aria-label')) {
             this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
         }
 
-        // aria-label is set either by user or above default, so set role
-        // since div is interactive and cannot have aria-label without a role
-        if (!this._element.hasAttribute('role')) {
-            this._element.setAttribute('role', 'button');
-        }
+        this._updateAccessibilityRole();
 
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
@@ -448,6 +467,12 @@ export class Marker extends Evented<MarkerEventType> {
             delete this._map;
         }
         this._element.removeEventListener('click', this._onClick);
+        this._element.removeEventListener('keydown', this._onKeyDown);
+        this._element.removeEventListener('keyup', this._onKeyUp);
+        this._element.removeEventListener('blur', this._onBlur);
+        this._element.removeEventListener('keypress', this._onKeyPress);
+        // Drop any in-flight keyboard drag silently, like a pointer drag interrupted by remove().
+        this._keyboardDragActive = false;
         this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
@@ -521,10 +546,6 @@ export class Marker extends Evented<MarkerEventType> {
             this._popup.remove();
             this._popup = null;
             this._element.removeEventListener('keypress', this._onKeyPress);
-
-            if (!this._originalTabIndex) {
-                this._element.removeAttribute('tabindex');
-            }
         }
 
         if (popup) {
@@ -545,13 +566,11 @@ export class Marker extends Evented<MarkerEventType> {
             }
             this._popup = popup;
 
-            this._originalTabIndex = this._element.getAttribute('tabindex');
-            if (!this._originalTabIndex) {
-                this._element.setAttribute('tabindex', '0');
-            }
             this._element.addEventListener('keypress', this._onKeyPress);
         }
 
+        this._updateTabIndex();
+        this._updateAccessibilityRole();
         return this;
     }
 
@@ -580,6 +599,57 @@ export class Marker extends Evented<MarkerEventType> {
             this.togglePopup();
         }
     };
+
+    /**
+     * Move a focused draggable default marker with the arrow keys
+     * (1 screen pixel per keydown; 10 with Shift).
+     * Mirrors the pointer drag gesture: the position updates before `dragstart`
+     * fires on the first movement, every movement fires `drag`, and releasing
+     * the arrow key (or losing focus) fires `dragend`. Holding a key down
+     * produces repeated `drag` events within a single gesture.
+     */
+    _onKeyDown = (e: KeyboardEvent): void => {
+        // Custom marker elements own their keyboard behavior (#7790).
+        if (!this._defaultMarker || !this._draggable || !this._map || !this._lngLat) return;
+        // Leave keys originating from elements nested inside the marker to the application.
+        if (e.composedPath()[0] !== this._element) return;
+        // Leave Alt/Ctrl/Meta shortcuts to the browser and the application.
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+        const delta = ARROW_KEY_DELTAS[e.key];
+        if (!delta) return;
+
+        e.preventDefault();
+        // The marker element lives in the canvas container, so without this the
+        // map's KeyboardHandler would also pan (or rotate/pitch with Shift) the camera.
+        e.stopPropagation();
+
+        const step = e.shiftKey ? KEYBOARD_DRAG_LARGE_STEP : KEYBOARD_DRAG_SMALL_STEP;
+        const pos = this._map.project(this._lngLat);
+        this.setLngLat(this._map.unproject(new Point(pos.x + delta[0] * step, pos.y + delta[1] * step)));
+
+        if (!this._keyboardDragActive) {
+            this._keyboardDragActive = true;
+            this.fire(new MarkerDragEvent('dragstart'));
+        }
+        this.fire(new MarkerDragEvent('drag'));
+    };
+
+    _onKeyUp = (e: KeyboardEvent): void => {
+        if (!ARROW_KEY_DELTAS[e.key]) return;
+        this._endKeyboardDrag();
+    };
+
+    _onBlur = (): void => {
+        this._endKeyboardDrag();
+    };
+
+    _endKeyboardDrag(): void {
+        if (this._keyboardDragActive) {
+            this._keyboardDragActive = false;
+            this.fire(new MarkerDragEvent('dragend'));
+        }
+    }
 
     _onMapClick = (e: MapMouseEvent): void => {
         const targetElement = e.originalEvent.target;
@@ -635,7 +705,7 @@ export class Marker extends Evented<MarkerEventType> {
 
     _updateOpacity(force: boolean = false): void {
         const terrain = this._map?.terrain;
-        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
@@ -658,8 +728,8 @@ export class Marker extends Evented<MarkerEventType> {
         // Read depth framebuffer, getting position of terrain in line of sight to marker
         const terrainDistance = map.terrain.depthAtPoint(this._pos);
         // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map.transform);
-        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map._camera.transform);
+        const markerDistance = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation);
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
@@ -667,10 +737,10 @@ export class Marker extends Evented<MarkerEventType> {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
+        const metersToCenter = -this._offset.y / map._camera.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
-        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        const markerDistanceCenter = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
 
@@ -687,12 +757,12 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.once('render', this._update);
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';
@@ -851,11 +921,15 @@ export class Marker extends Evented<MarkerEventType> {
     };
 
     /**
-     * Sets the `draggable` property and functionality of the marker
+     * Sets the `draggable` property and functionality of the marker.
+     * A draggable default marker is also keyboard focusable and movable with the
+     * arrow keys (see {@link MarkerOptions.draggable}); custom marker elements keep
+     * their focusability and keyboard behavior application-owned.
      * @param shouldBeDraggable - Turns drag functionality on/off
      */
     setDraggable(shouldBeDraggable?: boolean): this {
         this._draggable = !!shouldBeDraggable; // convert possible undefined value to false
+        this._element.classList.toggle('maplibregl-marker-draggable', this._draggable);
 
         // handle case where map may not exist yet
         // e.g. when setDraggable is called before addTo
@@ -869,6 +943,21 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
+        if (this._defaultMarker) {
+            if (this._draggable) {
+                this._element.addEventListener('keydown', this._onKeyDown);
+                this._element.addEventListener('keyup', this._onKeyUp);
+                this._element.addEventListener('blur', this._onBlur);
+            } else {
+                this._element.removeEventListener('keydown', this._onKeyDown);
+                this._element.removeEventListener('keyup', this._onKeyUp);
+                this._element.removeEventListener('blur', this._onBlur);
+                this._endKeyboardDrag();
+            }
+        }
+
+        this._updateTabIndex();
+        this._updateAccessibilityRole();
         return this;
     }
 
@@ -878,6 +967,52 @@ export class Marker extends Evented<MarkerEventType> {
      */
     isDraggable(): boolean {
         return this._draggable;
+    }
+
+    /**
+     * Keep the marker element focusable while it has built-in keyboard behavior.
+     * A popup makes any marker element interactive; dragging only manages
+     * focusability for the default marker so custom elements stay
+     * application-owned (#7790). A tabindex supplied by the application is
+     * never added, changed, or removed here.
+     */
+    _updateTabIndex(): void {
+        const needsTabIndex = !!this._popup || (this._defaultMarker && this._draggable);
+        if (needsTabIndex) {
+            if (!this._element.hasAttribute('tabindex')) {
+                this._element.setAttribute('tabindex', '0');
+                this._tabIndexManaged = true;
+            }
+        } else if (this._tabIndexManaged) {
+            // Only remove the value we set; the application may have overridden it since.
+            if (this._element.getAttribute('tabindex') === '0') {
+                this._element.removeAttribute('tabindex');
+            }
+            this._tabIndexManaged = false;
+        }
+    }
+
+    /**
+     * Keep the default marker role aligned with interactivity.
+     * Default markers need a role because `aria-label` is set in {@link Marker.addTo}.
+     * Non-interactive markers use `role=img`; interactive ones (draggable or with a popup) use `role=button`.
+     * Click listeners are application-owned and do not automatically change the role.
+     * Custom marker elements are left alone so applications own their a11y tree.
+     * Explicit roles set by the application are preserved.
+     */
+    _updateAccessibilityRole(): void {
+        if (!this._defaultMarker) {
+            return;
+        }
+
+        // Preserve an explicit role chosen by the application unless we previously managed it.
+        if (this._element.hasAttribute('role') && !this._roleManaged) {
+            return;
+        }
+
+        const role = (this._draggable || !!this._popup) ? 'button' : 'img';
+        this._element.setAttribute('role', role);
+        this._roleManaged = true;
     }
 
     /**

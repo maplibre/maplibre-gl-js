@@ -63,6 +63,15 @@ We tested it, and it looks like it fixes a lot of issue in labeling etc.
 It does changes rendering and the results of queryRenderedFeatures.
 If you would like to revert to the previous behavior you can set `zoomLevelsToOverscale: undefined` when initializing the map.
 
+## Nested GeoJSON properties
+
+Nested objects and arrays in GeoJSON feature properties are now preserved: features returned from events and `queryRenderedFeatures` contain them as real objects instead of JSON strings. If you called `JSON.parse` on such properties, remove it — it now throws `SyntaxError: "[object Object]" is not valid JSON`.
+
+```diff
+-const info = JSON.parse(e.features[0].properties.info);
++const info = e.features[0].properties.info;
+```
+
 ## pragma mapbox
 
 In case you were using `#pragma mapbox` in your shared code please replace it with `#pragma maplibre`.
@@ -74,3 +83,16 @@ In case you were using `#pragma mapbox` in your shared code please replace it wi
 ## Events
 
 All events are now classes, it is advised not to use `instanceof` but instead check the `type` field. Since the change was from types to classes this shouldn't be a problem in most code bases.
+
+### styleimagemissing
+
+In v6, `styleimagemissing` listeners can no longer resolve the current image request by calling `Map#addImage`. To migrate a listener that supplies missing images, replace it with [`Map#setMissingStyleImageResolver`](../API/classes/Map.md#setmissingstyleimageresolver):
+
+```diff
+-map.on('styleimagemissing', ({id}) => {
++map.setMissingStyleImageResolver((id) => {
+     map.addImage(id, generateImage(id));
+ });
+```
+
+The resolver can be synchronous or asynchronous. For asynchronous loading, call `Map#addImage` before the resolver's promise settles. The `styleimagemissing` event can still be used to observe images that remain unresolved.

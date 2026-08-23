@@ -1,5 +1,5 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map.ts';
+import {Map, type MapOptions, type MissingStyleImageResolver, type StyleImageSource, type WebGLContextAttributesWithType} from './ui/map.ts';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control.ts';
 import {GeolocateControl, GeolocateEvent, GeolocatePositionEvent, GeolocateErrorEvent, type GeolocateControlEventType, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control.ts';
@@ -15,16 +15,16 @@ import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
-import {Evented, ErrorEvent, Event, type Listener} from './util/evented.ts';
+import {Evented, ErrorEvent, Event, type ErrorEventType, type EventedParentData, type EventTypeMap, type Listener} from './util/evented.ts';
 import {type AddProtocolAction, config} from './util/config.ts';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
 import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
-import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source.ts';
+import {GeoJSONSource, type GetClusterOptions, type SetClusterOptions} from './source/geojson_source.ts';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
-import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
+import {type CanonicalTileRange, type Coordinates, type ImageSourceImage, ImageSource, type ImageSourceWarp, type UpdateImageOptions} from './source/image_source.ts';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source.ts';
 import {RasterTileSource} from './source/raster_tile_source.ts';
 import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source.ts';
@@ -57,7 +57,7 @@ import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
 import type {TransformConstrainFunction} from './geo/transform_interface.ts';
-import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image.ts';
+import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff.ts';
@@ -297,15 +297,23 @@ export {
     type CanonicalTileRange,
     type Tile,
     type Listener,
+    type EventTypeMap,
+    type ErrorEventType,
+    type EventedParentData,
     type Coordinates,
+    type ImageSourceWarp,
+    type ImageSourceImage,
     type UpdateImageOptions,
     type DragPanOptions,
     type FullscreenControlOptions,
+    type GetClusterOptions,
     type SetClusterOptions,
     type GeoJSONSourceDiff,
     type GeolocateControlOptions,
     type LogoControlOptions,
     type StyleImageInterface,
+    type StyleImageWebGLData,
+    type StyleImageWebGLTarget,
     type AddLayerObject,
     type StyleSetterOptions,
     type CameraForBoundsOptions,
@@ -365,6 +373,8 @@ export {
     type MessageType,
     type StyleGlyph,
     type MapOptions,
+    type MissingStyleImageResolver,
+    type StyleImageSource,
     type GestureOptions,
     type WebGLContextAttributesWithType,
     type IControl,

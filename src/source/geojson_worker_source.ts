@@ -6,7 +6,7 @@ import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
-import {WorkerTileState, type ParsingState} from './worker_tile_state.ts';
+import {WorkerTileState} from './worker_tile_state.ts';
 import {extend, JSON_PREFIX} from '../util/util.ts';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
@@ -33,6 +33,8 @@ export type GeoJSONWorkerOptions = {
  */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
+    /** The geojson source ID. */
+    source: string;
     /**
      * Request parameters including a URL to fetch GeoJSON data.
      */
@@ -111,52 +113,29 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = vectorTile;
             this.tileState.markLoaded(uid, workerTile);
+            const parsingState = {rawData};
+            this.tileState.setParsing(uid, parsingState);
 
-            const parseState = {rawData};
-            this.tileState.setParsing(uid, parseState);  // Keep data so reloadTile can access if parse is canceled.
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.removeParsing(uid);
-            }
+            return await this._parseWorkerTile(workerTile, params);
         } catch (err) {
-            workerTile.status = 'done';
             this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
     }
 
-    private async _reloadLoadedTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const uid = params.uid;
+    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const parseState = this.tileState.getParsing(workerTile.uid);
 
-        const workerTile = this.tileState.getLoaded(uid);
-        if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
-
-        workerTile.showCollisionBoxes = params.showCollisionBoxes;
-
-        if (workerTile.status === 'parsing') {
-            // If we are cancelling the original parse, make sure to pass the rawData from the original parse.
-            const parseState = this.tileState.getParsing(uid);
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.removeParsing(uid);
-            }
-        }
-
-        // If there was no vector tile data on the initial load, don't try and reparse the tile.
-        if (workerTile.status === 'done' && workerTile.vectorTile) {
-            return await this._parseWorkerTile(workerTile, params);
-        }
-    }
-
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
+        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
+        // After the main thread has successfully received and stored rawTileData,
+        // we no longer need to store it in the worker or transfer additional copies of it.
         if (parseState) {
             const {rawData} = parseState;
-            // Transferring a copy of rawTileData because the worker needs to retain its copy.
+            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
             result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
+            this.tileState.removeParsing(workerTile.uid);
         }
 
         return result;
@@ -239,14 +218,20 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * @param params - the parameters
      * @returns A promise that resolves when the tile is reloaded
      */
-    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const tile = this.tileState.getLoaded(params.uid);
-
-        if (tile) {
-            return this._reloadLoadedTile(params);
+    async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const uid = params.uid;
+        const workerTile = this.tileState.getLoaded(uid);
+        if (!workerTile) {
+            return await this.loadTile(params);
         }
 
-        return this.loadTile(params);
+        // If there was no vector tile data on the initial load, don't try to reparse the tile.
+        if (!workerTile.vectorTile) {
+            return;
+        }
+
+        workerTile.showCollisionBoxes = params.showCollisionBoxes;
+        return await this._parseWorkerTile(workerTile, params);
     }
 
     /**
@@ -263,14 +248,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         if (params.data) {
-            params.data = this._filterGeoJSON(params.data, params.filter);
+            params.data = this._filterGeoJSON(params.data, params.filter, params.source);
             this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
             return;
         }
 
         if (params.dataDiff) {
             this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
-            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter));
+            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter, params.source));
             return;
         }
 
@@ -286,10 +271,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
     /**
      * Applies a filter to a GeoJSON object.
      */
-    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification): GeoJSON.GeoJSON {
+    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification, source: string): GeoJSON.GeoJSON {
         if (data.type !== 'FeatureCollection') return data;
 
-        const predicate = this._getFilterPredicate(filter);
+        const predicate = this._getFilterPredicate(filter, source);
         if (!predicate) return data;
 
         return {type: 'FeatureCollection', features: data.features.filter(feature => predicate(feature))};
@@ -298,10 +283,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
     /**
      * Gets a predicate function that can be used to filter GeoJSON features.
      */
-    _getFilterPredicate(filter: FilterSpecification): (feature: GeoJSON.Feature) => boolean {
+    _getFilterPredicate(filter: FilterSpecification, source: string): (feature: GeoJSON.Feature) => boolean {
         if (typeof filter !== 'boolean' && !filter?.length) return undefined;
 
-        const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+        const compiled = createExpression(filter, `sources.${source}.filter`, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
         if (compiled.result === 'error') {
             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
         }
@@ -339,7 +324,7 @@ export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONPar
     return new GeoJSONVT(data, options);
 }
 
-function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJSONParameters) {
+function getSuperclusterOptions({geojsonVtOptions, clusterProperties, source}: LoadGeoJSONParameters) {
     if (!clusterProperties || !geojsonVtOptions.clusterOptions) return geojsonVtOptions.clusterOptions;
 
     const mapExpressions = {};
@@ -351,9 +336,9 @@ function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJS
     for (const key of propertyNames) {
         const [operator, mapExpression] = clusterProperties[key];
 
-        const mapExpressionParsed = createExpression(mapExpression);
+        const mapExpressionParsed = createExpression(mapExpression, `sources.${source}.clusterProperties.${key}[1]`);
         const reduceExpressionParsed = createExpression(
-            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
+            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator, `sources.${source}.clusterProperties.${key}[0]`);
 
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;

@@ -2,7 +2,6 @@
     "version": 8,
     "metadata": {
         "test": {
-            "timeout": 60000,
             "height": 256,
             "width": 256,
             "maxPitch": 120,

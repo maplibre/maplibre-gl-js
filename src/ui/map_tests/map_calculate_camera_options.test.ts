@@ -27,7 +27,7 @@ describe('calculateCameraOptionsFromTo', () => {
         const cameraOptions: CameraOptions = map.calculateCameraOptionsFromTo(new LngLat(1, 0), 111200, new LngLat(0, 0));
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(90);
-        expect(mockedGetElevation.mock.calls).toHaveLength(1);
+        expect(mockedGetElevation).toHaveBeenCalledTimes(1);
     });
 
     test('pitch 153.435 with terrain', () => {
@@ -44,7 +44,7 @@ describe('calculateCameraOptionsFromTo', () => {
         const cameraOptions: CameraOptions = map.calculateCameraOptionsFromTo(new LngLat(1, 0), 111200, new LngLat(0, 0));
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(153.435);
-        expect(mockedGetElevation.mock.calls).toHaveLength(1);
+        expect(mockedGetElevation).toHaveBeenCalledTimes(1);
     });
 
     test('pitch 63 with terrain', () => {
@@ -62,7 +62,7 @@ describe('calculateCameraOptionsFromTo', () => {
         const cameraOptions: CameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 111200, new LngLat(1, 0));
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(63.435);
-        expect(mockedGetElevation.mock.calls).toHaveLength(1);
+        expect(mockedGetElevation).toHaveBeenCalledTimes(1);
     });
 
     test('zoom distance 1000', () => {
@@ -74,12 +74,12 @@ describe('calculateCameraOptionsFromTo', () => {
         terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
 
-        const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);
+        const expectedZoom = Math.log2(map._camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map._camera.transform.tileSize);
         const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0));
 
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(mockedGetElevation.mock.calls).toHaveLength(1);
+        expect(mockedGetElevation).toHaveBeenCalledTimes(1);
     });
 
     test('don\'t call getElevation when altitude supplied', () => {
@@ -94,7 +94,7 @@ describe('calculateCameraOptionsFromTo', () => {
         const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0), 1000);
 
         expect(cameraOptions).toBeDefined();
-        expect(mockedGetElevation.mock.calls).toHaveLength(0);
+        expect(mockedGetElevation).toHaveBeenCalledTimes(0);
     });
 
     test('don\'t call getElevation when altitude 0 supplied', () => {
@@ -109,6 +109,6 @@ describe('calculateCameraOptionsFromTo', () => {
         const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(1, 0), 0);
 
         expect(cameraOptions).toBeDefined();
-        expect(mockedGetElevation.mock.calls).toHaveLength(0);
+        expect(mockedGetElevation).toHaveBeenCalledTimes(0);
     });
 });

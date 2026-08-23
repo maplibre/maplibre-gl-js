@@ -1,7 +1,7 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
+import {wrap, clamp, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
@@ -218,7 +218,7 @@ export class MercatorTransform implements ITransform {
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
     }
-    setTransitionState(_value: number, _error: number): void {
+    setTransitionState(_value: number): void {
         // Do nothing
     }
     //
@@ -308,10 +308,18 @@ export class MercatorTransform implements ITransform {
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+    /**
+     * Moves the center so that `lnglat`, on the ground at `elevation` meters, renders
+     * at the screen `point`. Both rays are cast through the same inverse pixel matrix
+     * so its inversion error cancels out of their difference; the current-center ray
+     * must be intersected at the center's own elevation (z=0) — intersecting it with
+     * the elevated plane would land `(elevation - centerElevation)·tan(pitch)` away
+     * from the center and make repeated calls drift.
+     */
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this.elevation): void {
+        const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
-        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
+        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
         const loc = MercatorCoordinate.fromLngLat(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
@@ -332,6 +340,10 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
+        return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
+    }
+
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
@@ -343,10 +355,14 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
-    screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {
+    /**
+     * Intersects the ray through a screen point with the horizontal plane at `z`,
+     * given in meters relative to the plane at the center's elevation (not mercator units).
+     */
+    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
 
         // calculate point-coordinate on flat earth
-        const targetZ = mercatorZ ? mercatorZ : 0;
+        const targetZ = z ? z : 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
         // line with z=0
@@ -748,6 +764,7 @@ export class MercatorTransform implements ITransform {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
             fallbackMatrix: mainMatrix,
+            clipAntimeridian: false,
         };
     }
 
@@ -799,21 +816,6 @@ export class MercatorTransform implements ITransform {
             // place the pos matrix into the transform's internal cache.
             this.calculatePosMatrix(coord);
         }
-    }
-
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        const modelAsMercatorCoordinate = MercatorCoordinate.fromLngLat(
-            location,
-            altitude
-        );
-        const scale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
-
-        const m = createIdentityMat4f64();
-        mat4.translate(m, m, [modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z]);
-        mat4.rotateZ(m, m, Math.PI);
-        mat4.rotateX(m, m, Math.PI / 2);
-        mat4.scale(m, m, [-scale, scale, scale]);
-        return m;
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
