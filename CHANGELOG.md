@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
+- Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982))
 
 ## 6.6.0
 

@@ -1296,7 +1296,8 @@ describe('easeTo', () => {
 
         terrain = {
             getMinTileElevationForLngLatZoom: () => 0,
-            getElevationForLngLatZoom: () => 0
+            getElevationForLngLatZoom: () => 0,
+            getElevationForLngLat: () => 0
         } as any as Terrain;
 
         stubNow.mockReturnValue(500);
@@ -2089,7 +2090,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain; 
+        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2113,7 +2114,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
+        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2138,7 +2139,7 @@ describe('flyTo', () => {
 
     test('check elevation callbacks', () => {
         const terrain = {
-            getElevationForLngLatZoom: () => 100,
+            getElevationForLngLat: () => 100,
             getMinTileElevationForLngLatZoom: () => 200
         } as any;
         const {camera} = createCamera({terrain});
@@ -2156,7 +2157,7 @@ describe('flyTo', () => {
         expect(camera._elevationTarget).toBe(100);
         expect(camera.elevationFreeze).toBeTruthy();
 
-        terrain.getElevationForLngLatZoom = () => 200;
+        terrain.getElevationForLngLat = () => 200;
         camera._updateElevation(0.5);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
