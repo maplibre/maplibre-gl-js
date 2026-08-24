@@ -299,37 +299,37 @@ describe('Terrain', () => {
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
-    /** Renders z0 tiles at 500m over a zoom-3 transform whose covering tiles are at 100m. */
-    function createTwoZoomTerrain(renderedDEMLoaded: boolean) {
+    /** Renders z0 tiles over a zoom-3 transform, so the covering tiles are at z3. */
+    function createTwoZoomTerrain() {
         const terrain = createFlatTerrain(500);
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
         (terrain.painter.transform as MercatorTransform).setZoom(3);
-        const renderedDEM = createDEM(() => 500);
-        const coveringDEM = createDEM(() => 100);
-        terrain.tileManager.getSourceTile = (tileID) => {
-            if (tileID.canonical.z === 0) {
-                return renderedDEMLoaded ? ({tileID, dem: renderedDEM}) as any as Tile : undefined;
-            }
-            return ({tileID, dem: coveringDEM}) as any as Tile;
-        };
         return terrain;
     }
 
     test('getElevationForLngLat samples the rendered tile where its DEM is loaded', () => {
-        const terrain = createTwoZoomTerrain(true);
+        const terrain = createTwoZoomTerrain();
+        const renderedDEM = createDEM(() => 500);
+        const coveringDEM = createDEM(() => 100);
+        terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
 
         expect(terrain.getElevationForLngLat(new LngLat(0, 40), terrain.painter.transform)).toBeCloseTo(500, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles while the rendered tile\'s DEM is loading', () => {
-        const terrain = createTwoZoomTerrain(false);
+        const terrain = createTwoZoomTerrain();
+        const coveringDEM = createDEM(() => 100);
+        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : ({tileID, dem: coveringDEM}) as any as Tile;
 
         expect(terrain.getElevationForLngLat(new LngLat(0, 40), terrain.painter.transform)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles outside the rendered tiles', () => {
-        const terrain = createTwoZoomTerrain(true);
+        const terrain = createTwoZoomTerrain();
+        const renderedDEM = createDEM(() => 500);
+        const coveringDEM = createDEM(() => 100);
+        terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
         terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(1, 0, 1, 0, 0)}] as any as Tile[];
 
         expect(terrain.getElevationForLngLat(new LngLat(90, -40), terrain.painter.transform)).toBeCloseTo(100, 6);
