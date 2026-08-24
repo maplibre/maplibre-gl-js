@@ -2957,7 +2957,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         // A swap to an already-loaded DEM source fires no data event, so invalidate here too.
-        this.style._placementRevision++;
+        this.style.triggerSymbolPlacement();
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
     }
@@ -2972,7 +2972,7 @@ export class Map extends Evented<MapEventType> {
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
             // New DEM data moves symbols even when the camera has not.
-            this.style._placementRevision++;
+            this.style.triggerSymbolPlacement();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));

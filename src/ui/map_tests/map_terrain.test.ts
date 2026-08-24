@@ -108,17 +108,16 @@ describe('setTerrain', () => {
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
     });
 
-    test('invalidates the placement input guard when terrain source data changes', async () => {
+    test('re-places symbols when terrain source data changes', async () => {
         await map.once('load');
         map.addSource('terrainrgb', {
             type: 'raster-dem',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
+        const triggerSymbolPlacement = vi.spyOn(map.style, 'triggerSymbolPlacement');
 
-        const beforeSet = map.style._placementRevision;
         map.setTerrain({source: 'terrainrgb'});
-        expect(map.style._placementRevision).toBeGreaterThan(beforeSet);
-        const revision = map.style._placementRevision;
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(1);
 
         map._terrainDataCallback({
             dataType: 'source',
@@ -126,7 +125,7 @@ describe('setTerrain', () => {
             sourceDataType: 'content',
             source: {type: 'raster-dem'}
         } as any);
-        expect(map.style._placementRevision).toBe(revision + 1);
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(2);
 
         map._terrainDataCallback({
             dataType: 'source',
@@ -134,7 +133,7 @@ describe('setTerrain', () => {
             sourceDataType: 'content',
             source: {type: 'geojson'}
         } as any);
-        expect(map.style._placementRevision).toBe(revision + 1);
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(2);
     });
 });
 

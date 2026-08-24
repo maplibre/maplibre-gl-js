@@ -232,7 +232,7 @@ export class Style extends Evented<MapEventType> {
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
     _placedSignature: Array<number | boolean> | undefined;
-    _placementRevision: number;
+    _symbolPlacementTriggers: number;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -317,7 +317,7 @@ export class Style extends Evented<MapEventType> {
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
         this._placedSignature = undefined;
-        this._placementRevision = 0;
+        this._symbolPlacementTriggers = 0;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
         this.placement = undefined;
@@ -1367,7 +1367,7 @@ export class Style extends Evented<MapEventType> {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
-        if (layer.type === 'symbol') this._placementRevision++;
+        if (layer.type === 'symbol') this.triggerSymbolPlacement();
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
@@ -1815,16 +1815,27 @@ export class Style extends Evented<MapEventType> {
     }
 
     /**
+     * Re-places symbols on the next frame.
+     *
+     * Symbol placement runs only when the map decides it could produce a different result, which
+     * it works out from the camera, the collision settings, and the symbol buckets. Call this when
+     * something outside all of those moves symbols, so that the map does not skip the re-placement.
+     */
+    triggerSymbolPlacement(): void {
+        this._symbolPlacementTriggers++;
+    }
+
+    /**
      * Everything symbol placement depends on, in a form two frames can be compared by. An equal
      * signature means placement would produce the same result, so it is skipped and a repaint
      * triggered by something else (an animated icon, a custom layer) costs a single frame
      * instead of a `fadeDuration` tail.
-     * Inputs that live outside the transform bump `_placementRevision` where they change.
+     * Inputs the signature cannot read for itself arrive as `triggerSymbolPlacement` calls.
      */
     _getPlacementSignature(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): Array<number | boolean> {
         const padding = transform.padding;
         return [
-            showCollisionBoxes, crossSourceCollisions, this._placementRevision,
+            showCollisionBoxes, crossSourceCollisions, this._symbolPlacementTriggers,
             this.projection?.transitionState ?? -1,
             transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
             transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
