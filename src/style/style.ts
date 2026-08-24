@@ -232,7 +232,7 @@ export class Style extends Evented<MapEventType> {
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
     _placedKey: Array<number | boolean> | undefined;
-    _symbolPlacementTriggers: number;
+    _triggerSymbolPlacementCount: number;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -317,7 +317,7 @@ export class Style extends Evented<MapEventType> {
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
         this._placedKey = undefined;
-        this._symbolPlacementTriggers = 0;
+        this._triggerSymbolPlacementCount = 0;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
         this.placement = undefined;
@@ -1822,7 +1822,7 @@ export class Style extends Evented<MapEventType> {
      * something outside all of those moves symbols, so that the map does not skip the re-placement.
      */
     triggerSymbolPlacement(): void {
-        this._symbolPlacementTriggers++;
+        this._triggerSymbolPlacementCount++;
     }
 
     /**
@@ -1835,7 +1835,7 @@ export class Style extends Evented<MapEventType> {
     _getPlacementKey(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): Array<number | boolean> {
         const padding = transform.padding;
         return [
-            showCollisionBoxes, crossSourceCollisions, this._symbolPlacementTriggers,
+            showCollisionBoxes, crossSourceCollisions, this._triggerSymbolPlacementCount,
             this.projection?.transitionState ?? -1,
             transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
             transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
