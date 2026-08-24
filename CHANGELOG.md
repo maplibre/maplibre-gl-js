@@ -8,6 +8,7 @@
 - Fix globe tile selection measuring distances from the ground point below the camera instead of the camera itself, refining some views past the requested zoom and leaving others coarser ([#8187](https://github.com/maplibre/maplibre-gl-js/pull/8187)) (by [@Alchez](https://github.com/Alchez))
 - Fix the style's `center`, `zoom`, `bearing`, `pitch` and `roll` being ignored when the map was created with a `minZoom` or `minPitch` option, since applying those limits marked the transform as modified ([#5932](https://github.com/maplibre/maplibre-gl-js/issues/5932))
 - Upload the `color-relief` DEM texture once per tile instead of on every frame ([#8209](https://github.com/maplibre/maplibre-gl-js/pull/8209))
+- Fix the globe drifting out from under the cursor while dragging, and snapping near the silhouette, by solving the bearing-locked center in closed form instead of applying a rotation and discarding the part of it a fixed bearing cannot hold (by [@jcolot](https://github.com/jcolot))
 - _...Add new stuff here..._
 
 ## 6.5.0

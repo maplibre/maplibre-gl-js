@@ -140,13 +140,6 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  */
 const PAN_FALLOFF_BAND = 0.1;
 
-/**
- * Radius around the pole's screen position, in pixels, within which the cursor's sweep around it
- * stops being trusted at face value: the angle a given drag subtends grows without bound as the
- * cursor closes on the pole, and at the pole itself there is no angle at all.
- */
-const DIAL_MIN_RADIUS_PIXELS = 20;
-
 /** Kept just below a half turn so the center cannot land exactly on the far side of the globe. */
 const PAN_MAX_ANGLE = Math.PI * 0.98;
 
@@ -226,12 +219,149 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
  * the globe does. Pass `false` to apply the twist about the view axis as well, so that the grabbed
  * location tracks the cursor exactly and the bearing drifts with it.
  */
-export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true): void {
+/**
+ * How far the center may move, as a multiple of the angle the drag subtends on the sphere. Only
+ * bites on the silhouette, where a center that tracks the grab exactly can still be half a globe
+ * away; everywhere else the solve already lands well inside it.
+ */
+const TRACK_REACH = 2;
+
+/** Floor on that, in radians, so the smallest drags can still move the globe. */
+const TRACK_MIN_TURN = 0.02;
+
+/**
+ * Returns the center that carries `grabbed` to where `aimed` is now, or the closest center to it
+ * that the drag can reach.
+ *
+ * A bearing-locked center enters the projection as `Rx(lat) . Ry(-lng)`, and those two angles are
+ * the center's own latitude and longitude, so a drag is a question about that pair directly rather
+ * than about a rotation that then has to be cut down to fit. `Ry` turns about the poles and leaves
+ * the grabbed location's latitude alone; `Rx` turns about the screen's horizontal axis and leaves
+ * its x alone. Between them a location at latitude `theta` reaches exactly the directions with
+ * `|x| <= cos(theta)`, a band around the screen's vertical midline. Bearing, pitch and roll are
+ * applied outside the pair and held fixed, so they cancel from both sides and never enter.
+ *
+ * Inside the band the answer is two atan2s and no iteration. Outside it there is no center that
+ * tracks the drag at all, and the nearest point of the band is the best there is. Taking it is
+ * what makes a grab near the pole a dial: the band narrows as `cos(theta)` closes, until a
+ * location on the pole itself can only ever sit on the midline and every drag becomes a spin
+ * about the pole.
+ * @param tr - The transform being dragged.
+ * @param grabbed - The location the drag started from.
+ * @param aimed - The location the cursor is over now, which `grabbed` should be brought to.
+ */
+function trackedCenter(tr: ITransform, grabbed: LngLat, aimed: LngLat): LngLat {
+    const g = angularCoordinatesToSurfaceVector(grabbed);
+    const target = angularCoordinatesToSurfaceVector(aimed);
+
+    // `aimed` carried into the frame the center's own two turns act in.
+    const lngRadians = tr.center.lng * Math.PI / 180;
+    const latRadians = tr.center.lat * Math.PI / 180;
+    const spunX = Math.cos(lngRadians) * target[0] - Math.sin(lngRadians) * target[2];
+    const spunZ = Math.sin(lngRadians) * target[0] + Math.cos(lngRadians) * target[2];
+    const v = [
+        spunX,
+        Math.cos(latRadians) * target[1] - Math.sin(latRadians) * spunZ,
+        Math.sin(latRadians) * target[1] + Math.cos(latRadians) * spunZ
+    ];
+
+    // The half-width of the band, and the point of it to aim at.
+    const reach = Math.hypot(g[0], g[2]);
+    if (reach < 1e-9) {
+        // The grab is on a pole, where the band has no width and every longitude names the same
+        // place. There is nothing for the drag to turn.
+        return tr.center;
+    }
+    let aim = v;
+    if (Math.abs(v[0]) > reach) {
+        const x = Math.sign(v[0]) * reach;
+        const rest = Math.sqrt(Math.max(1 - x * x, 0)) / Math.max(Math.hypot(v[1], v[2]), 1e-12);
+        aim = [x, v[1] * rest, v[2] * rest];
+    }
+
+    // The grabbed location after the longitude turn: it keeps its own latitude and takes the aim's
+    // x. Two of those, mirrored front to back, one the drag and one the way around.
+    // Which of the two mirrored solutions is this drag's: the one that leaves the grabbed location
+    // on the side it is already on. Picking by which center ends up nearer instead lets the choice
+    // swap between neighbouring cursor positions, and a swap is a snap. This cannot swap without
+    // the grab itself crossing the plane, and at zero drag it returns the center unmoved.
+    const side = Math.sin(lngRadians) * g[0] + Math.cos(lngRadians) * g[2] >= 0 ? 1 : -1;
+    const behind = Math.sqrt(Math.max(1 - aim[0] * aim[0] - g[1] * g[1], 0));
+    let settled: LngLat | undefined;
+    let wanted = tr.center.lat;
+    {
+        const w = [aim[0], g[1], side * behind];
+        const lng = (Math.atan2(g[0], g[2]) - Math.atan2(w[0], w[2])) * 180 / Math.PI;
+        const lat = -Math.atan2(aim[1] * w[2] - aim[2] * w[1], aim[1] * w[1] + aim[2] * w[2]) * 180 / Math.PI;
+        // A latitude past a pole is not the same center named from the other side: carrying it
+        // over would roll the view by half a turn, which a held bearing cannot do. Nor is one past
+        // MAX_VALID_LATITUDE, which `setCenter` would clamp back. Either way there is no such
+        // center, and the drag falls to the limited turn below.
+        wanted = lat;
+        if (Math.abs(lat) <= MAX_VALID_LATITUDE) {
+            settled = new LngLat(wrap(lng, -180, 180), lat);
+        }
+    }
+    if (settled) {
+        return limitToDrag(tr, settled, g, target);
+    }
+
+    // Neither branch is a latitude the center can hold: `setCenter` would clamp it back and the
+    // drag would track nothing, which with a pole near the middle of the screen leaves it standing
+    // still. So sit at the limit and turn about the poles as far as that allows, which is one more
+    // azimuth match, and is what reads as a dial.
+    const held = Math.sign(wanted) * MAX_VALID_LATITUDE;
+    const heldRadians = held * Math.PI / 180;
+    const liftedZ = Math.cos(heldRadians) * aim[2] - Math.sin(heldRadians) * aim[1];
+    const lng = (Math.atan2(g[0], g[2]) - Math.atan2(aim[0], liftedZ)) * 180 / Math.PI;
+    return limitToDrag(tr, new LngLat(wrap(lng, -180, 180), held), g, target);
+}
+
+/**
+ * Holds a solved center to a move in proportion to the drag that asked for it, easing towards it
+ * along the way rather than jumping.
+ *
+ * On the silhouette the solve can be exact and still useless: the center that tracks the grab may
+ * be half the globe away, because the near answer needs a latitude past the pole and a held bearing
+ * cannot name one. Rather than take a jump or refuse to move, this walks the same distance in the
+ * same direction, which is the closest the center can get to doing what was asked.
+ */
+function limitToDrag(tr: ITransform, settled: LngLat, g: vec3, target: vec3): LngLat {
+    const dragTurn = Math.acos(clamp(vec3.dot(g, target), -1, 1));
+    const allowed = Math.max(dragTurn * TRACK_REACH, TRACK_MIN_TURN);
+    const from = angularCoordinatesToSurfaceVector(tr.center);
+    const to = angularCoordinatesToSurfaceVector(settled);
+    const turn = Math.acos(clamp(vec3.dot(from, to), -1, 1));
+    if (turn <= allowed || turn < 1e-9) {
+        return settled;
+    }
+    const t = allowed / turn;
+    const eased = createVec3f64();
+    vec3.scale(eased, from, Math.sin((1 - t) * turn) / Math.sin(turn));
+    vec3.scaleAndAdd(eased, eased, to, Math.sin(t * turn) / Math.sin(turn));
+    vec3.normalize(eased, eased);
+    return sphereSurfacePointToCoordinates(eased);
+}
+
+export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true, leverPoint?: Point): void {
     const pointLngLat = panSurfaceLocation(tr, point);
     let sourceLngLat = lnglat;
     if (panDelta) {
         sourceLngLat = panSurfaceLocation(tr, point.sub(panDelta));
     } else if (!tr.isPointOnMapSurface(point)) {
+        return;
+    }
+
+    // A drag has a location it grabbed and a place to put it, both through the same falloff, so
+    // solve for the center that does that. The cursor is `leverPoint` where there is one: `point`
+    // off the globe has already been swapped for the screen center. Off the globe the falloff
+    // still supplies both ends, so this stays one equation there rather than a separate dial.
+    if (fixedBearing && panDelta) {
+        const grabAt = leverPoint ?? point;
+        const oldLat = tr.center.lat;
+        const oldZoom = tr.zoom;
+        tr.setCenter(trackedCenter(tr, panSurfaceLocation(tr, grabAt.sub(panDelta)), panSurfaceLocation(tr, grabAt)));
+        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
         return;
     }
 
@@ -249,7 +379,7 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
     const oldLat = tr.center.lat;
     const oldZoom = tr.zoom;
     const finalLat = clamp(newCenterLat, -90, 90);
-    const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
+    const finalLng = fixedBearing ? fixedBearingLongitude(tr, newCenterLng) : newCenterLng;
 
     tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
     if (!fixedBearing) {
@@ -259,40 +389,24 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
 }
 
 /**
- * Returns the center longitude for a bearing-preserving drag.
+ * Returns the center longitude to apply when the bearing is held fixed and there is no drag delta.
  *
- * The swing longitude becomes ill-conditioned near the pole and the grabbed location slips away
- * from the cursor, so within the last ~12 degrees of latitude the cursor is treated as turning a
- * dial around the pole, blended in with a smoothstep anchored on {@link MAX_VALID_LATITUDE}, the
- * highest latitude the center can reach. The sweep comes from the raw pixel delta rather than a
- * round-tripped previous cursor position, which would lose its sign to cancellation at the pole,
- * and is damped within {@link DIAL_MIN_RADIUS_PIXELS} so it eases to nothing there instead of
- * being dropped, which would leave a spot where the drag could not move at all.
- * @param tr - The transform being dragged.
- * @param point - The cursor position.
- * @param panDelta - The drag's pixel delta, or undefined to use the swing longitude only.
+ * This is the {@link ITransform.setLocationAtPoint} path, which has a location and a screen point
+ * but no motion, so it can only take the swing's longitude. That swing becomes ill-conditioned
+ * near the pole and lets the location slip away from the point, so within the last ~12 degrees of
+ * latitude it is eased off with a smoothstep anchored on {@link MAX_VALID_LATITUDE}, the highest
+ * latitude the center can reach. Drags do not come through here: they are solved outright by
+ * {@link trackedCenter}.
+ * @param tr - The transform being moved.
  * @param newCenterLng - The swing target longitude.
  * @returns the center longitude to apply.
  */
-function fixedBearingLongitude(tr: ITransform, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
+function fixedBearingLongitude(tr: ITransform, newCenterLng: number): number {
     const oldLng = tr.center.lng;
-    const oldLat = tr.center.lat;
-    const poleLat = oldLat >= 0 ? 90 : -90;
-    const polePoint = tr.locationToScreenPoint(new LngLat(0, poleLat));
-    const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
-    const r2 = rx * rx + ry * ry;
-
-    const tRamp = clamp(1 - (MAX_VALID_LATITUDE - Math.abs(oldLat)) / 12, 0, 1);
-    const dial = tRamp * tRamp * (3 - 2 * tRamp);
     const dLngSwing = mod(newCenterLng - oldLng + 180, 360) - 180;
-
-    let dLngDial = 0;
-    if (dial > 0 && panDelta) {
-        const dTheta = (rx * panDelta.y - ry * panDelta.x) / Math.max(r2, DIAL_MIN_RADIUS_PIXELS * DIAL_MIN_RADIUS_PIXELS);
-        dLngDial = (poleLat > 0 ? 1 : -1) * dTheta * 180 / Math.PI;
-    }
-
-    return oldLng + (1 - dial) * dLngSwing + dial * dLngDial;
+    const tRamp = clamp(1 - (MAX_VALID_LATITUDE - Math.abs(tr.center.lat)) / 12, 0, 1);
+    const easeOff = tRamp * tRamp * (3 - 2 * tRamp);
+    return oldLng + (1 - easeOff) * dLngSwing;
 }
 
 /**
