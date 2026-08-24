@@ -1831,6 +1831,8 @@ export class Style extends Evented<MapEventType> {
      * by something else (an animated icon, a custom layer) costs a single frame instead of a
      * `fadeDuration` tail.
      * Inputs the key cannot read for itself arrive as `triggerSymbolPlacement` calls.
+     *
+     * @internal
      */
     _getPlacementKey(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): Array<number | boolean> {
         const padding = transform.padding;
