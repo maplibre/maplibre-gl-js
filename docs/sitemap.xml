@@ -631,6 +631,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-terrain-from-quantized-mesh-tiles/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-using-threejs/</loc>
       </url>
       <url>
@@ -884,6 +887,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/draw-polygon-with-mapbox-gl-draw/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/elevate-symbols-above-the-terrain/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/enter-a-360-photosphere/</loc>

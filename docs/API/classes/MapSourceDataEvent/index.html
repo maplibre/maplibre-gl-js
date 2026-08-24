@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.56">
     
     
       
@@ -6674,6 +6674,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/add-3d-terrain-from-quantized-mesh-tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Add 3D terrain from quantized-mesh tiles
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/add-3d-tiles-using-threejs/" class="md-nav__link">
         
   
@@ -8993,6 +9028,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/elevate-symbols-above-the-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Elevate symbols above the terrain
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/enter-a-360-photosphere/" class="md-nav__link">
         
   
@@ -10793,7 +10863,7 @@
 
 
 <h1 id="mapsourcedataevent">MapSourceDataEvent</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L557">ui/events.ts:557</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L557">ui/events.ts:557</a></p>
 <p>A <code>MapSourceDataEvent</code> is emitted with the source-related <code>data</code>, <code>dataloading</code>, <code>dataabort</code>,
 <code>sourcedata</code>, <code>sourcedataloading</code> and <code>sourcedataabort</code> events. Its <code>dataType</code> is always <code>'source'</code>.</p>
 <p>Possible values for <code>sourceDataType</code>s are:</p>
@@ -10806,7 +10876,7 @@
 <h2 id="example">Example</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// The sourcedata event is an example of a MapSourceDataEvent.</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1">// Set up an event listener on the map.</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;sourcedata&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'sourcedata'</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">isSourceLoaded</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">       </span><span class="c1">// Do something when the source has finished loading</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">   </span><span class="p">}</span>
@@ -10821,35 +10891,35 @@
 <blockquote>
 <p><strong>coord</strong>: <a href="../../interfaces/OverscaledTileID/"><code>OverscaledTileID</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L579">ui/events.ts:579</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L579">ui/events.ts:579</a></p>
 <p>The tile ID of the tile being loaded or changed, if the event is related to loading of a tile.</p>
 <hr />
 <h3 id="issourceloaded">isSourceLoaded</h3>
 <blockquote>
 <p><strong>isSourceLoaded</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L563">ui/events.ts:563</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L563">ui/events.ts:563</a></p>
 <p>True if the event has a <code>dataType</code> of <code>source</code> and the source has no outstanding network requests.</p>
 <hr />
 <h3 id="resourcetiming">resourceTiming?</h3>
 <blockquote>
 <p><code>optional</code> <strong>resourceTiming?</strong>: <code>PerformanceResourceTiming</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L583">ui/events.ts:583</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L583">ui/events.ts:583</a></p>
 <p>Resource timing data, if <code>collectResourceTiming</code> is enabled for the source.</p>
 <hr />
 <h3 id="source">source</h3>
 <blockquote>
 <p><strong>source</strong>: <a href="https://maplibre.org/maplibre-style-spec/sources/"><code>SourceSpecification</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L567">ui/events.ts:567</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L567">ui/events.ts:567</a></p>
 <p>The <a href="https://maplibre.org/maplibre-style-spec/#sources">style spec representation of the source</a> if the event has a <code>dataType</code> of <code>source</code>.</p>
 <hr />
 <h3 id="target">target</h3>
 <blockquote>
 <p><strong>target</strong>: <a href="../Map/"><code>Map</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L486">ui/events.ts:486</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L486">ui/events.ts:486</a></p>
 <p>The object that fired the event. Set when the event is fired, and narrowed to a more
 specific type (e.g. <code>Map</code>, <code>Marker</code>) by the event subclasses.</p>
 <h4 id="inherited-from">Inherited from</h4>
@@ -10859,7 +10929,7 @@ specific type (e.g. <code>Map</code>, <code>Marker</code>) by the event subclass
 <blockquote>
 <p><strong>tile</strong>: <code>any</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3a0a4f795fef5b2a29034d71833475589c344eaf/src/ui/events.ts#L575">ui/events.ts:575</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/events.ts#L575">ui/events.ts:575</a></p>
 <p>The tile being loaded or changed, if the event has a <code>dataType</code> of <code>source</code> and
 the event is related to loading of a tile.</p>
 

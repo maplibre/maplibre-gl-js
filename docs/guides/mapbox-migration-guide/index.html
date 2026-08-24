@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.56">
     
     
       
@@ -6497,6 +6497,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/add-3d-terrain-from-quantized-mesh-tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Add 3D terrain from quantized-mesh tiles
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/add-3d-tiles-using-threejs/" class="md-nav__link">
         
   
@@ -8816,6 +8851,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/elevate-symbols-above-the-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Elevate symbols above the terrain
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/enter-a-360-photosphere/" class="md-nav__link">
         
   
@@ -10520,8 +10590,8 @@
 <div class="language-diff highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gd">-    var map = new mapboxgl.Map({</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gi">+    var map = new maplibregl.Map({</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gd">-    &lt;button class=&quot;mapboxgl-ctrl&quot;&gt;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gi">+    &lt;button class=&quot;maplibregl-ctrl&quot;&gt;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gd">-    &lt;button class="mapboxgl-ctrl"&gt;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gi">+    &lt;button class="maplibregl-ctrl"&gt;</span>
 </span></code></pre></div>
 <h4 id="compatibility-branch">Compatibility branch</h4>
 <p>MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. </p>
@@ -10529,19 +10599,19 @@
 <blockquote>
 <p>MapLibre GL JS is distributed via <a href="https://unpkg.com">unpkg.com</a>.</p>
 </blockquote>
-<div class="language-diff highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gd">-    &lt;script src=&quot;https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js&quot;&gt;&lt;/script&gt;</span>
+<div class="language-diff highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gd">-    &lt;script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"&gt;&lt;/script&gt;</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="gd">-    &lt;link</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gd">-      href=&quot;https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.css&quot;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="gd">-      rel=&quot;stylesheet&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gd">-      href="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.css"</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="gd">-      rel="stylesheet"</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gd">-    /&gt;</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="gi">+    &lt;script type=&quot;module&quot;&gt;</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gi">+      import * as maplibregl from &#39;https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.mjs&#39;;</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="gi">+    &lt;script type="module"&gt;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gi">+      import * as maplibregl from 'https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.mjs';</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="gi">+    &lt;/script&gt;</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gi">+    &lt;link</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="gi">+      href=&quot;https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.css&quot;</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gi">+      rel=&quot;stylesheet&quot;</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="gi">+      href="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.css"</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gi">+      rel="stylesheet"</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gi">+    /&gt;</span>
 </span></code></pre></div>
 <p>Don't forget to replace the version above <code>#.#.#</code> with the version you would like to use.

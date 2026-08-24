@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.56">
     
     
       
@@ -6495,6 +6495,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/add-3d-terrain-from-quantized-mesh-tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Add 3D terrain from quantized-mesh tiles
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/add-3d-tiles-using-threejs/" class="md-nav__link">
         
   
@@ -8814,6 +8849,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/elevate-symbols-above-the-terrain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Elevate symbols above the terrain
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/enter-a-360-photosphere/" class="md-nav__link">
         
   
@@ -10776,21 +10846,21 @@
 <p>If you import maplibre-gl from npm with <strong>named imports</strong> (<code>import {Map} from 'maplibre-gl'</code>), your imports keep working: v6 resolves to the ESM bundle automatically.</p>
 <p>If you used the <strong>default import</strong> (<code>import maplibregl from 'maplibre-gl'</code>), switch to either named imports or a namespace import:</p>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// before</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">import</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;maplibre-gl&#39;</span><span class="p">;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">import</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'maplibre-gl'</span><span class="p">;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1">// after</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;maplibre-gl&#39;</span><span class="p">;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'maplibre-gl'</span><span class="p">;</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1">// or pull in just what you need</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="nb">Map</span><span class="p">,</span><span class="w"> </span><span class="nx">setWorkerUrl</span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;maplibre-gl&#39;</span><span class="p">;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="nb">Map</span><span class="p">,</span><span class="w"> </span><span class="nx">setWorkerUrl</span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'maplibre-gl'</span><span class="p">;</span>
 </span></code></pre></div>
 <h2 id="script-tag"><code>&lt;script&gt;</code> tag</h2>
 <p>If you load maplibre-gl via <code>&lt;script src&gt;</code>, switch to a module script:</p>
 <div class="language-html highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">&lt;!-- before --&gt;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/maplibre-gl@^5/dist/maplibre-gl.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">"https://unpkg.com/maplibre-gl@^5/dist/maplibre-gl.js"</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cm">&lt;!-- after --&gt;</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;module&quot;</span><span class="p">&gt;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs&#39;</span><span class="p">;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">"module"</span><span class="p">&gt;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs'</span><span class="p">;</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </span></code></pre></div>
 <h2 id="setworkerurl-is-bundler-only"><code>setWorkerUrl()</code> is bundler-only</h2>
@@ -10799,12 +10869,12 @@
 <h2 id="csp-directives">CSP directives</h2>
 <p>The dedicated CSP bundle from v5 is no longer needed.</p>
 <p>If you load MapLibre from a CDN cross-origin to your page (e.g. unpkg), the worker is constructed from a same-origin Blob URL, so your CSP needs to allow <code>blob:</code> in <code>worker-src</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>worker-src &#39;self&#39; blob: ;
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>img-src data: blob: &#39;self&#39; ;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>worker-src 'self' blob: ;
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>img-src data: blob: 'self' ;
 </span></code></pre></div>
 <p>If you self-host the worker file (any bundler setup), the worker URL is same-origin and <code>blob:</code> is not required:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>worker-src &#39;self&#39; ;
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>img-src data: blob: &#39;self&#39; ;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>worker-src 'self' ;
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>img-src data: blob: 'self' ;
 </span></code></pre></div>
 <h2 id="zoomlevelstooverscale">zoomLevelsToOverscale</h2>
 <p>In version 5 there was an experimental parameter added to allow slicing vector tiles instead of overscaling them.
@@ -10825,7 +10895,7 @@ If you would like to revert to the previous behavior you can set <code>zoomLevel
 <p>All events are now classes, it is advised not to use <code>instanceof</code> but instead check the <code>type</code> field. Since the change was from types to classes this shouldn't be a problem in most code bases.</p>
 <h3 id="styleimagemissing">styleimagemissing</h3>
 <p>In v6, <code>styleimagemissing</code> listeners can no longer resolve the current image request by calling <code>Map#addImage</code>. To migrate a listener that supplies missing images, replace it with <a href="../../API/classes/Map/#setmissingstyleimageresolver"><code>Map#setMissingStyleImageResolver</code></a>:</p>
-<div class="language-diff highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gd">-map.on(&#39;styleimagemissing&#39;, ({id}) =&gt; {</span>
+<div class="language-diff highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gd">-map.on('styleimagemissing', ({id}) =&gt; {</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="gi">+map.setMissingStyleImageResolver((id) =&gt; {</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w"> </span>    map.addImage(id, generateImage(id));
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w"> </span>});
