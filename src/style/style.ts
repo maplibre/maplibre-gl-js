@@ -1814,6 +1814,24 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
+    /**
+     * Collects everything symbol placement depends on. When none of these changed since the last
+     * committed placement, placement is skipped, so a repaint triggered by something else (an
+     * animated icon, a custom layer) costs a single frame instead of a `fadeDuration` tail.
+     * Inputs that live outside the transform bump `_placementRevision` where they change.
+     */
+    _getPlacementInput(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): Array<number | boolean> {
+        const padding = transform.padding;
+        return [
+            showCollisionBoxes, crossSourceCollisions, this._placementRevision,
+            this.projection?.transitionState ?? -1,
+            transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
+            transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
+            transform.elevation, transform.minElevationForCurrentTile, transform.renderWorldCopies,
+            padding.top, padding.bottom, padding.left, padding.right,
+        ];
+    }
+
     _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
@@ -1844,19 +1862,7 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        // Placement only depends on these inputs, so when none of them changed since the last
-        // committed placement it is skipped, and a repaint triggered by something else (an
-        // animated icon, a custom layer) costs a single frame instead of a `fadeDuration` tail.
-        // Inputs that live outside the transform bump `_placementRevision` where they change.
-        const padding = transform.padding;
-        const placementInput: Array<number | boolean> = [
-            showCollisionBoxes, crossSourceCollisions, this._placementRevision,
-            this.projection?.transitionState ?? -1,
-            transform.zoom, transform.center.lng, transform.center.lat, transform.bearing,
-            transform.pitch, transform.roll, transform.fov, transform.width, transform.height,
-            transform.elevation, transform.minElevationForCurrentTile, transform.renderWorldCopies,
-            padding.top, padding.bottom, padding.left, padding.right,
-        ];
+        const placementInput = this._getPlacementInput(transform, showCollisionBoxes, crossSourceCollisions);
         const placementInputChanged = symbolBucketsChanged || !deepEqual(placementInput, this._placementInput);
 
         // A stale placement still needs one final re-run: committing is what clears staleness.
