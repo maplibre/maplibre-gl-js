@@ -299,17 +299,11 @@ describe('Terrain', () => {
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
-    /** Renders z0 tiles over a zoom-3 transform, so the covering tiles are at z3. */
-    function createTwoZoomTerrain() {
+    test('getElevationForLngLat samples the rendered tile where its DEM is loaded', () => {
         const terrain = createFlatTerrain(500);
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
-        (terrain.painter.transform as MercatorTransform).setZoom(3);
-        return terrain;
-    }
-
-    test('getElevationForLngLat samples the rendered tile where its DEM is loaded', () => {
-        const terrain = createTwoZoomTerrain();
+        (terrain.painter.transform as MercatorTransform).setZoom(3); // renders z0 tiles, covering tiles are z3
         const renderedDEM = createDEM(() => 500);
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
@@ -318,7 +312,10 @@ describe('Terrain', () => {
     });
 
     test('getElevationForLngLat traverses the covering tiles while the rendered tile\'s DEM is loading', () => {
-        const terrain = createTwoZoomTerrain();
+        const terrain = createFlatTerrain(500);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+        (terrain.painter.transform as MercatorTransform).setZoom(3); // renders z0 tiles, covering tiles are z3
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : ({tileID, dem: coveringDEM}) as any as Tile;
 
@@ -326,7 +323,10 @@ describe('Terrain', () => {
     });
 
     test('getElevationForLngLat traverses the covering tiles outside the rendered tiles', () => {
-        const terrain = createTwoZoomTerrain();
+        const terrain = createFlatTerrain(500);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+        (terrain.painter.transform as MercatorTransform).setZoom(3); // renders z0 tiles, covering tiles are z3
         const renderedDEM = createDEM(() => 500);
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
