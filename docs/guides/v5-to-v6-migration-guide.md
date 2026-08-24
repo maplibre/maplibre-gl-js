@@ -1,6 +1,6 @@
 # v5 to v6 migration guide
 
-MapLibre GL JS v6 ships as ES modules only. The UMD bundle and the separate CSP build from v5 are gone. The bundle file is now `maplibre-gl.mjs` (and `maplibre-gl-worker.mjs`).
+MapLibre GL JS v6 ships as ES modules only. The UMD bundle, the separate CSP build, and the CommonJS (`require('maplibre-gl')`) entry from v5 are all gone. The bundle file is now `maplibre-gl.mjs` (and `maplibre-gl-worker.mjs`). If you `require()` the package from Node with no bundler involved, this surfaces as `ERR_PACKAGE_PATH_NOT_EXPORTED`.
 
 ## Imports
 
@@ -31,6 +31,8 @@ If you load maplibre-gl via `<script src>`, switch to a module script:
     import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
 </script>
 ```
+
+Pin an explicit major version (e.g. ^6.0.0) rather than `@latest` or an unversioned specifier. Starting with v6, a page pinned to `@latest` goes to a blank gray screen with a 404 in the console.
 
 ## `setWorkerUrl()` is bundler-only
 
@@ -96,3 +98,11 @@ In v6, `styleimagemissing` listeners can no longer resolve the current image req
 ```
 
 The resolver can be synchronous or asynchronous. For asynchronous loading, call `Map#addImage` before the resolver's promise settles. The `styleimagemissing` event can still be used to observe images that remain unresolved.
+
+## WebGL2 is now required
+
+WebGL1 support has been removed; a map now requires WebGL2. A browser or device that does not support WebGL2 may fail to render one under v6. See [caniuse.com/webgl2](https://caniuse.com/webgl2) to check. When WebGL2 is unavailable, the map fires an `error` event whose `error` is a `GPUInitializationError` (check `e.error instanceof GPUInitializationError`, exported from `maplibre-gl`) instead of rendering.
+
+## `map.transform` was removed
+
+The internal `map.transform` property is gone; `Map` now composes a `Camera` rather than extending it. Use `Map`'s public API instead of reaching into `transform`. If you relied on something `transform` exposed that isn't covered by the public API, please open an issue or PR.
