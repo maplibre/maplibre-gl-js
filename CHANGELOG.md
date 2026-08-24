@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add support for `symbol-height-offset` and `symbol-height-anchor` layout properties, which raise icons and text above the map. `symbol-height-anchor` selects whether the offset is measured from the terrain surface (`ground`, the default) or from the zero elevation datum (`absolute`) ([#7827](https://github.com/maplibre/maplibre-gl-js/pull/7827)) (by [@HarelM](https://github.com/HarelM))
 - Pick terrain coordinates with a CPU raycast against the DEM instead of a coords framebuffer readback: full DEM resolution, no GPU stall on pointer events, and about 4MB less GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 

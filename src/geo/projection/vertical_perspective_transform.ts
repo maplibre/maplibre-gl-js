@@ -416,11 +416,10 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this.getCircleRadiusCorrection() / Math.cos(angular[1]);
     }
 
-    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
+    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
         const canonical = unwrappedTileID.canonical;
         const spherePos = projectTileCoordinatesToSphere(x, y, canonical.x, canonical.y, canonical.z);
-        const elevation = getElevation ? getElevation(x, y) : 0.0;
-        const vectorMultiplier = 1.0 + elevation / earthRadius;
+        const vectorMultiplier = 1.0 + (elevation ?? 0.0) / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
         vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64);
 
