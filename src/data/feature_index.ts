@@ -1,4 +1,3 @@
-import type Point from '@mapbox/point-geometry';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {loadGeometry} from './load_geometry.ts';
 import {toEvaluationFeature} from './evaluation_feature.ts';
@@ -18,13 +17,14 @@ import {MLTVectorTile} from '../source/vector_tile_mlt.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
+import type Point from '@mapbox/point-geometry';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
 import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
@@ -37,7 +37,7 @@ type QueryParameters = {
     queryGeometry: Point[];
     cameraQueryGeometry: Point[];
     queryPadding: number;
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;

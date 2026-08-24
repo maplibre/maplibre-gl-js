@@ -50,15 +50,13 @@ describe('render', () => {
         expect(painter.renderPass).toBe('translucent');
     });
 
-    test('calls terrainDepth but not terrainCoords', () => {
+    test('calls terrainDepth', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
-        const terrainCoords = vi.spyOn(painter.drawFunctions, 'terrainCoords').mockImplementation(() => {});
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
         painter.render(style, renderOptions);
 
         expect(terrainDepth).toHaveBeenCalled();
-        expect(terrainCoords).not.toHaveBeenCalled();
     });
 
     test('uses terrain data for regular Mercator draws', () => {

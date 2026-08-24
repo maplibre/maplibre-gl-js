@@ -12,6 +12,18 @@ import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_det
 import type {Frustum} from '../util/primitives/frustum.ts';
 
 /**
+ * Samples the terrain elevation, in meters, at a point given in tile coordinates.
+ *
+ * Implementations are bound to a specific tile, so `x` and `y` are interpreted within that tile.
+ * A missing function means the map has no terrain, in which case callers treat the elevation as 0.
+ *
+ * @param x - the x coordinate within the tile
+ * @param y - the y coordinate within the tile
+ * @returns the terrain elevation in meters
+ */
+export type GetElevation = (x: number, y: number) => number;
+
+/**
  * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
  * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
  */
@@ -354,6 +366,15 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Given a point on screen, return the mercator coordinate where its ray hits the rendered terrain surface.
+     * @param p - the point
+     * @param terrain - the terrain
+     * @returns the hit with z in meters, or null when the terrain has no renderable tiles or the ray never crosses the terrain surface
+     */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
+
+    /**
+     * @internal
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
@@ -502,7 +523,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection;
 
     /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.

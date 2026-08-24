@@ -11,6 +11,8 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {addDynamicAttributes} from '../../data/bucket/symbol_bucket.ts';
 import {fastInvertTransformMat4} from '../../util/fast_maths.ts';
 import {getAnchorAlignment, WritingMode} from '../../symbol/shaping.ts';
+import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels, elevationAt} from '../../symbol/projection.ts';
+import {translatePosition} from '../../util/util.ts';
 import ONE_EM from '../../symbol/one_em.ts';
 
 import {
@@ -23,7 +25,6 @@ import {
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
-
 import type {Texture, TextureFilter} from '../texture.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import type {UniformValues} from '../uniform_binding.ts';
@@ -32,12 +33,10 @@ import type {CrossTileID, VariableOffset} from '../../symbol/placement.ts';
 import type {SymbolBucket, SymbolBuffers} from '../../data/bucket/symbol_bucket.ts';
 import type {TerrainData} from '../../render/terrain.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../../geo/transform_interface.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {Program} from '../program.ts';
 import type {TextAnchor} from '../../style/style_layer/variable_text_anchor.ts';
-import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels} from '../../symbol/projection.ts';
-import {translatePosition} from '../../util/util.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 type SymbolTileRenderState = {
@@ -154,10 +153,11 @@ function updateVariableAnchors(coords: OverscaledTileID[],
 
         if (size) {
             const tileScale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
-            const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : null;
+            const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : undefined;
             const translation = translatePosition(transform, tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                transform, pitchedLabelPlaneMatrix, tileScale, size, updateTextFitIcon, translation, coord.toUnwrapped(), getElevation);
+                transform, pitchedLabelPlaneMatrix, tileScale, size, updateTextFitIcon, translation, coord.toUnwrapped(), getElevation,
+                layer.layout.get('symbol-height-anchor') === 'ground');
         }
     }
 }
@@ -173,7 +173,7 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: Symbol
             adjustedShift = adjustedShift.rotate(-transformAngle);
         }
         const tileAnchorShifted = translatedAnchor.add(adjustedShift);
-        return projectWithMatrix(tileAnchorShifted.x, tileAnchorShifted.y, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation).point;
+        return projectWithMatrix(tileAnchorShifted.x, tileAnchorShifted.y, projectionContext.pitchedLabelPlaneMatrix, elevationAt(projectionContext, tileAnchorShifted.x, tileAnchorShifted.y)).point;
     } else {
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with
@@ -201,7 +201,8 @@ function updateVariableAnchorsForBucket(
     updateTextFitIcon: boolean,
     translation: [number, number],
     unwrappedTileID: UnwrappedTileID,
-    getElevation: (x: number, y: number) => number) {
+    getElevation: GetElevation | undefined,
+    heightAnchorGround: boolean) {
     const placedSymbols = bucket.text.placedSymbolArray;
     const dynamicTextLayoutVertexArray = bucket.text.dynamicLayoutVertexArray;
     const dynamicIconLayoutVertexArray = bucket.icon.dynamicLayoutVertexArray;
@@ -221,6 +222,8 @@ function updateVariableAnchorsForBucket(
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
             const projectionContext: SymbolProjectionContext = {
                 getElevation,
+                heightOffset: symbol.heightOffset,
+                heightAnchorGround,
                 width: transform.width,
                 height: transform.height,
                 pitchedLabelPlaneMatrix,
@@ -386,12 +389,13 @@ function drawLayerSymbols(
             hasVariableAnchors &&
             bucket.hasIconData();
         const isOffset = layer._unevaluatedLayout.hasValue('icon-offset');
+        const heightAnchorGround = layer.layout.get('symbol-height-anchor') === 'ground';
 
         if (alongLine) {
             const pitchedLabelPlaneMatrixInverse = mat4.create();
             fastInvertTransformMat4(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
 
-            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
+            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : undefined;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
             updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
         }
@@ -411,16 +415,16 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset, heightAnchorGround);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling, isOffset);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling, isOffset, heightAnchorGround);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
                 size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling, isOffset);
+                uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling, isOffset, heightAnchorGround);
         }
 
         const state = {

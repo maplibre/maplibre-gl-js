@@ -23,7 +23,7 @@ import type {ImageManager} from '../render/image_manager.ts';
 import type {Context} from '../webgl/context.ts';
 import type {OverscaledTileID} from './tile_id.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {LayerFeatureStates} from '../source/source_state.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
@@ -104,6 +104,7 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
+    needsColorReliefPrepare: boolean;
     abortController: AbortController;
     texture: any;
     fbo: Framebuffer;
@@ -396,7 +397,7 @@ export class Tile {
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4,
-        getElevation: undefined | ((x: number, y: number) => number)
+        getElevation: GetElevation | undefined
     ): QueryResults {
         if (!this.latestFeatureIndex?.rawTileData)
             return {};

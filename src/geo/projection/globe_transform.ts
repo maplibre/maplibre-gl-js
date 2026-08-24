@@ -317,8 +317,8 @@ export class GlobeTransform implements ITransform {
         return lerp(mercatorCorrection, verticalCorrection, this._globeness);
     }
 
-    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
-        return this.currentTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
+        return this.currentTransform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
     }
 
     private _calcMatrices(): void {
@@ -428,6 +428,11 @@ export class GlobeTransform implements ITransform {
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         return this.currentTransform.screenPointToMercatorCoordinate(p, terrain);
+    }
+
+    /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        return this.currentTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
