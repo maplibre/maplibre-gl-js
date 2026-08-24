@@ -231,7 +231,7 @@ export class Style extends Evented<MapEventType> {
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
-    _placementInput: Array<number | boolean> | undefined;
+    _placedSignature: Array<number | boolean> | undefined;
     _placementRevision: number;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
@@ -316,7 +316,7 @@ export class Style extends Evented<MapEventType> {
         this._glyphsDidChange = false;
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
-        this._placementInput = undefined;
+        this._placedSignature = undefined;
         this._placementRevision = 0;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
@@ -1815,12 +1815,13 @@ export class Style extends Evented<MapEventType> {
     }
 
     /**
-     * Collects everything symbol placement depends on. When none of these changed since the last
-     * committed placement, placement is skipped, so a repaint triggered by something else (an
-     * animated icon, a custom layer) costs a single frame instead of a `fadeDuration` tail.
+     * Everything symbol placement depends on, in a form two frames can be compared by. An equal
+     * signature means placement would produce the same result, so it is skipped and a repaint
+     * triggered by something else (an animated icon, a custom layer) costs a single frame
+     * instead of a `fadeDuration` tail.
      * Inputs that live outside the transform bump `_placementRevision` where they change.
      */
-    _getPlacementInput(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): Array<number | boolean> {
+    _getPlacementSignature(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): Array<number | boolean> {
         const padding = transform.padding;
         return [
             showCollisionBoxes, crossSourceCollisions, this._placementRevision,
@@ -1862,12 +1863,12 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        const placementInput = this._getPlacementInput(transform, showCollisionBoxes, crossSourceCollisions);
-        const placementInputChanged = symbolBucketsChanged || !deepEqual(placementInput, this._placementInput);
+        const signature = this._getPlacementSignature(transform, showCollisionBoxes, crossSourceCollisions);
+        const signatureChanged = symbolBucketsChanged || !deepEqual(signature, this._placedSignature);
 
         // A stale placement still needs one final re-run: committing is what clears staleness.
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom) && (placementInputChanged || this.placement.stale))) {
-            this._placementInput = placementInput;
+        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom) && (signatureChanged || this.placement.stale))) {
+            this._placedSignature = signature;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
@@ -1877,7 +1878,7 @@ export class Style extends Evented<MapEventType> {
             // started yet because of the `stillRecent` check immediately
             // above, so mark it stale to ensure that we request another
             // render frame once it is due
-            if (placementInputChanged) this.placement.setStale();
+            if (signatureChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
 
