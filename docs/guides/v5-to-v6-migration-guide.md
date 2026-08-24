@@ -1,6 +1,6 @@
 # v5 to v6 migration guide
 
-MapLibre GL JS v6 ships as ES modules only. The UMD bundle, the separate CSP build, and the CommonJS (`require('maplibre-gl')`) entry from v5 are all gone. The bundle file is now `maplibre-gl.mjs` (and `maplibre-gl-worker.mjs`). If you `require()` the package from Node with no bundler involved, this surfaces as `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+MapLibre GL JS v6 ships as ES modules only. The UMD bundle, the separate CSP build, and the CommonJS (`require('maplibre-gl')`) entry from v5 are all gone. The bundle file is now `maplibre-gl.mjs` (and `maplibre-gl-worker.mjs`). If your build tooling or test runner still uses `require()` (plain Node scripts, test runners that don't transform ESM, server-side code importing the package without a bundler), this surfaces as `ERR_PACKAGE_PATH_NOT_EXPORTED`.
 
 ## Imports
 
@@ -61,8 +61,8 @@ img-src data: blob: 'self' ;
 ## zoomLevelsToOverscale
 
 In version 5 there was an experimental parameter added to allow slicing vector tiles instead of overscaling them.
-We tested it, and it looks like it fixes a lot of issue in labeling etc.
-It does changes rendering and the results of queryRenderedFeatures.
+We tested it, and it looks like it fixes a lot of issues in labeling etc.
+It changes rendering and the results of queryRenderedFeatures.
 If you would like to revert to the previous behavior you can set `zoomLevelsToOverscale: undefined` when initializing the map.
 
 ## Nested GeoJSON properties
@@ -101,8 +101,8 @@ The resolver can be synchronous or asynchronous. For asynchronous loading, call 
 
 ## WebGL2 is now required
 
-WebGL1 support has been removed; a map now requires WebGL2. A browser or device that does not support WebGL2 may fail to render one under v6. See [caniuse.com/webgl2](https://caniuse.com/webgl2) to check. When WebGL2 is unavailable, the `Map` constructor throws a `GPUInitializationError` (check with `instanceof GPUInitializationError`, exported from `maplibre-gl`) instead of returning a map.
+WebGL1 support has been removed; WebGL2 is now required. A browser or device that does not support WebGL2 will fail to render a map under v6. When WebGL2 is unavailable, the `Map` constructor throws a `GPUInitializationError` (check with `instanceof GPUInitializationError`, exported from `maplibre-gl`) instead of returning a map.
 
 ## `map.transform` was removed
 
-The internal `map.transform` property is gone; `Map` now composes a `Camera` rather than extending it. Use `Map`'s public API instead of reaching into `transform`. If you relied on something `transform` exposed that isn't covered by the public API, please open an issue or PR.
+The internal `map.transform` property has been removed; `Map` now composes a `Camera` rather than extending it. Use `Map`'s public API instead of reaching into `transform`. If you relied on something `transform` exposed that isn't covered by the public API, please open an issue or PR.
