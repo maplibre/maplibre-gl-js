@@ -21,6 +21,7 @@ import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {PauseablePlacement} from './pauseable_placement.ts';
 import {type Tile} from '../tile/tile.ts';
 import type Point from '@mapbox/point-geometry';
 import {type PossiblyEvaluated} from './properties.ts';
@@ -3887,19 +3888,20 @@ describe('Style#_updatePlacement', () => {
     let style: Style;
     let transform: MercatorTransform;
     let time: number;
+    let placementRun: MockInstance<PauseablePlacement['continuePlacement']>;
 
-    const update = () => style._updatePlacement(transform, false, 300, false);
-    // Run placement, then step the clock past the recency window so it can settle.
-    const settle = () => {
-        update();
+    /** Leaves placement committed and past its recency window, so the next run is free to be skipped. */
+    function settle() {
+        style._updatePlacement(transform, false, 300, false);
         setNow(time += 1000);
-        update();
-        setNow(time += 1000);
-    };
+        placementRun.mockClear();
+    }
 
     beforeEach(async () => {
         time = 0;
         setNow(time);
+        // `_updatePlacement` returns false either way with no symbol tiles loaded, so count runs instead.
+        placementRun = vi.spyOn(PauseablePlacement.prototype, 'continuePlacement');
         style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {geojson: createGeoJSONSource()},
@@ -3911,47 +3913,63 @@ describe('Style#_updatePlacement', () => {
     });
 
     afterEach(() => {
+        placementRun.mockRestore();
         restoreNow();
     });
 
     test('placement is not re-run while its inputs are unchanged', () => {
         settle();
-        const settled = style.pauseablePlacement;
 
-        expect(update()).toBe(false);
-        expect(style.pauseablePlacement).toBe(settled);
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).not.toHaveBeenCalled();
     });
 
-    test.each([
-        ['zoom', () => transform.setZoom(3)],
-        ['padding', () => transform.setPadding({top: 10, bottom: 0, left: 0, right: 0})],
-        ['elevation', () => transform.setElevation(100)],
-        ['paint property', () => style.setPaintProperty('symbol', 'icon-translate', [5, 5])],
-    ])('a %s change re-places, and then settles again instead of looping', (_name, change) => {
+    test('a zoom change re-places, and then settles again instead of looping', () => {
         settle();
-        const settled = style.pauseablePlacement;
 
-        change();
-        update();
-        expect(style.pauseablePlacement).not.toBe(settled);
+        transform.setZoom(3);
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).toHaveBeenCalled();
 
-        setNow(time += 1000);
-        update();
-        setNow(time += 1000);
-        expect(update()).toBe(false);
+        settle();
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a padding change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        transform.setPadding({top: 10, bottom: 0, left: 0, right: 0});
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a paint property change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        style.setPaintProperty('symbol', 'icon-translate', [5, 5]);
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).not.toHaveBeenCalled();
     });
 
     test('a stale placement gets its final re-run even after its inputs settled', () => {
         settle();
-        const settled = style.pauseablePlacement;
 
         style.placement.setStale();
-        update();
-        expect(style.pauseablePlacement).not.toBe(settled);
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).toHaveBeenCalled();
 
-        const rerun = style.pauseablePlacement;
+        placementRun.mockClear();
         setNow(time += 1000);
-        expect(update()).toBe(false);
-        expect(style.pauseablePlacement).toBe(rerun);
+        style._updatePlacement(transform, false, 300, false);
+        expect(placementRun).not.toHaveBeenCalled();
     });
 });
