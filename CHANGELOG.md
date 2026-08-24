@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
