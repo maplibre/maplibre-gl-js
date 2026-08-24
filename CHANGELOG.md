@@ -1,10 +1,25 @@
 ## main
 ### ✨ Features and improvements
+- Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066))
 - Allow negative `fill-extrusion-base` and `fill-extrusion-height` to extrude below ground level, for example underground floor levels ([#8051](https://github.com/maplibre/maplibre-gl-js/issues/8051)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
+
+## 6.6.0
+
+### ✨ Features and improvements
+
+- Add support for `symbol-height-offset` and `symbol-height-anchor` layout properties, which raise icons and text above the map. `symbol-height-anchor` selects whether the offset is measured from the terrain surface (`ground`, the default) or from the zero elevation datum (`absolute`) ([#7827](https://github.com/maplibre/maplibre-gl-js/pull/7827)) (by [@HarelM](https://github.com/HarelM))
+- Pick terrain coordinates with a CPU raycast against the DEM instead of a coords framebuffer readback: full DEM resolution, no GPU stall on pointer events, and about 4MB less GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+
+### 🐞 Bug fixes
+
+- Fix labels briefly appearing too large when zooming out several levels at once (e.g. a scroll-wheel or pinch fling) with a zoom-dependent `text-size`/`icon-size` ([#8175](https://github.com/maplibre/maplibre-gl-js/pull/8175)) (by [@mondsichtung](https://github.com/mondsichtung))
+- Fix globe tile selection measuring distances from the ground point below the camera instead of the camera itself, refining some views past the requested zoom and leaving others coarser ([#8187](https://github.com/maplibre/maplibre-gl-js/pull/8187)) (by [@Alchez](https://github.com/Alchez))
+- Fix the style's `center`, `zoom`, `bearing`, `pitch` and `roll` being ignored when the map was created with a `minZoom` or `minPitch` option, since applying those limits marked the transform as modified ([#5932](https://github.com/maplibre/maplibre-gl-js/issues/5932))
+- Upload the `color-relief` DEM texture once per tile instead of on every frame ([#8209](https://github.com/maplibre/maplibre-gl-js/pull/8209))
 
 ## 6.5.0
 

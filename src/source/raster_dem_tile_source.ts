@@ -93,6 +93,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.dem = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                 tile.needsHillshadePrepare = true;
                 tile.needsTerrainPrepare = true;
+                tile.needsColorReliefPrepare = true;
                 tile.state = 'loaded';
             }
         } catch (err) {

@@ -1,5 +1,6 @@
 /**
- * Thrown (via the map's `error` event) when a GPU rendering context cannot be created.
+ * Thrown by the `Map` constructor when a GPU rendering context cannot be created,
+ * or fired via the map's `error` event when recreating the context after a `webglcontextrestored` fails.
  *
  * Carries the canvas attributes that were requested and, when the browser provided one,
  * the originating `webglcontextcreationerror` `statusMessage`.

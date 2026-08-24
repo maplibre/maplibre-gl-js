@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map.ts';
+import {Map} from '../map.ts';
 import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
 import {ErrorEvent} from '../../util/evented.ts';
 import {MapSourceDataEvent, MapStyleDataEvent} from '../events.ts';
@@ -7,8 +7,8 @@ import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
 import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style.ts';
-import {type GeoJSONSourceSpecification, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
+import type {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -106,43 +106,65 @@ describe('setStyle', () => {
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', async () => {
-        const map = new Map({container: window.document.createElement('div')});
-        map._camera.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
-        map._camera.transform.resize(600, 400, true);
-        expect(map._camera.transform.zoom).toBe(0.6983039737971013);
-        expect(map._camera.transform.unmodified).toBeTruthy();
-        map.setStyle(createStyle());
+    test('style transform overrides unmodified map transform when max bounds are set for a large area', async () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 600});
+        Object.defineProperty(container, 'clientHeight', {value: 400});
+        const map = createMap({container, deleteStyle: true});
+        map.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
+        expect(map.getZoom()).toBeCloseTo(0.6983039737971013, 10);
+        const style = createStyle();
+        map.setStyle(style);
         await map.once('style.load');
-        expect(fixedLngLat(map._camera.transform.center)).toEqual(fixedLngLat({lng: -73.9749, lat: 40.7736}));
-        expect(fixedNum(map._camera.transform.zoom)).toBe(12.5);
-        expect(fixedNum(map._camera.transform.bearing)).toBe(29);
-        expect(fixedNum(map._camera.transform.pitch)).toBe(50);
+        expect(fixedLngLat(map.getCenter())).toEqual({lng: style.center[0], lat: style.center[1]});
+        expect(fixedNum(map.getZoom())).toBe(style.zoom);
+        expect(fixedNum(map.getBearing())).toBe(style.bearing);
+        expect(fixedNum(map.getPitch())).toBe(style.pitch);
+    });
+
+    test('style transform overrides map transform when zoom and pitch limits are set in options', async () => {
+        const map = createMap({deleteStyle: true, minZoom: 1, minPitch: 10});
+        const style = createStyle();
+        map.setStyle(style);
+        await map.once('style.load');
+        expect(fixedLngLat(map.getCenter())).toEqual({lng: style.center[0], lat: style.center[1]});
+        expect(fixedNum(map.getZoom())).toBe(style.zoom);
+        expect(fixedNum(map.getBearing())).toBe(style.bearing);
+        expect(fixedNum(map.getPitch())).toBe(style.pitch);
+    });
+
+    test('style transform overrides map transform when a max zoom limit is set in options', async () => {
+        const map = createMap({deleteStyle: true, maxZoom: -1});
+        const style = createStyle();
+        map.setStyle(style);
+        await map.once('style.load');
+        expect(fixedNum(map.getCenter().lng)).toBe(style.center[0]);
+        expect(fixedNum(map.getBearing())).toBe(style.bearing);
+        expect(fixedNum(map.getPitch())).toBe(style.pitch);
+        expect(fixedNum(map.getZoom())).toBe(-1);
+        expect(fixedNum(map.getCenter().lat)).toBe(36.5978911823);
     });
 
     test('style transform does not override map transform modified via options', async () => {
-        const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
-        expect(map._camera.transform.unmodified).toBeFalsy();
+        const map = createMap({deleteStyle: true, zoom: 10, center: [-77.0186, 38.8888]});
         map.setStyle(createStyle());
         await map.once('style.load');
-        expect(fixedLngLat(map._camera.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
-        expect(fixedNum(map._camera.transform.zoom)).toBe(10);
-        expect(fixedNum(map._camera.transform.bearing)).toBe(0);
-        expect(fixedNum(map._camera.transform.pitch)).toBe(0);
+        expect(fixedLngLat(map.getCenter())).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+        expect(fixedNum(map.getZoom())).toBe(10);
+        expect(fixedNum(map.getBearing())).toBe(0);
+        expect(fixedNum(map.getPitch())).toBe(0);
     });
 
     test('style transform does not override map transform modified via setters', async () => {
-        const map = new Map({container: window.document.createElement('div')});
-        expect(map._camera.transform.unmodified).toBeTruthy();
+        const map = createMap({deleteStyle: true});
         map.setZoom(10);
         map.setCenter([-77.0186, 38.8888]);
-        expect(map._camera.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
-        map.once('style.load');
-        expect(fixedLngLat(map._camera.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
-        expect(fixedNum(map._camera.transform.zoom)).toBe(10);
-        expect(fixedNum(map._camera.transform.bearing)).toBe(0);
-        expect(fixedNum(map._camera.transform.pitch)).toBe(0);
+        await map.once('style.load');
+        expect(fixedLngLat(map.getCenter())).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+        expect(fixedNum(map.getZoom())).toBe(10);
+        expect(fixedNum(map.getBearing())).toBe(0);
+        expect(fixedNum(map.getPitch())).toBe(0);
     });
 
     test('passing null removes style', () => {

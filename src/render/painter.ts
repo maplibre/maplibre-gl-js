@@ -157,9 +157,9 @@ export class Painter {
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
-    // of the terrain-facilitators. e.g. depth & coords framebuffers
-    // every time the camera-matrix changes the terrain-facilitators will be redrawn.
-    terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
+    // of the terrain depth framebuffer.
+    // every time the camera-matrix changes the depth framebuffer will be redrawn.
+    terrainFacilitator: {depthDirty: boolean; matrix: mat4; renderTime: number};
 
     constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
@@ -169,7 +169,7 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
-        this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
+        this.terrainFacilitator = {depthDirty: true, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
 
@@ -555,7 +555,7 @@ export class Painter {
             }
         }
 
-        this.maybeDrawDepth(false);
+        this.maybeDrawDepth();
 
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
@@ -661,9 +661,8 @@ export class Painter {
 
     /**
      * Update the depth framebuffer if the camera has moved or tiles have reloaded.
-     * Marks coords as depthDirty so they are re-rendered on next demand.
      */
-    maybeDrawDepth(requireExact: boolean): void {
+    maybeDrawDepth(): void {
         if (!this.style?.map?.terrain) {
             return;
         }
@@ -672,7 +671,7 @@ export class Painter {
 
         // Update depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.depthDirty;
-        doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
+        doUpdate ||= !mat4.equals(prevMatrix, currMatrix);
         doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
@@ -682,19 +681,7 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = now();
         this.terrainFacilitator.depthDirty = false;
-        this.terrainFacilitator.coordsDirty = true;
         this.drawFunctions.terrainDepth(this, this.style.map.terrain);
-    }
-
-    /**
-     * Render the coords framebuffer if it is coordsDirty
-     */
-    maybeDrawCoords(): void {
-        if (!this.style?.map?.terrain || !this.terrainFacilitator.coordsDirty) {
-            return;
-        }
-        this.terrainFacilitator.coordsDirty = false;
-        this.drawFunctions.terrainCoords(this, this.style.map.terrain);
     }
 
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
