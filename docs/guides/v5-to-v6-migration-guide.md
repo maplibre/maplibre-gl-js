@@ -101,7 +101,7 @@ The resolver can be synchronous or asynchronous. For asynchronous loading, call 
 
 ## WebGL2 is now required
 
-WebGL1 support has been removed; a map now requires WebGL2. A browser or device that does not support WebGL2 may fail to render one under v6. See [caniuse.com/webgl2](https://caniuse.com/webgl2) to check. When WebGL2 is unavailable, the map fires an `error` event whose `error` is a `GPUInitializationError` (check `e.error instanceof GPUInitializationError`, exported from `maplibre-gl`) instead of rendering.
+WebGL1 support has been removed; a map now requires WebGL2. A browser or device that does not support WebGL2 may fail to render one under v6. See [caniuse.com/webgl2](https://caniuse.com/webgl2) to check. When WebGL2 is unavailable, the `Map` constructor throws a `GPUInitializationError` (check with `instanceof GPUInitializationError`, exported from `maplibre-gl`) instead of returning a map.
 
 ## `map.transform` was removed
 
