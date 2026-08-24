@@ -12,6 +12,8 @@ type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
+    pitch?: number;
+    zoom?: number;
 };
 
 function createMap(options: MapOptions = {}) {
@@ -1119,6 +1121,43 @@ describe('marker', () => {
         marker.setRotationAlignment('viewport');
         marker.setPitchAlignment('auto');
         expect(marker.getRotationAlignment()).toBe(marker.getPitchAlignment());
+
+        map.remove();
+    });
+
+    test('Marker with a height offset is drawn above its ground position', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const ground = new Marker().setLngLat([0, 0]).addTo(map);
+        const raised = new Marker({heightOffset: 5000}).setLngLat([0, 0]).addTo(map);
+
+        expect(raised.getHeightOffset()).toBe(5000);
+        expect(raised.getHeightAnchor()).toBe('ground');
+        expect(raised._pos.y).toBeLessThan(ground._pos.y);
+
+        map.remove();
+    });
+
+    test('Marker height offset is measured from the terrain by default, and from the datum when absolute', () => {
+        const map = createMap();
+        map.terrain = createTerrain();   // 1000 m everywhere
+        const onGround = new Marker({heightOffset: 500}).setLngLat([0, 0]).addTo(map);
+        const absolute = new Marker({heightOffset: 500, heightAnchor: 'absolute'}).setLngLat([0, 0]).addTo(map);
+
+        expect(onGround._elevation()).toBe(1500);
+        expect(absolute._elevation()).toBe(500);
+
+        map.remove();
+    });
+
+    test('setHeightOffset moves an existing marker', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+        const atGround = marker._pos.y;
+
+        marker.setHeightOffset(5000);
+
+        expect(marker._pos.y).toBeLessThan(atGround);
+        expect(marker.getHeightOffset()).toBe(5000);
 
         map.remove();
     });

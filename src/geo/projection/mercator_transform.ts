@@ -369,6 +369,10 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
+    locationToScreenPointAtElevation(lnglat: LngLat, elevation: number): Point {
+        return this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat), elevation, this._pixelMatrix3D);
+    }
+
     screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
         return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
     }

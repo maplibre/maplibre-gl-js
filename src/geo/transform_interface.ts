@@ -356,6 +356,15 @@ export interface IReadonlyTransform extends ITransformGetters {
     screenPointToLocationAtElevation(p: Point, elevation: number): LngLat;
 
     /**
+     * Given a geographical location and an elevation above the zero elevation datum, returns the
+     * point on screen where it is drawn. The counterpart of {@link screenPointToLocationAtElevation}.
+     * @param lnglat - the location
+     * @param elevation - the elevation in meters above the zero elevation datum
+     * @returns the screen point in pixels
+     */
+    locationToScreenPointAtElevation(lnglat: LngLat, elevation: number): Point;
+
+    /**
      * @internal
      * Given a point on screen, return its mercator coordinate.
      * @param p - the point
