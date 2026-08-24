@@ -555,7 +555,7 @@ describe('GlobeTransform', () => {
 
         test('basic', () => {
 
-            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
+            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
             expect(projection.point.x).toBeCloseTo(0.008635590705360347, precisionDigits);
             expect(projection.point.y).toBeCloseTo(0.16970500709841846, precisionDigits);
             expect(projection.signedDistanceFromCamera).toBeCloseTo(781.0549201758624, precisionDigits);
@@ -566,7 +566,7 @@ describe('GlobeTransform', () => {
             transform.setBearing(12);
             transform.setPitch(10);
 
-            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
+            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
             expect(projection.point.x).toBeCloseTo(-0.026585319983152694, precisionDigits);
             expect(projection.point.y).toBeCloseTo(0.15506884411121183, precisionDigits);
             expect(projection.signedDistanceFromCamera).toBeCloseTo(788.4423931260653, precisionDigits);
@@ -577,7 +577,7 @@ describe('GlobeTransform', () => {
             transform.setBearing(-90);
             transform.setPitch(60);
 
-            const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
+            const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
             expect(projection.point.x).toBeCloseTo(0.22428309892086878, precisionDigits);
             expect(projection.point.y).toBeCloseTo(-0.4462620847133465, precisionDigits);
             expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
@@ -643,8 +643,7 @@ describe('GlobeTransform', () => {
         const originalLat = globeTransform.center.lat;
 
         const terrain = {
-            getElevationForLngLatZoom: () => 200,
-            pointCoordinate: () => null
+            getElevationForLngLatZoom: () => 200
         } as any;
 
         globeTransform.recalculateZoomAndCenter(terrain);

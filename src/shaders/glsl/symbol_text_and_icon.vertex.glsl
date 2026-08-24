@@ -2,6 +2,7 @@ layout(location = 0) in vec4 a_pos_offset;
 layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec3 a_projected_pos;
 layout(location = 3) in uint a_fade_opacity;
+layout(location = 4) in float a_height_offset;
 
 // contents of a_size vary based on the type of property value
 // used for {text,icon}-size.
@@ -30,6 +31,7 @@ uniform bool u_is_variable_anchor;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
 uniform bool u_is_offset;
+uniform bool u_height_anchor_ground;
 
 out vec4 v_data0;
 out vec3 v_data1;
@@ -57,7 +59,7 @@ void main() {
     float a_size_min = float(a_data.z >> 1u);
     float is_sdf = float(a_data.z & 1u);
 
-    float ele = get_elevation(a_pos);
+    float ele = a_height_offset + (u_height_anchor_ground ? get_elevation(a_pos) : 0.0);
     highp float segment_angle = -a_projected_pos[2];
     float size;
 
@@ -74,6 +76,7 @@ void main() {
 
     // compute total opacity and early exit if too transparent:
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
+    // Terrain can hide the ground anchor while the elevated symbol remains visible.
     float visibility = calculate_visibility(projectedPoint);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
     float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
