@@ -9,7 +9,7 @@ import {FullscreenControl, FullscreenEvent, type FullscreenControlEventType, typ
 import {TerrainControl} from './ui/control/terrain_control.ts';
 import {GlobeControl} from './ui/control/globe_control.ts';
 import {type Offset, Popup, PopupEvent, type PopupEventType, type PopupOptions} from './ui/popup.ts';
-import {type Alignment, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
+import {type Alignment, type HeightAnchor, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
 import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style.ts';
 import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
@@ -290,6 +290,7 @@ export {
     type GetResourceResponse,
     type MapGeoJSONFeature,
     type Alignment,
+    type HeightAnchor,
     type AddProtocolAction,
     type SourceClass,
     type IndicesType,
