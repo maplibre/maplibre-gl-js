@@ -1,7 +1,8 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} from '../../util/util.ts';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {WorldCoordinateHelper} from './world_coordinate_helper.ts';
 import Point from '@mapbox/point-geometry';
 import type {UnwrappedTileIDType} from '../transform_helper.ts';
 import type {LngLat} from '../lng_lat.ts';
@@ -40,26 +41,27 @@ export function tileCoordinatesToLocation(inTileX: number, inTileY: number, cano
 }
 
 /**
- * Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
- * @param worldSize - Mercator world size computed from zoom level and tile size.
+ * Convert from LngLat to world coordinates (the projection's 0..1 world square scaled by world size).
+ * @param worldSize - World size computed from zoom level and tile size.
  * @param lnglat - The location to convert.
+ * @param helper - The lng/lat to world mapping; mercator clamps latitude to the valid mercator range.
  * @returns Point
  */
-export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat): Point {
+export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat, helper: WorldCoordinateHelper): Point {
     const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-    return new Point(
-        mercatorXfromLng(lnglat.lng) * worldSize,
-        mercatorYfromLat(lat) * worldSize);
+    const {x, y} = helper.worldFromLngLat(lnglat.lng, lat);
+    return new Point(x * worldSize, y * worldSize);
 }
 
 /**
- * Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
- * @param worldSize - Mercator world size computed from zoom level and tile size.
+ * Convert from world coordinates (the projection's 0..1 world square scaled by world size) to LngLat.
+ * @param worldSize - World size computed from zoom level and tile size.
  * @param point - World coordinate.
+ * @param helper - The lng/lat to world mapping.
  * @returns LngLat
  */
-export function unprojectFromWorldCoordinates(worldSize: number, point: Point): LngLat {
-    return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
+export function unprojectFromWorldCoordinates(worldSize: number, point: Point, helper: WorldCoordinateHelper): LngLat {
+    return helper.lngLatFromWorld(point.x / worldSize, point.y / worldSize);
 }
 
 /**
@@ -85,9 +87,10 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
     return worldMatrix;
 }
 
-export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
-    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
-    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
+export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number, helper: WorldCoordinateHelper): MercatorCoordinate {
+    const {x: centerX, y: centerY} = helper.worldFromLngLat(center.lng, center.lat);
+    const centerMercator = new MercatorCoordinate(centerX, centerY, helper.worldZFromAltitude(elevation, center));
+    const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
     const dMercator = distance * mercUnitsPerMeter;
     const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
     const dxMercator = dMercator * -x;
@@ -108,11 +111,13 @@ export function cameraMercatorCoordinate(transform: {
     bearing: number;
     cameraToCenterDistance: number;
     worldSize: number;
+    worldCoordinateHelper: WorldCoordinateHelper;
 }): MercatorCoordinate {
-    const pixelPerMeter = mercatorZfromAltitude(1, transform.center.lat) * transform.worldSize;
+    const helper = transform.worldCoordinateHelper;
+    const pixelPerMeter = helper.worldZFromAltitude(1, transform.center) * transform.worldSize;
     return cameraMercatorCoordinateFromCenterAndRotation(
         transform.center, transform.elevation, transform.pitch, transform.bearing,
-        transform.cameraToCenterDistance / pixelPerMeter);
+        transform.cameraToCenterDistance / pixelPerMeter, helper);
 }
 
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {

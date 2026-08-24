@@ -11,6 +11,7 @@ import {type SubdivisionGranularitySetting} from '../../render/subdivision_granu
 import {type Context} from '../../webgl/context.ts';
 import {type CanonicalTileID} from '../../tile/tile_id.ts';
 import {type Mesh} from '../../render/mesh.ts';
+import {mercatorWorldCoordinates, type WorldCoordinateHelper} from './world_coordinate_helper.ts';
 
 export class GlobeProjection extends Evented implements Projection {
     properties: PossiblyEvaluated<ProjectionProps, ProjectionPropsPossiblyEvaluated>;
@@ -86,6 +87,10 @@ export class GlobeProjection extends Evented implements Projection {
 
     get subdivisionGranularity(): SubdivisionGranularitySetting {
         return this.currentProjection.subdivisionGranularity;
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return mercatorWorldCoordinates;
     }
 
     get useGlobeControls(): boolean {

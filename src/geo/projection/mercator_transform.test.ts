@@ -845,3 +845,55 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 });
+
+// Dumped from commit 407a8ce9e (before lng/lat math was routed through the world coordinate helper)
+// with this vitest body, run against that commit's MercatorTransform:
+//
+//     const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+//     transform.resize(800, 600);
+//     transform.setCenter(new LngLat(lng, lat));
+//     transform.setZoom(zoom);
+//     transform.setPitch(pitch);
+//     transform.setBearing(bearing);
+//     transform.setElevation(elevation);
+//     const camera = transform.getCameraLngLat();
+//     const fromCamera = transform.calculateCenterFromCameraLngLatAlt(new LngLat(camLng, camLat), alt, bearing, pitch);
+//     const screen = transform.screenPointToLocation(new Point(px, py));
+//     const depth = transform.lngLatToCameraDepth(new LngLat(camLng, camLat), elevation);
+//     console.log(JSON.stringify([lng, lat, zoom, pitch, bearing, elevation, px, py, camLng, camLat, alt,
+//         transform.pixelsPerMeter, camera.lng, camera.lat,
+//         fromCamera.center.lng, fromCamera.center.lat, fromCamera.elevation, fromCamera.zoom,
+//         screen.lng, screen.lat, depth]));
+//
+// Each row is the 11 inputs followed by the 10 outputs. The comparison is exact on purpose: it guards the
+// refactor, and the mercator helper must not change a single bit of what the transform computes.
+const bitIdentityRows: number[][] = [
+    [-47.66947732307017, -31.891872510313988, 12.335080658085644, 44.56127839162946, 336.473432360217, 2708.1988365389407, 633.7583729997277, 333.5038125514984, -48.08538376772776, -32.09453024622053, 6542.761099524796, 0.06608625848037492, -47.635173521078315, -0.07879338518436896, -48.10138014914466, -32.06339765398657, 2708.1988365389407, 13.435703555287978, -47.63887852731972, 0.006589276563389035, 1.0141147771923014],
+    [29.529827423393726, -44.010491259396076, 4.350916175171733, 40.40351155679673, 295.4289326816797, 742.9703597445041, 119.00203712284565, 341.0222121980041, 30.327826311811805, -44.438611211720854, 11584.925448521972, 0.0002609985923233138, 47.682901433135356, -8.598491341610824, 30.222915348529853, -44.402985754807105, 742.9703597445041, 11.785820788692991, 27.14136282768186, -9.145886234506918, 0.9691228484020332],
+    [-175.4359111469239, -60.00771701335907, 11.576151768676937, 56.23234930448234, 272.34073103405535, 2335.907760076225, 152.67861243337393, 567.1612800098956, -174.8650802965276, -59.31432515755296, 16009.216147474945, 0.039052676546020515, -175.26376370720283, -0.007036734336963946, -175.22507664128196, -59.30681470736939, 2335.907760076225, 10.511814234993162, -175.36093089187702, -0.042540721064781906, 1.0132583202764962],
+    [-144.41486184485257, 7.587629780173302, 19.653839827515185, 37.38076251000166, 167.28623329661787, 1020.5210256390274, 658.2415254786611, 348.03880993276834, -144.6090480950661, 8.191629043780267, 13963.913300074637, 10.550601155815519, -144.4149643458768, 0.0004543238948713224, -144.5892778507015, 8.104884388547887, 1020.5210256390274, 12.06229126031695, -144.41507905283308, 1.7517999424399022e-06, 1.0012305848915197],
+    [-89.8710085451603, 64.21592768281698, 1.8496395740658045, 48.10014402028173, 158.33662692457438, 657.6341448817402, 48.85685257613659, 331.04150402359664, -90.20058967545629, 64.65715769259259, 19041.576908901334, 4.609766002574671e-05, -138.11462647842262, 76.308455124853, -90.04266543186203, 64.48644307922879, 657.6341448817402, 10.104601204958453, -31.785299776317714, 30.85807805159577, 0.9761501769742178]
+];
+
+describe('mercator transform bit identity with commit 407a8ce9e', () => {
+    test.each(bitIdentityRows)('center %f,%f zoom %f pitch %f bearing %f', (lng, lat, zoom, pitch, bearing, elevation, px, py, camLng, camLat, alt, ...expected) => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(800, 600);
+        transform.setCenter(new LngLat(lng, lat));
+        transform.setZoom(zoom);
+        transform.setPitch(pitch);
+        transform.setBearing(bearing);
+        transform.setElevation(elevation);
+
+        const camera = transform.getCameraLngLat();
+        const fromCamera = transform.calculateCenterFromCameraLngLatAlt(new LngLat(camLng, camLat), alt, bearing, pitch);
+        const screen = transform.screenPointToLocation(new Point(px, py));
+        const depth = transform.lngLatToCameraDepth(new LngLat(camLng, camLat), elevation);
+
+        expect([
+            transform.pixelsPerMeter, camera.lng, camera.lat,
+            fromCamera.center.lng, fromCamera.center.lat, fromCamera.elevation, fromCamera.zoom,
+            screen.lng, screen.lat, depth,
+        ]).toEqual(expected);
+    });
+});

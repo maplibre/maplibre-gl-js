@@ -93,8 +93,9 @@ export class MercatorCameraHelper implements ICameraHelper {
         );
         normalizeCenter(tr, center);
 
-        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
-        const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
+        const helper = tr.worldCoordinateHelper;
+        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset, helper);
+        const delta = projectToWorldCoordinates(tr.worldSize, center, helper).sub(from);
 
         const finalScale = zoomScale(endZoom - startZoom);
         isZooming = (endZoom !== startZoom);
@@ -126,7 +127,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
-                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale));
+                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale), helper);
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
         };
@@ -153,9 +154,10 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         normalizeCenter(tr, targetCenter);
 
+        const helper = tr.worldCoordinateHelper;
         const startWorldSize = tr.worldSize;
-        const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset);
-        const delta = projectToWorldCoordinates(startWorldSize, targetCenter).sub(from);
+        const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset, helper);
+        const delta = projectToWorldCoordinates(startWorldSize, targetCenter, helper).sub(from);
 
         const pixelPathLength = delta.mag();
 
@@ -171,7 +173,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
             const newCenter = k === 1
                 ? targetCenter
-                : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)));
+                : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)), helper);
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 

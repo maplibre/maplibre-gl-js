@@ -1,4 +1,5 @@
 import type {LngLat, LngLatLike} from './lng_lat.ts';
+import type {WorldCoordinateHelper} from './projection/world_coordinate_helper.ts';
 import type {LngLatBounds} from './lng_lat_bounds.ts';
 import type {MercatorCoordinate} from './mercator_coordinate.ts';
 import type Point from '@mapbox/point-geometry';
@@ -99,6 +100,12 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+    /**
+     * @internal
+     * The lng/lat to world-coordinate mapping this transform positions the camera in.
+     * Mercator for the mercator, globe, and vertical-perspective transforms.
+     */
+    get worldCoordinateHelper(): WorldCoordinateHelper;
     /**
      * The distance from the camera to the center of the map in pixels space.
      */

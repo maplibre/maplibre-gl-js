@@ -217,8 +217,10 @@ function getElevationForTileCulling(transform: IReadonlyTransform): number {
 export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     const frustum = transform.getCameraFrustum();
     const plane = transform.getClippingPlane();
+    const helper = transform.worldCoordinateHelper;
     const cameraCoord = cameraMercatorCoordinate(transform);
-    const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
+    const {x: centerX, y: centerY} = helper.worldFromLngLat(transform.center.lng, transform.center.lat);
+    const centerCoord = new MercatorCoordinate(centerX, centerY, helper.worldZFromAltitude(transform.elevation, transform.center));
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);

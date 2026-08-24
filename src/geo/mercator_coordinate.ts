@@ -5,7 +5,7 @@ import {type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 /*
  * The average circumference of the world in meters.
  */
-const earthCircumference = 2 * Math.PI * earthRadius; // meters
+export const earthCircumference: number = 2 * Math.PI * earthRadius; // meters
 
 /*
  * The circumference at a line of latitude in meters.

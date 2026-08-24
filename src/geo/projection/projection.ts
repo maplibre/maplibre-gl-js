@@ -5,6 +5,7 @@ import type {Mesh} from '../../render/mesh.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {WorldCoordinateHelper} from './world_coordinate_helper.ts';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -106,6 +107,13 @@ export interface Projection {
      * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+
+    /**
+     * @internal
+     * The lng/lat to world-coordinate mapping of this projection.
+     * World coordinates are in the 0..1 square that the tile quad-tree subdivides.
+     */
+    get worldCoordinateHelper(): WorldCoordinateHelper;
 
     /**
      * @internal

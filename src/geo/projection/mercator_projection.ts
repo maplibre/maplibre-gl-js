@@ -8,6 +8,7 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import posAttributes from '../../data/pos_attributes.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {mercatorWorldCoordinates, type WorldCoordinateHelper} from './world_coordinate_helper.ts';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -42,6 +43,10 @@ export class MercatorProjection implements Projection {
 
     get subdivisionGranularity(): SubdivisionGranularitySetting {
         return SubdivisionGranularitySetting.noSubdivision;
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return mercatorWorldCoordinates;
     }
 
     get useGlobeControls(): boolean {
