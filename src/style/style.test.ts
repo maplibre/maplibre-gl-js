@@ -3900,7 +3900,6 @@ describe('Style#_updatePlacement', () => {
     beforeEach(async () => {
         time = 0;
         setNow(time);
-        // `_updatePlacement` returns false either way with no symbol tiles loaded, so count runs instead.
         placementRun = vi.spyOn(PauseablePlacement.prototype, 'continuePlacement');
         style = createStyle();
         style.loadJSON(createStyleJSON({
