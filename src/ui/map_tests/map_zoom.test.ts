@@ -14,6 +14,18 @@ test('setMinZoom', () => {
     expect(map.getZoom()).toBe(3.5);
 });
 
+test('setMinZoom raises the current zoom when it is below the new minimum', () => {
+    const map = createMap({zoom: 2});
+    map.setMinZoom(5);
+    expect(map.getZoom()).toBe(5);
+});
+
+test('setMaxZoom lowers the current zoom when it is above the new maximum', () => {
+    const map = createMap({zoom: 10});
+    map.setMaxZoom(5);
+    expect(map.getZoom()).toBe(5);
+});
+
 test('unset minZoom', () => {
     const map = createMap({minZoom: 5});
     map.setMinZoom(null);
