@@ -3,8 +3,8 @@ import {createProjectionFromName} from './projection_factory.ts';
 import {mercatorWorldCoordinates} from './world_coordinate_helper.ts';
 
 describe('createProjectionFromName', () => {
-    test('gives the mercator transform the projection world coordinate helper', () => {
-        const {projection, transform} = createProjectionFromName('mercator', undefined, {});
+    test.each(['mercator', 'globe', 'vertical-perspective'] as const)('gives the %s transform the projection world coordinate helper', (name) => {
+        const {projection, transform} = createProjectionFromName(name, undefined, {});
         expect(transform.worldCoordinateHelper).toBe(projection.worldCoordinateHelper);
         expect(transform.worldCoordinateHelper).toBe(mercatorWorldCoordinates);
     });
