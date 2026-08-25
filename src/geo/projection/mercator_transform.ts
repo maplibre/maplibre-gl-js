@@ -833,10 +833,13 @@ export class MercatorTransform implements ITransform {
 
     getCameraLngLat(): LngLat {
         const helper = this.worldCoordinateHelper;
-        const mercUnitsPerMeter = helper.worldZFromAltitude(1, this.center);
+        const center = this.center;
+        const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
         const pixelPerMeter = mercUnitsPerMeter * this.worldSize;
         const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters, helper, mercUnitsPerMeter);
+        const centerMercator = helper.worldFromLngLat(center.lng, center.lat);
+        centerMercator.z = helper.worldZFromAltitude(this.elevation, center);
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, this.pitch, this.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
         return helper.lngLatFromWorld(camMercator.x, camMercator.y);
     }
 

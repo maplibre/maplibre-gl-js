@@ -88,13 +88,13 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
 }
 
 /**
- * @param distance - camera to center distance in meters
- * @param mercUnitsPerMeter - `helper.worldZFromAltitude(1, center)`, passed in because every caller already has it
+ * Returns the camera position for a center already mapped to world coordinates.
+ * Callers resolve the center through their projection's `WorldCoordinateHelper`; keeping the helper
+ * out of this function lets the engine inline it on the per-frame camera path.
+ * @param centerMercator - the center in world coordinates, with its elevation in `z`
+ * @param dMercator - camera to center distance in world units
  */
-export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number, helper: WorldCoordinateHelper, mercUnitsPerMeter: number): MercatorCoordinate {
-    const centerMercator = helper.worldFromLngLat(center.lng, center.lat);
-    centerMercator.z = helper.worldZFromAltitude(elevation, center);
-    const dMercator = distance * mercUnitsPerMeter;
+export function cameraMercatorCoordinateFromCenterAndRotation(centerMercator: MercatorCoordinate, pitch: number, bearing: number, dMercator: number): MercatorCoordinate {
     const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
     const dxMercator = dMercator * -x;
     const dyMercator = dMercator * -y;
@@ -117,11 +117,13 @@ export function cameraMercatorCoordinate(transform: {
     worldCoordinateHelper: WorldCoordinateHelper;
 }): MercatorCoordinate {
     const helper = transform.worldCoordinateHelper;
-    const mercUnitsPerMeter = helper.worldZFromAltitude(1, transform.center);
+    const center = transform.center;
+    const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
     const pixelPerMeter = mercUnitsPerMeter * transform.worldSize;
-    return cameraMercatorCoordinateFromCenterAndRotation(
-        transform.center, transform.elevation, transform.pitch, transform.bearing,
-        transform.cameraToCenterDistance / pixelPerMeter, helper, mercUnitsPerMeter);
+    const distance = transform.cameraToCenterDistance / pixelPerMeter;
+    const centerMercator = helper.worldFromLngLat(center.lng, center.lat);
+    centerMercator.z = helper.worldZFromAltitude(transform.elevation, center);
+    return cameraMercatorCoordinateFromCenterAndRotation(centerMercator, transform.pitch, transform.bearing, distance * mercUnitsPerMeter);
 }
 
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {
