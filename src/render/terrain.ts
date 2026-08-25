@@ -142,13 +142,13 @@ export class Terrain {
      */
     _demMatrixCache: Map<string, mat4>;
     /**
-     * Per-render cache of resolved CPU elevation samplers. It is cleared after
-     * terrain tile selection updates and whenever the terrain source changes.
+     * Cache of resolved CPU elevation samplers. It is cleared when the set of renderable
+     * terrain tiles changes and whenever the terrain source changes.
      * Missing DEM data is deliberately not cached so a later sample can retry.
      */
     _elevationSamplerCache: Map<string, TerrainElevationSampler>;
     /**
-     * Per-render index of the tiles the terrain draws, used by CPU raycasts.
+     * Index of the tiles the terrain draws, used by CPU raycasts and elevation lookups.
      * It is cleared together with the elevation sampler cache; undefined means not built yet.
      */
     _coverageIndex: TerrainCoverageIndex | null | undefined;

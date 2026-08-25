@@ -2954,7 +2954,7 @@ export class Map extends Evented<MapEventType> {
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.terrain = this.terrain;
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -2978,7 +2978,7 @@ export class Map extends Evented<MapEventType> {
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
             }
         }
 
@@ -4317,12 +4317,14 @@ export class Map extends Evented<MapEventType> {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.tileManager.update(this._camera.transform, this.terrain);
-            // Tile selection can change with the transform or cache state without a data event.
-            this.terrain.resetElevationCache();
+            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            // The cached samplers and coverage index are only valid for the tile set they were built from.
+            if (renderableTilesChanged) {
+                this.terrain.resetElevationCache();
+            }
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
             }
         } else {
             this._camera.transform.setMinElevationForCurrentTile(0);

@@ -333,7 +333,7 @@ export class MercatorTransform implements ITransform {
     recalculateZoomAndCenter(terrain?: Terrain): void {
         // find position the camera is looking on
         const center = this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain ? terrain.getElevationForLngLatZoom(center, this._helper._tileZoom) : 0;
+        const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
