@@ -3,6 +3,7 @@ import {FontFaceManager} from './font_face_manager.ts';
 
 import TinySDF from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
+import {isCluster} from '../util/graphemes.ts';
 import {AlphaImage} from '../util/image.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
 
@@ -14,9 +15,10 @@ import type {FontFaces} from './font_face_manager.ts';
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
-    // null means we've requested the range, but the glyph wasn't included in the result.
+    // null means we've requested the glyph and it isn't available: either the range came back
+    // without it, or it is a cluster that no font file covers.
     glyphs: {
-        [id: number]: StyleGlyph | null;
+        [id: string]: StyleGlyph | null;
     };
     requests: {
         [range: number]: Promise<{[_: number]: StyleGlyph | null}>;
@@ -81,8 +83,8 @@ export class GlyphManager {
         this.entries = {};
     }
 
-    async getGlyphs(glyphs: {[stack: string]: number[]}): Promise<GetGlyphsResponse> {
-        const glyphsPromises: Array<Promise<{stack: string; id: number; glyph: StyleGlyph}>> = [];
+    async getGlyphs(glyphs: {[stack: string]: string[]}): Promise<GetGlyphsResponse> {
+        const glyphsPromises: Array<Promise<{stack: string; id: string; glyph: StyleGlyph}>> = [];
 
         for (const stack in glyphs) {
             for (const id of glyphs[stack]) {
@@ -107,21 +109,42 @@ export class GlyphManager {
         return result;
     }
 
-    async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
+    /**
+     * Gets one glyph, which is asked for by grapheme cluster: usually a single character, but for a
+     * letter written with marks around it -- a Hebrew vowel point, an Indic vowel sign -- the whole
+     * cluster, so that it can be drawn as the one shape it is written as.
+     */
+    async _getAndCacheGlyphsPromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
         this.entries[stack] ??= {glyphs: {}, requests: {}, ranges: {}};
         const entry = this.entries[stack];
 
-        // Try to get the glyph from the cache of client-side glyphs by codepoint.
+        // Try to get the glyph from the cache of client-side glyphs.
         let glyph = entry.glyphs[id];
         if (glyph !== undefined) {
+            return {stack, id, glyph};
+        }
+
+        const codePoint = id.codePointAt(0);
+
+        // A cluster of several codepoints has no glyph of its own in a glyphs URL, which serves one
+        // codepoint at a time, and none in a system font we did not choose. It can only be drawn
+        // from a file the style pinned with `font-faces`. Where there is none, this returns nothing
+        // and layout falls back to drawing the cluster a codepoint at a time, as it always has.
+        if (isCluster(id)) {
+            const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
+                await this.fontFaceManager.getFontFamily(stack, codePoint) :
+                null;
+            glyph = entry.glyphs[id] = fontFaceFamily ?
+                await this._drawGlyph(entry, stack, id, fontFaceFamily) :
+                null;
             return {stack, id, glyph};
         }
 
         // A font file the style declared for this codepoint wins over both the glyphs URL and the
         // local fallback fonts: the style asked for this exact file, by name and by unicode range.
         if (this.fontFaceManager.hasFontFaces()) {
-            const fontFaceFamily = await this.fontFaceManager.getFontFamily(stack, id);
+            const fontFaceFamily = await this.fontFaceManager.getFontFamily(stack, codePoint);
             if (fontFaceFamily) {
                 glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
                 return {stack, id, glyph};
@@ -129,7 +152,7 @@ export class GlyphManager {
         }
 
         // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
-        if (!this.url || this._charUsesLocalIdeographFontFamily(id)) {
+        if (!this.url || this._charUsesLocalIdeographFontFamily(codePoint)) {
             glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
             return {stack, id, glyph};
         }
@@ -137,10 +160,12 @@ export class GlyphManager {
         return await this._downloadAndCacheRangePromise(stack, id);
     }
 
-    async _downloadAndCacheRangePromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
-        // Try to get the glyph from the cache of server-side glyphs by PBF range.
+    async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
+        // Try to get the glyph from the cache of server-side glyphs by PBF range. Only ever reached
+        // for a single codepoint: a glyphs URL serves codepoints, not clusters.
+        const codePoint = id.codePointAt(0);
         const entry = this.entries[stack];
-        const range = Math.floor(id / 256);
+        const range = Math.floor(codePoint / 256);
         if (entry.ranges[range]) {
             return {stack, id, glyph: null};
         }
@@ -151,15 +176,17 @@ export class GlyphManager {
         try {
             // Get the response and cache the glyphs from it.
             const response = await entry.requests[range];
-            for (const id in response) {
-                entry.glyphs[+id] = response[+id];
+            // The response is keyed by codepoint, as the file is; the cache is keyed by grapheme
+            // cluster, which for a codepoint from a glyphs URL is the character itself.
+            for (const responseId in response) {
+                entry.glyphs[String.fromCodePoint(+responseId)] = response[+responseId];
             }
             entry.ranges[range] = true;
-            return {stack, id, glyph: response[id] || null};
+            return {stack, id, glyph: response[codePoint] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
             const glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
-            this._warnOnMissingGlyphRange(glyph, range, id, ensureError(e));
+            this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
         }
     }
@@ -183,9 +210,11 @@ export class GlyphManager {
      *
      * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
      */
-    async _drawGlyph(entry: Entry, stack: string, id: number, fontFaceFamily?: string): Promise<StyleGlyph> {
-        const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
-        const char = tinySDF.draw(String.fromCodePoint(id));
+    async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
+        const tinySDF = await this._getTinySDF(entry, stack, id.codePointAt(0), fontFaceFamily);
+        // Drawn as the whole grapheme cluster rather than a codepoint at a time, which is what lets
+        // the browser's own text engine place a letter's marks on it.
+        const char = tinySDF.draw(id);
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
@@ -205,10 +234,10 @@ export class GlyphManager {
         const leftAdjustment = 0.5;
 
         // By definition, control characters are invisible and nonspacing.
-        const isControl = /^\p{gc=Cf}+$/u.test(String.fromCodePoint(id));
+        const isControl = /^\p{gc=Cf}+$/u.test(id);
 
         return {
-            id,
+            id: id.codePointAt(0),
             bitmap: new AlphaImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
             metrics: {
                 width: isControl ? 0 : (char.glyphWidth / textureScale || 24),

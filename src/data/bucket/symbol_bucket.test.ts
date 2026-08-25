@@ -22,7 +22,12 @@ const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
 
-const stacks = {'Test': glyphs} as any as {
+// The fixture is keyed by codepoint, as a glyph PBF is; layout looks glyphs up by grapheme cluster,
+// which for every character in it is the character itself.
+const glyphsByGrapheme = Object.fromEntries(
+    Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+);
+const stacks = {'Test': glyphsByGrapheme} as any as {
     [_: string]: {
         [x: number]: StyleGlyph;
     };
@@ -121,7 +126,7 @@ describe('SymbolBucket', () => {
         performSymbolLayout({
             bucket,
             glyphMap: stacks,
-            glyphPositions: {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any},
+            glyphPositions: {'Test': {a: fakeGlyph, b: fakeGlyph, c: fakeGlyph, d: fakeGlyph, e: fakeGlyph, f: fakeGlyph} as any},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
 

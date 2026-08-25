@@ -1,4 +1,5 @@
 import {describe, test, expect} from 'vitest';
+import {toGraphemes} from '../util/graphemes.ts';
 import {type PositionedIcon, type Box, type Shaping, applyTextFit, shapeIcon, fitIconToText, shapeText, WritingMode} from './shaping.ts';
 import {ImagePosition} from '../render/image_atlas.ts';
 import {type StyleImage, TextFit} from '../style/style_image.ts';
@@ -380,15 +381,15 @@ describe('shapeText vertical glyph orientation', () => {
         };
     }
 
-    function createStubGlyphMap(text: string): {[_: number]: StyleGlyph} {
-        const glyphs: {[_: number]: StyleGlyph} = {};
+    /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
+    function createStubGlyphMap(text: string): {[_: string]: StyleGlyph} {
+        const glyphs: {[_: string]: StyleGlyph} = {};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);
 
-        for (const char of [...text, ...verticalizedChars]) {
-            const codePoint = char.codePointAt(0);
-            glyphs[codePoint] = createStubGlyph(codePoint);
+        for (const grapheme of [...toGraphemes(text), ...verticalizedChars]) {
+            glyphs[grapheme] = createStubGlyph(grapheme.codePointAt(0));
         }
         return glyphs;
     }
@@ -403,7 +404,7 @@ describe('shapeText vertical glyph orientation', () => {
     function getGlyphOrientations(shaping: Shaping | false): Array<[string, string]> {
         expect(shaping).toBeTruthy();
         return (shaping as Shaping).positionedLines.flatMap(line => line.positionedGlyphs.map(
-            (glyph): [string, string] => [String.fromCodePoint(glyph.glyph), glyph.vertical ? 'upright' : 'along-line']));
+            (glyph): [string, string] => [glyph.grapheme, glyph.vertical ? 'upright' : 'along-line']));
     }
 
     test('draws digits between CJK characters upright', () => {
@@ -475,17 +476,17 @@ describe('shapeText vertical glyph orientation', () => {
         ]);
     });
 
-    test('rotates a decomposed Latin letter so its combining mark stays attached', () => {
-        // é as “e” followed by U+0301 combining acute accent: upright glyphs
-        // each advance a full em, which would detach the mark from its base.
+    test('keeps a decomposed Latin letter and its combining mark in one glyph', () => {
+        // é as “e” followed by U+0301 combining acute accent. The two are one grapheme cluster and
+        // are drawn as one glyph, so the mark cannot come away from its base however the label is
+        // laid out -- which is what upright glyphs, each advancing a full em, used to do to it.
         const shapedLineLabel = shapeLineLabel('国道e\u0301号');
         const orientations = getGlyphOrientations(shapedLineLabel);
 
         expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
-            ['e', 'along-line'],
-            ['\u0301', 'along-line'],
+            ['e\u0301', 'along-line'],
             ['号', 'upright'],
         ]);
     });

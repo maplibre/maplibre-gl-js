@@ -23,6 +23,7 @@ import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray, LineIndexArray} from '../array_types.g.ts';
 import {transformText} from '../../symbol/transform_text.ts';
 import {mergeLines} from '../../symbol/merge_lines.ts';
+import {isCluster, toGraphemes} from '../../util/graphemes.ts';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
 import {WritingMode} from '../../symbol/shaping.ts';
 import {loadGeometry} from '../load_geometry.ts';
@@ -415,17 +416,28 @@ export class SymbolBucket implements Bucket {
 
     private calculateGlyphDependencies(
         text: string,
-        stack: {[_: number]: boolean},
+        stack: {[_: string]: boolean},
         textAlongLine: boolean,
         allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean): void {
 
-        for (const char of text) {
-            stack[char.codePointAt(0)] = true;
-            if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
-                const verticalChar = verticalizedCharacterMap[char];
-                if (verticalChar) {
-                    stack[verticalChar.codePointAt(0)] = true;
+        for (const grapheme of toGraphemes(text)) {
+            // A cluster of several codepoints is asked for as a whole, so that it can be drawn as
+            // the one shape it is written as. Its codepoints are asked for as well: not every
+            // cluster can be drawn -- it takes a font file the style pinned with `font-faces` --
+            // and where one cannot, layout falls back to drawing it a codepoint at a time, exactly
+            // as it did before. See `shapeLines`.
+            if (isCluster(grapheme)) {
+                stack[grapheme] = true;
+            }
+
+            for (const char of grapheme) {
+                stack[char] = true;
+                if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
+                    const verticalChar = verticalizedCharacterMap[char];
+                    if (verticalChar) {
+                        stack[verticalChar] = true;
+                    }
                 }
             }
         }

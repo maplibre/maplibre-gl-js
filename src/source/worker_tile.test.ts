@@ -214,7 +214,7 @@ describe('worker tile', () => {
             if (message.type === MessageType.getImages) {
                 return Promise.resolve({'hello': {width: 1, height: 1, data: new Uint8Array([0])}});
             } else if (message.type === MessageType.getGlyphs) {
-                return Promise.resolve({'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}});
+                return Promise.resolve({'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}});
             } else if (message.type === MessageType.getDashes) {
                 return Promise.resolve({
                     '2,1,false': {y: 0, height: 16, width: 256},
@@ -231,7 +231,7 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledTimes(4); // icons, patterns, glyphs, dashes
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': ['t', 'e', 's']}})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GDA', data: expect.objectContaining({'dashes': expect.any(Object)})}), expect.any(Object));
     });
 
@@ -283,9 +283,11 @@ describe('worker tile', () => {
         const sendAsync = vi.fn().mockImplementation((message: {type: string; data: unknown}, abortController: AbortController) => {
             return new Promise((resolve, _reject) => {
                 const res = setTimeout(() => {
-                    const response = message.type === 'getImages' ?
-                        {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                        {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                    // `MessageType.getImages` is 'GI'; comparing against 'getImages' never matched,
+                    // so image requests used to be answered with the glyph response.
+                    const response = message.type === MessageType.getImages ?
+                        {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
+                        {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
                     resolve(response);
                 }
                 );
@@ -309,7 +311,7 @@ describe('worker tile', () => {
         expect(sendAsync).toHaveBeenCalledTimes(9);
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': ['t', 'e', 's']}})}), expect.any(Object));
     });
 
     test('WorkerTile.parse passes global-state to layout properties', async () => {

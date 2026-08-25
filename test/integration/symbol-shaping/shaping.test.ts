@@ -35,10 +35,16 @@ describe('shaping', () => {
     const layoutTextSize = 16;
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
+    // The fixture is keyed by codepoint, as a glyph PBF is. Layout looks glyphs up by grapheme
+    // cluster, which for every character in this fixture is the character itself.
     const glyphs = {
-        'Test': glyphsJson as any as StyleGlyph
+        'Test': Object.fromEntries(
+            Object.entries(glyphsJson as any as {[codePoint: string]: StyleGlyph})
+                .map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+        )
     };
-    const glyphPositions = glyphs;
+    // The same fixture serves as both, as it did before: it carries metrics and rects.
+    const glyphPositions = glyphs as any;
 
     const images = {
         'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),

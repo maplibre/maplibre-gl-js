@@ -82,14 +82,16 @@ describe('TaggedString', () => {
             w: 32,
             h: 32,
         };
+        // Keyed by grapheme cluster, which for each of these is the character itself.
         const glyphs = {
             'Test': {
-                '97': {id: 0x61, metrics, rect},
-                '98': {id: 0x62, metrics, rect},
-                '99': {id: 0x63, metrics, rect},
-                '40629': {id: 0x9EB5, metrics, rect},
-                '200414': {id: 0x30EDE, metrics, rect},
-            } as any as StyleGlyph,
+                'a': {id: 0x61, metrics, rect},
+                'b': {id: 0x62, metrics, rect},
+                'c': {id: 0x63, metrics, rect},
+                '\u9EB5': {id: 0x9EB5, metrics, rect},
+                '\u{30EDE}': {id: 0x30EDE, metrics, rect},
+                // Only the metrics are read here, so these stand in without a bitmap.
+            } as unknown as {[_: string]: StyleGlyph},
         };
         const textSection = {
             scale: 1,

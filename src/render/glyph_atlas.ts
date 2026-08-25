@@ -30,7 +30,7 @@ export type GlyphPosition = {
  */
 export type GlyphPositions = {
     [_: string]: {
-        [_: number]: GlyphPosition;
+        [_: string]: GlyphPosition;
     };
 };
 
@@ -47,7 +47,7 @@ export class GlyphAtlas {
             const stackPositions = positions[stack] = {};
 
             for (const id in glyphs) {
-                const src = glyphs[+id];
+                const src = glyphs[id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
 
                 const bin = {
@@ -68,7 +68,7 @@ export class GlyphAtlas {
             const glyphs = stacks[stack];
 
             for (const id in glyphs) {
-                const src = glyphs[+id];
+                const src = glyphs[id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
                 const bin = positions[stack][id].rect;
                 AlphaImage.copy(src.bitmap, image, {x: 0, y: 0}, {x: bin.x + padding, y: bin.y + padding}, src.bitmap);

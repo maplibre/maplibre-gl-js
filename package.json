@@ -48,6 +48,8 @@
     "tinyqueue": "^3.0.0"
   },
   "devDependencies": {
+    "@fontsource/noto-sans-devanagari": "^5.3.0",
+    "@fontsource/noto-sans-hebrew": "^5.3.0",
     "@mapbox/mapbox-gl-rtl-text": "^0.4.0",
     "@mapbox/mvt-fixtures": "^4.0.0",
     "@stylistic/eslint-plugin": "^5.10.0",

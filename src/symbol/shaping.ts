@@ -3,13 +3,15 @@ import {
 } from '../util/unicode_properties.g.ts';
 import {
     charIsWhitespace,
-    charInComplexShapingScript
+    charInComplexShapingScript,
+    charInRTLScript
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import {isCluster, toGraphemes} from '../util/graphemes.ts';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
 
-import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
+import {TaggedString, type SectionOptions, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
 import {TextFit} from '../style/style_image.ts';
@@ -30,7 +32,16 @@ export {shapeText, shapeIcon, applyTextFit, fitIconToText, getAnchorAlignment, W
 
 // The position of a glyph relative to the text's anchor point.
 export type PositionedGlyph = {
+    /**
+     * The first codepoint of {@link grapheme}. Kept because it has always been here; it cannot name
+     * a cluster of several codepoints, so prefer `grapheme`.
+     */
     glyph: number;
+    /**
+     * What this glyph draws: a grapheme cluster, which is usually one character but is a letter with
+     * its marks where the two are written as one shape.
+     */
+    grapheme: string;
     imageName: string | null;
     x: number;
     y: number;
@@ -98,16 +109,100 @@ function breakLines(input: TaggedString, lineBreakPoints: number[]): TaggedStrin
     return lines;
 }
 
+
+/** A character that is written on another one rather than beside it. */
+const COMBINING_MARK = /^\p{gc=M}$/u;
+
+/**
+ * Puts the marks written on a letter back after the letter, and returns the new order as indices
+ * into `chars`.
+ *
+ * This is rule L3 of the Unicode Bidirectional Algorithm. Reversing a right-to-left run reverses
+ * the marks along with everything else, which leaves each mark *before* the letter it is written
+ * on -- and, worse, directly after the previous letter, which is not the one it belongs to. Undoing
+ * that is what lets a letter and its marks be recognised as one grapheme cluster again, and so be
+ * drawn as the one shape they are written as.
+ *
+ * Only marks followed by a right-to-left letter are moved. In a left-to-right run of the same line
+ * the marks already follow their base and must be left where they are.
+ */
+function combiningMarksAfterTheirBase(chars: string[]): number[] {
+    const order: number[] = [];
+
+    let i = 0;
+    while (i < chars.length) {
+        if (!COMBINING_MARK.test(chars[i])) {
+            order.push(i);
+            i++;
+            continue;
+        }
+
+        let end = i;
+        while (end < chars.length && COMBINING_MARK.test(chars[end])) end++;
+
+        const base = chars[end];
+        if (base !== undefined && charInRTLScript(base.codePointAt(0))) {
+            // The marks are put back in the order they were written in, not the order the reversal
+            // left them in: `base m1 m2` became `m2 m1 base`, and has to become `base m1 m2` again.
+            // Anything else is a different sequence of codepoints, and so a different cluster from
+            // the one the tile asked for a glyph for.
+            order.push(end);
+            for (let mark = end - 1; mark >= i; mark--) order.push(mark);
+            i = end + 1;
+        } else {
+            for (let mark = i; mark < end; mark++) order.push(mark);
+            i = end;
+        }
+    }
+
+    return order;
+}
+
+/**
+ * Builds a line out of what a text plugin returned: the text in the order it is read, and the style
+ * section of each of its UTF-16 code units.
+ */
+function taggedLineFromPlugin(
+    line: string,
+    sections: SectionOptions[],
+    sectionForCodeUnit: number[]
+): TaggedString {
+    const chars = [...line];
+    const codeUnitOf: number[] = [];
+    let codeUnit = 0;
+    for (const char of chars) {
+        codeUnitOf.push(codeUnit);
+        codeUnit += char.length;
+    }
+
+    const order = combiningMarksAfterTheirBase(chars);
+    const tagged = new TaggedString(
+        order.map(index => chars[index]).join(''),
+        sections,
+        []
+    );
+
+    // A grapheme cluster belongs to the section its first character does.
+    const sectionOfChar = order.map(index => sectionForCodeUnit[codeUnitOf[index]] ?? 0);
+    let at = 0;
+    for (const grapheme of tagged.graphemes()) {
+        tagged.sectionIndex.push(sectionOfChar[at] ?? 0);
+        at += [...grapheme].length;
+    }
+
+    return tagged;
+}
+
 function shapeText(
     text: Formatted,
     glyphMap: {
         [_: string]: {
-            [_: number]: StyleGlyph;
+            [_: string]: StyleGlyph;
         };
     },
     glyphPositions: {
         [_: string]: {
-            [_: number]: GlyphPosition;
+            [_: string]: GlyphPosition;
         };
     },
     imagePositions: {[_: string]: ImagePosition},
@@ -141,8 +236,7 @@ function shapeText(
         const untaggedLines =
             processBidirectionalText(logicalInput.toString(), lineBreaks);
         for (const line of untaggedLines) {
-            const sectionIndex = [...line].map(() => 0);
-            lines.push(new TaggedString(line, logicalInput.sections, sectionIndex));
+            lines.push(taggedLineFromPlugin(line, logicalInput.sections, [...line].map(() => 0)));
         }
     } else if (processStyledBidirectionalText) {
         // Need version of mapbox-gl-rtl-text with style support for combining RTL text
@@ -151,24 +245,19 @@ function shapeText(
         // ICU operates on code units.
         lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
 
-        // Convert character-based section index to be based on code units.
+        // The plugin counts in code units, and a section is recorded per grapheme cluster, so this
+        // spreads each cluster's section across the code units it takes.
         let i = 0;
         const sectionIndex = [];
-        for (const char of logicalInput.text) {
-            sectionIndex.push(...Array(char.length).fill(logicalInput.sectionIndex[i]));
+        for (const grapheme of logicalInput.graphemes()) {
+            sectionIndex.push(...Array(grapheme.length).fill(logicalInput.sectionIndex[i]));
             i++;
         }
 
         const processedLines =
             processStyledBidirectionalText(logicalInput.text, sectionIndex, lineBreaks);
         for (const line of processedLines) {
-            const sectionIndex = [];
-            let elapsedChars = '';
-            for (const char of line[0]) {
-                sectionIndex.push(line[1][elapsedChars.length]);
-                elapsedChars += char;
-            }
-            lines.push(new TaggedString(line[0], logicalInput.sections, sectionIndex));
+            lines.push(taggedLineFromPlugin(line[0], logicalInput.sections, line[1]));
         }
     } else {
         lines = breakLines(logicalInput, lineBreaks);
@@ -256,18 +345,18 @@ function getRectAndMetrics(
     glyphPosition: GlyphPosition,
     glyphMap: {
         [_: string]: {
-            [_: number]: StyleGlyph;
+            [_: string]: StyleGlyph;
         };
     },
     section: TextSectionOptions,
-    codePoint: number
+    key: string
 ): GlyphPosition | null {
     if (glyphPosition?.rect) {
         return glyphPosition;
     }
 
     const glyphs = glyphMap[section.fontStack];
-    const glyph = glyphs?.[codePoint];
+    const glyph = glyphs?.[key];
     if (!glyph) return null;
 
     const metrics = glyph.metrics;
@@ -364,7 +453,9 @@ function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[])
  * characters that are neither whitespace nor inline images.
  */
 function determineLineVerticals(line: TaggedString): boolean[] {
-    const chars = [...line.text];
+    // Grapheme clusters rather than characters, so that this lines up with `getSection` and with
+    // the layout loop. A cluster's orientation is the orientation of the character it starts with.
+    const chars = line.graphemes().slice();
     const codePoints = chars.map(char => char.codePointAt(0));
     const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
 
@@ -386,6 +477,7 @@ function determineLineVerticals(line: TaggedString): boolean[] {
 
     if (verticalizeSurroundedPunctuation(chars, verticals)) {
         line.text = chars.join('');
+        line._graphemes = null;
     }
 
     return verticals;
@@ -394,12 +486,12 @@ function determineLineVerticals(line: TaggedString): boolean[] {
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
-            [_: number]: StyleGlyph;
+            [_: string]: StyleGlyph;
         };
     },
     glyphPositions: {
         [_: string]: {
-            [_: number]: GlyphPosition;
+            [_: string]: GlyphPosition;
         };
     },
     imagePositions: {[_: string]: ImagePosition},
@@ -443,14 +535,24 @@ function shapeLines(shaping: Shaping,
         const lineVerticals = writingMode === WritingMode.vertical && !allowVerticalPlacement ?
             determineLineVerticals(line) : null;
 
-        let i = -1;
-        for (const char of line.text) {
-            i++;
+        const graphemes = line.graphemes();
+        for (let i = 0; i < graphemes.length; i++) {
             const section = line.getSection(i);
-            const codePoint = char.codePointAt(0);
+            const grapheme = graphemes[i];
+            const codePoint = grapheme.codePointAt(0);
             const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
+
+            // A cluster of several codepoints is drawn as one shape where a font file covers it, and
+            // a codepoint at a time where none does -- which is what MapLibre has always done, and
+            // is what a style that declares no `font-faces` keeps doing.
+            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.[grapheme] ?
+                [...grapheme] :
+                [grapheme];
+
+            for (const key of keys) {
             const positionedGlyph: PositionedGlyph = {
-                glyph: codePoint,
+                glyph: key.codePointAt(0),
+                grapheme: key,
                 imageName: null,
                 x,
                 y: y + SHAPING_DEFAULT_OFFSET,
@@ -464,7 +566,7 @@ function shapeLines(shaping: Shaping,
 
             let sectionAttributes: ShapingSectionAttributes;
             if ('fontStack' in section) {
-                sectionAttributes = shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions);
+                sectionAttributes = shapeTextSection(section, key, vertical, lineShapingSize, glyphMap, glyphPositions);
                 if (!sectionAttributes) continue;
                 positionedGlyph.fontStack = section.fontStack;
             } else {
@@ -493,6 +595,7 @@ function shapeLines(shaping: Shaping,
                 shaping.verticalizable = true;
                 const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
+            }
             }
         }
 
@@ -526,24 +629,24 @@ function shapeLines(shaping: Shaping,
 
 function shapeTextSection(
     section: TextSectionOptions,
-    codePoint: number,
+    key: string,
     vertical: boolean,
     lineShapingSize: LineShapingSize,
     glyphMap: {
         [_: string]: {
-            [_: number]: StyleGlyph;
+            [_: string]: StyleGlyph;
         };
     },
     glyphPositions: {
         [_: string]: {
-            [_: number]: GlyphPosition;
+            [_: string]: GlyphPosition;
         };
     },
 ): ShapingSectionAttributes | null {
     const positions = glyphPositions[section.fontStack];
-    const glyphPosition = positions?.[codePoint];
+    const glyphPosition = positions?.[key];
 
-    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
+    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, key);
 
     if (rectAndMetrics === null) return null;
 

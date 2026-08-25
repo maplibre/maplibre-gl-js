@@ -4,6 +4,7 @@ import ONE_EM from './one_em.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
+import {toGraphemes} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
@@ -66,11 +67,11 @@ const breakableBefore: {
 };
 
 function getGlyphAdvance(
-    codePoint: number,
+    grapheme: string,
     section: SectionOptions,
     glyphMap: {
         [_: string]: {
-            [_: number]: StyleGlyph;
+            [_: string]: StyleGlyph;
         };
     },
     imagePositions: {[_: string]: ImagePosition},
@@ -79,9 +80,17 @@ function getGlyphAdvance(
 ): number {
     if ('fontStack' in section) {
         const positions = glyphMap[section.fontStack];
-        const glyph = positions?.[codePoint];
-        if (!glyph) return 0;
-        return glyph.metrics.advance * section.scale + spacing;
+        const glyph = positions?.[grapheme];
+        if (glyph) return glyph.metrics.advance * section.scale + spacing;
+
+        // No glyph for the cluster as a whole, so it will be drawn a codepoint at a time and has to
+        // be measured the same way. See `shapeLines`.
+        let advance = 0;
+        for (const char of grapheme) {
+            const fallback = positions?.[char];
+            if (fallback) advance += fallback.metrics.advance * section.scale + spacing;
+        }
+        return advance;
     } else {
         const imagePosition = imagePositions[section.imageName];
         if (!imagePosition) return 0;
@@ -174,15 +183,30 @@ function leastBadBreaks(lastLineBreak?: Break | null): number[] {
 export class TaggedString {
     text: string;
     sections: SectionOptions[];
-    /** Maps each character in `text` to its corresponding entry in `sections`. */
+    /** Maps each grapheme cluster in `text` to its corresponding entry in `sections`. */
     sectionIndex: number[];
     imageSectionID: number | null;
+    /**
+     * `text` split into the units it is laid out in. Derived from `text`, so anything that changes
+     * `text` clears it.
+     */
+    _graphemes: string[] | null;
 
     constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
         this.imageSectionID = null;
+        this._graphemes = null;
+    }
+
+    /**
+     * The units this text is laid out in: grapheme clusters, so that a letter and the marks that
+     * belong to it stay together.
+     */
+    graphemes(): string[] {
+        this._graphemes ??= toGraphemes(this.text);
+        return this._graphemes;
     }
 
     static fromFeature(text: Formatted, defaultFontStack: string): TaggedString {
@@ -198,7 +222,7 @@ export class TaggedString {
     }
 
     length(): number {
-        return [...this.text].length;
+        return this.graphemes().length;
     }
 
     getSection(index: number): SectionOptions {
@@ -211,6 +235,7 @@ export class TaggedString {
 
     verticalizePunctuation(): void {
         this.text = verticalizePunctuation(this.text);
+        this._graphemes = null;
     }
 
     /**
@@ -231,19 +256,20 @@ export class TaggedString {
         const trailingLength = trailingWhitespace ? trailingWhitespace[0].length - 1 : 0;
         this.text = this.text.substring(leadingLength, this.text.length - trailingLength);
         this.sectionIndex = this.sectionIndex.slice(leadingLength, this.sectionIndex.length - trailingLength);
+        this._graphemes = null;
     }
 
     substring(start: number, end: number): TaggedString {
-        const text = [...this.text].slice(start, end).join('');
+        const text = this.graphemes().slice(start, end).join('');
         const sectionIndex = this.sectionIndex.slice(start, end);
         return new TaggedString(text, this.sections, sectionIndex);
     }
 
     /**
-     * Converts a UTF-16 character index to a UTF-16 code unit (JavaScript character index).
+     * Converts a grapheme cluster index to a UTF-16 code unit (JavaScript character index).
      */
-    toCodeUnitIndex(unicodeIndex: number): number {
-        return [...this.text].slice(0, unicodeIndex).join('').length;
+    toCodeUnitIndex(graphemeIndex: number): number {
+        return this.graphemes().slice(0, graphemeIndex).join('').length;
     }
 
     toString(): string {
@@ -275,13 +301,14 @@ export class TaggedString {
 
     addTextSection(section: FormattedSection, defaultFontStack: string): void {
         this.text += section.text;
+        this._graphemes = null;
         this.sections.push({
             scale: section.scale || 1,
             verticalAlign: section.verticalAlign || 'bottom',
             fontStack: section.fontStack || defaultFontStack,
         });
         const index = this.sections.length - 1;
-        this.sectionIndex.push(...[...section.text].map(() => index));
+        this.sectionIndex.push(...toGraphemes(section.text).map(() => index));
     }
 
     addImageSection(section: FormattedSection): void {
@@ -298,6 +325,7 @@ export class TaggedString {
         }
 
         this.text += String.fromCharCode(nextImageSectionCharCode);
+        this._graphemes = null;
         this.sections.push({
             scale: 1,
             verticalAlign: section.verticalAlign || 'bottom',
@@ -321,7 +349,7 @@ export class TaggedString {
         maxWidth: number,
         glyphMap: {
             [_: string]: {
-                [_: number]: StyleGlyph;
+                [_: string]: StyleGlyph;
             };
         },
         imagePositions: {[_: string]: ImagePosition},
@@ -334,28 +362,25 @@ export class TaggedString {
 
         let currentX = 0;
 
-        let i = 0;
-        const chars = this.text[Symbol.iterator]();
-        let char = chars.next();
-        const nextChars = this.text[Symbol.iterator]();
-        nextChars.next();
-        let nextChar = nextChars.next();
-        const nextNextChars = this.text[Symbol.iterator]();
-        nextNextChars.next();
-        nextNextChars.next();
-        let nextNextChar = nextNextChars.next();
+        // Breaks fall between grapheme clusters, never inside one: a line cannot start with the
+        // vowel point of a letter left at the end of the line before it.
+        const graphemes = this.graphemes();
 
-        while (!char.done) {
+        for (let i = 0; i < graphemes.length; i++) {
             const section = this.getSection(i);
-            const codePoint = char.value.codePointAt(0);
-            if (!charIsWhitespace(codePoint)) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
+            const grapheme = graphemes[i];
+            // Which character a cluster breaks on is decided by the one it starts with; the marks
+            // after it are part of the same unit and never a break opportunity of their own.
+            const codePoint = grapheme.codePointAt(0);
+            if (!charIsWhitespace(codePoint)) currentX += getGlyphAdvance(grapheme, section, glyphMap, imagePositions, spacing, layoutTextSize);
 
             // Ideographic characters, spaces, and word-breaking punctuation that often appear without
             // surrounding spaces.
-            if (!nextChar.done) {
+            const next = graphemes[i + 1];
+            if (next !== undefined) {
                 const ideographicBreak = codePointAllowsIdeographicBreaking(codePoint);
-                const nextCodePoint = nextChar.value.codePointAt(0);
-                if (breakable[codePoint] || ideographicBreak || 'imageName' in section || (!nextNextChar.done && breakableBefore[nextCodePoint])) {
+                const nextCodePoint = next.codePointAt(0);
+                if (breakable[codePoint] || ideographicBreak || 'imageName' in section || (graphemes[i + 2] !== undefined && breakableBefore[nextCodePoint])) {
 
                     potentialLineBreaks.push(
                         evaluateBreak(
@@ -367,10 +392,6 @@ export class TaggedString {
                             false));
                 }
             }
-            i++;
-            char = chars.next();
-            nextChar = nextChars.next();
-            nextNextChar = nextNextChars.next();
         }
 
         return leastBadBreaks(
@@ -388,7 +409,7 @@ export class TaggedString {
         maxWidth: number,
         glyphMap: {
             [_: string]: {
-                [_: number]: StyleGlyph;
+                [_: string]: StyleGlyph;
             };
         },
         imagePositions: {[_: string]: ImagePosition},
@@ -396,9 +417,9 @@ export class TaggedString {
         let totalWidth = 0;
 
         let index = 0;
-        for (const char of this.text) {
+        for (const grapheme of this.graphemes()) {
             const section = this.getSection(index);
-            totalWidth += getGlyphAdvance(char.codePointAt(0), section, glyphMap, imagePositions, spacing, layoutTextSize);
+            totalWidth += getGlyphAdvance(grapheme, section, glyphMap, imagePositions, spacing, layoutTextSize);
             index++;
         }
 

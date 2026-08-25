@@ -1,4 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {MessageType} from '../util/actor_messages.ts';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
@@ -87,9 +88,11 @@ describe('geojson tile worker source', () => {
             sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
                 return new Promise((resolve, _reject) => {
                     const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
+                        // matched, so image requests used to be answered with the glyph response.
+                        const response = message.type === MessageType.getImages ?
+                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
+                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
                         resolve(response);
                     }, 100);
                     abortController.signal.addEventListener('abort', () => {
@@ -158,9 +161,11 @@ describe('geojson tile worker source', () => {
             sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
                 return new Promise((resolve, _reject) => {
                     const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
+                        // matched, so image requests used to be answered with the glyph response.
+                        const response = message.type === MessageType.getImages ?
+                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
+                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
                         resolve(response);
                     }, 100);
                     abortController.signal.addEventListener('abort', () => {
@@ -245,9 +250,11 @@ describe('geojson tile worker source', () => {
 
                 return new Promise((resolve, reject) => {
                     const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
+                        // matched, so image requests used to be answered with the glyph response.
+                        const response = message.type === MessageType.getImages ?
+                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
+                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
                         resolve(response);
                     }, 100);
                     abortController.signal.addEventListener('abort', () => {
