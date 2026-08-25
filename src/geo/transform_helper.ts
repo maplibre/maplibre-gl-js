@@ -610,7 +610,7 @@ export class TransformHelper implements ITransformGetters {
         const helper = this.worldCoordinateHelper;
         const cameraLngLat = LngLat.convert(lnglat);
         const camMercator = helper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
-        let metersPerMercUnit = helper.metersPerWorldUnit(cameraLngLat);
+        let metersPerMercUnit = helper.metersPerWorldUnit(camMercator.x, camMercator.y);
         let centerMercator: {x: number; y: number};
         let dMercator: number;
         let iter = 0;
@@ -624,7 +624,7 @@ export class TransformHelper implements ITransformGetters {
             const dx = x * dMercator;
             const dy = y * dMercator;
             centerMercator = {x: camMercator.x + dx, y: camMercator.y + dy};
-            metersPerMercUnit = helper.metersPerWorldUnit(helper.lngLatFromWorld(centerMercator.x, centerMercator.y));
+            metersPerMercUnit = helper.metersPerWorldUnit(centerMercator.x, centerMercator.y);
         } while (Math.abs(distanceToCenter - dMercator * metersPerMercUnit) > 1.0e-12);
 
         const center = helper.lngLatFromWorld(centerMercator.x, centerMercator.y);

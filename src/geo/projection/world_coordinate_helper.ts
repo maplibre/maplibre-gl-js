@@ -22,10 +22,10 @@ export type WorldCoordinateHelper = {
      */
     lngLatFromWorld(x: number, y: number): LngLat;
     /**
-     * Meters per world unit at a location (mercator: the circumference at that latitude; planar: constant, argument ignored).
-     * Takes the location rather than a world position so mercator never round-trips y to latitude.
+     * Meters per world unit at a world position (mercator: the circumference at that latitude; planar: constant, arguments ignored).
+     * Takes the world position because the camera-to-center iteration only has one; it avoids a lng/lat object per step.
      */
-    metersPerWorldUnit(lngLat: LngLat): number;
+    metersPerWorldUnit(x: number, y: number): number;
     /**
      * Altitude in meters to world z at a location (mercator: `mercatorZfromAltitude(altitude, lat)`; planar: constant scale, argument ignored).
      */
@@ -44,8 +44,8 @@ export const mercatorWorldCoordinates: WorldCoordinateHelper = {
     lngLatFromWorld(x: number, y: number): LngLat {
         return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));
     },
-    metersPerWorldUnit(lngLat: LngLat): number {
-        return earthCircumference / mercatorScale(lngLat.lat);
+    metersPerWorldUnit(_x: number, y: number): number {
+        return earthCircumference / mercatorScale(latFromMercatorY(y));
     },
     worldZFromAltitude(altitude: number, lngLat: LngLat): number {
         return mercatorZfromAltitude(altitude, lngLat.lat);
