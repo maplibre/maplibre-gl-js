@@ -1,5 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, waitForEvent} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, waitForEvent, createTerrain} from '../../util/test/util.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain.ts';
@@ -134,6 +135,24 @@ describe('getCameraTargetElevation', () => {
     });
 });
 
+describe('Gesture end on terrain', () => {
+    test('the center elevation after a drag is the rendered surface elevation, not the tile-zoom DEM sample', async () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        await map.once('style.load');
+        map.terrain = {
+            ...createTerrain(),
+            getElevationForLngLat: () => 400,
+            getElevationForLngLatZoom: () => 1000,
+        } as any as Terrain;
+        map._camera.terrain = map.terrain;
+
+        simulate.dragWithMove(map.getCanvas(), {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+
+        expect(map.getCenterElevation()).toBe(400);
+    });
+});
+
 describe('Keep camera outside terrain', () => {
     test('Try to move camera into terrain', () => {
         let terrainElevation = 10;
@@ -141,6 +160,7 @@ describe('Keep camera outside terrain', () => {
         terrainStub.getElevationForLngLatZoom = vi.fn(
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
+        terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;
 
