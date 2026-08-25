@@ -8,7 +8,6 @@ import {type AJAXError} from '../util/ajax.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
-import {setNow, restoreNow} from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -21,7 +20,6 @@ import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {PauseablePlacement} from './pauseable_placement.ts';
 import {type Tile} from '../tile/tile.ts';
 import type Point from '@mapbox/point-geometry';
 import {type PossiblyEvaluated} from './properties.ts';
@@ -3881,94 +3879,5 @@ describe('Style#setFeatureState', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].error.message).toMatch(/The feature state should not include one of the following keys/);
-    });
-});
-
-describe('Style#_updatePlacement', () => {
-    let style: Style;
-    let transform: MercatorTransform;
-    let time: number;
-    let placementRun: MockInstance<PauseablePlacement['continuePlacement']>;
-
-    /** Leaves placement committed and past its recency window, so the next run is free to be skipped. */
-    function settle() {
-        style._updatePlacement(transform, false, 300, false);
-        setNow(time += 1000);
-        placementRun.mockClear();
-    }
-
-    beforeEach(async () => {
-        time = 0;
-        setNow(time);
-        placementRun = vi.spyOn(PauseablePlacement.prototype, 'continuePlacement');
-        style = createStyle();
-        style.loadJSON(createStyleJSON({
-            sources: {geojson: createGeoJSONSource()},
-            layers: [{id: 'symbol', type: 'symbol', source: 'geojson'}]
-        }));
-        await style.once('style.load');
-        transform = new MercatorTransform();
-        transform.resize(100, 100);
-    });
-
-    afterEach(() => {
-        placementRun.mockRestore();
-        restoreNow();
-    });
-
-    test('placement is not re-run while its inputs are unchanged', () => {
-        settle();
-
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).not.toHaveBeenCalled();
-    });
-
-    test('a zoom change re-places, and then settles again instead of looping', () => {
-        settle();
-
-        transform.setZoom(3);
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).toHaveBeenCalled();
-
-        settle();
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).not.toHaveBeenCalled();
-    });
-
-    test('a padding change re-places, and then settles again instead of looping', () => {
-        settle();
-
-        transform.setPadding({top: 10, bottom: 0, left: 0, right: 0});
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).toHaveBeenCalled();
-
-        settle();
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).not.toHaveBeenCalled();
-    });
-
-    test('a paint property change re-places, and then settles again instead of looping', () => {
-        settle();
-
-        style.setPaintProperty('symbol', 'icon-translate', [5, 5]);
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).toHaveBeenCalled();
-
-        settle();
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).not.toHaveBeenCalled();
-    });
-
-    test('a stale placement gets its final re-run even after its inputs settled', () => {
-        settle();
-
-        style.placement.setStale();
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).toHaveBeenCalled();
-
-        placementRun.mockClear();
-        setNow(time += 1000);
-        style._updatePlacement(transform, false, 300, false);
-        expect(placementRun).not.toHaveBeenCalled();
     });
 });

@@ -1,6 +1,9 @@
-import {beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
+import {PauseablePlacement} from '../../style/pauseable_placement.ts';
+import {now, setNow, restoreNow} from '../../util/time_control.ts';
+import type {Map} from '../map.ts';
 
 let server: FakeServer;
 
@@ -88,4 +91,90 @@ test('redraw', async () => {
 
     map.redraw();
     await expect(renderPromise).resolves.toBeDefined();
+});
+
+describe('symbol placement re-runs', () => {
+    let map: Map;
+    let time: number;
+    let placementRun: MockInstance<PauseablePlacement['continuePlacement']>;
+
+    /** Leaves placement committed and past its recency window, so the next run is free to be skipped. */
+    function settle() {
+        map.redraw();
+        setNow(time += 1000);
+        placementRun.mockClear();
+    }
+
+    beforeEach(async () => {
+        placementRun = vi.spyOn(PauseablePlacement.prototype, 'continuePlacement');
+        map = createMap({style: {
+            version: 8,
+            sources: {geojson: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+            layers: [{id: 'symbol', type: 'symbol', source: 'geojson'}]
+        }});
+        await map.once('idle');
+        time = now();
+        setNow(time);
+    });
+
+    afterEach(() => {
+        placementRun.mockRestore();
+        restoreNow();
+    });
+
+    test('placement is not re-run while its inputs are unchanged', () => {
+        settle();
+
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a zoom change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setZoom(3);
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a padding change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setPadding({top: 10, bottom: 0, left: 0, right: 0});
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a paint property change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setPaintProperty('symbol', 'icon-translate', [5, 5]);
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a stale placement gets its final re-run even after its inputs settled', () => {
+        settle();
+
+        map.style.placement.setStale();
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        placementRun.mockClear();
+        setNow(time += 1000);
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
 });
