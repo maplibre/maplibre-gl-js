@@ -1843,7 +1843,7 @@ export class Style extends Evented<MapEventType> {
         const lastPlacement = this.pauseablePlacement;
         return !lastPlacement ||
             this._symbolPlacementTriggered ||
-            this._placedProjectionTransition !== (this.projection?.transitionState ?? -1) ||
+            this._placedProjectionTransition !== this.projection?.transitionState ||
             lastPlacement._showCollisionBoxes !== showCollisionBoxes ||
             lastPlacement.placement.collisionGroups.crossSourceCollisions !== crossSourceCollisions ||
             lastPlacement.placement.transform.renderWorldCopies !== transform.renderWorldCopies ||
@@ -1886,7 +1886,7 @@ export class Style extends Evented<MapEventType> {
 
         if (forceFullPlacement || !this.pauseablePlacement || (placementSettled && (placementInputsChanged || this.placement.stale))) {
             this._symbolPlacementTriggered = false;
-            this._placedProjectionTransition = this.projection?.transitionState ?? -1;
+            this._placedProjectionTransition = this.projection?.transitionState;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }

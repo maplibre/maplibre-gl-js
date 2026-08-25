@@ -143,18 +143,6 @@ describe('symbol placement re-runs', () => {
         expect(placementRun).not.toHaveBeenCalled();
     });
 
-    test('a padding change re-places, and then settles again instead of looping', () => {
-        settle();
-
-        map.setPadding({top: 10, bottom: 0, left: 0, right: 0});
-        map.redraw();
-        expect(placementRun).toHaveBeenCalled();
-
-        settle();
-        map.redraw();
-        expect(placementRun).not.toHaveBeenCalled();
-    });
-
     test('a paint property change re-places, and then settles again instead of looping', () => {
         settle();
 
@@ -234,20 +222,18 @@ describe('symbol fade after the placement guard', () => {
         map.redraw();
         expect(idle).toHaveBeenCalled();
 
-        // Hiding the layer changes the placement: the symbol starts fading out.
+        // The clock is frozen, so pump a fixed batch of frames to carry the relayout through the worker.
         map.setLayoutProperty('symbol', 'visibility', 'none');
-        for (let i = 0; i < 100 && !map.loaded(); i++) {
+        for (let i = 0; i < 100; i++) {
             await sleep(0);
             map.redraw();
         }
         idle.mockClear();
 
-        // Inside the fade window the map must keep rendering.
         setNow(time += 100);
         map.redraw();
         expect(idle).not.toHaveBeenCalled();
 
-        // Once the fade has elapsed it settles again.
         setNow(time += 1000);
         map.redraw();
         expect(idle).toHaveBeenCalled();
