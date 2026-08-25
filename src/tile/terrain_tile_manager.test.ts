@@ -9,6 +9,7 @@ import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
 import {type DEMData} from '../data/dem_data.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap} from '../util/test/util.ts';
 import {type Painter, type RTTObject} from '../render/painter.ts';
 
@@ -89,6 +90,28 @@ describe('TerrainTileManager', () => {
         tsc.tileManager._outOfViewCache.add(underzoomTileID, tile);
         expect(tsc.tileManager._inViewTiles.getTileById(underzoomTileID.key)).toBeUndefined();
         expect(tsc.getSourceTile(tileID, true).tileID.key).toBe(underzoomTileID.key);
+    });
+
+    describe('update', () => {
+        test('reports whether the renderable tiles changed', () => {
+            tsc._tiles = {};
+            tsc._renderableTilesKeys = [];
+            const transform = new MercatorTransform();
+            transform.resize(512, 512);
+            transform.setCenter(new LngLat(-46, -6));
+            transform.setZoom(8);
+
+            expect(tsc.update(transform, null)).toBe(true);
+            const keys = [...tsc._renderableTilesKeys];
+            expect(keys.length).toBeGreaterThan(0);
+
+            expect(tsc.update(transform, null)).toBe(false);
+            expect(tsc._renderableTilesKeys).toEqual(keys);
+
+            transform.setZoom(9);
+            expect(tsc.update(transform, null)).toBe(true);
+            expect(tsc._renderableTilesKeys).not.toEqual(keys);
+        });
     });
 
     describe('getTerrainCoords', () => {
