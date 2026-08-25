@@ -1,9 +1,10 @@
 ## main
 ### ✨ Features and improvements
+- Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
 
 ## 6.6.0
 

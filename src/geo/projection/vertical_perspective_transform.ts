@@ -984,7 +984,7 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
     const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y);
     // The globe mesh caps the poles at elevation zero, matching the GLOBE branch of get_elevation.
     const elevation = Math.abs(lngLat.lat) > MAX_VALID_LATITUDE ? 0 : sample.elevation;
-    return {sample: {covered: sample.covered, elevation}, radius, mercator};
+    return {sample: {...sample, elevation}, radius, mercator};
 }
 
 function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
