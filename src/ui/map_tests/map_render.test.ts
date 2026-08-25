@@ -1,7 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import {bufferToArrayBuffer, createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
@@ -199,36 +197,26 @@ describe('symbol fade after the placement guard', () => {
     });
 
     test('a placement change keeps the map rendering through fadeDuration, then it goes idle', async () => {
-        server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../../test/unit/assets/0-255.pbf'))));
         const map = createMap({style: {
             version: 8,
-            glyphs: 'https://localhost/fonts/{fontstack}/{range}.pbf',
-            sources: {geojson: {type: 'geojson', data: {type: 'Feature', geometry: {type: 'Point', coordinates: [0, 0]}, properties: {}}}},
-            layers: [{id: 'symbol', type: 'symbol', source: 'geojson', layout: {'text-field': 'A'}}]
+            sources: {geojson: {type: 'geojson', data: {type: 'FeatureCollection', features: [
+                {type: 'Feature', geometry: {type: 'Point', coordinates: [-20, 0]}, properties: {}},
+                {type: 'Feature', geometry: {type: 'Point', coordinates: [20, 0]}, properties: {}}
+            ]}}},
+            layers: []
         }});
-
-        // Pump the fake server and worker until the glyph-dependent symbol tile lands.
-        for (let i = 0; i < 100 && !map.loaded(); i++) {
-            server.respond();
-            await sleep(10);
-        }
-        expect(map.loaded()).toBe(true);
-
-        // Let the initial fade-in finish so the map can prove it is able to go idle.
+        await map.once('load');
+        map.addImage('dot', {width: 80, height: 80, data: new Uint8Array(80 * 80 * 4)});
+        map.addLayer({id: 'symbol', type: 'symbol', source: 'geojson', layout: {'icon-image': 'dot'}});
+        await map.once('idle');
         const idle = vi.fn();
         map.on('idle', idle);
-        let time = now() + 10_000;
+        let time = now();
         setNow(time);
-        map.redraw();
-        expect(idle).toHaveBeenCalled();
 
-        // The clock is frozen, so pump a fixed batch of frames to carry the relayout through the worker.
-        map.setLayoutProperty('symbol', 'visibility', 'none');
-        for (let i = 0; i < 100; i++) {
-            await sleep(0);
-            map.redraw();
-        }
-        idle.mockClear();
+        // Zooming in separates the icons, so the one that lost the collision fades in.
+        map.setZoom(0.9);
+        map.redraw();
 
         setNow(time += 100);
         map.redraw();
