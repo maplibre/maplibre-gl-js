@@ -795,8 +795,6 @@ export class Map extends Evented<MapEventType> {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
         }
 
-        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
-
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
         this._container = this._resolveContainer(resolvedOptions.container);
@@ -806,8 +804,13 @@ export class Map extends Evented<MapEventType> {
         }
 
         this._setupContainer();
-        this._setupPainter();
-        if (!this.painter) return;
+        try {
+            this._setupPainter();
+        } catch (error) {
+            this._cleanupContainer();
+            throw error;
+        }
+        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
@@ -4065,6 +4068,19 @@ export class Map extends Evented<MapEventType> {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
+    /**
+     * @internal
+     * Reverses the DOM mutations of {@link Map._setupContainer}, returning the container element to its pre-construction state.
+     */
+    _cleanupContainer(): void {
+        this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
+        this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
+        this._canvasContainer.remove();
+        this._controlContainer.remove();
+        this._container.removeEventListener('scroll', this._onMapScroll, false);
+        this._container.classList.remove('maplibregl-map');
+    }
+
     _resizeCanvas(width: number, height: number, pixelRatio: number): void {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = Math.floor(pixelRatio * width);
@@ -4075,6 +4091,10 @@ export class Map extends Evented<MapEventType> {
         this._canvas.style.height = `${height}px`;
     }
 
+    /**
+     * @internal
+     * Creates the WebGL2 context and the painter. Throws {@link GPUInitializationError} when the context cannot be created.
+     */
     _setupPainter(): void {
 
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
@@ -4095,8 +4115,7 @@ export class Map extends Evented<MapEventType> {
         const gl: WebGL2RenderingContext | null = this._canvas.getContext('webgl2', attributes);
 
         if (!gl) {
-            this.fire(new ErrorEvent(new GPUInitializationError(attributes, creationEvent)));
-            return;
+            throw new GPUInitializationError(attributes, creationEvent);
         }
 
         this.painter = new Painter(gl, this._camera.transform);
@@ -4166,8 +4185,12 @@ export class Map extends Evented<MapEventType> {
 
         this._lostContextStyle = {style: null, images: null};
 
-        this._setupPainter();
-        if (!this.painter) return;
+        try {
+            this._setupPainter();
+        } catch (error) {
+            this.fire(new ErrorEvent(error));
+            return;
+        }
         this.resize();
         this._update();
         this._resizeInternal();
@@ -4411,12 +4434,7 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension?.loseContext) extension.loseContext();
-        this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
-        this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
-        this._canvasContainer.remove();
-        this._controlContainer.remove();
-        this._container.removeEventListener('scroll', this._onMapScroll, false);
-        this._container.classList.remove('maplibregl-map');
+        this._cleanupContainer();
 
         this._removed = true;
         this.fire(new MapLibreEvent('remove'));
