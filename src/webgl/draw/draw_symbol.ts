@@ -86,7 +86,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
         drawLayerSymbols(painter, tileManager, layer, coords, false,
             layer.paint.get('icon-translate'),
             layer.paint.get('icon-translate-anchor'),
-            layer.layout.get('icon-rotation-alignment'),
+            layer.layout.get('icon-rotation-alignment').constantOr('viewport'),
             layer.layout.get('icon-pitch-alignment'),
             layer.layout.get('icon-keep-upright'),
             stencilMode, colorMode, isRenderingToTexture
