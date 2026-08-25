@@ -1,5 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
-import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
+import fs from 'fs';
+import path from 'path';
+import {bufferToArrayBuffer, createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
@@ -200,5 +202,54 @@ describe('symbol placement re-runs', () => {
         setNow(time += 1000);
         map.redraw();
         expect(placementRun).not.toHaveBeenCalled();
+    });
+});
+
+describe('symbol fade after the placement guard', () => {
+    afterEach(() => {
+        restoreNow();
+    });
+
+    test('a placement change keeps the map rendering through fadeDuration, then it goes idle', async () => {
+        server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../../test/unit/assets/0-255.pbf'))));
+        const map = createMap({style: {
+            version: 8,
+            glyphs: 'https://localhost/fonts/{fontstack}/{range}.pbf',
+            sources: {geojson: {type: 'geojson', data: {type: 'Feature', geometry: {type: 'Point', coordinates: [0, 0]}, properties: {}}}},
+            layers: [{id: 'symbol', type: 'symbol', source: 'geojson', layout: {'text-field': 'A'}}]
+        }});
+
+        // Pump the fake server and worker until the glyph-dependent symbol tile lands.
+        for (let i = 0; i < 100 && !map.loaded(); i++) {
+            server.respond();
+            await sleep(10);
+        }
+        expect(map.loaded()).toBe(true);
+
+        // Let the initial fade-in finish so the map can prove it is able to go idle.
+        const idle = vi.fn();
+        map.on('idle', idle);
+        let time = now() + 10_000;
+        setNow(time);
+        map.redraw();
+        expect(idle).toHaveBeenCalled();
+
+        // Hiding the layer changes the placement: the symbol starts fading out.
+        map.setLayoutProperty('symbol', 'visibility', 'none');
+        for (let i = 0; i < 100 && !map.loaded(); i++) {
+            await sleep(0);
+            map.redraw();
+        }
+        idle.mockClear();
+
+        // Inside the fade window the map must keep rendering.
+        setNow(time += 100);
+        map.redraw();
+        expect(idle).not.toHaveBeenCalled();
+
+        // Once the fade has elapsed it settles again.
+        setNow(time += 1000);
+        map.redraw();
+        expect(idle).toHaveBeenCalled();
     });
 });
