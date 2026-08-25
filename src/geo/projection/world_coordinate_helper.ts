@@ -1,5 +1,5 @@
-import {LngLat} from '../lng_lat.ts';
-import {earthCircumference, MercatorCoordinate, latFromMercatorY, lngFromMercatorX, mercatorScale, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import type {LngLat} from '../lng_lat.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 
 /**
  * @internal
@@ -32,22 +32,4 @@ export type WorldCoordinateHelper = {
     worldZFromAltitude(altitude: number, lngLat: LngLat): number;
 };
 
-/**
- * @internal
- * The Web Mercator world mapping used by the mercator, globe, and vertical-perspective projections.
- * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`.
- */
-export const mercatorWorldCoordinates: WorldCoordinateHelper = {
-    worldFromLngLat(lng: number, lat: number): MercatorCoordinate {
-        return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat));
-    },
-    lngLatFromWorld(x: number, y: number): LngLat {
-        return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));
-    },
-    metersPerWorldUnit(_x: number, y: number): number {
-        return earthCircumference / mercatorScale(latFromMercatorY(y));
-    },
-    worldZFromAltitude(altitude: number, lngLat: LngLat): number {
-        return mercatorZfromAltitude(altitude, lngLat.lat);
-    },
-};
+export {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
