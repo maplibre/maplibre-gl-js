@@ -856,12 +856,6 @@ export class Style extends Evented<MapEventType> {
             throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
         }
 
-        // The specification's `diff` does not emit a command for `font-faces` yet, so the change is
-        // picked up here rather than in `_getOperationsToPerform`.
-        if (!deepEqual(serializedStyle['font-faces'], nextState['font-faces'])) {
-            operations.operations.push(() => this.setFontFaces(nextState['font-faces'], {validate: false}));
-        }
-
         if (operations.operations.length === 0) {
             return false;
         }
@@ -923,6 +917,9 @@ export class Style extends Evented<MapEventType> {
                     break;
                 case 'setGlyphs':
                     operations.push(() => this.setGlyphs.apply(this, op.args));
+                    break;
+                case 'setFontFaces':
+                    operations.push(() => this.setFontFaces.apply(this, op.args));
                     break;
                 case 'setSprite':
                     operations.push(() => this.setSprite.apply(this, op.args));
