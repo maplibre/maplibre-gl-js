@@ -42,6 +42,7 @@ export default [
                         'build/generate-*.ts',
                         'build/eslint-rules/*.js',
                         'test/build/*.ts',
+                        'test/types/*.ts',
                         'eslint.config.js',
                         'postcss.config.js',
                     ],

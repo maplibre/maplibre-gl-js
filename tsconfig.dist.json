@@ -8,7 +8,8 @@
     ]
   },
   "include": [
-    "dist/maplibre-gl.d.ts"
+    "dist/maplibre-gl.d.ts",
+    "test/types/**/*"
   ],
   "exclude": []
 }
