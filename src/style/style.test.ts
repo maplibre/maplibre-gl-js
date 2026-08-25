@@ -1578,18 +1578,6 @@ describe('Style.setFontFaces', () => {
         expect(style.getFontFaces()).toBeNull();
     });
 
-    test('rejects a font face declaration the specification does not allow', async () => {
-        const style = new Style(getStubMap());
-        style.loadJSON(createStyleJSON());
-        await style.once('style.load');
-        const error = style.once('error');
-
-        style.setFontFaces({'Noto Sans Regular': [{'unicode-range': ['U+1780-17FF']}]} as any);
-
-        expect((await error).error.message).toMatch(/url/);
-        expect(style.getFontFaces()).toBeNull();
-    });
-
     test('round-trips through serialize, so setState can diff them', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));

@@ -3708,7 +3708,8 @@ export class Map extends Evented<MapEventType> {
      * shaping are not rendered any better than they are with the `localIdeographFontFamily` option.
      *
      * @param fontFaces - The font faces to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/root/#font-faces).
-     * @param options - Options object.
+     * A declaration this cannot make sense of is skipped with a warning, as is a font file that
+     * fails to load, so the text it would have drawn falls back to the `glyphs` URL.
      * @example
      * ```ts
      * map.setFontFaces({
@@ -3718,9 +3719,9 @@ export class Map extends Evented<MapEventType> {
      * });
      * ```
      */
-    setFontFaces(fontFaces: FontFaces | null | undefined, options: StyleSetterOptions = {}): this {
+    setFontFaces(fontFaces: FontFaces | null | undefined): this {
         this._lazyInitEmptyStyle();
-        this.style.setFontFaces(fontFaces, options);
+        this.style.setFontFaces(fontFaces);
         return this._update(true);
     }
 

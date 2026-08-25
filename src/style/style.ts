@@ -18,7 +18,7 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
-import {validateStyle, validateStyleAndEmit, validateAndEmit, validateFontFaces, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
+import {validateStyle, validateStyleAndEmit, validateAndEmit, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
 import {derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
@@ -1984,12 +1984,8 @@ export class Style extends Evented<MapEventType> {
         return this.stylesheet['font-faces'] || null;
     }
 
-    setFontFaces(fontFaces: FontFaces | null | undefined, options: StyleSetterOptions = {}): void {
+    setFontFaces(fontFaces: FontFaces | null | undefined): void {
         this._checkLoaded();
-
-        if (fontFaces && this._validate(validateFontFaces, 'font-faces', fontFaces, null, options)) {
-            return;
-        }
 
         this._glyphsDidChange = true;
         // The cast drops the list form of a declaration, which the specification's type omits.

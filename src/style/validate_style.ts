@@ -1,4 +1,4 @@
-import {latest as styleSpec, validate, validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
 import {ErrorEvent} from '../util/evented.ts';
 import {warnOnce} from '../util/util.ts';
 
@@ -27,18 +27,6 @@ type ValidateStyle = {
 };
 
 export const validateStyle = (validateStyleMin as unknown as ValidateStyle);
-
-/**
- * Validates a `font-faces` value on its own. The specification hangs ready-made validators for
- * `glyphs`, `sprite` and friends off `validateStyleMin`, but not one for `font-faces`, so this one
- * is assembled from the spec's generic entry point instead.
- */
-export const validateFontFaces: Validator = (options) => validate({
-    ...options,
-    valueSpec: styleSpec.$root['font-faces'],
-    validateSpec: validate,
-    styleSpec
-});
 
 /**
  * The source types the spec has a schema for, and therefore the only ones it can judge. Taken from
