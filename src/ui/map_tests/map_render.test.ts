@@ -165,6 +165,30 @@ describe('symbol placement re-runs', () => {
         expect(placementRun).not.toHaveBeenCalled();
     });
 
+    test('a renderWorldCopies change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setRenderWorldCopies(false);
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a showCollisionBoxes change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.showCollisionBoxes = true;
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
     test('a stale placement gets its final re-run even after its inputs settled', () => {
         settle();
 
