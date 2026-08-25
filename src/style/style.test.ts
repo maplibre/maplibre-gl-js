@@ -1590,7 +1590,7 @@ describe('Style.setFontFaces', () => {
         expect(style.getFontFaces()).toBeNull();
     });
 
-    test('round-trips through serialize, so setState can tell that they changed', async () => {
+    test('round-trips through serialize, so setState can diff them', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
         await style.once('style.load');
@@ -1600,6 +1600,9 @@ describe('Style.setFontFaces', () => {
         const nextFontFaces = {'Noto Sans Regular': 'https://example.com/noto.ttf'};
         expect(style.setState(createStyleJSON({'font-faces': nextFontFaces} as any))).toBe(true);
         expect(style.getFontFaces()).toEqual(nextFontFaces);
+
+        expect(style.setState(createStyleJSON())).toBe(true);
+        expect(style.getFontFaces()).toBeNull();
     });
 });
 
