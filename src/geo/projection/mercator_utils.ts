@@ -87,10 +87,13 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
     return worldMatrix;
 }
 
-export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number, helper: WorldCoordinateHelper): MercatorCoordinate {
-    const {x: centerX, y: centerY} = helper.worldFromLngLat(center.lng, center.lat);
-    const centerMercator = new MercatorCoordinate(centerX, centerY, helper.worldZFromAltitude(elevation, center));
-    const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
+/**
+ * @param distance - camera to center distance in meters
+ * @param mercUnitsPerMeter - `helper.worldZFromAltitude(1, center)`, passed in because every caller already has it
+ */
+export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number, helper: WorldCoordinateHelper, mercUnitsPerMeter: number): MercatorCoordinate {
+    const centerMercator = helper.worldFromLngLat(center.lng, center.lat);
+    centerMercator.z = helper.worldZFromAltitude(elevation, center);
     const dMercator = distance * mercUnitsPerMeter;
     const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
     const dxMercator = dMercator * -x;
@@ -114,10 +117,11 @@ export function cameraMercatorCoordinate(transform: {
     worldCoordinateHelper: WorldCoordinateHelper;
 }): MercatorCoordinate {
     const helper = transform.worldCoordinateHelper;
-    const pixelPerMeter = helper.worldZFromAltitude(1, transform.center) * transform.worldSize;
+    const mercUnitsPerMeter = helper.worldZFromAltitude(1, transform.center);
+    const pixelPerMeter = mercUnitsPerMeter * transform.worldSize;
     return cameraMercatorCoordinateFromCenterAndRotation(
         transform.center, transform.elevation, transform.pitch, transform.bearing,
-        transform.cameraToCenterDistance / pixelPerMeter, helper);
+        transform.cameraToCenterDistance / pixelPerMeter, helper, mercUnitsPerMeter);
 }
 
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {

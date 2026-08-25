@@ -1,6 +1,5 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec4} from 'gl-matrix';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 
 import type {IReadonlyTransform} from '../transform_interface.ts';
@@ -219,8 +218,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const plane = transform.getClippingPlane();
     const helper = transform.worldCoordinateHelper;
     const cameraCoord = cameraMercatorCoordinate(transform);
-    const {x: centerX, y: centerY} = helper.worldFromLngLat(transform.center.lng, transform.center.lat);
-    const centerCoord = new MercatorCoordinate(centerX, centerY, helper.worldZFromAltitude(transform.elevation, transform.center));
+    const centerCoord = helper.worldFromLngLat(transform.center.lng, transform.center.lat);
+    centerCoord.z = helper.worldZFromAltitude(transform.elevation, transform.center);
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);

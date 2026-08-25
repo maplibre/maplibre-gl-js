@@ -1,5 +1,5 @@
 import {LngLat} from '../lng_lat.ts';
-import {earthCircumference, latFromMercatorY, lngFromMercatorX, mercatorScale, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {earthCircumference, MercatorCoordinate, latFromMercatorY, lngFromMercatorX, mercatorScale, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 
 /**
  * @internal
@@ -13,9 +13,10 @@ import {earthCircumference, latFromMercatorY, lngFromMercatorX, mercatorScale, m
  */
 export type WorldCoordinateHelper = {
     /**
-     * lng/lat in degrees to world square coordinates.
+     * lng/lat in degrees to a world square position with `z` at sea level; callers that need
+     * an altitude set `z` from `worldZFromAltitude`.
      */
-    worldFromLngLat(lng: number, lat: number): {x: number; y: number};
+    worldFromLngLat(lng: number, lat: number): MercatorCoordinate;
     /**
      * World square coordinates to lng/lat.
      */
@@ -37,8 +38,8 @@ export type WorldCoordinateHelper = {
  * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`.
  */
 export const mercatorWorldCoordinates: WorldCoordinateHelper = {
-    worldFromLngLat(lng: number, lat: number): {x: number; y: number} {
-        return {x: mercatorXfromLng(lng), y: mercatorYfromLat(lat)};
+    worldFromLngLat(lng: number, lat: number): MercatorCoordinate {
+        return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat));
     },
     lngLatFromWorld(x: number, y: number): LngLat {
         return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));

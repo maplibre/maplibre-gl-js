@@ -367,8 +367,7 @@ export class MercatorTransform implements ITransform {
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        const {x, y} = this.worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
-        const coord = new MercatorCoordinate(x, y);
+        const coord = this.worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
         return terrain ?
             this.coordinatePoint(coord, terrain.getElevationForLngLat(lnglat, this), this._pixelMatrix3D) :
             this.coordinatePoint(coord);
@@ -834,9 +833,10 @@ export class MercatorTransform implements ITransform {
 
     getCameraLngLat(): LngLat {
         const helper = this.worldCoordinateHelper;
-        const pixelPerMeter = helper.worldZFromAltitude(1, this.center) * this.worldSize;
+        const mercUnitsPerMeter = helper.worldZFromAltitude(1, this.center);
+        const pixelPerMeter = mercUnitsPerMeter * this.worldSize;
         const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters, helper);
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters, helper, mercUnitsPerMeter);
         return helper.lngLatFromWorld(camMercator.x, camMercator.y);
     }
 
