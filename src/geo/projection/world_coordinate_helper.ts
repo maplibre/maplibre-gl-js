@@ -34,8 +34,7 @@ export type WorldCoordinateHelper = {
 /**
  * @internal
  * The Web Mercator world mapping used by the mercator, globe, and vertical-perspective projections.
- * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`, written the
- * same way so the camera-to-center iteration produces the same doubles it did when it called that method.
+ * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`.
  */
 export const mercatorWorldCoordinates: WorldCoordinateHelper = {
     worldFromLngLat(lng: number, lat: number): {x: number; y: number} {
@@ -45,7 +44,7 @@ export const mercatorWorldCoordinates: WorldCoordinateHelper = {
         return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));
     },
     metersPerWorldUnit(lngLat: LngLat): number {
-        return 1 / (1 / earthCircumference * mercatorScale(lngLat.lat));
+        return earthCircumference / mercatorScale(lngLat.lat);
     },
     worldZFromAltitude(altitude: number, lngLat: LngLat): number {
         return mercatorZfromAltitude(altitude, lngLat.lat);
