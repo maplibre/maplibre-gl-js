@@ -94,23 +94,23 @@ describe('TerrainTileManager', () => {
 
     describe('update', () => {
         test('reports whether the renderable tiles changed', () => {
-            tsc._tiles = {};
-            tsc._renderableTilesKeys = [];
+            const manager = new TerrainTileManager(style.tileManagers.terrain);
             const transform = new MercatorTransform();
             transform.resize(512, 512);
             transform.setCenter(new LngLat(-46, -6));
             transform.setZoom(8);
+            const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
 
-            expect(tsc.update(transform, null)).toBe(true);
-            const keys = [...tsc._renderableTilesKeys];
+            expect(manager.update(transform, null)).toBe(true);
+            const keys = renderableKeys();
             expect(keys.length).toBeGreaterThan(0);
 
-            expect(tsc.update(transform, null)).toBe(false);
-            expect(tsc._renderableTilesKeys).toEqual(keys);
+            expect(manager.update(transform, null)).toBe(false);
+            expect(renderableKeys()).toEqual(keys);
 
             transform.setZoom(9);
-            expect(tsc.update(transform, null)).toBe(true);
-            expect(tsc._renderableTilesKeys).not.toEqual(keys);
+            expect(manager.update(transform, null)).toBe(true);
+            expect(renderableKeys()).not.toEqual(keys);
         });
     });
 
