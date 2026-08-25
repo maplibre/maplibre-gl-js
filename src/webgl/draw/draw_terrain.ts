@@ -23,7 +23,7 @@ function drawDepth(painter: Painter, terrain: Terrain): void {
     const program = painter.useProgram('terrainDepth');
     context.bindFramebuffer.set(terrain.getFramebuffer().framebuffer);
     context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
-    context.clear({color: Color.transparent, depth: 1});
+    context.clear({color: Color.white, depth: 1});
     for (const tile of tiles) {
         const mesh = terrain.getTerrainMesh(tile.tileID);
         const terrainData = terrain.getTerrainData(tile.tileID);

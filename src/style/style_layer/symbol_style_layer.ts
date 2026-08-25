@@ -48,12 +48,12 @@ export class SymbolStyleLayer extends StyleLayer {
     recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
 
-        if (this.layout.get('icon-rotation-alignment') === 'auto') {
-            if (this.layout.get('symbol-placement') !== 'point') {
-                this.layout._values['icon-rotation-alignment'] = 'map';
-            } else {
-                this.layout._values['icon-rotation-alignment'] = 'viewport';
-            }
+        const iconRotationAlignment = this.layout.get('icon-rotation-alignment');
+        if (iconRotationAlignment.value.kind !== 'constant' || iconRotationAlignment.value.value === 'auto') {
+            this.layout._values['icon-rotation-alignment'] = new PossiblyEvaluatedPropertyValue(
+                iconRotationAlignment.property,
+                {kind: 'constant', value: this.layout.get('symbol-placement') !== 'point' ? 'map' : 'viewport'},
+                iconRotationAlignment.parameters);
         }
 
         if (this.layout.get('text-rotation-alignment') === 'auto') {
@@ -69,7 +69,7 @@ export class SymbolStyleLayer extends StyleLayer {
             this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment') === 'map' ? 'map' : 'viewport';
         }
         if (this.layout.get('icon-pitch-alignment') === 'auto') {
-            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment');
+            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment').constantOr('viewport');
         }
 
         if (this.layout.get('symbol-placement') === 'point') {

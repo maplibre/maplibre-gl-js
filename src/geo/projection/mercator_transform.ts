@@ -333,7 +333,7 @@ export class MercatorTransform implements ITransform {
     recalculateZoomAndCenter(terrain?: Terrain): void {
         // find position the camera is looking on
         const center = this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain ? terrain.getElevationForLngLatZoom(center, this._helper._tileZoom) : 0;
+        const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
@@ -875,11 +875,11 @@ export class MercatorTransform implements ITransform {
         throw new Error('Not implemented.'); // No need for this in mercator transform
     }
 
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
         const matrix = this.calculatePosMatrix(unwrappedTileID);
         let pos;
-        if (getElevation) { // slow because of handle z-index
-            pos = [x, y, getElevation(x, y), 1] as vec4;
+        if (elevation != null) { // slow because of handle z-index
+            pos = [x, y, elevation, 1] as vec4;
             vec4.transformMat4(pos, pos, matrix);
         } else { // fast because of ignore z-index
             pos = [x, y, 0, 1] as vec4;

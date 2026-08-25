@@ -49,6 +49,8 @@ const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
 
 export type TerrainSample = {
     covered: boolean;
+    /** Whether the elevation comes from loaded DEM data rather than the flat surface rendered while it loads. */
+    demLoaded: boolean;
     elevation: number;
 };
 
@@ -140,13 +142,13 @@ export class Terrain {
      */
     _demMatrixCache: Map<string, mat4>;
     /**
-     * Per-render cache of resolved CPU elevation samplers. It is cleared after
-     * terrain tile selection updates and whenever the terrain source changes.
+     * Cache of resolved CPU elevation samplers. It is cleared when the set of renderable
+     * terrain tiles changes and whenever the terrain source changes.
      * Missing DEM data is deliberately not cached so a later sample can retry.
      */
     _elevationSamplerCache: Map<string, TerrainElevationSampler>;
     /**
-     * Per-render index of the tiles the terrain draws, used by CPU raycasts.
+     * Index of the tiles the terrain draws, used by CPU raycasts and elevation lookups.
      * It is cleared together with the elevation sampler cache; undefined means not built yet.
      */
     _coverageIndex: TerrainCoverageIndex | null | undefined;
@@ -223,11 +225,19 @@ export class Terrain {
 
     /**
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
-     * This will traverse up the zoom levels to find the first tile with data to return.
+     * Where the location is covered by a rendered tile with loaded DEM data this samples the
+     * rendered surface, so the result agrees with what is drawn; elsewhere it traverses up the
+     * zoom levels to find the first tile with data to return.
      * @param lnglat - the location
      * @returns the elevation
      */
     getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
+        const index = this.getCoverageIndex();
+        if (index) {
+            const mercator = MercatorCoordinate.fromLngLat(lnglat);
+            const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
+            if (sample.demLoaded) return sample.elevation;
+        }
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
         let zoom = 0;
         for (const tile of terrainCoveringTiles) {
@@ -553,7 +563,7 @@ export class Terrain {
     }
 }
 
-const NOT_COVERED: TerrainSample = {covered: false, elevation: 0};
+const NOT_COVERED: TerrainSample = {covered: false, demLoaded: false, elevation: 0};
 
 /**
  * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
@@ -573,10 +583,10 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
         const key = `${wrap}/${z}/${tileX}/${tileY}`;
         if (!index.samplerPerTile.has(key)) continue;
         const sampler = index.samplerPerTile.get(key);
-        if (!sampler) return {covered: true, elevation: 0};
+        if (!sampler) return {covered: true, demLoaded: false, elevation: 0};
         const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
         const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
-        return {covered: true, elevation: sampler(x, y, EXTENT) * exaggeration};
+        return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
     }
     return NOT_COVERED;
 }

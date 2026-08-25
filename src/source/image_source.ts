@@ -171,6 +171,18 @@ export type CanonicalTileRange = {
  * const bitmap = await createImageBitmap(myCanvas);
  * mySource.updateImage({image: bitmap});
  *
+ * // create an empty source (no url), then feed it entirely via updateImage
+ * map.addSource('empty id', {
+ *    type: 'image',
+ *    coordinates: [
+ *        [-76.54, 39.18],
+ *        [-76.52, 39.18],
+ *        [-76.52, 39.17],
+ *        [-76.54, 39.17]
+ *    ]
+ * });
+ * (map.getSource('empty id') as ImageSource).updateImage({image: bitmap});
+ *
  * map.removeSource('some id');  // remove
  * ```
  */
@@ -229,6 +241,13 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     async load(newCoordinates?: Coordinates): Promise<void> {
+        if (this.options.url === undefined) {
+            // A url-less source starts empty and displays nothing until updateImage provides content.
+            this._loaded = true;
+            this._finishLoading();
+            return;
+        }
+
         this._loaded = false;
         this.fire(new MapSourceDataEvent('dataloading'));
 
@@ -481,11 +500,14 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     serialize(): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification {
-        return {
+        const spec: ImageSourceSpecification = {
             type: 'image',
-            url: this.options.url,
             coordinates: this.coordinates
         };
+        if (this.options.url !== undefined) {
+            spec.url = this.options.url;
+        }
+        return spec;
     }
 
     hasTransition() {
