@@ -53,6 +53,7 @@ type MercatorRay = {
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
+    private _worldCoordinateHelper: WorldCoordinateHelper;
 
     //
     // Implementation of transform getters and setters
@@ -279,6 +280,7 @@ export class MercatorTransform implements ITransform {
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
+        this._worldCoordinateHelper = this._helper.worldCoordinateHelper;
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
@@ -289,7 +291,7 @@ export class MercatorTransform implements ITransform {
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
-        return this._helper.worldCoordinateHelper;
+        return this._worldCoordinateHelper;
     }
 
     public apply(that: IReadonlyTransform, constrain: boolean, forceOverrideZ?: boolean): void {
