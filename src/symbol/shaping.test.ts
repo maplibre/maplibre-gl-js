@@ -370,26 +370,42 @@ describe('shapeText vertical glyph orientation', () => {
     type ShapeLineLabelOptions = {
         writingMode?: WritingMode.horizontal | WritingMode.vertical;
         allowVerticalPlacement?: boolean;
-        missingGlyphs?: string;
     };
 
-    /** Shapes a line label, providing a stub glyph for every character of `text` and its vertical form. */
-    function shapeLineLabel(text: string, {writingMode = WritingMode.vertical, allowVerticalPlacement = false, missingGlyphs = ''}: ShapeLineLabelOptions = {}): Shaping | false {
-        const glyphs: {[_: number]: StyleGlyph} = {};
-        const addGlyph = (codePoint: number) => {
-            glyphs[codePoint] = {
-                id: codePoint,
-                bitmap: null,
-                metrics: {width: 10, height: 18, left: 1, top: -8, advance: 12}
-            };
+    function createStubGlyph(codePoint: number): StyleGlyph {
+        return {
+            id: codePoint,
+            bitmap: null,
+            metrics: {width: 10, height: 18, left: 1, top: -8, advance: 12}
         };
-        for (const char of text) {
-            if (missingGlyphs.includes(char)) continue;
-            addGlyph(char.codePointAt(0));
-            const verticalizedChar = verticalizedCharacterMap[char];
-            if (verticalizedChar) addGlyph(verticalizedChar.codePointAt(0));
+    }
+
+    function createStubGlyphMap(text: string): {[_: number]: StyleGlyph} {
+        const glyphs: {[_: number]: StyleGlyph} = {};
+        const verticalizedChars = Object.entries(verticalizedCharacterMap)
+            .filter(([char]) => text.includes(char))
+            .map(([, verticalizedChar]) => verticalizedChar);
+
+        for (const char of [...text, ...verticalizedChars]) {
+            const codePoint = char.codePointAt(0);
+            glyphs[codePoint] = createStubGlyph(codePoint);
         }
+        return glyphs;
+    }
+
+    /** Shapes a line label, providing a stub glyph for every character of `text` and its verticalized form. */
+    function shapeLineLabel(text: string, {writingMode = WritingMode.vertical, allowVerticalPlacement = false}: ShapeLineLabelOptions = {}): Shaping | false {
+        const glyphs = createStubGlyphMap(text);
         return shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], writingMode, allowVerticalPlacement, 24, 24);
+    }
+
+    /** Shapes a vertical line label without a glyph for `missingGlyph` and its verticalized form. */
+    function shapeLineLabelWithMissingGlyph(text: string, missingGlyph: string): Shaping | false {
+        const availableGlyphText = [...text]
+            .filter(char => char !== missingGlyph)
+            .join('');
+        const glyphs = createStubGlyphMap(availableGlyphText);
+        return shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24);
     }
 
     /** Returns each positioned glyph of the shaping as a [character, orientation] pair. */
@@ -401,7 +417,10 @@ describe('shapeText vertical glyph orientation', () => {
 
     test('draws digits between CJK characters upright', () => {
         // The label reported in https://github.com/maplibre/maplibre-gl-js/issues/5404
-        expect(getGlyphOrientations(shapeLineLabel('반포대로21길'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('반포대로21길');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['반', 'upright'],
             ['포', 'upright'],
             ['대', 'upright'],
@@ -413,7 +432,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws a trailing digit run upright', () => {
-        expect(getGlyphOrientations(shapeLineLabel('身什戰33'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('身什戰33');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['身', 'upright'],
             ['什', 'upright'],
             ['戰', 'upright'],
@@ -423,7 +445,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws a digit run upright regardless of its length', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道1234号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道1234号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['1', 'upright'],
@@ -435,7 +460,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws a whitespace-separated digit upright', () => {
-        expect(getGlyphOrientations(shapeLineLabel('身什戰 1'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('身什戰 1');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['身', 'upright'],
             ['什', 'upright'],
             ['戰', 'upright'],
@@ -445,7 +473,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws a single uppercase letter between CJK characters upright', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道A号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道A号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['A', 'upright'],
@@ -456,7 +487,10 @@ describe('shapeText vertical glyph orientation', () => {
     test('rotates a decomposed Latin letter so its combining mark stays attached', () => {
         // é as “e” followed by U+0301 combining acute accent: upright glyphs
         // each advance a full em, which would detach the mark from its base.
-        expect(getGlyphOrientations(shapeLineLabel('国道e\u0301号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道e\u0301号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['e', 'along-line'],
@@ -466,7 +500,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates a single lowercase letter mixed with CJK', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道α号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道α号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['α', 'along-line'],
@@ -475,7 +512,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws short uppercase codes of non-Latin scripts upright', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道\u041C1号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道\u041C1号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['\u041C', 'upright'], // Cyrillic capital М
@@ -485,7 +525,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates complex-shaping script characters mixed with CJK', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道ب号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道ب号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['ب', 'along-line'],
@@ -494,7 +537,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates the prolonged sound mark so it reads as a vertical stroke', () => {
-        expect(getGlyphOrientations(shapeLineLabel('札幌タワー'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('札幌タワー');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['札', 'upright'],
             ['幌', 'upright'],
             ['タ', 'upright'],
@@ -504,7 +550,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates a wave dash between upright digits', () => {
-        expect(getGlyphOrientations(shapeLineLabel('身什戰1〜2'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('身什戰1〜2');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['身', 'upright'],
             ['什', 'upright'],
             ['戰', 'upright'],
@@ -515,7 +564,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates lowercase Latin words', () => {
-        expect(getGlyphOrientations(shapeLineLabel('two 身什戰'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('two 身什戰');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['t', 'along-line'],
             ['w', 'along-line'],
             ['o', 'along-line'],
@@ -527,7 +579,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws mixed alphanumeric codes upright', () => {
-        expect(getGlyphOrientations(shapeLineLabel('身什戰A1'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('身什戰A1');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['身', 'upright'],
             ['什', 'upright'],
             ['戰', 'upright'],
@@ -537,7 +592,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates Latin words directly adjoining CJK characters', () => {
-        expect(getGlyphOrientations(shapeLineLabel('銀座Ginza通り'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('銀座Ginza通り');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['銀', 'upright'],
             ['座', 'upright'],
             ['G', 'along-line'],
@@ -551,7 +609,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('rotates long uppercase words of dual names', () => {
-        expect(getGlyphOrientations(shapeLineLabel('ヴィラ ISHIKAWA'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('ヴィラ ISHIKAWA');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['ヴ', 'upright'],
             ['ィ', 'upright'],
             ['ラ', 'upright'],
@@ -568,7 +629,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws short uppercase codes upright', () => {
-        expect(getGlyphOrientations(shapeLineLabel('JR山手線'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('JR山手線');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['J', 'upright'],
             ['R', 'upright'],
             ['山', 'upright'],
@@ -578,7 +642,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('replaces a symbol between upright digits with its vertical form', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道1-2号'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道1-2号');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['1', 'upright'],
@@ -589,7 +656,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('keeps the horizontal form of symbols in runs that stay rotated', () => {
-        expect(getGlyphOrientations(shapeLineLabel('国道3.5km'))).toEqual([
+        const shapedLineLabel = shapeLineLabel('国道3.5km');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
             ['3', 'along-line'],
@@ -603,7 +673,10 @@ describe('shapeText vertical glyph orientation', () => {
     test('keeps orientations aligned after a missing glyph', () => {
         // “w” has no glyph, so it produces no positioned glyph; the characters
         // after it must still get their own orientation, not their neighbor's.
-        expect(getGlyphOrientations(shapeLineLabel('what 国21号', {missingGlyphs: 'w'}))).toEqual([
+        const shapedLineLabel = shapeLineLabelWithMissingGlyph('what 国21号', 'w');
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['h', 'along-line'],
             ['a', 'along-line'],
             ['t', 'along-line'],
@@ -616,7 +689,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('does not mark glyphs upright in horizontal writing mode', () => {
-        expect(getGlyphOrientations(shapeLineLabel('身什戰33', {writingMode: WritingMode.horizontal}))).toEqual([
+        const shapedLineLabel = shapeLineLabel('身什戰33', {writingMode: WritingMode.horizontal});
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['身', 'along-line'],
             ['什', 'along-line'],
             ['戰', 'along-line'],
@@ -626,7 +702,10 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test('draws every non-whitespace glyph upright when vertical placement is allowed', () => {
-        expect(getGlyphOrientations(shapeLineLabel('two 身什戰', {allowVerticalPlacement: true}))).toEqual([
+        const shapedLineLabel = shapeLineLabel('two 身什戰', {allowVerticalPlacement: true});
+        const orientations = getGlyphOrientations(shapedLineLabel);
+
+        expect(orientations).toEqual([
             ['t', 'upright'],
             ['w', 'upright'],
             ['o', 'upright'],
