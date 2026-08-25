@@ -40,7 +40,6 @@ import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
-import type {FontFaces} from '../render/font_face_manager.ts';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
@@ -55,6 +54,7 @@ import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_
 import type {TaskID} from '../util/task_queue.ts';
 import type {
     FilterSpecification,
+    FontFacesSpecification,
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
@@ -3719,7 +3719,7 @@ export class Map extends Evented<MapEventType> {
      * });
      * ```
      */
-    setFontFaces(fontFaces: FontFaces | null | undefined): this {
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): this {
         this._lazyInitEmptyStyle();
         this.style.setFontFaces(fontFaces);
         return this._update(true);
@@ -3730,7 +3730,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The style's font faces, or `null` if it declares none.
      */
-    getFontFaces(): FontFaces | null {
+    getFontFaces(): FontFacesSpecification | null {
         return this.style.getFontFaces();
     }
 

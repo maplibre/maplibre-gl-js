@@ -2,17 +2,8 @@ import {getArrayBuffer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
 
-import type {MLFontFace} from '@maplibre/maplibre-gl-style-spec';
+import type {FontFacesSpecification, MLFontFace} from '@maplibre/maplibre-gl-style-spec';
 import type {RequestManager} from '../util/request_manager.ts';
-
-/**
- * The [`font-faces`](https://maplibre.org/maplibre-style-spec/root/#font-faces) property of a style:
- * the font files to draw each `text-font` name with, either one file or a list of them.
- *
- * This widens the specification's own `FontFacesSpecification` type, which leaves out the list form
- * that both its validator and its own example use.
- */
-export type FontFaces = Record<string, MLFontFace | MLFontFace[]>;
 
 /**
  * An inclusive range of Unicode codepoints, parsed out of a `unicode-range` entry.
@@ -145,7 +136,7 @@ export class FontFaceManager {
      *
      * @param fontFaces - the style's `font-faces` property, if it has one
      */
-    setFontFaces(fontFaces?: FontFaces | null): void {
+    setFontFaces(fontFaces?: FontFacesSpecification | null): void {
         this._unregisterAll();
         this._faces = {};
 
@@ -190,7 +181,7 @@ export class FontFaceManager {
         return null;
     }
 
-    _declareFontFace(fontName: string, declaration: MLFontFace): DeclaredFontFace | null {
+    _declareFontFace(fontName: string, declaration: string | MLFontFace): DeclaredFontFace | null {
         const url = typeof declaration === 'string' ? declaration : declaration?.url;
         if (typeof url !== 'string') {
             warnOnce(`Ignoring the font face declared for "${fontName}": it has no URL.`);

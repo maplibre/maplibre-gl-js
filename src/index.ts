@@ -74,7 +74,6 @@ import type {AlphaImage} from './util/image.ts';
 import type {GlyphPosition, GlyphPositions} from './render/glyph_atlas.ts';
 import type {ImageAtlas} from './render/image_atlas.ts';
 import type {StyleGlyph} from './style/style_glyph.ts';
-import type {FontFaces} from './render/font_face_manager.ts';
 import type {FeatureIndex} from './data/feature_index.ts';
 import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
@@ -373,7 +372,6 @@ export {
     type ImageAtlas,
     type MessageType,
     type StyleGlyph,
-    type FontFaces,
     type MapOptions,
     type MissingStyleImageResolver,
     type StyleImageSource,

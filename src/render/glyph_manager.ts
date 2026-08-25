@@ -10,7 +10,7 @@ import {ensureError, warnOnce} from '../util/util.ts';
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {GetGlyphsResponse} from '../util/actor_messages.ts';
-import type {FontFaces} from './font_face_manager.ts';
+import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
@@ -78,7 +78,7 @@ export class GlyphManager {
      * Replaces the font files the style declares in its `font-faces` property, dropping every glyph
      * drawn with the previous ones.
      */
-    setFontFaces(fontFaces?: FontFaces | null): void {
+    setFontFaces(fontFaces?: FontFacesSpecification | null): void {
         this.fontFaceManager.setFontFaces(fontFaces);
         this.entries = {};
     }

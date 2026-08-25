@@ -45,6 +45,7 @@ import type {
     LayerSpecification,
     FilterSpecification,
     StyleSpecification,
+    FontFacesSpecification,
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
@@ -60,7 +61,6 @@ import type {
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
-import type {FontFaces} from '../render/font_face_manager.ts';
 import {
     type GetDashesParameters,
     type GetDashesResponse,
@@ -1980,16 +1980,15 @@ export class Style extends Evented<MapEventType> {
         this.glyphManager.setURL(glyphsUrl);
     }
 
-    getFontFaces(): FontFaces | null {
+    getFontFaces(): FontFacesSpecification | null {
         return this.stylesheet['font-faces'] || null;
     }
 
-    setFontFaces(fontFaces: FontFaces | null | undefined): void {
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): void {
         this._checkLoaded();
 
         this._glyphsDidChange = true;
-        // The cast drops the list form of a declaration, which the specification's type omits.
-        this.stylesheet['font-faces'] = fontFaces as StyleSpecification['font-faces'];
+        this.stylesheet['font-faces'] = fontFaces;
         this.glyphManager.setFontFaces(fontFaces);
     }
 

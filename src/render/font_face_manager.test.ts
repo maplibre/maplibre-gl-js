@@ -191,7 +191,7 @@ describe('FontFaceManager', () => {
 
         const manager = new FontFaceManager(identityTransform);
         manager.setFontFaces({
-            'Noto Sans Regular': ['https://example.com/missing.ttf', 'https://example.com/noto.ttf']
+            'Noto Sans Regular': [{url: 'https://example.com/missing.ttf'}, {url: 'https://example.com/noto.ttf'}]
         });
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.not.toBeNull();
