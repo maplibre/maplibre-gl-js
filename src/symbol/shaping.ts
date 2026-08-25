@@ -287,55 +287,60 @@ function isLineVertical(
         (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
+/** Returns whether the codepoint is a decimal digit of any script (`\p{Nd}`). */
 function charIsDecimalDigit(codePoint: number): boolean {
     return /\p{Nd}/u.test(String.fromCodePoint(codePoint));
 }
 
+/** Returns whether the codepoint is an uppercase letter of any script (`\p{Lu}`). */
 function charIsUppercaseLetter(codePoint: number): boolean {
     return /\p{Lu}/u.test(String.fromCodePoint(codePoint));
 }
 
+/** Returns whether the codepoint is a punctuation or symbol character (`\p{P}` or `\p{S}`). */
 function charIsSymbolOrPunctuation(codePoint: number): boolean {
     return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
 }
 
-// Uppercase runs longer than this are words (e.g. “ISHIKAWA” in a dual name),
-// which read better lying along the line; shorter ones are codes (“JR”, “A1”).
+/**
+ * Uppercase runs longer than this are words (e.g. “ISHIKAWA” in a dual name),
+ * which read better lying along the line; shorter runs are codes (“JR”, “A1”).
+ */
 const MAX_UPRIGHT_LETTER_RUN = 3;
 
-function determineLineVerticals(line: TaggedString): boolean[] {
-    const chars = [...line.text];
-    const codePoints = chars.map(char => char.codePointAt(0));
-    const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
+/**
+ * Returns whether a run qualifies for upright treatment: numbers of any length,
+ * optionally combined with symbols (“21”, “1-2”), and codes of up to
+ * {@link MAX_UPRIGHT_LETTER_RUN} uppercase letters and digits (“JR”, “A1”).
+ */
+function runIsUpright(run: number[]): boolean {
+    const isNumber = run.some(charIsDecimalDigit) &&
+        run.every(codePoint => charIsDecimalDigit(codePoint) || charIsSymbolOrPunctuation(codePoint));
+    const isShortUppercaseCode = run.length <= MAX_UPRIGHT_LETTER_RUN &&
+        run.every(codePoint => charIsUppercaseLetter(codePoint) || charIsDecimalDigit(codePoint));
+    return isNumber || isShortUppercaseCode;
+}
 
-    // A rotated character is part of a run if it is neither whitespace nor an inline image.
-    const isRunCharacter = (i: number): boolean =>
-        !verticals[i] && !charIsWhitespace(codePoints[i]) && !('imageName' in line.getSection(i));
+/**
+ * Returns whether a letter or digit in a qualifying run is drawn upright.
+ * Punctuation and symbols are handled separately by
+ * {@link verticalizeSurroundedPunctuation}; complex-shaping scripts keep
+ * following the line.
+ */
+function charIsUprightInRun(codePoint: number): boolean {
+    return (charIsDecimalDigit(codePoint) || charIsUppercaseLetter(codePoint)) &&
+        !charInComplexShapingScript(codePoint);
+}
 
-    for (let start = 0; start < codePoints.length; start++) {
-        if (!isRunCharacter(start)) continue;
-        let end = start;
-        while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
-
-        const run = codePoints.slice(start, end + 1);
-        // Numbers of any length, optionally combined with symbols (“21”, “1-2”),
-        // and short uppercase codes (“JR”, “A1”) read well upright.
-        const isNumber = run.some(charIsDecimalDigit) &&
-            run.every(codePoint => charIsDecimalDigit(codePoint) || charIsSymbolOrPunctuation(codePoint));
-        const isShortUppercaseCode = run.length <= MAX_UPRIGHT_LETTER_RUN &&
-            run.every(codePoint => charIsUppercaseLetter(codePoint) || charIsDecimalDigit(codePoint));
-        if (isNumber || isShortUppercaseCode) {
-            for (let i = start; i <= end; i++) {
-                verticals[i] = (charIsDecimalDigit(codePoints[i]) || charIsUppercaseLetter(codePoints[i])) &&
-                    !charInComplexShapingScript(codePoints[i]);
-            }
-        }
-        start = end;
-    }
-
-    // Punctuation between characters that this pass made upright gets its
-    // vertical presentation form (e.g. “-” in “1-2” becomes “︲”) —
-    // verticalizePunctuation couldn't apply it, as digits look rotated to it.
+/**
+ * Replaces punctuation surrounded by upright characters with its vertical
+ * presentation form (“-” in “1-2” becomes “︲”) and marks it upright.
+ * `verticalizePunctuation` cannot do this earlier: it doesn't know which
+ * characters {@link determineLineVerticals} draws upright.
+ *
+ * Returns whether anything in `chars` was replaced.
+ */
+function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[]): boolean {
     let replaced = false;
     for (let i = 0; i < chars.length; i++) {
         if (verticals[i]) continue;
@@ -347,7 +352,41 @@ function determineLineVerticals(line: TaggedString): boolean[] {
             replaced = true;
         }
     }
-    if (replaced) line.text = chars.join('');
+    return replaced;
+}
+
+/**
+ * Returns, for each character of a vertically laid out line label, whether
+ * its glyph is drawn upright rather than lying along the line, and updates
+ * `line` with vertical presentation forms of punctuation.
+ *
+ * A run passed to {@link runIsUpright} is a maximal sequence of non-upright
+ * characters that are neither whitespace nor inline images.
+ */
+function determineLineVerticals(line: TaggedString): boolean[] {
+    const chars = [...line.text];
+    const codePoints = chars.map(char => char.codePointAt(0));
+    const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
+
+    const isRunCharacter = (i: number): boolean =>
+        !verticals[i] && !charIsWhitespace(codePoints[i]) && !('imageName' in line.getSection(i));
+
+    for (let start = 0; start < codePoints.length; start++) {
+        if (!isRunCharacter(start)) continue;
+        let end = start;
+        while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
+
+        if (runIsUpright(codePoints.slice(start, end + 1))) {
+            for (let i = start; i <= end; i++) {
+                verticals[i] = charIsUprightInRun(codePoints[i]);
+            }
+        }
+        start = end;
+    }
+
+    if (verticalizeSurroundedPunctuation(chars, verticals)) {
+        line.text = chars.join('');
+    }
 
     return verticals;
 }
