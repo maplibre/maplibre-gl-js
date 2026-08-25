@@ -1817,25 +1817,18 @@ export class Style extends Evented<MapEventType> {
 
     /**
      * Re-places symbols on the next frame.
-     *
-     * Symbol placement runs only when the map decides it could produce a different result, which
-     * it works out from the camera, the collision settings, and the symbol buckets. Call this when
-     * something outside all of those moves symbols, so that the map does not skip the re-placement.
+     * Placement is skipped while its inputs look unchanged, so call this when something
+     * the map cannot see for itself has moved symbols.
      */
     triggerSymbolPlacement(): void {
         this._symbolPlacementTriggered = true;
     }
 
     /**
-     * Whether re-running symbol placement could produce a different result than the last run,
-     * judged against the inputs the last placement captured when it started. Every camera and
-     * viewport parameter placement can observe (zoom, center, rotation, size, padding, elevation)
-     * perturbs the model-view-projection matrix, so comparing the matrix covers them all,
-     * including camera parameters that do not exist yet. When nothing changed, placement is
-     * skipped and a repaint triggered by something else (an animated icon, a custom layer) costs
-     * a single frame instead of a `fadeDuration` tail.
-     * Inputs the matrix cannot see (terrain data, symbol paint changes) arrive as
-     * `triggerSymbolPlacement` calls.
+     * Whether re-running symbol placement could produce a different result than the last run.
+     * Every camera and viewport parameter placement can observe perturbs the model-view-projection
+     * matrix, so comparing the matrix covers them all. Inputs the matrix cannot see arrive as
+     * {@link triggerSymbolPlacement} calls.
      *
      * @internal
      */
@@ -1892,10 +1885,8 @@ export class Style extends Evented<MapEventType> {
         }
 
         if (this.pauseablePlacement.isDone()) {
-            // the last placement finished running, but the next one hasn’t
-            // started yet because of the `stillRecent` check immediately
-            // above, so mark it stale to ensure that we request another
-            // render frame once it is due
+            // the last placement finished but the next one is not yet due, so
+            // mark it stale to request another render frame when it is
             if (placementInputsChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);

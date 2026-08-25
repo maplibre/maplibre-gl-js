@@ -206,9 +206,8 @@ export interface StyleImageInterface {
      * If the method updates the image it must return `true` to commit the change.
      * If the method returns `false` or nothing the image is assumed to not have changed.
      *
-     * The map does not render frames on its own, so an animated image schedules its next frame by
-     * calling {@link Map.triggerRepaint}, typically from a timer set for when that frame is due.
-     * Returning `false` in between lets the map rest and fire `idle` until the timer next fires.
+     * An animated image schedules its next frame by calling {@link Map.triggerRepaint}, typically
+     * from a timer; returning `false` in between lets the map rest and fire `idle`.
      *
      * An image whose `data` renders with WebGL has nothing to update here; returning `true` is how
      * it asks for {@link StyleImageWebGLData.renderWithWebGL} to be called again.
