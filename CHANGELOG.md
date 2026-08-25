@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
+- Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 
 ## 6.6.0
 
@@ -19,9 +20,6 @@
 - Fix globe tile selection measuring distances from the ground point below the camera instead of the camera itself, refining some views past the requested zoom and leaving others coarser ([#8187](https://github.com/maplibre/maplibre-gl-js/pull/8187)) (by [@Alchez](https://github.com/Alchez))
 - Fix the style's `center`, `zoom`, `bearing`, `pitch` and `roll` being ignored when the map was created with a `minZoom` or `minPitch` option, since applying those limits marked the transform as modified ([#5932](https://github.com/maplibre/maplibre-gl-js/issues/5932))
 - Upload the `color-relief` DEM texture once per tile instead of on every frame ([#8209](https://github.com/maplibre/maplibre-gl-js/pull/8209))
-- Draw non-CJK characters (e.g. “21” in “반포대로21길”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
-- Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
-- _...Add new stuff here..._
 
 ## 6.5.0
 
