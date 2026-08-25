@@ -1879,7 +1879,9 @@ export class Style extends Evented<MapEventType> {
         const placementKey = this._getPlacementKey(transform, showCollisionBoxes, crossSourceCollisions);
         const placementKeyChanged = symbolBucketsChanged || !deepEqual(placementKey, this._placedKey);
 
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom) && (placementKeyChanged || this.placement.stale))) {
+        const placementSettled = this.pauseablePlacement?.isDone() && !this.placement.stillRecent(now(), transform.zoom);
+
+        if (forceFullPlacement || !this.pauseablePlacement || (placementSettled && (placementKeyChanged || this.placement.stale))) {
             this._placedKey = placementKey;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
