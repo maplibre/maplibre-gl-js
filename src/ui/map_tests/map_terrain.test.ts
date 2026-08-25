@@ -108,6 +108,45 @@ describe('setTerrain', () => {
 
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
     });
+
+    test('re-places symbols when terrain is set', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const triggerSymbolPlacement = vi.spyOn(map.style, 'triggerSymbolPlacement');
+
+        map.setTerrain({source: 'terrainrgb'});
+
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(1);
+    });
+
+    test('re-places symbols when terrain source data changes, but not for data from another source', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.setTerrain({source: 'terrainrgb'});
+        const triggerSymbolPlacement = vi.spyOn(map.style, 'triggerSymbolPlacement');
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'other',
+            sourceDataType: 'content',
+            source: {type: 'geojson'}
+        } as any);
+        expect(triggerSymbolPlacement).not.toHaveBeenCalled();
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'terrainrgb',
+            sourceDataType: 'content',
+            source: {type: 'raster-dem'}
+        } as any);
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe('getTerrain', () => {

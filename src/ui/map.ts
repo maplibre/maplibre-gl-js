@@ -2959,6 +2959,7 @@ export class Map extends Evented<MapEventType> {
             this.style.on('data', this._terrainDataCallback);
         }
 
+        this.style.triggerSymbolPlacement();
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
     }
@@ -2972,6 +2973,7 @@ export class Map extends Evented<MapEventType> {
         const isTerrainSourceEvent = event.sourceId === terrainSourceId;
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
+            this.style.triggerSymbolPlacement();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
