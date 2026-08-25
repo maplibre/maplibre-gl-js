@@ -399,15 +399,6 @@ describe('shapeText vertical glyph orientation', () => {
         return shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], writingMode, allowVerticalPlacement, 24, 24);
     }
 
-    /** Shapes a vertical line label without a glyph for `missingGlyph` and its verticalized form. */
-    function shapeLineLabelWithMissingGlyph(text: string, missingGlyph: string): Shaping | false {
-        const availableGlyphText = [...text]
-            .filter(char => char !== missingGlyph)
-            .join('');
-        const glyphs = createStubGlyphMap(availableGlyphText);
-        return shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24);
-    }
-
     /** Returns each positioned glyph of the shaping as a [character, orientation] pair. */
     function getGlyphOrientations(shaping: Shaping | false): Array<[string, string]> {
         expect(shaping).toBeTruthy();
@@ -673,7 +664,12 @@ describe('shapeText vertical glyph orientation', () => {
     test('keeps orientations aligned after a missing glyph', () => {
         // “w” has no glyph, so it produces no positioned glyph; the characters
         // after it must still get their own orientation, not their neighbor's.
-        const shapedLineLabel = shapeLineLabelWithMissingGlyph('what 国21号', 'w');
+        const text = 'what 国21号';
+        const availableGlyphText = [...text]
+            .filter(char => char !== 'w')
+            .join('');
+        const glyphs = createStubGlyphMap(availableGlyphText);
+        const shapedLineLabel = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24);
         const orientations = getGlyphOrientations(shapedLineLabel);
 
         expect(orientations).toEqual([
