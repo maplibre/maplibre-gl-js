@@ -1,4 +1,5 @@
 import {now} from '../util/time_control.ts';
+import {createMat4f64} from '../util/util.ts';
 import {mat4} from 'gl-matrix';
 import {TileManager} from '../tile/tile_manager.ts';
 import {EXTENT} from '../data/extent.ts';
@@ -160,6 +161,7 @@ export class Painter {
     // of the terrain depth framebuffer.
     // every time the camera-matrix changes the depth framebuffer will be redrawn.
     terrainFacilitator: {depthDirty: boolean; matrix: mat4; renderTime: number};
+    private _viewportCoveringTiles: {matrix: mat4; renderWorldCopies: boolean; maxZoom: number; elevation: number; tiles: OverscaledTileID[]} | null = null;
 
     constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
@@ -365,6 +367,42 @@ export class Painter {
     }
 
     /**
+     * The tiles covering the viewport, for layers that draw the whole world rather than a source's tiles.
+     *
+     * The returned array is the held one, callers must not mutate it. Matched on matrix value rather than
+     * identity because the globe transform rebuilds its matrix every frame, and on the inputs that matrix
+     * leaves out. Terrain is never held: its DEM moves tile bounds with no camera change.
+     */
+    getViewportCoveringTiles(): OverscaledTileID[] {
+        const transform = this.transform;
+        const terrain = this.style.map.terrain;
+        if (terrain) {
+            return coveringTiles(transform, {tileSize: transform.tileSize, terrain});
+        }
+
+        const matrix = transform.modelViewProjectionMatrix;
+        const cached = this._viewportCoveringTiles;
+
+        if (cached !== null &&
+            cached.renderWorldCopies === transform.renderWorldCopies &&
+            cached.maxZoom === transform.maxZoom &&
+            cached.elevation === transform.elevation &&
+            mat4.exactEquals(cached.matrix, matrix)) {
+            return cached.tiles;
+        }
+
+        const tiles = coveringTiles(transform, {tileSize: transform.tileSize});
+        this._viewportCoveringTiles = {
+            matrix: mat4.copy(cached?.matrix ?? createMat4f64(), matrix),
+            renderWorldCopies: transform.renderWorldCopies,
+            maxZoom: transform.maxZoom,
+            elevation: transform.elevation,
+            tiles,
+        };
+        return tiles;
+    }
+
+    /**
      * Fills the depth buffer with the geometry of all supplied tiles.
      * Does not change the color buffer or the stencil buffer.
      */
@@ -376,7 +414,7 @@ export class Painter {
 
         const program = this.useProgram('depth');
         const depthMode = this.getDepthModeFor3D();
-        const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
+        const tileIDs = this.getViewportCoveringTiles();
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {

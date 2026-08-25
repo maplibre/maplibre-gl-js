@@ -10,7 +10,6 @@ import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
 import {type OverscaledTileID} from '../../tile/tile_id.ts';
-import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('background-color');
@@ -35,7 +34,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
+    const tileIDs = coords ? coords : painter.getViewportCoveringTiles();
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);

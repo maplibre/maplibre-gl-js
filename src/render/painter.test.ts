@@ -1,6 +1,7 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {Style} from '../style/style.ts';
 import {StubMap} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -12,6 +13,7 @@ describe('render', () => {
     let painter: Painter;
     let map: any;
     let style: Style;
+    let transform: MercatorTransform;
     const renderOptions = {
         fadeDuration: 0,
         moving: false,
@@ -25,7 +27,7 @@ describe('render', () => {
 
     beforeEach(() => {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
         painter = new Painter(gl, transform);
         map = new StubMap() as any;
@@ -80,6 +82,69 @@ describe('render', () => {
         expect(painter.getTerrainDataForTile(tileID, true)).toBe(terrainData);
         expect(getTerrainData).toHaveBeenCalledWith(tileID);
     });
+
+    test('recomputes the covering tiles when the camera moves', () => {
+        painter.style = style;
+        const before = painter.getViewportCoveringTiles();
+
+        transform.setZoom(4);
+
+        expect(painter.getViewportCoveringTiles()).not.toBe(before);
+    });
+
+    test('recomputes the covering tiles when world copies are turned off', () => {
+        painter.style = style;
+        const before = painter.getViewportCoveringTiles();
+
+        transform.setRenderWorldCopies(false);
+
+        expect(painter.getViewportCoveringTiles()).not.toBe(before);
+    });
+
+    test('recomputes the covering tiles when the maximum zoom changes without moving the camera', () => {
+        painter.style = style;
+        transform.setZoom(4);
+        transform.setMaxZoom(4);
+        const before = painter.getViewportCoveringTiles();
+
+        transform.setMaxZoom(8);
+
+        expect(transform.zoom).toBe(4);
+        expect(painter.getViewportCoveringTiles()).not.toBe(before);
+    });
+
+    test('reuses the covering tiles when the globe transform rebuilds its matrix', () => {
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(512, 512);
+        painter.transform = globeTransform;
+        painter.style = style;
+        const first = painter.getViewportCoveringTiles();
+
+        globeTransform.setTransitionState(1);
+
+        expect(painter.getViewportCoveringTiles()).toBe(first);
+    });
+
+    test('recomputes the covering tiles when the globe camera elevation changes', () => {
+        const globeTransform = new GlobeTransform();
+        globeTransform.resize(512, 512);
+        painter.transform = globeTransform;
+        painter.style = style;
+        const before = painter.getViewportCoveringTiles();
+
+        globeTransform.setElevation(2000);
+
+        expect(painter.getViewportCoveringTiles()).not.toBe(before);
+    });
+
+    test('does not reuse the covering tiles while terrain is enabled', () => {
+        painter.style = style;
+        map.terrain = {getMinMaxElevation: () => ({minElevation: null, maxElevation: null})};
+        const first = painter.getViewportCoveringTiles();
+
+        expect(painter.getViewportCoveringTiles()).not.toBe(first);
+    });
+
     describe('terrain render time', () => {
         beforeEach(() => {
             vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
