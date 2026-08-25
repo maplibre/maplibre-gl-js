@@ -20,7 +20,9 @@ export type EventNames<EventType extends EventTypeMap> = Extract<keyof EventType
  */
 export type EventedParentData = Record<string, unknown>;
 
-type Listeners<EventType extends EventTypeMap> = {[K in keyof EventType]?: Array<Listener<EventType[K]>>};
+type Listeners<EventType extends EventTypeMap> = {
+    [K in keyof EventType]?: Array<{bivariant(event: EventType[K]): unknown}['bivariant']>
+};
 
 function _addEventListener<T extends EventTypeMap, K extends EventNames<T>>(type: K, listener: Listener<T[K]>, listenerList: Listeners<T>) {
     const listenerExists = listenerList[type]?.includes(listener);
