@@ -1885,8 +1885,11 @@ export class Style extends Evented<MapEventType> {
         }
 
         if (this.pauseablePlacement.isDone()) {
-            // the last placement finished but the next one is not yet due, so
-            // mark it stale to request another render frame when it is
+            // the last placement finished running, but the next one hasn’t
+            // started yet because of the `stillRecent` check immediately
+            // above, so mark it stale to ensure that we request another
+            // render frame
+            // if nothing changed, skip this so the map can go idle
             if (placementInputsChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
