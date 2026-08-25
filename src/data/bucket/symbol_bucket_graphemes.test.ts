@@ -1,5 +1,4 @@
 import {describe, expect, test} from 'vitest';
-import {SymbolBucket} from './symbol_bucket.ts';
 import {createSymbolBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
 import {CollisionBoxArray} from '../array_types.g.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
@@ -12,7 +11,7 @@ import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
  * is written as: the cluster has to be asked for, or there is nothing to draw it with.
  */
 function glyphDependencies(text: string): string[] {
-    const bucket = createSymbolBucket('test', 'Test', text, new CollisionBoxArray()) as SymbolBucket;
+    const bucket = createSymbolBucket('test', 'Test', text, new CollisionBoxArray());
     const options = {glyphDependencies: {}, iconDependencies: {}, availableImages: []} as unknown as PopulateParameters;
     const feature = {
         type: 1,
@@ -27,7 +26,7 @@ function glyphDependencies(text: string): string[] {
         new CanonicalTileID(0, 0, 0),
     );
 
-    return Object.keys((options.glyphDependencies as {[stack: string]: {[key: string]: boolean}}).Test ?? {});
+    return Object.keys((options.glyphDependencies).Test ?? {});
 }
 
 describe('glyph dependencies', () => {

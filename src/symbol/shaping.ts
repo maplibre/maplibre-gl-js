@@ -7,7 +7,7 @@ import {
     charInRTLScript
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
-import {isCluster, toGraphemes} from '../util/graphemes.ts';
+import {isCluster} from '../util/graphemes.ts';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
 
@@ -108,7 +108,6 @@ function breakLines(input: TaggedString, lineBreakPoints: number[]): TaggedStrin
     }
     return lines;
 }
-
 
 /** A character that is written on another one rather than beside it. */
 const COMBINING_MARK = /^\p{gc=M}$/u;
@@ -550,52 +549,52 @@ function shapeLines(shaping: Shaping,
                 [grapheme];
 
             for (const key of keys) {
-            const positionedGlyph: PositionedGlyph = {
-                glyph: key.codePointAt(0),
-                grapheme: key,
-                imageName: null,
-                x,
-                y: y + SHAPING_DEFAULT_OFFSET,
-                vertical,
-                scale: 1,
-                fontStack: '',
-                sectionIndex: line.getSectionIndex(i),
-                metrics: null,
-                rect: null
-            };
+                const positionedGlyph: PositionedGlyph = {
+                    glyph: key.codePointAt(0),
+                    grapheme: key,
+                    imageName: null,
+                    x,
+                    y: y + SHAPING_DEFAULT_OFFSET,
+                    vertical,
+                    scale: 1,
+                    fontStack: '',
+                    sectionIndex: line.getSectionIndex(i),
+                    metrics: null,
+                    rect: null
+                };
 
-            let sectionAttributes: ShapingSectionAttributes;
-            if ('fontStack' in section) {
-                sectionAttributes = shapeTextSection(section, key, vertical, lineShapingSize, glyphMap, glyphPositions);
-                if (!sectionAttributes) continue;
-                positionedGlyph.fontStack = section.fontStack;
-            } else {
-                shaping.iconsInText = true;
-                // If needed, allow to set scale factor for an image using
-                // alias "image-scale" that could be alias for "font-scale"
-                // when FormattedSection is an image section.
-                section.scale *= layoutTextSizeFactor;
+                let sectionAttributes: ShapingSectionAttributes;
+                if ('fontStack' in section) {
+                    sectionAttributes = shapeTextSection(section, key, vertical, lineShapingSize, glyphMap, glyphPositions);
+                    if (!sectionAttributes) continue;
+                    positionedGlyph.fontStack = section.fontStack;
+                } else {
+                    shaping.iconsInText = true;
+                    // If needed, allow to set scale factor for an image using
+                    // alias "image-scale" that could be alias for "font-scale"
+                    // when FormattedSection is an image section.
+                    section.scale *= layoutTextSizeFactor;
 
-                sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
-                if (!sectionAttributes) continue;
-                imageOffset = Math.max(imageOffset, sectionAttributes.imageOffset);
-                positionedGlyph.imageName = section.imageName;
-            }
+                    sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
+                    if (!sectionAttributes) continue;
+                    imageOffset = Math.max(imageOffset, sectionAttributes.imageOffset);
+                    positionedGlyph.imageName = section.imageName;
+                }
 
-            const {rect, metrics, baselineOffset} = sectionAttributes;
-            positionedGlyph.y += baselineOffset;
-            positionedGlyph.scale = section.scale;
-            positionedGlyph.metrics = metrics;
-            positionedGlyph.rect = rect;
-            positionedGlyphs.push(positionedGlyph);
+                const {rect, metrics, baselineOffset} = sectionAttributes;
+                positionedGlyph.y += baselineOffset;
+                positionedGlyph.scale = section.scale;
+                positionedGlyph.metrics = metrics;
+                positionedGlyph.rect = rect;
+                positionedGlyphs.push(positionedGlyph);
 
-            if (!vertical) {
-                x += metrics.advance * section.scale + spacing;
-            } else {
-                shaping.verticalizable = true;
-                const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
-                x += verticalAdvance * section.scale + spacing;
-            }
+                if (!vertical) {
+                    x += metrics.advance * section.scale + spacing;
+                } else {
+                    shaping.verticalizable = true;
+                    const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
+                    x += verticalAdvance * section.scale + spacing;
+                }
             }
         }
 
