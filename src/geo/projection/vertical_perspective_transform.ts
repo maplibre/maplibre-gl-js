@@ -18,7 +18,8 @@ import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
-import {mercatorWorldCoordinates, type WorldCoordinateHelper} from './world_coordinate_helper.ts';
+import type {WorldCoordinateHelper} from './projection.ts';
+import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
 
 const GLOBE_SAMPLES = 256;
 const GLOBE_BISECT_EPSILON_T = 1e-12;

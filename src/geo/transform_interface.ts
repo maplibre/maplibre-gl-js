@@ -1,5 +1,5 @@
 import type {LngLat, LngLatLike} from './lng_lat.ts';
-import type {WorldCoordinateHelper} from './projection/world_coordinate_helper.ts';
+import type {WorldCoordinateHelper} from './projection/projection.ts';
 import type {LngLatBounds} from './lng_lat_bounds.ts';
 import type {MercatorCoordinate} from './mercator_coordinate.ts';
 import type Point from '@mapbox/point-geometry';

@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
-import {mercatorWorldCoordinates} from './world_coordinate_helper.ts';
+import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';

@@ -5,7 +5,8 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
-import {mercatorWorldCoordinates, type WorldCoordinateHelper} from './projection/world_coordinate_helper.ts';
+import type {WorldCoordinateHelper} from './projection/projection.ts';
+import {mercatorWorldCoordinates} from './mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';

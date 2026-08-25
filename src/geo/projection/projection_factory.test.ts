@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {createProjectionFromName} from './projection_factory.ts';
-import {mercatorWorldCoordinates} from './world_coordinate_helper.ts';
+import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
 
 describe('createProjectionFromName', () => {
     test.each(['mercator', 'globe', 'vertical-perspective'] as const)('gives the %s transform the projection world coordinate helper', (name) => {

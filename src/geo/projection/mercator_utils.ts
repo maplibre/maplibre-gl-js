@@ -2,7 +2,7 @@ import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} from '../../util/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {WorldCoordinateHelper} from './world_coordinate_helper.ts';
+import type {WorldCoordinateHelper} from './projection.ts';
 import Point from '@mapbox/point-geometry';
 import type {UnwrappedTileIDType} from '../transform_helper.ts';
 import type {LngLat} from '../lng_lat.ts';

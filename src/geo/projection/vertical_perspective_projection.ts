@@ -6,7 +6,8 @@ import type {Projection, TileMeshUsage} from './projection.ts';
 import {type PreparedShader, shaders} from '../../shaders/shaders.ts';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh.ts';
 import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {mercatorWorldCoordinates, type WorldCoordinateHelper} from './world_coordinate_helper.ts';
+import type {WorldCoordinateHelper} from './projection.ts';
+import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
 
 export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
