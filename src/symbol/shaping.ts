@@ -6,6 +6,7 @@ import {
     charInComplexShapingScript
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
 
 import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
@@ -286,6 +287,110 @@ function isLineVertical(
         (allowVerticalPlacement && (charIsWhitespace(codePoint) || charInComplexShapingScript(codePoint))));
 }
 
+/** Returns whether the codepoint is a decimal digit of any script (`\p{Nd}`). */
+function charIsDecimalDigit(codePoint: number): boolean {
+    return /\p{Nd}/u.test(String.fromCodePoint(codePoint));
+}
+
+/** Returns whether the codepoint is an uppercase letter of any script (`\p{Lu}`). */
+function charIsUppercaseLetter(codePoint: number): boolean {
+    return /\p{Lu}/u.test(String.fromCodePoint(codePoint));
+}
+
+/** Returns whether the codepoint is a punctuation or symbol character (`\p{P}` or `\p{S}`). */
+function charIsSymbolOrPunctuation(codePoint: number): boolean {
+    return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Uppercase runs longer than this are words (e.g. “ISHIKAWA” in a dual name),
+ * which read better lying along the line; shorter runs are codes (“JR”, “A1”).
+ */
+const MAX_UPRIGHT_LETTER_RUN = 3;
+
+/**
+ * Returns whether a run qualifies for upright treatment: numbers of any length,
+ * optionally combined with symbols (“21”, “1-2”), and codes of up to
+ * {@link MAX_UPRIGHT_LETTER_RUN} uppercase letters and digits (“JR”, “A1”).
+ */
+function runIsUpright(run: number[]): boolean {
+    const isNumber = run.some(charIsDecimalDigit) &&
+        run.every(codePoint => charIsDecimalDigit(codePoint) || charIsSymbolOrPunctuation(codePoint));
+    const isShortUppercaseCode = run.length <= MAX_UPRIGHT_LETTER_RUN &&
+        run.every(codePoint => charIsUppercaseLetter(codePoint) || charIsDecimalDigit(codePoint));
+    return isNumber || isShortUppercaseCode;
+}
+
+/**
+ * Returns whether a letter or digit in a qualifying run is drawn upright.
+ * Punctuation and symbols are handled separately by
+ * {@link verticalizeSurroundedPunctuation}; complex-shaping scripts keep
+ * following the line.
+ */
+function charIsUprightInRun(codePoint: number): boolean {
+    return (charIsDecimalDigit(codePoint) || charIsUppercaseLetter(codePoint)) &&
+        !charInComplexShapingScript(codePoint);
+}
+
+/**
+ * Replaces punctuation surrounded by upright characters with its vertical
+ * presentation form (“-” in “1-2” becomes “︲”) and marks it upright.
+ * `verticalizePunctuation` cannot do this earlier: it doesn't know which
+ * characters {@link determineLineVerticals} draws upright.
+ *
+ * Returns whether anything in `chars` was replaced.
+ */
+function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[]): boolean {
+    let replaced = false;
+    for (let i = 0; i < chars.length; i++) {
+        if (verticals[i]) continue;
+        const verticalizedChar = verticalizedCharacterMap[chars[i]];
+        if (!verticalizedChar) continue;
+        if ((i === 0 || verticals[i - 1]) && (i === chars.length - 1 || verticals[i + 1])) {
+            chars[i] = verticalizedChar;
+            verticals[i] = true;
+            replaced = true;
+        }
+    }
+    return replaced;
+}
+
+/**
+ * Returns, for each character of a vertically laid out line label, whether
+ * its glyph is drawn upright rather than lying along the line, and updates
+ * `line` with vertical presentation forms of punctuation.
+ *
+ * A run passed to {@link runIsUpright} is a maximal sequence of non-upright
+ * characters that are neither whitespace nor inline images.
+ */
+function determineLineVerticals(line: TaggedString): boolean[] {
+    const chars = [...line.text];
+    const codePoints = chars.map(char => char.codePointAt(0));
+    const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
+
+    const isRunCharacter = (i: number): boolean =>
+        !verticals[i] && !charIsWhitespace(codePoints[i]) && !('imageName' in line.getSection(i));
+
+    for (let start = 0; start < codePoints.length; start++) {
+        if (!isRunCharacter(start)) continue;
+        let end = start;
+        while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
+
+        if (runIsUpright(codePoints.slice(start, end + 1))) {
+            for (let i = start; i <= end; i++) {
+                verticals[i] = charIsUprightInRun(codePoints[i]);
+            }
+        }
+        start = end;
+    }
+
+    if (verticalizeSurroundedPunctuation(chars, verticals)) {
+        line.text = chars.join('');
+    }
+
+    return verticals;
+}
+
 function shapeLines(shaping: Shaping,
     glyphMap: {
         [_: string]: {
@@ -335,12 +440,15 @@ function shapeLines(shaping: Shaping,
         }
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
+        const lineVerticals = writingMode === WritingMode.vertical && !allowVerticalPlacement ?
+            determineLineVerticals(line) : null;
 
-        let i = 0;
+        let i = -1;
         for (const char of line.text) {
+            i++;
             const section = line.getSection(i);
             const codePoint = char.codePointAt(0);
-            const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
+            const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
             const positionedGlyph: PositionedGlyph = {
                 glyph: codePoint,
                 imageName: null,
@@ -386,8 +494,6 @@ function shapeLines(shaping: Shaping,
                 const verticalAdvance = 'imageName' in section ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
-
-            i++;
         }
 
         // Only justify if we placed at least one glyph
@@ -485,7 +591,7 @@ function shapeImageSection(
     // Difference between height of an image and one EM at max line scale.
     // Pushes current line down if an image size is over 1 EM at max line scale.
     const imageOffset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
-    
+
     return {rect, metrics, baselineOffset, imageOffset};
 }
 

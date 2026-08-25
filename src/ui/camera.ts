@@ -648,7 +648,7 @@ export class Camera extends Evented<MapEventType> {
 
         const oldZoom = tr.zoom;
         if (this.terrain) {
-            tr.setElevation(this.terrain.getElevationForLngLatZoom(options.center ? LngLat.convert(options.center) : tr.center, options.zoom || tr.tileZoom));
+            tr.setElevation(this.terrain.getElevationForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr));
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
@@ -851,7 +851,7 @@ export class Camera extends Evented<MapEventType> {
     _prepareElevation(center: LngLat): void {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
+        this._elevationTarget = this.terrain.getElevationForLngLat(center, this.transform);
         this.elevationFreeze = true;
     }
 
@@ -862,7 +862,7 @@ export class Camera extends Evented<MapEventType> {
         }
 
         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
-        const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, this.transform);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;

@@ -1,3 +1,4 @@
+import {mat4} from 'gl-matrix';
 import {throwIfAborted} from '../util/abort_error.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventType} from '../ui/events.ts';
@@ -231,6 +232,8 @@ export class Style extends Evented<MapEventType> {
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
+    _symbolPlacementTriggered: boolean;
+    _placedProjectionTransition: number;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -314,6 +317,8 @@ export class Style extends Evented<MapEventType> {
         this._glyphsDidChange = false;
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
+        this._symbolPlacementTriggered = false;
+        this._placedProjectionTransition = undefined;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
         this.placement = undefined;
@@ -1363,6 +1368,7 @@ export class Style extends Evented<MapEventType> {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
+        if (layer.type === 'symbol') this.triggerSymbolPlacement();
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
@@ -1809,6 +1815,34 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
+    /**
+     * Re-places symbols on the next frame.
+     * Placement is skipped while its inputs look unchanged, so call this when something
+     * the map cannot see for itself has moved symbols.
+     */
+    triggerSymbolPlacement(): void {
+        this._symbolPlacementTriggered = true;
+    }
+
+    /**
+     * Whether re-running symbol placement could produce a different result than the last run.
+     * Every camera and viewport parameter placement can observe perturbs the model-view-projection
+     * matrix, so comparing the matrix covers them all. Inputs the matrix cannot see arrive as
+     * {@link triggerSymbolPlacement} calls.
+     *
+     * @internal
+     */
+    _placementInputsChanged(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
+        const lastPlacement = this.pauseablePlacement;
+        return !lastPlacement ||
+            this._symbolPlacementTriggered ||
+            this._placedProjectionTransition !== this.projection?.transitionState ||
+            lastPlacement._showCollisionBoxes !== showCollisionBoxes ||
+            lastPlacement.placement.collisionGroups.crossSourceCollisions !== crossSourceCollisions ||
+            lastPlacement.placement.transform.renderWorldCopies !== transform.renderWorldCopies ||
+            !mat4.exactEquals(lastPlacement.placement.transform.modelViewProjectionMatrix, transform.modelViewProjectionMatrix);
+    }
+
     _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
@@ -1839,7 +1873,13 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom))) {
+        const placementInputsChanged = symbolBucketsChanged || this._placementInputsChanged(transform, showCollisionBoxes, crossSourceCollisions);
+
+        const placementSettled = this.pauseablePlacement?.isDone() && !this.placement.stillRecent(now(), transform.zoom);
+
+        if (forceFullPlacement || !this.pauseablePlacement || (placementSettled && (placementInputsChanged || this.placement.stale))) {
+            this._symbolPlacementTriggered = false;
+            this._placedProjectionTransition = this.projection?.transitionState;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
@@ -1849,7 +1889,8 @@ export class Style extends Evented<MapEventType> {
             // started yet because of the `stillRecent` check immediately
             // above, so mark it stale to ensure that we request another
             // render frame
-            this.placement.setStale();
+            // if nothing changed, skip this so the map can go idle
+            if (placementInputsChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
 
