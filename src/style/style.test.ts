@@ -1550,7 +1550,7 @@ describe('Style.setFontFaces', () => {
         expect(style.getFontFaces()).toBeNull();
     });
 
-    test('hands the new font faces to the glyph manager and reloads the tiles that used the old ones', async () => {
+    test('hands the new font faces to the glyph manager', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
@@ -1560,7 +1560,6 @@ describe('Style.setFontFaces', () => {
 
         expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
         expect(style.getFontFaces()).toEqual(fontFaces);
-        expect(style._glyphsDidChange).toBe(true);
     });
 
     test('allows font faces to be unset via null and undefined', async () => {

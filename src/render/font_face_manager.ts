@@ -121,9 +121,6 @@ export class FontFaceManager {
      */
     _registered: FontFace[];
 
-    // exposed as a static to enable stubbing in unit tests
-    static loadFontFile: typeof loadFontFile = loadFontFile;
-
     constructor(requestManager: RequestManager) {
         this.requestManager = requestManager;
         this._faces = {};
@@ -206,6 +203,14 @@ export class FontFaceManager {
         return {url, ranges, family: `maplibre-gl-font-face-${nextFamilyId++}`};
     }
 
+    /**
+     * Downloads a declared file and hands it to the browser, and reports whether it can be drawn
+     * with.
+     *
+     * A file that fails to load is not an error: the specification asks for unsupported fonts to be
+     * ignored, so the codepoints it would have covered fall through to the next declared file and
+     * then to the `glyphs` URL.
+     */
     async _loadFontFace(face: DeclaredFontFace): Promise<boolean> {
         if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {
             warnOnce(`Ignoring the font face at ${face.url}: this environment has no CSS Font Loading API.`);
@@ -214,14 +219,12 @@ export class FontFaceManager {
 
         let fontFace: FontFace;
         try {
-            fontFace = new FontFace(face.family, await FontFaceManager.loadFontFile(face.url, this.requestManager));
+            fontFace = new FontFace(face.family, await loadFontFile(face.url, this.requestManager));
             document.fonts.add(fontFace);
             this._registered.push(fontFace);
             await fontFace.load();
             return true;
         } catch (e) {
-            // The specification asks for unsupported fonts to be ignored, so the codepoints this
-            // file would have covered fall through to the next file and then to the `glyphs` URL.
             if (fontFace) this._unregister(fontFace);
             warnOnce(`Ignoring the font face at ${face.url}: ${ensureError(e).message}`);
             return false;

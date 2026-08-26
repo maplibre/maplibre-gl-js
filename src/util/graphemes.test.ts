@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {isCluster, supportsGraphemeSegmentation, toGraphemes} from './graphemes.ts';
+import {isCluster, supportsGraphemeSegmentation, toGraphemes, wordBoundaries} from './graphemes.ts';
 
 describe('toGraphemes', () => {
     test('leaves plain text one unit per character', () => {
@@ -25,6 +25,12 @@ describe('toGraphemes', () => {
 
     test('keeps a Khmer syllable with a subscript consonant together', () => {
         expect(toGraphemes('ភ្នំ')).toEqual(['ភ្នំ']);
+    });
+
+    test('keeps a Burmese syllable together across the boundaries the segmenter tailors in', () => {
+        // `Intl.Segmenter` follows the rules CLDR tailors for cursor movement, which break before a
+        // spacing mark: on its own it would give လ, ာ and း as three separate units of writing.
+        expect(toGraphemes('ဘင်္ဂလားဒေ့ရှ်')).toEqual(['ဘ', 'င်္ဂ', 'လား', 'ဒေ့', 'ရှ်']);
     });
 
     test('does not split a character outside the basic plane', () => {
@@ -55,4 +61,33 @@ test('the environment can segment graphemes', () => {
     // Everything above falls back to one codepoint at a time without it, so a failure here is worth
     // knowing about rather than silently passing.
     expect(supportsGraphemeSegmentation).toBe(true);
+});
+
+describe('wordBoundaries', () => {
+    test('finds where each word of spaced text begins', () => {
+        expect([...wordBoundaries('Tel Aviv')].sort((a, b) => a - b)).toEqual([0, 3, 4]);
+    });
+
+    test('finds the words of text that does not space them', () => {
+        // ราชอาณาจักร (kingdom) followed by ไทย (Thai): the browser's dictionary knows where the
+        // second word starts, which no table of punctuation could.
+        expect(wordBoundaries('ราชอาณาจักรไทย').has('ราชอาณาจักร'.length)).toBe(true);
+    });
+
+    test('offers a break at a newline, whether or not a carriage return precedes it', () => {
+        expect(wordBoundaries('ab\ncd').has(3)).toBe(true);
+        expect(wordBoundaries('ab\r\ncd').has(4)).toBe(true);
+    });
+
+    test('offers a break at a zero-width space, which some tilesets insert as a hint', () => {
+        expect(wordBoundaries('三三\u200b三三').has(3)).toBe(true);
+    });
+
+    test('offers a break between ideographs, which wrap anywhere', () => {
+        expect([...wordBoundaries('三三三')].sort((a, b) => a - b)).toEqual([0, 1, 2]);
+    });
+
+    test('handles the empty string', () => {
+        expect([...wordBoundaries('')]).toEqual([]);
+    });
 });

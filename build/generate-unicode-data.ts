@@ -313,6 +313,17 @@ async function requiresComplexTextShaping(): Promise<string> {
     return set.toString();
 }
 
+async function joinsToTheFollowingGrapheme(): Promise<string> {
+    // An invisible stacker -- a virama and its equivalents in other scripts -- joins the consonant
+    // before it to the one after it, and a zero-width joiner does the same for emoji. `Intl.Segmenter`
+    // puts a cluster boundary after both, so the two halves have to be put back together.
+    const set = regenerate.default();
+    set.add((await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Invisible_Stacker/code-points.js`)).default);
+    set.add(0x200d); // zero-width joiner
+
+    return set.toString();
+}
+
 fs.writeFileSync('src/util/unicode_properties.g.ts',
     `// This file is generated. Edit build/generate-unicode-data.ts, then run \`npm run generate-unicode-data\`.
 
@@ -366,5 +377,17 @@ export function codePointHasNeutralVerticalOrientation(codePoint: number): boole
  */
 export function codePointRequiresComplexTextShaping(codePoint: number): boolean {
     return /${await requiresComplexTextShaping()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether two grapheme clusters found by \`Intl.Segmenter\` are really one unit of writing,
+ * and so have to be measured and drawn as a whole.
+ *
+ * The segmenter follows the tailored rules CLDR uses for stepping a cursor through text, which put a
+ * boundary after an invisible stacker and before a spacing mark. Laying text out wants the untailored
+ * rules of UAX #29 instead: \`လ\`, \`ာ\` and \`း\` are one Burmese syllable, not three.
+ */
+export function canCombineGraphemes(former: string, latter: string): boolean {
+    return /(?:${await joinsToTheFollowingGrapheme()})$/.test(former) || /^\\p{gc=Mc}/u.test(latter);
 }
 `);

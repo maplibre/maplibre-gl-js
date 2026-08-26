@@ -612,4 +612,21 @@ describe('getStyle', () => {
         });
     });
 
+    describe('setFontFaces', () => {
+        test('round-trips the font files the style draws text with', async () => {
+            const map = createMap();
+            await map.once('style.load');
+            expect(map.getFontFaces()).toBeNull();
+
+            const fontFaces = {
+                'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+            };
+            map.setFontFaces(fontFaces);
+            expect(map.getFontFaces()).toEqual(fontFaces);
+
+            map.setFontFaces(null);
+            expect(map.getFontFaces()).toBeNull();
+        });
+    });
+
 });

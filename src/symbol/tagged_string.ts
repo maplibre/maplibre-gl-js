@@ -4,7 +4,7 @@ import ONE_EM from './one_em.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
-import {toGraphemes} from '../util/graphemes.ts';
+import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
@@ -38,33 +38,18 @@ type Break = {
 // using computed properties due to https://github.com/facebook/flow/issues/380
 /* eslint no-useless-computed-key: 0 */
 
-const breakable: {
+/**
+ * Characters a line may end on even in the middle of a word.
+ *
+ * Word boundaries come from the segmenter, which does not offer one after any of these: to a reader
+ * they are part of the word around them, and only typesetting cares that they may be broken at.
+ */
+const breakableWithinWord: {
     [_: number]: boolean;
 } = {
-    [0x0a]: true, // newline
-    [0x0d]: true, // carriage return, on its own or starting a CRLF cluster
-    [0x20]: true, // space
-    [0x26]: true, // ampersand
-    [0x29]: true, // right parenthesis
-    [0x2b]: true, // plus sign
-    [0x2d]: true, // hyphen-minus
-    [0x2f]: true, // solidus
     [0xad]: true, // soft hyphen
     [0xb7]: true, // middle dot
-    [0x200b]: true, // zero-width space
-    [0x2010]: true, // hyphen
-    [0x2013]: true, // en dash
     [0x2027]: true  // interpunct
-    // Many other characters may be reasonable breakpoints
-    // Consider "neutral orientation" characters in codePointHasNeutralVerticalOrientation in unicode_properties
-    // See https://github.com/mapbox/mapbox-gl-js/issues/3658
-};
-
-// Allow breaks depending on the following character
-const breakableBefore: {
-    [_: number]: boolean;
-} = {
-    [0x28]: true, // left parenthesis
 };
 
 function getGlyphAdvance(
@@ -123,25 +108,29 @@ function isWhitespaceGrapheme(grapheme: string): boolean {
     return /^\s+$/u.test(grapheme);
 }
 
+/**
+ * Scores a candidate break by the characters on either side of it, lower being better: a newline is
+ * a break the text asked for, an opening bracket left at the end of a line is merely allowed, and
+ * everything else falls in between.
+ *
+ * A break ends the line with `codePoint`'s cluster and starts the next with `nextCodePoint`'s. Each
+ * is the first codepoint of its cluster, which is what decides how the cluster breaks -- a CRLF is
+ * one cluster, so a forced newline is seen here as its carriage return.
+ *
+ * @param penalizableIdeographicBreak - whether this break falls between two ideographs in text that
+ * also carries zero-width space hints, in which case the hints are the better places to break
+ */
 function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableIdeographicBreak: boolean) {
     let penalty = 0;
-    // Force break on newline. A CRLF is one grapheme cluster, so what is seen here is its first
-    // codepoint, the carriage return.
     if (codePoint === 0x0a || codePoint === 0x0d) {
         penalty -= 10000;
     }
-    // Penalize breaks between characters that allow ideographic breaking because
-    // they are less preferable than breaks at spaces (or zero width spaces).
     if (penalizableIdeographicBreak) {
         penalty += 150;
     }
-
-    // Penalize open parenthesis at end of line
     if (codePoint === 0x28 || codePoint === 0xff08) {
         penalty += 50;
     }
-
-    // Penalize close parenthesis at beginning of line
     if (nextCodePoint === 0x29 || nextCodePoint === 0xff09) {
         penalty += 50;
     }
@@ -257,10 +246,14 @@ export class TaggedString {
         return this.text.includes('\u200b');
     }
 
+    /**
+     * Drops the whitespace at each end of the line.
+     *
+     * Counted in grapheme clusters rather than code units, because that is what `sectionIndex` is
+     * indexed by. A CRLF is one cluster of two code units, so counting code units here would take
+     * one section too many off the end and leave the sections short of the text.
+     */
     trim(): void {
-        // Counted in grapheme clusters rather than code units, because that is what `sectionIndex`
-        // is indexed by. A CRLF is one cluster of two code units, so counting code units here would
-        // take one section too many off the end and leave the sections short of the text.
         const graphemes = this.graphemes();
         let start = 0;
         while (start < graphemes.length && isWhitespaceGrapheme(graphemes[start])) start++;
@@ -357,6 +350,14 @@ export class TaggedString {
         return ++this.imageSectionID;
     }
 
+    /**
+     * Returns the grapheme cluster indices the text should be broken at to fill lines of roughly
+     * `maxWidth`, chosen by weighing every candidate break against how ragged it leaves the line.
+     *
+     * Breaks fall between grapheme clusters, never inside one: a line cannot start with the vowel
+     * point of a letter left at the end of the line before it. Of those, the candidates are where a
+     * word begins, plus the few characters a word may be broken at internally.
+     */
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
@@ -373,38 +374,35 @@ export class TaggedString {
 
         const hasZeroWidthSpaces = this.hasZeroWidthSpaces();
 
-        let currentX = 0;
-
-        // Breaks fall between grapheme clusters, never inside one: a line cannot start with the
-        // vowel point of a letter left at the end of the line before it.
         const graphemes = this.graphemes();
+        const wordStarts = wordBoundaries(this.text);
+
+        let currentX = 0;
+        let codeUnit = 0;
 
         for (let i = 0; i < graphemes.length; i++) {
-            const section = this.getSection(i);
             const grapheme = graphemes[i];
-            // Which character a cluster breaks on is decided by the one it starts with; the marks
-            // after it are part of the same unit and never a break opportunity of their own.
-            const codePoint = grapheme.codePointAt(0);
-            if (!charIsWhitespace(codePoint)) currentX += getGlyphAdvance(grapheme, section, glyphMap, imagePositions, spacing, layoutTextSize);
 
-            // Ideographic characters, spaces, and word-breaking punctuation that often appear without
-            // surrounding spaces.
-            const next = graphemes[i + 1];
-            if (next !== undefined) {
-                const ideographicBreak = codePointAllowsIdeographicBreaking(codePoint);
-                const nextCodePoint = next.codePointAt(0);
-                if (breakable[codePoint] || ideographicBreak || 'imageName' in section || (graphemes[i + 2] !== undefined && breakableBefore[nextCodePoint])) {
-
+            if (i > 0) {
+                const previousCodePoint = graphemes[i - 1].codePointAt(0);
+                if (wordStarts.has(codeUnit) || breakableWithinWord[previousCodePoint]) {
+                    const ideographicBreak = codePointAllowsIdeographicBreaking(previousCodePoint);
                     potentialLineBreaks.push(
                         evaluateBreak(
-                            i + 1,
+                            i,
                             currentX,
                             targetWidth,
                             potentialLineBreaks,
-                            calculatePenalty(codePoint, nextCodePoint, ideographicBreak && hasZeroWidthSpaces),
+                            calculatePenalty(previousCodePoint, grapheme.codePointAt(0), ideographicBreak && hasZeroWidthSpaces),
                             false));
                 }
             }
+
+            const codePoint = grapheme.codePointAt(0);
+            if (!charIsWhitespace(codePoint)) {
+                currentX += getGlyphAdvance(grapheme, this.getSection(i), glyphMap, imagePositions, spacing, layoutTextSize);
+            }
+            codeUnit += grapheme.length;
         }
 
         return leastBadBreaks(

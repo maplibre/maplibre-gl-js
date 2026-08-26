@@ -1,7 +1,11 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {FontFaceManager, parseUnicodeRange} from './font_face_manager.ts';
+import {getArrayBuffer} from '../util/ajax.ts';
+import {RequestManager} from '../util/request_manager.ts';
 
-import type {RequestManager} from '../util/request_manager.ts';
+vi.mock(import('../util/ajax.ts'), () => ({
+    getArrayBuffer: vi.fn()
+}));
 
 describe('parseUnicodeRange', () => {
     test('parses a single codepoint', () => {
@@ -33,42 +37,58 @@ describe('parseUnicodeRange', () => {
 });
 
 describe('FontFaceManager', () => {
-    const identityTransform = ((url: string) => ({url})) as any as RequestManager;
+    const requestManager = new RequestManager();
+
+    /**
+     * The faces handed to and taken back from `document.fonts` over the course of one test.
+     */
     let added: FontFace[];
     let deleted: FontFace[];
 
-    class FontFaceStub {
-        family: string;
-        source: ArrayBuffer;
-        constructor(family: string, source: ArrayBuffer) {
-            this.family = family;
-            this.source = source;
-        }
-        load = vi.fn(() => Promise.resolve(this));
+    /**
+     * The URLs the manager asked the network for, in the order it asked for them.
+     */
+    function requestedUrls(): string[] {
+        return vi.mocked(getArrayBuffer).mock.calls.map(function ([request]) { return request.url; });
+    }
+
+    function stubFontFace(load: () => Promise<unknown> = function () { return Promise.resolve(); }) {
+        (globalThis as any).FontFace = class {
+            family: string;
+            constructor(family: string) {
+                this.family = family;
+            }
+            load = load;
+        };
+    }
+
+    function silenceWarnings() {
+        vi.spyOn(console, 'warn').mockImplementation(function () {});
     }
 
     beforeEach(() => {
         added = [];
         deleted = [];
-        (globalThis as any).FontFace = FontFaceStub;
+        stubFontFace();
         Object.defineProperty(document, 'fonts', {
             configurable: true,
             value: {
-                add: (face: FontFace) => added.push(face),
-                delete: (face: FontFace) => deleted.push(face)
+                add(face: FontFace) { added.push(face); },
+                delete(face: FontFace) { deleted.push(face); }
             }
         });
-        vi.spyOn(FontFaceManager, 'loadFontFile').mockResolvedValue(new ArrayBuffer(8));
+        vi.mocked(getArrayBuffer).mockResolvedValue({data: new ArrayBuffer(8)});
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.mocked(getArrayBuffer).mockReset();
         delete (globalThis as any).FontFace;
         delete (document as any).fonts;
     });
 
     test('reports whether the style declared anything', () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         expect(manager.hasFontFaces()).toBe(false);
 
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
@@ -79,7 +99,7 @@ describe('FontFaceManager', () => {
     });
 
     test('registers a font file under a family of its own and returns it', async () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
 
         const family = await manager.getFontFamily('Noto Sans Regular', 0x41);
@@ -89,40 +109,31 @@ describe('FontFaceManager', () => {
         expect(family).not.toBe('Noto Sans Regular');
         expect(added).toHaveLength(1);
         expect(added[0].family).toBe(family);
-        expect(FontFaceManager.loadFontFile).toHaveBeenCalledWith('https://example.com/noto.ttf', identityTransform);
+        expect(requestedUrls()).toEqual(['https://example.com/noto.ttf']);
     });
 
-    test('does not download a file until a codepoint needs it', async () => {
-        const manager = new FontFaceManager(identityTransform);
+    test('downloads a file only once, and only once a codepoint needs it', async () => {
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
         });
 
-        expect(FontFaceManager.loadFontFile).not.toHaveBeenCalled();
+        expect(requestedUrls()).toEqual([]);
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.toBeNull();
-        expect(FontFaceManager.loadFontFile).not.toHaveBeenCalled();
-
-        await expect(manager.getFontFamily('Noto Sans Regular', 0x1780)).resolves.not.toBeNull();
-        expect(FontFaceManager.loadFontFile).toHaveBeenCalledTimes(1);
-    });
-
-    test('downloads each file once, however many codepoints it covers', async () => {
-        const manager = new FontFaceManager(identityTransform);
-        manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
+        expect(requestedUrls()).toEqual([]);
 
         const [first, second] = await Promise.all([
-            manager.getFontFamily('Noto Sans Regular', 0x41),
-            manager.getFontFamily('Noto Sans Regular', 0x42)
+            manager.getFontFamily('Noto Sans Regular', 0x1780),
+            manager.getFontFamily('Noto Sans Regular', 0x1781)
         ]);
-        await manager.getFontFamily('Noto Sans Regular', 0x43);
 
         expect(first).toBe(second);
-        expect(FontFaceManager.loadFontFile).toHaveBeenCalledTimes(1);
+        expect(requestedUrls()).toEqual(['https://example.com/khmer.ttf']);
     });
 
     test('picks the file whose unicode range covers the codepoint', async () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [
                 {url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']},
@@ -133,12 +144,11 @@ describe('FontFaceManager', () => {
         await manager.getFontFamily('Noto Sans Regular', 0x1780);
         await manager.getFontFamily('Noto Sans Regular', 0x0915);
 
-        expect(FontFaceManager.loadFontFile).toHaveBeenNthCalledWith(1, 'https://example.com/khmer.ttf', identityTransform);
-        expect(FontFaceManager.loadFontFile).toHaveBeenNthCalledWith(2, 'https://example.com/devanagari.ttf', identityTransform);
+        expect(requestedUrls()).toEqual(['https://example.com/khmer.ttf', 'https://example.com/devanagari.ttf']);
     });
 
     test('honours every range of a multi-range font face', async () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             Unifont: [{url: 'https://example.com/unifont.ttf', 'unicode-range': ['U+0900-097F', 'U+1780-17FF']}]
         });
@@ -149,7 +159,7 @@ describe('FontFaceManager', () => {
     });
 
     test('covers every codepoint when no unicode range is given', async () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({Unifont: 'https://example.com/unifont.ttf'});
 
         await expect(manager.getFontFamily('Unifont', 0)).resolves.not.toBeNull();
@@ -157,24 +167,22 @@ describe('FontFaceManager', () => {
     });
 
     test('walks the font stack in order, name by name', async () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}],
             'Noto Sans Italic': 'https://example.com/italic.ttf'
         });
 
-        // The first name in the stack does not cover Latin, so the second one gets a turn.
+        // The first name in the stack does not cover Latin, so the second one gets a turn...
         await manager.getFontFamily('Noto Sans Regular,Noto Sans Italic', 0x41);
-        expect(FontFaceManager.loadFontFile).toHaveBeenCalledExactlyOnceWith('https://example.com/italic.ttf', identityTransform);
-
         // ...but it does cover Khmer, so the second one never comes up.
         await manager.getFontFamily('Noto Sans Regular,Noto Sans Italic', 0x1780);
-        expect(FontFaceManager.loadFontFile).toHaveBeenLastCalledWith('https://example.com/khmer.ttf', identityTransform);
-        expect(FontFaceManager.loadFontFile).toHaveBeenCalledTimes(2);
+
+        expect(requestedUrls()).toEqual(['https://example.com/italic.ttf', 'https://example.com/khmer.ttf']);
     });
 
     test('leaves a codepoint no font face covers to the caller', async () => {
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
         });
@@ -184,12 +192,12 @@ describe('FontFaceManager', () => {
     });
 
     test('ignores a file that fails to download, falling through to the next one', async () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        vi.mocked(FontFaceManager.loadFontFile)
+        silenceWarnings();
+        vi.mocked(getArrayBuffer)
             .mockRejectedValueOnce(new Error('404 Not Found'))
-            .mockResolvedValueOnce(new ArrayBuffer(8));
+            .mockResolvedValueOnce({data: new ArrayBuffer(8)});
 
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/missing.ttf'}, {url: 'https://example.com/noto.ttf'}]
         });
@@ -199,23 +207,20 @@ describe('FontFaceManager', () => {
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('404 Not Found'));
     });
 
-    test('ignores a font the browser refuses to decode', async () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        (globalThis as any).FontFace = class extends FontFaceStub {
-            load = vi.fn(() => Promise.reject(new Error('could not be loaded')));
-        };
+    test('ignores a font the browser refuses to decode, taking it back out of the document', async () => {
+        silenceWarnings();
+        stubFontFace(function () { return Promise.reject(new Error('could not be loaded')); });
 
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/not-a-font.txt'});
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.toBeNull();
-        // The unusable face must not be left behind in the document.
         expect(deleted).toEqual(added);
     });
 
     test('ignores a declaration without a URL', async () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const manager = new FontFaceManager(identityTransform);
+        silenceWarnings();
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': [{'unicode-range': ['U+0-10FFFF']} as any]});
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.toBeNull();
@@ -223,8 +228,8 @@ describe('FontFaceManager', () => {
     });
 
     test('drops an unparseable unicode range but keeps the rest', async () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const manager = new FontFaceManager(identityTransform);
+        silenceWarnings();
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['nonsense', 'U+1780-17FF']}]
         });
@@ -235,29 +240,29 @@ describe('FontFaceManager', () => {
     });
 
     test('ignores a face whose every unicode range is unparseable', async () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const manager = new FontFaceManager(identityTransform);
+        silenceWarnings();
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['nonsense']}]
         });
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x1780)).resolves.toBeNull();
-        expect(FontFaceManager.loadFontFile).not.toHaveBeenCalled();
+        expect(requestedUrls()).toEqual([]);
     });
 
     test('gives up when the environment has no CSS Font Loading API', async () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        silenceWarnings();
         delete (globalThis as any).FontFace;
 
-        const manager = new FontFaceManager(identityTransform);
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.toBeNull();
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('CSS Font Loading API'));
     });
 
-    test('hands the previous font faces back when they are replaced', async () => {
-        const manager = new FontFaceManager(identityTransform);
+    test('hands the font faces back when they are replaced, and again on destroy', async () => {
+        const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
         await manager.getFontFamily('Noto Sans Regular', 0x41);
 
@@ -267,16 +272,9 @@ describe('FontFaceManager', () => {
         const family = await manager.getFontFamily('Noto Sans Regular', 0x41);
         expect(added).toHaveLength(2);
         expect(added[1].family).toBe(family);
-        expect(FontFaceManager.loadFontFile).toHaveBeenLastCalledWith('https://example.com/other.ttf', identityTransform);
-    });
-
-    test('hands the font faces back on destroy', async () => {
-        const manager = new FontFaceManager(identityTransform);
-        manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
-        await manager.getFontFamily('Noto Sans Regular', 0x41);
+        expect(requestedUrls()).toEqual(['https://example.com/noto.ttf', 'https://example.com/other.ttf']);
 
         manager.destroy();
-
         expect(deleted).toEqual(added);
         expect(manager.hasFontFaces()).toBe(false);
     });

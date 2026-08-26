@@ -2,8 +2,12 @@ import {describe, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 import {GlyphManager} from './glyph_manager.ts';
 import fs from 'fs';
-import {type RequestManager} from '../util/request_manager.ts';
-import {FontFaceManager} from './font_face_manager.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {getArrayBuffer} from '../util/ajax.ts';
+
+vi.mock(import('../util/ajax.ts'), () => ({
+    getArrayBuffer: vi.fn()
+}));
 
 describe('GlyphManager', () => {
     const GLYPHS = {};
@@ -11,7 +15,7 @@ describe('GlyphManager', () => {
         GLYPHS[glyph.id] = glyph;
     }
 
-    const identityTransform = ((url) => ({url})) as any as RequestManager;
+    const identityTransform = new RequestManager();
 
     /**
      * Glyphs are asked for by grapheme cluster, and these tests are written in codepoints, so this
@@ -279,7 +283,11 @@ describe('GlyphManager', () => {
     });
 
     describe('font-faces', () => {
-        const stubFontFaces = () => {
+        /**
+         * Puts a CSS Font Loading API in place that accepts every file, so that a declared font face
+         * is always available to draw with.
+         */
+        function stubFontFaces() {
             Object.defineProperty(document, 'fonts', {
                 configurable: true,
                 value: {load: () => Promise.resolve([]), add: () => {}, delete: () => {}}
@@ -289,11 +297,12 @@ describe('GlyphManager', () => {
                 constructor(family: string) { this.family = family; }
                 load = () => Promise.resolve(this);
             };
-            vi.spyOn(FontFaceManager, 'loadFontFile').mockResolvedValue(new ArrayBuffer(8));
-        };
+            vi.mocked(getArrayBuffer).mockResolvedValue({data: new ArrayBuffer(8)});
+        }
 
         afterEach(() => {
             delete (globalThis as any).FontFace;
+            vi.mocked(getArrayBuffer).mockReset();
         });
 
         test('draws a covered codepoint with the declared font file instead of downloading a range', async () => {
@@ -388,17 +397,34 @@ describe('GlyphManager', () => {
             expect(new Set(families).size).toBe(2);
         });
 
-        test('drops the glyphs drawn with the previous font faces', async () => {
+        test('redraws with the new font faces rather than serving the glyphs cached from the old ones', async () => {
             stubFontFaces();
-            vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
 
             const manager = createGlyphManager(false);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/noto.ttf'});
             await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
-            expect(manager.entries['Arial Unicode MS'].glyphs[char(0x41)]).toBeDefined();
 
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/other.ttf'});
-            expect(manager.entries['Arial Unicode MS']).toBeUndefined();
+            await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
+
+            const families = tinySdfSpy.mock.calls.map(([options]) => options.fontFamily);
+            expect(families).toHaveLength(2);
+            expect(families[0]).not.toBe(families[1]);
+        });
+
+        test('gives a cluster a canvas wide enough that it is not cut off', async () => {
+            stubFontFaces();
+            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+
+            const manager = createGlyphManager(false);
+            manager.setFontFaces({'Arial Unicode MS': 'https://localhost/myanmar.ttf'});
+
+            // A Burmese syllable, which is drawn nearly twice as wide as a single character.
+            await manager.getGlyphs({'Arial Unicode MS': ['\u101C\u102C\u1038', char(0x41)]});
+
+            const buffers = tinySdfSpy.mock.calls.map(([options]) => options.buffer);
+            expect(Math.max(...buffers)).toBeGreaterThan(Math.min(...buffers));
         });
     });
 });

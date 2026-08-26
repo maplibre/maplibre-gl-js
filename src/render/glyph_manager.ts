@@ -32,6 +32,10 @@ type Entry = {
      * One TinySDF per `font-faces` file this stack draws with, keyed by the file's CSS family.
      */
     fontFaceTinySDFs?: {[family: string]: Promise<TinySDF>};
+    /**
+     * The same, for drawing whole grapheme clusters, which need a wider canvas to fit in.
+     */
+    clusterTinySDFs?: {[family: string]: Promise<TinySDF>};
 };
 
 /**
@@ -49,6 +53,15 @@ const defaultGenericFontFamily = 'sans-serif';
  * Client-generated glyphs are rendered at 2× because CJK glyphs are more detailed than others.
  */
 const textureScale = 2;
+
+/**
+ * How wide a grapheme cluster is allowed to be, as a multiple of the font size.
+ *
+ * TinySDF sizes its canvas for a single character and cuts off anything past the right edge, but a
+ * cluster is a whole syllable: Burmese `လား` is nearly twice as wide as the font size, and a
+ * Devanagari conjunct is wider still. Three ems has room for the ones that occur in practice.
+ */
+const clusterEmsWide = 3;
 
 export class GlyphManager {
     requestManager: RequestManager;
@@ -113,6 +126,14 @@ export class GlyphManager {
      * Gets one glyph, which is asked for by grapheme cluster: usually a single character, but for a
      * letter written with marks around it -- a Hebrew vowel point, an Indic vowel sign -- the whole
      * cluster, so that it can be drawn as the one shape it is written as.
+     *
+     * A cluster of several codepoints has no glyph of its own in a glyphs URL, which serves one
+     * codepoint at a time, and none in a system font nobody chose. It can only be drawn from a file
+     * the style pinned with `font-faces`; where there is none, this returns nothing and layout falls
+     * back to drawing the cluster a codepoint at a time, as it always has.
+     *
+     * For a single codepoint, a font file the style declared wins over both the glyphs URL and the
+     * local fallback fonts: the style asked for that exact file, by name and by unicode range.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
@@ -127,10 +148,6 @@ export class GlyphManager {
 
         const codePoint = id.codePointAt(0);
 
-        // A cluster of several codepoints has no glyph of its own in a glyphs URL, which serves one
-        // codepoint at a time, and none in a system font we did not choose. It can only be drawn
-        // from a file the style pinned with `font-faces`. Where there is none, this returns nothing
-        // and layout falls back to drawing the cluster a codepoint at a time, as it always has.
         if (isCluster(id)) {
             const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
                 await this.fontFaceManager.getFontFamily(stack, codePoint) :
@@ -141,8 +158,6 @@ export class GlyphManager {
             return {stack, id, glyph};
         }
 
-        // A font file the style declared for this codepoint wins over both the glyphs URL and the
-        // local fallback fonts: the style asked for this exact file, by name and by unicode range.
         if (this.fontFaceManager.hasFontFaces()) {
             const fontFaceFamily = await this.fontFaceManager.getFontFamily(stack, codePoint);
             if (fontFaceFamily) {
@@ -211,7 +226,7 @@ export class GlyphManager {
      * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
      */
     async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
-        const tinySDF = await this._getTinySDF(entry, stack, id.codePointAt(0), fontFaceFamily);
+        const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
         // Drawn as the whole grapheme cluster rather than a codepoint at a time, which is what lets
         // the browser's own text engine place a letter's marks on it.
         const char = tinySDF.draw(id);
@@ -251,21 +266,28 @@ export class GlyphManager {
     }
 
     /**
-     * Returns the TinySDF that draws this codepoint in this fontstack, creating it lazily. A stack
+     * Returns the TinySDF that draws this grapheme in this fontstack, creating it lazily. A stack
      * keeps one instance per font selection it draws with, so that a fallback applying to some
-     * codepoints does not bleed into the rest of the text.
+     * codepoints does not bleed into the rest of the text, and a further one per font file for the
+     * clusters drawn from it, which need a wider canvas.
+     *
+     * A font file carries its own weight and style, so neither is sniffed out of the family name --
+     * doing so would ask the browser to synthesize a second helping of both.
      */
-    _getTinySDF(entry: Entry, stack: string, id: number, fontFaceFamily?: string): Promise<TinySDF> {
+    _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<TinySDF> {
         if (fontFaceFamily) {
-            // The font file carries its own weight and style, so neither is sniffed out of the name
-            // -- doing so would ask the browser to synthesize a second helping of both.
+            if (isCluster(id)) {
+                entry.clusterTinySDFs ??= {};
+                entry.clusterTinySDFs[fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false, clusterEmsWide);
+                return entry.clusterTinySDFs[fontFaceFamily];
+            }
             entry.fontFaceTinySDFs ??= {};
             entry.fontFaceTinySDFs[fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false);
             return entry.fontFaceTinySDFs[fontFaceFamily];
         }
 
         // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
-        const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id);
+        const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id.codePointAt(0));
 
         // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
         const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
@@ -273,7 +295,11 @@ export class GlyphManager {
         return entry[tinySDFKey];
     }
 
-    async _createTinySDF(stack: String | false, sniffFontStyles: boolean = true): Promise<TinySDF> {
+    /**
+     * @param emsWide - how wide, in multiples of the font size, the glyphs drawn with this instance
+     * may be before TinySDF cuts them off
+     */
+    async _createTinySDF(stack: String | false, sniffFontStyles: boolean = true, emsWide: number = 1): Promise<TinySDF> {
         // Escape and quote the font family list for use in CSS.
         const fontFamilies = stack ? stack.split(',') : [];
         fontFamilies.push(defaultGenericFontFamily);
@@ -294,9 +320,13 @@ export class GlyphManager {
             }
         }
 
-        return new GlyphManager.TinySDF({
+        // TinySDF derives its canvas from `fontSize + buffer * 4`, so the buffer is the only way in
+        // to a wider one. The padding the buffer also stands for is put back afterwards, because the
+        // atlas and the shaders expect exactly `GLYPH_PBF_BORDER` of it around every glyph.
+        const buffer = 3 * textureScale;
+        const tinySDF = new GlyphManager.TinySDF({
             fontSize,
-            buffer: 3 * textureScale,
+            buffer: Math.max(buffer, Math.ceil(fontSize * (emsWide - 1) / 4)),
             radius: 8 * textureScale,
             cutoff: 0.25,
             fontFamily,
@@ -304,6 +334,8 @@ export class GlyphManager {
             fontStyle,
             lang: this.lang
         });
+        (tinySDF as TinySDF & {buffer: number}).buffer = buffer;
+        return tinySDF;
     }
 
     /**

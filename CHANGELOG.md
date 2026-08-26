@@ -6,9 +6,12 @@
 - Allow adding an image source without a `url`. The source starts empty and makes no network request; call `updateImage({image})` or `updateImage({url})` later to show an image ([#8167](https://github.com/maplibre/maplibre-gl-js/pull/8167))
 - Skip symbol re-placement when its inputs are unchanged, so repaints from animated style images or custom layers cost a single frame ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Add `Style#triggerSymbolPlacement`, which re-places symbols when something the map cannot see for itself has moved them ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Lay text out in grapheme clusters rather than codepoints, so a letter and the marks written on it stay one shape, and draw the whole cluster from a `font-faces` file where the style declares one. Devanagari conjuncts, Khmer and Burmese syllables and Hebrew niqqud render as written ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
+- Find line break opportunities with the browser's word segmenter instead of a table of punctuation, which brings word wrapping to Thai, Khmer and other writing systems that do not put spaces between words, and keeps CJK compounds together ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Apply rule L3 of the Unicode Bidirectional Algorithm, putting the marks written on a right-to-left letter back after it once the line has been reversed. Pointed Hebrew and vocalised Arabic no longer scatter their marks across the line ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
 - Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982))
