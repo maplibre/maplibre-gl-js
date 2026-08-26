@@ -100,7 +100,7 @@ describe('TaggedString', () => {
                 '\u9EB5': {id: 0x9EB5, metrics, rect},
                 '\u{30EDE}': {id: 0x30EDE, metrics, rect},
                 // Only the metrics are read here, so these stand in without a bitmap.
-            } as unknown as {[_: string]: StyleGlyph},
+            } as unknown as Record<string, StyleGlyph>,
         };
         const textSection = {
             scale: 1,
