@@ -375,7 +375,8 @@ export class TaggedString {
      * character or an inline image a line may end on, plus -- in scripts that do not put spaces
      * between words, where there is no such character to key off -- wherever the browser's word
      * segmenter finds a word. The segmenter is not consulted elsewhere: it isolates a comma as a
-     * word of its own, and a line must not begin with one.
+     * word of its own, and a line must not begin with one. Nor is it consulted until one of those
+     * scripts turns up, since segmenting into words costs more than the rest of this put together.
      */
     determineLineBreaks(
         spacing: number,
@@ -390,7 +391,7 @@ export class TaggedString {
         const hasZeroWidthSpaces = this.hasZeroWidthSpaces();
 
         const graphemes = this.graphemes();
-        const wordStarts = wordBoundaries(this.text);
+        let wordStarts: Set<number> | null = null;
 
         let currentX = 0;
         let codeUnit = 0;
@@ -409,7 +410,7 @@ export class TaggedString {
                     ideographicBreak ||
                     'imageName' in this.getSection(i - 1) ||
                     (graphemes[i + 1] !== undefined && breakableBefore[codePoint]) ||
-                    (withinAWordlessScript && wordStarts.has(codeUnit))) {
+                    (withinAWordlessScript && (wordStarts ??= wordBoundaries(this.text)).has(codeUnit))) {
                     potentialLineBreaks.push(
                         evaluateBreak(
                             i,

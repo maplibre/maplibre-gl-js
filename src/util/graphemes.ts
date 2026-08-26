@@ -1,4 +1,4 @@
-import {canCombineGraphemes} from './unicode_properties.g.ts';
+import {canCombineGraphemes, textCanContainGraphemeClusters} from './unicode_properties.g.ts';
 
 const hasSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl;
 
@@ -35,9 +35,12 @@ export const supportsGraphemeSegmentation: boolean = graphemeSegmenter !== null;
  *
  * Clusters the segmenter separates but a font draws as one shape are put back together first: see
  * {@link canCombineGraphemes}.
+ *
+ * Text that holds none of the characters a cluster can be built from skips the segmenter, which
+ * costs far more than the one test that rules it out. Most labels are of that kind.
  */
 export function toGraphemes(text: string): string[] {
-    if (!graphemeSegmenter) return [...text];
+    if (!graphemeSegmenter || !textCanContainGraphemeClusters(text)) return [...text];
 
     const graphemes: string[] = [];
     for (const {segment} of graphemeSegmenter.segment(text)) {
