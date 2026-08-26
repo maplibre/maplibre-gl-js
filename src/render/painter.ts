@@ -24,6 +24,7 @@ import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CrossFaded} from '../style/properties.ts';
@@ -392,6 +393,28 @@ export class Painter {
         }
     }
 
+    /**
+     * The far plane is derived from the lowest point the camera has to reach, which until now only
+     * came from terrain. Geometry extruded below the datum has to be counted too, otherwise it
+     * falls outside the frustum and disappears, most visibly at low pitch.
+     */
+    _updateMinElevationFromExtrusions(layerIds: string[], coordsAscending: {[_: string]: OverscaledTileID[]}): void {
+        let minElevation = 0;
+        for (const layerId of layerIds) {
+            const layer = this.style._layers[layerId];
+            if (layer.type !== 'fill-extrusion' || layer.isHidden(this.transform.zoom)) continue;
+            const tileManager = this.style.tileManagers[layer.source];
+            for (const coord of coordsAscending[layer.source] || []) {
+                const bucket = tileManager?.getTile(coord)?.getBucket(layer) as FillExtrusionBucket;
+                if (bucket && bucket.minElevation < minElevation) {
+                    minElevation = bucket.minElevation;
+                }
+            }
+        }
+        const transform = this.style.map?._camera?.transform;
+        transform?.setMinGeometryElevation?.(minElevation);
+    }
+
     stencilModeFor3D(): StencilMode {
         this.currentStencilSource = undefined;
 
@@ -578,6 +601,8 @@ export class Painter {
 
             this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
+
+        this._updateMinElevationFromExtrusions(layerIds, coordsAscending);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);

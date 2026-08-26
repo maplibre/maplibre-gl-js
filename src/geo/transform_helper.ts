@@ -136,6 +136,8 @@ export class TransformHelper implements ITransformGetters {
     _center: LngLat;
     _elevation: number;
     _minElevationForCurrentTile: number;
+    /** Lowest point drawn by geometry extruded below the datum, in meters. */
+    _minGeometryElevation: number;
     _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
     /**
@@ -186,6 +188,7 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = true;
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
+        this._minGeometryElevation = 0;
         this._autoCalculateNearFarZ = true;
     }
 
@@ -228,6 +231,14 @@ export class TransformHelper implements ITransformGetters {
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number): void {
         this._minElevationForCurrentTile = ele;
+    }
+
+    get minGeometryElevation(): number { return this._minGeometryElevation; }
+    setMinGeometryElevation(ele: number): void {
+        if (ele === this._minGeometryElevation) return;
+        this._minGeometryElevation = ele;
+        // it feeds the far plane, so the matrices have to be rebuilt for it to take effect
+        this._calcMatrices();
     }
 
     get tileSize(): number { return this._tileSize; }

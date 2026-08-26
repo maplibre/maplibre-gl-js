@@ -120,6 +120,12 @@ export class MercatorTransform implements ITransform {
     setMinElevationForCurrentTile(elevation: number): void {
         this._helper.setMinElevationForCurrentTile(elevation);
     }
+    get minGeometryElevation(): number {
+        return this._helper.minGeometryElevation;
+    }
+    setMinGeometryElevation(elevation: number): void {
+        this._helper.setMinGeometryElevation(elevation);
+    }
     setPadding(padding: PaddingOptions): void {
         this._helper.setPadding(padding);
     }
@@ -658,7 +664,7 @@ export class MercatorTransform implements ITransform {
         }
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
         const minRenderDistanceBelowCameraInMeters = 100;
-        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
+        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.minGeometryElevation, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
         const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians);
         const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 

@@ -103,6 +103,12 @@ export class VerticalPerspectiveTransform implements ITransform {
     setElevation(elevation: number): void {
         this._helper.setElevation(elevation);
     }
+    get minGeometryElevation(): number {
+        return this._helper.minGeometryElevation;
+    }
+    setMinGeometryElevation(elevation: number): void {
+        this._helper.setMinGeometryElevation(elevation);
+    }
     setMinElevationForCurrentTile(elevation: number): void {
         this._helper.setMinElevationForCurrentTile(elevation);
     }
