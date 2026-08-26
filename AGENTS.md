@@ -35,6 +35,17 @@ into named functions that can each carry one.
 Do not restate the code (`// increment i`), and do not narrate the change you are making
 (`// now uses the segmenter`) — the diff already says that, and it stops being true immediately.
 
+**No file-level preamble.** A comment belongs to the thing below it, not to the file. A block at the
+top of a module explaining the subject in general has nothing to attach to: it is not in the API
+docs, nobody scrolls back up to it from the function they are reading, and it drifts once the file
+gains a function the preamble never anticipated.
+
+Everything such a preamble wants to say belongs to one of the declarations underneath it. Why a
+grapheme cluster is the unit of layout belongs on the function that produces them. What
+`Intl.Segmenter` does belongs on the constant that holds it. Split it up and put each part where a
+reader meets the code it explains — if a part fits nowhere, it was background rather than
+documentation, and the PR description is where it goes.
+
 ## Changelog
 
 **One line per entry.** Say what changed and what it means for someone using the library, then stop.

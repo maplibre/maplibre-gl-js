@@ -1,26 +1,21 @@
-/**
- * Splitting text into the units that get drawn, and into the words they can be wrapped at.
- *
- * A codepoint is not a unit of writing. `שְׁ` is a letter with two vowel points under it, `दि` is a
- * consonant with a vowel sign written *before* it, and `ल्ली` is three consonants fused into one
- * shape. Laid out a codepoint at a time, each of those comes apart. Laid out a grapheme cluster at a
- * time — and drawn a cluster at a time — each of them holds together, because the browser's own text
- * engine draws the cluster correctly when it is handed the whole cluster.
- *
- * `Intl.Segmenter` is what decides where the clusters and the words are. Its cluster rules are the
- * ones CLDR tailors for stepping a cursor through text, which is not quite the same question as
- * where the units of writing are, so {@link canCombineGraphemes} puts back the boundaries that
- * tailoring introduces.
- */
-
 import {canCombineGraphemes} from './unicode_properties.g.ts';
 
+const hasSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl;
+
 /**
- * Built once: constructing a segmenter is expensive relative to using one, and these are called for
+ * Decides where the grapheme clusters are, following the rules CLDR tailors for stepping a cursor
+ * through text -- not quite the same question as where the units of writing are, which is what
+ * {@link canCombineGraphemes} corrects for.
+ *
+ * Built once: constructing a segmenter is expensive relative to using one, and this is reached for
  * every label of every tile.
  */
-const hasSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl;
 const graphemeSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'grapheme'}) : null;
+
+/**
+ * Decides where the words are, drawing on the browser's own dictionaries. Built once, for the same
+ * reason as {@link graphemeSegmenter}.
+ */
 const wordSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'word'}) : null;
 
 /**
@@ -31,6 +26,12 @@ export const supportsGraphemeSegmentation: boolean = graphemeSegmenter !== null;
 
 /**
  * Splits text into grapheme clusters, or into codepoints where the environment cannot do better.
+ *
+ * A codepoint is not a unit of writing. `שְׁ` is a letter with two vowel points under it, `दि` is a
+ * consonant with a vowel sign written *before* it, and `ल्ली` is three consonants fused into one
+ * shape. Laid out a codepoint at a time, each of those comes apart; laid out -- and drawn -- a
+ * cluster at a time, each holds together, because the browser's text engine shapes the cluster
+ * correctly when it is handed the whole of it.
  *
  * Clusters the segmenter separates but a font draws as one shape are put back together first: see
  * {@link canCombineGraphemes}.
