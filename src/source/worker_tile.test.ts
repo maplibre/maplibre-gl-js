@@ -5,6 +5,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {createFakeActor} from '../util/test/util.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileParameters, WorkerTileWithData} from './worker_source.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -280,27 +281,8 @@ describe('worker tile', () => {
         } as any as VectorTileLike;
 
         let cancelCount = 0;
-        const sendAsync = vi.fn().mockImplementation((message: {type: string; data: unknown}, abortController: AbortController) => {
-            return new Promise((resolve, _reject) => {
-                const res = setTimeout(() => {
-                    // `MessageType.getImages` is 'GI'; comparing against 'getImages' never matched,
-                    // so image requests used to be answered with the glyph response.
-                    const response = message.type === MessageType.getImages ?
-                        {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
-                        {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
-                    resolve(response);
-                }
-                );
-                abortController.signal.addEventListener('abort', () => {
-                    cancelCount += 1;
-                    clearTimeout(res);
-                });
-            });
-        });
-
-        const actorMock = {
-            sendAsync
-        };
+        const actorMock = createFakeActor(undefined, () => { cancelCount += 1; });
+        const sendAsync = actorMock.sendAsync;
         const onSettled = vi.fn();
         tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
         tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);

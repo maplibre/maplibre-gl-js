@@ -1,4 +1,4 @@
-import {vi, expect, onTestFinished} from 'vitest';
+import {vi, expect, onTestFinished, type Mock} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
@@ -351,13 +351,16 @@ const fakeGlyphs = {
  * Typed as an {@link IActor}, so that the message types are the real ones: comparing against a
  * message type that does not exist is a compile error rather than a branch that silently never runs.
  *
+ * `sendAsync` is a spy, so that a test can assert on what was asked for.
+ *
  * @param shouldAbort - consulted on every request. Where it is given, the actor also rejects a
  * request that is aborted while in flight; where it is not, an aborted request is simply never
  * answered, as it is for a source that has moved on.
+ * @param onAbort - called whenever a request in flight is aborted
  */
-export function createFakeActor(shouldAbort?: () => boolean): IActor {
+export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => void): IActor & {sendAsync: Mock} {
     return {
-        sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
+        sendAsync: vi.fn(<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> => {
             if (shouldAbort?.()) return Promise.reject('aborted by test');
 
             return new Promise((resolve, reject) => {
@@ -368,9 +371,10 @@ export function createFakeActor(shouldAbort?: () => boolean): IActor {
 
                 abortController?.signal.addEventListener('abort', () => {
                     clearTimeout(timeout);
+                    onAbort?.();
                     if (shouldAbort) reject('aborted by abortController');
                 });
             });
-        }
+        })
     };
 }

@@ -25,16 +25,16 @@ type Entry = {
     glyphs: Record<string, StyleGlyph | null>;
     requests: Record<number, Promise<{[_: number]: StyleGlyph | null}>>;
     ranges: Record<number, boolean | null>;
-    tinySDF?: Promise<TinySDF>;
-    ideographTinySDF?: Promise<TinySDF>;
+    tinySDF?: Promise<Rasterizer>;
+    ideographTinySDF?: Promise<Rasterizer>;
     /**
      * One TinySDF per `font-faces` file this stack draws with, keyed by the file's CSS family.
      */
-    fontFaceTinySDFs?: Record<string, Promise<TinySDF>>;
+    fontFaceTinySDFs?: Record<string, Promise<Rasterizer>>;
     /**
      * The same, for drawing whole grapheme clusters, which need a wider canvas to fit in.
      */
-    clusterTinySDFs?: Record<string, Promise<TinySDF>>;
+    clusterTinySDFs?: Record<string, Promise<Rasterizer>>;
 };
 
 /**
@@ -54,12 +54,26 @@ const defaultGenericFontFamily = 'sans-serif';
 const textureScale = 2;
 
 /**
+ * The rasterizer, as it really is. TinySDF carries the `buffer` it was built with, which its type
+ * declaration leaves out and which the canvas has to be widened through.
+ */
+export type Rasterizer = TinySDF & {buffer: number};
+
+/**
  * Builds the thing that rasterizes a glyph. Taken as a dependency so that a test can stand in for
  * the canvas it would otherwise need to draw on.
+ *
+ * @param options - what to draw with, whose `buffer` sizes the canvas
+ * @param padding - how much room to leave around each glyph in the bitmap that comes out, which is
+ * not the same as the buffer the canvas was sized with
  */
-export type CreateRasterizer = (options: TinySDFOptions) => TinySDF;
+export type CreateRasterizer = (options: TinySDFOptions, padding: number) => Rasterizer;
 
-const defaultCreateRasterizer: CreateRasterizer = (options) => new TinySDF(options);
+const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
+    const tinySDF = new TinySDF(options) as Rasterizer;
+    tinySDF.buffer = padding;
+    return tinySDF;
+};
 
 /**
  * How wide a grapheme cluster is allowed to be, as a multiple of the font size.
@@ -311,7 +325,7 @@ export class GlyphManager {
      * Where no font file covers the grapheme, the CJK fallback font named by the `localIdeographFontFamily`
      * map option takes precedence over the last resort fontstack in the style specification.
      */
-    _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<TinySDF> {
+    _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<Rasterizer> {
         if (fontFaceFamily) {
             const cluster = isCluster(id);
             const cache = cluster ? 'clusterTinySDFs' : 'fontFaceTinySDFs';
@@ -334,13 +348,13 @@ export class GlyphManager {
      * Builds the TinySDF that draws with a given font selection.
      *
      * TinySDF derives its canvas from `fontSize + buffer * 4`, so the buffer is the only way in to a
-     * wider one. The padding the buffer also stands for is put back afterwards, because the atlas
-     * and the shaders expect exactly `GLYPH_PBF_BORDER` of it around every glyph.
+     * wider one. It stands for the padding around each glyph as well, which the atlas and the shaders
+     * expect to be exactly `GLYPH_PBF_BORDER`, so the two are passed separately.
      *
      * @param emsWide - how wide, in multiples of the font size, the glyphs drawn with this instance
      * may be before TinySDF cuts them off
      */
-    async _createTinySDF(stack: String | false, sniffFontStyles: boolean = true, emsWide: number = 1): Promise<TinySDF> {
+    async _createTinySDF(stack: String | false, sniffFontStyles: boolean = true, emsWide: number = 1): Promise<Rasterizer> {
         // Escape and quote the font family list for use in CSS.
         const fontFamilies = stack ? stack.split(',') : [];
         fontFamilies.push(defaultGenericFontFamily);
@@ -361,19 +375,17 @@ export class GlyphManager {
             }
         }
 
-        const buffer = 3 * textureScale;
-        const tinySDF = this.createRasterizer({
+        const padding = 3 * textureScale;
+        return this.createRasterizer({
             fontSize,
-            buffer: Math.max(buffer, Math.ceil(fontSize * (emsWide - 1) / 4)),
+            buffer: Math.max(padding, Math.ceil(fontSize * (emsWide - 1) / 4)),
             radius: 8 * textureScale,
             cutoff: 0.25,
             fontFamily,
             fontWeight,
             fontStyle,
             lang: this.lang
-        });
-        (tinySDF as TinySDF & {buffer: number}).buffer = buffer;
-        return tinySDF;
+        }, padding);
     }
 
     /**

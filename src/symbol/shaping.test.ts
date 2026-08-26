@@ -382,8 +382,8 @@ describe('shapeText vertical glyph orientation', () => {
     }
 
     /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
-    function createStubGlyphMap(text: string): {[_: string]: StyleGlyph} {
-        const glyphs: {[_: string]: StyleGlyph} = {};
+    function createStubGlyphMap(text: string): Record<string, StyleGlyph> {
+        const glyphs: Record<string, StyleGlyph> = {};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);

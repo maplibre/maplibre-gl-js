@@ -66,7 +66,7 @@ describe('GlyphManager', () => {
      * A stand-in for the rasterizer, so that nothing has to be drawn on a canvas.
      */
     function fakeRasterizer(draw: (text: string) => any = () => GLYPHS[0]) {
-        return vi.fn((_options: TinySDFOptions) => ({draw}));
+        return vi.fn((_options: TinySDFOptions, padding: number) => ({draw, buffer: padding}));
     }
 
     afterEach(() => {
@@ -255,14 +255,14 @@ describe('GlyphManager', () => {
         const createRasterizer = fakeRasterizer();
         const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
-        expect(createRasterizer).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}));
+        expect(createRasterizer).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}), expect.any(Number));
     });
 
     test('GlyphManager sets the language on TinySDF', async () => {
         const createRasterizer = fakeRasterizer();
         const manager = createGlyphManager(true, 'sans-serif', 'zh', createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
-        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}), expect.any(Number));
     });
 
     test('awaits document.fonts.load before instantiating TinySDF', async () => {
@@ -341,7 +341,7 @@ describe('GlyphManager', () => {
             expect(glyphRangeRequests()).toHaveLength(0);
             expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
                 fontFamily: expect.stringMatching(/^maplibre-gl-font-face-\d+,sans-serif$/)
-            }));
+            }), expect.any(Number));
         });
 
         test('draws a grapheme cluster as one glyph, from the file covering the letter it starts with', async () => {
@@ -398,7 +398,7 @@ describe('GlyphManager', () => {
             manager.setFontFaces({'Noto Sans Bold Italic': 'https://localhost/noto-bold-italic.ttf'});
             await manager.getGlyphs({'Noto Sans Bold Italic': [char(0x41)]});
 
-            expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({fontWeight: undefined, fontStyle: 'normal'}));
+            expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({fontWeight: undefined, fontStyle: 'normal'}), expect.any(Number));
         });
 
         test('keeps one TinySDF per declared file so a fallback cannot bleed into the rest of the text', async () => {
