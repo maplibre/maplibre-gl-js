@@ -1,17 +1,14 @@
 ## main
 ### ✨ Features and improvements
-- Pick terrain coordinates with a CPU raycast against the DEM instead of a coords framebuffer readback: full DEM resolution, no GPU stall on pointer events, and about 4MB less GPU memory ([#7640](https://github.com/maplibre/maplibre-gl-js/issues/7640)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Add support for the style specification's `font-faces` property, along with `map.setFontFaces` and `map.getFontFaces`: a style can point at the font files to draw each `text-font` name with, optionally narrowed to a `unicode-range`, and codepoints no font face covers still fall back to the `glyphs` URL ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066))
 - Allow adding an image source without a `url`. The source starts empty and makes no network request; call `updateImage({image})` or `updateImage({url})` later to show an image ([#8167](https://github.com/maplibre/maplibre-gl-js/pull/8167))
 - Skip symbol re-placement when its inputs are unchanged, so repaints from animated style images or custom layers cost a single frame ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Add `Style#triggerSymbolPlacement`, which re-places symbols when something the map cannot see for itself has moved them ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
-- Lay text out in grapheme clusters rather than codepoints, so a letter and the marks written on it stay one shape, and draw the whole cluster from a `font-faces` file where the style declares one. Devanagari conjuncts, Khmer and Burmese syllables and Hebrew niqqud render as written ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
-- Wrap text in Thai, Khmer, Burmese, Lao, Tibetan, Javanese and Balinese, which do not put spaces between words, by asking the browser's word segmenter where the words are. Every other script keeps breaking at the characters it always has ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
+- Support `font-faces` style spec property and improve text rendering for complext scripting languages ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Apply rule L3 of the Unicode Bidirectional Algorithm, putting the marks written on a right-to-left letter back after it once the line has been reversed. Pointed Hebrew and vocalised Arabic no longer scatter their marks across the line ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
 - Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982))
