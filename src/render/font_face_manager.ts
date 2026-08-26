@@ -89,7 +89,7 @@ async function loadFontFile(url: string, requestManager: RequestManager): Promis
     const request = await requestManager.transformRequest(url, ResourceType.Glyphs);
     const response = await getArrayBuffer(request, new AbortController());
     if (!response?.data) {
-        throw new Error('the response was empty');
+        throw new Error(`the response was empty for the font file at ${url}`);
     }
     return response.data;
 }

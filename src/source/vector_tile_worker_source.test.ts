@@ -1,5 +1,4 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {MessageType} from '../util/actor_messages.ts';
 import fs from 'fs';
 import path from 'path';
 import {PbfReader} from 'pbf';
@@ -9,7 +8,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type IActor} from '../util/actor.ts';
 import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source.ts';
 import {WorkerTile} from './worker_tile.ts';
-import {setPerformance, sleep} from '../util/test/util.ts';
+import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {ABORT_ERROR} from '../util/abort_error.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
@@ -97,23 +96,7 @@ describe('vector tile worker source', () => {
             }
         }]);
 
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                return new Promise((resolve, _reject) => {
-                    const res = setTimeout(() => {
-                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
-                        // matched, so image requests used to be answered with the glyph response.
-                        const response = message.type === MessageType.getImages ?
-                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
-                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor();
 
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
         source.loadVectorTile = (_params, _rawData) => {
@@ -189,30 +172,7 @@ describe('vector tile worker source', () => {
         }]);
 
         let sendAsyncShouldAbort = false;
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                if (sendAsyncShouldAbort) {
-                    return new Promise((_resolve, reject) => {
-                        reject('aborted by test');
-                    });
-                }
-
-                return new Promise((resolve, reject) => {
-                    const res = setTimeout(() => {
-                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
-                        // matched, so image requests used to be answered with the glyph response.
-                        const response = message.type === MessageType.getImages ?
-                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
-                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                        reject('aborted by abortController');
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor(() => sendAsyncShouldAbort);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
         source.loadVectorTile = (_params, _rawData) => {

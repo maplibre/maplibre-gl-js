@@ -1,10 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {MessageType} from '../util/actor_messages.ts';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {setPerformance, sleep} from '../util/test/util.ts';
+import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 
@@ -84,23 +83,7 @@ describe('geojson tile worker source', () => {
             }
         }]);
 
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                return new Promise((resolve, _reject) => {
-                    const res = setTimeout(() => {
-                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
-                        // matched, so image requests used to be answered with the glyph response.
-                        const response = message.type === MessageType.getImages ?
-                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
-                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor();
 
         const source = new GeoJSONWorkerSource(actor, layerIndex, ['hello']);
 
@@ -157,23 +140,7 @@ describe('geojson tile worker source', () => {
             }
         }]);
 
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                return new Promise((resolve, _reject) => {
-                    const res = setTimeout(() => {
-                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
-                        // matched, so image requests used to be answered with the glyph response.
-                        const response = message.type === MessageType.getImages ?
-                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
-                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor();
 
         const source = new GeoJSONWorkerSource(actor, layerIndex, ['hello']);
 
@@ -240,30 +207,7 @@ describe('geojson tile worker source', () => {
         }]);
 
         let sendAsyncShouldAbort = false;
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                if (sendAsyncShouldAbort) {
-                    return new Promise((_resolve, reject) => {
-                        reject('aborted by test');
-                    });
-                }
-
-                return new Promise((resolve, reject) => {
-                    const res = setTimeout(() => {
-                        // `MessageType.getImages` is 'GI'; comparing against 'getImages' never
-                        // matched, so image requests used to be answered with the glyph response.
-                        const response = message.type === MessageType.getImages ?
-                            {'hello': {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}} :
-                            {'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                        reject('aborted by abortController');
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor(() => sendAsyncShouldAbort);
 
         // Step 1: Create source and load data
         const source = new GeoJSONWorkerSource(actor, layerIndex, ['hello']);

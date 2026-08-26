@@ -4,6 +4,7 @@ import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {type Dispatcher} from '../../util/dispatcher.ts';
 import {type IActor} from '../actor.ts';
+import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {type SourceEventType} from '../../ui/events.ts';
 import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -324,4 +325,52 @@ export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | nul
     terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
     terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
     return terrain;
+}
+
+/**
+ * The image a {@link createFakeActor} answers a `getImages` request with.
+ */
+const fakeImages = {
+    hello: {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}
+};
+
+/**
+ * The glyph a {@link createFakeActor} answers a `getGlyphs` request with, keyed by the grapheme
+ * cluster layout asks for it by.
+ */
+const fakeGlyphs = {
+    'StandardFont-Bold': {
+        e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+    }
+};
+
+/**
+ * An actor that answers a worker source's requests for images and glyphs with fixtures, after a
+ * delay long enough that a test can abort the request part-way.
+ *
+ * Typed as an {@link IActor}, so that the message types are the real ones: comparing against a
+ * message type that does not exist is a compile error rather than a branch that silently never runs.
+ *
+ * @param shouldAbort - consulted on every request. Where it is given, the actor also rejects a
+ * request that is aborted while in flight; where it is not, an aborted request is simply never
+ * answered, as it is for a source that has moved on.
+ */
+export function createFakeActor(shouldAbort?: () => boolean): IActor {
+    return {
+        sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
+            if (shouldAbort?.()) return Promise.reject('aborted by test');
+
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    const response = message.type === MessageType.getImages ? fakeImages : fakeGlyphs;
+                    resolve(response as RequestResponseMessageMap[T][1]);
+                }, 100);
+
+                abortController?.signal.addEventListener('abort', () => {
+                    clearTimeout(timeout);
+                    if (shouldAbort) reject('aborted by abortController');
+                });
+            });
+        }
+    };
 }
