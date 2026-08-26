@@ -280,12 +280,10 @@ describe('SymbolBucket', () => {
             expect(glyphDependencies('abc').sort()).toEqual(['a', 'b', 'c']);
         });
 
-        test('asks for a Hebrew letter with its vowel points as one cluster, and for its codepoints', () => {
+        test('asks for a Hebrew letter with its vowel points as one cluster, and for its codepoints to fall back to', () => {
             const dependencies = glyphDependencies('שְׁ');
 
-            // The cluster, so that it can be drawn as one shape where a font file covers it...
             expect(dependencies).toContain('שְׁ');
-            // ...and its codepoints, so that there is something to fall back to where none does.
             expect(dependencies).toEqual(expect.arrayContaining(['ש', 'ְ', 'ׁ']));
         });
 
@@ -296,8 +294,7 @@ describe('SymbolBucket', () => {
             expect(dependencies).toEqual(expect.arrayContaining(['द', 'ि']));
         });
 
-        test('asks for nothing extra where a character stands alone', () => {
-            // A single codepoint is its own cluster, so there is no second key for it.
+        test('asks for nothing extra where a character stands alone, being its own cluster', () => {
             expect(glyphDependencies('a')).toEqual(['a']);
         });
     });

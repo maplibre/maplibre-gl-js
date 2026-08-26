@@ -39,9 +39,7 @@ describe('TaggedString', () => {
             expect(tagged.sectionIndex).toHaveLength(2);
         });
 
-        test('counts a CRLF as the single grapheme cluster it is', () => {
-            // Two code units, one cluster: taking two sections off for it would leave the sections
-            // short of the text, and every later lookup into them undefined.
+        test('counts a CRLF as the single grapheme cluster it is, so the sections stay level with the text', () => {
             const tagged = new TaggedString('\r\nabc\r\n', [textSection], Array(5).fill(0));
             tagged.trim();
             expect(tagged.text).toBe('abc');
@@ -91,7 +89,6 @@ describe('TaggedString', () => {
             w: 32,
             h: 32,
         };
-        // Keyed by grapheme cluster, which for each of these is the character itself.
         const glyphs = {
             'Test': {
                 'a': {id: 0x61, metrics, rect},
@@ -99,7 +96,6 @@ describe('TaggedString', () => {
                 'c': {id: 0x63, metrics, rect},
                 '\u9EB5': {id: 0x9EB5, metrics, rect},
                 '\u{30EDE}': {id: 0x30EDE, metrics, rect},
-                // Only the metrics are read here, so these stand in without a bitmap.
             } as unknown as Record<string, StyleGlyph>,
         };
         const textSection = {

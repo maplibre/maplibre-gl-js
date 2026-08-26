@@ -477,10 +477,7 @@ describe('shapeText vertical glyph orientation', () => {
         ]);
     });
 
-    test('keeps a decomposed Latin letter and its combining mark in one glyph', () => {
-        // é as “e” followed by U+0301 combining acute accent. The two are one grapheme cluster and
-        // are drawn as one glyph, so the mark cannot come away from its base however the label is
-        // laid out -- which is what upright glyphs, each advancing a full em, used to do to it.
+    test('draws a decomposed Latin letter and its combining mark as one glyph, so the mark cannot drift off its base', () => {
         const shapedLineLabel = shapeLineLabel('国道e\u0301号');
         const orientations = getGlyphOrientations(shapedLineLabel);
 
@@ -770,7 +767,6 @@ describe('shapeText with a right-to-left text plugin', () => {
             line => line.positionedGlyphs.map(glyph => glyph.grapheme));
     }
 
-    // שְׁדֵרוֹת -- three of its letters are written with vowel points, and one carries two of them.
     const SHIN_SHEVA_DOT = 'שְׁ';
     const DALET_TSERE = 'דֵ';
     const RESH = 'ר';
@@ -778,11 +774,9 @@ describe('shapeText with a right-to-left text plugin', () => {
     const TAV = 'ת';
     const text = SHIN_SHEVA_DOT + DALET_TSERE + RESH + VAV_HOLAM + TAV;
 
-    test('keeps each letter with the marks written on it', () => {
+    test('reverses the letters but keeps each one with the marks written on it, in writing order', () => {
         stubReversingPlugin();
 
-        // Read right to left, so the letters come out in the reverse of the order they were
-        // written -- but each letter still carries its own marks, in the order they were written.
         expect(drawn(shape(text))).toEqual([TAV, VAV_HOLAM, RESH, DALET_TSERE, SHIN_SHEVA_DOT]);
     });
 
@@ -795,11 +789,9 @@ describe('shapeText with a right-to-left text plugin', () => {
         }
     });
 
-    test('falls back to one codepoint at a time when no glyph covers the cluster', () => {
+    test('falls back to the same codepoints in the same order when no glyph covers the cluster', () => {
         stubReversingPlugin();
 
-        // Only the individual codepoints have glyphs, as when a style declares no font file for
-        // this script.
         const codepointsOnly: Record<string, StyleGlyph> = {};
         for (const char of text) {
             codepointsOnly[char] = {id: char.codePointAt(0), metrics} as StyleGlyph;
@@ -808,8 +800,6 @@ describe('shapeText with a right-to-left text plugin', () => {
         const asClusters = drawn(shape(text)).join('');
         const asCodepoints = drawn(shape(text, {Test: codepointsOnly}));
 
-        // The same codepoints in the same order -- just as separate glyphs, with the marks no
-        // longer positioned on their letters. This is what MapLibre has always drawn.
         expect(asCodepoints.join('')).toBe(asClusters);
         expect(asCodepoints).toHaveLength([...text].length);
     });

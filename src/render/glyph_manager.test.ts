@@ -362,7 +362,7 @@ describe('GlyphManager', () => {
             expect(glyphRangeRequests()).toHaveLength(0);
         });
 
-        test('leaves a cluster no declared file covers undrawn, so that layout can fall back', async () => {
+        test('leaves a cluster undrawn where the declared file does not cover the letter it starts with, so that layout can fall back', async () => {
             stubFontFaces();
             serveGlyphRanges();
             const createRasterizer = fakeRasterizer();
@@ -433,14 +433,13 @@ describe('GlyphManager', () => {
             expect(families[0]).not.toBe(families[1]);
         });
 
-        test('gives a cluster a canvas wide enough that it is not cut off', async () => {
+        test('gives a Burmese syllable, drawn nearly twice as wide as one character, a canvas it is not cut off by', async () => {
             stubFontFaces();
             const createRasterizer = fakeRasterizer();
 
             const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/myanmar.ttf'});
 
-            // A Burmese syllable, which is drawn nearly twice as wide as a single character.
             await manager.getGlyphs({'Arial Unicode MS': ['\u101C\u102C\u1038', char(0x41)]});
 
             const buffers = createRasterizer.mock.calls.map(([options]) => options.buffer);

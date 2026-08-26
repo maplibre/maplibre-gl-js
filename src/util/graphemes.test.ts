@@ -6,20 +6,16 @@ describe('toGraphemes', () => {
         expect(toGraphemes('Tel Aviv')).toEqual(['T', 'e', 'l', ' ', 'A', 'v', 'i', 'v']);
     });
 
-    test('keeps a letter and its combining mark together', () => {
-        // e followed by U+0301 combining acute accent.
+    test('keeps a letter and the combining mark written on it together', () => {
         expect(toGraphemes('é')).toEqual(['é']);
     });
 
-    test('keeps a Hebrew letter and its vowel points together', () => {
-        // שׁ with a sheva and a shin dot: one letter as it is written, three codepoints as it is stored.
+    test('keeps a Hebrew letter and its vowel points together: one letter, three codepoints', () => {
         expect(toGraphemes('שְׁ')).toEqual(['שְׁ']);
         expect(toGraphemes('שְׁדֵ')).toEqual(['שְׁ', 'דֵ']);
     });
 
-    test('keeps a Devanagari syllable together, including a conjunct', () => {
-        // दिल्ली: the vowel sign of the first syllable is written before its consonant, and the
-        // second is three consonants fused into one shape.
+    test('keeps a Devanagari syllable together, vowel sign written before its consonant and all', () => {
         expect(toGraphemes('दिल्ली')).toEqual(['दि', 'ल्ली']);
     });
 
@@ -27,9 +23,7 @@ describe('toGraphemes', () => {
         expect(toGraphemes('ភ្នំ')).toEqual(['ភ្នំ']);
     });
 
-    test('keeps a Burmese syllable together across the boundaries the segmenter tailors in', () => {
-        // `Intl.Segmenter` follows the rules CLDR tailors for cursor movement, which break before a
-        // spacing mark: on its own it would give လ, ာ and း as three separate units of writing.
+    test('keeps a Burmese syllable together across the spacing-mark boundaries the segmenter tailors in', () => {
         expect(toGraphemes('ဘင်္ဂလားဒေ့ရှ်')).toEqual(['ဘ', 'င်္ဂ', 'လား', 'ဒေ့', 'ရှ်']);
     });
 
@@ -57,9 +51,7 @@ describe('isCluster', () => {
     });
 });
 
-test('the environment can segment graphemes', () => {
-    // Everything above falls back to one codepoint at a time without it, so a failure here is worth
-    // knowing about rather than silently passing.
+test('the environment can segment graphemes, so that the tests above are not silently vacuous', () => {
     expect(supportsGraphemeSegmentation).toBe(true);
 });
 
@@ -68,9 +60,7 @@ describe('wordBoundaries', () => {
         expect([...wordBoundaries('Tel Aviv')].sort((a, b) => a - b)).toEqual([0, 3, 4]);
     });
 
-    test('finds the words of text that does not space them', () => {
-        // ราชอาณาจักร (kingdom) followed by ไทย (Thai): the browser's dictionary knows where the
-        // second word starts, which no table of punctuation could.
+    test('finds the words of Thai, which spaces none of them, from the browser dictionary', () => {
         expect(wordBoundaries('ราชอาณาจักรไทย').has('ราชอาณาจักร'.length)).toBe(true);
     });
 

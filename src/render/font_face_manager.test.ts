@@ -77,14 +77,13 @@ describe('FontFaceManager', () => {
         expect(manager.hasFontFaces()).toBe(false);
     });
 
-    test('registers a font file under a family of its own and returns it', async () => {
+    test('registers a font file under a family of its own, so the style cannot restyle the page', async () => {
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
 
         const family = await manager.getFontFamily('Noto Sans Regular', 0x41);
 
         expect(family).toMatch(/^maplibre-gl-font-face-\d+$/);
-        // The style's own font name must not leak into the page's typography.
         expect(family).not.toBe('Noto Sans Regular');
         expect(added).toHaveLength(1);
         expect(added[0].family).toBe(family);
@@ -145,7 +144,6 @@ describe('FontFaceManager', () => {
         await expect(manager.getFontFamily('Wildcard', 0x4ff)).resolves.not.toBeNull();
         await expect(manager.getFontFamily('Wildcard', 0x500)).resolves.toBeNull();
 
-        // A wildcard that runs past the last codepoint stops there rather than covering nothing.
         await expect(manager.getFontFamily('PastTheEnd', 0x10ffff)).resolves.not.toBeNull();
     });
 
@@ -168,16 +166,14 @@ describe('FontFaceManager', () => {
         await expect(manager.getFontFamily('Unifont', 0x10ffff)).resolves.not.toBeNull();
     });
 
-    test('walks the font stack in order, name by name', async () => {
+    test('walks the font stack in order, giving the next name a turn only where the one before does not cover the codepoint', async () => {
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}],
             'Noto Sans Italic': 'https://example.com/italic.ttf'
         });
 
-        // The first name in the stack does not cover Latin, so the second one gets a turn...
         await manager.getFontFamily('Noto Sans Regular,Noto Sans Italic', 0x41);
-        // ...but it does cover Khmer, so the second one never comes up.
         await manager.getFontFamily('Noto Sans Regular,Noto Sans Italic', 0x1780);
 
         expect(requestedUrls()).toEqual(['https://example.com/italic.ttf', 'https://example.com/khmer.ttf']);
