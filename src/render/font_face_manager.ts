@@ -58,7 +58,7 @@ let nextFamilyId = 0;
  * @param value - a single `unicode-range` entry
  * @returns the codepoints it covers, or `null` if it is not a range this can make sense of
  */
-export function parseUnicodeRange(value: string): UnicodeRange | null {
+function parseUnicodeRange(value: string): UnicodeRange | null {
     const wildcard = /^u\+([0-9a-f]*)(\?+)$/i.exec(value);
     if (wildcard) {
         const [, prefix, questionMarks] = wildcard;
@@ -79,19 +79,6 @@ export function parseUnicodeRange(value: string): UnicodeRange | null {
 function clampRange(start: number, end: number): UnicodeRange | null {
     if (start > end || start > MAX_CODE_POINT) return null;
     return {start, end: Math.min(end, MAX_CODE_POINT)};
-}
-
-/**
- * Downloads a font file, giving the map's `transformRequest` a chance to rewrite the request the
- * same way it gets one for a glyph range.
- */
-async function loadFontFile(url: string, requestManager: RequestManager): Promise<ArrayBuffer> {
-    const request = await requestManager.transformRequest(url, ResourceType.Glyphs);
-    const response = await getArrayBuffer(request, new AbortController());
-    if (!response?.data) {
-        throw new Error(`the response was empty for the font file at ${url}`);
-    }
-    return response.data;
 }
 
 /**
@@ -231,7 +218,7 @@ export class FontFaceManager {
 
         let fontFace: FontFace;
         try {
-            fontFace = new FontFace(face.family, await loadFontFile(face.url, this.requestManager));
+            fontFace = new FontFace(face.family, await this._downloadFontFile(face.url));
             document.fonts.add(fontFace);
             this._registered.add(fontFace);
             await fontFace.load();
@@ -241,6 +228,19 @@ export class FontFaceManager {
             warnOnce(`Ignoring the font face at ${face.url}: ${ensureError(e).message}`);
             return false;
         }
+    }
+
+    /**
+     * Downloads a font file, giving the map's `transformRequest` a chance to rewrite the request the
+     * same way it gets one for a glyph range.
+     */
+    async _downloadFontFile(url: string): Promise<ArrayBuffer> {
+        const request = await this.requestManager.transformRequest(url, ResourceType.Glyphs);
+        const response = await getArrayBuffer(request, new AbortController());
+        if (!response?.data) {
+            throw new Error(`the response was empty for the font file at ${url}`);
+        }
+        return response.data;
     }
 
     _unregister(fontFace: FontFace): void {

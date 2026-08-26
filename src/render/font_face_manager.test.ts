@@ -1,36 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {FontFaceManager, parseUnicodeRange} from './font_face_manager.ts';
+import {FontFaceManager} from './font_face_manager.ts';
 import {RequestManager} from '../util/request_manager.ts';
-
-describe('parseUnicodeRange', () => {
-    test('parses a single codepoint', () => {
-        expect(parseUnicodeRange('U+A5')).toEqual({start: 0xa5, end: 0xa5});
-    });
-
-    test('parses an explicit range', () => {
-        expect(parseUnicodeRange('U+0-10FFFF')).toEqual({start: 0, end: 0x10ffff});
-        expect(parseUnicodeRange('u+1780-17ff')).toEqual({start: 0x1780, end: 0x17ff});
-    });
-
-    test('parses a wildcard range', () => {
-        expect(parseUnicodeRange('U+4??')).toEqual({start: 0x400, end: 0x4ff});
-        expect(parseUnicodeRange('U+??')).toEqual({start: 0, end: 0xff});
-    });
-
-    test('clamps a wildcard range that runs past the last codepoint', () => {
-        expect(parseUnicodeRange('U+??????')).toEqual({start: 0, end: 0x10ffff});
-    });
-
-    test('rejects ranges it cannot make sense of', () => {
-        expect(parseUnicodeRange('0-255')).toBeNull();
-        expect(parseUnicodeRange('U+')).toBeNull();
-        expect(parseUnicodeRange('U+1234567')).toBeNull();
-        expect(parseUnicodeRange('U+4??-U+5??')).toBeNull();
-        expect(parseUnicodeRange('U+17FF-1780')).toBeNull();
-        expect(parseUnicodeRange('U+FFFFFF')).toBeNull();
-    });
-});
 
 describe('FontFaceManager', () => {
     const requestManager = new RequestManager();
@@ -155,6 +126,29 @@ describe('FontFaceManager', () => {
         expect(requestedUrls()).toEqual(['https://example.com/khmer.ttf', 'https://example.com/devanagari.ttf']);
     });
 
+    test('reads the unicode range grammar that CSS uses', async () => {
+        const manager = new FontFaceManager(requestManager);
+        manager.setFontFaces({
+            Single: [{url: 'https://example.com/single.ttf', 'unicode-range': ['U+A5']}],
+            Explicit: [{url: 'https://example.com/explicit.ttf', 'unicode-range': ['u+1780-17ff']}],
+            Wildcard: [{url: 'https://example.com/wildcard.ttf', 'unicode-range': ['U+4??']}],
+            PastTheEnd: [{url: 'https://example.com/past-the-end.ttf', 'unicode-range': ['U+??????']}]
+        });
+
+        await expect(manager.getFontFamily('Single', 0xa5)).resolves.not.toBeNull();
+        await expect(manager.getFontFamily('Single', 0xa6)).resolves.toBeNull();
+
+        await expect(manager.getFontFamily('Explicit', 0x1780)).resolves.not.toBeNull();
+        await expect(manager.getFontFamily('Explicit', 0x1800)).resolves.toBeNull();
+
+        await expect(manager.getFontFamily('Wildcard', 0x400)).resolves.not.toBeNull();
+        await expect(manager.getFontFamily('Wildcard', 0x4ff)).resolves.not.toBeNull();
+        await expect(manager.getFontFamily('Wildcard', 0x500)).resolves.toBeNull();
+
+        // A wildcard that runs past the last codepoint stops there rather than covering nothing.
+        await expect(manager.getFontFamily('PastTheEnd', 0x10ffff)).resolves.not.toBeNull();
+    });
+
     test('honours every range of a multi-range font face', async () => {
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
@@ -238,12 +232,15 @@ describe('FontFaceManager', () => {
         silenceWarnings();
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
-            'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['nonsense', 'U+1780-17FF']}]
+            'Noto Sans Regular': [{
+                url: 'https://example.com/khmer.ttf',
+                'unicode-range': ['0-255', 'U+', 'U+1234567', 'U+4??-U+5??', 'U+17FF-1780', 'U+FFFFFF', 'U+1780-17FF']
+            }]
         });
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.toBeNull();
         await expect(manager.getFontFamily('Noto Sans Regular', 0x1780)).resolves.not.toBeNull();
-        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('nonsense'));
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('U+1234567'));
     });
 
     test('ignores a face whose every unicode range is unparseable', async () => {
