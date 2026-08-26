@@ -22,16 +22,18 @@ const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
 
-// The fixture is keyed by codepoint, as a glyph PBF is; layout looks glyphs up by grapheme cluster,
-// which for every character in it is the character itself.
-const glyphsByGrapheme = Object.fromEntries(
-    Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
-);
-const stacks = {'Test': glyphsByGrapheme} as any as {
-    [_: string]: {
-        [x: number]: StyleGlyph;
-    };
-};
+/**
+ * Re-keys the fixture, which is keyed by codepoint as a glyph PBF is, by the grapheme cluster layout
+ * looks glyphs up by -- for every character in this fixture, the character itself.
+ *
+ * The cast is for the bitmap a real {@link StyleGlyph} carries and the fixture, which needs only the
+ * metrics layout reads, does not.
+ */
+const stacks = {
+    'Test': Object.fromEntries(
+        Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+    )
+} as unknown as {[stack: string]: {[cluster: string]: StyleGlyph}};
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);

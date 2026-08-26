@@ -6,6 +6,7 @@ import {ResolvedImage, Formatted, FormattedSection, type VerticalAlign} from '@m
 import {ImagePosition} from '../../../src/render/image_atlas.ts';
 import type {StyleImage} from '../../../src/style/style_image.ts';
 import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
+import type {GlyphPosition} from '../../../src/render/glyph_atlas.ts';
 
 import glyphsJson from '../assets/glyphs/fontstack-glyphs.json' with {type: 'json'};
 import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json'};
@@ -22,6 +23,22 @@ if (typeof process !== 'undefined' && process.env !== undefined) {
     UPDATE = !!process.env.UPDATE;
 }
 
+/**
+ * A glyph as the fixture stores it: the metrics and the atlas rect that layout reads, without the
+ * bitmap a real {@link StyleGlyph} also carries and layout never looks at.
+ */
+type FixtureGlyph = GlyphPosition & {id: number};
+
+/**
+ * Re-keys the fixture, which is keyed by codepoint as a glyph PBF is, by the grapheme cluster layout
+ * looks glyphs up by -- for every character in this fixture, the character itself.
+ */
+function byGraphemeCluster(fixture: Record<string, FixtureGlyph>): Record<string, FixtureGlyph> {
+    return Object.fromEntries(
+        Object.entries(fixture).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+    );
+}
+
 function sectionForImage(name: string, verticalAlign?: VerticalAlign) {
     return new FormattedSection('', ResolvedImage.fromString(name), null, null, null, verticalAlign);
 }
@@ -35,16 +52,8 @@ describe('shaping', () => {
     const layoutTextSize = 16;
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
-    // The fixture is keyed by codepoint, as a glyph PBF is. Layout looks glyphs up by grapheme
-    // cluster, which for every character in this fixture is the character itself.
-    const glyphs = {
-        'Test': Object.fromEntries(
-            Object.entries(glyphsJson as any as {[codePoint: string]: StyleGlyph})
-                .map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
-        )
-    };
-    // The same fixture serves as both, as it did before: it carries metrics and rects.
-    const glyphPositions = glyphs as any;
+    const glyphPositions = {'Test': byGraphemeCluster(glyphsJson)};
+    const glyphs = glyphPositions as unknown as {[stack: string]: {[cluster: string]: StyleGlyph}};
 
     const images = {
         'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),
