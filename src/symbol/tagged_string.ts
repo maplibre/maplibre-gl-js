@@ -41,9 +41,7 @@ type Break = {
 /**
  * Characters a line may end on.
  */
-const breakable: {
-    [_: number]: boolean;
-} = {
+const breakable: Record<number, boolean> = {
     [0x0a]: true, // newline
     [0x0d]: true, // carriage return, on its own or starting a CRLF cluster
     [0x20]: true, // space
@@ -66,9 +64,7 @@ const breakable: {
 /**
  * Characters a line may begin with, whatever precedes them.
  */
-const breakableBefore: {
-    [_: number]: boolean;
-} = {
+const breakableBefore: Record<number, boolean> = {
     [0x28]: true, // left parenthesis
 };
 
