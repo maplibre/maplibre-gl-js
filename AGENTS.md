@@ -35,6 +35,19 @@ into named functions that can each carry one.
 Do not restate the code (`// increment i`), and do not narrate the change you are making
 (`// now uses the segmenter`) — the diff already says that, and it stops being true immediately.
 
+## Changelog
+
+**One line per entry.** Say what changed and what it means for someone using the library, then stop.
+The changelog is skimmed, not read, and a paragraph buries the one clause a reader was looking for.
+
+```md
+- Support `font-faces` style spec property and improve text rendering for complex script languages ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
+```
+
+Resist explaining the mechanism, listing every affected script, or narrating the design decision —
+that belongs in the PR description and the code's own doc comments. If a change genuinely needs two
+sentences to be understood, it is usually two entries, or one entry and a link.
+
 ## Tests
 
 **Declare test helpers with `function`, not with a lambda assigned to a `const`.** A hoisted,
