@@ -1,7 +1,7 @@
-import {loadGlyphRange} from '../style/load_glyph_range.ts';
+import {loadGlyphRange as defaultLoadGlyphRange} from '../style/load_glyph_range.ts';
 import {FontFaceManager} from './font_face_manager.ts';
 
-import TinySDF from '@mapbox/tiny-sdf';
+import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
 import {isCluster} from '../util/graphemes.ts';
 import {AlphaImage} from '../util/image.ts';
@@ -56,6 +56,20 @@ const defaultGenericFontFamily = 'sans-serif';
 const textureScale = 2;
 
 /**
+ * Builds the thing that rasterizes a glyph. Taken as a dependency so that a test can stand in for
+ * the canvas it would otherwise need to draw on.
+ */
+export type CreateRasterizer = (options: TinySDFOptions) => TinySDF;
+
+/**
+ * Fetches a range of server-side glyphs. Taken as a dependency so that a test can answer with a
+ * fixture rather than going to the network.
+ */
+export type LoadGlyphRange = typeof defaultLoadGlyphRange;
+
+const defaultCreateRasterizer: CreateRasterizer = (options) => new TinySDF(options);
+
+/**
  * How wide a grapheme cluster is allowed to be, as a multiple of the font size.
  *
  * TinySDF sizes its canvas for a single character and cuts off anything past the right edge, but a
@@ -71,17 +85,23 @@ export class GlyphManager {
     url: string;
     lang?: string;
     fontFaceManager: FontFaceManager;
+    loadGlyphRange: LoadGlyphRange;
+    createRasterizer: CreateRasterizer;
 
-    // exposed as statistics to enable stubbing in unit tests
-    static loadGlyphRange: typeof loadGlyphRange = loadGlyphRange;
-    static TinySDF: typeof TinySDF = TinySDF;
-
-    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false, lang?: string) {
+    constructor(
+        requestManager: RequestManager,
+        localIdeographFontFamily?: string | false,
+        lang?: string,
+        loadGlyphRange: LoadGlyphRange = defaultLoadGlyphRange,
+        createRasterizer: CreateRasterizer = defaultCreateRasterizer
+    ) {
         this.requestManager = requestManager;
         this.localIdeographFontFamily = localIdeographFontFamily;
         this.entries = {};
         this.lang = lang;
         this.fontFaceManager = new FontFaceManager(requestManager);
+        this.loadGlyphRange = loadGlyphRange;
+        this.createRasterizer = createRasterizer;
     }
 
     setURL(url?: string | null): void {
@@ -148,23 +168,18 @@ export class GlyphManager {
         }
 
         const codePoint = id.codePointAt(0);
+        const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
+            await this.fontFaceManager.getFontFamily(stack, codePoint) :
+            null;
 
-        if (isCluster(id)) {
-            const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
-                await this.fontFaceManager.getFontFamily(stack, codePoint) :
-                null;
-            glyph = entry.glyphs[id] = fontFaceFamily ?
-                await this._drawGlyph(entry, stack, id, fontFaceFamily) :
-                null;
+        if (fontFaceFamily) {
+            glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
             return {stack, id, glyph};
         }
 
-        if (this.fontFaceManager.hasFontFaces()) {
-            const fontFaceFamily = await this.fontFaceManager.getFontFamily(stack, codePoint);
-            if (fontFaceFamily) {
-                glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
-                return {stack, id, glyph};
-            }
+        if (isCluster(id)) {
+            glyph = entry.glyphs[id] = null;
+            return {stack, id, glyph};
         }
 
         // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
@@ -193,7 +208,7 @@ export class GlyphManager {
         }
 
         // Start downloading this range unless we’re currently downloading it.
-        entry.requests[range] ||= GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
+        entry.requests[range] ||= this.loadGlyphRange(stack, range, this.url, this.requestManager);
 
         try {
             // Get the response and cache the glyphs from it.
@@ -279,26 +294,27 @@ export class GlyphManager {
      *
      * A font file carries its own weight and style, so neither is sniffed out of the family name --
      * doing so would ask the browser to synthesize a second helping of both.
+     *
+     * Where no font file covers the grapheme, the CJK fallback font named by the `localIdeographFontFamily`
+     * map option takes precedence over the last resort fontstack in the style specification.
      */
     _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<TinySDF> {
         if (fontFaceFamily) {
-            if (isCluster(id)) {
-                entry.clusterTinySDFs ??= {};
-                entry.clusterTinySDFs[fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false, clusterEmsWide);
-                return entry.clusterTinySDFs[fontFaceFamily];
-            }
-            entry.fontFaceTinySDFs ??= {};
-            entry.fontFaceTinySDFs[fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false);
-            return entry.fontFaceTinySDFs[fontFaceFamily];
+            const cluster = isCluster(id);
+            const cache = cluster ? 'clusterTinySDFs' : 'fontFaceTinySDFs';
+
+            entry[cache] ??= {};
+            entry[cache][fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false, cluster ? clusterEmsWide : 1);
+            return entry[cache][fontFaceFamily];
         }
 
-        // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
-        const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id.codePointAt(0));
+        const usesLocalIdeographFontFamily = stack === defaultStack &&
+            this.localIdeographFontFamily !== '' &&
+            this._charUsesLocalIdeographFontFamily(id.codePointAt(0));
+        const cache = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
 
-        // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
-        const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
-        entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-        return entry[tinySDFKey];
+        entry[cache] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
+        return entry[cache];
     }
 
     /**
@@ -333,7 +349,7 @@ export class GlyphManager {
         }
 
         const buffer = 3 * textureScale;
-        const tinySDF = new GlyphManager.TinySDF({
+        const tinySDF = this.createRasterizer({
             fontSize,
             buffer: Math.max(buffer, Math.ceil(fontSize * (emsWide - 1) / 4)),
             radius: 8 * textureScale,

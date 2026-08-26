@@ -95,6 +95,13 @@ async function loadFontFile(url: string, requestManager: RequestManager): Promis
 }
 
 /**
+ * Whether the style lets this file cover the given codepoint.
+ */
+function covers(face: DeclaredFontFace, codePoint: number): boolean {
+    return face.ranges.some(({start, end}) => codePoint >= start && codePoint <= end);
+}
+
+/**
  * Keeps track of the font files a style declares in its
  * [`font-faces`](https://maplibre.org/maplibre-style-spec/root/#font-faces) property, and hands the
  * {@link GlyphManager} the CSS family to draw a given codepoint with.
@@ -119,12 +126,12 @@ export class FontFaceManager {
     /**
      * Everything handed to `document.fonts`, so that it can all be handed back on destroy.
      */
-    _registered: FontFace[];
+    _registered: Set<FontFace>;
 
     constructor(requestManager: RequestManager) {
         this.requestManager = requestManager;
         this._faces = {};
-        this._registered = [];
+        this._registered = new Set();
     }
 
     /**
@@ -166,41 +173,46 @@ export class FontFaceManager {
     async getFontFamily(fontStack: string, codePoint: number): Promise<string | null> {
         for (const fontName of fontStack.split(',')) {
             for (const face of this._faces[fontName.trim()] ?? []) {
-                if (!face.ranges.some(({start, end}) => codePoint >= start && codePoint <= end)) {
-                    continue;
-                }
+                if (!covers(face, codePoint)) continue;
+
                 face.loaded ??= this._loadFontFace(face);
-                if (await face.loaded) {
-                    return face.family;
-                }
+                if (await face.loaded) return face.family;
             }
         }
         return null;
     }
 
+    /**
+     * Turns one declaration into a face to draw with, or `null` if there is nothing usable in it.
+     *
+     * A bare URL is the same as a face that names no `unicode-range`: it covers every codepoint.
+     */
     _declareFontFace(fontName: string, declaration: string | MLFontFace): DeclaredFontFace | null {
-        const url = typeof declaration === 'string' ? declaration : declaration?.url;
-        if (typeof url !== 'string') {
+        const face: MLFontFace = typeof declaration === 'string' ? {url: declaration} : declaration;
+
+        if (typeof face?.url !== 'string') {
             warnOnce(`Ignoring the font face declared for "${fontName}": it has no URL.`);
             return null;
         }
 
-        const unicodeRange = typeof declaration === 'string' ? undefined : declaration['unicode-range'];
-        let ranges = [DEFAULT_UNICODE_RANGE];
-        if (unicodeRange?.length) {
-            ranges = [];
-            for (const entry of unicodeRange) {
-                const range = parseUnicodeRange(entry);
-                if (range) {
-                    ranges.push(range);
-                } else {
-                    warnOnce(`Ignoring the unicode range "${entry}" of the font face at ${url}: it is not a valid range.`);
-                }
-            }
-            if (ranges.length === 0) return null;
+        const family = `maplibre-gl-font-face-${nextFamilyId++}`;
+        const unicodeRange = face['unicode-range'];
+        if (!unicodeRange?.length) {
+            return {url: face.url, ranges: [DEFAULT_UNICODE_RANGE], family};
         }
 
-        return {url, ranges, family: `maplibre-gl-font-face-${nextFamilyId++}`};
+        const ranges: UnicodeRange[] = [];
+        for (const entry of unicodeRange) {
+            const range = parseUnicodeRange(entry);
+            if (!range) {
+                warnOnce(`Ignoring the unicode range "${entry}" of the font face at ${face.url}: it is not a valid range.`);
+                continue;
+            }
+            ranges.push(range);
+        }
+        if (!ranges.length) return null;
+
+        return {url: face.url, ranges, family};
     }
 
     /**
@@ -221,7 +233,7 @@ export class FontFaceManager {
         try {
             fontFace = new FontFace(face.family, await loadFontFile(face.url, this.requestManager));
             document.fonts.add(fontFace);
-            this._registered.push(fontFace);
+            this._registered.add(fontFace);
             await fontFace.load();
             return true;
         } catch (e) {
@@ -233,15 +245,14 @@ export class FontFaceManager {
 
     _unregister(fontFace: FontFace): void {
         document.fonts?.delete(fontFace);
-        const index = this._registered.indexOf(fontFace);
-        if (index !== -1) this._registered.splice(index, 1);
+        this._registered.delete(fontFace);
     }
 
     _unregisterAll(): void {
         for (const fontFace of this._registered) {
             document.fonts?.delete(fontFace);
         }
-        this._registered = [];
+        this._registered.clear();
     }
 
     destroy(): void {

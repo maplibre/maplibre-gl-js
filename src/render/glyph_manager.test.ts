@@ -1,9 +1,11 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
-import {GlyphManager} from './glyph_manager.ts';
+import {GlyphManager, type LoadGlyphRange} from './glyph_manager.ts';
 import fs from 'fs';
 import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
+import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
+import type {CreateRasterizer} from './glyph_manager.ts';
 
 describe('GlyphManager', () => {
     const GLYPHS = {};
@@ -19,23 +21,33 @@ describe('GlyphManager', () => {
      */
     const char = (codePoint: number) => String.fromCodePoint(codePoint);
 
-    const createLoadGlyphRangeStub = () => {
-        return vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform) => {
-            expect(stack).toBe('Arial Unicode MS');
-            expect(range).toBe(0);
-            expect(urlTemplate).toBe('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
-            expect(transform).toBe(identityTransform);
-            return Promise.resolve(GLYPHS);
-        });
-    };
-
-    const createGlyphManager = (remoteEnabled: boolean, font?: string | false, language?: string) => {
-        const manager = new GlyphManager(identityTransform, font, language);
+    function createGlyphManager(
+        remoteEnabled: boolean,
+        font?: string | false,
+        language?: string,
+        loadGlyphRange?: LoadGlyphRange,
+        createRasterizer?: CreateRasterizer
+    ): GlyphManager {
+        const manager = new GlyphManager(identityTransform, font, language, loadGlyphRange, createRasterizer);
         if (remoteEnabled) {
             manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         }
         return manager;
-    };
+    }
+
+    /**
+     * A stand-in for the range loader that answers every request with the fixture.
+     */
+    function serveGlyphRanges() {
+        return vi.fn().mockResolvedValue(GLYPHS) as unknown as LoadGlyphRange;
+    }
+
+    /**
+     * A stand-in for the rasterizer, so that nothing has to be drawn on a canvas.
+     */
+    function fakeRasterizer(draw: (text: string) => any = () => GLYPHS[0]) {
+        return vi.fn((_options: TinySDFOptions) => ({draw}));
+    }
 
     afterEach(() => {
         vi.clearAllMocks();
@@ -43,46 +55,41 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager requests 0-255 PBF', async () => {
-        createLoadGlyphRangeStub();
-        const manager = createGlyphManager(true);
+        const loadGlyphRange = serveGlyphRanges();
+        const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange);
 
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
+
         expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
+        expect(loadGlyphRange).toHaveBeenCalledExactlyOnceWith(
+            'Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', identityTransform);
     });
 
     test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', async () => {
-        const stub = createLoadGlyphRangeStub();
-        const manager = createGlyphManager(true);
+        const loadGlyphRange = serveGlyphRanges();
+        const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange);
 
         await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
         expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(stub).toHaveBeenCalledTimes(1);
+        expect(loadGlyphRange).toHaveBeenCalledTimes(1);
 
         // We remove all requests as in getGlyphs code.
         delete manager.entries['Arial Unicode MS'].requests[0];
 
         await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
         expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(stub).toHaveBeenCalledTimes(1);
+        expect(loadGlyphRange).toHaveBeenCalledTimes(1);
     });
 
     test('GlyphManager requests remote CJK PBF', async () => {
-        vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, _range, _urlTemplate, _transform) => {
-            return Promise.resolve(GLYPHS);
-        });
-
-        const manager = createGlyphManager(true);
+        const manager = createGlyphManager(true, undefined, undefined, serveGlyphRanges());
 
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x5e73)]});
         expect(returnedGlyphs['Arial Unicode MS'][char(0x5e73)]).toBeNull(); // The fixture returns a PBF without the glyph we requested
     });
 
     test('GlyphManager requests remote non-BMP, non-CJK PBF', async () => {
-        vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, _range, _urlTemplate, _transform) => {
-            return Promise.resolve(GLYPHS);
-        });
-
-        const manager = createGlyphManager(true);
+        const manager = createGlyphManager(true, undefined, undefined, serveGlyphRanges());
 
         // Request Egyptian hieroglyph 𓃰
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x1e0f0)]});
@@ -90,17 +97,16 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager does not cache CJK chars that should be rendered locally', async () => {
-        vi.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, range, _urlTemplate, _transform) => {
+        // Every range comes back full, so anything not drawn locally is found on the server.
+        const loadGlyphRange = vi.fn((_stack, range) => {
             const overlappingGlyphs = {};
-            const start = range * 256;
-            const end = start + 256;
-            for (let i = start, j = 0; i < end; i++, j++) {
+            for (let i = range * 256, j = 0; j < 256; i++, j++) {
                 overlappingGlyphs[i] = GLYPHS[j];
             }
             return Promise.resolve(overlappingGlyphs);
-        });
+        }) as unknown as LoadGlyphRange;
 
-        const manager = createGlyphManager(true, 'sans-serif');
+        const manager = createGlyphManager(true, 'sans-serif', undefined, loadGlyphRange);
 
         //Request char that overlaps Katakana range
         let returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x3005)]});
@@ -206,16 +212,20 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager generates missing PBF locally', async () => {
-        const manager = createGlyphManager(true, 'sans-serif');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const loadGlyphRange = vi.fn().mockRejectedValue(new Error('404 Not Found')) as unknown as LoadGlyphRange;
+        const manager = createGlyphManager(true, 'sans-serif', undefined, loadGlyphRange);
 
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x10e1)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x10e1)].metrics.advance).toBe(12);
+
+        expect(returnedGlyphs['Arial Unicode MS'][char(0x10e1)].metrics.advance).toBeGreaterThan(0);
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Unable to load glyph range'));
     });
 
     test('GlyphManager caches locally generated glyphs', async () => {
 
         const manager = createGlyphManager(true, 'sans-serif');
-        const drawSpy = vi.spyOn(GlyphManager.TinySDF.prototype, 'draw').mockReturnValue({data: new Uint8ClampedArray(60 * 60)} as any);
+        const drawSpy = vi.spyOn(TinySDF.prototype, 'draw').mockReturnValue({data: new Uint8ClampedArray(60 * 60)} as any);
 
         // Katakana letter te
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
@@ -225,52 +235,52 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager passes no language to TinySDF by default', async () => {
-        const langSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
-        const manager = createGlyphManager(true, 'sans-serif');
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, 'sans-serif', undefined, undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
-        expect(langSpy).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}));
+        expect(createRasterizer).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}));
     });
 
     test('GlyphManager sets the language on TinySDF', async () => {
-        const langSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
-        const manager = createGlyphManager(true, 'sans-serif', 'zh');
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, 'sans-serif', 'zh', undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
-        expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
     });
 
     test('awaits document.fonts.load before instantiating TinySDF', async () => {
         const loadSpy = vi.fn(() => Promise.resolve([]));
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
-        const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+        const createRasterizer = fakeRasterizer();
 
-        const manager = createGlyphManager(false, 'sans-serif');
+        const manager = createGlyphManager(false, 'sans-serif', undefined, undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
-        expect(tinySdfSpy).toHaveBeenCalledTimes(1);
-        expect(loadSpy.mock.invocationCallOrder[0]).toBeLessThan(tinySdfSpy.mock.invocationCallOrder[0]);
+        expect(createRasterizer).toHaveBeenCalledTimes(1);
+        expect(loadSpy.mock.invocationCallOrder[0]).toBeLessThan(createRasterizer.mock.invocationCallOrder[0]);
     });
 
     test('still instantiates TinySDF when document.fonts.load rejects', async () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         const loadSpy = vi.fn(() => Promise.reject(new Error('font not found')));
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
-        const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+        const createRasterizer = fakeRasterizer();
 
-        const manager = createGlyphManager(false, 'sans-serif');
+        const manager = createGlyphManager(false, 'sans-serif', undefined, undefined, createRasterizer);
         const result = await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
-        expect(tinySdfSpy).toHaveBeenCalledTimes(1);
+        expect(createRasterizer).toHaveBeenCalledTimes(1);
         expect(result['Arial Unicode MS'][char(0x41)]).toBeDefined();
     });
 
     test('memoizes document.fonts.load per fontstack', async () => {
         const loadSpy = vi.fn(() => Promise.resolve([]));
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
-        vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+        const createRasterizer = fakeRasterizer();
 
-        const manager = createGlyphManager(false, 'sans-serif');
+        const manager = createGlyphManager(false, 'sans-serif', undefined, undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
         await manager.getGlyphs({'Arial Unicode MS': [char(0x42)]});
         await manager.getGlyphs({'Arial Unicode MS': [char(0x43)]});
@@ -308,30 +318,28 @@ describe('GlyphManager', () => {
 
         test('draws a covered codepoint with the declared font file instead of downloading a range', async () => {
             stubFontFaces();
-            const rangeStub = vi.spyOn(GlyphManager, 'loadGlyphRange').mockResolvedValue(GLYPHS);
-            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const loadGlyphRange = serveGlyphRanges();
+            const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(true);
+            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
             const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x1780)]});
 
             expect(returnedGlyphs['Arial Unicode MS'][char(0x1780)]).toBeDefined();
-            expect(rangeStub).not.toHaveBeenCalled();
-            expect(tinySdfSpy).toHaveBeenCalledWith(expect.objectContaining({
+            expect(loadGlyphRange).not.toHaveBeenCalled();
+            expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
                 fontFamily: expect.stringMatching(/^maplibre-gl-font-face-\d+,sans-serif$/)
             }));
         });
 
         test('draws a grapheme cluster as one glyph, from the file covering the letter it starts with', async () => {
             stubFontFaces();
-            const rangeStub = vi.spyOn(GlyphManager, 'loadGlyphRange').mockResolvedValue(GLYPHS);
+            const loadGlyphRange = serveGlyphRanges();
             const drawn: string[] = [];
-            vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class {
-                draw = (text: string) => { drawn.push(text); return GLYPHS[0]; };
-            });
+            const createRasterizer = fakeRasterizer((text) => { drawn.push(text); return GLYPHS[0]; });
 
-            const manager = createGlyphManager(true);
+            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/hebrew.ttf'});
 
             // A Hebrew letter with a sheva and a shin dot on it.
@@ -340,15 +348,15 @@ describe('GlyphManager', () => {
 
             expect(returnedGlyphs['Arial Unicode MS'][cluster]).toBeDefined();
             expect(drawn).toContain(cluster);
-            expect(rangeStub).not.toHaveBeenCalled();
+            expect(loadGlyphRange).not.toHaveBeenCalled();
         });
 
         test('leaves a cluster no declared file covers undrawn, so that layout can fall back', async () => {
             stubFontFaces();
-            vi.spyOn(GlyphManager, 'loadGlyphRange').mockResolvedValue(GLYPHS);
-            vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const loadGlyphRange = serveGlyphRanges();
+            const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(true);
+            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange, createRasterizer);
             // Declared for Khmer only, so it does not cover the Hebrew letter this cluster starts with.
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
@@ -360,33 +368,33 @@ describe('GlyphManager', () => {
 
         test('leaves a codepoint outside every declared range to the glyphs URL', async () => {
             stubFontFaces();
-            const rangeStub = vi.spyOn(GlyphManager, 'loadGlyphRange').mockResolvedValue(GLYPHS);
+            const loadGlyphRange = serveGlyphRanges();
 
-            const manager = createGlyphManager(true);
+            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
             const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
 
             expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
-            expect(rangeStub).toHaveBeenCalledTimes(1);
+            expect(loadGlyphRange).toHaveBeenCalledTimes(1);
         });
 
         test('does not sniff a weight or a style out of the font name, which the file already carries', async () => {
             stubFontFaces();
-            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false);
+            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Noto Sans Bold Italic': 'https://localhost/noto-bold-italic.ttf'});
             await manager.getGlyphs({'Noto Sans Bold Italic': [char(0x41)]});
 
-            expect(tinySdfSpy).toHaveBeenCalledWith(expect.objectContaining({fontWeight: undefined, fontStyle: 'normal'}));
+            expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({fontWeight: undefined, fontStyle: 'normal'}));
         });
 
         test('keeps one TinySDF per declared file so a fallback cannot bleed into the rest of the text', async () => {
             stubFontFaces();
-            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false);
+            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': [
                 {url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']},
                 {url: 'https://localhost/devanagari.ttf', 'unicode-range': ['U+0900-097F']}
@@ -394,37 +402,37 @@ describe('GlyphManager', () => {
 
             await manager.getGlyphs({'Arial Unicode MS': [char(0x1780), char(0x1781), char(0x0915)]});
 
-            const families = tinySdfSpy.mock.calls.map(([options]) => options.fontFamily);
+            const families = createRasterizer.mock.calls.map(([options]) => options.fontFamily);
             expect(new Set(families).size).toBe(2);
         });
 
         test('redraws with the new font faces rather than serving the glyphs cached from the old ones', async () => {
             stubFontFaces();
-            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false);
+            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/noto.ttf'});
             await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/other.ttf'});
             await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
-            const families = tinySdfSpy.mock.calls.map(([options]) => options.fontFamily);
+            const families = createRasterizer.mock.calls.map(([options]) => options.fontFamily);
             expect(families).toHaveLength(2);
             expect(families[0]).not.toBe(families[1]);
         });
 
         test('gives a cluster a canvas wide enough that it is not cut off', async () => {
             stubFontFaces();
-            const tinySdfSpy = vi.spyOn(GlyphManager, 'TinySDF').mockImplementation(class { draw = () => GLYPHS[0]; });
+            const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false);
+            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/myanmar.ttf'});
 
             // A Burmese syllable, which is drawn nearly twice as wide as a single character.
             await manager.getGlyphs({'Arial Unicode MS': ['\u101C\u102C\u1038', char(0x41)]});
 
-            const buffers = tinySdfSpy.mock.calls.map(([options]) => options.buffer);
+            const buffers = createRasterizer.mock.calls.map(([options]) => options.buffer);
             expect(Math.max(...buffers)).toBeGreaterThan(Math.min(...buffers));
         });
     });

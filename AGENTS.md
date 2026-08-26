@@ -46,6 +46,42 @@ grapheme cluster is the unit of layout belongs on the function that produces the
 reader meets the code it explains — if a part fits nowhere, it was background rather than
 documentation, and the PR description is where it goes.
 
+## Nesting
+
+**Keep indentation shallow.** Every level a reader descends is another condition they have to hold
+in their head to know whether the line in front of them runs at all. Three levels inside a function
+is usually the point to stop and restructure.
+
+Two moves cover most of it. **Hoist what does not vary** — a condition that depends on none of the
+loop variables is computed once, above the loop, under a name:
+
+```ts
+const needsVerticalForms = (textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode;
+
+for (const grapheme of toGraphemes(text)) {
+```
+
+**Turn a wrapping `if` into a guard.** `if (!ready) continue;` in a loop, or an early `return` in a
+function, puts the exceptional case out of the way and lets the work that matters sit at the
+outer level instead of inside a block:
+
+```ts
+for (const char of grapheme) {
+    stack[char] = true;
+    if (!needsVerticalForms) continue;
+
+    const verticalChar = verticalizedCharacterMap[char];
+    if (verticalChar) stack[verticalChar] = true;
+}
+```
+
+Extracting a named function is the third move, and the right one when a block has grown its own
+subject rather than merely its own indentation.
+
+Flattening must not change behaviour. Splitting one pass into two reorders the work, which is fine
+for a pure computation and not fine where something downstream can observe the order — insertion
+order into an object used as a set, for one. If you cannot see that it is safe, leave it nested.
+
 ## Types
 
 **Spell a map as `Record<K, V>`, not as an index signature.** `Record<string, Promise<TinySDF>>`
