@@ -313,13 +313,18 @@ async function requiresComplexTextShaping(): Promise<string> {
     return set.toString();
 }
 
+/**
+ * Returns a character class matching the characters that join the grapheme cluster they end to the
+ * one after it.
+ *
+ * An invisible stacker -- a virama and its equivalents in other scripts -- joins the consonant
+ * before it to the one after it, and a zero-width joiner does the same for emoji. `Intl.Segmenter`
+ * puts a cluster boundary after both, so the two halves have to be put back together.
+ */
 async function joinsToTheFollowingGrapheme(): Promise<string> {
-    // An invisible stacker -- a virama and its equivalents in other scripts -- joins the consonant
-    // before it to the one after it, and a zero-width joiner does the same for emoji. `Intl.Segmenter`
-    // puts a cluster boundary after both, so the two halves have to be put back together.
     const set = regenerate.default();
     set.add((await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Invisible_Stacker/code-points.js`)).default);
-    set.add(0x200d); // zero-width joiner
+    set.add(0x200d);
 
     return set.toString();
 }
