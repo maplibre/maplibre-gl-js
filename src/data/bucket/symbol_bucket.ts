@@ -429,19 +429,17 @@ export class SymbolBucket implements Bucket {
         allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean): void {
 
+        const needsVerticalForms = (textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode;
+
         for (const grapheme of toGraphemes(text)) {
-            if (isCluster(grapheme)) {
-                stack[grapheme] = true;
-            }
+            if (isCluster(grapheme)) stack[grapheme] = true;
 
             for (const char of grapheme) {
                 stack[char] = true;
-                if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
-                    const verticalChar = verticalizedCharacterMap[char];
-                    if (verticalChar) {
-                        stack[verticalChar] = true;
-                    }
-                }
+                if (!needsVerticalForms) continue;
+
+                const verticalChar = verticalizedCharacterMap[char];
+                if (verticalChar) stack[verticalChar] = true;
             }
         }
     }
