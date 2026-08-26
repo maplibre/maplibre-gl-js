@@ -23,12 +23,8 @@ type Entry = {
      * that no font file covers.
      */
     glyphs: Record<string, StyleGlyph | null>;
-    requests: {
-        [range: number]: Promise<{[_: number]: StyleGlyph | null}>;
-    };
-    ranges: {
-        [range: number]: boolean | null;
-    };
+    requests: Record<number, Promise<{[_: number]: StyleGlyph | null}>>;
+    ranges: Record<number, boolean | null>;
     tinySDF?: Promise<TinySDF>;
     ideographTinySDF?: Promise<TinySDF>;
     /**
@@ -77,7 +73,7 @@ const clusterEmsWide = 3;
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string | false;
-    entries: {[stack: string]: Entry};
+    entries: Record<string, Entry>;
     url: string;
     lang?: string;
     fontFaceManager: FontFaceManager;
