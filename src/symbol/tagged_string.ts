@@ -42,6 +42,7 @@ const breakable: {
     [_: number]: boolean;
 } = {
     [0x0a]: true, // newline
+    [0x0d]: true, // carriage return, on its own or starting a CRLF cluster
     [0x20]: true, // space
     [0x26]: true, // ampersand
     [0x29]: true, // right parenthesis
@@ -115,10 +116,18 @@ function calculateBadness(lineWidth: number,
     return raggedness + Math.abs(penalty) * penalty;
 }
 
+/**
+ * Whether a grapheme cluster is entirely whitespace, and so can be trimmed off the end of a line.
+ */
+function isWhitespaceGrapheme(grapheme: string): boolean {
+    return /^\s+$/u.test(grapheme);
+}
+
 function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableIdeographicBreak: boolean) {
     let penalty = 0;
-    // Force break on newline
-    if (codePoint === 0x0a) {
+    // Force break on newline. A CRLF is one grapheme cluster, so what is seen here is its first
+    // codepoint, the carriage return.
+    if (codePoint === 0x0a || codePoint === 0x0d) {
         penalty -= 10000;
     }
     // Penalize breaks between characters that allow ideographic breaking because
@@ -249,13 +258,17 @@ export class TaggedString {
     }
 
     trim(): void {
-        const leadingWhitespace = this.text.match(/^\s*/);
-        const leadingLength = leadingWhitespace ? leadingWhitespace[0].length : 0;
-        // Require a preceding non-space character to avoid overlapping leading and trailing matches.
-        const trailingWhitespace = this.text.match(/\S\s*$/);
-        const trailingLength = trailingWhitespace ? trailingWhitespace[0].length - 1 : 0;
-        this.text = this.text.substring(leadingLength, this.text.length - trailingLength);
-        this.sectionIndex = this.sectionIndex.slice(leadingLength, this.sectionIndex.length - trailingLength);
+        // Counted in grapheme clusters rather than code units, because that is what `sectionIndex`
+        // is indexed by. A CRLF is one cluster of two code units, so counting code units here would
+        // take one section too many off the end and leave the sections short of the text.
+        const graphemes = this.graphemes();
+        let start = 0;
+        while (start < graphemes.length && isWhitespaceGrapheme(graphemes[start])) start++;
+        let end = graphemes.length;
+        while (end > start && isWhitespaceGrapheme(graphemes[end - 1])) end--;
+
+        this.text = graphemes.slice(start, end).join('');
+        this.sectionIndex = this.sectionIndex.slice(start, end);
         this._graphemes = null;
     }
 

@@ -38,6 +38,15 @@ describe('TaggedString', () => {
             expect(tagged.text).toBe('茹𦨭');
             expect(tagged.sectionIndex).toHaveLength(2);
         });
+
+        test('counts a CRLF as the single grapheme cluster it is', () => {
+            // Two code units, one cluster: taking two sections off for it would leave the sections
+            // short of the text, and every later lookup into them undefined.
+            const tagged = new TaggedString('\r\nabc\r\n', [textSection], Array(5).fill(0));
+            tagged.trim();
+            expect(tagged.text).toBe('abc');
+            expect(tagged.sectionIndex).toHaveLength(tagged.length());
+        });
     });
 
     describe('substring', () => {

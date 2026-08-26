@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <title>Style labels with font faces</title>
-    <meta property="og:description" content="Point your style at the font files used to draw its text labels. The font-faces property names a font file per text-font name, optionally narrowed to a unicode-range, so a style can cover scripts its glyphs server does not. Anything the browser can render text with may be used, and it is understood by Android and iOS as well. Codepoints no font face covers still come from the glyphs URL.">
+    <meta property="og:description" content="Point your style at the font files used to draw its text labels. The font-faces property names a font file per text-font name, optionally narrowed to a unicode-range, so a style can cover scripts its glyphs server does not. Anything the browser can render text with may be used, and it is understood by Android and iOS as well. Here Georgian and Armenian labels come from font files while the Latin ones still come from the glyphs URL.">
     <meta property="og:category" content="Labels & Fonts" />
     <meta property="og:order" content="3" />
     <meta property="og:created" content="2026-08-23" />
-    <!-- cspell:ignore አዲስ አበባ አስመራ თბილისი ბათუმი -->
+    <!-- cspell:ignore თბილისი ბათუმი Երևան Գյումրի -->
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css'>
@@ -23,23 +23,23 @@
 
     const map = new maplibregl.Map({
         container: 'map',
-        zoom: 3.5,
-        center: [40, 26],
+        zoom: 5.8,
+        center: [42.3, 40.95],
         style: {
             "version": 8,
-            // Latin labels are drawn from this glyph server, which has no Ethiopic or Georgian.
+            // Latin labels are drawn from this glyph server, which has no Georgian or Armenian.
             "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
             // ...so the style points at a font file for each of those two scripts instead. Both are
             // listed under the same name the layer asks for in its `text-font`.
             "font-faces": {
                 "Noto Sans Regular": [
                     {
-                        "url": "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansEthiopic/hinted/ttf/NotoSansEthiopic-Regular.ttf",
-                        "unicode-range": ["U+1200-137F"]
-                    },
-                    {
                         "url": "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansGeorgian/hinted/ttf/NotoSansGeorgian-Regular.ttf",
                         "unicode-range": ["U+10A0-10FF", "U+1C90-1CBF"]
+                    },
+                    {
+                        "url": "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansArmenian/hinted/ttf/NotoSansArmenian-Regular.ttf",
+                        "unicode-range": ["U+0530-058F"]
                     }
                 ]
             },
@@ -58,16 +58,6 @@
                         "features": [
                             {
                                 "type": "Feature",
-                                "properties": {"name": "አዲስ አበባ"},
-                                "geometry": {"type": "Point", "coordinates": [38.7578, 9.0192]}
-                            },
-                            {
-                                "type": "Feature",
-                                "properties": {"name": "አስመራ"},
-                                "geometry": {"type": "Point", "coordinates": [38.9251, 15.3229]}
-                            },
-                            {
-                                "type": "Feature",
                                 "properties": {"name": "თბილისი"},
                                 "geometry": {"type": "Point", "coordinates": [44.8271, 41.7151]}
                             },
@@ -78,13 +68,23 @@
                             },
                             {
                                 "type": "Feature",
-                                "properties": {"name": "Nicosia"},
-                                "geometry": {"type": "Point", "coordinates": [33.3823, 35.1856]}
+                                "properties": {"name": "Երևան"},
+                                "geometry": {"type": "Point", "coordinates": [44.5152, 40.1872]}
                             },
                             {
                                 "type": "Feature",
-                                "properties": {"name": "Alexandria"},
-                                "geometry": {"type": "Point", "coordinates": [29.9187, 31.2001]}
+                                "properties": {"name": "Գյումրի"},
+                                "geometry": {"type": "Point", "coordinates": [43.8453, 40.7894]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "Trabzon"},
+                                "geometry": {"type": "Point", "coordinates": [39.7168, 41.0027]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "Erzurum"},
+                                "geometry": {"type": "Point", "coordinates": [41.2769, 39.9043]}
                             }
                         ]
                     }
