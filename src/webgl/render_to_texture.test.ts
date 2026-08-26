@@ -79,7 +79,7 @@ describe('render to texture', () => {
             terrainDepth: vi.fn(),
         }
     } as any as Painter;
-    const map = {painter} as Map;
+    const map = {painter, triggerRepaint: vi.fn()} as any as Map;
 
     const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), 512);
     const tileManager = {
@@ -125,6 +125,7 @@ describe('render to texture', () => {
     beforeEach(() => {
         tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
+        tile.rttBakeZoom = undefined;
     });
 
     test('should call painter with overlay tiles for terrain tile', () => {
@@ -262,6 +263,50 @@ describe('render to texture', () => {
 
         expect(acquireSpy).not.toHaveBeenCalled();
         expect(tile.getRTT(0)).toBe(cached);
+    });
+
+    test('renderLayer records the zoom a texture was baked at', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(tile.rttBakeZoom).toBe(painter.transform.zoom);
+    });
+
+    test('re-bakes a texture baked at another zoom once the zoom settles', () => {
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
+        const obj = {texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttFingerprint = {maine: '923#0'};
+        tile.rttObjects[0] = obj;
+        tile.rttBakeZoom = 10;
+
+        vi.mocked(map.triggerRepaint).mockClear();
+        rtt.prepareForRender(style, 11);
+        // the zoom is still changing: keep the texture, but request the settling frame
+        expect(tile.getRTT(0)).toBe(obj);
+        expect(map.triggerRepaint).toHaveBeenCalled();
+
+        rtt.prepareForRender(style, 11);
+        // the zoom has settled: release, so this frame re-bakes at the on-screen zoom
+        expect(tile.getRTT(0)).toBeUndefined();
+    });
+
+    test('keeps a texture baked at the current zoom', () => {
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
+        const obj = {texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttFingerprint = {maine: '923#0'};
+        tile.rttObjects[0] = obj;
+        tile.rttBakeZoom = 10;
+
+        vi.mocked(map.triggerRepaint).mockClear();
+        rtt.prepareForRender(style, 10);
+        rtt.prepareForRender(style, 10);
+
+        expect(tile.getRTT(0)).toBe(obj);
+        expect(map.triggerRepaint).not.toHaveBeenCalled();
     });
 
     test('prepare only queries sources rendered to texture', () => {

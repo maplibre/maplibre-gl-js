@@ -67,6 +67,10 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: string[];
+    /**
+     * the zoom of the previous prepareForRender call
+     */
+    _lastPrepareZoom: number;
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
@@ -125,6 +129,24 @@ export class RenderToTexture {
                 }
             }
         }
+
+        // Textures bake zoom-dependent style properties at the zoom of their bake
+        // frame, so a bake from mid-animation goes stale the moment the camera rests
+        // at a different zoom. Re-bake once the zoom has settled; while it is still
+        // changing, only request the follow-up frame that a finished animation would
+        // otherwise never schedule.
+        let staleBakeZoom = false;
+        for (const tile of this._renderableTiles) {
+            if (tile.rttObjects.length > 0 && tile.rttBakeZoom !== undefined && tile.rttBakeZoom !== zoom) {
+                if (this._lastPrepareZoom === zoom) {
+                    tile.releaseRTT(this.painter);
+                } else {
+                    staleBakeZoom = true;
+                }
+            }
+        }
+        if (staleBakeZoom) style.map.triggerRepaint();
+        this._lastPrepareZoom = zoom;
     }
 
     /**
@@ -177,6 +199,7 @@ export class RenderToTexture {
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
+                tile.rttBakeZoom = painter.transform.zoom;
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
