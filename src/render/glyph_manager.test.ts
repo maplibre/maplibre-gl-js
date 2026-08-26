@@ -1,19 +1,28 @@
-import {describe, afterEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
-import {GlyphManager, type LoadGlyphRange} from './glyph_manager.ts';
+import {GlyphManager} from './glyph_manager.ts';
 import fs from 'fs';
+import path from 'path';
 import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
+import {bufferToArrayBuffer} from '../util/test/util.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
 import type {CreateRasterizer} from './glyph_manager.ts';
 
 describe('GlyphManager', () => {
+    const pbf = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'));
     const GLYPHS = {};
-    for (const glyph of parseGlyphPbf(fs.readFileSync('./test/unit/assets/0-255.pbf'))) {
+    for (const glyph of parseGlyphPbf(pbf)) {
         GLYPHS[glyph.id] = glyph;
     }
 
     const identityTransform = new RequestManager();
+    let server: FakeServer;
+
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create({autoRespond: true, autoRespondAfter: 0});
+    });
 
     /**
      * Glyphs are asked for by grapheme cluster, and these tests are written in codepoints, so this
@@ -27,10 +36,9 @@ describe('GlyphManager', () => {
         remoteEnabled: boolean,
         font?: string | false,
         language?: string,
-        loadGlyphRange?: LoadGlyphRange,
         createRasterizer?: CreateRasterizer
     ): GlyphManager {
-        const manager = new GlyphManager(identityTransform, font, language, loadGlyphRange, createRasterizer);
+        const manager = new GlyphManager(identityTransform, font, language, createRasterizer);
         if (remoteEnabled) {
             manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         }
@@ -38,10 +46,20 @@ describe('GlyphManager', () => {
     }
 
     /**
-     * A stand-in for the range loader that answers every request with the fixture.
+     * Answers every glyph range request with the fixture, whichever range was asked for.
      */
     function serveGlyphRanges() {
-        return vi.fn().mockResolvedValue(GLYPHS) as unknown as LoadGlyphRange;
+        server.respondWith(/\.pbf$/, function (request) {
+            request.respond(200, undefined, bufferToArrayBuffer(pbf) as unknown as string);
+        });
+    }
+
+    /**
+     * The glyph range requests made so far, told apart from the font files a `font-faces` test also
+     * asks the server for.
+     */
+    function glyphRangeRequests() {
+        return server.requests.filter(request => request.url.endsWith('.pbf'));
     }
 
     /**
@@ -53,45 +71,50 @@ describe('GlyphManager', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+        server.restore();
         delete (document as any).fonts;
     });
 
     test('GlyphManager requests 0-255 PBF', async () => {
-        const loadGlyphRange = serveGlyphRanges();
-        const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange);
+        serveGlyphRanges();
+        const transformRequest = vi.fn((url: string) => ({url}));
+        const manager = new GlyphManager(new RequestManager(transformRequest));
+        manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
 
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
 
         expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
-        expect(loadGlyphRange).toHaveBeenCalledExactlyOnceWith(
-            'Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', identityTransform);
+        expect(transformRequest).toHaveBeenCalledExactlyOnceWith(
+            'https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
     });
 
     test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', async () => {
-        const loadGlyphRange = serveGlyphRanges();
-        const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange);
+        serveGlyphRanges();
+        const manager = createGlyphManager(true);
 
         await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
         expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(loadGlyphRange).toHaveBeenCalledTimes(1);
+        expect(glyphRangeRequests()).toHaveLength(1);
 
         // We remove all requests as in getGlyphs code.
         delete manager.entries['Arial Unicode MS'].requests[0];
 
         await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
         expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(loadGlyphRange).toHaveBeenCalledTimes(1);
+        expect(glyphRangeRequests()).toHaveLength(1);
     });
 
     test('GlyphManager requests remote CJK PBF', async () => {
-        const manager = createGlyphManager(true, undefined, undefined, serveGlyphRanges());
+        serveGlyphRanges();
+        const manager = createGlyphManager(true);
 
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x5e73)]});
         expect(returnedGlyphs['Arial Unicode MS'][char(0x5e73)]).toBeNull(); // The fixture returns a PBF without the glyph we requested
     });
 
     test('GlyphManager requests remote non-BMP, non-CJK PBF', async () => {
-        const manager = createGlyphManager(true, undefined, undefined, serveGlyphRanges());
+        serveGlyphRanges();
+        const manager = createGlyphManager(true);
 
         // Request Egyptian hieroglyph 𓃰
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x1e0f0)]});
@@ -99,16 +122,8 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager does not cache CJK chars that should be rendered locally', async () => {
-        // Every range comes back full, so anything not drawn locally is found on the server.
-        const loadGlyphRange = vi.fn((_stack, range) => {
-            const overlappingGlyphs = {};
-            for (let i = range * 256, j = 0; j < 256; i++, j++) {
-                overlappingGlyphs[i] = GLYPHS[j];
-            }
-            return Promise.resolve(overlappingGlyphs);
-        }) as unknown as LoadGlyphRange;
-
-        const manager = createGlyphManager(true, 'sans-serif', undefined, loadGlyphRange);
+        serveGlyphRanges();
+        const manager = createGlyphManager(true, 'sans-serif');
 
         //Request char that overlaps Katakana range
         let returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x3005)]});
@@ -215,8 +230,8 @@ describe('GlyphManager', () => {
 
     test('GlyphManager generates missing PBF locally', async () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const loadGlyphRange = vi.fn().mockRejectedValue(new Error('404 Not Found')) as unknown as LoadGlyphRange;
-        const manager = createGlyphManager(true, 'sans-serif', undefined, loadGlyphRange);
+        server.respondWith(function (request) { request.respond(404, undefined, 'Not Found'); });
+        const manager = createGlyphManager(true, 'sans-serif');
 
         const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x10e1)]});
 
@@ -238,14 +253,14 @@ describe('GlyphManager', () => {
 
     test('GlyphManager passes no language to TinySDF by default', async () => {
         const createRasterizer = fakeRasterizer();
-        const manager = createGlyphManager(true, 'sans-serif', undefined, undefined, createRasterizer);
+        const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
         expect(createRasterizer).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}));
     });
 
     test('GlyphManager sets the language on TinySDF', async () => {
         const createRasterizer = fakeRasterizer();
-        const manager = createGlyphManager(true, 'sans-serif', 'zh', undefined, createRasterizer);
+        const manager = createGlyphManager(true, 'sans-serif', 'zh', createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
         expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
     });
@@ -255,7 +270,7 @@ describe('GlyphManager', () => {
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         const createRasterizer = fakeRasterizer();
 
-        const manager = createGlyphManager(false, 'sans-serif', undefined, undefined, createRasterizer);
+        const manager = createGlyphManager(false, 'sans-serif', undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
@@ -269,7 +284,7 @@ describe('GlyphManager', () => {
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         const createRasterizer = fakeRasterizer();
 
-        const manager = createGlyphManager(false, 'sans-serif', undefined, undefined, createRasterizer);
+        const manager = createGlyphManager(false, 'sans-serif', undefined, createRasterizer);
         const result = await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
@@ -282,7 +297,7 @@ describe('GlyphManager', () => {
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         const createRasterizer = fakeRasterizer();
 
-        const manager = createGlyphManager(false, 'sans-serif', undefined, undefined, createRasterizer);
+        const manager = createGlyphManager(false, 'sans-serif', undefined, createRasterizer);
         await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
         await manager.getGlyphs({'Arial Unicode MS': [char(0x42)]});
         await manager.getGlyphs({'Arial Unicode MS': [char(0x43)]});
@@ -291,8 +306,6 @@ describe('GlyphManager', () => {
     });
 
     describe('font-faces', () => {
-        let server: FakeServer;
-
         /**
          * Puts a CSS Font Loading API and a font server in place that accept every file, so that a
          * declared font face is always available to draw with.
@@ -307,29 +320,25 @@ describe('GlyphManager', () => {
                 constructor(family: string) { this.family = family; }
                 load = () => Promise.resolve(this);
             };
-            global.fetch = null;
-            server = fakeServer.create({autoRespond: true, autoRespondAfter: 0});
-            server.respondWith(function (request) { request.respond(200, undefined, 'font file'); });
+            server.respondWith(/\.ttf$/, function (request) { request.respond(200, undefined, 'font file'); });
         }
 
         afterEach(() => {
             delete (globalThis as any).FontFace;
-            server?.restore();
-            server = undefined;
         });
 
         test('draws a covered codepoint with the declared font file instead of downloading a range', async () => {
             stubFontFaces();
-            const loadGlyphRange = serveGlyphRanges();
+            serveGlyphRanges();
             const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange, createRasterizer);
+            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
             const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x1780)]});
 
             expect(returnedGlyphs['Arial Unicode MS'][char(0x1780)]).toBeDefined();
-            expect(loadGlyphRange).not.toHaveBeenCalled();
+            expect(glyphRangeRequests()).toHaveLength(0);
             expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
                 fontFamily: expect.stringMatching(/^maplibre-gl-font-face-\d+,sans-serif$/)
             }));
@@ -337,11 +346,11 @@ describe('GlyphManager', () => {
 
         test('draws a grapheme cluster as one glyph, from the file covering the letter it starts with', async () => {
             stubFontFaces();
-            const loadGlyphRange = serveGlyphRanges();
+            serveGlyphRanges();
             const drawn: string[] = [];
             const createRasterizer = fakeRasterizer((text) => { drawn.push(text); return GLYPHS[0]; });
 
-            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange, createRasterizer);
+            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/hebrew.ttf'});
 
             // A Hebrew letter with a sheva and a shin dot on it.
@@ -350,15 +359,15 @@ describe('GlyphManager', () => {
 
             expect(returnedGlyphs['Arial Unicode MS'][cluster]).toBeDefined();
             expect(drawn).toContain(cluster);
-            expect(loadGlyphRange).not.toHaveBeenCalled();
+            expect(glyphRangeRequests()).toHaveLength(0);
         });
 
         test('leaves a cluster no declared file covers undrawn, so that layout can fall back', async () => {
             stubFontFaces();
-            const loadGlyphRange = serveGlyphRanges();
+            serveGlyphRanges();
             const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange, createRasterizer);
+            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             // Declared for Khmer only, so it does not cover the Hebrew letter this cluster starts with.
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
@@ -370,22 +379,22 @@ describe('GlyphManager', () => {
 
         test('leaves a codepoint outside every declared range to the glyphs URL', async () => {
             stubFontFaces();
-            const loadGlyphRange = serveGlyphRanges();
+            serveGlyphRanges();
 
-            const manager = createGlyphManager(true, undefined, undefined, loadGlyphRange);
+            const manager = createGlyphManager(true);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
             const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
 
             expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
-            expect(loadGlyphRange).toHaveBeenCalledTimes(1);
+            expect(glyphRangeRequests()).toHaveLength(1);
         });
 
         test('does not sniff a weight or a style out of the font name, which the file already carries', async () => {
             stubFontFaces();
             const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
+            const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Noto Sans Bold Italic': 'https://localhost/noto-bold-italic.ttf'});
             await manager.getGlyphs({'Noto Sans Bold Italic': [char(0x41)]});
 
@@ -396,7 +405,7 @@ describe('GlyphManager', () => {
             stubFontFaces();
             const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
+            const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': [
                 {url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']},
                 {url: 'https://localhost/devanagari.ttf', 'unicode-range': ['U+0900-097F']}
@@ -412,7 +421,7 @@ describe('GlyphManager', () => {
             stubFontFaces();
             const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
+            const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/noto.ttf'});
             await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
 
@@ -428,7 +437,7 @@ describe('GlyphManager', () => {
             stubFontFaces();
             const createRasterizer = fakeRasterizer();
 
-            const manager = createGlyphManager(false, undefined, undefined, undefined, createRasterizer);
+            const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/myanmar.ttf'});
 
             // A Burmese syllable, which is drawn nearly twice as wide as a single character.

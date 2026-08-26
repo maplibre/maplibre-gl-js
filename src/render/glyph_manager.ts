@@ -1,4 +1,3 @@
-import {loadGlyphRange as defaultLoadGlyphRange} from '../style/load_glyph_range.ts';
 import {FontFaceManager} from './font_face_manager.ts';
 
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
@@ -6,6 +5,9 @@ import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.
 import {isCluster} from '../util/graphemes.ts';
 import {AlphaImage} from '../util/image.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
+import {getArrayBuffer} from '../util/ajax.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
@@ -61,12 +63,6 @@ const textureScale = 2;
  */
 export type CreateRasterizer = (options: TinySDFOptions) => TinySDF;
 
-/**
- * Fetches a range of server-side glyphs. Taken as a dependency so that a test can answer with a
- * fixture rather than going to the network.
- */
-export type LoadGlyphRange = typeof defaultLoadGlyphRange;
-
 const defaultCreateRasterizer: CreateRasterizer = (options) => new TinySDF(options);
 
 /**
@@ -85,14 +81,12 @@ export class GlyphManager {
     url: string;
     lang?: string;
     fontFaceManager: FontFaceManager;
-    loadGlyphRange: LoadGlyphRange;
     createRasterizer: CreateRasterizer;
 
     constructor(
         requestManager: RequestManager,
         localIdeographFontFamily?: string | false,
         lang?: string,
-        loadGlyphRange: LoadGlyphRange = defaultLoadGlyphRange,
         createRasterizer: CreateRasterizer = defaultCreateRasterizer
     ) {
         this.requestManager = requestManager;
@@ -100,7 +94,6 @@ export class GlyphManager {
         this.entries = {};
         this.lang = lang;
         this.fontFaceManager = new FontFaceManager(requestManager);
-        this.loadGlyphRange = loadGlyphRange;
         this.createRasterizer = createRasterizer;
     }
 
@@ -208,7 +201,7 @@ export class GlyphManager {
         }
 
         // Start downloading this range unless we’re currently downloading it.
-        entry.requests[range] ||= this.loadGlyphRange(stack, range, this.url, this.requestManager);
+        entry.requests[range] ||= this._loadGlyphRange(stack, range);
 
         try {
             // Get the response and cache the glyphs from it.
@@ -224,6 +217,30 @@ export class GlyphManager {
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
         }
+    }
+
+    /**
+     * Downloads one range of 256 codepoints from the glyphs URL and parses the glyphs out of it.
+     */
+    async _loadGlyphRange(fontstack: string, range: number): Promise<Record<number, StyleGlyph | null>> {
+        const begin = range * 256;
+        const end = begin + 255;
+
+        const request = await this.requestManager.transformRequest(
+            this.url.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
+            ResourceType.Glyphs
+        );
+
+        const response = await getArrayBuffer(request, new AbortController());
+        if (!response?.data) {
+            throw new Error(`Could not load glyph range. range: ${range}, ${begin}-${end}`);
+        }
+
+        const glyphs = {};
+        for (const glyph of parseGlyphPbf(response.data)) {
+            glyphs[glyph.id] = glyph;
+        }
+        return glyphs;
     }
 
     _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error): void {
