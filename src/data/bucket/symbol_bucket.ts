@@ -424,7 +424,7 @@ export class SymbolBucket implements Bucket {
      */
     private calculateGlyphDependencies(
         text: string,
-        stack: {[_: string]: boolean},
+        stack: Record<string, boolean>,
         textAlongLine: boolean,
         allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean): void {
