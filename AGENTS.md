@@ -60,6 +60,24 @@ test is actually about inline.
 only be observed through internals, that is a sign the class is missing an accessor or the test is
 asserting on the wrong thing — assert on what a caller can see.
 
+**Fake the network with a fake server, not by mocking the request functions.** `nise`'s
+`fakeServer` is what the rest of the suite uses. Mocking `getArrayBuffer` or `getJSON` skips the
+request-building the code under test does — the URL it composed, the headers it set, the
+`transformRequest` it went through — which is usually the part worth asserting on.
+
+```ts
+let server: FakeServer;
+
+beforeEach(() => {
+    global.fetch = null;   // sends the request down the XHR path the fake server intercepts
+    server = fakeServer.create();
+});
+
+afterEach(() => {
+    server.restore();
+});
+```
+
 **Stub collaborators, never the unit under test.** Replacing a method on the class you are testing
 means the test no longer exercises the thing it names. Replace what that class *uses* — its
 dependencies, the network, the clock — and let the unit itself run.
