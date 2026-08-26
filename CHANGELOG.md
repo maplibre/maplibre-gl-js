@@ -7,7 +7,7 @@
 - Skip symbol re-placement when its inputs are unchanged, so repaints from animated style images or custom layers cost a single frame ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Add `Style#triggerSymbolPlacement`, which re-places symbols when something the map cannot see for itself has moved them ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Lay text out in grapheme clusters rather than codepoints, so a letter and the marks written on it stay one shape, and draw the whole cluster from a `font-faces` file where the style declares one. Devanagari conjuncts, Khmer and Burmese syllables and Hebrew niqqud render as written ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
-- Find line break opportunities with the browser's word segmenter instead of a table of punctuation, which brings word wrapping to Thai, Khmer and other writing systems that do not put spaces between words, and keeps CJK compounds together ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
+- Wrap text in Thai, Khmer, Burmese, Lao, Tibetan, Javanese and Balinese, which do not put spaces between words, by asking the browser's word segmenter where the words are. Every other script keeps breaking at the characters it always has ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

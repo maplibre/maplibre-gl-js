@@ -6,7 +6,7 @@ import type {StyleGlyph} from '../style/style_glyph.ts';
 import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
 import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
-import {codePointAllowsIdeographicBreaking} from '../util/unicode_properties.g.ts';
+import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
 
 export type TextSectionOptions = {
@@ -39,17 +39,37 @@ type Break = {
 /* eslint no-useless-computed-key: 0 */
 
 /**
- * Characters a line may end on even in the middle of a word.
- *
- * Word boundaries come from the segmenter, which does not offer one after any of these: to a reader
- * they are part of the word around them, and only typesetting cares that they may be broken at.
+ * Characters a line may end on.
  */
-const breakableWithinWord: {
+const breakable: {
     [_: number]: boolean;
 } = {
+    [0x0a]: true, // newline
+    [0x0d]: true, // carriage return, on its own or starting a CRLF cluster
+    [0x20]: true, // space
+    [0x26]: true, // ampersand
+    [0x29]: true, // right parenthesis
+    [0x2b]: true, // plus sign
+    [0x2d]: true, // hyphen-minus
+    [0x2f]: true, // solidus
     [0xad]: true, // soft hyphen
     [0xb7]: true, // middle dot
+    [0x200b]: true, // zero-width space
+    [0x2010]: true, // hyphen
+    [0x2013]: true, // en dash
     [0x2027]: true  // interpunct
+    // Many other characters may be reasonable breakpoints
+    // Consider "neutral orientation" characters in codePointHasNeutralVerticalOrientation in unicode_properties
+    // See https://github.com/mapbox/mapbox-gl-js/issues/3658
+};
+
+/**
+ * Characters a line may begin with, whatever precedes them.
+ */
+const breakableBefore: {
+    [_: number]: boolean;
+} = {
+    [0x28]: true, // left parenthesis
 };
 
 function getGlyphAdvance(
@@ -356,7 +376,10 @@ export class TaggedString {
      *
      * Breaks fall between grapheme clusters, never inside one: a line cannot start with the vowel
      * point of a letter left at the end of the line before it. Of those, the candidates are where a
-     * word begins, plus the few characters a word may be broken at internally.
+     * character or an inline image a line may end on, plus -- in scripts that do not put spaces
+     * between words, where there is no such character to key off -- wherever the browser's word
+     * segmenter finds a word. The segmenter is not consulted elsewhere: it isolates a comma as a
+     * word of its own, and a line must not begin with one.
      */
     determineLineBreaks(
         spacing: number,
@@ -385,15 +408,23 @@ export class TaggedString {
 
             if (i > 0) {
                 const previousCodePoint = graphemes[i - 1].codePointAt(0);
-                if (wordStarts.has(codeUnit) || breakableWithinWord[previousCodePoint]) {
-                    const ideographicBreak = codePointAllowsIdeographicBreaking(previousCodePoint);
+                const codePoint = grapheme.codePointAt(0);
+                const ideographicBreak = codePointAllowsIdeographicBreaking(previousCodePoint);
+                const withinAWordlessScript = codePointIsWrittenWithoutSpaces(previousCodePoint) &&
+                    codePointIsWrittenWithoutSpaces(codePoint);
+
+                if (breakable[previousCodePoint] ||
+                    ideographicBreak ||
+                    'imageName' in this.getSection(i - 1) ||
+                    (graphemes[i + 1] !== undefined && breakableBefore[codePoint]) ||
+                    (withinAWordlessScript && wordStarts.has(codeUnit))) {
                     potentialLineBreaks.push(
                         evaluateBreak(
                             i,
                             currentX,
                             targetWidth,
                             potentialLineBreaks,
-                            calculatePenalty(previousCodePoint, grapheme.codePointAt(0), ideographicBreak && hasZeroWidthSpaces),
+                            calculatePenalty(previousCodePoint, codePoint, ideographicBreak && hasZeroWidthSpaces),
                             false));
                 }
             }

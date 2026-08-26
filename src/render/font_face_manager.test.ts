@@ -1,11 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {fakeServer, type FakeServer} from 'nise';
 import {FontFaceManager, parseUnicodeRange} from './font_face_manager.ts';
-import {getArrayBuffer} from '../util/ajax.ts';
 import {RequestManager} from '../util/request_manager.ts';
-
-vi.mock(import('../util/ajax.ts'), () => ({
-    getArrayBuffer: vi.fn()
-}));
 
 describe('parseUnicodeRange', () => {
     test('parses a single codepoint', () => {
@@ -44,12 +40,18 @@ describe('FontFaceManager', () => {
      */
     let added: FontFace[];
     let deleted: FontFace[];
+    let server: FakeServer;
+
+    /**
+     * The URLs the server answers with a 404 rather than with a font file.
+     */
+    let missing: Set<string>;
 
     /**
      * The URLs the manager asked the network for, in the order it asked for them.
      */
     function requestedUrls(): string[] {
-        return vi.mocked(getArrayBuffer).mock.calls.map(function ([request]) { return request.url; });
+        return server.requests.map(function (request) { return request.url; });
     }
 
     function stubFontFace(load: () => Promise<unknown> = function () { return Promise.resolve(); }) {
@@ -69,6 +71,13 @@ describe('FontFaceManager', () => {
     beforeEach(() => {
         added = [];
         deleted = [];
+        missing = new Set();
+        global.fetch = null;
+        server = fakeServer.create({autoRespond: true, autoRespondAfter: 0});
+        server.respondWith(function (request) {
+            if (missing.has(request.url)) request.respond(404, undefined, 'Not Found');
+            else request.respond(200, undefined, 'font file');
+        });
         stubFontFace();
         Object.defineProperty(document, 'fonts', {
             configurable: true,
@@ -77,12 +86,11 @@ describe('FontFaceManager', () => {
                 delete(face: FontFace) { deleted.push(face); }
             }
         });
-        vi.mocked(getArrayBuffer).mockResolvedValue({data: new ArrayBuffer(8)});
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
-        vi.mocked(getArrayBuffer).mockReset();
+        server.restore();
         delete (globalThis as any).FontFace;
         delete (document as any).fonts;
     });
@@ -193,9 +201,7 @@ describe('FontFaceManager', () => {
 
     test('ignores a file that fails to download, falling through to the next one', async () => {
         silenceWarnings();
-        vi.mocked(getArrayBuffer)
-            .mockRejectedValueOnce(new Error('404 Not Found'))
-            .mockResolvedValueOnce({data: new ArrayBuffer(8)});
+        missing.add('https://example.com/missing.ttf');
 
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
@@ -204,7 +210,8 @@ describe('FontFaceManager', () => {
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.not.toBeNull();
         expect(added).toHaveLength(1);
-        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('404 Not Found'));
+        expect(requestedUrls()).toEqual(['https://example.com/missing.ttf', 'https://example.com/noto.ttf']);
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('404'));
     });
 
     test('ignores a font the browser refuses to decode, taking it back out of the document', async () => {

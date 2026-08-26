@@ -3,11 +3,7 @@ import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 import {GlyphManager} from './glyph_manager.ts';
 import fs from 'fs';
 import {RequestManager} from '../util/request_manager.ts';
-import {getArrayBuffer} from '../util/ajax.ts';
-
-vi.mock(import('../util/ajax.ts'), () => ({
-    getArrayBuffer: vi.fn()
-}));
+import {fakeServer, type FakeServer} from 'nise';
 
 describe('GlyphManager', () => {
     const GLYPHS = {};
@@ -283,9 +279,11 @@ describe('GlyphManager', () => {
     });
 
     describe('font-faces', () => {
+        let server: FakeServer;
+
         /**
-         * Puts a CSS Font Loading API in place that accepts every file, so that a declared font face
-         * is always available to draw with.
+         * Puts a CSS Font Loading API and a font server in place that accept every file, so that a
+         * declared font face is always available to draw with.
          */
         function stubFontFaces() {
             Object.defineProperty(document, 'fonts', {
@@ -297,12 +295,15 @@ describe('GlyphManager', () => {
                 constructor(family: string) { this.family = family; }
                 load = () => Promise.resolve(this);
             };
-            vi.mocked(getArrayBuffer).mockResolvedValue({data: new ArrayBuffer(8)});
+            global.fetch = null;
+            server = fakeServer.create({autoRespond: true, autoRespondAfter: 0});
+            server.respondWith(function (request) { request.respond(200, undefined, 'font file'); });
         }
 
         afterEach(() => {
             delete (globalThis as any).FontFace;
-            vi.mocked(getArrayBuffer).mockReset();
+            server?.restore();
+            server = undefined;
         });
 
         test('draws a covered codepoint with the declared font file instead of downloading a range', async () => {

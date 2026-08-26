@@ -314,6 +314,27 @@ async function requiresComplexTextShaping(): Promise<string> {
 }
 
 /**
+ * Returns a character class matching the scripts that do not put spaces between words.
+ *
+ * Text in these has no punctuation to break a line at, so the only way to wrap it is to ask the
+ * browser's word segmenter where the words are. Elsewhere the segmenter is the wrong tool: it
+ * isolates a comma as a word of its own, and a line must not begin with one.
+ */
+async function isWrittenWithoutSpaces(): Promise<string> {
+    const set = await createSet([], [
+        'Balinese',
+        'Javanese',
+        'Khmer',
+        'Lao',
+        'Myanmar',
+        'Thai',
+        'Tibetan',
+    ]);
+
+    return set.toString();
+}
+
+/**
  * Returns a character class matching the characters that join the grapheme cluster they end to the
  * one after it.
  *
@@ -382,6 +403,14 @@ export function codePointHasNeutralVerticalOrientation(codePoint: number): boole
  */
 export function codePointRequiresComplexTextShaping(codePoint: number): boolean {
     return /${await requiresComplexTextShaping()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether the given codepoint belongs to a script that does not put spaces between words,
+ * and so can only be wrapped by asking the word segmenter where its words are.
+ */
+export function codePointIsWrittenWithoutSpaces(codePoint: number): boolean {
+    return /${await isWrittenWithoutSpaces()}/gim.test(String.fromCodePoint(codePoint));
 }
 
 /**

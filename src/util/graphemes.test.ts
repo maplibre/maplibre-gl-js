@@ -83,10 +83,6 @@ describe('wordBoundaries', () => {
         expect(wordBoundaries('三三\u200b三三').has(3)).toBe(true);
     });
 
-    test('offers a break between ideographs, which wrap anywhere', () => {
-        expect([...wordBoundaries('三三三')].sort((a, b) => a - b)).toEqual([0, 1, 2]);
-    });
-
     test('handles the empty string', () => {
         expect([...wordBoundaries('')]).toEqual([]);
     });
