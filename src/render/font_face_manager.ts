@@ -115,7 +115,7 @@ export class FontFaceManager {
     /**
      * The declared files by the font name used in `text-font`, in the order the style listed them.
      */
-    _faces: {[fontName: string]: DeclaredFontFace[]};
+    _faces: Record<string, DeclaredFontFace[]>;
     /**
      * Everything handed to `document.fonts`, so that it can all be handed back on destroy.
      */

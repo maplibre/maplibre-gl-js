@@ -3,7 +3,7 @@ import {SymbolBucket} from './symbol_bucket.ts';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
-import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {Tile} from '../../tile/tile.ts';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index.ts';
 import {FeatureIndex} from '../../data/feature_index.ts';
@@ -33,7 +33,7 @@ const stacks = {
     'Test': Object.fromEntries(
         Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
     )
-} as unknown as {[stack: string]: {[cluster: string]: StyleGlyph}};
+} as unknown as Record<string, Record<string, StyleGlyph>>;
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
@@ -247,5 +247,58 @@ describe('SymbolBucket', () => {
         mixedBucket.populate(features, options, undefined);
 
         expect(mixedBucket.hasRTLText).toBeTruthy();
+    });
+
+    describe('glyph dependencies', () => {
+        /**
+         * The glyphs a tile asks for, given a label.
+         *
+         * These are what decides whether a letter written with marks on it can be drawn as the one
+         * shape it is written as: the cluster has to be asked for, or there is nothing to draw it
+         * with.
+         */
+        function glyphDependencies(text: string): string[] {
+            const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
+            const options = createPopulateOptions([]);
+            const feature = {
+                type: 1,
+                id: 1,
+                properties: {},
+                loadGeometry: () => [[{x: 0, y: 0}]],
+            };
+
+            bucket.populate(
+                [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
+                options,
+                new CanonicalTileID(0, 0, 0),
+            );
+
+            return Object.keys(options.glyphDependencies.Test ?? {});
+        }
+
+        test('asks for one glyph per character of plain text', () => {
+            expect(glyphDependencies('abc').sort()).toEqual(['a', 'b', 'c']);
+        });
+
+        test('asks for a Hebrew letter with its vowel points as one cluster, and for its codepoints', () => {
+            const dependencies = glyphDependencies('שְׁ');
+
+            // The cluster, so that it can be drawn as one shape where a font file covers it...
+            expect(dependencies).toContain('שְׁ');
+            // ...and its codepoints, so that there is something to fall back to where none does.
+            expect(dependencies).toEqual(expect.arrayContaining(['ש', 'ְ', 'ׁ']));
+        });
+
+        test('asks for a Devanagari syllable as one cluster', () => {
+            const dependencies = glyphDependencies('दि');
+
+            expect(dependencies).toContain('दि');
+            expect(dependencies).toEqual(expect.arrayContaining(['द', 'ि']));
+        });
+
+        test('asks for nothing extra where a character stands alone', () => {
+            // A single codepoint is its own cluster, so there is no second key for it.
+            expect(glyphDependencies('a')).toEqual(['a']);
+        });
     });
 });

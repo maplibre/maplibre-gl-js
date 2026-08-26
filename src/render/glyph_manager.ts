@@ -15,11 +15,12 @@ import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
-    // null means we've requested the glyph and it isn't available: either the range came back
-    // without it, or it is a cluster that no font file covers.
-    glyphs: {
-        [id: string]: StyleGlyph | null;
-    };
+    /**
+     * The glyphs drawn or downloaded so far, keyed by grapheme cluster. `null` means the glyph was
+     * asked for and is not available: either the range came back without it, or it is a cluster
+     * that no font file covers.
+     */
+    glyphs: Record<string, StyleGlyph | null>;
     requests: {
         [range: number]: Promise<{[_: number]: StyleGlyph | null}>;
     };
@@ -31,11 +32,11 @@ type Entry = {
     /**
      * One TinySDF per `font-faces` file this stack draws with, keyed by the file's CSS family.
      */
-    fontFaceTinySDFs?: {[family: string]: Promise<TinySDF>};
+    fontFaceTinySDFs?: Record<string, Promise<TinySDF>>;
     /**
      * The same, for drawing whole grapheme clusters, which need a wider canvas to fit in.
      */
-    clusterTinySDFs?: {[family: string]: Promise<TinySDF>};
+    clusterTinySDFs?: Record<string, Promise<TinySDF>>;
 };
 
 /**
@@ -96,7 +97,7 @@ export class GlyphManager {
         this.entries = {};
     }
 
-    async getGlyphs(glyphs: {[stack: string]: string[]}): Promise<GetGlyphsResponse> {
+    async getGlyphs(glyphs: Record<string, string[]>): Promise<GetGlyphsResponse> {
         const glyphsPromises: Array<Promise<{stack: string; id: string; glyph: StyleGlyph}>> = [];
 
         for (const stack in glyphs) {
@@ -175,9 +176,15 @@ export class GlyphManager {
         return await this._downloadAndCacheRangePromise(stack, id);
     }
 
+    /**
+     * Gets a glyph from the cache of server-side glyphs, downloading the PBF range it falls in if it
+     * is not there yet.
+     *
+     * Only ever reached for a single codepoint: a glyphs URL serves codepoints, not clusters. What
+     * comes back is keyed by codepoint, as the file is, and is cached by grapheme cluster -- which
+     * for a codepoint from a glyphs URL is the character itself.
+     */
     async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
-        // Try to get the glyph from the cache of server-side glyphs by PBF range. Only ever reached
-        // for a single codepoint: a glyphs URL serves codepoints, not clusters.
         const codePoint = id.codePointAt(0);
         const entry = this.entries[stack];
         const range = Math.floor(codePoint / 256);
@@ -191,8 +198,6 @@ export class GlyphManager {
         try {
             // Get the response and cache the glyphs from it.
             const response = await entry.requests[range];
-            // The response is keyed by codepoint, as the file is; the cache is keyed by grapheme
-            // cluster, which for a codepoint from a glyphs URL is the character itself.
             for (const responseId in response) {
                 entry.glyphs[String.fromCodePoint(+responseId)] = response[+responseId];
             }
@@ -223,12 +228,13 @@ export class GlyphManager {
     /**
      * Draws a glyph offscreen using TinySDF, creating a TinySDF instance lazily.
      *
+     * The whole grapheme cluster is handed to TinySDF rather than a codepoint at a time, which is
+     * what lets the browser's own text engine place a letter's marks on it.
+     *
      * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
      */
     async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
         const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
-        // Drawn as the whole grapheme cluster rather than a codepoint at a time, which is what lets
-        // the browser's own text engine place a letter's marks on it.
         const char = tinySDF.draw(id);
 
         /**
@@ -296,6 +302,12 @@ export class GlyphManager {
     }
 
     /**
+     * Builds the TinySDF that draws with a given font selection.
+     *
+     * TinySDF derives its canvas from `fontSize + buffer * 4`, so the buffer is the only way in to a
+     * wider one. The padding the buffer also stands for is put back afterwards, because the atlas
+     * and the shaders expect exactly `GLYPH_PBF_BORDER` of it around every glyph.
+     *
      * @param emsWide - how wide, in multiples of the font size, the glyphs drawn with this instance
      * may be before TinySDF cuts them off
      */
@@ -320,9 +332,6 @@ export class GlyphManager {
             }
         }
 
-        // TinySDF derives its canvas from `fontSize + buffer * 4`, so the buffer is the only way in
-        // to a wider one. The padding the buffer also stands for is put back afterwards, because the
-        // atlas and the shaders expect exactly `GLYPH_PBF_BORDER` of it around every glyph.
         const buffer = 3 * textureScale;
         const tinySDF = new GlyphManager.TinySDF({
             fontSize,

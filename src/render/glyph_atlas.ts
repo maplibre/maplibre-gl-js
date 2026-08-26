@@ -28,11 +28,7 @@ export type GlyphPosition = {
 /**
  * The glyphs' positions
  */
-export type GlyphPositions = {
-    [_: string]: {
-        [_: string]: GlyphPosition;
-    };
-};
+export type GlyphPositions = Record<string, Record<string, GlyphPosition>>;
 
 export class GlyphAtlas {
     image: AlphaImage;

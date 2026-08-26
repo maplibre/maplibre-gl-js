@@ -27,7 +27,11 @@ export type PopulateParameters = {
     featureIndex: FeatureIndex;
     iconDependencies: {};
     patternDependencies: {};
-    glyphDependencies: {[fontStack: string]: {[glyph: string]: boolean}};
+    /**
+     * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
+     * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     */
+    glyphDependencies: Record<string, Record<string, boolean>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;

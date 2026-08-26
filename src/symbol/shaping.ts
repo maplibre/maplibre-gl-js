@@ -124,6 +124,11 @@ const COMBINING_MARK = /^\p{gc=M}$/u;
  *
  * Only marks followed by a right-to-left letter are moved. In a left-to-right run of the same line
  * the marks already follow their base and must be left where they are.
+ *
+ * The marks come back in the order they were written in, not the order the reversal left them in:
+ * `base m1 m2` became `m2 m1 base`, and has to become `base m1 m2` again. Anything else is a
+ * different sequence of codepoints, and so a different cluster from the one the tile asked for a
+ * glyph for.
  */
 function combiningMarksAfterTheirBase(chars: string[]): number[] {
     const order: number[] = [];
@@ -141,10 +146,6 @@ function combiningMarksAfterTheirBase(chars: string[]): number[] {
 
         const base = chars[end];
         if (base !== undefined && charInRTLScript(base.codePointAt(0))) {
-            // The marks are put back in the order they were written in, not the order the reversal
-            // left them in: `base m1 m2` became `m2 m1 base`, and has to become `base m1 m2` again.
-            // Anything else is a different sequence of codepoints, and so a different cluster from
-            // the one the tile asked for a glyph for.
             order.push(end);
             for (let mark = end - 1; mark >= i; mark--) order.push(mark);
             i = end + 1;
@@ -158,8 +159,24 @@ function combiningMarksAfterTheirBase(chars: string[]): number[] {
 }
 
 /**
+ * Spreads each grapheme cluster's style section across the UTF-16 code units it takes, which is what
+ * a text plugin counts in.
+ */
+function sectionForEachCodeUnit(input: TaggedString): number[] {
+    const sectionIndex: number[] = [];
+    let i = 0;
+    for (const grapheme of input.graphemes()) {
+        sectionIndex.push(...Array(grapheme.length).fill(input.sectionIndex[i]));
+        i++;
+    }
+    return sectionIndex;
+}
+
+/**
  * Builds a line out of what a text plugin returned: the text in the order it is read, and the style
  * section of each of its UTF-16 code units.
+ *
+ * A grapheme cluster belongs to the section its first character does.
  */
 function taggedLineFromPlugin(
     line: string,
@@ -181,7 +198,6 @@ function taggedLineFromPlugin(
         []
     );
 
-    // A grapheme cluster belongs to the section its first character does.
     const sectionOfChar = order.map(index => sectionForCodeUnit[codeUnitOf[index]] ?? 0);
     let at = 0;
     for (const grapheme of tagged.graphemes()) {
@@ -194,17 +210,9 @@ function taggedLineFromPlugin(
 
 function shapeText(
     text: Formatted,
-    glyphMap: {
-        [_: string]: {
-            [_: string]: StyleGlyph;
-        };
-    },
-    glyphPositions: {
-        [_: string]: {
-            [_: string]: GlyphPosition;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
+    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    imagePositions: Record<string, ImagePosition>,
     defaultFontStack: string,
     maxWidth: number,
     lineHeight: number,
@@ -244,14 +252,7 @@ function shapeText(
         // ICU operates on code units.
         lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
 
-        // The plugin counts in code units, and a section is recorded per grapheme cluster, so this
-        // spreads each cluster's section across the code units it takes.
-        let i = 0;
-        const sectionIndex = [];
-        for (const grapheme of logicalInput.graphemes()) {
-            sectionIndex.push(...Array(grapheme.length).fill(logicalInput.sectionIndex[i]));
-            i++;
-        }
+        const sectionIndex = sectionForEachCodeUnit(logicalInput);
 
         const processedLines =
             processStyledBidirectionalText(logicalInput.text, sectionIndex, lineBreaks);
@@ -314,7 +315,7 @@ function getAnchorAlignment(anchor: SymbolAnchor): {horizontalAlign: number; ver
 }
 
 function calculateLineContentSize(
-    imagePositions: {[_: string]: ImagePosition},
+    imagePositions: Record<string, ImagePosition>,
     line: TaggedString,
     layoutTextSizeFactor: number
 ): LineShapingSize {
@@ -342,11 +343,7 @@ function getVerticalAlignFactor(
 
 function getRectAndMetrics(
     glyphPosition: GlyphPosition,
-    glyphMap: {
-        [_: string]: {
-            [_: string]: StyleGlyph;
-        };
-    },
+    glyphMap: Record<string, Record<string, StyleGlyph>>,
     section: TextSectionOptions,
     key: string
 ): GlyphPosition | null {
@@ -444,16 +441,17 @@ function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[])
 }
 
 /**
- * Returns, for each character of a vertically laid out line label, whether
+ * Returns, for each grapheme cluster of a vertically laid out line label, whether
  * its glyph is drawn upright rather than lying along the line, and updates
  * `line` with vertical presentation forms of punctuation.
  *
  * A run passed to {@link runIsUpright} is a maximal sequence of non-upright
  * characters that are neither whitespace nor inline images.
+ *
+ * Counted in clusters rather than characters, so that it lines up with `getSection` and with the
+ * layout loop. A cluster's orientation is the orientation of the character it starts with.
  */
 function determineLineVerticals(line: TaggedString): boolean[] {
-    // Grapheme clusters rather than characters, so that this lines up with `getSection` and with
-    // the layout loop. A cluster's orientation is the orientation of the character it starts with.
     const chars = line.graphemes().slice();
     const codePoints = chars.map(char => char.codePointAt(0));
     const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
@@ -482,18 +480,17 @@ function determineLineVerticals(line: TaggedString): boolean[] {
     return verticals;
 }
 
+/**
+ * Places every glyph of every line, filling in `shaping`.
+ *
+ * A cluster of several codepoints is drawn as one shape where a font file covers it, and a codepoint
+ * at a time where none does -- which is what MapLibre has always done, and what a style that
+ * declares no `font-faces` keeps doing.
+ */
 function shapeLines(shaping: Shaping,
-    glyphMap: {
-        [_: string]: {
-            [_: string]: StyleGlyph;
-        };
-    },
-    glyphPositions: {
-        [_: string]: {
-            [_: string]: GlyphPosition;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
+    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    imagePositions: Record<string, ImagePosition>,
     lines: TaggedString[],
     lineHeight: number,
     textAnchor: SymbolAnchor,
@@ -541,9 +538,6 @@ function shapeLines(shaping: Shaping,
             const codePoint = grapheme.codePointAt(0);
             const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
-            // A cluster of several codepoints is drawn as one shape where a font file covers it, and
-            // a codepoint at a time where none does -- which is what MapLibre has always done, and
-            // is what a style that declares no `font-faces` keeps doing.
             const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.[grapheme] ?
                 [...grapheme] :
                 [grapheme];
@@ -631,16 +625,8 @@ function shapeTextSection(
     key: string,
     vertical: boolean,
     lineShapingSize: LineShapingSize,
-    glyphMap: {
-        [_: string]: {
-            [_: string]: StyleGlyph;
-        };
-    },
-    glyphPositions: {
-        [_: string]: {
-            [_: string]: GlyphPosition;
-        };
-    },
+    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphPositions: Record<string, Record<string, GlyphPosition>>,
 ): ShapingSectionAttributes | null {
     const positions = glyphPositions[section.fontStack];
     const glyphPosition = positions?.[key];
@@ -669,7 +655,7 @@ function shapeImageSection(
     vertical: boolean,
     lineMaxScale: number,
     lineShapingSize: LineShapingSize,
-    imagePositions: {[_: string]: ImagePosition},
+    imagePositions: Record<string, ImagePosition>,
 ): ShapingSectionAttributes | null {
     const imagePosition = imagePositions[section.imageName];
     if (!imagePosition) return null;

@@ -127,8 +127,6 @@ export class WorkerTile {
 
         // options.glyphDependencies looks like: {"SomeFontName":{"a":true," ":true,"\u05e9\u05b0\u05c1":true}}
         // this line makes an object like: {"SomeFontName":["a"," ","\u05e9\u05b0\u05c1"]}
-        // The keys stay strings: a dependency is a grapheme cluster, usually a single character but
-        // sometimes a letter with the marks written on it, which no single codepoint stands for.
         const stacks: {[_: string]: string[]} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
 
         for (const request of this.inFlightDependencies) {

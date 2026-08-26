@@ -72,15 +72,17 @@ const breakableBefore: {
     [0x28]: true, // left parenthesis
 };
 
+/**
+ * Returns how far a grapheme cluster advances the pen, including any letter spacing after it.
+ *
+ * Where a font file covers the cluster it advances as the one shape it is drawn as. Where none does
+ * it is drawn a codepoint at a time, and has to be measured the same way. See `shapeLines`.
+ */
 function getGlyphAdvance(
     grapheme: string,
     section: SectionOptions,
-    glyphMap: {
-        [_: string]: {
-            [_: string]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
+    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    imagePositions: Record<string, ImagePosition>,
     spacing: number,
     layoutTextSize: number
 ): number {
@@ -89,8 +91,6 @@ function getGlyphAdvance(
         const glyph = positions?.[grapheme];
         if (glyph) return glyph.metrics.advance * section.scale + spacing;
 
-        // No glyph for the cluster as a whole, so it will be drawn a codepoint at a time and has to
-        // be measured the same way. See `shapeLines`.
         let advance = 0;
         for (const char of grapheme) {
             const fallback = positions?.[char];
@@ -306,7 +306,7 @@ export class TaggedString {
         return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
     }
 
-    getMaxImageSize(imagePositions: {[_: string]: ImagePosition}): {
+    getMaxImageSize(imagePositions: Record<string, ImagePosition>): {
         maxImageWidth: number;
         maxImageHeight: number;
     } {
@@ -384,12 +384,8 @@ export class TaggedString {
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
-        glyphMap: {
-            [_: string]: {
-                [_: string]: StyleGlyph;
-            };
-        },
-        imagePositions: {[_: string]: ImagePosition},
+        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
         const potentialLineBreaks = [];
@@ -449,12 +445,8 @@ export class TaggedString {
     determineAverageLineWidth(
         spacing: number,
         maxWidth: number,
-        glyphMap: {
-            [_: string]: {
-                [_: string]: StyleGlyph;
-            };
-        },
-        imagePositions: {[_: string]: ImagePosition},
+        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number): number {
         let totalWidth = 0;
 

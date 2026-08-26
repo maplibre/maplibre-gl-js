@@ -53,7 +53,7 @@ describe('shaping', () => {
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
     const glyphPositions = {'Test': byGraphemeCluster(glyphsJson)};
-    const glyphs = glyphPositions as unknown as {[stack: string]: {[cluster: string]: StyleGlyph}};
+    const glyphs = glyphPositions as unknown as Record<string, Record<string, StyleGlyph>>;
 
     const images = {
         'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),

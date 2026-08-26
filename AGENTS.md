@@ -46,6 +46,21 @@ grapheme cluster is the unit of layout belongs on the function that produces the
 reader meets the code it explains — if a part fits nowhere, it was background rather than
 documentation, and the PR description is where it goes.
 
+## Types
+
+**Spell a map as `Record<K, V>`, not as an index signature.** `Record<string, Promise<TinySDF>>`
+reads as one thing; `{[family: string]: Promise<TinySDF>}` makes the reader parse a type literal to
+find out it is a map, and nests badly — a map of maps is four lines as an index signature and one as
+a `Record`.
+
+```ts
+glyphs: Record<string, StyleGlyph | null>;
+export type GetGlyphsResponse = Record<string, Record<string, StyleGlyph>>;
+```
+
+Keep an index signature only where it carries something a `Record` cannot: a named key that
+documents itself in a type with other members, or a numeric key alongside declared properties.
+
 ## Changelog
 
 **One line per entry.** Say what changed and what it means for someone using the library, then stop.

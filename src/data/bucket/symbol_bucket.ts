@@ -414,6 +414,14 @@ export class SymbolBucket implements Bucket {
         this.textAnchorOffsets = new TextAnchorOffsetArray();
     }
 
+    /**
+     * Collects the glyphs a label needs into `stack`, so that the tile can ask for them.
+     *
+     * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
+     * shape it is written as. Its codepoints are asked for as well: not every cluster can be drawn
+     * -- it takes a font file the style pinned with `font-faces` -- and where one cannot, layout
+     * falls back to drawing it a codepoint at a time, exactly as it did before. See `shapeLines`.
+     */
     private calculateGlyphDependencies(
         text: string,
         stack: {[_: string]: boolean},
@@ -422,11 +430,6 @@ export class SymbolBucket implements Bucket {
         doesAllowVerticalWritingMode: boolean): void {
 
         for (const grapheme of toGraphemes(text)) {
-            // A cluster of several codepoints is asked for as a whole, so that it can be drawn as
-            // the one shape it is written as. Its codepoints are asked for as well: not every
-            // cluster can be drawn -- it takes a font file the style pinned with `font-faces` --
-            // and where one cannot, layout falls back to drawing it a codepoint at a time, exactly
-            // as it did before. See `shapeLines`.
             if (isCluster(grapheme)) {
                 stack[grapheme] = true;
             }

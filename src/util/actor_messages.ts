@@ -72,11 +72,7 @@ export type GetGlyphsParameters = {
 /**
  * A response object returned when requesting glyphs
  */
-export type GetGlyphsResponse = {
-    [stack: string]: {
-        [id: string]: StyleGlyph;
-    };
-};
+export type GetGlyphsResponse = Record<string, Record<string, StyleGlyph>>;
 
 /**
  * A response object returned when requesting images

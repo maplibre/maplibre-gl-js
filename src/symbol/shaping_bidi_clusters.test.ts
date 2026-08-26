@@ -34,8 +34,8 @@ afterEach(() => {
 const metrics = {width: 10, height: 10, left: 0, top: -8, advance: 10};
 
 /** A glyph for every grapheme cluster of `text`, and for every codepoint, as a tile asks for. */
-function glyphsFor(text: string): {[stack: string]: {[key: string]: StyleGlyph}} {
-    const glyphs: {[key: string]: StyleGlyph} = {};
+function glyphsFor(text: string): Record<string, Record<string, StyleGlyph>> {
+    const glyphs: Record<string, StyleGlyph> = {};
     for (const grapheme of toGraphemes(text)) {
         glyphs[grapheme] = {id: grapheme.codePointAt(0), metrics} as StyleGlyph;
         for (const char of grapheme) {
@@ -91,7 +91,7 @@ describe('a right-to-left line whose letters carry marks', () => {
 
         // Only the individual codepoints have glyphs, as when a style declares no font file for
         // this script.
-        const codepointsOnly: {[key: string]: StyleGlyph} = {};
+        const codepointsOnly: Record<string, StyleGlyph> = {};
         for (const char of text) {
             codepointsOnly[char] = {id: char.codePointAt(0), metrics} as StyleGlyph;
         }
