@@ -64,7 +64,7 @@ export type GetImagesParameters = {
 export type GetGlyphsParameters = {
     type: string;
     /** Keyed by fontstack; each entry is the grapheme clusters that stack needs glyphs for. */
-    stacks: {[_: string]: string[]};
+    stacks: Record<string, string[]>;
     source: string;
     tileID: OverscaledTileID;
 };

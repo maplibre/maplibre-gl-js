@@ -127,7 +127,7 @@ export class WorkerTile {
 
         // options.glyphDependencies looks like: {"SomeFontName":{"a":true," ":true,"\u05e9\u05b0\u05c1":true}}
         // this line makes an object like: {"SomeFontName":["a"," ","\u05e9\u05b0\u05c1"]}
-        const stacks: {[_: string]: string[]} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
+        const stacks: Record<string, string[]> = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();
