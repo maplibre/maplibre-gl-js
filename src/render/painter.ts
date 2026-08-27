@@ -402,7 +402,12 @@ export class Painter {
         let minElevation = 0;
         for (const layerId of layerIds) {
             const layer = this.style._layers[layerId];
-            if (layer.type !== 'fill-extrusion' || layer.isHidden(this.transform.zoom)) continue;
+            if (!isFillExtrusionStyleLayer(layer) || layer.isHidden(this.transform.zoom)) continue;
+            // Constants are read from the layer here, so a runtime paint change is seen on the next
+            // frame; data-driven values come from the bucket, which tracked them at layout.
+            minElevation = Math.min(minElevation,
+                layer.paint.get('fill-extrusion-base').constantOr(0),
+                layer.paint.get('fill-extrusion-height').constantOr(0));
             const tileManager = this.style.tileManagers[layer.source];
             for (const coord of coordsAscending[layer.source] || []) {
                 const bucket = tileManager?.getTile(coord)?.getBucket(layer) as FillExtrusionBucket;

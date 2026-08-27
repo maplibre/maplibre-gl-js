@@ -176,12 +176,15 @@ export class FillExtrusionBucket implements Bucket {
 
     /**
      * Remembers how far below the datum this feature reaches, so the far plane can be made to
-     * include it. Both base and height are checked: either may be negative.
+     * include it. Both base and height are checked: either may be negative. Constant values are
+     * skipped: the painter reads those from the layer each frame, so a runtime change is not missed.
      */
     trackMinElevation(layer: FillExtrusionStyleLayer, feature: BucketFeature, canonical: CanonicalTileID): void {
-        const base = layer.paint.get('fill-extrusion-base').evaluate(feature, {}, canonical);
-        const height = layer.paint.get('fill-extrusion-height').evaluate(feature, {}, canonical);
-        const lowest = Math.min(base, height);
+        const base = layer.paint.get('fill-extrusion-base');
+        const height = layer.paint.get('fill-extrusion-height');
+        const lowest = Math.min(
+            base.isConstant() ? 0 : base.evaluate(feature, {}, canonical),
+            height.isConstant() ? 0 : height.evaluate(feature, {}, canonical));
         if (lowest < this.minElevation) {
             this.minElevation = lowest;
         }
