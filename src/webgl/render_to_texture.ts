@@ -8,6 +8,7 @@ import {type Terrain} from '../render/terrain.ts';
 import {type Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
+import {RTTFingerprint} from './rtt_fingerprint.ts';
 
 /**
  * lookup table which layers should rendered to texture
@@ -39,11 +40,11 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: OverscaledTileID[]}};
     /**
-     * fingerprint string representing the unique state of source tiles, revision and
-     * bake zoom for a given render-to-texture tile. Used to detect changes and trigger
-     * re-rendering. Format: "sorted_tile_keys#revision#zoom"
+     * the state each render-to-texture tile would be baked from this frame, per
+     * source. Compared against the fingerprint stored on the tile at bake time
+     * to detect changes and trigger re-rendering.
      */
-    _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: string}};
+    _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: RTTFingerprint}};
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -119,18 +120,17 @@ export class RenderToTexture {
             const fingerprints = this._rttFingerprints[sourceId];
             const revision = tileManager.getState().revision;
             for (const key in coordsAscending)
-                fingerprints[key] = `${coordsAscending[key].map(c => c.key).sort().join()}#${revision}#${zoom}`;
+                fingerprints[key] = new RTTFingerprint(coordsAscending[key], revision, zoom);
         }
 
         // check tiles to render
-        const stripZoom = (f: string) => f.slice(0, f.lastIndexOf('#'));
         let staleZoomOnly = false;
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
                 const baked = tile.rttFingerprint[source];
-                if (!fingerprint || fingerprint === baked) continue;
-                if (baked !== undefined && !zoomSettled && stripZoom(fingerprint) === stripZoom(baked)) {
+                if (!fingerprint || fingerprint.equals(baked)) continue;
+                if (!zoomSettled && fingerprint.equalsIgnoringZoom(baked)) {
                     // only the bake zoom differs and the zoom is still changing: keep the
                     // texture for now, but request the follow-up frame that a finished
                     // animation would otherwise never schedule, so the comparison re-runs

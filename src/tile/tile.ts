@@ -32,6 +32,7 @@ import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {Painter, RTTObject} from '../render/painter.ts';
+import type {RTTFingerprint} from '../webgl/rtt_fingerprint.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -130,7 +131,7 @@ export class Tile {
      * changes.
      */
     rttObjects: Array<RTTObject | undefined>;
-    rttFingerprint: {[sourceId:string]: string};
+    rttFingerprint: {[sourceId:string]: RTTFingerprint};
 
     featureStateRevision: number;
 
