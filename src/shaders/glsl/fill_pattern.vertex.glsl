@@ -9,6 +9,7 @@ out vec2 v_pos_a;
 out vec2 v_pos_b;
 
 #pragma maplibre: define lowp float opacity
+#pragma maplibre: define highp vec4 color
 #pragma maplibre: define lowp vec4 pattern_from
 #pragma maplibre: define lowp vec4 pattern_to
 #pragma maplibre: define lowp float pixel_ratio_from
@@ -16,6 +17,7 @@ out vec2 v_pos_b;
 
 void main() {
     #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize highp vec4 color
     #pragma maplibre: initialize mediump vec4 pattern_from
     #pragma maplibre: initialize mediump vec4 pattern_to
     #pragma maplibre: initialize lowp float pixel_ratio_from

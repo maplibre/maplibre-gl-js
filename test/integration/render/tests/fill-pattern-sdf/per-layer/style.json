@@ -1,0 +1,49 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "sprite": "local://sprites/fill-pattern-sdf",
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [[[-10, -10], [-10, 10], [10, 10], [10, -10], [-10, -10]]]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "rgba-fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-antialias": false,
+        "fill-pattern": "rgba-stripes",
+        "fill-translate": [-18, 0]
+      }
+    },
+    {
+      "id": "sdf-fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-antialias": false,
+        "fill-pattern": "sdf-stripes",
+        "fill-color": "#ff0000",
+        "fill-translate": [18, 0]
+      }
+    }
+  ]
+}
