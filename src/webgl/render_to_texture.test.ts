@@ -80,7 +80,7 @@ describe('render to texture', () => {
             terrainDepth: vi.fn(),
         }
     } as any as Painter;
-    const map = {painter, triggerRepaint: vi.fn()} as any as Map;
+    const map = {painter} as Map;
 
     const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), 512);
     const tileManager = {
@@ -265,7 +265,7 @@ describe('render to texture', () => {
         expect(tile.getRTT(0)).toBe(cached);
     });
 
-    test('renderLayer records the fingerprint including the bake zoom', () => {
+    test('renderLayer records the fingerprint including the render zoom', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
@@ -277,35 +277,34 @@ describe('render to texture', () => {
         expect(new RTTFingerprint([tile.tileID], 0, 0).equals(tile.rttFingerprint['maine'])).toBe(true);
     });
 
-    test('re-bakes a texture baked at another zoom once the zoom settles', () => {
+    test('re-renders a texture rendered at another zoom once the zoom settles', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10)};
         tile.rttObjects[0] = obj;
 
-        vi.mocked(map.triggerRepaint).mockClear();
         rtt.prepareForRender(style, 11);
-        // the zoom is still changing: keep the texture, but request the settling frame
+        // the zoom is still changing: keep the texture, but ask for the settling frame
         expect(tile.getRTT(0)).toBe(obj);
-        expect(map.triggerRepaint).toHaveBeenCalled();
+        expect(rtt.needsFollowUpFrame).toBe(true);
 
         rtt.prepareForRender(style, 11);
-        // the zoom has settled: release, so this frame re-bakes at the on-screen zoom
+        // the zoom has settled: release, so this frame re-renders at the on-screen zoom
         expect(tile.getRTT(0)).toBeUndefined();
+        expect(rtt.needsFollowUpFrame).toBe(false);
     });
 
-    test('keeps a texture baked at the current zoom', () => {
+    test('keeps a texture rendered at the current zoom', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10)};
         tile.rttObjects[0] = obj;
 
-        vi.mocked(map.triggerRepaint).mockClear();
         rtt.prepareForRender(style, 10);
         rtt.prepareForRender(style, 10);
 
         expect(tile.getRTT(0)).toBe(obj);
-        expect(map.triggerRepaint).not.toHaveBeenCalled();
+        expect(rtt.needsFollowUpFrame).toBe(false);
     });
 
     test('prepare only queries sources rendered to texture', () => {

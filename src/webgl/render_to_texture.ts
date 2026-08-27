@@ -73,6 +73,13 @@ export class RenderToTexture {
      * the zoom of the previous prepareForRender call
      */
     _lastPrepareZoom: number;
+    /**
+     * true when a kept texture was rendered at another zoom than the current
+     * one. The map's render loop must then schedule one follow-up frame — a
+     * finished animation schedules none on its own — so the texture is
+     * released and re-rendered once the zoom settles.
+     */
+    needsFollowUpFrame: boolean = false;
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
@@ -125,7 +132,7 @@ export class RenderToTexture {
         }
 
         // check tiles to render
-        let staleZoomOnly = false;
+        this.needsFollowUpFrame = false;
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
                 const frameFingerprint = this._rttFingerprints[source][tile.tileID.key];
@@ -133,16 +140,14 @@ export class RenderToTexture {
                 if (!frameFingerprint || frameFingerprint.equals(tileFingerprint)) continue;
                 if (zoomChanged && frameFingerprint.equalsIgnoringZoom(tileFingerprint)) {
                     // keep the texture while the zoom is still changing (see
-                    // equalsIgnoringZoom), but request the follow-up frame that a
-                    // finished animation would otherwise never schedule, so the
-                    // comparison re-runs (and releases) once the zoom settles
-                    staleZoomOnly = true;
+                    // equalsIgnoringZoom); the follow-up frame re-runs this
+                    // comparison and releases once the zoom has settled
+                    this.needsFollowUpFrame = true;
                 } else {
                     tile.releaseRTT(this.painter);
                 }
             }
         }
-        if (staleZoomOnly) style.map.triggerRepaint();
     }
 
     /**

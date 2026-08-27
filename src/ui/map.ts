@@ -4371,7 +4371,7 @@ export class Map extends Evented<MapEventType> {
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
         const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
-        if (somethingDirty || this._repaint) {
+        if (somethingDirty || this._repaint || this.painter.renderToTexture?.needsFollowUpFrame) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
             this.fire(new MapLibreEvent('idle'));

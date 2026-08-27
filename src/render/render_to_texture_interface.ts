@@ -8,6 +8,12 @@ import type {RenderOptions} from './painter.ts';
  * The painter uses this interface — concrete implementations live in backend folders (webgl/, webgpu/).
  */
 export interface IRenderToTexture {
+    /**
+     * true when prepareForRender kept a texture rendered at another zoom while
+     * the zoom is changing: the render loop must schedule one follow-up frame
+     * so the texture is re-rendered once the zoom settles.
+     */
+    needsFollowUpFrame: boolean;
     prepareForRender(style: Style, zoom: number): void;
     renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean;
     getTexture(tile: Tile): any;
