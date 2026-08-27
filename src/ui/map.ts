@@ -3353,7 +3353,7 @@ export class Map extends Evented<MapEventType> {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @returns a promise that is resolved when the image is loaded
+     * @returns a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)
      *
      * @example
      * Load an image from an external URL.
