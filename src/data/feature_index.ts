@@ -20,6 +20,7 @@ import {VectorTile} from '@mapbox/vector-tile';
 import type Point from '@mapbox/point-geometry';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
+import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -349,6 +350,18 @@ register(
  * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
  * value, is passed through as it is.
  */
+/**
+ * Whether a possibly-evaluated property still has to be evaluated against a feature, as a
+ * data-driven one does.
+ *
+ * A data-constant property is already the value it will be drawn with, and that value is often a
+ * primitive -- `'map'` for an alignment, a number for an opacity -- which the `in` operator throws
+ * on, so it is not reached for until the value is known to be an object.
+ */
+function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValue<unknown> {
+    return typeof value === 'object' && value !== null && 'evaluate' in value;
+}
+
 function evaluateProperties<Props, PossiblyEvaluatedProps>(
     serializedProperties: Record<string, unknown>,
     styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
@@ -360,7 +373,7 @@ function evaluateProperties<Props, PossiblyEvaluatedProps>(
         const value = styleLayerProperties instanceof PossiblyEvaluated ?
             styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
             null;
-        return 'evaluate' in value ? value.evaluate(feature, featureState, undefined, availableImages) : value;
+        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
     });
 }
 
