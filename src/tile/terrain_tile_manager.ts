@@ -88,13 +88,15 @@ export class TerrainTileManager extends Evented {
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param transform - the operation to do
      * @param terrain - the terrain
+     * @returns true when the set of renderable tiles changed
      */
-    update(transform: ITransform, terrain: Terrain): void {
+    update(transform: ITransform, terrain: Terrain): boolean {
         // load raster-dem tiles for the current scene.
         this.tileManager.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
+        let changed = false;
         for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
@@ -110,6 +112,7 @@ export class TerrainTileManager extends Evented {
                 mat4.ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
                 this._lastTilesetChange = now();
+                changed = true;
             }
         }
         // free unused tiles
@@ -117,8 +120,10 @@ export class TerrainTileManager extends Evented {
             if (!keys[key]) {
                 this._tiles[key].releaseRTT(this.tileManager.map.painter);
                 delete this._tiles[key];
+                changed = true;
             }
         }
+        return changed;
     }
 
     /**

@@ -124,7 +124,8 @@ export type StyleImageWebGLData = {
      * arrives in the same state a custom layer's is given: cull face, active texture and the pixel
      * store settings at their WebGL defaults, and no vertex array bound. Everything is yours to
      * change, and MapLibre restores its own state afterwards. The scissor test is the one
-     * exception: MapLibre never touches it, so an image that enables it has to disable it again.
+     * exception: MapLibre leaves it disabled rather than restoring it, so an image that enables
+     * it has to disable it again.
      *
      * Called before the first frame the image is used in, again whenever
      * {@link StyleImageInterface.render} returns `true`, and again for each atlas holding a slot
@@ -204,6 +205,9 @@ export interface StyleImageInterface {
      *
      * If the method updates the image it must return `true` to commit the change.
      * If the method returns `false` or nothing the image is assumed to not have changed.
+     *
+     * An animated image schedules its next frame by calling {@link Map.triggerRepaint}, typically
+     * from a timer; returning `false` in between lets the map rest and fire `idle`.
      *
      * An image whose `data` renders with WebGL has nothing to update here; returning `true` is how
      * it asks for {@link StyleImageWebGLData.renderWithWebGL} to be called again.

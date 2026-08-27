@@ -258,7 +258,7 @@ describe('transform', () => {
         // expect same values because of no elevation change
         const terrain = {
             ...createTerrain(),
-            getElevationForLngLatZoom: () => 200,
+            getElevationForLngLat: () => 200,
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
@@ -277,7 +277,7 @@ describe('transform', () => {
 
         const terrain = {
             ...createTerrain(),
-            getElevationForLngLatZoom: () => 200 + 1,
+            getElevationForLngLat: () => 200 + 1,
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.center.lat).toBeCloseTo(82, 4);
@@ -303,7 +303,7 @@ describe('transform', () => {
         // expect new zoom and center because of elevation change
         const terrain = {
             ...createTerrain(),
-            getElevationForLngLatZoom: () => 400,
+            getElevationForLngLat: () => 400,
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(400);
@@ -314,6 +314,26 @@ describe('transform', () => {
         expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 5);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBeCloseTo(14.184585871638795, 10);
+    });
+
+    test('recalculateZoomAndCenter solves at the rendered terrain surface, not the tile-zoom DEM sample', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.setElevation(200);
+        transform.setCenter(new LngLat(10.0, 50.0));
+        transform.setZoom(14);
+        transform.setPitch(45);
+        transform.resize(512, 512);
+        const expectedAltitude = transform.getCameraAltitude();
+        const terrain = {
+            ...createTerrain(),
+            getElevationForLngLat: () => 400,
+            getElevationForLngLatZoom: () => 1000,
+        };
+
+        transform.recalculateZoomAndCenter(terrain as any);
+
+        expect(transform.elevation).toBe(400);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
     });
 
     test('recalculateZoomAndCenter: elevation decrease', () => {
@@ -336,7 +356,7 @@ describe('transform', () => {
         // expect new zoom because of elevation change to point below sea level
         const terrain = {
             ...createTerrain(),
-            getElevationForLngLatZoom: () => -200,
+            getElevationForLngLat: () => -200,
         };
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(-200);
