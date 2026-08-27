@@ -131,12 +131,6 @@ export class Tile {
      */
     rttObjects: Array<RTTObject | undefined>;
     rttFingerprint: {[sourceId:string]: string};
-    /**
-     * The map zoom the textures in `rttObjects` were baked at. Zoom-dependent style
-     * properties are evaluated at bake time, so the textures only match the screen
-     * while the map sits at this zoom. Undefined until the first bake.
-     */
-    rttBakeZoom: number;
 
     featureStateRevision: number;
 

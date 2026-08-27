@@ -39,9 +39,9 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: OverscaledTileID[]}};
     /**
-     * fingerprint string representing the unique state of source tiles and revision
-     * for a given render-to-texture tile. Used to detect changes and trigger re-rendering.
-     * Format: "sorted_tile_keys#revision"
+     * fingerprint string representing the unique state of source tiles, revision and
+     * bake zoom for a given render-to-texture tile. Used to detect changes and trigger
+     * re-rendering. Format: "sorted_tile_keys#revision#zoom"
      */
     _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: string}};
     /**
@@ -82,6 +82,8 @@ export class RenderToTexture {
     }
 
     prepareForRender(style: Style, zoom: number): void {
+        const zoomSettled = zoom === this._lastPrepareZoom;
+        this._lastPrepareZoom = zoom;
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
@@ -117,36 +119,29 @@ export class RenderToTexture {
             const fingerprints = this._rttFingerprints[sourceId];
             const revision = tileManager.getState().revision;
             for (const key in coordsAscending)
-                fingerprints[key] = `${coordsAscending[key].map(c => c.key).sort().join()}#${revision}`;
+                fingerprints[key] = `${coordsAscending[key].map(c => c.key).sort().join()}#${revision}#${zoom}`;
         }
 
         // check tiles to render
+        const stripZoom = (f: string) => f.slice(0, f.lastIndexOf('#'));
+        let staleZoomOnly = false;
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
-                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
-                    tile.releaseRTT(this.painter);
-                }
-            }
-        }
-
-        // Textures bake zoom-dependent style properties at the zoom of their bake
-        // frame, so a bake from mid-animation goes stale the moment the camera rests
-        // at a different zoom. Re-bake once the zoom has settled; while it is still
-        // changing, only request the follow-up frame that a finished animation would
-        // otherwise never schedule.
-        let staleBakeZoom = false;
-        for (const tile of this._renderableTiles) {
-            if (tile.rttObjects.length > 0 && tile.rttBakeZoom !== undefined && tile.rttBakeZoom !== zoom) {
-                if (this._lastPrepareZoom === zoom) {
-                    tile.releaseRTT(this.painter);
+                const baked = tile.rttFingerprint[source];
+                if (!fingerprint || fingerprint === baked) continue;
+                if (baked !== undefined && !zoomSettled && stripZoom(fingerprint) === stripZoom(baked)) {
+                    // only the bake zoom differs and the zoom is still changing: keep the
+                    // texture for now, but request the follow-up frame that a finished
+                    // animation would otherwise never schedule, so the comparison re-runs
+                    // (and releases) once the zoom settles
+                    staleZoomOnly = true;
                 } else {
-                    staleBakeZoom = true;
+                    tile.releaseRTT(this.painter);
                 }
             }
         }
-        if (staleBakeZoom) style.map.triggerRepaint();
-        this._lastPrepareZoom = zoom;
+        if (staleZoomOnly) style.map.triggerRepaint();
     }
 
     /**
@@ -199,7 +194,6 @@ export class RenderToTexture {
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
-                tile.rttBakeZoom = painter.transform.zoom;
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
