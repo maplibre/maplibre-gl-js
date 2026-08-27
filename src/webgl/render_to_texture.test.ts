@@ -307,6 +307,18 @@ describe('render to texture', () => {
         expect(rtt.needsFollowUpFrame).toBe(false);
     });
 
+    test('a source data change releases immediately even while the zoom is changing', () => {
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 1} as any);
+        const obj = {texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 4)};
+        tile.rttObjects[0] = obj;
+
+        rtt.prepareForRender(style, 5);
+
+        expect(tile.getRTT(0)).toBeUndefined();
+        expect(rtt.needsFollowUpFrame).toBe(false);
+    });
+
     test('prepare only queries sources rendered to texture', () => {
         const tileManager = () => ({
             getVisibleCoordinates: vi.fn().mockReturnValue([tile.tileID]),
