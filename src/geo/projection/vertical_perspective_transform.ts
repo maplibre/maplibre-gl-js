@@ -19,7 +19,6 @@ import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from './projection.ts';
-import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
 
 const GLOBE_SAMPLES = 256;
 const GLOBE_BISECT_EPSILON_T = 1e-12;
@@ -547,7 +546,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
-        return mercatorWorldCoordinates;
+        return this._helper.worldCoordinateHelper;
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {

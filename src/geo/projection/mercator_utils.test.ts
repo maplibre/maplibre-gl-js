@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
-import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
+import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
@@ -14,14 +14,14 @@ describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setZoom(10);
-        expect(projectToWorldCoordinates(transform.worldSize, transform.center, mercatorWorldCoordinates)).toEqual(new Point(262144, 262144));
+        expect(projectToWorldCoordinates(transform.worldSize, transform.center, mercatorWorldCoordinateHelper)).toEqual(new Point(262144, 262144));
     });
 
     test('projectToWorldCoordinates clamps latitude', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
-        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -90), mercatorWorldCoordinates)).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -MAX_VALID_LATITUDE), mercatorWorldCoordinates));
-        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90), mercatorWorldCoordinates)).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE), mercatorWorldCoordinates));
+        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -90), mercatorWorldCoordinateHelper)).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -MAX_VALID_LATITUDE), mercatorWorldCoordinateHelper));
+        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90), mercatorWorldCoordinateHelper)).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE), mercatorWorldCoordinateHelper));
     });
 
     test('getMercatorHorizon', () => {

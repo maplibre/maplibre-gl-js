@@ -6,7 +6,7 @@ import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
 import type {WorldCoordinateHelper} from './projection/projection.ts';
-import {mercatorWorldCoordinates} from './mercator_coordinate.ts';
+import {mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
@@ -167,7 +167,7 @@ export class TransformHelper implements ITransformGetters {
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
-        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinates;
+        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -643,10 +643,10 @@ export class TransformHelper implements ITransformGetters {
         const originalPixelsPerMeter = originalMercUnitsPerMeter * this.worldSize;
 
         // Determine camera
-        const originalCenterMercator = helper.worldFromLngLat(this.center.lng, this.center.lat);
+        const originalCenterMercator = helper.worldFromLngLat(this.center.lng, this.center.lat, this.elevation);
         const originalCenterPixelX = originalCenterMercator.x / mercUnitsPerPixel;
         const originalCenterPixelY = originalCenterMercator.y / mercUnitsPerPixel;
-        const originalCenterPixelZ = helper.worldZFromAltitude(this.elevation, this.center) / mercUnitsPerPixel;
+        const originalCenterPixelZ = originalCenterMercator.z / mercUnitsPerPixel;
         
         const cameraPitch = this.pitch;
         const cameraBearing = this.bearing;

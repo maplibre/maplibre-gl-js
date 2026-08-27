@@ -6,7 +6,7 @@ import type {WorldCoordinateHelper} from './projection/projection.ts';
 /*
  * The average circumference of the world in meters.
  */
-export const earthCircumference: number = 2 * Math.PI * earthRadius; // meters
+const earthCircumference = 2 * Math.PI * earthRadius; // meters
 
 /*
  * The circumference at a line of latitude in meters.
@@ -165,9 +165,9 @@ export class MercatorCoordinate implements IMercatorCoordinate {
  * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`.
  * Lives next to the mercator functions it calls so they stay module-local on the camera paths.
  */
-export const mercatorWorldCoordinates: WorldCoordinateHelper = {
-    worldFromLngLat(lng: number, lat: number): MercatorCoordinate {
-        return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat));
+export const mercatorWorldCoordinateHelper: WorldCoordinateHelper = {
+    worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
+        return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat), altitude === undefined ? 0 : mercatorZfromAltitude(altitude, lat));
     },
     lngLatFromWorld(x: number, y: number): LngLat {
         return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));

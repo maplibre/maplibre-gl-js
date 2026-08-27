@@ -44,7 +44,7 @@ export function tileCoordinatesToLocation(inTileX: number, inTileY: number, cano
  * Convert from LngLat to world coordinates (the projection's 0..1 world square scaled by world size).
  * @param worldSize - World size computed from zoom level and tile size.
  * @param lnglat - The location to convert.
- * @param helper - The lng/lat to world mapping; mercator clamps latitude to the valid mercator range.
+ * @param helper - The lng/lat to world mapping.
  * @returns Point
  */
 export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat, helper: WorldCoordinateHelper): Point {
@@ -89,7 +89,7 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
 
 /**
  * Returns the camera position for a center already mapped to world coordinates.
- * Callers resolve the center through their projection's `WorldCoordinateHelper`; keeping the helper
+ * Callers resolve the center through the transform's `WorldCoordinateHelper`; keeping the helper
  * out of this function lets the engine inline it on the per-frame camera path.
  * @param centerMercator - the center in world coordinates, with its elevation in `z`
  * @param dMercator - camera to center distance in world units
@@ -121,8 +121,7 @@ export function cameraMercatorCoordinate(transform: {
     const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
     const pixelPerMeter = mercUnitsPerMeter * transform.worldSize;
     const distance = transform.cameraToCenterDistance / pixelPerMeter;
-    const centerMercator = helper.worldFromLngLat(center.lng, center.lat);
-    centerMercator.z = helper.worldZFromAltitude(transform.elevation, center);
+    const centerMercator = helper.worldFromLngLat(center.lng, center.lat, transform.elevation);
     return cameraMercatorCoordinateFromCenterAndRotation(centerMercator, transform.pitch, transform.bearing, distance * mercUnitsPerMeter);
 }
 

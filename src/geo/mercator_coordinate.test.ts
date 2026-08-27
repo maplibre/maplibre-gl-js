@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {LngLat} from './lng_lat.ts';
-import {MercatorCoordinate, mercatorScale, mercatorWorldCoordinates} from './mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorScale, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 
 describe('LngLat', () => {
     test('constructor', () => {
@@ -46,11 +46,11 @@ function createSamplePoints(): Array<[number, number]> {
     ];
 }
 
-describe('mercatorWorldCoordinates', () => {
+describe('mercatorWorldCoordinateHelper', () => {
     test('round-trips lng/lat through world coordinates', () => {
         for (const [lng, lat] of createSamplePoints()) {
-            const {x, y} = mercatorWorldCoordinates.worldFromLngLat(lng, lat);
-            const back = mercatorWorldCoordinates.lngLatFromWorld(x, y);
+            const {x, y} = mercatorWorldCoordinateHelper.worldFromLngLat(lng, lat);
+            const back = mercatorWorldCoordinateHelper.lngLatFromWorld(x, y);
             expect(back.lng).toBeCloseTo(lng, 10);
             expect(back.lat).toBeCloseTo(lat, 10);
         }

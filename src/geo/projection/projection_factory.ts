@@ -12,7 +12,6 @@ import {VerticalPerspectiveProjection} from './vertical_perspective_projection.t
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
 import type {ITransform, TransformConstrainFunction} from '../transform_interface.ts';
-import type {TransformOptions} from '../transform_helper.ts';
 import type {ICameraHelper} from './camera_helper.ts';
 
 export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain: TransformConstrainFunction | undefined, globalState: Record<string, any>): {
@@ -31,7 +30,13 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
     }
     switch (name) {
         case 'mercator':
-            return createMercator(transformOptions);
+        {
+            return {
+                projection: new MercatorProjection(),
+                transform: new MercatorTransform(transformOptions),
+                cameraHelper: new MercatorCameraHelper(),
+            };
+        }
         case 'globe':
         {
             const globeProjection = new GlobeProjection({type: [
@@ -58,20 +63,13 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             };
         }
         default:
+        {
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
-            return createMercator(transformOptions);
+            return {
+                projection: new MercatorProjection(),
+                transform: new MercatorTransform(transformOptions),
+                cameraHelper: new MercatorCameraHelper(),
+            };
+        }
     }
-}
-
-function createMercator(transformOptions: TransformOptions): {
-    projection: Projection;
-    transform: ITransform;
-    cameraHelper: ICameraHelper;
-} {
-    const projection = new MercatorProjection();
-    return {
-        projection,
-        transform: new MercatorTransform({...transformOptions, worldCoordinateHelper: projection.worldCoordinateHelper}),
-        cameraHelper: new MercatorCameraHelper(),
-    };
 }

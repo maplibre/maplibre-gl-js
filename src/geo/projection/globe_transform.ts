@@ -2,7 +2,6 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {lerp} from '../../util/util.ts';
-import {mercatorWorldCoordinates} from '../mercator_coordinate.ts';
 import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
@@ -18,7 +17,6 @@ import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from './projection.ts';
-
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.
@@ -385,7 +383,7 @@ export class GlobeTransform implements ITransform {
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
-        return mercatorWorldCoordinates;
+        return this._helper.worldCoordinateHelper;
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {

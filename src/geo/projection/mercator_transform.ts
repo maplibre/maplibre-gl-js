@@ -21,6 +21,7 @@ import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from './projection.ts';
+
 /**
  * @internal
  * The portion of a ray through a screen pixel that lies inside the view frustum.
@@ -52,7 +53,6 @@ type MercatorRay = {
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
-    private _worldCoordinateHelper: WorldCoordinateHelper;
 
     //
     // Implementation of transform getters and setters
@@ -279,7 +279,6 @@ export class MercatorTransform implements ITransform {
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
-        this._worldCoordinateHelper = this._helper.worldCoordinateHelper;
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
@@ -290,7 +289,7 @@ export class MercatorTransform implements ITransform {
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
-        return this._worldCoordinateHelper;
+        return this._helper.worldCoordinateHelper;
     }
 
     public apply(that: IReadonlyTransform, constrain: boolean, forceOverrideZ?: boolean): void {
@@ -836,8 +835,7 @@ export class MercatorTransform implements ITransform {
         const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
         const pixelPerMeter = mercUnitsPerMeter * this.worldSize;
         const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const centerMercator = helper.worldFromLngLat(center.lng, center.lat);
-        centerMercator.z = helper.worldZFromAltitude(this.elevation, center);
+        const centerMercator = helper.worldFromLngLat(center.lng, center.lat, this.elevation);
         const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, this.pitch, this.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
         return helper.lngLatFromWorld(camMercator.x, camMercator.y);
     }

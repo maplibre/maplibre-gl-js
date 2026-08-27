@@ -127,7 +127,8 @@ export class MercatorCameraHelper implements ICameraHelper {
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
-                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale), helper);
+                const newCenterWorld = from.add(delta.mult(k * speedup)).mult(scale);
+                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, newCenterWorld, helper);
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
         };

@@ -37,17 +37,17 @@ export type TileMeshUsage = 'stencil' | 'raster';
  * Maps between geographic coordinates and the 0..1 world square that the tile
  * quad-tree subdivides. Transform and camera code goes through this seam instead of
  * calling the mercator functions directly, so a projection with a different planar
- * mapping can supply its own without touching the callers.
+ * mapping can hand the transform its own without touching the callers.
  *
  * The mapping does not have to be separable: `x` may depend on both `lng` and `lat`
  * and vice versa.
  */
 export type WorldCoordinateHelper = {
     /**
-     * lng/lat in degrees to a world square position with `z` at sea level; callers that need
-     * an altitude set `z` from `worldZFromAltitude`.
+     * lng/lat in degrees and an altitude in meters to a world square position. `z` is
+     * `worldZFromAltitude` of the altitude, and stays `0` when no altitude is given.
      */
-    worldFromLngLat(lng: number, lat: number): MercatorCoordinate;
+    worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate;
     /**
      * World square coordinates to lng/lat.
      */
@@ -139,13 +139,6 @@ export interface Projection {
      * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
-
-    /**
-     * @internal
-     * The lng/lat to world-coordinate mapping of this projection.
-     * World coordinates are in the 0..1 square that the tile quad-tree subdivides.
-     */
-    get worldCoordinateHelper(): WorldCoordinateHelper;
 
     /**
      * @internal
