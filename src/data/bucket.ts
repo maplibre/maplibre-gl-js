@@ -30,6 +30,10 @@ export type PopulateParameters = {
     /**
      * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
      * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     * @example
+     * ```json
+     * {"SomeFontName": {"a": true, " ": true, "\u05e9\u05b0\u05c1": true}}
+     * ```
      */
     glyphDependencies: Record<string, Record<string, boolean>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;

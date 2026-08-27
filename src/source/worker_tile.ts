@@ -12,7 +12,7 @@ import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 
-import type {Bucket} from '../data/bucket.ts';
+import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
@@ -70,7 +70,7 @@ export class WorkerTile {
 
         const buckets: {[_: string]: Bucket} = {};
 
-        const options = {
+        const options: PopulateParameters = {
             featureIndex,
             iconDependencies: {},
             patternDependencies: {},
@@ -125,9 +125,7 @@ export class WorkerTile {
             }
         }
 
-        // options.glyphDependencies looks like: {"SomeFontName":{"a":true," ":true,"\u05e9\u05b0\u05c1":true}}
-        // this line makes an object like: {"SomeFontName":["a"," ","\u05e9\u05b0\u05c1"]}
-        const stacks: Record<string, string[]> = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
+        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();

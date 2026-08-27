@@ -353,12 +353,11 @@ describe('GlyphManager', () => {
             const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/hebrew.ttf'});
 
-            // A Hebrew letter with a sheva and a shin dot on it.
-            const cluster = '\u05E9\u05B0\u05C1';
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [cluster]});
+            const shinWithShevaAndDot = '\u05E9\u05B0\u05C1';
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [shinWithShevaAndDot]});
 
-            expect(returnedGlyphs['Arial Unicode MS'][cluster]).toBeDefined();
-            expect(drawn).toContain(cluster);
+            expect(returnedGlyphs['Arial Unicode MS'][shinWithShevaAndDot]).toBeDefined();
+            expect(drawn).toContain(shinWithShevaAndDot);
             expect(glyphRangeRequests()).toHaveLength(0);
         });
 
@@ -368,13 +367,13 @@ describe('GlyphManager', () => {
             const createRasterizer = fakeRasterizer();
 
             const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
-            // Declared for Khmer only, so it does not cover the Hebrew letter this cluster starts with.
-            manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
+            const khmerOnly = [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}];
+            manager.setFontFaces({'Arial Unicode MS': khmerOnly});
 
-            const cluster = '\u05E9\u05B0\u05C1';
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [cluster]});
+            const shinWithShevaAndDot = '\u05E9\u05B0\u05C1';
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [shinWithShevaAndDot]});
 
-            expect(returnedGlyphs['Arial Unicode MS'][cluster]).toBeNull();
+            expect(returnedGlyphs['Arial Unicode MS'][shinWithShevaAndDot]).toBeNull();
         });
 
         test('leaves a codepoint outside every declared range to the glyphs URL', async () => {

@@ -23,7 +23,7 @@ import type {SourceFeatureState} from '../source/source_state.ts';
 import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
-import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
 
@@ -342,13 +342,28 @@ register(
     {omit: ['rawTileData', 'sourceLayerCoder']}
 );
 
-function evaluateProperties(serializedProperties, styleLayerProperties, feature, featureState, availableImages) {
-    return mapObject(serializedProperties, (property, key) => {
-        const prop = styleLayerProperties instanceof PossiblyEvaluated ? styleLayerProperties.get(key) : null;
-        return prop?.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
+/**
+ * Evaluates a serialized layer's paint or layout properties against one feature, so that a queried
+ * feature reports the values it was actually drawn with.
+ *
+ * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
+ * value, is passed through as it is.
+ */
+function evaluateProperties<Props, PossiblyEvaluatedProps>(
+    serializedProperties: Record<string, unknown>,
+    styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
+    feature: Feature,
+    featureState: FeatureState,
+    availableImages: string[]
+): Record<string, unknown> {
+    return mapObject(serializedProperties, (_property, key) => {
+        const value = styleLayerProperties instanceof PossiblyEvaluated ?
+            styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
+            null;
+        return 'evaluate' in value ? value.evaluate(feature, featureState, undefined, availableImages) : value;
     });
 }
 
-function topDownFeatureComparator(a, b) {
+function topDownFeatureComparator(a: number, b: number) {
     return b - a;
 }
