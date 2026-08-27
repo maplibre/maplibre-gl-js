@@ -64,6 +64,11 @@ function renderColorRelief(
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
+        // a loaded raster-dem tile can carry no dem at all (e.g. an empty 204 response), and the
+        // firstTile block below reads from it, so skip before that rather than after
+        if (!dem?.data) {
+            continue;
+        }
         if(firstTile) {
             // we should avoid calling gl.getParameter at runtime (GPU stall risk)
             textureMaxSize ||= gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -75,10 +80,6 @@ function renderColorRelief(
             colorTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             firstTile = false;
             colorRampSize = elevationTexture.size[0];
-        }
-
-        if (!dem?.data) {
-            continue;
         }
 
         const textureStride = dem.stride;
