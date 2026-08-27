@@ -131,7 +131,7 @@ export class Tile {
      * changes.
      */
     rttObjects: Array<RTTObject | undefined>;
-    rttFingerprint: {[sourceId:string]: RTTFingerprint};
+    rttFingerprint: Record<string, RTTFingerprint>;
 
     featureStateRevision: number;
 

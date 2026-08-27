@@ -40,11 +40,12 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: OverscaledTileID[]}};
     /**
-     * the state each render-to-texture tile would be baked from this frame, per
-     * source. Compared against the fingerprint stored on the tile at bake time
-     * to detect changes and trigger re-rendering.
+     * the state each render-to-texture tile's textures would be rendered from
+     * this frame, per source. Compared against the fingerprint stored on the
+     * tile when its textures were last rendered to detect changes and trigger
+     * re-rendering.
      */
-    _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: RTTFingerprint}};
+    _rttFingerprints: Record<string, Record<string, RTTFingerprint>>;
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -83,7 +84,7 @@ export class RenderToTexture {
     }
 
     prepareForRender(style: Style, zoom: number): void {
-        const zoomSettled = zoom === this._lastPrepareZoom;
+        const zoomChanged = zoom !== this._lastPrepareZoom;
         this._lastPrepareZoom = zoom;
         this._stacks = [];
         this._prevType = null;
@@ -127,14 +128,14 @@ export class RenderToTexture {
         let staleZoomOnly = false;
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
-                const fingerprint = this._rttFingerprints[source][tile.tileID.key];
-                const baked = tile.rttFingerprint[source];
-                if (!fingerprint || fingerprint.equals(baked)) continue;
-                if (!zoomSettled && fingerprint.equalsIgnoringZoom(baked)) {
-                    // only the bake zoom differs and the zoom is still changing: keep the
-                    // texture for now, but request the follow-up frame that a finished
-                    // animation would otherwise never schedule, so the comparison re-runs
-                    // (and releases) once the zoom settles
+                const frameFingerprint = this._rttFingerprints[source][tile.tileID.key];
+                const tileFingerprint = tile.rttFingerprint[source];
+                if (!frameFingerprint || frameFingerprint.equals(tileFingerprint)) continue;
+                if (zoomChanged && frameFingerprint.equalsIgnoringZoom(tileFingerprint)) {
+                    // keep the texture while the zoom is still changing (see
+                    // equalsIgnoringZoom), but request the follow-up frame that a
+                    // finished animation would otherwise never schedule, so the
+                    // comparison re-runs (and releases) once the zoom settles
                     staleZoomOnly = true;
                 } else {
                     tile.releaseRTT(this.painter);
