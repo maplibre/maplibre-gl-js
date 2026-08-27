@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
-import type {WorldCoordinateHelper} from './projection/projection.ts';
+import type {WorldCoordinateHelper} from './transform_interface.ts';
 import {mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
 
@@ -90,10 +90,6 @@ export type TransformOptions = {
      * An override of the transform's default constraining function for respecting its longitude and latitude bounds.
      */
     constrainOverride?: TransformConstrainFunction | null;
-    /**
-     * The lng/lat to world-coordinate mapping the transform positions the camera in. Defaults to mercator.
-     */
-    worldCoordinateHelper?: WorldCoordinateHelper;
 };
 
 function getTileZoom(zoom: number): number {
@@ -167,7 +163,7 @@ export class TransformHelper implements ITransformGetters {
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
-        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
+        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -608,10 +604,10 @@ export class TransformHelper implements ITransformGetters {
         // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
         // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
         // This typically takes about 5 iterations.
-        const helper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
         const cameraLngLat = LngLat.convert(lnglat);
-        const camMercator = helper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
-        let metersPerMercUnit = helper.metersPerWorldUnit(camMercator.x, camMercator.y);
+        const camMercator = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
+        let metersPerMercUnit = worldCoordinateHelper.metersPerWorldUnit(camMercator.x, camMercator.y);
         let centerMercator: {x: number; y: number};
         let dMercator: number;
         let iter = 0;
@@ -625,10 +621,10 @@ export class TransformHelper implements ITransformGetters {
             const dx = x * dMercator;
             const dy = y * dMercator;
             centerMercator = {x: camMercator.x + dx, y: camMercator.y + dy};
-            metersPerMercUnit = helper.metersPerWorldUnit(centerMercator.x, centerMercator.y);
+            metersPerMercUnit = worldCoordinateHelper.metersPerWorldUnit(centerMercator.x, centerMercator.y);
         } while (Math.abs(distanceToCenter - dMercator * metersPerMercUnit) > 1.0e-12);
 
-        const center = helper.lngLatFromWorld(centerMercator.x, centerMercator.y);
+        const center = worldCoordinateHelper.lngLatFromWorld(centerMercator.x, centerMercator.y);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
         return {center, elevation: clampedElevation, zoom};
     }
@@ -637,13 +633,13 @@ export class TransformHelper implements ITransformGetters {
         if (this.elevation - elevation === 0) return;
 
         // Critical: Stay in pixels and use original center to avoid instability at extreme latitudes when using Mercator-LngLat
-        const helper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
         const mercUnitsPerPixel = 1 / this.worldSize;
-        const originalMercUnitsPerMeter = helper.worldZFromAltitude(1, this.center);
+        const originalMercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, this.center);
         const originalPixelsPerMeter = originalMercUnitsPerMeter * this.worldSize;
 
         // Determine camera
-        const originalCenterMercator = helper.worldFromLngLat(this.center.lng, this.center.lat, this.elevation);
+        const originalCenterMercator = worldCoordinateHelper.worldFromLngLat(this.center.lng, this.center.lat, this.elevation);
         const originalCenterPixelX = originalCenterMercator.x / mercUnitsPerPixel;
         const originalCenterPixelY = originalCenterMercator.y / mercUnitsPerPixel;
         const originalCenterPixelZ = originalCenterMercator.z / mercUnitsPerPixel;
@@ -661,9 +657,9 @@ export class TransformHelper implements ITransformGetters {
         const distanceToCenterPixels = distanceToCenter * originalPixelsPerMeter;
         const centerPixelX = camPixelX + x * distanceToCenterPixels;
         const centerPixelY = camPixelY + y * distanceToCenterPixels;
-        const center = helper.lngLatFromWorld(centerPixelX * mercUnitsPerPixel, centerPixelY * mercUnitsPerPixel);
+        const center = worldCoordinateHelper.lngLatFromWorld(centerPixelX * mercUnitsPerPixel, centerPixelY * mercUnitsPerPixel);
 
-        const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
+        const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenter / mercUnitsPerMeter / this.tileSize);
 
         // Update matrices

@@ -15,12 +15,11 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
-import type {WorldCoordinateHelper} from './projection.ts';
 
 /**
  * @internal
@@ -283,7 +282,7 @@ export class MercatorTransform implements ITransform {
     }
 
     public clone(): ITransform {
-        const clone = new MercatorTransform({worldCoordinateHelper: this.worldCoordinateHelper});
+        const clone = new MercatorTransform();
         clone.apply(this, false);
         return clone;
     }
@@ -354,9 +353,9 @@ export class MercatorTransform implements ITransform {
         const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
-        const helper = this.worldCoordinateHelper;
-        const loc = helper.worldFromLngLat(lnglat.lng, lnglat.lat);
-        this.setCenter(helper.lngLatFromWorld(
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const loc = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
+        this.setCenter(worldCoordinateHelper.lngLatFromWorld(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y)));
         if (this._helper._renderWorldCopies) {
@@ -712,10 +711,10 @@ export class MercatorTransform implements ITransform {
         if (!this._helper._height) return;
 
         const offset = this.centerOffset;
-        const helper = this.worldCoordinateHelper;
-        const point = projectToWorldCoordinates(this.worldSize, this.center, helper);
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const point = projectToWorldCoordinates(this.worldSize, this.center, worldCoordinateHelper);
         const x = point.x, y = point.y;
-        this._helper._pixelPerMeter = helper.worldZFromAltitude(1, this.center) * this.worldSize;
+        this._helper._pixelPerMeter = worldCoordinateHelper.worldZFromAltitude(1, this.center) * this.worldSize;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
@@ -830,14 +829,14 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraLngLat(): LngLat {
-        const helper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
         const center = this.center;
-        const mercUnitsPerMeter = helper.worldZFromAltitude(1, center);
+        const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
         const pixelPerMeter = mercUnitsPerMeter * this.worldSize;
         const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const centerMercator = helper.worldFromLngLat(center.lng, center.lat, this.elevation);
+        const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, this.elevation);
         const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, this.pitch, this.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
-        return helper.lngLatFromWorld(camMercator.x, camMercator.y);
+        return worldCoordinateHelper.lngLatFromWorld(camMercator.x, camMercator.y);
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {

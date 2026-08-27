@@ -13,12 +13,11 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
-import type {WorldCoordinateHelper} from './projection.ts';
 
 const GLOBE_SAMPLES = 256;
 const GLOBE_BISECT_EPSILON_T = 1e-12;
