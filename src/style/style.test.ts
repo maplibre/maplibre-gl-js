@@ -2350,6 +2350,18 @@ describe('Style.addLayer', () => {
         expect(style.getLayer('custom')).toBeUndefined();
     });
 
+    test('does not serialize the style when validation is off', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const serialize = vi.spyOn(style, 'serialize');
+
+        style.addLayer({id: 'background', type: 'background'}, undefined, {validate: false});
+
+        expect(serialize).not.toHaveBeenCalled();
+        expect(style.getLayer('background')).toBeTruthy();
+    });
+
     test('sets up layer event forwarding', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
