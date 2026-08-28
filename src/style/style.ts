@@ -1988,6 +1988,7 @@ export class Style extends Evented<MapEventType> {
     setFontFaces(fontFaces: FontFacesSpecification | null | undefined): void {
         this._checkLoaded();
 
+        this._changed = true;
         this._glyphsDidChange = true;
         this.stylesheet['font-faces'] = fontFaces;
         this.glyphManager.setFontFaces(fontFaces);
