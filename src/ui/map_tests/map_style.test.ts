@@ -8,7 +8,7 @@ import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style.ts';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
-import type {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {GeoJSONSourceSpecification, LayerSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -23,6 +23,58 @@ afterEach(() => {
 });
 
 describe('setStyle', () => {
+    test('replaces a terrain style while terrain is loading', async () => {
+        const terrainStyle: StyleSpecification = {
+            version: 8,
+            sources: {
+                dem: {
+                    type: 'raster-dem',
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }
+            },
+            terrain: {source: 'dem'},
+            layers: []
+        };
+        const nextTerrainStyle: StyleSpecification = {
+            ...terrainStyle,
+            sources: {nextDem: terrainStyle.sources.dem},
+            terrain: {source: 'nextDem'}
+        };
+        const map = createMap({style: terrainStyle});
+        await map.once('style.load');
+        const styleLoad = map.once('style.load');
+
+        map.setStyle(nextTerrainStyle, {diff: false});
+        map.redraw();
+        await styleLoad;
+
+        expect(map.getTerrain()).toEqual({source: 'nextDem'});
+    });
+
+    test('replaces a loading terrain style with a style without terrain', async () => {
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {
+                    dem: {
+                        type: 'raster-dem',
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                terrain: {source: 'dem'},
+                layers: []
+            }
+        });
+        await map.once('style.load');
+        const styleLoad = map.once('style.load');
+
+        map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        map.redraw();
+        await styleLoad;
+
+        expect(map.getTerrain()).toBeNull();
+    });
+
     test('returns self', () => {
         const map = new Map({container: window.document.createElement('div')});
         expect(map.setStyle({
