@@ -1755,8 +1755,6 @@ export class Style extends Evented<MapEventType> {
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
-        // Checked here as well as in validateAndEmit so that serializing the style, which costs
-        // O(layers) and is only needed as error context, is skipped along with the validation.
         if (options.validate === false) return false;
 
         return validateAndEmit(this, validate, {
