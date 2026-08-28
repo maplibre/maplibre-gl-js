@@ -1974,6 +1974,7 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
+        this._changed = true;
         this._glyphsDidChange = true;
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
