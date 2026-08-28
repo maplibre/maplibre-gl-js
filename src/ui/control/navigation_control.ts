@@ -90,7 +90,7 @@ export class NavigationControl implements IControl {
     _updateZoomButtons = (): void => {
         const zoom = this._map.getZoom();
         const isMax = zoom === this._map.getMaxZoom();
-        const isMin = zoom === this._map.getMinZoom();
+        const isMin = !this._map._camera.canZoomOut();
         this._zoomInButton.disabled = isMax;
         this._zoomOutButton.disabled = isMin;
         this._zoomInButton.setAttribute('aria-disabled', isMax.toString());
@@ -123,7 +123,7 @@ export class NavigationControl implements IControl {
         if (this.options.showZoom) {
             this._setButtonTitle(this._zoomInButton, 'ZoomIn');
             this._setButtonTitle(this._zoomOutButton, 'ZoomOut');
-            this._map.on('zoom', this._updateZoomButtons);
+            this._map.on('move', this._updateZoomButtons);
             this._updateZoomButtons();
         }
         if (this.options.showCompass) {
@@ -145,7 +145,7 @@ export class NavigationControl implements IControl {
     onRemove(): void {
         this._container.remove();
         if (this.options.showZoom) {
-            this._map.off('zoom', this._updateZoomButtons);
+            this._map.off('move', this._updateZoomButtons);
         }
         if (this.options.showCompass) {
             if (this.options.visualizePitch) {

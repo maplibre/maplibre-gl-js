@@ -463,6 +463,14 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
+    /** @internal */
+    canZoomOut(): boolean {
+        const zoom = this.transform.zoom;
+        const targetZoom = evaluateZoomSnap(zoom - 1, this._zoomSnap);
+        const center = this.transform.center;
+        return this.transform.applyConstrain(new LngLat(center.lng, center.lat), targetZoom).zoom < zoom;
+    }
+
     getVerticalFieldOfView(): number { return this.transform.fov; }
 
     setVerticalFieldOfView(fov: number, eventData?: any): this {
