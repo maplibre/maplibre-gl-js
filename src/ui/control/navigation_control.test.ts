@@ -263,7 +263,7 @@ describe('NavigationControl', () => {
 
         testMap.addControl(new NavigationControl());
 
-        const zoomOutButton = testMap.getContainer().querySelector('.maplibregl-ctrl-zoom-out');
+        const zoomOutButton = testMap.getContainer().querySelector<HTMLButtonElement>('.maplibregl-ctrl-zoom-out');
         expect(zoomOutButton.disabled).toBe(true);
     });
 
@@ -278,7 +278,7 @@ describe('NavigationControl', () => {
         Object.defineProperty(container, 'clientHeight', {value: 560});
         testMap.resize();
 
-        const zoomOutButton = testMap.getContainer().querySelector('.maplibregl-ctrl-zoom-out');
+        const zoomOutButton = testMap.getContainer().querySelector<HTMLButtonElement>('.maplibregl-ctrl-zoom-out');
         expect(zoomOutButton.disabled).toBe(true);
     });
 
