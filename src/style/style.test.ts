@@ -565,7 +565,7 @@ describe('Style.loadJSON', () => {
         // by setting globalState property and checking if the new value
         // was used when evaluating the layer
         const globalState = {size: {default: 12}};
-        style.setGlobalState(globalState, null);
+        style.setGlobalState(globalState);
         const layer = style.getLayer('layer-id');
         layer.recalculate({} as EvaluationParameters, []);
         const layout = layer.layout as PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
@@ -596,7 +596,7 @@ describe('Style.loadJSON', () => {
         // by setting globalState property and checking if the new value
         // was used when evaluating the layer
         const globalState = {color: {default: 'red'}, radius: {default: 12}};
-        style.setGlobalState(globalState, null);
+        style.setGlobalState(globalState);
         const layer = style.getLayer('layer-id');
         layer.recalculate({} as EvaluationParameters, []);
         const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
@@ -1788,31 +1788,15 @@ describe('Style.setGeoJSONSourceData', () => {
 describe('Style.setGlobalState', () => {
     test('throws before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => style.setGlobalState({}, null)).toThrow(/load/i);
+        expect(() => style.setGlobalState({})).toThrow(/load/i);
     });
 
     test('sets global state', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
-        style.setGlobalState({accentColor: {default: 'yellow'}}, null);
+        style.setGlobalState({accentColor: {default: 'yellow'}});
         expect(style.getGlobalState()).toEqual({accentColor: 'yellow'});
-    });
-
-    test('sets global state, with the state overriding the style defaults', async () => {
-        const style = new Style(getStubMap());
-        style.loadJSON(createStyleJSON());
-        await style.once('style.load');
-        style.setGlobalState({accentColor: {default: 'yellow'}}, {accentColor: 'red'});
-        expect(style.getGlobalState()).toEqual({accentColor: 'red'});
-    });
-
-    test('sets global state, with state properties without a default accepted', async () => {
-        const style = new Style(getStubMap());
-        style.loadJSON(createStyleJSON());
-        await style.once('style.load');
-        style.setGlobalState({accentColor: {default: 'yellow'}}, {other: 'value'});
-        expect(style.getGlobalState()).toEqual({accentColor: 'yellow', other: 'value'});
     });
 
     test('reloads sources when state property is used in filter property', async () => {
@@ -1843,7 +1827,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['fill-source-id'].resume = vi.fn();
         style.tileManagers['fill-source-id'].reload = vi.fn();
 
-        style.setGlobalState({showCircles: {default: true}, showFill: {default: false}}, null);
+        style.setGlobalState({showCircles: {default: true}, showFill: {default: false}});
 
         expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();
         expect(style.tileManagers['circle-source-id'].reload).toHaveBeenCalled();
@@ -1871,7 +1855,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['line-source-id'].resume = vi.fn();
         style.tileManagers['line-source-id'].reload = vi.fn();
 
-        style.setGlobalState({lineJoin: {default: 'bevel'}}, null);
+        style.setGlobalState({lineJoin: {default: 'bevel'}});
 
         expect(style.tileManagers['line-source-id'].resume).toHaveBeenCalled();
         expect(style.tileManagers['line-source-id'].reload).toHaveBeenCalled();
@@ -1899,7 +1883,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['circle-source-id'].resume = vi.fn();
         style.tileManagers['circle-source-id'].reload = vi.fn();
 
-        style.setGlobalState({circleColor: {default: 'red'}}, null);
+        style.setGlobalState({circleColor: {default: 'red'}});
         style.update({} as EvaluationParameters);
 
         expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();
@@ -1931,38 +1915,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['circle-source-id'].resume = vi.fn();
         style.tileManagers['circle-source-id'].reload = vi.fn();
 
-        style.setGlobalState({showCircles: {default: true}}, null);
-
-        expect(style.tileManagers['circle-source-id'].resume).not.toHaveBeenCalled();
-        expect(style.tileManagers['circle-source-id'].reload).not.toHaveBeenCalled();
-    });
-
-    test('does not reload sources when state property is set to the same value as current one, but with a different default value', async () => {
-        const style = new Style(getStubMap());
-        style.loadJSON(createStyleJSON({
-            state: {
-                'showCircles': {
-                    default: true
-                }
-            },
-            sources: {
-                'circle-source-id': createGeoJSONSource(),
-                'fill-source-id': createGeoJSONSource()
-            },
-            layers: [{
-                id: 'first-layer-id',
-                type: 'circle',
-                source: 'circle-source-id',
-                filter: ['global-state', 'showCircles']
-            }]
-        }));
-
-        await style.once('style.load');
-
-        style.tileManagers['circle-source-id'].resume = vi.fn();
-        style.tileManagers['circle-source-id'].reload = vi.fn();
-
-        style.setGlobalState({showCircles: {default: false}}, {showCircles: true});
+        style.setGlobalState({showCircles: {default: true}});
 
         expect(style.tileManagers['circle-source-id'].resume).not.toHaveBeenCalled();
         expect(style.tileManagers['circle-source-id'].reload).not.toHaveBeenCalled();
@@ -1990,7 +1943,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['circle-source-id'].resume = vi.fn();
         style.tileManagers['circle-source-id'].reload = vi.fn();
 
-        style.setGlobalState({circleColor: {default: 'red'}}, null);
+        style.setGlobalState({circleColor: {default: 'red'}});
         style.update({} as EvaluationParameters);
 
         expect(style.tileManagers['circle-source-id'].resume).not.toHaveBeenCalled();
@@ -2019,7 +1972,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['circle-source-id'].resume = vi.fn();
         style.tileManagers['circle-source-id'].reload = vi.fn();
 
-        style.setGlobalState({circleColor: {default: 'red'}}, null);
+        style.setGlobalState({circleColor: {default: 'red'}});
         style.update({} as EvaluationParameters);
 
         expect(style.tileManagers['circle-source-id'].resume).not.toHaveBeenCalled();
@@ -2050,7 +2003,7 @@ describe('Style.setGlobalState', () => {
         style.tileManagers['line-source-id'].resume = vi.fn();
         style.tileManagers['line-source-id'].reload = vi.fn();
 
-        style.setGlobalState({lineColor: {default: 'red'}}, null);
+        style.setGlobalState({lineColor: {default: 'red'}});
 
         expect(style.tileManagers['line-source-id'].resume).not.toHaveBeenCalled();
         expect(style.tileManagers['line-source-id'].reload).not.toHaveBeenCalled();

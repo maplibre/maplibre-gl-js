@@ -242,6 +242,7 @@ export class Style extends Evented<MapEventType> {
     _layerOrderChanged: boolean;
     _symbolPlacementTriggered: boolean;
     _placedProjectionTransition: number;
+    _initialGlobalState: Record<string, any>;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -271,7 +272,7 @@ export class Style extends Evented<MapEventType> {
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
-        this._setInitialValues();
+        this._setInitialValues(options.globalState);
 
         this._resetUpdates();
 
@@ -302,12 +303,13 @@ export class Style extends Evented<MapEventType> {
         });
     }
 
-    private _setInitialValues() {
+    private _setInitialValues(initialGlobalState: Record<string, any>) {
         this._layers = {};
         this._order = [];
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._imagesListDirty = false;
+        this._initialGlobalState = initialGlobalState ?? {};
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -365,14 +367,15 @@ export class Style extends Evented<MapEventType> {
         return this._globalState;
     }
 
-    setGlobalState(newStylesheetState: StateSpecification, globalState: Record<string, any>): void {
+    setGlobalState(newStylesheetState: StateSpecification): void {
         this._checkLoaded();
 
         const changedGlobalStateRefs = [];
-        const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(globalState ?? {})]);
+        const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(this._initialGlobalState)]);
 
         for (const propertyName of propertyNames) {
-            const propertyValue = globalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
+            // Initial global state has priority over global state defaults defined in the map style
+            const propertyValue = this._initialGlobalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
             const didChange = !deepEqual(this._globalState[propertyName], propertyValue);
 
             if (didChange) {
@@ -501,7 +504,7 @@ export class Style extends Evented<MapEventType> {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
-        this._createLayers(options.globalState);
+        this._createLayers();
 
         this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
@@ -515,10 +518,10 @@ export class Style extends Evented<MapEventType> {
         this.fire(new MapStyleLoadEvent());
     }
 
-    private _createLayers(globalState: Record<string, any>) {
+    private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
 
-        this.setGlobalState(this.stylesheet.state ?? null, globalState);
+        this.setGlobalState(this.stylesheet.state ?? null);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
@@ -863,7 +866,7 @@ export class Style extends Evented<MapEventType> {
         nextState.layers = derefLayers(nextState.layers);
 
         const changes = diffStyles(serializedStyle, nextState);
-        const operations = this._getOperationsToPerform(changes, options.globalState);
+        const operations = this._getOperationsToPerform(changes);
 
         if (operations.unimplemented.length > 0) {
             throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
@@ -873,6 +876,7 @@ export class Style extends Evented<MapEventType> {
             return false;
         }
 
+        this._initialGlobalState = options.globalState ?? {};
         for (const styleChangeOperation of operations.operations) {
             styleChangeOperation();
         }
@@ -887,7 +891,7 @@ export class Style extends Evented<MapEventType> {
         return true;
     }
 
-    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>, globalState: Record<string, any>): {operations: Function[]; unimplemented: string[]} {
+    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>): {operations: Function[]; unimplemented: string[]} {
         const operations: Function[] = [];
         const unimplemented: string[] = [];
         for (const op of diff) {
@@ -944,7 +948,7 @@ export class Style extends Evented<MapEventType> {
                     this.setProjection.apply(this, op.args);
                     break;
                 case 'setGlobalState':
-                    operations.push(() => this.setGlobalState.apply(this, [...op.args, globalState]));
+                    operations.push(() => this.setGlobalState.apply(this, op.args));
                     break;
                 case 'setTransition':
                     operations.push(() => {});
@@ -2125,7 +2129,7 @@ export class Style extends Evented<MapEventType> {
         }
 
         // reset internal state
-        this._setInitialValues();
+        this._setInitialValues({});
 
         // Remove event listeners
         this.setEventedParent(null);
