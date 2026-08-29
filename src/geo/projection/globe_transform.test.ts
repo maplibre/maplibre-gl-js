@@ -583,6 +583,21 @@ describe('GlobeTransform', () => {
             expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
             expect(projection.isOccluded).toBe(true);
         });
+
+        test('point high above an occluded anchor stays visible', () => {
+            const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 2000000);
+            expect(projection.isOccluded).toBe(false);
+        });
+
+        test('point slightly above an occluded anchor is still occluded', () => {
+            const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 1000);
+            expect(projection.isOccluded).toBe(true);
+        });
+
+        test('point below an occluded anchor uses the surface test', () => {
+            const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), -100);
+            expect(projection.isOccluded).toBe(true);
+        });
     });
 
     describe('isLocationOccluded', () => {
