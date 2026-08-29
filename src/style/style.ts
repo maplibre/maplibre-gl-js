@@ -272,7 +272,6 @@ export class Style extends Evented<MapEventType> {
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         this._setInitialValues();
-        this._globalState = extend({}, this._globalState, options.globalState);
 
         this._resetUpdates();
 
@@ -366,17 +365,19 @@ export class Style extends Evented<MapEventType> {
         return this._globalState;
     }
 
-    setGlobalState(newStylesheetState: StateSpecification): void {
+    setGlobalState(newStylesheetState: StateSpecification, globalState: Record<string, any>): void {
         this._checkLoaded();
 
         const changedGlobalStateRefs = [];
+        const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(globalState ?? {})]);
 
-        for (const propertyName in newStylesheetState) {
-            const didChange = !deepEqual(this._globalState[propertyName], newStylesheetState[propertyName].default);
+        for (const propertyName of propertyNames) {
+            const propertyValue = globalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
+            const didChange = !deepEqual(this._globalState[propertyName], propertyValue);
 
             if (didChange) {
                 changedGlobalStateRefs.push(propertyName);
-                this._globalState[propertyName] = newStylesheetState[propertyName].default;
+                this._globalState[propertyName] = propertyValue;
             }
         }
 
@@ -500,7 +501,7 @@ export class Style extends Evented<MapEventType> {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
-        this._createLayers();
+        this._createLayers(options.globalState);
 
         this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
@@ -514,10 +515,10 @@ export class Style extends Evented<MapEventType> {
         this.fire(new MapStyleLoadEvent());
     }
 
-    private _createLayers() {
+    private _createLayers(globalState: Record<string, any>) {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
 
-        this.setGlobalState(this.stylesheet.state ?? null);
+        this.setGlobalState(this.stylesheet.state ?? null, globalState);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
@@ -862,7 +863,7 @@ export class Style extends Evented<MapEventType> {
         nextState.layers = derefLayers(nextState.layers);
 
         const changes = diffStyles(serializedStyle, nextState);
-        const operations = this._getOperationsToPerform(changes);
+        const operations = this._getOperationsToPerform(changes, options.globalState);
 
         if (operations.unimplemented.length > 0) {
             throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
@@ -876,7 +877,6 @@ export class Style extends Evented<MapEventType> {
             styleChangeOperation();
         }
 
-        this._globalState = extend({}, this._globalState, options.globalState);
         this.stylesheet = nextState;
 
         // reset serialization field, to be populated only when needed
@@ -887,7 +887,7 @@ export class Style extends Evented<MapEventType> {
         return true;
     }
 
-    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>): {operations: Function[]; unimplemented: string[]} {
+    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>, globalState: Record<string, any>): {operations: Function[]; unimplemented: string[]} {
         const operations: Function[] = [];
         const unimplemented: string[] = [];
         for (const op of diff) {
@@ -944,7 +944,7 @@ export class Style extends Evented<MapEventType> {
                     this.setProjection.apply(this, op.args);
                     break;
                 case 'setGlobalState':
-                    operations.push(() => this.setGlobalState.apply(this, op.args));
+                    operations.push(() => this.setGlobalState.apply(this, [...op.args, globalState]));
                     break;
                 case 'setTransition':
                     operations.push(() => {});
