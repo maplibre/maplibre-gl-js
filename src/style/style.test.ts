@@ -3810,6 +3810,32 @@ describe('Style.serialize', () => {
         expect(style.serialize().sky).toBeDefined();
     });
 
+    test('include state property for style with state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.serialize().state).toBeUndefined();
+    });
+
+    test('include state property for style with state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {
+                showCircles: {
+                    default: true,
+                }
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().state).toEqual({
+            showCircles: {
+                default: true,
+            },
+        });
+    });
+
     test('update sky properties after setting the sky on initial load', async () => {
         const sky: SkySpecification = {
             'fog-color': '#FF0000'
