@@ -108,6 +108,10 @@ export type StyleOptions = {
      * Forces a full update.
      */
     localIdeographFontFamily?: string | false;
+    /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if setGlobalStateProperty was called after loading the style.
+     */
+    globalState?: Record<string, any>;
 };
 
 /**
@@ -118,6 +122,10 @@ export type StyleSetterOptions = {
      * Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      */
     validate?: boolean;
+    /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if setGlobalStateProperty was called after loading the style.
+     */
+    globalState?: Record<string, any>;
 };
 
 /**
@@ -264,6 +272,7 @@ export class Style extends Evented<MapEventType> {
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         this._setInitialValues();
+        this._globalState = extend({}, this._globalState, options.globalState);
 
         this._resetUpdates();
 
@@ -867,6 +876,7 @@ export class Style extends Evented<MapEventType> {
             styleChangeOperation();
         }
 
+        this._globalState = extend({}, this._globalState, options.globalState);
         this.stylesheet = nextState;
 
         // reset serialization field, to be populated only when needed
