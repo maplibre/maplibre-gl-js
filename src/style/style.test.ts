@@ -3810,7 +3810,7 @@ describe('Style.serialize', () => {
         expect(style.serialize().sky).toBeDefined();
     });
 
-    test('include state property for style with state defaults', async () => {
+    test('does not include state property when style has no state defaults', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
 
