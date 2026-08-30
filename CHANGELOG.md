@@ -12,6 +12,7 @@
 - Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982))
 - Fix an empty tile response (e.g. HTTP 204 for a tile without content) being decoded into a fake 1×1 image for every image consumer; raster-DEM tiles now load without elevation data instead of building a degenerate DEM that broke terrain and hillshade with a "dem dimension mismatch" error, while empty raster tiles keep rendering as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Ensure style state defaults are serialized (by [@hiddewie](https://github.com/hiddewie))
 
 ## 6.6.0
 
