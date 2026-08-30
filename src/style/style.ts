@@ -1487,9 +1487,10 @@ export class Style extends Evented<MapEventType> {
             glyphs: myStyleSheet.glyphs,
             transition: myStyleSheet.transition,
             projection: myStyleSheet.projection,
+            state: myStyleSheet.state,
             sources,
             layers,
-            terrain
+            terrain,
         },
         (value) => value !== undefined);
     }
