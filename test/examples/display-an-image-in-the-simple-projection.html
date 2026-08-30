@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display an image in the simple projection</title>
+    <meta property="og:description" content="Place an image by its four corners on a flat, image-space map using the built-in simple projection." />
+    <meta property="og:category" content="Raster & Imagery" />
+    <meta property="og:created" content="2026-08-24" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    // Draw a labelled grid so the image's corners are easy to spot on the map.
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+    gradient.addColorStop(0, '#f5b041');
+    gradient.addColorStop(1, '#5dade2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 512);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i <= 512; i += 64) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 512);
+        ctx.moveTo(0, i);
+        ctx.lineTo(512, i);
+        ctx.stroke();
+    }
+    ctx.fillStyle = '#222';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.fillText('[-60, 30]', 12, 12);
+    ctx.textAlign = 'right';
+    ctx.fillText('[60, 30]', 500, 12);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('[60, -30]', 500, 500);
+    ctx.textAlign = 'left';
+    ctx.fillText('[-60, -30]', 12, 500);
+
+    // The simple projection is an identity CRS: coordinates are plain plane units
+    // and tile 0/0/0 spans -90..90 on both axes, so nothing is stretched by latitude.
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            projection: {type: 'simple'},
+            sources: {
+                grid: {
+                    type: 'image',
+                    url: canvas.toDataURL(),
+                    coordinates: [
+                        [-60, 30],
+                        [60, 30],
+                        [60, -30],
+                        [-60, -30]
+                    ]
+                }
+            },
+            layers: [
+                {
+                    id: 'background',
+                    type: 'background',
+                    paint: {'background-color': '#e9ecef'}
+                },
+                {
+                    id: 'grid',
+                    type: 'raster',
+                    source: 'grid'
+                }
+            ]
+        },
+        center: [0, 0],
+        zoom: 0
+    });
+
+    map.addControl(new maplibregl.NavigationControl());
+</script>
+</body>
+</html>

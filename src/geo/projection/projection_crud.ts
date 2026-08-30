@@ -16,6 +16,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
 }
 
 /**
+ * @experimental
  * Registers a planar coordinate reference system so it can be used as a map projection.
  * After registration the CRS name is accepted by `map.setProjection({type: name})` and by the
  * style's `projection.type`. Every source of such a map is expected to serve tiles in the CRS's
@@ -59,6 +60,7 @@ export function addProjection(def: CrsDefinition): void {
 }
 
 /**
+ * @experimental
  * Removes a projection registered with {@link addProjection}. Maps currently using it keep working
  * until their projection changes; the pre-registered `'simple'` projection can be removed too.
  *

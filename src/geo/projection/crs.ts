@@ -6,6 +6,7 @@ import type {WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TileMatrix} from './tile_matrix.ts';
 
 /**
+ * @experimental
  * Describes a planar coordinate reference system (CRS) together with the square, power-of-two
  * quad tile grid laid over it, so a map can render tiles that were pre-projected in that CRS.
  * Register a definition with {@link addProjection} and select it with `map.setProjection({type: name})`
