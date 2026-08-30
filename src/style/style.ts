@@ -39,9 +39,9 @@ import {
     type GetImagesResponse
 } from '../util/actor_messages.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import {GeoJSONSource} from '../source/geojson_source.ts';
 
 import type {Source} from '../source/source.ts';
-import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
@@ -1815,6 +1815,8 @@ export class Style extends Evented<MapEventType> {
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {
+            const source = this.tileManagers[key].getSource();
+            if (source instanceof GeoJSONSource) source.reloadForProjection();
             this.tileManagers[key].reload();
         }
     }

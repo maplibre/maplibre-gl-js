@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {describe, test, expect, vi, beforeEach, afterEach} from 'vitest';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
@@ -7,18 +7,52 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
-import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {latFromMercatorY} from '../geo/mercator_coordinate.ts';
+import {fakeServer, type FakeServer} from 'nise';
 
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {RequestManager} from '../util/request_manager.ts';
+import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
+import type {Projection} from '../geo/projection/projection.ts';
 import type {Map} from '../ui/map.ts';
 
 const wrapDispatcher = getWrapDispatcher();
+
+let map: Map;
+
+beforeEach(async () => {
+    beforeMapTest();
+    map = createMap();
+    await map.once('style.load');
+});
+
+afterEach(() => {
+    map.remove();
+});
+
+const performanceMark = window.performance.mark;
+
+/** `beforeMapTest` stubs `performance.mark`; a test that measures a request wants the real one back. */
+function restorePerformanceMarks(): void {
+    window.performance.mark = performanceMark;
+}
+
+/** The test's map, switched to the given projection. */
+function mapWithProjection(projection: Projection): Map {
+    map.style.projection = projection;
+    return map;
+}
+
+/** A second map whose request manager runs the given transform; the test removes it. */
+async function createMapTransformingRequests(transformRequest: RequestTransformFunction): Promise<Map> {
+    const transformingMap = createMap({transformRequest});
+    await transformingMap.once('style.load');
+    return transformingMap;
+}
 
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
@@ -92,13 +126,15 @@ describe('GeoJSONSource.setData', () => {
     function createSource(opts?) {
         opts ||= {};
         opts = extend(opts, {data: {}});
-        return new GeoJSONSource('id', opts, wrapDispatcher({
+        const source = new GeoJSONSource('id', opts, wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
                     setTimeout(() => resolve({}), 0);
                 });
             }
         }), undefined);
+        source.map = map;
+        return source;
     }
 
     test('fires "data" event', async () => {
@@ -127,6 +163,7 @@ describe('GeoJSONSource.setData', () => {
                 });
             }
         }), undefined);
+        source.map = map;
         const promise = source.once('dataabort');
         source.load();
         await expect(promise).resolves.toBeDefined();
@@ -146,11 +183,7 @@ describe('GeoJSONSource.setData', () => {
                 });
             }
         }), undefined);
-        source.map = {
-            _requestManager: {
-                transformRequest: (url:string) => ({url})
-            } as any as RequestManager
-        } as any;
+        source.map = map;
         source.setData('http://localhost/nonexistent');
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -169,14 +202,12 @@ describe('GeoJSONSource.setData', () => {
                 });
             }
         }), undefined);
-        source.map = {
-            _requestManager: {
-                transformRequest: async (url: string) => ({url})
-            } as any as RequestManager
-        } as any;
+        const transformingMap = await createMapTransformingRequests(async (url) => ({url}));
+        source.map = transformingMap;
         await source.setData('http://localhost/nonexistent');
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].data.request.collectResourceTiming).toBeTruthy();
+        transformingMap.remove();
     });
 
     test('only marks source as loaded when there are no pending loads', async () => {
@@ -200,6 +231,7 @@ describe('GeoJSONSource.setData', () => {
                 });
             }
         }), undefined);
+        source.map = map;
 
         const firstPromise = source.setData({} as GeoJSON.GeoJSON);
         const secondPromise = source.setData({} as GeoJSON.GeoJSON);
@@ -234,6 +266,7 @@ describe('GeoJSONSource.setData', () => {
                 });
             }
         }), undefined);
+        source.map = map;
         const promise = waitForEvent(source, 'dataabort', () => true);
         source.setData({} as GeoJSON.GeoJSON);
         await promise;
@@ -307,6 +340,7 @@ describe('GeoJSONSource.onRemove', () => {
                 return Promise.resolve({});
             }
         }), undefined);
+        source.map = map;
         source.onRemove();
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -332,7 +366,9 @@ describe('GeoJSONSource.update', () => {
             }
         });
 
-        new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
+        source.load();
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -347,13 +383,15 @@ describe('GeoJSONSource.update', () => {
             }
         });
 
-        new GeoJSONSource('id', {
+        const source = new GeoJSONSource('id', {
             data: {},
             maxzoom: 10,
             tolerance: 0.25,
             buffer: 16,
             generateId: true
-        } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
+        source.load();
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -394,6 +432,7 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         source.load();
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -426,6 +465,7 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         }, mockDispatcher, undefined);
+        source.map = map;
 
         // Wait for initial data to be loaded
         source.load();
@@ -460,6 +500,7 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         }, mockDispatcher, undefined);
+        source.map = map;
 
         // Wait for initial data to be loaded
         source.load();
@@ -525,6 +566,7 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         }, mockDispatcher, undefined);
+        source.map = map;
 
         // Wait for initial data to be loaded
         source.load();
@@ -566,6 +608,7 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         source.load();
         await sleep(0);
         expect(spy).toHaveBeenCalled();
@@ -580,24 +623,21 @@ describe('GeoJSONSource.update', () => {
         });
     });
 
-    test('transforms url before making request', () => {
-        const mapStub = {
-            _requestManager: {
-                transformRequest: (url: string) => ({url})
-            }
-        } as any;
-        const transformSpy = vi.spyOn(mapStub._requestManager, 'transformRequest');
+    test('transforms url before making request', async () => {
+        const transformRequest = vi.fn((url: string) => ({url}));
+        const transformingMap = await createMapTransformingRequests(transformRequest);
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        source.onAdd(mapStub);
-        expect(transformSpy).toHaveBeenCalledTimes(1);
-        expect(transformSpy.mock.calls[0][0]).toBe('https://example.com/data.geojson');
+        source.onAdd(transformingMap);
+        expect(transformRequest).toHaveBeenCalledTimes(1);
+        expect(transformRequest.mock.calls[0][0]).toBe('https://example.com/data.geojson');
+        transformingMap.remove();
     });
 
     test('updates _data.geojson when worker returns data from URL load', async () => {
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync() { return Promise.resolve({data: hawkHill}); }
         }), undefined);
-        source.map = {_requestManager: {transformRequest: (url: string) => ({url})}} as any;
+        source.map = map;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         source.load();
@@ -614,20 +654,18 @@ describe('GeoJSONSource.update', () => {
                 return Promise.resolve({});
             }
         }), undefined);
-        source.map = {
-            _requestManager: {
-                transformRequest: async (url) => ({
-                    url,
-                    headers: {Authorization: 'Bearer token'}
-                })
-            }
-        } as any;
+        const transformingMap = await createMapTransformingRequests(async (url) => ({
+            url,
+            headers: {Authorization: 'Bearer token'}
+        }));
+        source.map = transformingMap;
         await source.load();
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].data.request).toEqual({
             url: 'https://example.com/data.geojson',
             headers: {Authorization: 'Bearer token'}
         });
+        transformingMap.remove();
     });
 
     test('fires event when metadata loads', async () =>  {
@@ -640,6 +678,7 @@ describe('GeoJSONSource.update', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -659,6 +698,7 @@ describe('GeoJSONSource.update', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -676,6 +716,7 @@ describe('GeoJSONSource.update', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         const promise = waitForEvent(source, 'error', () => true);
 
@@ -693,20 +734,17 @@ describe('GeoJSONSource.update', () => {
                 if (message.type === MessageType.loadData) {
                     spy();
                 }
-                return new Promise((resolve) => setTimeout(() => resolve({}), 0));
+                const emptyGeoJSONTile = null;
+                return new Promise((resolve) => setTimeout(() => resolve(message.type === MessageType.loadTile ? emptyGeoJSONTile : {}), 0));
             }
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        source.map = {
-            transform: {} as IReadonlyTransform,
-            getPixelRatio() { return 1; },
-            getGlobalState: () => ({}),
-            style: {projection: new MercatorProjection()}
-        } as any;
+        source.map = map;
 
+        let updates = 0;
         source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
+            if (e.sourceDataType === 'metadata' && updates++ < 3) {
                 source.setData({} as GeoJSON.GeoJSON);
                 source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
             }
@@ -723,7 +761,8 @@ describe('GeoJSONSource.getData', () => {
     const mapStub = {
         _requestManager: {
             transformRequest: (url: string) => ({url})
-        }
+        },
+        style: {projection: new MercatorProjection()}
     } as any;
     test('gets the data when passed as a geojson object', async () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, mockDispatcher, undefined);
@@ -744,6 +783,7 @@ describe('GeoJSONSource.getData', () => {
 
     test('returns added features from getData when updateData is called immediately after initialization', async () => {
         const source = new GeoJSONSource('id', {data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         source.load();
 
         const diff: GeoJSONSourceDiff = {
@@ -772,6 +812,7 @@ describe('GeoJSONSource.getData', () => {
         };
 
         const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -802,6 +843,7 @@ describe('GeoJSONSource.updateData', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         // Wait for initial data to be loaded
         source.load();
@@ -840,6 +882,7 @@ describe('GeoJSONSource.updateData', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
@@ -884,6 +927,7 @@ describe('GeoJSONSource.updateData', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
@@ -922,6 +966,7 @@ describe('GeoJSONSource.updateData', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
@@ -959,6 +1004,7 @@ describe('GeoJSONSource.updateData', () => {
         };
 
         const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -1052,6 +1098,7 @@ describe('GeoJSONSource.serialize', () => {
 
     test('serialize source with additional options', () => {
         const source = new GeoJSONSource('id', {data: {}, cluster: true} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         expect(source.serialize()).toEqual({
             type: 'geojson',
             data: {},
@@ -1074,6 +1121,7 @@ describe('GeoJSONSource.load', () => {
         });
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
 
         // Wait for initial data to be loaded
         source.load();
@@ -1097,6 +1145,7 @@ describe('GeoJSONSource.applyDiff', () => {
         };
 
         const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
@@ -1298,6 +1347,7 @@ describe('GeoJSONSource.getClusterExpansionZoom', () => {
             sendAsync: spy.mockResolvedValue({})
         });
         const source = new GeoJSONSource('id', {data: {}, cluster: true} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         await source.getClusterExpansionZoom(1);
 
         expect(spy).toHaveBeenCalledTimes(1);
@@ -1314,6 +1364,7 @@ describe('GeoJSONSource.getClusterChildren', () => {
             sendAsync: spy.mockResolvedValue({})
         });
         const source = new GeoJSONSource('id', {data: {}, cluster: true} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         await source.getClusterChildren(1);
 
         expect(spy).toHaveBeenCalledTimes(1);
@@ -1330,6 +1381,7 @@ describe('GeoJSONSource.getClusterLeaves', () => {
             sendAsync: spy.mockResolvedValue({})
         });
         const source = new GeoJSONSource('id', {data: {}, cluster: true} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = map;
         await source.getClusterLeaves(1, 0, 1);
 
         expect(spy).toHaveBeenCalledTimes(1);
@@ -1348,6 +1400,7 @@ describe('GeoJSONSource.getClusterOptions', () => {
             clusterMaxZoom: 12,
             clusterRadius: 80
         }, mockDispatcher, undefined);
+        source.map = map;
 
         expect(source.getClusterOptions()).toEqual({cluster: true, clusterMaxZoom: 12, clusterRadius: 80});
     });
@@ -1358,10 +1411,228 @@ describe('GeoJSONSource.getClusterOptions', () => {
             data: {} as GeoJSON.GeoJSON,
             cluster: false
         }, mockDispatcher, undefined);
+        source.map = map;
 
         const options = {cluster: true, clusterMaxZoom: 9, clusterRadius: 40};
         await source.setClusterOptions(options);
 
         expect(source.getClusterOptions()).toEqual(options);
+    });
+});
+
+describe('GeoJSONSource in a planar projection', () => {
+    function createSimpleCrsProjection(): Projection {
+        return new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs));
+    }
+
+    /** lng/lat 45/45 is world (0.75, 0.25) in the simple CRS; mercator puts that world position at this lng/lat. */
+    function pseudoLngLatOf45(): GeoJSON.Position {
+        return [90, latFromMercatorY(0.25)];
+    }
+
+    function createPointData(): GeoJSON.FeatureCollection {
+        return {
+            type: 'FeatureCollection',
+            features: [{type: 'Feature', id: 1, properties: {name: 'p'}, geometry: {type: 'Point', coordinates: [45, 45]}}]
+        };
+    }
+
+    function createSpiedSource(options: GeoJSONSourceOptions, map: Map, respond: (message: ActorMessage<MessageType>) => any) {
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', options, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                spy(message);
+                return Promise.resolve(respond(message));
+            }
+        }), undefined);
+        source.map = map;
+        return {source, spy};
+    }
+
+    function expectPseudo(coordinates: GeoJSON.Position) {
+        const pseudo = pseudoLngLatOf45();
+        expect(coordinates[0]).toBeCloseTo(pseudo[0], 9);
+        expect(coordinates[1]).toBeCloseTo(pseudo[1], 9);
+    }
+
+    test('sends object data pre-projected and keeps the original', async () => {
+        const data = createPointData();
+        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
+        const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        source.load();
+        await loaded;
+
+        const sent = spy.mock.calls[0][0].data.data as GeoJSON.FeatureCollection;
+        expect(sent).not.toBe(data);
+        expectPseudo((sent.features[0].geometry as GeoJSON.Point).coordinates);
+        expect((data.features[0].geometry as GeoJSON.Point).coordinates).toEqual([45, 45]);
+        expect(source.serialize().data).toBe(data);
+    });
+
+    test('sends mercator data as is', async () => {
+        const data = createPointData();
+        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, () => ({}));
+        const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        source.load();
+        await loaded;
+        expect(spy.mock.calls[0][0].data.data).toBe(data);
+    });
+
+    describe('url data', () => {
+        let server: FakeServer;
+        beforeEach(() => {
+            global.fetch = null;
+            server = fakeServer.create();
+            server.respondImmediately = true;
+        });
+        afterEach(() => {
+            server.restore();
+        });
+
+        test('is fetched on the main thread and sent pre-projected', async () => {
+            const data = createPointData();
+            server.respondWith('/data.geojson', JSON.stringify(data));
+            const {source, spy} = createSpiedSource({data: '/data.geojson'} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
+            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+            source.load();
+            await loaded;
+
+            const params = spy.mock.calls[0][0].data;
+            expect(params.request).toBeUndefined();
+            expectPseudo((params.data.features[0].geometry as GeoJSON.Point).coordinates);
+            expect(source.serialize().data).toEqual(data);
+            await expect(source.getData()).resolves.toEqual(data);
+        });
+
+        test('is left to the worker for mercator', async () => {
+            const {source, spy} = createSpiedSource({data: '/data.geojson'} as GeoJSONSourceOptions, map, () => ({}));
+            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+            source.load();
+            await loaded;
+            expect(spy.mock.calls[0][0].data.request).toEqual({url: 'http://localhost/data.geojson', collectResourceTiming: undefined});
+            expect(spy.mock.calls[0][0].data.data).toBeUndefined();
+            expect(server.requests).toHaveLength(0);
+        });
+
+        test('reports a failed fetch as an error event', async () => {
+            server.respondWith('/missing.geojson', [404, {}, '']);
+            const {source} = createSpiedSource({data: '/missing.geojson'} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
+            const error = source.once('error');
+            source.load();
+            await expect(error).resolves.toBeDefined();
+        });
+
+        test('keeps resource timing for the main-thread fetch', async () => {
+            restorePerformanceMarks();
+            server.respondWith('/data.geojson', JSON.stringify(createPointData()));
+            const {source} = createSpiedSource({data: '/data.geojson', collectResourceTiming: true} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
+            const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+            source.load();
+            const event = await loaded;
+            expect(event.resourceTiming).toHaveLength(1);
+            expect(event.resourceTiming[0].name).toBe('http://localhost/data.geojson');
+        });
+    });
+
+    test('pre-projects added features and new geometries of a diff', async () => {
+        const {source, spy} = createSpiedSource({data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        spy.mockClear();
+
+        const diff: GeoJSONSourceDiff = {
+            remove: ['1'],
+            add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}],
+            update: [
+                {id: '3', newGeometry: {type: 'Point', coordinates: [45, 45]}},
+                {id: '4', addOrUpdateProperties: [{key: 'a', value: 1}]}
+            ]
+        };
+        await source.updateData(diff);
+
+        const sent = spy.mock.calls[0][0].data.dataDiff as GeoJSONSourceDiff;
+        expect(sent.remove).toEqual(['1']);
+        expectPseudo((sent.add[0].geometry as GeoJSON.Point).coordinates);
+        expectPseudo((sent.update[0].newGeometry as GeoJSON.Point).coordinates);
+        expect(sent.update[1]).toBe(diff.update[1]);
+        expect((diff.add[0].geometry as GeoJSON.Point).coordinates).toEqual([45, 45]);
+    });
+
+    test('applies a diff to its own data in real lng/lat', async () => {
+        const {source} = createSpiedSource({data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        const content = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        await source.updateData({add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]});
+
+        const data = await source.getData() as GeoJSON.FeatureCollection;
+        expect((data.features[0].geometry as GeoJSON.Point).coordinates).toEqual([45, 45]);
+        const {shouldReloadTileOptions} = await content;
+        expect(shouldReloadTileOptions.affectedBounds[0].toArray()).toEqual([[45, 45], [45, 45]]);
+    });
+
+    test('maps cluster children and leaves back to the map lng/lat', async () => {
+        const workerFeature = (): GeoJSON.Feature => ({type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: pseudoLngLatOf45()}});
+        const {source} = createSpiedSource({data: createPointData()} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), (message) => {
+            if (message.type === MessageType.getClusterChildren || message.type === MessageType.getClusterLeaves) return [workerFeature()];
+            return {};
+        });
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        for (const features of [await source.getClusterChildren(1), await source.getClusterLeaves(1, 10, 0)]) {
+            const coordinates = (features[0].geometry as GeoJSON.Point).coordinates;
+            expect(coordinates[0]).toBeCloseTo(45, 9);
+            expect(coordinates[1]).toBeCloseTo(45, 9);
+        }
+    });
+
+    test('does not resend the data for a projection change that keeps the world mapping, like mercator to globe', async () => {
+        const data = createPointData();
+        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, () => ({}));
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        source.reloadForProjection();
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('resends the data pre-projected when the projection becomes planar and as is when it goes back to mercator', async () => {
+        const data = createPointData();
+        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, () => ({}));
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        map.style.projection = createSimpleCrsProjection();
+        source.reloadForProjection();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        expect(spy).toHaveBeenCalledTimes(2);
+        expectPseudo((spy.mock.calls[1][0].data.data.features[0].geometry as GeoJSON.Point).coordinates);
+
+        map.style.projection = new MercatorProjection();
+        source.reloadForProjection();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        expect(spy).toHaveBeenCalledTimes(3);
+        expect(spy.mock.calls[2][0].data.data).toBe(data);
+    });
+
+    test('keeps a diff that is still waiting for the worker when the projection changes', async () => {
+        const {source, spy} = createSpiedSource({data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, map, () => ({}));
+        source.load();
+        source.updateData({add: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]});
+        map.style.projection = createSimpleCrsProjection();
+        source.reloadForProjection();
+        await vi.waitFor(() => expect(source.loaded()).toBe(true));
+
+        const sent = spy.mock.calls.map(call => call[0].data);
+        expect(sent.map(params => params.dataDiff ? 'diff' : 'data')).toEqual(['data', 'data', 'diff']);
+        expectPseudo((sent[2].dataDiff.add[0].geometry as GeoJSON.Point).coordinates);
+        const data = await source.getData() as GeoJSON.FeatureCollection;
+        expect((data.features[0].geometry as GeoJSON.Point).coordinates).toEqual([45, 45]);
     });
 });

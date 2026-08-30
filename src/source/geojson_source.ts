@@ -9,7 +9,13 @@ import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
+import {getJSON} from '../util/ajax.ts';
+import {reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
+import {RequestPerformance} from '../util/request_performance.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {RequestParameters} from '../util/ajax.ts';
 import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import type {Source} from './source.ts';
 import type {Map} from '../ui/map.ts';
@@ -89,6 +95,8 @@ export type GetClusterOptions = {
 
 /**
  * A source containing GeoJSON.
+ * On a projection registered with {@link addProjection} the data is tiled from pre-projected coordinates, so the
+ * `filter` option is evaluated on those and geometry-based filters (`within`) are not supported there.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
  * GeoJSON is tiled internally for rendering. Features exposed from rendered tiles and related events come from vector-tile data, so GeoJSON foreign members that cannot be represented by the vector-tile format are not preserved there. Keep that data separately, or map it to supported feature properties, if you need it after tiling.
@@ -172,6 +180,17 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     };
     _collectResourceTiming: boolean;
     _removed: boolean;
+    /**
+     * The world mapping the worker's copy of the data was pre-projected for: the worker tiles GeoJSON in
+     * mercator, so for a planar projection the main thread first moves every position to the lng/lat whose
+     * mercator projection is the map's world position (`reprojectGeoJSONToPseudoLngLat`); for mercator the
+     * worker gets the data as is.
+     */
+    private _workerDataHelper: WorldCoordinateHelper | undefined;
+    /** The URL fetch a planar projection runs on the main thread, while it is in flight; `onRemove` aborts it. */
+    private _mainThreadRequest: AbortController | undefined;
+    /** The resource timing of the last main-thread fetch, until the data event that follows it carries it. */
+    private _mainThreadResourceTiming: PerformanceEntryList | undefined;
 
     /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -381,7 +400,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * @returns a promise that is resolved when the features are retrieved
      */
     async getClusterChildren(clusterId: number): Promise<GeoJSON.Feature[]> {
-        return (await this.actorPromise).sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
+        const features = await (await this.actorPromise).sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
+        return this._fromWorkerLngLat(features);
     }
 
     /**
@@ -410,13 +430,43 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * ```
      */
     async getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<GeoJSON.Feature[]> {
-        return (await this.actorPromise).sendAsync({type: MessageType.getClusterLeaves, data: {
+        const features = await (await this.actorPromise).sendAsync({type: MessageType.getClusterLeaves, data: {
             type: this.type,
             source: this.id,
             clusterId,
             limit,
             offset
         }});
+        return this._fromWorkerLngLat(features);
+    }
+
+    /**
+     * Maps features returned by the worker back to the map's lng/lat when the worker holds pre-projected data.
+     */
+    private _fromWorkerLngLat(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
+        const worldCoordinateHelper = this._workerDataHelper;
+        if (!worldCoordinateHelper || worldCoordinateHelper === mercatorWorldCoordinateHelper) return features;
+        return features.map(feature => reprojectGeoJSONFromPseudoLngLat(feature, worldCoordinateHelper));
+    }
+
+    /**
+     * @internal
+     * Re-sends the data to the worker after the map's projection changed, since the worker's copy is
+     * pre-projected for the previous projection. Nothing happens between projections that share one world
+     * mapping, as mercator and globe do. A diff still waiting to be sent stays pending and follows the data.
+     */
+    reloadForProjection(): void {
+        const worldCoordinateHelper = this.map.style.projection.worldCoordinateHelper;
+        const previous = this._workerDataHelper;
+        if (!previous || previous === worldCoordinateHelper) return;
+        if (this._data.url) {
+            this._pendingWorkerUpdate.data = this._data.url;
+        } else if (this._data.updateable) {
+            this._pendingWorkerUpdate.data = {type: 'FeatureCollection', features: Array.from(this._data.updateable.values())};
+        } else {
+            this._pendingWorkerUpdate.data = this._data.geojson;
+        }
+        this._updateWorkerData();
     }
 
     /**
@@ -436,15 +486,17 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         // delay awaiting params until _isUpdatingWorker is set, otherwise, a race condition could happen
         const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
 
+        let sentDiff: GeoJSONSourceDiff | undefined;
         if (data !== undefined) {
             this._pendingWorkerUpdate.data = undefined;
         } else if (diff) {
             this._pendingWorkerUpdate.diff = undefined;
+            sentDiff = diff;
         } else if (updateCluster) {
             this._pendingWorkerUpdate.updateCluster = undefined;
         }
 
-        this._updatePromise = this._dispatchWorkerUpdate(params);
+        this._updatePromise = this._dispatchWorkerUpdate(params, sentDiff);
         await this._updatePromise;
     }
 
@@ -453,23 +505,35 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      */
     private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
         const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
+        const worldCoordinateHelper = this.map.style.projection.worldCoordinateHelper;
+        const isMercator = worldCoordinateHelper === mercatorWorldCoordinateHelper;
+        if (data !== undefined || diff) this._workerDataHelper = worldCoordinateHelper;
 
         // Data comes from a remote url
         if (typeof data === 'string') {
-            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data), ResourceType.Source);
-            params.request.collectResourceTiming = this._collectResourceTiming;
+            const request = await this.map._requestManager.transformRequest(browser.resolveURL(data), ResourceType.Source);
+            if (isMercator) {
+                params.request = request;
+                params.request.collectResourceTiming = this._collectResourceTiming;
+                return params;
+            }
+            params.data = reprojectGeoJSONToPseudoLngLat(await this._fetchOnMainThread(request), worldCoordinateHelper);
             return params;
         }
 
         // Data is a geojson object
         if (data !== undefined) {
-            params.data = data;
+            params.data = isMercator ? data : reprojectGeoJSONToPseudoLngLat(data, worldCoordinateHelper);
             return params;
         }
 
         // Data is a differential update
         if (diff) {
-            params.dataDiff = diff;
+            params.dataDiff = isMercator ? diff : {
+                ...diff,
+                add: diff.add?.map(feature => reprojectGeoJSONToPseudoLngLat(feature, worldCoordinateHelper)),
+                update: diff.update?.map(update => update.newGeometry ? {...update, newGeometry: reprojectGeoJSONToPseudoLngLat(update.newGeometry, worldCoordinateHelper)} : update)
+            };
             return params;
         }
 
@@ -481,9 +545,29 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
-     * Send the worker update data from the main thread to the worker
+     * Fetches URL data on the main thread for a planar projection: the data has to be pre-projected before the
+     * worker tiles it, and the projection's `project` function is a closure that cannot be posted to the worker.
+     * The resource timing entries are copied to plain objects, the shape the worker path posts them in.
      */
-    private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
+    private async _fetchOnMainThread(request: RequestParameters): Promise<GeoJSON.GeoJSON> {
+        const timing = this._collectResourceTiming ? new RequestPerformance(request.url) : undefined;
+        this._mainThreadRequest = new AbortController();
+        try {
+            const geojson = (await getJSON<GeoJSON.GeoJSON>(request, this._mainThreadRequest)).data;
+            this._data = {geojson};
+            if (timing) this._mainThreadResourceTiming = JSON.parse(JSON.stringify(timing.finish()));
+            return geojson;
+        } finally {
+            this._mainThreadRequest = undefined;
+        }
+    }
+
+    /**
+     * Send the worker update data from the main thread to the worker.
+     * @param optionsPromise - the parameters for the worker, whose diff may be pre-projected for a planar projection
+     * @param diff - the diff as the caller gave it, in real lng/lat, which is what this source's own data copy takes
+     */
+    private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>, diff: GeoJSONSourceDiff | undefined) {
         this._isUpdatingWorker = true;
         this.fire(new MapSourceDataEvent('dataloading'));
 
@@ -502,7 +586,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 this._data = {geojson: result.data};
             }
 
-            const affectedGeometries = this._applyDiffToSource(options.dataDiff);
+            const affectedGeometries = this._applyDiffToSource(diff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
             const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};
@@ -534,7 +618,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     private _applyResourceTiming(eventData: {resourceTiming?: PerformanceResourceTiming[]}, result: GeoJSONWorkerSourceLoadDataResult) {
         if (!this._collectResourceTiming) return;
 
-        const timingData = result.resourceTiming?.[this.id];
+        const timingData = result.resourceTiming?.[this.id] ?? this._mainThreadResourceTiming;
+        this._mainThreadResourceTiming = undefined;
         if (!timingData) return;
 
         const resourceTiming = timingData.slice(0);
@@ -671,6 +756,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
     onRemove(): void {
         this._removed = true;
+        this._mainThreadRequest?.abort();
         this.actorPromise.then(actor => actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}}));
     }
 
