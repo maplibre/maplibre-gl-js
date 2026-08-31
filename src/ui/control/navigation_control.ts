@@ -90,7 +90,7 @@ export class NavigationControl implements IControl {
     _updateZoomButtons = (): void => {
         const zoom = this._map.getZoom();
         const isMax = zoom === this._map.getMaxZoom();
-        const isMin = !this._map._camera.canZoomOut();
+        const isMin = zoom === this._map.getMinZoom(true);
         this._zoomInButton.disabled = isMax;
         this._zoomOutButton.disabled = isMin;
         this._zoomInButton.setAttribute('aria-disabled', isMax.toString());
