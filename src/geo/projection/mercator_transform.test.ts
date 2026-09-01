@@ -916,8 +916,9 @@ describe('MercatorTransform over the simple CRS', () => {
         test('clamps the center so the viewport stays inside the square', () => {
             const transform = createSimpleTransform(200, 200);
             transform.setZoom(1);
-            // At zoom 1 the world is 1024px; a 200px viewport can move its center at most 100px from either edge.
-            const maxOffset = 180 * (1 - 100 / 1024) - 90;
+            const worldSizeAtZoom1 = 1024;
+            const halfViewport = 100;
+            const maxOffset = 180 * (1 - halfViewport / worldSizeAtZoom1) - 90;
 
             transform.setCenter(new LngLat(89, 89));
             expect(transform.center.lng).toBeCloseTo(maxOffset, 6);
@@ -932,8 +933,9 @@ describe('MercatorTransform over the simple CRS', () => {
             const transform = createSimpleTransform(200, 200);
             transform.setZoom(-2);
             transform.setCenter(new LngLat(0, 0));
-            // A 200px viewport needs a world of at least 200px, i.e. zoom log2(200 / 512).
-            expect(transform.zoom).toBeCloseTo(Math.log2(200 / 512), 6);
+            const viewport = 200;
+            const worldSizeAtZoom0 = 512;
+            expect(transform.zoom).toBeCloseTo(Math.log2(viewport / worldSizeAtZoom0), 6);
             expect(transform.center.lng).toBeCloseTo(0, 6);
             expect(transform.center.lat).toBeCloseTo(0, 6);
         });
@@ -951,8 +953,9 @@ describe('MercatorTransform over the simple CRS', () => {
             const transform = createSimpleTransform(200, 200);
             transform.setZoom(4);
             transform.setCenter(new LngLat(89, 0));
-            // At zoom 4 the world is 8192px; a 200px viewport keeps its center 100px from the edge of the square.
-            expect(transform.center.lng).toBeCloseTo(90 - 180 * 100 / 8192, 6);
+            const worldSizeAtZoom4 = 8192;
+            const halfViewport = 100;
+            expect(transform.center.lng).toBeCloseTo(90 - 180 * halfViewport / worldSizeAtZoom4, 6);
 
             transform.setLocationAtPoint(new LngLat(85, 0), transform.centerPoint);
             expect(transform.center.lng).toBeCloseTo(85, 6);
