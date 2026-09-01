@@ -104,6 +104,51 @@ describe('resize', () => {
         expect(redrawSpy).toHaveBeenCalledTimes(2);
     });
 
+    test('resizes on the first observer callback if the container is shown after map creation, see #8277', () => {
+        let observerCallback: Function = null;
+        global.ResizeObserver = vi.fn(class {
+            constructor(c) { observerCallback = c; }
+            observe = () => { };
+        }) as any;
+
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 0, configurable: true});
+        Object.defineProperty(container, 'clientHeight', {value: 0, configurable: true});
+        const map = createMap({container});
+
+        expect(map._camera.transform.width).toBe(400);
+        expect(map._camera.transform.height).toBe(300);
+
+        Object.defineProperty(container, 'clientWidth', {value: 640, configurable: true});
+        Object.defineProperty(container, 'clientHeight', {value: 480, configurable: true});
+
+        observerCallback();
+
+        expect(map._camera.transform.width).toBe(640);
+        expect(map._camera.transform.height).toBe(480);
+        expect(map.getCanvas().width).toBe(640);
+        expect(map.getCanvas().height).toBe(480);
+    });
+
+    test('does not resize on the first observer callback while the container stays hidden', () => {
+        let observerCallback: Function = null;
+        global.ResizeObserver = vi.fn(class {
+            constructor(c) { observerCallback = c; }
+            observe = () => { };
+        }) as any;
+
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 0, configurable: true});
+        Object.defineProperty(container, 'clientHeight', {value: 0, configurable: true});
+        const map = createMap({container});
+
+        const resizeSpy = vi.spyOn(map, 'resize');
+
+        observerCallback();
+
+        expect(resizeSpy).not.toHaveBeenCalled();
+    });
+
     test('width and height correctly rounded', () => {
         const map = createMap();
         const container = map.getContainer();

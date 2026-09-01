@@ -114,6 +114,43 @@ describe('Browser tests', () => {
         expect(firstFiredEvent).toBe('load');
     });
 
+    test('Map created in a hidden container resizes when shown, see #8277', {retry: 3, timeout: 20000}, async () => {
+        const dimensions = await page.evaluate(async () => {
+            const host = document.createElement('div');
+            host.style.display = 'none';
+
+            const container = document.createElement('div');
+            container.style.cssText = 'width: 640px; height: 480px';
+            host.append(container);
+            document.body.append(host);
+
+            const hiddenMap = new maplibregl.Map({
+                container,
+                style: {version: 8, sources: {}, layers: []}
+            });
+            const canvas = hiddenMap.getCanvas();
+
+            host.style.display = 'block';
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            const result = {
+                containerWidth: container.clientWidth,
+                containerHeight: container.clientHeight,
+                canvasWidth: canvas.clientWidth,
+                canvasHeight: canvas.clientHeight
+            };
+
+            hiddenMap.remove();
+            host.remove();
+            return result;
+        });
+
+        expect(dimensions.containerWidth).toBe(640);
+        expect(dimensions.containerHeight).toBe(480);
+        expect(dimensions.canvasWidth).toBe(640);
+        expect(dimensions.canvasHeight).toBe(480);
+    });
+
     test('Should continue zooming from last mouse position after scroll and flyto, see #2709', {retry: 3, timeout: 20000}, async () => {
         const finalZoom = await page.evaluate(() => {
             return new Promise<number>((resolve, _reject) => {
