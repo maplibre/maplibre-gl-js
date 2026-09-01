@@ -113,7 +113,12 @@ export class TransformHelper implements ITransformGetters {
     _tileSize: number; // constant
     _tileZoom: number; // integer zoom level for tiles
     _lngRange: [number, number];
-    _latRange: [number, number];
+    /**
+     * The latitude range the center is constrained to: the max bounds' when set, otherwise the valid mercator range
+     * for a wrapping world, and `null` for a world that does not wrap (a planar CRS), which is constrained to its
+     * world square instead.
+     */
+    _latRange: [number, number] | null;
     _scale: number; // computed based on zoom
     _width: number;
     _height: number;
@@ -259,7 +264,7 @@ export class TransformHelper implements ITransformGetters {
     get bearingInRadians(): number { return this._bearingInRadians; }
 
     get lngRange(): [number, number] { return this._lngRange; }
-    get latRange(): [number, number] { return this._latRange; }
+    get latRange(): [number, number] | null { return this._latRange; }
     get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
 
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
