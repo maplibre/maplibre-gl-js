@@ -1,3 +1,4 @@
+import {updateMinElevationFromExtrusions} from '../webgl/draw/draw_fill_extrusion.ts';
 import {now} from '../util/time_control.ts';
 import {mat4} from 'gl-matrix';
 import {TileManager} from '../tile/tile_manager.ts';
@@ -398,27 +399,6 @@ export class Painter {
      * came from terrain. Geometry extruded below the datum has to be counted too, otherwise it
      * falls outside the frustum and disappears, most visibly at low pitch.
      */
-    _updateMinElevationFromExtrusions(layerIds: string[], coordsAscending: {[_: string]: OverscaledTileID[]}): void {
-        let minElevation = 0;
-        for (const layerId of layerIds) {
-            const layer = this.style._layers[layerId];
-            if (!isFillExtrusionStyleLayer(layer) || layer.isHidden(this.transform.zoom)) continue;
-            // Constants are read from the layer here, so a runtime paint change is seen on the next
-            // frame; data-driven values come from the bucket, which tracked them at layout.
-            minElevation = Math.min(minElevation,
-                layer.paint.get('fill-extrusion-base').constantOr(0),
-                layer.paint.get('fill-extrusion-height').constantOr(0));
-            const tileManager = this.style.tileManagers[layer.source];
-            for (const coord of coordsAscending[layer.source] || []) {
-                const bucket = tileManager?.getTile(coord)?.getBucket(layer) as FillExtrusionBucket;
-                if (bucket && bucket.minElevation < minElevation) {
-                    minElevation = bucket.minElevation;
-                }
-            }
-        }
-        const transform = this.style.map?._camera?.transform;
-        transform?.setMinGeometryElevation?.(minElevation);
-    }
 
     stencilModeFor3D(): StencilMode {
         this.currentStencilSource = undefined;
@@ -607,7 +587,7 @@ export class Painter {
             this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
 
-        this._updateMinElevationFromExtrusions(layerIds, coordsAscending);
+        updateMinElevationFromExtrusions(this, layerIds, coordsAscending);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);
