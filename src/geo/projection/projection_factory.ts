@@ -8,7 +8,7 @@ import {GlobeCameraHelper} from './globe_camera_helper.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
-import {PlanarProjection, CrsWorldCoordinateHelper} from './planar_projection.ts';
+import {CrsWorldCoordinateHelper} from './crs.ts';
 import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -32,9 +32,8 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
     }
     const registered = getRegisteredProjection(name);
     if (registered) {
-        const projection = new PlanarProjection(registered);
         return {
-            projection,
+            projection: new MercatorProjection(registered.name),
             transform: new MercatorTransform({...transformOptions, worldCoordinateHelper: new CrsWorldCoordinateHelper(registered)}),
             cameraHelper: new MercatorCameraHelper(),
         };

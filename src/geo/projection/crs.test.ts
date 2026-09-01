@@ -1,7 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {PlanarProjection, CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from './planar_projection.ts';
+import {CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from './crs.ts';
 import {createRotatedCrs} from '../../util/test/util.ts';
-import {MercatorProjection, MercatorShaderVariantKey} from './mercator_projection.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -34,23 +33,6 @@ function createMercatorAsCrs(): CrsDefinition {
         tileMatrix: {origin: [-halfCircumference, halfCircumference], extentAtZoom0: 2 * halfCircumference},
     };
 }
-
-describe('PlanarProjection', () => {
-    test('takes its name from the definition and is planar', () => {
-        const projection = new PlanarProjection(createRotatedCrs());
-        expect(projection.name).toBe('rotated-test');
-        expect(projection.isPlanar).toBe(true);
-    });
-
-    test('shares the mercator shader variant', () => {
-        const projection = new PlanarProjection(simpleCrs);
-        const mercator = new MercatorProjection();
-        expect(projection.shaderVariantName).toBe(MercatorShaderVariantKey);
-        expect(projection.shaderDefine).toBe(mercator.shaderDefine);
-        expect(projection.shaderPreludeCode).toBe(mercator.shaderPreludeCode);
-        expect(projection.useSubdivision).toBe(false);
-    });
-});
 
 describe('CrsWorldCoordinateHelper', () => {
     describe('simple', () => {
@@ -88,6 +70,15 @@ describe('CrsWorldCoordinateHelper', () => {
 
         test('does not wrap', () => {
             expect(new CrsWorldCoordinateHelper(simpleCrs).wraps).toBe(false);
+        });
+    });
+
+    describe('simple CRS definition', () => {
+        test('is the identity over lng/lat with tile 0/0/0 spanning -90..90', () => {
+            expect(simpleCrs.name).toBe('simple');
+            expect(simpleCrs.project(12.5, -41.9)).toEqual([12.5, -41.9]);
+            expect(simpleCrs.unproject(12.5, -41.9)).toEqual([12.5, -41.9]);
+            expect(simpleCrs.tileMatrix).toEqual({origin: [-90, 90], extentAtZoom0: 180});
         });
     });
 

@@ -1,4 +1,4 @@
-import {simpleCrs, type CrsDefinition} from './planar_projection.ts';
+import {simpleCrs, type CrsDefinition} from './crs.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const BUILT_IN_PROJECTION_NAMES = ['mercator', 'globe', 'vertical-perspective'];

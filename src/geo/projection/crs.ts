@@ -1,7 +1,5 @@
 import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {MercatorProjection} from './mercator_projection.ts';
-import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TileMatrix} from './tile_matrix.ts';
 
@@ -14,10 +12,8 @@ import type {TileMatrix} from './tile_matrix.ts';
  * Tiles are used as-is: the map never reprojects tile content, it only positions the CRS's own
  * tile grid on screen and maps lng/lat to and from it through `project`/`unproject`. CRS units are
  * taken as meters wherever the map converts meters: altitudes, elevations, and the camera distance.
- *
- * @group Geography and Geometry
  */
-export type CrsDefinition = {
+export interface CrsDefinition {
     /**
      * Name used in `projection.type`, e.g. `'EPSG:2193'`.
      * `'simple'` is pre-registered; `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved.
@@ -35,7 +31,7 @@ export type CrsDefinition = {
      * The quad tile matrix set over the CRS plane.
      */
     tileMatrix: TileMatrix;
-};
+}
 
 /**
  * @internal
@@ -75,41 +71,25 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
 }
 
 /**
- * @internal
  * The identity CRS behind the built-in `'simple'` projection: CRS coordinates are lng/lat degrees and
  * tile 0/0/0 spans -90..90 on both axes. It exists for image-space maps (the analogue of Leaflet's
  * `CRS.Simple`), where a square root tile keeps the quad tree uniform in both directions.
  */
-export const simpleCrs: CrsDefinition = {
-    name: 'simple',
+class SimpleCrs implements CrsDefinition {
+    readonly name = 'simple';
+    readonly tileMatrix: TileMatrix = {origin: [-90, 90], extentAtZoom0: 180};
+
     project(lng: number, lat: number): [number, number] {
         return [lng, lat];
-    },
+    }
+
     unproject(x: number, y: number): [number, number] {
         return [x, y];
-    },
-    tileMatrix: {
-        origin: [-90, 90],
-        extentAtZoom0: 180,
-    },
-};
+    }
+}
 
 /**
  * @internal
- * A flat projection over a registered planar CRS. Rendering is identical to mercator, since the
- * tiles are already in the CRS's own quad grid and only the lng/lat mapping differs; that mapping
- * is built by {@link CrsWorldCoordinateHelper} and lives on the transform. Shares the mercator
- * shader variant so programs are cached once for every planar projection.
+ * The one simple CRS: it holds no state, so the registry and every test share this instance.
  */
-export class PlanarProjection extends MercatorProjection {
-    private readonly _name: string;
-
-    constructor(definition: CrsDefinition) {
-        super();
-        this._name = definition.name;
-    }
-
-    override get name(): ProjectionSpecification['type'] {
-        return this._name;
-    }
-}
+export const simpleCrs: CrsDefinition = new SimpleCrs();

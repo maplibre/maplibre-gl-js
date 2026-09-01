@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from './planar_projection.ts';
+import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
