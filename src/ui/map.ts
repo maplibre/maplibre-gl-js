@@ -1550,8 +1550,10 @@ export class Map extends Evented<MapEventType> {
      * `container` element.
      *
      * Checks if the map container size changed and updates the map if it has changed.
-     * This method must be called after the map's `container` is resized programmatically
-     * or when the map is shown after being initially hidden with CSS.
+     * With the default `trackResize: true`, container size changes are picked up automatically,
+     * including a container that becomes visible after being hidden with CSS. Call this method
+     * explicitly when `trackResize` is `false`, or when the map's size changes in a way the
+     * container's `ResizeObserver` cannot observe.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, and `resize`.
      *
@@ -1559,10 +1561,10 @@ export class Map extends Evented<MapEventType> {
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
      * @example
-     * Resize the map when the map container is shown after being initially hidden with CSS.
+     * Resize a map with `trackResize` disabled when its container is shown after being hidden with CSS.
      * ```ts
      * let mapDiv = document.getElementById('map');
-     * if (mapDiv.style.visibility === true) map.resize();
+     * if (mapDiv.style.visibility === 'visible') map.resize();
      * ```
      */
     resize(eventData?: any, constrainTransform = true): this {
@@ -3993,6 +3995,25 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
+     * A `ResizeObserver` invokes its callback as soon as it starts observing. That first
+     * notification is normally ignored so `resize` and `moveend` are not fired before `load`
+     * (see #2551). It must be handled when the container reports usable dimensions that differ
+     * from the ones the map is using, which happens when the map is created inside a hidden
+     * container that becomes visible before the notification is delivered (see #8277).
+     *
+     * While the container is unmeasurable, {@link Map._containerDimensions} substitutes a
+     * fallback size, so there is nothing to catch up to and the notification stays ignored.
+     */
+    private _shouldHandleInitialResize(): boolean {
+        if (!this._container?.clientWidth || !this._container.clientHeight) {
+            return false;
+        }
+        const [width, height] = this._containerDimensions();
+        return width !== this._camera.transform.width || height !== this._camera.transform.height;
+    }
+
+    /**
+     * @internal
      * Sets up the ResizeObserver to track container size changes.
      * Uses the owning window's ResizeObserver for cross-window support.
      */
@@ -4009,7 +4030,9 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
             if (!initialResizeEventCaptured) {
                 initialResizeEventCaptured = true;
-                return;
+                if (!this._shouldHandleInitialResize()) {
+                    return;
+                }
             }
             throttledResizeCallback(entries);
         });
