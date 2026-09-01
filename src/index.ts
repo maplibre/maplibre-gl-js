@@ -68,6 +68,7 @@ import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
 import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
 import type {CrsDefinition} from './geo/projection/planar_projection.ts';
+import type {TileMatrix} from './geo/projection/tile_matrix.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
@@ -352,6 +353,7 @@ export {
     type ProjectionMatrix,
     type RendererProjectionData,
     type CrsDefinition,
+    type TileMatrix,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,
