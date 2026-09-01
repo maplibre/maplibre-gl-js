@@ -8,7 +8,6 @@ function createMap() {
 }
 
 let map;
-let testMap;
 
 beforeEach(() => {
     beforeMapTest();
@@ -17,8 +16,6 @@ beforeEach(() => {
 
 afterEach(() => {
     map.remove();
-    testMap?.remove();
-    testMap = undefined;
 });
 
 describe('NavigationControl', () => {
@@ -254,11 +251,12 @@ describe('NavigationControl', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 560});
         Object.defineProperty(container, 'clientHeight', {value: 560});
-        testMap = globalCreateMap({container, minZoom: 0, zoom: 0});
+        map.remove();
+        map = globalCreateMap({container, minZoom: 0, zoom: 0});
 
-        testMap.addControl(new NavigationControl());
+        map.addControl(new NavigationControl());
 
-        const zoomOutButton = testMap.getContainer().querySelector<HTMLButtonElement>('.maplibregl-ctrl-zoom-out');
+        const zoomOutButton: HTMLButtonElement = map.getContainer().querySelector('.maplibregl-ctrl-zoom-out');
         expect(zoomOutButton.disabled).toBe(true);
     });
 
@@ -266,15 +264,16 @@ describe('NavigationControl', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512, configurable: true});
         Object.defineProperty(container, 'clientHeight', {value: 512, configurable: true});
-        testMap = globalCreateMap({container, minZoom: 0, zoom: 0.1});
-        testMap.addControl(new NavigationControl());
+        map.remove();
+        map = globalCreateMap({container, minZoom: 0, zoom: 0.1});
+        map.addControl(new NavigationControl());
 
-        const zoomOutButton = testMap.getContainer().querySelector<HTMLButtonElement>('.maplibregl-ctrl-zoom-out');
+        const zoomOutButton: HTMLButtonElement = map.getContainer().querySelector('.maplibregl-ctrl-zoom-out');
         expect(zoomOutButton.disabled).toBe(false);
 
         Object.defineProperty(container, 'clientWidth', {value: 560});
         Object.defineProperty(container, 'clientHeight', {value: 560});
-        testMap.resize();
+        map.resize();
 
         expect(zoomOutButton.disabled).toBe(true);
     });
