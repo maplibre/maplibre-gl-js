@@ -743,7 +743,7 @@ export class Camera extends Evented<MapEventType> {
 
         this._cameraOptionsTransform ||= this.transform.clone();
         this._cameraOptionsTransform.apply(this.transform, false);
-        let tr = this._cameraOptionsTransform;
+        const tr = this._cameraOptionsTransform;
         const bearing = 'bearing' in options ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
         const pitch = 'pitch' in options ? +options.pitch : tr.pitch;
         const roll = 'roll' in options ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
@@ -779,7 +779,9 @@ export class Camera extends Evented<MapEventType> {
             tr.setElevation(+options.elevation);
         }
 
-        tr = this._getFinalTransform(tr);
+        const elevated = this._elevateCameraIfInsideTerrain(tr);
+        if (elevated.zoom !== undefined) tr.setZoom(elevated.zoom);
+        if (elevated.pitch !== undefined) tr.setPitch(elevated.pitch);
 
         return {
             center: tr.center,
@@ -1017,18 +1019,13 @@ export class Camera extends Evented<MapEventType> {
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
     applyUpdatedTransform(tr: ITransform): void {
-        this.transform.apply(this._getFinalTransform(tr), false);
-    }
-
-    /**
-     * Applies camera modifiers to clones of the requested transform and returns
-     * the resulting transform without changing the live camera.
-     */
-    _getFinalTransform(tr: ITransform): ITransform {
         const modifiers : Array<(tr: ITransform) => ReturnType<CameraUpdateTransformFunction>> = [];
         modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         if (this.transformCameraUpdate) {
             modifiers.push(tr => this.transformCameraUpdate(tr));
+        }
+        if (!modifiers.length) {
+            return;
         }
         const finalTransform = tr.clone();
         for (const modifier of modifiers) {
@@ -1049,7 +1046,7 @@ export class Camera extends Evented<MapEventType> {
             if (bearing !== undefined) nextTransform.setBearing(bearing);
             finalTransform.apply(nextTransform, false);
         }
-        return finalTransform;
+        this.transform.apply(finalTransform, false);
     }
 
     _fireMoveEvents(eventData?: Record<string, unknown>): void {

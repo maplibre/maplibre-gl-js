@@ -215,18 +215,4 @@ describe('calculateCameraOptions', () => {
         expect(map.getCenterElevation()).toBe(before);
     });
 
-    test('applies transformCameraUpdate without changing the live camera', () => {
-        const transformCameraUpdate = vi.fn(({zoom}) => ({zoom: zoom + 1, center: new LngLat(20, 30)}));
-        const map = createMap({center: [0, 0], zoom: 3});
-        map.setTransformCameraUpdate(transformCameraUpdate);
-
-        const result = map.calculateCameraOptions({zoom: 5});
-
-        expect(result.zoom).toBe(6);
-        expect(result.center.lng).toBeCloseTo(20);
-        expect(result.center.lat).toBeCloseTo(30);
-        expect(map.getZoom()).toBe(3);
-        expect(map.getCenter()).toEqual(new LngLat(0, 0));
-        expect(transformCameraUpdate).toHaveBeenCalledTimes(1);
-    });
 });
