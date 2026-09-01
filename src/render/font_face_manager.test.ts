@@ -255,6 +255,26 @@ describe('FontFaceManager', () => {
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('CSS Font Loading API'));
     });
 
+    test('does not register a font face that was replaced while its file was downloading', async () => {
+        server.autoRespond = false;
+        const manager = new FontFaceManager(requestManager);
+        manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
+        const staleFamily = manager.getFontFamily('Noto Sans Regular', 0x41);
+        await vi.waitFor(() => expect(server.requests).toHaveLength(1));
+
+        manager.setFontFaces({'Noto Sans Regular': 'https://example.com/other.ttf'});
+        server.respond();
+
+        await expect(staleFamily).resolves.toBeNull();
+        expect(added).toHaveLength(0);
+
+        server.autoRespond = true;
+        const family = await manager.getFontFamily('Noto Sans Regular', 0x41);
+        expect(added).toHaveLength(1);
+        expect(added[0].family).toBe(family);
+        expect(requestedUrls()).toEqual(['https://example.com/noto.ttf', 'https://example.com/other.ttf']);
+    });
+
     test('hands the font faces back when they are replaced, and again on destroy', async () => {
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
