@@ -23,7 +23,8 @@ import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray, LineIndexArray} from '../array_types.g.ts';
 import {transformText} from '../../symbol/transform_text.ts';
 import {mergeLines} from '../../symbol/merge_lines.ts';
-import {isCluster, toGraphemes} from '../../util/graphemes.ts';
+import {isCluster} from '../../util/graphemes.ts';
+import {TaggedString} from '../../symbol/tagged_string.ts';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
 import {WritingMode} from '../../symbol/shaping.ts';
 import {loadGeometry} from '../load_geometry.ts';
@@ -415,23 +416,35 @@ export class SymbolBucket implements Bucket {
     }
 
     /**
-     * Collects the glyphs a label needs into `stack`, so that the tile can ask for them.
+     * Collects the glyphs a label needs into `stacks`, so that the tile can ask for them.
      *
      * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
      * shape it is written as. Its codepoints are asked for as well: not every cluster can be drawn
      * -- it takes a font file the style pinned with `font-faces` -- and where one cannot, layout
      * falls back to drawing it a codepoint at a time, exactly as it did before. See `shapeLines`.
+     *
+     * A cluster can span two sections, a letter in one and the accent written on it in the next, so
+     * the label is taken as a whole and each cluster attributed to the section its first character
+     * came from -- the same way layout attributes it. Collecting each section's text on its own
+     * would ask for glyphs no cluster is ever looked up by.
      */
     private calculateGlyphDependencies(
-        text: string,
-        stack: Record<string, boolean>,
+        text: Formatted,
+        stacks: Record<string, Record<string, boolean>>,
+        fontStack: string,
         textAlongLine: boolean,
-        allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean): void {
 
-        const needsVerticalForms = (textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode;
+        const needsVerticalForms = (textAlongLine || this.allowVerticalPlacement) && doesAllowVerticalWritingMode;
+        const tagged = TaggedString.fromFeature(text, fontStack);
+        const graphemes = tagged.graphemes();
 
-        for (const grapheme of toGraphemes(text)) {
+        for (let i = 0; i < graphemes.length; i++) {
+            const section = tagged.getSection(i);
+            if ('imageName' in section) continue;
+
+            const stack = stacks[section.fontStack] ||= {};
+            const grapheme = graphemes[i];
             if (isCluster(grapheme)) stack[grapheme] = true;
 
             for (const char of grapheme) {
@@ -544,16 +557,11 @@ export class SymbolBucket implements Bucket {
                 const fontStack = textFont.evaluate(evaluationFeature, {}, canonical).join(',');
                 const textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point';
                 this.allowVerticalPlacement = this.writingModes?.includes(WritingMode.vertical);
+                const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
+                this.calculateGlyphDependencies(text, stacks, fontStack, textAlongLine, doesAllowVerticalWritingMode);
+
                 for (const section of text.sections) {
-                    if (!section.image) {
-                        const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
-                        const sectionFont = section.fontStack || fontStack;
-                        stacks[sectionFont] ||= {};
-                        this.calculateGlyphDependencies(section.text, stacks[sectionFont], textAlongLine, this.allowVerticalPlacement, doesAllowVerticalWritingMode);
-                    } else {
-                        // Add section image to the list of dependencies.
-                        icons[section.image.name] = true;
-                    }
+                    if (section.image) icons[section.image.name] = true;
                 }
             }
         }

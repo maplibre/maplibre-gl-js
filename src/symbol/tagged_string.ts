@@ -321,16 +321,36 @@ export class TaggedString {
         return {maxImageWidth, maxImageHeight};
     }
 
+    /**
+     * Appends one section's text, recording which section each grapheme cluster it adds belongs to.
+     *
+     * A cluster belongs to the section its first character came from, so a section that only joins
+     * the cluster before it -- an accent given its own formatting, say -- adds no cluster of its own
+     * and takes the formatting of the letter it is written on. Only the last cluster and the new
+     * text have to be segmented to see that, which keeps a label with many sections from being
+     * segmented again from the start for each one.
+     */
+    _appendSection(text: string, sectionIndex: number): void {
+        const graphemes = this.graphemes();
+        const tail = graphemes.length > 0 ? graphemes[graphemes.length - 1] : '';
+        const joined = toGraphemes(tail + text);
+
+        this.text += text;
+        this._graphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
+
+        const added = joined.length - (tail ? 1 : 0);
+        for (let i = 0; i < added; i++) {
+            this.sectionIndex.push(sectionIndex);
+        }
+    }
+
     addTextSection(section: FormattedSection, defaultFontStack: string): void {
-        this.text += section.text;
-        this._graphemes = null;
         this.sections.push({
             scale: section.scale || 1,
             verticalAlign: section.verticalAlign || 'bottom',
             fontStack: section.fontStack || defaultFontStack,
         });
-        const index = this.sections.length - 1;
-        this.sectionIndex.push(...toGraphemes(section.text).map(() => index));
+        this._appendSection(section.text, this.sections.length - 1);
     }
 
     addImageSection(section: FormattedSection): void {
@@ -346,14 +366,12 @@ export class TaggedString {
             return;
         }
 
-        this.text += String.fromCharCode(nextImageSectionCharCode);
-        this._graphemes = null;
         this.sections.push({
             scale: 1,
             verticalAlign: section.verticalAlign || 'bottom',
             imageName,
         });
-        this.sectionIndex.push(this.sections.length - 1);
+        this._appendSection(String.fromCharCode(nextImageSectionCharCode), this.sections.length - 1);
     }
 
     getNextImageSectionCharCode(): number | null {
