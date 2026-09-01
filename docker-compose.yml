@@ -21,7 +21,7 @@ services:
   # volume so the host tree (and any host-native builds) are left untouched.
   dev:
     # Node version should be kept in sync with .nvmrc.
-    image: node:26.7
+    image: node:26.8
     working_dir: /app
     volumes:
       - .:/app
