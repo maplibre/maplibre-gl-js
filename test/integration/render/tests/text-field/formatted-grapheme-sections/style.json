@@ -55,7 +55,7 @@
         "text-field": [
           "format",
           "a", {"font-scale": 1, "text-color": "#ff6b6b"},
-          "́", {"font-scale": 0.55, "text-color": "#ffd166"},
+          "\u0301", {"font-scale": 0.55, "text-color": "#ffd166"},
           "b", {"font-scale": 1.8, "text-color": "#4dabf7"}
         ],
         "text-font": ["Noto Sans Latin"],
