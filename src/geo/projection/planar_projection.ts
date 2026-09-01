@@ -3,6 +3,7 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorldCoordinateHelper} from '../transform_interface.ts';
+import type {TileMatrix} from './tile_matrix.ts';
 
 /**
  * Describes a planar coordinate reference system (CRS) together with the square, power-of-two
@@ -33,16 +34,7 @@ export type CrsDefinition = {
     /**
      * The quad tile matrix set over the CRS plane.
      */
-    tileMatrix: {
-        /**
-         * CRS coordinates of the top-left corner of tile 0/0/0 (min x, max y).
-         */
-        origin: [number, number];
-        /**
-         * Width (= height) of tile 0/0/0 in CRS units.
-         */
-        extentAtZoom0: number;
-    };
+    tileMatrix: TileMatrix;
 };
 
 /**
