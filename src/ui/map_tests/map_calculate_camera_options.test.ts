@@ -174,10 +174,12 @@ describe('calculateCameraOptions', () => {
 
     test('repeated calculations are independent and preserve world-copy behavior', () => {
         const map = createMap({center: [350, 0], zoom: 3, renderWorldCopies: true});
+        const clone = vi.spyOn(map._camera.transform, 'clone');
         const options = {center: [-350, 5] as [number, number], zoom: 4};
         const first = map.calculateCameraOptions(options);
         const second = map.calculateCameraOptions(options);
         expect(second).toEqual(first);
+        expect(clone).toHaveBeenCalledTimes(1);
 
         const applied = createMap({center: [350, 0], zoom: 3, renderWorldCopies: true});
         applied.easeTo({...options, duration: 0});
@@ -211,5 +213,20 @@ describe('calculateCameraOptions', () => {
 
         expect(result.elevation).toBe(50);
         expect(map.getCenterElevation()).toBe(before);
+    });
+
+    test('applies transformCameraUpdate without changing the live camera', () => {
+        const transformCameraUpdate = vi.fn(({zoom}) => ({zoom: zoom + 1, center: new LngLat(20, 30)}));
+        const map = createMap({center: [0, 0], zoom: 3});
+        map.setTransformCameraUpdate(transformCameraUpdate);
+
+        const result = map.calculateCameraOptions({zoom: 5});
+
+        expect(result.zoom).toBe(6);
+        expect(result.center.lng).toBeCloseTo(20);
+        expect(result.center.lat).toBeCloseTo(30);
+        expect(map.getZoom()).toBe(3);
+        expect(map.getCenter()).toEqual(new LngLat(0, 0));
+        expect(transformCameraUpdate).toHaveBeenCalledTimes(1);
     });
 });
