@@ -1,6 +1,7 @@
 import {LngLat, earthRadius} from '../geo/lng_lat.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import {type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
+import type {WorldCoordinateHelper} from './transform_interface.ts';
 
 /*
  * The average circumference of the world in meters.
@@ -157,3 +158,30 @@ export class MercatorCoordinate implements IMercatorCoordinate {
         return 1 / earthCircumference * mercatorScale(latFromMercatorY(this.y));
     }
 }
+
+/**
+ * @internal
+ * The Web Mercator world mapping used by the mercator, globe, and vertical-perspective projections.
+ * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`.
+ * Lives next to the mercator functions it calls so they stay module-local on the camera paths.
+ */
+class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
+    worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
+        return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat), altitude === undefined ? 0 : mercatorZfromAltitude(altitude, lat));
+    }
+    lngLatFromWorld(x: number, y: number): LngLat {
+        return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));
+    }
+    metersPerWorldUnit(_x: number, y: number): number {
+        return earthCircumference / mercatorScale(latFromMercatorY(y));
+    }
+    worldZFromAltitude(altitude: number, lngLat: LngLat): number {
+        return mercatorZfromAltitude(altitude, lngLat.lat);
+    }
+}
+
+/**
+ * @internal
+ * The one mercator world mapping: it holds no state, so every mercator-based transform shares this instance.
+ */
+export const mercatorWorldCoordinateHelper: WorldCoordinateHelper = new MercatorWorldCoordinateHelper();
