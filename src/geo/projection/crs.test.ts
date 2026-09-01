@@ -96,11 +96,14 @@ describe('CrsWorldCoordinateHelper', () => {
         test('measures world coordinates from the tile matrix origin with y growing down', () => {
             const definition = createRotatedCrs();
             const worldCoordinateHelper = new CrsWorldCoordinateHelper(definition);
-            // World (0.25, 0.75) is a quarter of the extent right of the origin and three quarters below it.
-            const lngLat = worldCoordinateHelper.lngLatFromWorld(0.25, 0.75);
+            const quarterAcross = 0.25;
+            const threeQuartersDown = 0.75;
+            const [originX, originY] = definition.tileMatrix.origin;
+            const extent = definition.tileMatrix.extentAtZoom0;
+            const lngLat = worldCoordinateHelper.lngLatFromWorld(quarterAcross, threeQuartersDown);
             const [x, y] = definition.project(lngLat.lng, lngLat.lat);
-            expect(x).toBeCloseTo(-150 + 0.25 * 300, 10);
-            expect(y).toBeCloseTo(150 - 0.75 * 300, 10);
+            expect(x).toBeCloseTo(originX + quarterAcross * extent, 10);
+            expect(y).toBeCloseTo(originY - threeQuartersDown * extent, 10);
         });
 
         test('takes the zoom 0 extent as meters per world unit', () => {
