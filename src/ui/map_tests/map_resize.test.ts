@@ -104,6 +104,27 @@ describe('resize', () => {
         expect(redrawSpy).toHaveBeenCalledTimes(2);
     });
 
+    test('do resize on the first observer event if the container was hidden on creation', () => {
+        let observerCallback: Function = null;
+        global.ResizeObserver = vi.fn(class {
+            constructor(c) { observerCallback = c; }
+            observe = () => { };
+        }) as any;
+
+        const container = window.document.createElement('div');
+        const map = createMap({container});
+
+        expect(map._camera.transform.width).toBe(400);
+        expect(map._camera.transform.height).toBe(300);
+
+        Object.defineProperty(container, 'clientWidth', {value: 640, configurable: true});
+        Object.defineProperty(container, 'clientHeight', {value: 480, configurable: true});
+        observerCallback();
+
+        expect(map._camera.transform.width).toBe(640);
+        expect(map._camera.transform.height).toBe(480);
+    });
+
     test('width and height correctly rounded', () => {
         const map = createMap();
         const container = map.getContainer();

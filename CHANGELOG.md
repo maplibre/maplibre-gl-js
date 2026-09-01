@@ -12,6 +12,7 @@
 - Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982))
 - Ensure style state defaults are serialized (by [@hiddewie](https://github.com/hiddewie))
+- Fix a map created inside a hidden container staying at its 400x300 fallback size after the container is shown ([#8277](https://github.com/maplibre/maplibre-gl-js/issues/8277))
 
 ## 6.6.0
 

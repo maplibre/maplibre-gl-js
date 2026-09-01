@@ -4009,7 +4009,10 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
             if (!initialResizeEventCaptured) {
                 initialResizeEventCaptured = true;
-                return;
+                const [width, height] = this._containerDimensions();
+                if (width === this._camera.transform.width && height === this._camera.transform.height) {
+                    return;
+                }
             }
             throttledResizeCallback(entries);
         });
