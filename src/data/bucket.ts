@@ -25,8 +25,8 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
 
 export type PopulateParameters = {
     featureIndex: FeatureIndex;
-    iconDependencies: {};
-    patternDependencies: {};
+    iconDependencies: Record<string, boolean>;
+    patternDependencies: Record<string, boolean>;
     /**
      * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
      * but sometimes a letter with the marks written on it, which no single codepoint stands for.

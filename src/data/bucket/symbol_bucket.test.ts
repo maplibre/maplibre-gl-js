@@ -190,7 +190,7 @@ describe('SymbolBucket', () => {
             options, undefined
         );
 
-        const icons = options.iconDependencies as any;
+        const icons = options.iconDependencies;
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
@@ -233,7 +233,7 @@ describe('SymbolBucket', () => {
             options, undefined
         );
 
-        const icons = options.iconDependencies as any;
+        const icons = options.iconDependencies;
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
