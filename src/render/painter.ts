@@ -1,4 +1,3 @@
-import {updateMinElevationFromExtrusions} from '../webgl/draw/draw_fill_extrusion.ts';
 import {now} from '../util/time_control.ts';
 import {mat4} from 'gl-matrix';
 import {TileManager} from '../tile/tile_manager.ts';
@@ -47,7 +46,7 @@ import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
 import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
 import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
-import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
+import {isFillExtrusionStyleLayer, updateMinElevationFromExtrusions} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
 import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
 import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';

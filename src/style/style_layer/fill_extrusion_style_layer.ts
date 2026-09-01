@@ -1,6 +1,8 @@
 import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 
 import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
@@ -223,4 +225,31 @@ function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: n
         projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
     }
     return projectedQueryGeometry;
+}
+
+/**
+ * Tracks the lowest point any visible fill-extrusion can reach, so the far plane
+ * covers geometry extruded below the datum. Fill-extrusion specific, hence next to
+ * the layer implementation rather than in the painter.
+ */
+export function updateMinElevationFromExtrusions(painter: Painter, layerIds: string[], coordsAscending: {[_: string]: OverscaledTileID[]}): void {
+    let minElevation = 0;
+    for (const layerId of layerIds) {
+        const layer = painter.style._layers[layerId];
+        if (!isFillExtrusionStyleLayer(layer) || layer.isHidden(painter.transform.zoom)) continue;
+        // Constants are read from the layer here, so a runtime paint change is seen on the next
+        // frame; data-driven values come from the bucket, which tracked them at layout.
+        minElevation = Math.min(minElevation,
+            layer.paint.get('fill-extrusion-base').constantOr(0),
+            layer.paint.get('fill-extrusion-height').constantOr(0));
+        const tileManager = painter.style.tileManagers[layer.source];
+        for (const coord of coordsAscending[layer.source] || []) {
+            const bucket = tileManager?.getTile(coord)?.getBucket(layer) as FillExtrusionBucket;
+            if (bucket && bucket.minElevation < minElevation) {
+                minElevation = bucket.minElevation;
+            }
+        }
+    }
+    const transform = painter.style.map?._camera?.transform;
+    transform?.setMinGeometryElevation?.(minElevation);
 }
