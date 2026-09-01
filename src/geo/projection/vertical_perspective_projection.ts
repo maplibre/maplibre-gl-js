@@ -60,6 +60,10 @@ export class VerticalPerspectiveProjection implements Projection {
         return granularitySettingsGlobe;
     }
 
+    get isPlanar(): boolean {
+        return false;
+    }
+
     get useGlobeControls(): boolean {
         return true;
     }

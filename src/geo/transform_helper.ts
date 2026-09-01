@@ -1,7 +1,7 @@
 import {LngLat, type LngLatLike} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
@@ -90,6 +90,11 @@ export type TransformOptions = {
      * An override of the transform's default constraining function for respecting its longitude and latitude bounds.
      */
     constrainOverride?: TransformConstrainFunction | null;
+    /**
+     * The lng/lat to world coordinate mapping the transform positions the camera in. Defaults to mercator;
+     * the projection factory passes a registered CRS's mapping here.
+     */
+    worldCoordinateHelper?: WorldCoordinateHelper;
 };
 
 function getTileZoom(zoom: number): number {
@@ -163,7 +168,7 @@ export class TransformHelper implements ITransformGetters {
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
-        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
+        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -215,7 +220,7 @@ export class TransformHelper implements ITransformGetters {
         this._maxZoom = thatI.maxZoom;
         this._minPitch = thatI.minPitch;
         this._maxPitch = thatI.maxPitch;
-        this._renderWorldCopies = thatI.renderWorldCopies;
+        this._renderWorldCopies = thatI.renderWorldCopiesSetting;
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
@@ -295,7 +300,12 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = unmodified;
     }
 
-    get renderWorldCopies(): boolean { return this._renderWorldCopies; }
+    /**
+     * World copies only exist for a wrapping world, so a non-wrapping planar projection always reads as `false`
+     * regardless of what was set; {@link renderWorldCopiesSetting} keeps the setting itself.
+     */
+    get renderWorldCopies(): boolean { return this._renderWorldCopies && this._worldCoordinateHelper.wraps; }
+    get renderWorldCopiesSetting(): boolean { return this._renderWorldCopies; }
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         if (renderWorldCopies === undefined) {
             renderWorldCopies = true;
@@ -303,6 +313,9 @@ export class TransformHelper implements ITransformGetters {
             renderWorldCopies = false;
         }
 
+        if (renderWorldCopies && !this._worldCoordinateHelper.wraps) {
+            warnOnce('renderWorldCopies has no effect in a projection whose world does not wrap.');
+        }
         this._renderWorldCopies = renderWorldCopies;
     }
 
@@ -514,7 +527,7 @@ export class TransformHelper implements ITransformGetters {
             this.constrainInternal();
         } else {
             this._lngRange = null;
-            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
+            this._latRange = this._worldCoordinateHelper.wraps ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE] : null;
         }
     }
 

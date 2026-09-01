@@ -40,6 +40,11 @@ export interface WorldCoordinateHelper {
      * Altitude in meters to world z at a location (mercator: `mercatorZfromAltitude(altitude, lat)`; planar: constant scale, argument ignored).
      */
     worldZFromAltitude(altitude: number, lngLat: LngLat): number;
+    /**
+     * True for mercator only: the world wraps in longitude, gets world copies, and clamps latitude to the valid
+     * mercator range. A planar CRS is a bounded square that does none of that.
+     */
+    wraps: boolean;
 }
 
 /**
@@ -130,6 +135,12 @@ export interface ITransformGetters {
     get unmodified(): boolean;
 
     get renderWorldCopies(): boolean;
+    /**
+     * @internal
+     * The `renderWorldCopies` setting as given, before {@link renderWorldCopies} masks it for a non-wrapping world;
+     * what a transform created for another projection inherits in `apply`.
+     */
+    get renderWorldCopiesSetting(): boolean;
     /**
      * @internal
      * The lng/lat to world-coordinate mapping this transform positions the camera in.

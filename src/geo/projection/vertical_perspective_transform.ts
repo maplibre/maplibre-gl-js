@@ -218,6 +218,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
+    get renderWorldCopiesSetting(): boolean {
+        return this._helper.renderWorldCopiesSetting;
+    }
     get constrainOverride(): TransformConstrainFunction {
         return this._helper.constrainOverride;
     }

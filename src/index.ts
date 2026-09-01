@@ -31,6 +31,7 @@ import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source
 import {VideoSource} from './source/video_source.ts';
 import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
+import {addProjection, removeProjection} from './geo/projection/projection_crud.ts';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
@@ -66,6 +67,7 @@ import type {RequestTransformFunction, ResourceType} from './util/request_manage
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
 import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
+import type {CrsDefinition} from './geo/projection/planar_projection.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
@@ -349,6 +351,7 @@ export {
     type Mat4f64,
     type ProjectionMatrix,
     type RendererProjectionData,
+    type CrsDefinition,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,
@@ -414,6 +417,8 @@ export {
     setWorkerUrl,
     addProtocol,
     removeProtocol,
+    addProjection,
+    removeProjection,
     addSourceType,
     importScriptInWorkers,
     createTileMesh,

@@ -109,6 +109,14 @@ export interface Projection {
 
     /**
      * @internal
+     * True when the projection renders onto a flat plane (mercator and planar CRSs),
+     * false for globe and vertical-perspective. Used instead of name-checking `'mercator'`
+     * so any planar projection takes the same fast paths.
+     */
+    get isPlanar(): boolean;
+
+    /**
+     * @internal
      * Recalculates the projection state based on the current evaluation parameters.
      * @param params - Evaluation parameters.
      */
