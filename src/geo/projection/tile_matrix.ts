@@ -1,10 +1,6 @@
-// This module has no projection or shader imports so the worker bundle can address tiles without them.
-
 /**
  * A square, power-of-two quad tile grid laid over a planar CRS: tile 0/0/0 is the square of side
  * `extentAtZoom0` whose top-left corner is `origin`, and every zoom level splits each tile in four.
- *
- * @group Geography and Geometry
  */
 export type TileMatrix = {
     /**
