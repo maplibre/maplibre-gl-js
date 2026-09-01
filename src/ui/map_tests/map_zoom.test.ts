@@ -40,6 +40,17 @@ test('getMinZoom', () => {
     expect(map.getMinZoom()).toBe(10);
 });
 
+test('getMinZoom returns the viewport-constrained minimum when requested', () => {
+    const container = window.document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', {value: 560});
+    Object.defineProperty(container, 'clientHeight', {value: 560});
+    const map = createMap({container, minZoom: 0, zoom: 0});
+
+    expect(map.getMinZoom()).toBe(0);
+    expect(map.getMinZoom(true)).toBe(map.getZoom());
+    expect(map.getMinZoom(true)).toBeGreaterThan(0);
+});
+
 test('ignore minZooms over maxZoom', () => {
     const map = createMap({zoom: 2, maxZoom: 5});
     expect(() => {
