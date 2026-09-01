@@ -248,7 +248,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const stack: CoveringTilesStackEntry[] = [];
     const result: CoveringTilesResult[] = [];
 
-    if (transform.renderWorldCopies && detailsProvider.allowWorldCopies()) {
+    if (transform.renderWorldCopies && transform.worldCoordinateHelper.wraps && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides
         for (let i = 1; i <= 3; i++) {
             stack.push(newRootTile(-i));

@@ -14,11 +14,11 @@ import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} 
 import {Bounds} from './bounds.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
- * interpolating between the two endpoints will cross it.
+ * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
  * @param center - The LngLat object of the desired center. This object will be mutated.
  */
 export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
-    if (!tr.renderWorldCopies || tr.lngRange) return;
+    if (!tr.renderWorldCopies || !tr.worldCoordinateHelper.wraps || tr.lngRange) return;
     const delta = center.lng - tr.center.lng;
     center.lng +=
         delta > 180 ? -360 :
@@ -220,7 +220,7 @@ export class TransformHelper implements ITransformGetters {
         this._maxZoom = thatI.maxZoom;
         this._minPitch = thatI.minPitch;
         this._maxPitch = thatI.maxPitch;
-        this._renderWorldCopies = thatI.renderWorldCopiesSetting;
+        this._renderWorldCopies = thatI.renderWorldCopies;
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
@@ -300,12 +300,7 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = unmodified;
     }
 
-    /**
-     * World copies only exist for a wrapping world, so a non-wrapping planar projection always reads as `false`
-     * regardless of what was set; {@link renderWorldCopiesSetting} keeps the setting itself.
-     */
-    get renderWorldCopies(): boolean { return this._renderWorldCopies && this._worldCoordinateHelper.wraps; }
-    get renderWorldCopiesSetting(): boolean { return this._renderWorldCopies; }
+    get renderWorldCopies(): boolean { return this._renderWorldCopies; }
     setRenderWorldCopies(renderWorldCopies: boolean): void {
         if (renderWorldCopies === undefined) {
             renderWorldCopies = true;

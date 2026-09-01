@@ -4,6 +4,7 @@ import {LngLat} from '../lng_lat.ts';
 import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
@@ -656,6 +657,17 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1)
             ]);
+        });
+
+        test('only includes tiles for a single world over a non-wrapping CRS, even where a pitched view sees past its edge', () => {
+            const simpleTransform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)});
+            simpleTransform.resize(512, 512);
+            simpleTransform.setZoom(1);
+            simpleTransform.setPitch(60);
+            simpleTransform.setCenter(new LngLat(80, 0));
+            const tiles = coveringTiles(simpleTransform, options);
+            expect(tiles.length).toBeGreaterThan(0);
+            expect(tiles.every((tileID) => tileID.wrap === 0)).toBe(true);
         });
     
         test('overscaledZ', () => {

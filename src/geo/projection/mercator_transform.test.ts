@@ -959,6 +959,14 @@ describe('MercatorTransform over the simple CRS', () => {
         });
     });
 
+    test('returns only the main world from getVisibleUnwrappedCoordinates while renderWorldCopies is on', () => {
+        const transform = createSimpleTransform(512, 512);
+        transform.setZoom(0);
+        transform.setCenter(new LngLat(0, 0));
+        expect(transform.renderWorldCopies).toBe(true);
+        expect(transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0))).toHaveLength(1);
+    });
+
     test('apply carries a renderWorldCopies of false through the non-wrapping transform and back', () => {
         const simple = createSimpleTransform(200, 200);
         simple.apply(new MercatorTransform({renderWorldCopies: false}), false);
