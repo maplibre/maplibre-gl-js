@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
-import {cameraMercatorCoordinate, getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
+import {cameraMercatorCoordinate, getMercatorHorizon, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
 import {MercatorTransform} from './mercator_transform.ts';
@@ -10,6 +10,7 @@ import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util.ts';
+import {createRotatedCrs} from '../../util/test/util.ts';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
@@ -167,5 +168,32 @@ describe('mercator utils', () => {
             expect(result.lng).toBeCloseTo(0, precisionDigits);
             expect(result.lat).toBeCloseTo(0, precisionDigits);
         });
+    });
+});
+
+describe('lngLatBoxToWorldBox and worldBoxToLngLatBox', () => {
+    test('round trip a lng/lat box through the mercator helper', () => {
+        const world = lngLatBoxToWorldBox(mercatorWorldCoordinateHelper, -120, -40, 30, 60);
+        const back = worldBoxToLngLatBox(mercatorWorldCoordinateHelper, world.minX, world.minY, world.maxX, world.maxY);
+        expect(back.west).toBeCloseTo(-120, 10);
+        expect(back.south).toBeCloseTo(-40, 10);
+        expect(back.east).toBeCloseTo(30, 10);
+        expect(back.north).toBeCloseTo(60, 10);
+    });
+
+    test('map the whole world square of the simple CRS to lng/lat -90..90', () => {
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+        expect(worldBoxToLngLatBox(worldCoordinateHelper, 0, 0, 1, 1)).toEqual({west: -90, south: -90, east: 90, north: 90});
+        expect(lngLatBoxToWorldBox(worldCoordinateHelper, -90, -90, 90, 90)).toEqual({minX: 0, minY: 0, maxX: 1, maxY: 1});
+    });
+
+    test('round trip through a rotated CRS contains the original box, since each direction takes the axis-aligned hull', () => {
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
+        const world = lngLatBoxToWorldBox(worldCoordinateHelper, -20, -10, 30, 40);
+        const back = worldBoxToLngLatBox(worldCoordinateHelper, world.minX, world.minY, world.maxX, world.maxY);
+        expect(back.west).toBeLessThan(-20);
+        expect(back.south).toBeLessThan(-10);
+        expect(back.east).toBeGreaterThan(30);
+        expect(back.north).toBeGreaterThan(40);
     });
 });

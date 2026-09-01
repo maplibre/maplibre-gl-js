@@ -155,3 +155,23 @@ export function lngLatBoxToWorldBox(worldCoordinateHelper: WorldCoordinateHelper
         maxY: Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
     };
 }
+
+/**
+ * Maps the four corners of a world rectangle back to lng/lat and returns the box that contains them:
+ * the inverse of {@link lngLatBoxToWorldBox}, with the same axis-aligned hull where `x` and `y` both
+ * depend on `lng` and `lat`.
+ */
+export function worldBoxToLngLatBox(worldCoordinateHelper: WorldCoordinateHelper, minX: number, minY: number, maxX: number, maxY: number): {west: number; south: number; east: number; north: number} {
+    const corners = [
+        worldCoordinateHelper.lngLatFromWorld(minX, minY),
+        worldCoordinateHelper.lngLatFromWorld(maxX, minY),
+        worldCoordinateHelper.lngLatFromWorld(maxX, maxY),
+        worldCoordinateHelper.lngLatFromWorld(minX, maxY),
+    ];
+    return {
+        west: Math.min(corners[0].lng, corners[1].lng, corners[2].lng, corners[3].lng),
+        south: Math.min(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
+        east: Math.max(corners[0].lng, corners[1].lng, corners[2].lng, corners[3].lng),
+        north: Math.max(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
+    };
+}
