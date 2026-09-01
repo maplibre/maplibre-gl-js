@@ -13,7 +13,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
-import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type CameraForBoundsOptions, type CenterZoomBearing, type CameraCalculationOptions, type CameraState} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -1413,6 +1413,17 @@ export class Map extends Evented<MapEventType> {
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this { this._camera.jumpTo(options, eventData); return this; }
+    /**
+     * Calculates the constrained camera state produced by the supplied options without
+     * changing the map. Omitted camera properties inherit the current map camera state.
+     *
+     * If `around` is supplied without `aroundPoint`, its current projected position is
+     * used. Supplying `aroundPoint` without `around` throws an error.
+     *
+     * @param options - Camera properties and optional geographic/screen anchor.
+     * @returns A complete public camera state that can be passed to {@link Map.jumpTo}.
+     */
+    calculateCameraOptions(options: CameraCalculationOptions): CameraState { return this._camera.calculateCameraOptions(options); }
     /**
      * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
      * @param cameraLngLat - The lng, lat of the camera to look from
