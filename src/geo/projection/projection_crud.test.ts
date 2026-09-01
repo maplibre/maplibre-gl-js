@@ -1,6 +1,6 @@
 import {afterEach, describe, test, expect} from 'vitest';
 import {addProjection, getRegisteredProjection, removeProjection} from './projection_crud.ts';
-import type {CrsDefinition} from './planar_projection.ts';
+import type {CrsDefinition} from './crs.ts';
 
 function createDefinition(name: string): CrsDefinition {
     return {

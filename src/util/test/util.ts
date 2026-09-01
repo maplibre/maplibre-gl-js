@@ -13,7 +13,7 @@ import {type IReadonlyTransform, type ITransform} from '../../geo/transform_inte
 import {type Style} from '../../style/style.ts';
 import {Terrain} from '../../render/terrain.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
-import type {CrsDefinition} from '../../geo/projection/planar_projection.ts';
+import type {CrsDefinition} from '../../geo/projection/crs.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
