@@ -24,7 +24,6 @@ import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CrossFaded} from '../style/properties.ts';
