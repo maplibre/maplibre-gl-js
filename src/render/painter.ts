@@ -916,6 +916,8 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
 
+        this.context.projectionUniformBuffer.destroy();
+
         if (this.cache) {
             for (const key in this.cache) {
                 const program = this.cache[key];
