@@ -81,7 +81,7 @@ describe('vector tile worker source', () => {
         await expect(reloadPromise).resolves.toBeTruthy();
     });
 
-    test('VectorTileWorkerSource.reloadTile returns the etag of the response the tile was loaded from', async () => {
+    test('VectorTileWorkerSource keeps the etag across reloadTile so the next expiry refresh can return unmodified', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -95,7 +95,8 @@ describe('vector tile worker source', () => {
         server.respondWith(request => {
             request.respond(200, {
                 'Content-Type': 'application/pbf',
-                'ETag': '"v1"'
+                'ETag': '"v1"',
+                'Cache-Control': 'max-age=300'
             }, new ArrayBuffer(0) as any);
         });
 
@@ -111,9 +112,16 @@ describe('vector tile worker source', () => {
         server.respond();
         const loadResult = await loadPromise;
         const reloadResult = await source.reloadTile(params);
+        const paramsWithEtagKeptFromReload = {...params, etag: reloadResult.etag};
+        const expiryRefreshPromise = source.loadTile(paramsWithEtagKeptFromReload);
+        server.respond();
+        const expiryRefreshResult = await expiryRefreshPromise;
 
         expect(loadResult.etag).toBe('"v1"');
+        expect(loadResult.cacheControl).toBe('max-age=300');
         expect(reloadResult.etag).toBe('"v1"');
+        expect(reloadResult.cacheControl).toBeUndefined();
+        expect(expiryRefreshResult.etagUnmodified).toBe(true);
     });
 
     test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {

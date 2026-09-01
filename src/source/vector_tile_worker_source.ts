@@ -140,6 +140,9 @@ export class VectorTileWorkerSource implements WorkerSource {
             result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
             this.tileState.removeParsing(workerTile.uid);
         } else if (workerTile.etag) {
+            // Reload: return the stored etag since the main thread overwrites the tile's etag with every
+            // result (#3309). cacheControl/expires are deliberately not re-sent: the main thread anchors
+            // max-age to the time it receives them, and the tile's expiration already survives a reload.
             result = extend(result, {etag: workerTile.etag});
         }
 
