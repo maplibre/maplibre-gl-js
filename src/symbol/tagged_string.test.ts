@@ -1,4 +1,5 @@
 import {describe, test, expect} from 'vitest';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
@@ -9,6 +10,21 @@ describe('TaggedString', () => {
         verticalAlign: 'bottom',
         fontStack: 'Test',
     } as TextSectionOptions;
+
+    describe('sectionIndex', () => {
+        test('keeps the following section aligned when a letter and its accent are in different sections', () => {
+            const formatted = new Formatted([
+                new FormattedSection('a', null, 1, null, null, null),
+                new FormattedSection('\u0301', null, 0.5, null, null, null),
+                new FormattedSection('b', null, 2, null, null, null),
+            ]);
+
+            const tagged = TaggedString.fromFeature(formatted, 'Test');
+
+            expect(tagged.graphemes()).toEqual(['a\u0301', 'b']);
+            expect(tagged.sectionIndex).toEqual([0, 2]);
+        });
+    });
 
     describe('length', () => {
         test('counts a surrogate pair as a single character', () => {
