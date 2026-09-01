@@ -6,9 +6,6 @@ import {RequestManager} from '../util/request_manager.ts';
 describe('FontFaceManager', () => {
     const requestManager = new RequestManager();
 
-    /**
-     * The faces handed to and taken back from `document.fonts` over the course of one test.
-     */
     let added: FontFace[];
     let deleted: FontFace[];
     let server: FakeServer;
@@ -18,9 +15,6 @@ describe('FontFaceManager', () => {
      */
     let missing: Set<string>;
 
-    /**
-     * The URLs the manager asked the network for, in the order it asked for them.
-     */
     function requestedUrls(): string[] {
         return server.requests.map(function (request) { return request.url; });
     }

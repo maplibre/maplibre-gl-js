@@ -327,9 +327,6 @@ export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | nul
     return terrain;
 }
 
-/**
- * The image a {@link createFakeActor} answers a `getImages` request with.
- */
 const fakeImages = {
     hello: {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}
 };
@@ -347,11 +344,6 @@ const fakeGlyphs = {
 /**
  * An actor that answers a worker source's requests for images and glyphs with fixtures, after a
  * delay long enough that a test can abort the request part-way.
- *
- * Typed as an {@link IActor}, so that the message types are the real ones: comparing against a
- * message type that does not exist is a compile error rather than a branch that silently never runs.
- *
- * `sendAsync` is a spy, so that a test can assert on what was asked for.
  *
  * @param shouldAbort - consulted on every request. Where it is given, the actor also rejects a
  * request that is aborted while in flight; where it is not, an aborted request is simply never

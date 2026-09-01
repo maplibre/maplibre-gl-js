@@ -29,10 +29,6 @@ if (typeof process !== 'undefined' && process.env !== undefined) {
  */
 type FixtureGlyph = GlyphPosition & {id: number};
 
-/**
- * Re-keys the fixture, which is keyed by codepoint as a glyph PBF is, by the grapheme cluster layout
- * looks glyphs up by -- for every character in this fixture, the character itself.
- */
 function byGraphemeCluster(fixture: Record<string, FixtureGlyph>): Record<string, FixtureGlyph> {
     return Object.fromEntries(
         Object.entries(fixture).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])

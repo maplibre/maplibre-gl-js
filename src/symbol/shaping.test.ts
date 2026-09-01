@@ -395,13 +395,11 @@ describe('shapeText vertical glyph orientation', () => {
         return glyphs;
     }
 
-    /** Shapes a line label, providing a stub glyph for every character of `text` and its verticalized form. */
     function shapeLineLabel(text: string, {writingMode = WritingMode.vertical, allowVerticalPlacement = false}: ShapeLineLabelOptions = {}): Shaping | false {
         const glyphs = createStubGlyphMap(text);
         return shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], writingMode, allowVerticalPlacement, 24, 24);
     }
 
-    /** Returns each positioned glyph of the shaping as a [character, orientation] pair. */
     function getGlyphOrientations(shaping: Shaping | false): Array<[string, string]> {
         expect(shaping).toBeTruthy();
         return (shaping as Shaping).positionedLines.flatMap(line => line.positionedGlyphs.map(
@@ -715,14 +713,6 @@ describe('shapeText vertical glyph orientation', () => {
 describe('shapeText with a right-to-left text plugin', () => {
     const metrics = {width: 10, height: 10, left: 0, top: -8, advance: 10};
 
-    /**
-     * What a right-to-left text plugin does to a line: it reverses it.
-     *
-     * That is the whole of what matters here. Reversing a letter and the marks written on it leaves
-     * the marks *before* the letter, and directly after the letter that came before it -- so unless
-     * they are put back, a letter and its marks are no longer one grapheme cluster, and the tile has
-     * asked for a glyph for a cluster that layout will never look up.
-     */
     function stubReversingPlugin() {
         rtlWorkerPlugin.processBidirectionalText = (text: string, lineBreaks: number[]) => {
             const lines: string[] = [];

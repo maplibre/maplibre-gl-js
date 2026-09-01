@@ -25,9 +25,6 @@ transform.resize(100, 100);
 /**
  * Re-keys the fixture, which is keyed by codepoint as a glyph PBF is, by the grapheme cluster layout
  * looks glyphs up by -- for every character in this fixture, the character itself.
- *
- * The cast is for the bitmap a real {@link StyleGlyph} carries and the fixture, which needs only the
- * metrics layout reads, does not.
  */
 const stacks = {
     'Test': Object.fromEntries(
@@ -58,12 +55,6 @@ function createIndexedFeature(id: number, index: number, iconId: string): Indexe
     } as any as IndexedFeature;
 }
 
-/**
- * Populates a bucket with one label and returns the glyphs it asked the tile for.
- *
- * These are what decides whether a letter written with marks on it can be drawn as the one shape it
- * is written as: the cluster has to be asked for, or there is nothing to draw it with.
- */
 function glyphsRequestedFor(text: string): string[] {
     const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
     const options = createPopulateOptions([]);

@@ -45,26 +45,16 @@ describe('GlyphManager', () => {
         return manager;
     }
 
-    /**
-     * Answers every glyph range request with the fixture, whichever range was asked for.
-     */
     function serveGlyphRanges() {
         server.respondWith(/\.pbf$/, function (request) {
             request.respond(200, undefined, bufferToArrayBuffer(pbf) as unknown as string);
         });
     }
 
-    /**
-     * The glyph range requests made so far, told apart from the font files a `font-faces` test also
-     * asks the server for.
-     */
     function glyphRangeRequests() {
         return server.requests.filter(request => request.url.endsWith('.pbf'));
     }
 
-    /**
-     * A stand-in for the rasterizer, so that nothing has to be drawn on a canvas.
-     */
     function fakeRasterizer(draw: (text: string) => any = () => GLYPHS[0]) {
         return vi.fn((_options: TinySDFOptions, padding: number) => ({draw, buffer: padding}));
     }
@@ -306,10 +296,6 @@ describe('GlyphManager', () => {
     });
 
     describe('font-faces', () => {
-        /**
-         * Puts a CSS Font Loading API and a font server in place that accept every file, so that a
-         * declared font face is always available to draw with.
-         */
         function stubFontFaces() {
             Object.defineProperty(document, 'fonts', {
                 configurable: true,
