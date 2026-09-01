@@ -1493,9 +1493,10 @@ export class Style extends Evented<MapEventType> {
             'font-faces': myStyleSheet['font-faces'],
             transition: myStyleSheet.transition,
             projection: myStyleSheet.projection,
+            state: myStyleSheet.state,
             sources,
             layers,
-            terrain
+            terrain,
         },
         (value) => value !== undefined);
     }
@@ -1761,6 +1762,8 @@ export class Style extends Evented<MapEventType> {
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
+        if (options.validate === false) return false;
+
         return validateAndEmit(this, validate, {
             key,
             style: this.serialize(),
