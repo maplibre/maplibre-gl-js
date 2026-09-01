@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect} from 'vitest';
+import {vi, describe, beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 
 beforeEach(() => {
@@ -100,5 +100,48 @@ describe('renderWorldCopies', () => {
         });
         map.setCenter({lng: 180, lat: 0});
         expect(map.getCenter().lng).toBeCloseTo(80, 0);
+    });
+});
+
+describe('renderWorldCopies with a registered planar projection', () => {
+    test('reads false while the projection is active', async () => {
+        const map = createMap({renderWorldCopies: true});
+        await map.once('style.load');
+
+        map.setProjection({type: 'simple'});
+
+        expect(map.getRenderWorldCopies()).toBe(false);
+    });
+
+    test('warns and stays false when enabled while the projection is active', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const map = createMap({renderWorldCopies: true});
+        await map.once('style.load');
+        map.setProjection({type: 'simple'});
+
+        map.setRenderWorldCopies(true);
+
+        expect(map.getRenderWorldCopies()).toBe(false);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('renderWorldCopies has no effect'));
+    });
+
+    test('keeps renderWorldCopies true across a round trip through simple and back to mercator', async () => {
+        const map = createMap({renderWorldCopies: true});
+        await map.once('style.load');
+
+        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'mercator'});
+
+        expect(map.getRenderWorldCopies()).toBe(true);
+    });
+
+    test('keeps renderWorldCopies false across a round trip through simple and back to mercator', async () => {
+        const map = createMap({renderWorldCopies: false});
+        await map.once('style.load');
+
+        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'mercator'});
+
+        expect(map.getRenderWorldCopies()).toBe(false);
     });
 });

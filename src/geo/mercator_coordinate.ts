@@ -178,6 +178,8 @@ class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
     worldZFromAltitude(altitude: number, lngLat: LngLat): number {
         return mercatorZfromAltitude(altitude, lngLat.lat);
     }
+    /** The world wraps in longitude: copies, wrapping, and the mercator latitude clamp all apply. */
+    readonly wraps = true;
 }
 
 /**

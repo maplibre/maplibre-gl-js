@@ -360,7 +360,7 @@ export class Painter {
     }
 
     getTerrainDataForTile(tileID: OverscaledTileID, isRenderingToTexture: boolean): TerrainData | null {
-        if (isRenderingToTexture && this.style.projection?.name === 'mercator') return null;
+        if (isRenderingToTexture && this.style.projection?.isPlanar) return null;
         return this.style.map.terrain?.getTerrainData(tileID) || null;
     }
 

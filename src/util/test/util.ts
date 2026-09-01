@@ -13,6 +13,7 @@ import {type IReadonlyTransform, type ITransform} from '../../geo/transform_inte
 import {type Style} from '../../style/style.ts';
 import {Terrain} from '../../render/terrain.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
+import type {CrsDefinition} from '../../geo/projection/planar_projection.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
@@ -324,4 +325,23 @@ export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | nul
     terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
     terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
     return terrain;
+}
+
+/**
+ * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
+ * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
+ */
+export function createRotatedCrs(): CrsDefinition {
+    const cos = Math.cos(Math.PI / 6);
+    const sin = Math.sin(Math.PI / 6);
+    return {
+        name: 'rotated-test',
+        project(lng, lat) {
+            return [lng * cos - lat * sin, lng * sin + lat * cos];
+        },
+        unproject(x, y) {
+            return [x * cos + y * sin, -x * sin + y * cos];
+        },
+        tileMatrix: {origin: [-150, 150], extentAtZoom0: 300},
+    };
 }

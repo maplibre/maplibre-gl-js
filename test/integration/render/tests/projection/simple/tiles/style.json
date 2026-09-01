@@ -1,0 +1,48 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Renders vector tiles in the pre-registered simple projection, centered on lng/lat 45,45 so the view differs from mercator. The tile is the fixture's mercator 0/0/0 tile, overscaled to zoom 1 and placed on the simple CRS's grid: the map does not reproject tile content, it only places the grid.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [45, 45],
+  "zoom": 1,
+  "projection": {"type": "simple"},
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 0,
+      "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "maplibre",
+      "source-layer": "water",
+      "paint": {"fill-color": "#4488cc"}
+    },
+    {
+      "id": "landcover",
+      "type": "fill",
+      "source": "maplibre",
+      "source-layer": "landcover",
+      "paint": {"fill-color": "#88cc88"}
+    },
+    {
+      "id": "admin",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "admin",
+      "paint": {"line-color": "#333333", "line-width": 1}
+    }
+  ]
+}

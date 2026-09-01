@@ -32,6 +32,7 @@ import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
 import {isStyleImageWebGLData} from '../style/style_image.ts';
+import {getRegisteredProjection} from '../geo/projection/projection_crud.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
@@ -847,10 +848,11 @@ export class Map extends Evented<MapEventType> {
             }
         }
 
-        // When no style is set or it's using something other than the globe projection, we can constrain the camera.
-        // When a style is set with other projections though, we can't constrain the camera until the style is loaded
+        // When no style is set or it's using something other than the globe projection or a registered planar CRS, we can constrain the camera.
+        // When a style is set with those projections though, we can't constrain the camera until the style is loaded
         // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
-        const shouldConstrainUsingMercatorTransform = typeof resolvedOptions.style === 'string' || !(resolvedOptions.style?.projection?.type === 'globe');
+        const styleProjectionType = typeof resolvedOptions.style === 'string' ? undefined : resolvedOptions.style?.projection?.type;
+        const shouldConstrainUsingMercatorTransform = styleProjectionType !== 'globe' && !getRegisteredProjection(styleProjectionType);
         this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
@@ -1962,6 +1964,9 @@ export class Map extends Evented<MapEventType> {
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
      * map and the other on the left edge of the map) at every zoom level.
+     *
+     * A projection registered with {@link addProjection} has no world copies, so this is `false` while such a
+     * projection is active whatever was set; the setting survives the projection change and applies again in mercator.
      * @returns The renderWorldCopies
      * @example
      * ```ts
@@ -1981,7 +1986,8 @@ export class Map extends Evented<MapEventType> {
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
      * map and the other on the left edge of the map) at every zoom level.
      *
-     * `undefined` is treated as `true`, `null` is treated as `false`.
+     * `undefined` is treated as `true`, `null` is treated as `false`. The setting has no effect while a projection
+     * registered with {@link addProjection} is active, since such a projection has no world copies.
      * @example
      * ```ts
      * map.setRenderWorldCopies(true);
