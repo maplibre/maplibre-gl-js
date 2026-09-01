@@ -38,6 +38,12 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
 }
 
 let textureMaxSize = 0;
+/**
+ * Draws the color-relief tiles of one pass.
+ *
+ * A loaded raster-DEM tile can carry no DEM at all (e.g. an empty 204 response);
+ * such tiles are skipped before the first-tile setup reads from them.
+ */
 function renderColorRelief(
     painter: Painter,
     tileManager: TileManager,
@@ -64,8 +70,6 @@ function renderColorRelief(
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
-        // a loaded raster-dem tile can carry no dem at all (e.g. an empty 204 response), and the
-        // firstTile block below reads from it, so skip before that rather than after
         if (!dem?.data) {
             continue;
         }

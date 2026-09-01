@@ -265,7 +265,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
                     this.coordinates = newCoordinates;
                 }
                 this._finishLoading();
-            } else if (image) {
+            } else {
                 this.fire(new ErrorEvent(new Error(`Could not load image ${this.url}: the response is empty`)));
             }
         } catch (err) {
