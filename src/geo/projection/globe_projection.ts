@@ -88,10 +88,6 @@ export class GlobeProjection extends Evented implements Projection {
         return this.currentProjection.subdivisionGranularity;
     }
 
-    get isPlanar(): boolean {
-        return false;
-    }
-
     get useGlobeControls(): boolean {
         return this.transitionState > 0;
     }
