@@ -51,10 +51,8 @@ type DeclaredFontFace = {
 let nextFamilyId = 0;
 
 /**
- * Parses one entry of a `unicode-range` list, which the style specification borrows from the CSS
- * descriptor of the same name: a single codepoint (`U+A5`), an inclusive range (`U+0-10FFFF`), or a
- * wildcard range (`U+4??`).
- *
+ * Parses one `unicode-range` entry, in the CSS grammar the style specification borrows: `U+A5`,
+ * `U+0-10FFFF` or `U+4??`.
  * @param value - a single `unicode-range` entry
  * @returns the codepoints it covers, or `null` if it is not a range this can make sense of
  */
@@ -89,21 +87,17 @@ function covers(face: DeclaredFontFace, codePoint: number): boolean {
 }
 
 /**
- * Keeps track of the font files a style declares in its
+ * Keeps the font files a style declares in its
  * [`font-faces`](https://maplibre.org/maplibre-style-spec/root/#font-faces) property, and hands the
  * {@link GlyphManager} the CSS family to draw a given codepoint with.
  *
- * The files themselves are handed to the browser's CSS Font Loading API, so anything the browser can
- * render text with -- TrueType, OpenType, WOFF, WOFF2, variable fonts -- works here, and the browser
- * does the decoding, caching and rasterization. Each file is registered under a family name of our
- * own making, both to keep the style from reaching into the surrounding page's typography and so
- * that a codepoint can be pinned to one specific file rather than to whatever the browser's font
- * matching picks.
+ * The files go to the browser's CSS Font Loading API, so any format it can render text with works.
+ * Each is registered under a family name of our own making, so that a style cannot restyle the
+ * surrounding page and a codepoint can be pinned to one file rather than to whatever font matching
+ * picks.
  *
- * Glyphs are rasterized a grapheme cluster at a time, so a letter and the marks written on it reach
- * the browser's text engine together and come back as the one shape they are written as. What a
- * declared file cannot do is shape across cluster boundaries, so a script whose letters change form
- * according to their neighbours still needs the RTL text plugin.
+ * Rasterizing happens a grapheme cluster at a time, so a letter reaches the browser's text engine
+ * with its marks. Shaping across cluster boundaries still needs the RTL text plugin.
  */
 export class FontFaceManager {
     requestManager: RequestManager;
@@ -123,10 +117,8 @@ export class FontFaceManager {
     }
 
     /**
-     * Replaces the declared font faces with the ones in a style's `font-faces` property. Files are
-     * not downloaded here: each one waits until a codepoint it covers is actually drawn.
-     *
-     * @param fontFaces - the style's `font-faces` property, if it has one
+     * Replaces the declared font faces. Nothing is downloaded here: each file waits until a
+     * codepoint it covers is actually drawn.
      */
     setFontFaces(fontFaces?: FontFacesSpecification | null): void {
         this._unregisterAll();
@@ -149,13 +141,10 @@ export class FontFaceManager {
     }
 
     /**
-     * Finds the font file to draw a codepoint with, following the specification's font resolution:
-     * every name in the font stack is tried in turn, and within a name every declared file, until
-     * one of them covers the codepoint. A file that fails to load is skipped, as the specification
-     * asks for unsupported fonts to be ignored.
+     * Finds the font file to draw a codepoint with: each name of the `text-font` stack in turn, and
+     * within a name each declared file, until one covers it. A file that fails to load is skipped,
+     * the specification asking for unsupported fonts to be ignored.
      *
-     * @param fontStack - the comma-separated `text-font` stack the codepoint is drawn in
-     * @param codePoint - the codepoint about to be drawn
      * @returns the CSS family to draw with, or `null` to leave the codepoint to the `glyphs` URL
      */
     async getFontFamily(fontStack: string, codePoint: number): Promise<string | null> {
@@ -204,12 +193,8 @@ export class FontFaceManager {
     }
 
     /**
-     * Downloads a declared file and hands it to the browser, and reports whether it can be drawn
-     * with.
-     *
-     * A file that fails to load is not an error: the specification asks for unsupported fonts to be
-     * ignored, so the codepoints it would have covered fall through to the next declared file and
-     * then to the `glyphs` URL.
+     * Downloads a declared file and hands it to the browser, reporting whether it can be drawn with.
+     * A failure is not an error: its codepoints fall through to the next file, then to `glyphs`.
      */
     async _loadFontFace(face: DeclaredFontFace): Promise<boolean> {
         if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {

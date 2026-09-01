@@ -125,16 +125,14 @@ function isWhitespaceGrapheme(grapheme: string): boolean {
 }
 
 /**
- * Scores a candidate break by the characters on either side of it, lower being better: a newline is
- * a break the text asked for, an opening bracket left at the end of a line is merely allowed, and
- * everything else falls in between.
+ * Scores a candidate break, lower being better: a newline is one the text asked for, an opening
+ * bracket left at the end of a line is merely allowed.
  *
- * A break ends the line with `codePoint`'s cluster and starts the next with `nextCodePoint`'s. Each
- * is the first codepoint of its cluster, which is what decides how the cluster breaks -- a CRLF is
- * one cluster, so a forced newline is seen here as its carriage return.
+ * `codePoint` and `nextCodePoint` are the first codepoints of the clusters either side, which is
+ * what decides how a cluster breaks -- a CRLF is one cluster, so a newline is seen as its CR.
  *
- * @param penalizableIdeographicBreak - whether this break falls between two ideographs in text that
- * also carries zero-width space hints, in which case the hints are the better places to break
+ * @param penalizableIdeographicBreak - whether this falls between ideographs in text that also
+ * carries zero-width space hints, which are the better places to break
  */
 function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableIdeographicBreak: boolean) {
     let penalty = 0;
@@ -265,9 +263,8 @@ export class TaggedString {
     /**
      * Drops the whitespace at each end of the line.
      *
-     * Counted in grapheme clusters rather than code units, because that is what `sectionIndex` is
-     * indexed by. A CRLF is one cluster of two code units, so counting code units here would take
-     * one section too many off the end and leave the sections short of the text.
+     * Counted in clusters, which is what `sectionIndex` is indexed by: a CRLF is one cluster of two
+     * code units, so counting code units would leave the sections short of the text.
      */
     trim(): void {
         const graphemes = this.graphemes();
@@ -322,13 +319,11 @@ export class TaggedString {
     }
 
     /**
-     * Appends one section's text, recording which section each grapheme cluster it adds belongs to.
+     * Appends one section's text, recording which section each cluster it adds belongs to.
      *
      * A cluster belongs to the section its first character came from, so a section that only joins
-     * the cluster before it -- an accent given its own formatting, say -- adds no cluster of its own
-     * and takes the formatting of the letter it is written on. Only the last cluster and the new
-     * text have to be segmented to see that, which keeps a label with many sections from being
-     * segmented again from the start for each one.
+     * the cluster before it -- an accent given its own formatting -- adds none of its own. Only the
+     * last cluster and the new text are segmented, not the label from the start.
      */
     _appendSection(text: string, sectionIndex: number): void {
         const graphemes = this.graphemes();
@@ -385,16 +380,13 @@ export class TaggedString {
     }
 
     /**
-     * Returns the grapheme cluster indices the text should be broken at to fill lines of roughly
-     * `maxWidth`, chosen by weighing every candidate break against how ragged it leaves the line.
+     * Returns the cluster indices to break at for lines of roughly `maxWidth`, weighing each
+     * candidate by how ragged it leaves the line.
      *
-     * Breaks fall between grapheme clusters, never inside one: a line cannot start with the vowel
-     * point of a letter left at the end of the line before it. Of those, the candidates are where a
-     * character or an inline image a line may end on, plus -- in scripts that do not put spaces
-     * between words, where there is no such character to key off -- wherever the browser's word
-     * segmenter finds a word. The segmenter is not consulted elsewhere: it isolates a comma as a
-     * word of its own, and a line must not begin with one. Nor is it consulted until one of those
-     * scripts turns up, since segmenting into words costs more than the rest of this put together.
+     * Breaks fall between clusters, never inside one, at a character or image a line may end on --
+     * plus, in scripts that do not space their words and so offer no such character, wherever the
+     * word segmenter finds a word. It is not consulted elsewhere, isolating a comma as a word of its
+     * own, nor until such a script turns up, costing more than the rest of this put together.
      */
     determineLineBreaks(
         spacing: number,

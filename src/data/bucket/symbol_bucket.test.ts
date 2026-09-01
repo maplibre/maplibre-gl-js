@@ -58,6 +58,31 @@ function createIndexedFeature(id: number, index: number, iconId: string): Indexe
     } as any as IndexedFeature;
 }
 
+/**
+ * Populates a bucket with one label and returns the glyphs it asked the tile for.
+ *
+ * These are what decides whether a letter written with marks on it can be drawn as the one shape it
+ * is written as: the cluster has to be asked for, or there is nothing to draw it with.
+ */
+function glyphsRequestedFor(text: string): string[] {
+    const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
+    const options = createPopulateOptions([]);
+    const feature = {
+        type: 1,
+        id: 1,
+        properties: {},
+        loadGeometry: () => [[{x: 0, y: 0}]],
+    };
+
+    bucket.populate(
+        [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
+        options,
+        new CanonicalTileID(0, 0, 0),
+    );
+
+    return Object.keys(options.glyphDependencies.Test ?? {});
+}
+
 describe('SymbolBucket', () => {
     let features: IndexedFeature[];
     beforeAll(() => {
@@ -249,53 +274,17 @@ describe('SymbolBucket', () => {
         expect(mixedBucket.hasRTLText).toBeTruthy();
     });
 
-    describe('glyph dependencies', () => {
-        /**
-         * The glyphs a tile asks for, given a label.
-         *
-         * These are what decides whether a letter written with marks on it can be drawn as the one
-         * shape it is written as: the cluster has to be asked for, or there is nothing to draw it
-         * with.
-         */
-        function glyphDependencies(text: string): string[] {
-            const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
-            const options = createPopulateOptions([]);
-            const feature = {
-                type: 1,
-                id: 1,
-                properties: {},
-                loadGeometry: () => [[{x: 0, y: 0}]],
-            };
+    test('SymbolBucket asks for one glyph per character of plain text and nothing besides', () => {
+        expect(glyphsRequestedFor('abc').sort()).toEqual(['a', 'b', 'c']);
+    });
 
-            bucket.populate(
-                [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
-                options,
-                new CanonicalTileID(0, 0, 0),
-            );
+    test('SymbolBucket asks for a cluster as a whole, and for its codepoints to fall back to', () => {
+        const hebrew = glyphsRequestedFor('שְׁ');
+        expect(hebrew).toContain('שְׁ');
+        expect(hebrew).toEqual(expect.arrayContaining(['ש', 'ְ', 'ׁ']));
 
-            return Object.keys(options.glyphDependencies.Test ?? {});
-        }
-
-        test('asks for one glyph per character of plain text', () => {
-            expect(glyphDependencies('abc').sort()).toEqual(['a', 'b', 'c']);
-        });
-
-        test('asks for a Hebrew letter with its vowel points as one cluster, and for its codepoints to fall back to', () => {
-            const dependencies = glyphDependencies('שְׁ');
-
-            expect(dependencies).toContain('שְׁ');
-            expect(dependencies).toEqual(expect.arrayContaining(['ש', 'ְ', 'ׁ']));
-        });
-
-        test('asks for a Devanagari syllable as one cluster', () => {
-            const dependencies = glyphDependencies('दि');
-
-            expect(dependencies).toContain('दि');
-            expect(dependencies).toEqual(expect.arrayContaining(['द', 'ि']));
-        });
-
-        test('asks for nothing extra where a character stands alone, being its own cluster', () => {
-            expect(glyphDependencies('a')).toEqual(['a']);
-        });
+        const devanagari = glyphsRequestedFor('दि');
+        expect(devanagari).toContain('दि');
+        expect(devanagari).toEqual(expect.arrayContaining(['द', 'ि']));
     });
 });

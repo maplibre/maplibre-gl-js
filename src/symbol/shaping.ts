@@ -116,19 +116,13 @@ const COMBINING_MARK = /^\p{gc=M}$/u;
  * Puts the marks written on a letter back after the letter, and returns the new order as indices
  * into `chars`.
  *
- * This is rule L3 of the Unicode Bidirectional Algorithm. Reversing a right-to-left run reverses
- * the marks along with everything else, which leaves each mark *before* the letter it is written
- * on -- and, worse, directly after the previous letter, which is not the one it belongs to. Undoing
- * that is what lets a letter and its marks be recognised as one grapheme cluster again, and so be
- * drawn as the one shape they are written as.
+ * This is rule L3 of the Unicode Bidirectional Algorithm. Reversing a right-to-left run leaves each
+ * mark before its letter, and next to the letter before that -- so undoing it is what lets a letter
+ * and its marks be one grapheme cluster again.
  *
- * Only marks followed by a right-to-left letter are moved. In a left-to-right run of the same line
- * the marks already follow their base and must be left where they are.
- *
- * The marks come back in the order they were written in, not the order the reversal left them in:
- * `base m1 m2` became `m2 m1 base`, and has to become `base m1 m2` again. Anything else is a
- * different sequence of codepoints, and so a different cluster from the one the tile asked for a
- * glyph for.
+ * Only marks followed by a right-to-left letter move; in a left-to-right run they already follow
+ * their base. They come back in writing order, `m2 m1 base` to `base m1 m2`, since any other order
+ * is a different cluster from the one the tile asked for a glyph for.
  */
 function combiningMarksAfterTheirBase(chars: string[]): number[] {
     const order: number[] = [];
@@ -159,8 +153,8 @@ function combiningMarksAfterTheirBase(chars: string[]): number[] {
 }
 
 /**
- * Spreads each grapheme cluster's style section across the UTF-16 code units it takes, which is what
- * a text plugin counts in.
+ * Spreads each cluster's style section across the code units it takes, which is what a text plugin
+ * counts in.
  */
 function sectionForEachCodeUnit(input: TaggedString): number[] {
     const sectionIndex: number[] = [];
@@ -173,10 +167,8 @@ function sectionForEachCodeUnit(input: TaggedString): number[] {
 }
 
 /**
- * Builds a line out of what a text plugin returned: the text in the order it is read, and the style
- * section of each of its UTF-16 code units.
- *
- * A grapheme cluster belongs to the section its first character does.
+ * Builds a line out of what a text plugin returned: the text in reading order, and the section of
+ * each code unit. A cluster belongs to the section its first character does.
  */
 function taggedLineFromPlugin(
     line: string,
@@ -448,8 +440,8 @@ function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[])
  * A run passed to {@link runIsUpright} is a maximal sequence of non-upright
  * characters that are neither whitespace nor inline images.
  *
- * Counted in clusters rather than characters, so that it lines up with `getSection` and with the
- * layout loop. A cluster's orientation is the orientation of the character it starts with.
+ * Counted in clusters, to line up with `getSection` and the layout loop. A cluster's orientation is
+ * that of the character it starts with.
  */
 function determineLineVerticals(line: TaggedString): boolean[] {
     const chars = line.graphemes().slice();
@@ -483,9 +475,8 @@ function determineLineVerticals(line: TaggedString): boolean[] {
 /**
  * Places every glyph of every line, filling in `shaping`.
  *
- * A cluster of several codepoints is drawn as one shape where a font file covers it, and a codepoint
- * at a time where none does -- which is what MapLibre has always done, and what a style that
- * declares no `font-faces` keeps doing.
+ * A cluster is drawn as one shape where a font file covers it, and a codepoint at a time where none
+ * does -- which is what a style declaring no `font-faces` keeps doing.
  */
 function shapeLines(shaping: Shaping,
     glyphMap: Record<string, Record<string, StyleGlyph>>,

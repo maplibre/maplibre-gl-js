@@ -64,8 +64,7 @@ export type Rasterizer = TinySDF & {buffer: number};
  * the canvas it would otherwise need to draw on.
  *
  * @param options - what to draw with, whose `buffer` sizes the canvas
- * @param padding - how much room to leave around each glyph in the bitmap that comes out, which is
- * not the same as the buffer the canvas was sized with
+ * @param padding - the room to leave around each glyph in the bitmap, which is not that buffer
  */
 export type CreateRasterizer = (options: TinySDFOptions, padding: number) => Rasterizer;
 
@@ -76,11 +75,10 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
 };
 
 /**
- * How wide a grapheme cluster is allowed to be, as a multiple of the font size.
+ * How wide a grapheme cluster may be drawn, in multiples of the font size.
  *
- * TinySDF sizes its canvas for a single character and cuts off anything past the right edge, but a
- * cluster is a whole syllable: Burmese `လား` is nearly twice as wide as the font size, and a
- * Devanagari conjunct is wider still. Three ems has room for the ones that occur in practice.
+ * TinySDF sizes its canvas for a single character and cuts off the rest, but a cluster is a whole
+ * syllable: Burmese `လား` is nearly twice the font size. Three ems fits the ones that occur.
  */
 const clusterEmsWide = 3;
 
@@ -147,17 +145,12 @@ export class GlyphManager {
     }
 
     /**
-     * Gets one glyph, which is asked for by grapheme cluster: usually a single character, but for a
-     * letter written with marks around it -- a Hebrew vowel point, an Indic vowel sign -- the whole
-     * cluster, so that it can be drawn as the one shape it is written as.
+     * Gets one glyph, asked for by grapheme cluster so that a letter and its marks are drawn as the
+     * one shape they are written as.
      *
-     * A cluster of several codepoints has no glyph of its own in a glyphs URL, which serves one
-     * codepoint at a time, and none in a system font nobody chose. It can only be drawn from a file
-     * the style pinned with `font-faces`; where there is none, this returns nothing and layout falls
-     * back to drawing the cluster a codepoint at a time, as it always has.
-     *
-     * For a single codepoint, a font file the style declared wins over both the glyphs URL and the
-     * local fallback fonts: the style asked for that exact file, by name and by unicode range.
+     * Only a file the style pinned with `font-faces` can draw a cluster -- a glyphs URL serves
+     * codepoints -- so where none covers it this returns nothing and layout falls back to codepoints.
+     * For a single codepoint a declared file still wins over the glyphs URL and the local fallbacks.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
@@ -195,12 +188,10 @@ export class GlyphManager {
     }
 
     /**
-     * Gets a glyph from the cache of server-side glyphs, downloading the PBF range it falls in if it
-     * is not there yet.
+     * Gets a glyph from the server-side cache, downloading the PBF range it falls in if need be.
      *
-     * Only ever reached for a single codepoint: a glyphs URL serves codepoints, not clusters. What
-     * comes back is keyed by codepoint, as the file is, and is cached by grapheme cluster -- which
-     * for a codepoint from a glyphs URL is the character itself.
+     * Only reached for a single codepoint. What comes back is keyed by codepoint, as the file is,
+     * and is cached by cluster -- which for one codepoint is the character itself.
      */
     async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         const codePoint = id.codePointAt(0);
@@ -268,10 +259,8 @@ export class GlyphManager {
     }
 
     /**
-     * Draws a glyph offscreen using TinySDF, creating a TinySDF instance lazily.
-     *
-     * The whole grapheme cluster is handed to TinySDF rather than a codepoint at a time, which is
-     * what lets the browser's own text engine place a letter's marks on it.
+     * Draws a glyph offscreen using TinySDF, created lazily. The whole cluster goes to TinySDF, which
+     * is what lets the browser's text engine place a letter's marks on it.
      *
      * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
      */
@@ -314,16 +303,12 @@ export class GlyphManager {
     }
 
     /**
-     * Returns the TinySDF that draws this grapheme in this fontstack, creating it lazily. A stack
-     * keeps one instance per font selection it draws with, so that a fallback applying to some
-     * codepoints does not bleed into the rest of the text, and a further one per font file for the
-     * clusters drawn from it, which need a wider canvas.
+     * Returns the TinySDF that draws this grapheme, created lazily. A stack keeps one per font
+     * selection, so a fallback cannot bleed into the rest of the text, and one more per font file
+     * for the clusters drawn from it, which need a wider canvas.
      *
-     * A font file carries its own weight and style, so neither is sniffed out of the family name --
-     * doing so would ask the browser to synthesize a second helping of both.
-     *
-     * Where no font file covers the grapheme, the CJK fallback font named by the `localIdeographFontFamily`
-     * map option takes precedence over the last resort fontstack in the style specification.
+     * A font file carries its own weight and style, so neither is sniffed out of the family name.
+     * Where no file covers the grapheme, `localIdeographFontFamily` beats the last resort fontstack.
      */
     _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<Rasterizer> {
         if (fontFaceFamily) {
@@ -348,11 +333,10 @@ export class GlyphManager {
      * Builds the TinySDF that draws with a given font selection.
      *
      * TinySDF derives its canvas from `fontSize + buffer * 4`, so the buffer is the only way in to a
-     * wider one. It stands for the padding around each glyph as well, which the atlas and the shaders
-     * expect to be exactly `GLYPH_PBF_BORDER`, so the two are passed separately.
+     * wider one. It also stands for the padding the atlas expects to be `GLYPH_PBF_BORDER`, so the
+     * two are passed separately.
      *
-     * @param emsWide - how wide, in multiples of the font size, the glyphs drawn with this instance
-     * may be before TinySDF cuts them off
+     * @param emsWide - how wide the glyphs may be, in font sizes, before TinySDF cuts them off
      */
     async _createTinySDF(stack: String | false, sniffFontStyles: boolean = true, emsWide: number = 1): Promise<Rasterizer> {
         // Escape and quote the font family list for use in CSS.
