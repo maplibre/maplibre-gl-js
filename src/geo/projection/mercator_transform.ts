@@ -1,5 +1,5 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
@@ -13,9 +13,9 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -287,6 +287,10 @@ export class MercatorTransform implements ITransform {
         return clone;
     }
 
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._helper.worldCoordinateHelper;
+    }
+
     public apply(that: IReadonlyTransform, constrain: boolean, forceOverrideZ?: boolean): void {
         this._helper.apply(that, constrain, forceOverrideZ);
     }
@@ -349,28 +353,37 @@ export class MercatorTransform implements ITransform {
         const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
-        const loc = MercatorCoordinate.fromLngLat(lnglat);
-        const newCenter = new MercatorCoordinate(
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const loc = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
+        this.setCenter(worldCoordinateHelper.lngLatFromWorld(
             loc.x - (a.x - b.x),
-            loc.y - (a.y - b.y));
-        this.setCenter(newCenter?.toLngLat());
+            loc.y - (a.y - b.y)));
         if (this._helper._renderWorldCopies) {
             this.setCenter(this.center.wrap());
         }
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+        const coord = this.worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
         return terrain ?
-            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat), terrain.getElevationForLngLat(lnglat, this), this._pixelMatrix3D) :
-            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat));
+            this.coordinatePoint(coord, terrain.getElevationForLngLat(lnglat, this), this._pixelMatrix3D) :
+            this.coordinatePoint(coord);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+        return this._worldToLngLat(this.screenPointToMercatorCoordinate(p, terrain));
     }
 
     screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
-        return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
+        return this._worldToLngLat(this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation));
+    }
+
+    /**
+     * Maps a world position back to lng/lat through the projection, or `undefined` when the point missed
+     * the world (a screen point above the horizon or off the terrain).
+     */
+    private _worldToLngLat(coord: MercatorCoordinate | null | undefined): LngLat | undefined {
+        return coord ? this.worldCoordinateHelper.lngLatFromWorld(coord.x, coord.y) : undefined;
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
@@ -602,7 +615,7 @@ export class MercatorTransform implements ITransform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat);
+        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat, this.worldCoordinateHelper);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
@@ -612,7 +625,7 @@ export class MercatorTransform implements ITransform {
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this.worldCoordinateHelper).wrap();
             result.zoom += scaleZoom(scale);
             return result;
         }
@@ -638,7 +651,7 @@ export class MercatorTransform implements ITransform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this.worldCoordinateHelper).wrap();
         }
 
         return result;
@@ -698,9 +711,10 @@ export class MercatorTransform implements ITransform {
         if (!this._helper._height) return;
 
         const offset = this.centerOffset;
-        const point = projectToWorldCoordinates(this.worldSize, this.center);
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const point = projectToWorldCoordinates(this.worldSize, this.center, worldCoordinateHelper);
         const x = point.x, y = point.y;
-        this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        this._helper._pixelPerMeter = worldCoordinateHelper.worldZFromAltitude(1, this.center) * this.worldSize;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
@@ -815,14 +829,18 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraLngLat(): LngLat {
-        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const center = this.center;
+        const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
+        const pixelPerMeter = mercUnitsPerMeter * this.worldSize;
         const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
-        return camMercator.toLngLat();
+        const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, this.elevation);
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, this.pitch, this.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
+        return worldCoordinateHelper.lngLatFromWorld(camMercator.x, camMercator.y);
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        const coord = MercatorCoordinate.fromLngLat(lngLat);
+        const coord = this.worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);

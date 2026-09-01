@@ -4,8 +4,9 @@ import Point from '@mapbox/point-geometry';
 import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
-import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
 import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import type {WorldCoordinateHelper} from './transform_interface.ts';
+import {mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
@@ -157,9 +158,12 @@ export class TransformHelper implements ITransformGetters {
 
     _constrainOverride: TransformConstrainFunction;
 
+    _worldCoordinateHelper: WorldCoordinateHelper;
+
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
+        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -251,6 +255,7 @@ export class TransformHelper implements ITransformGetters {
 
     get lngRange(): [number, number] { return this._lngRange; }
     get latRange(): [number, number] { return this._latRange; }
+    get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
 
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
 
@@ -599,9 +604,11 @@ export class TransformHelper implements ITransformGetters {
         // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
         // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
         // This typically takes about 5 iterations.
-        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
-        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
-        let centerMercator: MercatorCoordinate;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const cameraLngLat = LngLat.convert(lnglat);
+        const camMercator = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
+        let metersPerMercUnit = worldCoordinateHelper.metersPerWorldUnit(camMercator.x, camMercator.y);
+        let centerMercator: {x: number; y: number};
         let dMercator: number;
         let iter = 0;
         const maxIter = 10;
@@ -613,11 +620,11 @@ export class TransformHelper implements ITransformGetters {
             dMercator = distanceToCenter / metersPerMercUnit;
             const dx = x * dMercator;
             const dy = y * dMercator;
-            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
-            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+            centerMercator = {x: camMercator.x + dx, y: camMercator.y + dy};
+            metersPerMercUnit = worldCoordinateHelper.metersPerWorldUnit(centerMercator.x, centerMercator.y);
         } while (Math.abs(distanceToCenter - dMercator * metersPerMercUnit) > 1.0e-12);
 
-        const center = centerMercator.toLngLat();
+        const center = worldCoordinateHelper.lngLatFromWorld(centerMercator.x, centerMercator.y);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
         return {center, elevation: clampedElevation, zoom};
     }
@@ -626,12 +633,13 @@ export class TransformHelper implements ITransformGetters {
         if (this.elevation - elevation === 0) return;
 
         // Critical: Stay in pixels and use original center to avoid instability at extreme latitudes when using Mercator-LngLat
+        const worldCoordinateHelper = this.worldCoordinateHelper;
         const mercUnitsPerPixel = 1 / this.worldSize;
-        const originalMercUnitsPerMeter = mercatorZfromAltitude(1, this.center.lat);
+        const originalMercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, this.center);
         const originalPixelsPerMeter = originalMercUnitsPerMeter * this.worldSize;
 
         // Determine camera
-        const originalCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        const originalCenterMercator = worldCoordinateHelper.worldFromLngLat(this.center.lng, this.center.lat, this.elevation);
         const originalCenterPixelX = originalCenterMercator.x / mercUnitsPerPixel;
         const originalCenterPixelY = originalCenterMercator.y / mercUnitsPerPixel;
         const originalCenterPixelZ = originalCenterMercator.z / mercUnitsPerPixel;
@@ -649,9 +657,9 @@ export class TransformHelper implements ITransformGetters {
         const distanceToCenterPixels = distanceToCenter * originalPixelsPerMeter;
         const centerPixelX = camPixelX + x * distanceToCenterPixels;
         const centerPixelY = camPixelY + y * distanceToCenterPixels;
-        const center = new MercatorCoordinate(centerPixelX * mercUnitsPerPixel, centerPixelY * mercUnitsPerPixel, 0).toLngLat();
+        const center = worldCoordinateHelper.lngLatFromWorld(centerPixelX * mercUnitsPerPixel, centerPixelY * mercUnitsPerPixel);
 
-        const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
+        const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenter / mercUnitsPerMeter / this.tileSize);
 
         // Update matrices
@@ -686,7 +694,8 @@ export class TransformHelper implements ITransformGetters {
     }
 
     getCameraLngLat(): LngLat {
-        return cameraMercatorCoordinate(this).toLngLat();
+        const camera = cameraMercatorCoordinate(this);
+        return this.worldCoordinateHelper.lngLatFromWorld(camera.x, camera.y);
     }
 
     getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
