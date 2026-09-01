@@ -344,13 +344,6 @@ register(
 );
 
 /**
- * Evaluates a serialized layer's paint or layout properties against one feature, so that a queried
- * feature reports the values it was actually drawn with.
- *
- * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
- * value, is passed through as it is.
- */
-/**
  * Whether a possibly-evaluated property still has to be evaluated against a feature, as a
  * data-driven one does.
  *
@@ -361,6 +354,14 @@ register(
 function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValue<unknown> {
     return typeof value === 'object' && value !== null && 'evaluate' in value;
 }
+
+/**
+ * Evaluates a serialized layer's paint or layout properties against one feature, so that a queried
+ * feature reports the values it was actually drawn with.
+ *
+ * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
+ * value, is passed through as it is.
+ */
 
 function evaluateProperties<Props, PossiblyEvaluatedProps>(
     serializedProperties: Record<string, unknown>,
