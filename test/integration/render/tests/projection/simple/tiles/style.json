@@ -2,9 +2,9 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Renders vector tiles in the pre-registered simple projection, centered on lng/lat 45,45 so the view differs from mercator. The tile is the fixture's mercator 0/0/0 tile, overscaled to zoom 1 and placed on the simple CRS's grid: the map does not reproject tile content, it only places the grid.",
-      "width": 256,
-      "height": 256
+      "description": "Vector tiles in the built-in simple projection, whose tile 1/1/0 spans lng 0..90 and lat 0..90. Centered on 45,45 at zoom 1, a 512px canvas is exactly that tile: the north-east quarter of the world tile fills the canvas edge to edge, with the equator along the bottom edge and the prime meridian along the left edge. In mercator the same style puts the equator 400px down and the top edge at 80N.",
+      "width": 512,
+      "height": 512
     }
   },
   "center": [45, 45],
