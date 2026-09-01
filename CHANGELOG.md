@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Support the style specification's `font-faces` property, with `map.setFontFaces` and `map.getFontFaces` and improve complex script languages such as Devanagari, Khmer, Burmese and Hebrew ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))  (by [@HarelM](https://github.com/HarelM))
+- Wrap Thai, Khmer, Burmese, Lao, Tibetan, Javanese and Balinese labels at word boundaries instead of running them on in one line, which applies to every style whether or not it declares `font-faces` ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066))
 - Allow adding an image source without a `url`. The source starts empty and makes no network request; call `updateImage({image})` or `updateImage({url})` later to show an image ([#8167](https://github.com/maplibre/maplibre-gl-js/pull/8167))
 - Skip symbol re-placement when its inputs are unchanged, so repaints from animated style images or custom layers cost a single frame ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))

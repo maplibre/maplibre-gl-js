@@ -100,9 +100,10 @@ function covers(face: DeclaredFontFace, codePoint: number): boolean {
  * that a codepoint can be pinned to one specific file rather than to whatever the browser's font
  * matching picks.
  *
- * Note that glyphs are still rasterized one codepoint at a time, so a font file only renders the
- * scripts that do not need contextual shaping. This is the same limitation that already applies to
- * the `localIdeographFontFamily` map option.
+ * Glyphs are rasterized a grapheme cluster at a time, so a letter and the marks written on it reach
+ * the browser's text engine together and come back as the one shape they are written as. What a
+ * declared file cannot do is shape across cluster boundaries, so a script whose letters change form
+ * according to their neighbours still needs the RTL text plugin.
  */
 export class FontFaceManager {
     requestManager: RequestManager;

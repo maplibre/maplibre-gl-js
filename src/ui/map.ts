@@ -3704,8 +3704,9 @@ export class Map extends Evented<MapEventType> {
      *
      * The files are handed to the browser's CSS Font Loading API, so any format the browser can
      * render text with may be used, and requests for them go through `transformRequest` as glyph
-     * requests do. Text is still drawn one codepoint at a time, so scripts that need contextual
-     * shaping are not rendered any better than they are with the `localIdeographFontFamily` option.
+     * requests do. Text is drawn a grapheme cluster at a time, so a letter and the marks written on
+     * it are handed to the browser's text engine together and come back as the one shape they are
+     * written as -- which is what a `glyphs` URL, serving one codepoint at a time, cannot do.
      *
      * @param fontFaces - The font faces to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/root/#font-faces).
      * A declaration this cannot make sense of is skipped with a warning, as is a font file that
