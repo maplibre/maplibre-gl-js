@@ -81,6 +81,41 @@ describe('vector tile worker source', () => {
         await expect(reloadPromise).resolves.toBeTruthy();
     });
 
+    test('VectorTileWorkerSource.reloadTile returns the etag of the response the tile was loaded from', async () => {
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'fill'
+        }]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = () => ({vectorTile: new VectorTile(new PbfReader(rawTileData)), rawData: rawTileData});
+
+        server.respondWith(request => {
+            request.respond(200, {
+                'Content-Type': 'application/pbf',
+                'ETag': '"v1"'
+            }, new ArrayBuffer(0) as any);
+        });
+
+        const params = {
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters;
+
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        const loadResult = await loadPromise;
+        const reloadResult = await source.reloadTile(params);
+
+        expect(loadResult.etag).toBe('"v1"');
+        expect(reloadResult.etag).toBe('"v1"');
+    });
+
     test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {
         const rawTileData = new ArrayBuffer(0);
 
