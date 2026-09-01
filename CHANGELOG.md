@@ -5,6 +5,7 @@
 - Skip symbol re-placement when its inputs are unchanged, so repaints from animated style images or custom layers cost a single frame ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Add `Style#triggerSymbolPlacement`, which re-places symbols when something the map cannot see for itself has moved them ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Make `{validate: false}` skip the style snapshot the style setters only build as error context, so adding layers one at a time no longer serializes the whole style on every call ([#8259](https://github.com/maplibre/maplibre-gl-js/issues/8259))
+- Add `Map#calculateCameraOptions` to calculate a complete camera state without mutating or rendering the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
