@@ -1,10 +1,12 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
-import {TransformHelper} from './transform_helper.ts';
+import {normalizeCenter, TransformHelper} from './transform_helper.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {expectToBeCloseToArray} from '../util/test/util.ts';
+import {createRotatedCrs, expectToBeCloseToArray} from '../util/test/util.ts';
 import {EXTENT} from '../data/extent.ts';
+import {MercatorTransform} from './projection/mercator_transform.ts';
+import {CrsWorldCoordinateHelper} from './projection/crs.ts';
 
 const emptyCallbacks = {
     calcMatrices: () => {},
@@ -67,6 +69,27 @@ describe('TransformHelper', () => {
         expect(cloned.padding).toEqual(original.padding);
         expect(cloned.unmodified).toEqual(original.unmodified);
         expect(cloned.renderWorldCopies).toEqual(original.renderWorldCopies);
+    });
+
+    describe('normalizeCenter', () => {
+        test('extends the target past the antimeridian when that path is shorter in a wrapping world', () => {
+            const transform = new MercatorTransform({renderWorldCopies: true});
+            transform.resize(200, 200);
+            transform.setCenter(new LngLat(170, 0));
+            const target = new LngLat(-170, 0);
+            normalizeCenter(transform, target);
+            expect(target.lng).toBe(190);
+        });
+
+        test('leaves the target alone in a world that does not wrap', () => {
+            const transform = new MercatorTransform({renderWorldCopies: true, worldCoordinateHelper: new CrsWorldCoordinateHelper(createRotatedCrs())});
+            transform.resize(200, 200);
+            transform.setZoom(4);
+            transform.setCenter(new LngLat(140, 0));
+            const target = new LngLat(-140, 0);
+            normalizeCenter(transform, target);
+            expect(target.lng).toBe(-140);
+        });
     });
 
     describe('getMercatorTilesCoordinates', () => {

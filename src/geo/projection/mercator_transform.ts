@@ -232,9 +232,6 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get renderWorldCopiesSetting(): boolean {
-        return this._helper.renderWorldCopiesSetting;
-    }
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
@@ -306,7 +303,7 @@ export class MercatorTransform implements ITransform {
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         const result = [new UnwrappedTileID(0, tileID)];
-        if (this._helper.renderWorldCopies) {
+        if (this._helper.renderWorldCopies && this.worldCoordinateHelper.wraps) {
             const utl = this.screenPointToMercatorCoordinate(new Point(0, 0));
             const utr = this.screenPointToMercatorCoordinate(new Point(this._helper._width, 0));
             const ubl = this.screenPointToMercatorCoordinate(new Point(this._helper._width, this._helper._height));
@@ -361,7 +358,7 @@ export class MercatorTransform implements ITransform {
         this.setCenter(worldCoordinateHelper.lngLatFromWorld(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y)));
-        if (this._helper.renderWorldCopies) {
+        if (this._helper.renderWorldCopies && this.worldCoordinateHelper.wraps) {
             this.setCenter(this.center.wrap());
         }
     }

@@ -137,12 +137,6 @@ export interface ITransformGetters {
     get renderWorldCopies(): boolean;
     /**
      * @internal
-     * The `renderWorldCopies` setting as given, before {@link renderWorldCopies} masks it for a non-wrapping world;
-     * what a transform created for another projection inherits in `apply`.
-     */
-    get renderWorldCopiesSetting(): boolean;
-    /**
-     * @internal
      * The lng/lat to world-coordinate mapping this transform positions the camera in.
      * Mercator for the mercator, globe, and vertical-perspective transforms.
      */

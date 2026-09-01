@@ -104,16 +104,17 @@ describe('renderWorldCopies', () => {
 });
 
 describe('renderWorldCopies with a registered planar projection', () => {
-    test('reads false while the projection is active', async () => {
-        const map = createMap({renderWorldCopies: true});
+    test('covers a single world while the projection is active, where mercator covers copies', async () => {
+        const map = createMap({renderWorldCopies: true, minZoom: -2, zoom: -2, pitch: 60});
         await map.once('style.load');
+        expect(map.coveringTiles({tileSize: 512}).some((tileID) => tileID.wrap !== 0)).toBe(true);
 
         map.setProjection({type: 'simple'});
 
-        expect(map.getRenderWorldCopies()).toBe(false);
+        expect(map.coveringTiles({tileSize: 512}).every((tileID) => tileID.wrap === 0)).toBe(true);
     });
 
-    test('warns and stays false when enabled while the projection is active', async () => {
+    test('warns when enabled while the projection is active', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const map = createMap({renderWorldCopies: true});
         await map.once('style.load');
@@ -121,7 +122,6 @@ describe('renderWorldCopies with a registered planar projection', () => {
 
         map.setRenderWorldCopies(true);
 
-        expect(map.getRenderWorldCopies()).toBe(false);
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('renderWorldCopies has no effect'));
     });
 

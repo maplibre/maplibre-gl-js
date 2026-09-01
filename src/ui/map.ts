@@ -1965,8 +1965,8 @@ export class Map extends Evented<MapEventType> {
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
      * map and the other on the left edge of the map) at every zoom level.
      *
-     * A projection registered with {@link addProjection} has no world copies, so this is `false` while such a
-     * projection is active whatever was set; the setting survives the projection change and applies again in mercator.
+     * A projection registered with {@link addProjection} renders a single world whatever this is set to; the setting
+     * is kept and applies again in mercator.
      * @returns The renderWorldCopies
      * @example
      * ```ts
