@@ -1,0 +1,75 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [0, 0],
+  "zoom": 0,
+  "sources": {
+    "combined": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [0, 35]
+      }
+    },
+    "split": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [0, -35]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#10141c"
+      }
+    },
+    {
+      "id": "combined",
+      "type": "symbol",
+      "source": "combined",
+      "layout": {
+        "text-field": [
+          "format",
+          "á", {"font-scale": 1, "text-color": "#ff6b6b"},
+          "b", {"font-scale": 1.8, "text-color": "#4dabf7"}
+        ],
+        "text-font": ["Noto Sans Latin"],
+        "text-size": 72,
+        "text-allow-overlap": true
+      }
+    },
+    {
+      "id": "split",
+      "type": "symbol",
+      "source": "split",
+      "layout": {
+        "text-field": [
+          "format",
+          "a", {"font-scale": 1, "text-color": "#ff6b6b"},
+          "́", {"font-scale": 0.55, "text-color": "#ffd166"},
+          "b", {"font-scale": 1.8, "text-color": "#4dabf7"}
+        ],
+        "text-font": ["Noto Sans Latin"],
+        "text-size": 72,
+        "text-allow-overlap": true
+      }
+    }
+  ],
+  "font-faces": {
+    "Noto Sans Latin": [
+      {
+        "url": "local://fonts/noto-sans-hebrew/files/noto-sans-hebrew-latin-400-normal.woff2",
+        "unicode-range": ["U+0000-024F"]
+      }
+    ]
+  }
+}
