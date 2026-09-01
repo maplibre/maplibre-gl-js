@@ -1,21 +1,14 @@
-import {describe, beforeEach, afterEach, onTestFinished, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
 import {NavigationControl} from './navigation_control.ts';
-
-import type {MapOptions} from '../map.ts';
 
 function createMap() {
     return globalCreateMap();
 }
 
-function createTestMap(options: Partial<MapOptions> = {}) {
-    const testMap = globalCreateMap(options);
-    onTestFinished(() => testMap.remove());
-    return testMap;
-}
-
 let map;
+let testMap;
 
 beforeEach(() => {
     beforeMapTest();
@@ -24,6 +17,8 @@ beforeEach(() => {
 
 afterEach(() => {
     map.remove();
+    testMap?.remove();
+    testMap = undefined;
 });
 
 describe('NavigationControl', () => {
@@ -259,7 +254,7 @@ describe('NavigationControl', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 560});
         Object.defineProperty(container, 'clientHeight', {value: 560});
-        const testMap = createTestMap({container, minZoom: 0, zoom: 0});
+        testMap = globalCreateMap({container, minZoom: 0, zoom: 0});
 
         testMap.addControl(new NavigationControl());
 
@@ -271,14 +266,16 @@ describe('NavigationControl', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512, configurable: true});
         Object.defineProperty(container, 'clientHeight', {value: 512, configurable: true});
-        const testMap = createTestMap({container, minZoom: 0, zoom: 0.1});
+        testMap = globalCreateMap({container, minZoom: 0, zoom: 0.1});
         testMap.addControl(new NavigationControl());
+
+        const zoomOutButton = testMap.getContainer().querySelector<HTMLButtonElement>('.maplibregl-ctrl-zoom-out');
+        expect(zoomOutButton.disabled).toBe(false);
 
         Object.defineProperty(container, 'clientWidth', {value: 560});
         Object.defineProperty(container, 'clientHeight', {value: 560});
         testMap.resize();
 
-        const zoomOutButton = testMap.getContainer().querySelector<HTMLButtonElement>('.maplibregl-ctrl-zoom-out');
         expect(zoomOutButton.disabled).toBe(true);
     });
 
