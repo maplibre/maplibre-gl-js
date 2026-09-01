@@ -1,6 +1,15 @@
 import {describe, test, expect} from 'vitest';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
-import {evaluateSizeForFeature, evaluateSizeForZoom, getSizeData} from './symbol_size.ts';
+import {
+    evaluateSizeForFeature,
+    evaluateSizeForZoom,
+    getSizeData,
+    ICON_ROTATE_WITH_MAP_FLAG,
+    ICON_SIZE_MASK,
+    iconSizeRotatesWithMap,
+    MAX_PACKED_SIZE,
+    packIconSizeAndRotation
+} from './symbol_size.ts';
 
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -96,5 +105,24 @@ describe('evaluateSizeForFeature', () => {
         const size = evaluateSizeForFeature(sizeData, {uSize: 12, uSizeT: 0}, {lowerSize: 1280, upperSize: 2560});
 
         expect(size).toBe(12);
+    });
+});
+
+describe('packIconSizeAndRotation', () => {
+    test('reserves the high bit above the largest packed icon size', () => {
+        expect(MAX_PACKED_SIZE).toBeLessThan(ICON_ROTATE_WITH_MAP_FLAG);
+        expect(ICON_SIZE_MASK & ICON_ROTATE_WITH_MAP_FLAG).toBe(0);
+    });
+
+    test('preserves the largest icon size with either rotation alignment', () => {
+        const viewportAligned = packIconSizeAndRotation(MAX_PACKED_SIZE, false);
+        const mapAligned = packIconSizeAndRotation(MAX_PACKED_SIZE, true);
+
+        expect(viewportAligned & ICON_SIZE_MASK).toBe(MAX_PACKED_SIZE);
+        expect(mapAligned & ICON_SIZE_MASK).toBe(MAX_PACKED_SIZE);
+        expect(viewportAligned & ICON_ROTATE_WITH_MAP_FLAG).toBe(0);
+        expect(mapAligned & ICON_ROTATE_WITH_MAP_FLAG).toBe(ICON_ROTATE_WITH_MAP_FLAG);
+        expect(iconSizeRotatesWithMap(viewportAligned)).toBe(false);
+        expect(iconSizeRotatesWithMap(mapAligned)).toBe(true);
     });
 });

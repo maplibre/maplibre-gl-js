@@ -11,7 +11,7 @@ uniform highp float u_size_t; // used to interpolate between zoom stops when siz
 uniform highp float u_size; // used when size is both zoom and feature constant
 uniform highp float u_camera_to_center_distance;
 uniform highp float u_pitch;
-uniform bool u_rotate_symbol;
+uniform int u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform float u_fade_change;
 uniform mat4 u_label_plane_matrix;
@@ -29,6 +29,9 @@ uniform bool u_height_anchor_ground;
 out vec2 v_tex;
 flat out float v_total_opacity;
 
+const uint ICON_SIZE_MASK = 0x7fffu;
+const uint ICON_ROTATE_WITH_MAP_FLAG = 0x8000u;
+
 #pragma maplibre: define lowp float opacity
 
 void main() {
@@ -38,7 +41,9 @@ void main() {
     vec2 a_offset = a_pos_offset.zw;
 
     vec2 a_tex = vec2(a_data.xy);
-    vec2 a_size = vec2(a_data.zw);
+    vec2 a_size = vec2(a_data.z, a_data.w & ICON_SIZE_MASK);
+    bool rotate_symbol = u_rotate_symbol == 2 ?
+        (a_data.w & ICON_ROTATE_WITH_MAP_FLAG) != 0u : u_rotate_symbol == 1;
 
     float a_size_min = float(a_data.z >> 1u);
     vec2 a_pxoffset = a_pixeloffset.xy;
@@ -87,7 +92,7 @@ void main() {
     float fontScale = u_is_text ? size / 24.0 : size;
 
     highp float symbol_rotation = 0.0;
-    if (u_rotate_symbol) {
+    if (rotate_symbol) {
         // See comments in symbol_sdf.vertex
         vec4 offsetProjectedPoint = projectTileWithElevation(translated_a_pos + vec2(1, 0), ele);
 

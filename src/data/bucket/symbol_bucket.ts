@@ -30,7 +30,7 @@ import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {type Anchor} from '../../symbol/anchor.ts';
-import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
+import {getSizeData, MAX_PACKED_SIZE, packIconSizeAndRotation} from '../../symbol/symbol_size.ts';
 
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
@@ -120,7 +120,8 @@ function addVertex(
     pixelOffsetY: number,
     minFontScaleX: number,
     minFontScaleY: number,
-    elevation: number
+    elevation: number,
+    rotateWithMap: boolean
 ) {
     const aSizeX = sizeVertex ? Math.min(MAX_PACKED_SIZE, Math.round(sizeVertex[0])) : 0;
     const aSizeY = sizeVertex ? Math.min(MAX_PACKED_SIZE, Math.round(sizeVertex[1])) : 0;
@@ -135,7 +136,7 @@ function addVertex(
         tx, // x coordinate of symbol on glyph atlas texture
         ty, // y coordinate of symbol on glyph atlas texture
         (aSizeX << 1) + (isSDF ? 1 : 0),
-        aSizeY,
+        packIconSizeAndRotation(aSizeY, rotateWithMap),
         pixelOffsetX * 16,
         pixelOffsetY * 16,
         minFontScaleX * 256,
@@ -637,7 +638,7 @@ export class SymbolBucket implements Bucket {
         quads: SymbolQuad[],
         sizeVertex: any,
         lineOffset: [number, number],
-        alongLine: boolean,
+        rotateWithMap: boolean,
         feature: SymbolFeature,
         writingMode: WritingMode,
         labelAnchor: Anchor,
@@ -654,6 +655,8 @@ export class SymbolBucket implements Bucket {
         const vertexStartIndex = segment.vertexLength;
 
         const angle = (this.allowVerticalPlacement && writingMode === WritingMode.vertical) ? Math.PI / 2 : 0;
+        const packRotationAlignment = arrays === this.icon && this.layers[0].hasDataDrivenIconRotationAlignment;
+        const iconRotatesWithMap = packRotationAlignment && rotateWithMap;
 
         const sections = feature.text && feature.text.sections;
 
@@ -662,10 +665,10 @@ export class SymbolBucket implements Bucket {
             const index = segment.vertexLength;
 
             const y = glyphOffset[1];
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tl.x, y + tl.y, tex.x, tex.y, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY, elevation);
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tr.x, y + tr.y, tex.x + tex.w, tex.y, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY, elevation);
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, bl.x, y + bl.y, tex.x, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY, elevation);
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, br.x, y + br.y, tex.x + tex.w, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY, elevation);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tl.x, y + tl.y, tex.x, tex.y, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY, elevation, iconRotatesWithMap);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tr.x, y + tr.y, tex.x + tex.w, tex.y, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY, elevation, iconRotatesWithMap);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, bl.x, y + bl.y, tex.x, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY, elevation, iconRotatesWithMap);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, br.x, y + br.y, tex.x + tex.w, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY, elevation, iconRotatesWithMap);
 
             addDynamicAttributes(arrays.dynamicLayoutVertexArray, labelAnchor, angle);
 
@@ -682,6 +685,9 @@ export class SymbolBucket implements Bucket {
             }
         }
 
+        const upperSize = sizeVertex?.[1] ?? 0;
+        const placedUpperSize = packRotationAlignment ?
+            packIconSizeAndRotation(Math.min(MAX_PACKED_SIZE, Math.round(upperSize)), iconRotatesWithMap) : upperSize;
         arrays.placedSymbolArray.emplaceBack(
             labelAnchor.x, labelAnchor.y,
             glyphOffsetArrayStart,
@@ -691,7 +697,7 @@ export class SymbolBucket implements Bucket {
             lineLength,
             labelAnchor.segment,
             sizeVertex ? sizeVertex[0] : 0,
-            sizeVertex ? sizeVertex[1] : 0,
+            placedUpperSize,
             lineOffset[0], lineOffset[1],
             writingMode,
             // placedOrientation is null initially; will be updated to horizontal(1)/vertical(2) if placed
