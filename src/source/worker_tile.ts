@@ -42,6 +42,11 @@ export class WorkerTile {
 
     abort: AbortController;
     vectorTile: VectorTileLike;
+    /**
+     * The etag of the response this tile was loaded from. A reload has no new response, so it is returned again
+     * to keep the main thread's tile etag intact for the next expiry refresh.
+     */
+    etag?: string;
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {
