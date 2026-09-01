@@ -19,7 +19,7 @@ uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
-uniform bool u_rotate_symbol;
+uniform int u_rotate_symbol;
 uniform vec2 u_texsize;
 uniform vec2 u_texsize_icon;
 uniform bool u_is_along_line;
@@ -104,7 +104,7 @@ void main() {
     float fontScale = size / 24.0;
 
     highp float symbol_rotation = 0.0;
-    if (u_rotate_symbol) {
+    if (u_rotate_symbol == 1) {
         // See comments in symbol_sdf.vertex
         vec4 offsetProjectedPoint = projectTileWithElevation(translated_a_pos + vec2(1, 0), ele);
 

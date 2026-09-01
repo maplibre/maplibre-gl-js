@@ -6,6 +6,12 @@ import type {Painter} from '../../render/painter.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import {type mat4} from 'gl-matrix';
 
+export const enum SymbolRotationMode {
+    Viewport = 0,
+    Map = 1,
+    PerFeature = 2
+}
+
 export type SymbolIconUniformsType = {
     'u_is_size_zoom_constant': Uniform1i;
     'u_is_size_feature_constant': Uniform1i;
@@ -146,7 +152,7 @@ const symbolIconUniformValues = (
         uSizeT: number;
         uSize: number;
     },
-    rotateInShader: boolean,
+    rotationMode: SymbolRotationMode,
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
@@ -165,7 +171,7 @@ const symbolIconUniformValues = (
         'u_is_size_feature_constant': +(functionType === 'constant' || functionType === 'camera'),
         'u_size_t': size ? size.uSizeT : 0,
         'u_size': size ? size.uSize : 0,
-        'u_rotate_symbol': +rotateInShader,
+        'u_rotate_symbol': rotationMode,
         'u_label_plane_matrix': labelPlaneMatrix,
         'u_coord_matrix': glCoordMatrix,
         'u_is_text': +isText,
@@ -187,7 +193,7 @@ const symbolSDFUniformValues = (
         uSizeT: number;
         uSize: number;
     },
-    rotateInShader: boolean,
+    rotationMode: SymbolRotationMode,
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
@@ -205,7 +211,7 @@ const symbolSDFUniformValues = (
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
+        rotationMode, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
         glCoordMatrix, translation, isText, texSize, pitchedScale, isOffset, heightAnchorGround), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_is_halo': isHalo ? 1 : 0,
@@ -219,7 +225,7 @@ const symbolTextAndIconUniformValues = (
         uSizeT: number;
         uSize: number;
     },
-    rotateInShader: boolean,
+    rotationMode: SymbolRotationMode,
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
@@ -234,7 +240,7 @@ const symbolTextAndIconUniformValues = (
     heightAnchorGround: boolean
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
+        rotationMode, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
         glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale, isOffset, heightAnchorGround), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1

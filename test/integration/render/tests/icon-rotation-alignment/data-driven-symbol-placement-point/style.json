@@ -1,0 +1,68 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 160,
+      "height": 96
+    }
+  },
+  "bearing": 45,
+  "sources": {
+    "points": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "alignment": "map",
+              "size": 1.5
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [-45, 0]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "alignment": "viewport",
+              "size": 0.75
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "alignment": "auto",
+              "size": 1
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [45, 0]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/sprite",
+  "layers": [
+    {
+      "id": "symbols",
+      "type": "symbol",
+      "source": "points",
+      "layout": {
+        "symbol-placement": "point",
+        "icon-rotation-alignment": ["get", "alignment"],
+        "icon-size": ["get", "size"],
+        "icon-allow-overlap": true,
+        "icon-image": "oneway"
+      }
+    }
+  ]
+}
