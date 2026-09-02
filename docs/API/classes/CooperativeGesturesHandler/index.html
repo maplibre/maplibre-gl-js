@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.56">
+      <meta name="generator" content="zensical-0.0.57">
     
     
       
@@ -34,12 +34,12 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.20815dad.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.dfe2e883.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.812a03bb.min.css">
       
       
 
@@ -1014,7 +1014,7 @@
   <span class="md-ellipsis">
     
   
-  Event&lt;TType&gt;
+  Event&lt;TType extends string = string&gt;
 
     
   </span>
@@ -1041,7 +1041,7 @@
   <span class="md-ellipsis">
     
   
-  Evented&lt;EventType&gt;
+  Evented&lt;EventType extends EventTypeMap = EventTypeMap&gt;
 
     
   </span>
@@ -1554,7 +1554,7 @@
   <span class="md-ellipsis">
     
   
-  MapLibreEvent&lt;TOrig&gt;
+  MapLibreEvent&lt;TOrig = unknown&gt;
 
     
   </span>
@@ -3661,7 +3661,7 @@
   <span class="md-ellipsis">
     
   
-  ActorMessage&lt;T&gt;
+  ActorMessage&lt;T extends MessageType&gt;
 
     
   </span>
@@ -4336,7 +4336,7 @@
   <span class="md-ellipsis">
     
   
-  DistributiveOmit&lt;T, K&gt;
+  DistributiveOmit&lt;T, K extends DistributiveKeys&lt;T&gt;&gt;
 
     
   </span>
@@ -5065,7 +5065,7 @@
   <span class="md-ellipsis">
     
   
-  Listener&lt;E&gt;
+  Listener&lt;E extends Event = Event&gt;
 
     
   </span>
@@ -5686,7 +5686,7 @@
   <span class="md-ellipsis">
     
   
-  ProjectionData&lt;MainMatrix, FallbackMatrix&gt;
+  ProjectionData&lt;MainMatrix extends mat4 = mat4, FallbackMatrix extends mat4 = MainMatrix&gt;
 
     
   </span>
@@ -9789,14 +9789,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
-  
 
       </a>
     </li>
@@ -9931,6 +9923,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/style-labels-with-font-faces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Style labels with font faces
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10147,14 +10174,6 @@
     
   </span>
   
-  
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
   
 
       </a>
@@ -10853,7 +10872,7 @@
 
 
 <h1 id="cooperativegestureshandler">CooperativeGesturesHandler</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/handler/cooperative_gestures.ts#L29">ui/handler/cooperative_gestures.ts:29</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/e1736fd29fdb26a359640ca61a88343bc2604aac/src/ui/handler/cooperative_gestures.ts#L29">ui/handler/cooperative_gestures.ts:29</a></p>
 <p>A <code>CooperativeGestureHandler</code> is a control that adds cooperative gesture info when user tries to zoom in/out.</p>
 <p>When the CooperativeGestureHandler blocks a gesture, it will emit a <code>cooperativegestureprevented</code> event.</p>
 <h2 id="example">Example</h2>
@@ -10872,7 +10891,7 @@
 <blockquote>
 <p><strong>isActive</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/handler/cooperative_gestures.ts#L44">ui/handler/cooperative_gestures.ts:44</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/e1736fd29fdb26a359640ca61a88343bc2604aac/src/ui/handler/cooperative_gestures.ts#L44">ui/handler/cooperative_gestures.ts:44</a></p>
 <p>This is used to indicate if the handler is currently active or not.
 In case a handler is active, it will block other handlers from getting the relevant events.
 There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
@@ -10885,7 +10904,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>reset</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/handler/cooperative_gestures.ts#L47">ui/handler/cooperative_gestures.ts:47</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/e1736fd29fdb26a359640ca61a88343bc2604aac/src/ui/handler/cooperative_gestures.ts#L47">ui/handler/cooperative_gestures.ts:47</a></p>
 <p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
@@ -10896,7 +10915,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>_bypassKey</strong>: <code>"ctrlKey"</code> | <code>"metaKey"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/407a8ce9e379c16066b13c3a6729e404b69743c6/src/ui/handler/cooperative_gestures.ts#L36">ui/handler/cooperative_gestures.ts:36</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/e1736fd29fdb26a359640ca61a88343bc2604aac/src/ui/handler/cooperative_gestures.ts#L36">ui/handler/cooperative_gestures.ts:36</a></p>
 <p>This is the key that will allow to bypass the cooperative gesture protection</p>
 
 
@@ -11031,7 +11050,7 @@ There is an allow list of handlers that can be active at the same time, which is
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.49251538.min.js"></script>
       
     
   </body>

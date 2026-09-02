@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.56">
+      <meta name="generator" content="zensical-0.0.57">
     
     
       
@@ -34,12 +34,12 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5da3a30f.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.812a03bb.min.css">
       
       
 
@@ -981,7 +981,7 @@
   <span class="md-ellipsis">
     
   
-  Event&lt;TType&gt;
+  Event&lt;TType extends string = string&gt;
 
     
   </span>
@@ -1008,7 +1008,7 @@
   <span class="md-ellipsis">
     
   
-  Evented&lt;EventType&gt;
+  Evented&lt;EventType extends EventTypeMap = EventTypeMap&gt;
 
     
   </span>
@@ -1521,7 +1521,7 @@
   <span class="md-ellipsis">
     
   
-  MapLibreEvent&lt;TOrig&gt;
+  MapLibreEvent&lt;TOrig = unknown&gt;
 
     
   </span>
@@ -3616,7 +3616,7 @@
   <span class="md-ellipsis">
     
   
-  ActorMessage&lt;T&gt;
+  ActorMessage&lt;T extends MessageType&gt;
 
     
   </span>
@@ -4291,7 +4291,7 @@
   <span class="md-ellipsis">
     
   
-  DistributiveOmit&lt;T, K&gt;
+  DistributiveOmit&lt;T, K extends DistributiveKeys&lt;T&gt;&gt;
 
     
   </span>
@@ -5020,7 +5020,7 @@
   <span class="md-ellipsis">
     
   
-  Listener&lt;E&gt;
+  Listener&lt;E extends Event = Event&gt;
 
     
   </span>
@@ -5641,7 +5641,7 @@
   <span class="md-ellipsis">
     
   
-  ProjectionData&lt;MainMatrix, FallbackMatrix&gt;
+  ProjectionData&lt;MainMatrix extends mat4 = mat4, FallbackMatrix extends mat4 = MainMatrix&gt;
 
     
   </span>
@@ -9741,14 +9741,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
-  
 
       </a>
     </li>
@@ -9883,6 +9875,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/style-labels-with-font-faces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Style labels with font faces
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10099,14 +10126,6 @@
     
   </span>
   
-  
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
   
 
       </a>
@@ -10843,6 +10862,7 @@
 <li><a href="https://github.com/jimmyrocks/maplibre-gl-vector-text-protocol">maplibre-gl-vector-text-protocol</a> - Supports <code>CSV</code>, <code>TSV</code>, <code>Topojson</code>, <code>KML</code>, <code>GPX</code>, and <code>TCX</code> formats using the addProtocol feature.</li>
 <li><a href="https://github.com/falseinput/geogrid-maplibre-gl">geogrid-maplibre-gl</a> - Renders customizable graticule (geographic grid).</li>
 <li><a href="https://gitlab.com/IvanSanchez/maplibre-gleo">maplibre-gleo</a> - Adds symbols using the "gleo" WebGL map rendering library.</li>
+<li><a href="https://github.com/lucaswoj/maplibre-image-plugins">maplibre-image-plugins</a> - Animated icons from GIF, animated WebP, APNG, or AVIF files, plus a pulsing location dot, rendered on the GPU via <code>StyleImageWebGLData</code>. <a href="https://lucaswoj.github.io/maplibre-image-plugins/">demo</a></li>
 <li><a href="https://github.com/AbelVM/maplibre-contourmap">maplibre-contourmap</a> - Renders contour lines from vector sources in MapLibre GL JS. <a href="https://abelvm.github.io/maplibre-contourmap/example/">demo</a></li>
 <li><a href="https://github.com/dvt3d/maplibre-three-plugin">maplibre-three-plugin</a> - A bridge plugin that cleverly connects MapLibre GL JS with Three.js, enabling developers to implement 3D rendering and animation on maps.</li>
 <li><a href="https://github.com/teritorio/maplibre-gl-teritorio-cluster">maplibre-gl-teritorio-cluster</a> - Clustering plugin implementing a MapLibre GL Layer with configurable HTML clustering renderer and support of events.</li>
@@ -10866,6 +10886,7 @@
 <li><a href="https://github.com/geoblocks/ol-maplibre-layer">ol-maplibre-layer</a> - Render a MapLibre GL JS map as an <a href="https://openlayers.org/">OpenLayers</a> layer.</li>
 <li><a href="https://github.com/protomaps/PMTiles/tree/main/js">PMTiles for MapLibre</a> - A library that uses addProtocol to read PMTIles. a single-file format for hosting tilesets without a server or API, just S3 or other storage providers.</li>
 <li><a href="https://www.naivemap.com/map-gl-layers/api/maplibre-gl-image-layer/">@naivemap/maplibre-gl-image-layer</a> - A versatile layer for displaying georeferenced images with various projections (using proj4js) on the map.</li>
+<li><a href="https://github.com/guillaumemichel/veritiles">veritiles</a> - Verified <a href="https://github.com/protomaps/PMTiles">PMTiles</a> from untrusted static hosting <a href="https://guillaumemichel.github.io/ipfs-pmtiles-demo/">demo</a></li>
 </ul>
 <h2 id="utility-libraries">Utility Libraries</h2>
 <ul>
@@ -11079,7 +11100,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
+      <script src="../assets/javascripts/bundle.49251538.min.js"></script>
       
     
   </body>

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.56">
+      <meta name="generator" content="zensical-0.0.57">
     
     
       
@@ -34,12 +34,12 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5da3a30f.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.812a03bb.min.css">
       
       
 
@@ -857,7 +857,7 @@
   <span class="md-ellipsis">
     
   
-  Event&lt;TType&gt;
+  Event&lt;TType extends string = string&gt;
 
     
   </span>
@@ -884,7 +884,7 @@
   <span class="md-ellipsis">
     
   
-  Evented&lt;EventType&gt;
+  Evented&lt;EventType extends EventTypeMap = EventTypeMap&gt;
 
     
   </span>
@@ -1397,7 +1397,7 @@
   <span class="md-ellipsis">
     
   
-  MapLibreEvent&lt;TOrig&gt;
+  MapLibreEvent&lt;TOrig = unknown&gt;
 
     
   </span>
@@ -3492,7 +3492,7 @@
   <span class="md-ellipsis">
     
   
-  ActorMessage&lt;T&gt;
+  ActorMessage&lt;T extends MessageType&gt;
 
     
   </span>
@@ -4167,7 +4167,7 @@
   <span class="md-ellipsis">
     
   
-  DistributiveOmit&lt;T, K&gt;
+  DistributiveOmit&lt;T, K extends DistributiveKeys&lt;T&gt;&gt;
 
     
   </span>
@@ -4896,7 +4896,7 @@
   <span class="md-ellipsis">
     
   
-  Listener&lt;E&gt;
+  Listener&lt;E extends Event = Event&gt;
 
     
   </span>
@@ -5517,7 +5517,7 @@
   <span class="md-ellipsis">
     
   
-  ProjectionData&lt;MainMatrix, FallbackMatrix&gt;
+  ProjectionData&lt;MainMatrix extends mat4 = mat4, FallbackMatrix extends mat4 = MainMatrix&gt;
 
     
   </span>
@@ -9724,14 +9724,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
-  
 
       </a>
     </li>
@@ -9866,6 +9858,41 @@
     
   </span>
   
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./style-labels-with-font-faces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Style labels with font faces
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10082,14 +10109,6 @@
     
   </span>
   
-  
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
   
 
       </a>
@@ -11237,7 +11256,6 @@
 <a class="example-card" href="./update-geojson-polygons/">
 <div class="example-card-image">
 <img src="../assets/examples/update-geojson-polygons.webp" loading="lazy" alt="Update GeoJSON polygons using updateable GeoJSONVT">
-<span class="example-card-badge">new</span>
 </div>
 <div class="example-card-content">
 <h3>Update GeoJSON polygons</h3>
@@ -11282,21 +11300,21 @@
 </a>
 <a class="example-card" href="./add-an-animated-icon-to-the-map/">
 <div class="example-card-image">
-<img src="../assets/examples/add-an-animated-icon-to-the-map.webp" loading="lazy" alt="Add an animated icon to the map that was generated at runtime with the Canvas API.">
+<img src="../assets/examples/add-an-animated-icon-to-the-map.webp" loading="lazy" alt="Add an animated icon to the map that was generated at runtime with the Canvas API. If performance is important, consider using a <a href="https://maplibre.org/maplibre-gl-js/docs/plugins/">plugin</a> that draws the icon directly on the GPU via <code>StyleImageWebGLData</code>.">
 </div>
 <div class="example-card-content">
 <h3>Add an animated icon to the map</h3>
-<p>Add an animated icon to the map that was generated at runtime with the Canvas API.</p>
+<p>Add an animated icon to the map that was generated at runtime with the Canvas API. If performance is important, consider using a <a href="https://maplibre.org/maplibre-gl-js/docs/plugins/">plugin</a> that draws the icon directly on the GPU via <code>StyleImageWebGLData</code>.</p>
 </div>
 </a>
 <a class="example-card" href="./animate-an-icon-on-the-gpu/">
 <div class="example-card-image">
-<img src="../assets/examples/animate-an-icon-on-the-gpu.webp" loading="lazy" alt="Draw an animated icon straight into the icon atlas with WebGL, without moving its pixels through the CPU.">
+<img src="../assets/examples/animate-an-icon-on-the-gpu.webp" loading="lazy" alt="Draw an animated icon straight into the icon atlas with WebGL, without moving its pixels through the CPU. Writing WebGL by hand is hard to get right, consider using a <a href="https://maplibre.org/maplibre-gl-js/docs/plugins/">plugin</a> that implements <code>StyleImageWebGLData</code> for you.">
 <span class="example-card-badge">new</span>
 </div>
 <div class="example-card-content">
 <h3>Animate an icon on the GPU</h3>
-<p>Draw an animated icon straight into the icon atlas with WebGL, without moving its pixels through the CPU.</p>
+<p>Draw an animated icon straight into the icon atlas with WebGL, without moving its pixels through the CPU. Writing WebGL by hand is hard to get right, consider using a <a href="https://maplibre.org/maplibre-gl-js/docs/plugins/">plugin</a> that implements <code>StyleImageWebGLData</code> for you.</p>
 </div>
 </a>
 <a class="example-card" href="./display-a-remote-svg-symbol/">
@@ -11787,11 +11805,11 @@
 </a>
 <a class="example-card" href="./create-a-draggable-marker/">
 <div class="example-card-image">
-<img src="../assets/examples/create-a-draggable-marker.webp" loading="lazy" alt="Drag the marker to a new location on a map and populate its coordinates in a display.">
+<img src="../assets/examples/create-a-draggable-marker.webp" loading="lazy" alt="Drag a marker with the pointer or the keyboard, and make a custom marker element keyboard accessible.">
 </div>
 <div class="example-card-content">
 <h3>Create a draggable Marker</h3>
-<p>Drag the marker to a new location on a map and populate its coordinates in a display.</p>
+<p>Drag a marker with the pointer or the keyboard, and make a custom marker element keyboard accessible.</p>
 </div>
 </a>
 <a class="example-card" href="./animate-a-marker/">
@@ -11872,6 +11890,16 @@
 <div class="example-card-content">
 <h3>Style labels with Web fonts</h3>
 <p>Apply Web fonts to your style’s text labels. Unlike signed distance field (SDF) glyph sets, Web fonts are available from a variety of providers, or your can make your own using popular tools. This option is suitable for fonts that are only available through a third-party content delivery network (CDN) for technical or legal reasons, as well as fonts that are incompatible with SDF, such as variable fonts. For compatibility with Android and iOS applications, specify equivalent fonts in the style’s font-faces property.</p>
+</div>
+</a>
+<a class="example-card" href="./style-labels-with-font-faces/">
+<div class="example-card-image">
+<img src="../assets/examples/style-labels-with-font-faces.webp" loading="lazy" alt="Point your style at the font files used to draw its text labels. The font-faces property names a font file per text-font name, optionally narrowed to a unicode-range, so a style can cover scripts its glyphs server does not. Anything the browser can render text with may be used, and it is understood by Android and iOS as well. Here Georgian and Armenian labels come from font files while the Latin ones still come from the glyphs URL.">
+<span class="example-card-badge">new</span>
+</div>
+<div class="example-card-content">
+<h3>Style labels with font faces</h3>
+<p>Point your style at the font files used to draw its text labels. The font-faces property names a font file per text-font name, optionally narrowed to a unicode-range, so a style can cover scripts its glyphs server does not. Anything the browser can render text with may be used, and it is understood by Android and iOS as well. Here Georgian and Armenian labels come from font files while the Latin ones still come from the glyphs URL.</p>
 </div>
 </a>
 <a class="example-card" href="./change-the-case-of-labels/">
@@ -12017,7 +12045,6 @@
 <a class="example-card" href="./select-features-with-boxzoomend-callback/">
 <div class="example-card-image">
 <img src="../assets/examples/select-features-with-boxzoomend-callback.webp" loading="lazy" alt="Use the boxZoomEnd callback to select features with Shift-drag instead of fitting the map to the dragged box.">
-<span class="example-card-badge">new</span>
 </div>
 <div class="example-card-content">
 <h3>Select features with boxZoomEnd callback</h3>
@@ -12246,7 +12273,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
+      <script src="../assets/javascripts/bundle.49251538.min.js"></script>
       
     
   </body>

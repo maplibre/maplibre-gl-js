@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <title>Add an animated icon to the map</title>
-    <meta property="og:description" content="Add an animated icon to the map that was generated at runtime with the Canvas API." />
+    <meta property="og:description" content="Add an animated icon to the map that was generated at runtime with the Canvas API. If performance is important, consider using a [plugin](https://maplibre.org/maplibre-gl-js/docs/plugins/) that draws the icon directly on the GPU via `StyleImageWebGLData`." />
     <meta property="og:category" content="Icons & Symbols" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.6.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.7.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -18,7 +18,7 @@
 <div id="map"></div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.6.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.7.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',
