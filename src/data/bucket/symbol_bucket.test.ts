@@ -13,7 +13,12 @@ import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
+import {featureFilter, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {ICON_ROTATE_WITH_MAP_FLAG} from '../../symbol/symbol_size.ts';
 import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
+import type {BucketParameters} from '../bucket.ts';
 import type {StyleImage} from '../../style/style_image.ts';
 import type {StyleGlyph} from '../../style/style_glyph.ts';
 import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
@@ -32,14 +37,15 @@ function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
 }
 
-function createIndexedFeature(id: number, index: number, iconId: string): IndexedFeature {
+function createIndexedFeature(id: number, index: number, iconId: string, alignment?: string): IndexedFeature {
     return {
         feature: {
             extent: 8192,
             type: 1,
             id,
             properties: {
-                icon: iconId
+                icon: iconId,
+                alignment
             },
             loadGeometry() {
                 return [[{x: 0, y: 0}]];
@@ -107,6 +113,68 @@ describe('SymbolBucket', () => {
         place(bucketB.layers[0], tileB);
         const b2 = placement.collisionIndex.grid.keysLength();
         expect(b2).toBe(a2);
+    });
+
+    test('preserves data-driven icon rotation alignment for rendering and collision placement', () => {
+        const iconCollisionBoxArray = new CollisionBoxArray();
+        const layer = new SymbolStyleLayer({
+            id: 'test',
+            type: 'symbol',
+            source: 'source',
+            layout: {
+                'icon-image': ['get', 'icon'],
+                'icon-rotation-alignment': ['get', 'alignment']
+            },
+            filter: featureFilter(undefined, 'filter')
+        } as unknown as LayerSpecification, {});
+        layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, []);
+        const bucket = new SymbolBucket({
+            overscaling: 1,
+            zoom: 0,
+            collisionBoxArray: iconCollisionBoxArray,
+            layers: [layer]
+        } as BucketParameters<SymbolStyleLayer>);
+        const options = createPopulateOptions([]);
+        const image = {data: new RGBAImage({width: 0, height: 0}), sdf: false} as StyleImage;
+
+        bucket.populate([
+            createIndexedFeature(0, 0, 'icon', 'map'),
+            createIndexedFeature(1, 1, 'icon', 'viewport')
+        ], options, undefined);
+        performSymbolLayout({
+            bucket,
+            imageMap: {icon: image},
+            imagePositions: {icon: new ImagePosition({x: 0, y: 0, w: 10, h: 10}, image)},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+        } as any);
+
+        const uint16ValuesPerVertex = 14;
+        const rotationValueOffset = 7;
+        const verticesPerIcon = 4;
+        const firstIconRotation = bucket.icon.layoutVertexArray.uint16[rotationValueOffset];
+        const secondIconRotation = bucket.icon.layoutVertexArray.uint16[
+            verticesPerIcon * uint16ValuesPerVertex + rotationValueOffset
+        ];
+
+        expect(firstIconRotation & ICON_ROTATE_WITH_MAP_FLAG).toBe(ICON_ROTATE_WITH_MAP_FLAG);
+        expect(secondIconRotation & ICON_ROTATE_WITH_MAP_FLAG).toBe(0);
+
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = new Tile(tileID, 512);
+        tile.latestFeatureIndex = new FeatureIndex(tileID);
+        tile.buckets = {test: bucket};
+        tile.collisionBoxArray = iconCollisionBoxArray;
+        new CrossTileSymbolIndex().addLayer(layer, [tile], undefined);
+
+        const placement = new Placement(transform, undefined, 0, true);
+        const collisionBoxPlacement = vi.spyOn(placement.collisionIndex, 'placeCollisionBox');
+        const bucketParts = [];
+        placement.getBucketParts(bucketParts, layer, tile, false);
+        placement.placeLayerBucketPart(bucketParts[0], {}, false);
+
+        const collisionRotationsWithMap = collisionBoxPlacement.mock.calls.map(
+            ([, , , , , , rotatesWithMap]) => rotatesWithMap);
+        expect(collisionRotationsWithMap).toEqual([true, false]);
     });
 
     test('SymbolBucket integer overflow', () => {

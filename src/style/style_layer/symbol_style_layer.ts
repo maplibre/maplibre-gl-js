@@ -30,6 +30,7 @@ import type {EvaluationParameters} from '../evaluation_parameters.ts';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import {FormatSectionOverride} from '../format_section_override.ts';
+import {warnOnce} from '../../util/util.ts';
 
 export const isSymbolStyleLayer = (layer: StyleLayer): layer is SymbolStyleLayer => layer.type === 'symbol';
 
@@ -40,6 +41,8 @@ export class SymbolStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<SymbolPaintProps>;
     _transitioningPaint: Transitioning<SymbolPaintProps>;
     paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
+    _autoIconRotationAlignment: 'map' | 'viewport';
+    hasDataDrivenIconRotationAlignment: boolean;
 
     constructor(layer: LayerSpecification, globalState: Record<string, any>) {
         super(layer, properties, globalState);
@@ -48,16 +51,37 @@ export class SymbolStyleLayer extends StyleLayer {
     recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
 
-        const iconRotationAlignment = this.layout.get('icon-rotation-alignment');
-        if (iconRotationAlignment.value.kind !== 'constant' || iconRotationAlignment.value.value === 'auto') {
+        const symbolPlacement = this.layout.get('symbol-placement');
+        const iconPitchAlignment = this.layout.get('icon-pitch-alignment');
+        this._autoIconRotationAlignment = symbolPlacement === 'point' ? 'viewport' : 'map';
+
+        let iconRotationAlignment = this.layout.get('icon-rotation-alignment');
+        const hasDataDrivenIconRotationAlignment = iconRotationAlignment.value.kind !== 'constant';
+        if (iconRotationAlignment.value.kind === 'constant' && iconRotationAlignment.value.value === 'auto') {
             this.layout._values['icon-rotation-alignment'] = new PossiblyEvaluatedPropertyValue(
                 iconRotationAlignment.property,
-                {kind: 'constant', value: this.layout.get('symbol-placement') !== 'point' ? 'map' : 'viewport'},
+                {kind: 'constant', value: this._autoIconRotationAlignment},
+                iconRotationAlignment.parameters);
+            iconRotationAlignment = this.layout.get('icon-rotation-alignment');
+        }
+
+        this.hasDataDrivenIconRotationAlignment = hasDataDrivenIconRotationAlignment &&
+            symbolPlacement === 'point' && iconPitchAlignment !== 'map';
+        if (hasDataDrivenIconRotationAlignment && !this.hasDataDrivenIconRotationAlignment) {
+            if (symbolPlacement !== 'point') {
+                warnOnce(`${this.id}: data-driven "icon-rotation-alignment" is only supported with "symbol-placement": "point".`);
+            }
+            if (iconPitchAlignment === 'map') {
+                warnOnce(`${this.id}: data-driven "icon-rotation-alignment" is not supported with "icon-pitch-alignment": "map".`);
+            }
+            this.layout._values['icon-rotation-alignment'] = new PossiblyEvaluatedPropertyValue(
+                iconRotationAlignment.property,
+                {kind: 'constant', value: this._autoIconRotationAlignment},
                 iconRotationAlignment.parameters);
         }
 
         if (this.layout.get('text-rotation-alignment') === 'auto') {
-            if (this.layout.get('symbol-placement') !== 'point') {
+            if (symbolPlacement !== 'point') {
                 this.layout._values['text-rotation-alignment'] = 'map';
             } else {
                 this.layout._values['text-rotation-alignment'] = 'viewport';
@@ -68,11 +92,11 @@ export class SymbolStyleLayer extends StyleLayer {
         if (this.layout.get('text-pitch-alignment') === 'auto') {
             this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment') === 'map' ? 'map' : 'viewport';
         }
-        if (this.layout.get('icon-pitch-alignment') === 'auto') {
+        if (iconPitchAlignment === 'auto') {
             this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment').constantOr('viewport');
         }
 
-        if (this.layout.get('symbol-placement') === 'point') {
+        if (symbolPlacement === 'point') {
             const writingModes = this.layout.get('text-writing-mode');
             if (writingModes) {
                 // remove duplicates, preserving order
@@ -87,6 +111,11 @@ export class SymbolStyleLayer extends StyleLayer {
         }
 
         this._setPaintOverrides();
+    }
+
+    iconRotatesWithMap(feature: SymbolFeature, canonical: CanonicalTileID): boolean {
+        const alignment = this.layout.get('icon-rotation-alignment').evaluate(feature, {}, canonical);
+        return alignment === 'map' || (alignment === 'auto' && this._autoIconRotationAlignment === 'map');
     }
 
     getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]): any {

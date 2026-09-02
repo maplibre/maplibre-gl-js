@@ -8,8 +8,31 @@ import type {InterpolationType, StylePropertyExpression} from '@maplibre/maplibr
 const MAX_GLYPH_ICON_SIZE = 255;
 const SIZE_PACK_FACTOR = 128;
 const MAX_PACKED_SIZE: number = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
+const ICON_ROTATE_WITH_MAP_FLAG: number = 0x8000;
+const ICON_SIZE_MASK: number = ICON_ROTATE_WITH_MAP_FLAG - 1;
 
-export {getSizeData, evaluateSizeForFeature, evaluateSizeForZoom, SIZE_PACK_FACTOR, MAX_GLYPH_ICON_SIZE, MAX_PACKED_SIZE};
+export {
+    getSizeData,
+    evaluateSizeForFeature,
+    evaluateSizeForZoom,
+    packIconSizeAndRotation,
+    iconSizeRotatesWithMap,
+    SIZE_PACK_FACTOR,
+    MAX_GLYPH_ICON_SIZE,
+    MAX_PACKED_SIZE,
+    ICON_ROTATE_WITH_MAP_FLAG,
+    ICON_SIZE_MASK
+};
+
+/** Packs icon rotation alignment into the unused high bit of a packed icon size. */
+function packIconSizeAndRotation(packedSize: number, rotateWithMap: boolean): number {
+    return packedSize | (rotateWithMap ? ICON_ROTATE_WITH_MAP_FLAG : 0);
+}
+
+/** Returns whether a packed icon size marks map-aligned rotation. */
+function iconSizeRotatesWithMap(packedSize: number): boolean {
+    return (packedSize & ICON_ROTATE_WITH_MAP_FLAG) !== 0;
+}
 
 /**
  * Per-bucket data for `text-size` or `icon-size`. Built in the worker, so it holds

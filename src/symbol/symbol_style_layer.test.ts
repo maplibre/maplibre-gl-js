@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {FormatSectionOverride} from '../style/format_section_override.ts';
 import properties, {type SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
@@ -101,4 +101,61 @@ describe('hasPaintOverrides', () => {
 
     });
 
+});
+
+describe('icon-rotation-alignment', () => {
+    const dataDrivenAlignment = ['get', 'alignment'];
+    const feature = (alignment: string) => ({properties: {alignment}} as any);
+
+    test('evaluates a data expression for each feature', () => {
+        const layer = createSymbolLayer({layout: {'icon-rotation-alignment': dataDrivenAlignment}});
+
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(true);
+        expect(layer.iconRotatesWithMap(feature('map'), null)).toBe(true);
+        expect(layer.iconRotatesWithMap(feature('viewport'), null)).toBe(false);
+    });
+
+    test('resolves a data-driven `auto` value from point placement', () => {
+        const layer = createSymbolLayer({layout: {
+            'symbol-placement': 'point',
+            'icon-rotation-alignment': dataDrivenAlignment
+        }});
+
+        expect(layer.iconRotatesWithMap(feature('auto'), null)).toBe(false);
+    });
+
+    test('falls back to layer-wide alignment for line placement', () => {
+        const layer = createSymbolLayer({layout: {
+            'symbol-placement': 'line',
+            'icon-rotation-alignment': dataDrivenAlignment
+        }});
+
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(false);
+        expect(layer.layout.get('icon-rotation-alignment').constantOr(null)).toBe('map');
+    });
+
+    test('uses viewport pitch for data-driven rotation alignment', () => {
+        const layer = createSymbolLayer({layout: {'icon-rotation-alignment': dataDrivenAlignment}});
+
+        expect(layer.layout.get('icon-pitch-alignment')).toBe('viewport');
+    });
+
+    test('warns and uses the point-placement fallback with map-aligned pitch', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const layer = createSymbolLayer({
+            id: 'map-pitch',
+            type: 'symbol',
+            layout: {
+                'icon-pitch-alignment': 'map',
+                'icon-rotation-alignment': dataDrivenAlignment
+            }
+        });
+
+        expect(layer.hasDataDrivenIconRotationAlignment).toBe(false);
+        expect(layer.layout.get('icon-rotation-alignment').constantOr(null)).toBe('viewport');
+        expect(warn).toHaveBeenCalledWith(
+            'map-pitch: data-driven "icon-rotation-alignment" is not supported with "icon-pitch-alignment": "map".'
+        );
+        warn.mockRestore();
+    });
 });
