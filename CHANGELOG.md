@@ -1,5 +1,21 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- feat: support `font-faces` style property ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237)) (by [@HarelM](https://github.com/HarelM))
+- Fix navigation control at the effective minimum zoom ([#8261](https://github.com/maplibre/maplibre-gl-js/pull/8261)) (by [@miakh](https://github.com/miakh))
+- fix: Serialize `state` in map style ([#8263](https://github.com/maplibre/maplibre-gl-js/pull/8263)) (by [@hiddewie](https://github.com/hiddewie))
+- Skip serializing the style when validation is turned off ([#8260](https://github.com/maplibre/maplibre-gl-js/pull/8260)) (by [@lazerg](https://github.com/lazerg))
+- docs(marker): show keyboard accessibility for custom marker elements ([#8252](https://github.com/maplibre/maplibre-gl-js/pull/8252)) (by [@smmariquit](https://github.com/smmariquit))
+- Point the animated icon examples at the plugins page ([#8249](https://github.com/maplibre/maplibre-gl-js/pull/8249)) (by [@lucaswoj](https://github.com/lucaswoj))
+- fix: draw non-CJK characters upright in vertical CJK line labels ([#8205](https://github.com/maplibre/maplibre-gl-js/pull/8205)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+- fix: sample elevation lookups from the rendered terrain surface ([#8213](https://github.com/maplibre/maplibre-gl-js/pull/8213)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- fix: throw GPUInitializationError from Map constructor when WebGL2 context creation fails ([#8214](https://github.com/maplibre/maplibre-gl-js/pull/8214)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+## 6.7.0
+### ✨ Features and improvements
 - Support the style specification's `font-faces` property, with `map.setFontFaces` and `map.getFontFaces` and improve complex script languages such as Devanagari, Khmer, Burmese and Hebrew ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))  (by [@HarelM](https://github.com/HarelM))
 - Wrap Thai, Khmer, Burmese, Lao, Tibetan, Javanese and Balinese labels at word boundaries instead of running them on in one line, which applies to every style whether or not it declares `font-faces` ([#6637](https://github.com/maplibre/maplibre-gl-js/issues/6637))
 - Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066))
@@ -7,7 +23,6 @@
 - Skip symbol re-placement when its inputs are unchanged, so repaints from animated style images or custom layers cost a single frame ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Add `Style#triggerSymbolPlacement`, which re-places symbols when something the map cannot see for itself has moved them ([#8208](https://github.com/maplibre/maplibre-gl-js/pull/8208)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Make `{validate: false}` skip the style snapshot the style setters only build as error context, so adding layers one at a time no longer serializes the whole style on every call ([#8259](https://github.com/maplibre/maplibre-gl-js/issues/8259))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Disable the navigation control's zoom-out button when viewport constraints prevent zooming out further ([#5316](https://github.com/maplibre/maplibre-gl-js/issues/5316))
