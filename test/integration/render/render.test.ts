@@ -34,7 +34,7 @@ const DEFAULT_TEST_TIMEOUT = 60000;
  */
 const HOOK_TIMEOUT = 180000;
 
-/** How many tests run at the same time, each in its own browser; 1 is the serial run CI does. */
+/** How many tests run at the same time, each in its own browser; 1 is serial / default. */
 const TEST_CONCURRENCY = Math.max(1, +process.env.RENDER_TEST_CONCURRENCY || 1);
 
 type RenderTestContext = TestContext & {page: Page};
