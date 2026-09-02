@@ -663,7 +663,7 @@ export class Painter {
      * Update the depth framebuffer if the camera has moved or tiles have reloaded.
      */
     maybeDrawDepth(): void {
-        if (!this.style?.map?.terrain) {
+        if (!this.style?.projection || !this.style.map?.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;

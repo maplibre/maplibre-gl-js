@@ -10,6 +10,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `setStyle()` throwing while terrain is still loading because an intermediate render tried to compile a terrain shader before the replacement style initialized its projection ([#6824](https://github.com/maplibre/maplibre-gl-js/issues/6824))
 - Disable the navigation control's zoom-out button when viewport constraints prevent zooming out further ([#5316](https://github.com/maplibre/maplibre-gl-js/issues/5316))
 - Keep a vector tile's etag when the tile is reloaded after a style change, so the next expiry refresh can still skip unchanged tiles ([#3309](https://github.com/maplibre/maplibre-gl-js/issues/3309))
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212))
