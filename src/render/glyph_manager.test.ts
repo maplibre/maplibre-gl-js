@@ -24,10 +24,6 @@ describe('GlyphManager', () => {
         server = fakeServer.create({autoRespond: true, autoRespondAfter: 0});
     });
 
-    /**
-     * Glyphs are asked for by grapheme cluster, and these tests are written in codepoints, so this
-     * says the one in terms of the other.
-     */
     function char(codePoint: number) {
         return String.fromCodePoint(codePoint);
     }

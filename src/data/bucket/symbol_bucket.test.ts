@@ -22,11 +22,7 @@ const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
 
-/**
- * Re-keys the fixture, which is keyed by codepoint as a glyph PBF is, by the grapheme cluster layout
- * looks glyphs up by -- for every character in this fixture, the character itself.
- */
-const stacks = {
+const glyphsByCluster = {
     'Test': Object.fromEntries(
         Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
     )
@@ -94,7 +90,7 @@ describe('SymbolBucket', () => {
         performSymbolLayout(
             {
                 bucket: bucketA,
-                glyphMap: stacks,
+                glyphMap: glyphsByCluster,
                 glyphPositions: {},
                 subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
             } as any);
@@ -106,7 +102,7 @@ describe('SymbolBucket', () => {
         // add same feature from bucket B
         bucketB.populate(features, options, undefined);
         performSymbolLayout({
-            bucket: bucketB, glyphMap: stacks, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+            bucket: bucketB, glyphMap: glyphsByCluster, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
         const tileB = new Tile(tileID, 512);
         tileB.buckets = {test: bucketB};
@@ -143,7 +139,7 @@ describe('SymbolBucket', () => {
         const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
         performSymbolLayout({
             bucket,
-            glyphMap: stacks,
+            glyphMap: glyphsByCluster,
             glyphPositions: {'Test': {a: fakeGlyph, b: fakeGlyph, c: fakeGlyph, d: fakeGlyph, e: fakeGlyph, f: fakeGlyph} as any},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);

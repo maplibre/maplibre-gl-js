@@ -10,10 +10,7 @@ describe('FontFaceManager', () => {
     let deleted: FontFace[];
     let server: FakeServer;
 
-    /**
-     * The URLs the server answers with a 404 rather than with a font file.
-     */
-    let missing: Set<string>;
+    let urlsWithoutAFontFile: Set<string>;
 
     function requestedUrls(): string[] {
         return server.requests.map(function (request) { return request.url; });
@@ -36,11 +33,11 @@ describe('FontFaceManager', () => {
     beforeEach(() => {
         added = [];
         deleted = [];
-        missing = new Set();
+        urlsWithoutAFontFile = new Set();
         global.fetch = null;
         server = fakeServer.create({autoRespond: true, autoRespondAfter: 0});
         server.respondWith(function (request) {
-            if (missing.has(request.url)) request.respond(404, undefined, 'Not Found');
+            if (urlsWithoutAFontFile.has(request.url)) request.respond(404, undefined, 'Not Found');
             else request.respond(200, undefined, 'font file');
         });
         stubFontFace();
@@ -185,16 +182,16 @@ describe('FontFaceManager', () => {
 
     test('ignores a file that fails to download, falling through to the next one', async () => {
         silenceWarnings();
-        missing.add('https://example.com/missing.ttf');
+        urlsWithoutAFontFile.add('https://example.com/urlsWithoutAFontFile.ttf');
 
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
-            'Noto Sans Regular': [{url: 'https://example.com/missing.ttf'}, {url: 'https://example.com/noto.ttf'}]
+            'Noto Sans Regular': [{url: 'https://example.com/urlsWithoutAFontFile.ttf'}, {url: 'https://example.com/noto.ttf'}]
         });
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.not.toBeNull();
         expect(added).toHaveLength(1);
-        expect(requestedUrls()).toEqual(['https://example.com/missing.ttf', 'https://example.com/noto.ttf']);
+        expect(requestedUrls()).toEqual(['https://example.com/urlsWithoutAFontFile.ttf', 'https://example.com/noto.ttf']);
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('404'));
     });
 

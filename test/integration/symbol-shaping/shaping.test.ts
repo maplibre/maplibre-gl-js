@@ -23,10 +23,6 @@ if (typeof process !== 'undefined' && process.env !== undefined) {
     UPDATE = !!process.env.UPDATE;
 }
 
-/**
- * A glyph as the fixture stores it: the metrics and the atlas rect that layout reads, without the
- * bitmap a real {@link StyleGlyph} also carries and layout never looks at.
- */
 type FixtureGlyph = GlyphPosition & {id: number};
 
 function byGraphemeCluster(fixture: Record<string, FixtureGlyph>): Record<string, FixtureGlyph> {

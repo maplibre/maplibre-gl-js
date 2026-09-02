@@ -801,11 +801,7 @@ async function createServer() {
         cors: true,
         passthrough: true,
     });
-    /**
-     * Serves the font files the `font-faces` tests draw with, straight out of the packages that
-     * carry them rather than out of a copy in the assets. They are subset to one script apiece and
-     * pinned by package version, so what a test draws with does not drift.
-     */
+    /** Serves the `font-faces` tests their font files, pinned by package version so they do not drift. */
     const fontMount = st({
         path: 'node_modules/@fontsource',
         url: '/fonts',
