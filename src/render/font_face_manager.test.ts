@@ -2,6 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {FontFaceManager} from './font_face_manager.ts';
 import {RequestManager} from '../util/request_manager.ts';
+import {sleep} from '../util/test/util.ts';
 
 describe('FontFaceManager', () => {
     const requestManager = new RequestManager();
@@ -250,6 +251,28 @@ describe('FontFaceManager', () => {
 
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41)).resolves.toBeNull();
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('CSS Font Loading API'));
+    });
+
+    test('does not register a font face that was replaced while its file was downloading', async () => {
+        server.autoRespond = false;
+        const manager = new FontFaceManager(requestManager);
+        manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
+        const staleFamily = manager.getFontFamily('Noto Sans Regular', 0x41);
+        await sleep(0);
+
+        manager.setFontFaces({'Noto Sans Regular': 'https://example.com/other.ttf'});
+        server.respond();
+
+        await expect(staleFamily).resolves.toBeNull();
+        expect(added).toHaveLength(0);
+
+        const familyPromise = manager.getFontFamily('Noto Sans Regular', 0x41);
+        await sleep(0);
+        server.respond();
+        const family = await familyPromise;
+        expect(added).toHaveLength(1);
+        expect(added[0].family).toBe(family);
+        expect(requestedUrls()).toEqual(['https://example.com/noto.ttf', 'https://example.com/other.ttf']);
     });
 
     test('hands the font faces back when they are replaced, and again on destroy', async () => {

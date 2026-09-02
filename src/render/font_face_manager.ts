@@ -205,6 +205,7 @@ export class FontFaceManager {
         let fontFace: FontFace;
         try {
             fontFace = new FontFace(face.family, await this._downloadFontFile(face.url));
+            if (!Object.values(this._faces).some(faces => faces.includes(face))) return false;
             document.fonts.add(fontFace);
             this._registered.add(fontFace);
             await fontFace.load();
