@@ -1503,7 +1503,7 @@ export class Map extends Evented<MapEventType> {
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
-    queryTerrainElevation(lngLatLike: LngLatLike): number | null { 
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {
             return null;
         }
@@ -2655,6 +2655,12 @@ export class Map extends Evented<MapEventType> {
      *           })
      *       ]
      *   })
+     * });
+     *
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   globalState: {
+     *     showCircles: true,
+     *   }
      * });
      * ```
      */

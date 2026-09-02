@@ -195,6 +195,89 @@ describe('setStyle', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
+    test('initial style global state overrides defaults', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        map.setStyle(style, {
+            globalState: {
+                showCircles: false,
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: false,
+        });
+    });
+
+    test('not setting initial style global state uses defaults', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        map.setStyle(style, {
+            globalState: {},
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
+    test('allow providing initial style global state that has no defaults defined in the style', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = createStyle();
+        map.setStyle(style, {
+            globalState: {
+                somethingElse: 'something',
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            somethingElse: 'something',
+        });
+    });
+
+    test('setting an initial style global with null value resets to the default', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        map.setStyle(style, {
+            globalState: {
+                showCircles: null,
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
     test('transformStyle should copy the source and the layer into next style', async () => {
         const style = extend(createStyle(), {
             sources: {
