@@ -801,19 +801,28 @@ async function createServer() {
         cors: true,
         passthrough: true,
     });
+    /** Serves the `font-faces` tests their font files, pinned by package version so they do not drift. */
+    const fontMount = st({
+        path: 'node_modules/@fontsource',
+        url: '/fonts',
+        cors: true,
+        passthrough: true,
+    });
     const server = http.createServer((req, res) => {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
         res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
         distMount(req, res, () => {
-            mount(req, res, () => {
-                if (req.url.includes('/sparse204/1-')) {
-                    res.writeHead(204);
-                    res.end('');
-                } else {
-                    res.writeHead(404);
-                    res.end('');
-                }
+            fontMount(req, res, () => {
+                mount(req, res, () => {
+                    if (req.url.includes('/sparse204/1-')) {
+                        res.writeHead(204);
+                        res.end('');
+                    } else {
+                        res.writeHead(404);
+                        res.end('');
+                    }
+                });
             });
         });
     });

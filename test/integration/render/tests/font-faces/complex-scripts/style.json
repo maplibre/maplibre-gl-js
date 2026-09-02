@@ -1,0 +1,96 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 500,
+      "height": 340
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            0,
+            0
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-field": "ဘင်္ဂလားဒေ့ရှ်\nราชอาณาจักรไทยเป็นประเทศ\nព្រះរាជាណាចក្រកម្ពុជា\nदिल्ली Delhi\nשְׁדֵרוֹת",
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 24,
+        "text-max-width": 7,
+        "text-line-height": 1.4
+      },
+      "paint": {
+        "text-color": "black"
+      }
+    }
+  ],
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "font-faces": {
+    "Noto Sans Regular": [
+      {
+        "url": "local://fonts/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-400-normal.woff2",
+        "unicode-range": [
+          "U+1000-109F",
+          "U+A9E0-A9FF",
+          "U+AA60-AA7F"
+        ]
+      },
+      {
+        "url": "local://fonts/noto-sans-thai/files/noto-sans-thai-thai-400-normal.woff2",
+        "unicode-range": [
+          "U+0E00-0E7F"
+        ]
+      },
+      {
+        "url": "local://fonts/noto-sans-khmer/files/noto-sans-khmer-khmer-400-normal.woff2",
+        "unicode-range": [
+          "U+1780-17FF",
+          "U+19E0-19FF"
+        ]
+      },
+      {
+        "url": "local://fonts/noto-sans-devanagari/files/noto-sans-devanagari-devanagari-400-normal.woff2",
+        "unicode-range": [
+          "U+0900-097F",
+          "U+A8E0-A8FF"
+        ]
+      },
+      {
+        "url": "local://fonts/noto-sans-hebrew/files/noto-sans-hebrew-hebrew-400-normal.woff2",
+        "unicode-range": [
+          "U+0590-05FF",
+          "U+FB1D-FB4F"
+        ]
+      }
+    ]
+  }
+}
