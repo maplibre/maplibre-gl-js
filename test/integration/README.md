@@ -34,7 +34,7 @@ To run the render tests:
 npm run test-render
 ```
 
-By default the render tests run one at a time, as CI does. Locally you can run several at once, each in its own browser tab, for example:
+By default the render tests run one at a time, as CI does. Locally you can run several at once, each in its own headless browser, for example:
 
 ```sh
 RENDER_TEST_CONCURRENCY=4 npm run test-render
