@@ -3,7 +3,7 @@ import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export const PROJECTION_UBO_BINDING_POINT = 0;
 
-export const PROJECTION_UBO_MEMBERS = [
+const PROJECTION_UBO_MEMBERS = [
     {name: 'u_projection_matrix', type: 'mat4', offset: 0},
     {name: 'u_projection_fallback_matrix', type: 'mat4', offset: 16},
     {name: 'u_projection_tile_mercator_coords', type: 'vec4', offset: 32},
