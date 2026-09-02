@@ -40,9 +40,9 @@
       "type": "symbol",
       "source": "point",
       "layout": {
-        "text-field": "ဘင်္ဂလားဒေ့ရှ်\nราชอาณาจักรไทยเป็นประเทศ\nព្រះរាជាណាចក្រកម្ពុជា\nदिल्ली\nשְׁדֵרוֹת",
+        "text-field": "ဘင်္ဂလားဒေ့ရှ်\nราชอาณาจักรไทยเป็นประเทศ\nព្រះរាជាណាចក្រកម្ពុជា\nदिल्ली Delhi\nשְׁדֵרוֹת",
         "text-font": [
-          "Noto Sans Complex"
+          "Noto Sans Regular"
         ],
         "text-size": 24,
         "text-max-width": 7,
@@ -53,8 +53,9 @@
       }
     }
   ],
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
   "font-faces": {
-    "Noto Sans Complex": [
+    "Noto Sans Regular": [
       {
         "url": "local://fonts/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-400-normal.woff2",
         "unicode-range": [
