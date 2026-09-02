@@ -13,7 +13,7 @@ import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi, type TestContext} from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -37,11 +37,7 @@ const HOOK_TIMEOUT = 180000;
 /** How many tests run at the same time, each in its own browser; 1 is the serial run CI does. */
 const TEST_CONCURRENCY = Math.max(1, +process.env.RENDER_TEST_CONCURRENCY || 1);
 
-declare module 'vitest' {
-    export interface TestContext {
-        page: Page;
-    }
-}
+type RenderTestContext = TestContext & {page: Page};
 
 type TestData = {
     id: string;
@@ -914,7 +910,7 @@ describe('Render tests', () => {
         console.log(`Render test setup took ${Date.now() - setupStart}ms`);
     }, HOOK_TIMEOUT);
 
-    beforeEach((ctx) => {
+    beforeEach((ctx: RenderTestContext) => {
         ctx.page = freePages.pop();
         if (ctx.task.result?.retryCount > 0) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
@@ -922,7 +918,7 @@ describe('Render tests', () => {
         }
     });
 
-    afterEach(async (ctx) => {
+    afterEach(async (ctx: RenderTestContext) => {
         ctx.page.removeAllListeners('console');
         ctx.page.removeAllListeners('pageerror');
         ctx.page.removeAllListeners('response');
@@ -941,7 +937,7 @@ describe('Render tests', () => {
     }, HOOK_TIMEOUT);
 
     for (const style of testStyles) {
-        test.concurrent(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async ({page}) => {
+        test.concurrent(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async ({page}: RenderTestContext) => {
             const serverPort = (server.address() as any).port;
             localizeURLs(style, serverPort, path.join(__dirname, '../'));
             const data = await getImageFromStyle(style, page);
