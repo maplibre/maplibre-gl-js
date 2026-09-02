@@ -1763,13 +1763,18 @@ export class Map extends Evented<MapEventType> {
     /**
      * Returns the map's minimum allowable zoom level.
      *
+     * @param constrained - If `true`, returns the effective minimum zoom after applying the map's viewport constraints.
+     * If `false` or omitted, returns the configured minimum zoom.
      * @returns minZoom
      * @example
      * ```ts
      * let minZoom = map.getMinZoom();
      * ```
      */
-    getMinZoom(): number { return this._camera.transform.minZoom; }
+    getMinZoom(constrained = false): number {
+        const transform = this._camera.transform;
+        return constrained ? transform.applyConstrain(transform.center, transform.minZoom).zoom : transform.minZoom;
+    }
 
     /**
      * Sets or clears the map's maximum zoom level.
