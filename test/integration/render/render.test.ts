@@ -13,7 +13,7 @@ import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
-import {afterAll, beforeAll, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -36,6 +36,12 @@ const HOOK_TIMEOUT = 180000;
 
 /** How many tests run at the same time, each in its own browser; 1 is the serial run CI does. */
 const TEST_CONCURRENCY = Math.max(1, +process.env.RENDER_TEST_CONCURRENCY || 1);
+
+declare module 'vitest' {
+    export interface TestContext {
+        page: Page;
+    }
+}
 
 type TestData = {
     id: string;
@@ -908,6 +914,22 @@ describe('Render tests', () => {
         console.log(`Render test setup took ${Date.now() - setupStart}ms`);
     }, HOOK_TIMEOUT);
 
+    beforeEach((ctx) => {
+        ctx.page = freePages.pop();
+        if (ctx.task.result?.retryCount > 0) {
+            console.log(`Retry ${ctx.task.name} with console logging enabled`);
+            addConsoleLogging(ctx.page);
+        }
+    });
+
+    afterEach(async (ctx) => {
+        ctx.page.removeAllListeners('console');
+        ctx.page.removeAllListeners('pageerror');
+        ctx.page.removeAllListeners('response');
+        ctx.page.removeAllListeners('requestfailed');
+        freePages.push(ctx.page);
+    });
+
     afterAll(async () => {
         if (pages.length > 0) {
             await stopCoverageAndReport(pages, workers.flat(), 'render');
@@ -919,28 +941,12 @@ describe('Render tests', () => {
     }, HOOK_TIMEOUT);
 
     for (const style of testStyles) {
-        test.concurrent(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async (ctx) => {
-            const page = freePages.pop();
-            if (!page) {
-                throw new Error('More tests running at once than pages');
-            }
-            try {
-                if (ctx.task.result?.retryCount > 0) {
-                    console.log(`Retry ${ctx.task.name} with console logging enabled`);
-                    addConsoleLogging(page);
-                }
-                const serverPort = (server.address() as any).port;
-                localizeURLs(style, serverPort, path.join(__dirname, '../'));
-                const data = await getImageFromStyle(style, page);
-                compareRenderResults(directory, style.metadata.test, data);
-                expect(style.metadata.test.ok).toBe(true);
-            } finally {
-                page.removeAllListeners('console');
-                page.removeAllListeners('pageerror');
-                page.removeAllListeners('response');
-                page.removeAllListeners('requestfailed');
-                freePages.push(page);
-            }
+        test.concurrent(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async ({page}) => {
+            const serverPort = (server.address() as any).port;
+            localizeURLs(style, serverPort, path.join(__dirname, '../'));
+            const data = await getImageFromStyle(style, page);
+            compareRenderResults(directory, style.metadata.test, data);
+            expect(style.metadata.test.ok).toBe(true);
         });
     }
 });
