@@ -215,14 +215,22 @@ function getElevationForTileCulling(transform: IReadonlyTransform): number {
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
+    if (!transform.width || !transform.height) {
+        console.log(`[coveringTiles] width or height is 0: ${transform.width}x${transform.height}`);
+        return [];
+    }
     const frustum = transform.getCameraFrustum();
+    if (!frustum) {
+        console.log('[coveringTiles] no frustum');
+        return [];
+    }
     const plane = transform.getClippingPlane();
     const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
-    
+
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;

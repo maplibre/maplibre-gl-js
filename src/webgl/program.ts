@@ -57,6 +57,7 @@ export type ProgramAttribute = {
  */
 export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
+    name: string;
     attributes: {[_: string]: ProgramAttribute};
     numAttributes: number;
     fixedUniforms: Us;
@@ -64,6 +65,8 @@ export class Program<Us extends UniformBindings> {
     projectionUniforms: ProjectionPreludeUniformsType;
     binderUniforms: BinderUniform[];
     failedToCreate: boolean;
+    vertexSource: string;
+    fragmentSource: string;
 
     constructor(context: Context,
         source: PreparedShader,
@@ -73,9 +76,11 @@ export class Program<Us extends UniformBindings> {
         useTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
-        extraDefines: string[] = []) {
+        extraDefines: string[] = [],
+        name: string = '') {
 
         const gl = context.gl;
+        this.name = name;
         this.program = gl.createProgram();
 
         const staticAttrInfo = getTokenizedAttributesAndUniforms(source.staticAttributes);
@@ -111,8 +116,12 @@ export class Program<Us extends UniformBindings> {
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
         const vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
 
+        this.vertexSource = vertexSource;
+        this.fragmentSource = fragmentSource;
+
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-        if (gl.isContextLost()) {
+        if (!fragmentShader || gl.isContextLost()) {
+            console.log(`[Program] createShader block: fragShader=${!!fragmentShader} contextLost=${gl.isContextLost()} error=${gl.getError()}`);
             this.failedToCreate = true;
             return;
         }
@@ -126,7 +135,8 @@ export class Program<Us extends UniformBindings> {
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-        if (gl.isContextLost()) {
+        if (!vertexShader || gl.isContextLost()) {
+            console.log(`[Program] vertexShader failed! vertexShader=${!!vertexShader} contextLost=${gl.isContextLost()}`);
             this.failedToCreate = true;
             return;
         }
@@ -198,7 +208,6 @@ export class Program<Us extends UniformBindings> {
         dynamicLayoutBuffer3?: VertexBuffer | null): void {
 
         const gl = context.gl;
-
         if (this.failedToCreate) return;
 
         context.program.set(this.program);
@@ -207,7 +216,6 @@ export class Program<Us extends UniformBindings> {
         context.setColorMode(colorMode);
         context.setCullFace(cullFaceMode);
 
-        // set variables used by the 3d functions defined in _prelude.vertex.glsl
         if (terrain) {
             context.activeTexture.set(gl.TEXTURE2);
             gl.bindTexture(gl.TEXTURE_2D, terrain.depthTexture);
@@ -237,15 +245,9 @@ export class Program<Us extends UniformBindings> {
 
         let primitiveSize = 0;
         switch (drawMode) {
-            case gl.LINES:
-                primitiveSize = 2;
-                break;
-            case gl.TRIANGLES:
-                primitiveSize = 3;
-                break;
-            case gl.LINE_STRIP:
-                primitiveSize = 1;
-                break;
+            case gl.LINES: primitiveSize = 2; break;
+            case gl.TRIANGLES: primitiveSize = 3; break;
+            case gl.LINE_STRIP: primitiveSize = 1; break;
         }
 
         for (const segment of segments.get()) {
@@ -256,18 +258,10 @@ export class Program<Us extends UniformBindings> {
                 this,
                 layoutVertexBuffer,
                 configuration ? configuration.getPaintVertexBuffers() : [],
-                indexBuffer,
-                segment.vertexOffset,
-                dynamicLayoutBuffer,
-                dynamicLayoutBuffer2,
-                dynamicLayoutBuffer3
-            );
-
-            gl.drawElements(
-                drawMode,
-                segment.primitiveLength * primitiveSize,
-                gl.UNSIGNED_SHORT,
-                segment.primitiveOffset * primitiveSize * 2);
+                indexBuffer, segment.vertexOffset,
+                dynamicLayoutBuffer, dynamicLayoutBuffer2, dynamicLayoutBuffer3);
+            gl.drawElements(drawMode, segment.primitiveLength * primitiveSize,
+                gl.UNSIGNED_SHORT, segment.primitiveOffset * primitiveSize * 2);
         }
     }
 }

@@ -73,7 +73,7 @@ import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
 
 const version = packageJSON.version;
 
-export type ContextType = 'webgl2';
+export type ContextType = 'webgl2' | 'webgpu';
 /** @deprecated Use {@link ContextType} instead. */
 export type WebGLSupportedVersions = ContextType | undefined;
 export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: ContextType};
@@ -817,7 +817,7 @@ export class Map extends Evented<MapEventType> {
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.depthDirty = true;
+            if (this.painter) this.painter.terrainFacilitator.depthDirty = true;
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
@@ -1604,18 +1604,19 @@ export class Map extends Evented<MapEventType> {
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
-
-        // check if we've reached GL limits, in that case further clamps pixelRatio
-        if (this.painter.overLimit()) {
-            const gl = this.painter.context.gl;
-            // store updated _maxCanvasSize value
-            this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-            this._resizeCanvas(width, height, clampedPixelRatio);
+        if (this.painter) {
             this.painter.resize(width, height, clampedPixelRatio);
-        }
 
+            // check if we've reached GL limits, in that case further clamps pixelRatio
+            if (this.painter.overLimit()) {
+                const gl = this.painter.context.gl;
+                // store updated _maxCanvasSize value
+                this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+                const clampedPixelRatio = this._getClampedPixelRatio(width, height);
+                this._resizeCanvas(width, height, clampedPixelRatio);
+                this.painter.resize(width, height, clampedPixelRatio);
+            }
+        }
         this._resizeTransform(constrainTransform);
     }
 
@@ -2282,7 +2283,7 @@ export class Map extends Evented<MapEventType> {
      * @event
      * @param type - The type of the event.
      * @param layerIds - The array of style layer IDs.
-     * @param listener - The listener callback.
+     * @param listener - The function previously installed as a listener.
      */
     on<T extends keyof MapLayerEventType>(
         type: T,
@@ -2293,14 +2294,14 @@ export class Map extends Evented<MapEventType> {
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
-     * @param listener - The listener callback.
+     * @param listener - The function previously installed as a listener.
      */
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): Subscription;
     /**
      * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
-     * @param listener - The listener callback.
+     * @param listener - The function previously installed as a listener.
      */
     on(type: keyof MapEventType, listener: Listener): Subscription;
     on(type: keyof MapEventType, layerIdsOrListener: string | string[] | Listener, listener?: Listener): Subscription {
@@ -2362,7 +2363,7 @@ export class Map extends Evented<MapEventType> {
      * @event
      * @param type - The type of the event.
      * @param layerIds - The array of style layer IDs.
-     * @param listener - The listener callback.
+     * @param listener - The function previously installed as a listener.
      */
     once<T extends keyof MapLayerEventType>(
         type: T,
@@ -2384,7 +2385,7 @@ export class Map extends Evented<MapEventType> {
      * Overload of the `once` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
-     * @param listener - The listener callback.
+     * @param listener - The function previously installed as a listener.
      */
     once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
@@ -2398,7 +2399,7 @@ export class Map extends Evented<MapEventType> {
      * Overload of the `once` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
-     * @param listener - The listener callback.
+     * @param listener - The function previously installed as a listener.
      */
     once(type: keyof MapEventType, listener?: Listener): this | Promise<any>;
     once(type: keyof MapEventType, layerIdsOrListener?: string | string[] | Listener, listener?: Listener): this | Promise<any> {
@@ -2812,6 +2813,9 @@ export class Map extends Evented<MapEventType> {
      * @returns An object containing the style and images.
      */
     _getStyleAndImages(): LostContextStyle {
+        if (!this.painter || this._repaint) {
+            return;
+        }
         if (this.style) {
             return {
                 style: this.style.serialize(),
@@ -3088,10 +3092,10 @@ export class Map extends Evented<MapEventType> {
      * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/level-of-detail-control/)
 
      */
-    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string) : this {
+    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string): this {
         if (sourceId) {
             const source = this.getSource(sourceId);
-            if(!source) {
+            if (!source) {
                 throw new Error(`There is no source with ID "${sourceId}", cannot set LOD parameters`);
             }
             source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
@@ -3116,13 +3120,13 @@ export class Map extends Evented<MapEventType> {
      */
     refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>): void {
         const tileManager = this.style.tileManagers[sourceId];
-        if(!tileManager) {
+        if (!tileManager) {
             throw new Error(`There is no tile manager with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
             tileManager.reload(true);
         } else {
-            tileManager.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+            tileManager.refreshTiles(tileIds.map((tileId) => { return new CanonicalTileID(tileId.z, tileId.x, tileId.y); }));
         }
     }
 
@@ -4142,9 +4146,11 @@ export class Map extends Evented<MapEventType> {
     _setupPainter(): void {
 
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
-        // We use the values provided in the map constructor for the rest of context attributes
+        // We use the values provided in the map constructor for the rest of context attributes.
+        // Strip contextType since it's a MapLibre option, not a WebGL context attribute.
+        const {contextType: _, ...webglAttributes} = this._canvasContextAttributes;
         const attributes = {
-            ...this._canvasContextAttributes,
+            ...webglAttributes,
             alpha: true,
             depth: true,
             stencil: true,
@@ -4155,6 +4161,11 @@ export class Map extends Evented<MapEventType> {
         this._canvas.addEventListener('webglcontextcreationerror', (event: WebGLContextEvent) => {
             creationEvent = event;
         }, {once: true});
+
+        if (this._canvasContextAttributes.contextType === 'webgpu') {
+            this._setupWebGPUPainter(attributes).catch((error) => this.fire(new ErrorEvent(error)));
+            return;
+        }
 
         const gl: WebGL2RenderingContext | null = this._canvas.getContext('webgl2', attributes);
 
@@ -4167,13 +4178,91 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
+     * WebGPU proof of concept. The device request is asynchronous, so the painter stays null until it resolves.
+     * Falls back to WebGL2 when WebGPU is unavailable.
+     */
+    async _setupWebGPUPainter(attributes: WebGLContextAttributes): Promise<void> {
+        let device: any = null;
+        let gl: WebGL2RenderingContext | null = null;
+        try {
+            const gpu = typeof navigator !== 'undefined' ? (navigator as any).gpu : null;
+            const gpuAdapter = gpu && await Promise.race([
+                gpu.requestAdapter(),
+                new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+            ]);
+            const gpuDevice = gpuAdapter && await gpuAdapter.requestDevice();
+            const gpuContext = gpuDevice && this._canvas.getContext('webgpu') as any;
+            if (gpuContext) {
+                gpuContext.configure({
+                    device: gpuDevice,
+                    format: gpu.getPreferredCanvasFormat(),
+                    alphaMode: 'premultiplied',
+                });
+                // Minimal device-like object for the painter
+                const deviceWrapper: any = {
+                    type: 'webgpu',
+                    handle: gpuDevice,
+                    canvasContext: {handle: gpuContext},
+                    commandEncoder: {handle: null as any},
+                    preferredColorFormat: gpu.getPreferredCanvasFormat(),
+                    createBuffer: (props: any) => {
+                        // WebGPU requires buffer sizes aligned to 4 bytes
+                        const rawSize = Math.max(props.byteLength || props.data?.byteLength || 64, 16);
+                        const size = Math.ceil(rawSize / 4) * 4;
+                        const buf = gpuDevice.createBuffer({
+                            size,
+                            usage: props.usage || (64 | 8),
+                            mappedAtCreation: !!props.data,
+                        });
+                        if (props.data) {
+                            new Uint8Array(buf.getMappedRange()).set(new Uint8Array(props.data.buffer || props.data));
+                            buf.unmap();
+                        }
+                        return {
+                            handle: buf, props, byteLength: size,
+                            write: (data: ArrayBuffer) => { gpuDevice.queue.writeBuffer(buf, 0, data); },
+                            destroy: () => { buf.destroy(); },
+                        };
+                    },
+                    // Called at start of each frame to create a fresh command encoder
+                    beginFrame: () => {
+                        deviceWrapper.commandEncoder = {
+                            handle: gpuDevice.createCommandEncoder(),
+                        };
+                    },
+                    // Called at end of each frame to submit commands
+                    submit: () => {
+                        if (deviceWrapper.commandEncoder?.handle) {
+                            gpuDevice.queue.submit([deviceWrapper.commandEncoder.handle.finish()]);
+                            deviceWrapper.commandEncoder = {handle: null};
+                        }
+                    },
+                };
+                device = deviceWrapper;
+            }
+        } catch (e) {
+            console.warn('WebGPU unavailable, falling back to WebGL2', e);
+        }
+        if (!device) {
+            gl = this._canvas.getContext('webgl2', attributes);
+            if (!gl) {
+                throw new GPUInitializationError(attributes, null);
+            }
+        }
+        this.painter = new Painter(gl, this._camera.transform, device);
+        this.resize();
+        this._update(true);
+    }
+
+    /**
+     * @internal
      * Creates a new specialized transform instance from a projection instance and migrates
      * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
      * When the style's projection is changed (or first set), this function should be called.
      */
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         this._camera.migrateProjection(newTransform, newCameraHelper);
-        this.painter.transform = newTransform;
+        if (this.painter) this.painter.transform = newTransform;
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));
@@ -4185,7 +4274,7 @@ export class Map extends Evented<MapEventType> {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
-        this.painter.destroy();
+        if (this.painter) this.painter.destroy();
 
         this._lostContextStyle = this._getStyleAndImages();
 
@@ -4275,6 +4364,12 @@ export class Map extends Evented<MapEventType> {
 
         this._styleDirty ||= updateStyle;
         this._sourcesDirty = true;
+
+        if (!this.painter && this._sourcesDirty) {
+            this._sourcesDirty = false;
+            this.style._updateSources(this._camera.transform);
+        }
+
         this.triggerRepaint();
 
         return this;
@@ -4313,8 +4408,10 @@ export class Map extends Evented<MapEventType> {
         const isGlobeRendering = this.style.projection?.transitionState > 0;
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
-        this.painter.context.setDirty();
-        this.painter.setBaseState();
+        if (this.painter) {
+            this.painter.context.setDirty();
+            this.painter.setBaseState();
+        }
 
         this._renderTaskQueue.run(paintStartTimeStamp);
         // A task queue callback may have fired a user event which may have removed the map
@@ -4379,7 +4476,10 @@ export class Map extends Evented<MapEventType> {
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
-        // Actually draw
+        if (!this.painter) {
+            return;
+        }
+
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,

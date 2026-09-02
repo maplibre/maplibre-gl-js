@@ -13,6 +13,7 @@ import {
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
+import {drawRasterWebGPU} from '../../webgpu/draw/draw_raster_webgpu.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -31,7 +32,7 @@ type FadeProperties = {
 type FadeValues = {
     tileOpacity: number;
     parentTileOpacity?: number;
-    fadeMix: {opacity: number; mix: number};
+    fadeMix: { opacity: number; mix: number };
 };
 
 const cornerCoords = [
@@ -45,6 +46,12 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
+
+    // Use drawable path for WebGPU
+    if (painter.useDrawables?.has('raster')) {
+        drawRasterWebGPU(painter, tileManager, layer, tileIDs, renderOptions);
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const source = tileManager.getSource();
@@ -146,7 +153,7 @@ function drawTiles(
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
+            uniformValues as any, terrainData, projectionData, layer.id, mesh.vertexBuffer,
             mesh.indexBuffer, mesh.segments);
     }
 }
@@ -227,3 +234,4 @@ function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
 
     return {tileOpacity, fadeMix};
 }
+

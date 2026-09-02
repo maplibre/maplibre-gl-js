@@ -26,6 +26,7 @@ function hasDataProperty(image: TextureImage): image is DataTextureImage {
 export class Texture {
     context: Context;
     size: [number, number];
+    image: TextureImage;
     texture: WebGLTexture;
     format: TextureFormat;
     filter: TextureFilter;
@@ -53,6 +54,7 @@ export class Texture {
         x: number;
         y: number;
     }): void {
+        this.image = image;
         const {width, height} = image as {width: number; height: number};
         const resize = (this.size?.[0] !== width || this.size[1] !== height) && !position;
         const {context} = this;

@@ -104,8 +104,7 @@ function renderColorRelief(
             applyGlobeMatrix: !isRenderingToTexture,
             applyTerrainMatrix: true
         });
-
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            colorReliefUniformValues(layer, tile.dem, colorRampSize) as any, terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

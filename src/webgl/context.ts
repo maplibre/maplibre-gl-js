@@ -28,6 +28,7 @@ type ClearArgs = {
  */
 export class Context {
     gl: WebGL2RenderingContext;
+    device: any;
 
     currentNumAttributes: number;
     maxTextureSize: number;
@@ -67,8 +68,29 @@ export class Context {
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
 
-    constructor(gl: WebGL2RenderingContext) {
-        this.gl = gl;
+    constructor(gl: WebGL2RenderingContext | null, device?: any) {
+        this.gl = gl || new Proxy({} as WebGL2RenderingContext, {
+            get: (target, prop) => {
+                if (typeof prop === 'string') {
+                    // Return correct GL enum values for WebGPU-only mode
+                    const glEnums: Record<string, number> = {
+                        'LINES': 1, 'LINE_STRIP': 3, 'TRIANGLES': 4,
+                        'TEXTURE_2D': 3553, 'TEXTURE0': 33984,
+                        'RGBA': 6408, 'ALPHA': 6406, 'LUMINANCE': 6409, 'LUMINANCE_ALPHA': 6410,
+                        'UNSIGNED_BYTE': 5121,
+                        'LINEAR': 9729, 'NEAREST': 9728, 'LINEAR_MIPMAP_NEAREST': 9985,
+                        'CLAMP_TO_EDGE': 33071, 'REPEAT': 10497, 'MIRRORED_REPEAT': 33648,
+                        'TEXTURE_MIN_FILTER': 10241, 'TEXTURE_MAG_FILTER': 10240,
+                        'TEXTURE_WRAP_S': 10242, 'TEXTURE_WRAP_T': 10243,
+                    };
+                    if (prop in glEnums) return glEnums[prop];
+                    if (prop === prop.toUpperCase()) return 0;
+                    return () => null;
+                }
+                return undefined;
+            }
+        });
+        this.device = device;
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
         this.clearStencil = new ClearStencil(this);
@@ -101,13 +123,14 @@ export class Context {
         this.pixelStoreUnpackPremultiplyAlpha = new PixelStoreUnpackPremultiplyAlpha(this);
         this.pixelStoreUnpackFlipY = new PixelStoreUnpackFlipY(this);
 
-        this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
+        const glContext = this.gl;
+        this.extTextureFilterAnisotropic = glContext.getExtension('EXT_texture_filter_anisotropic');
 
         if (this.extTextureFilterAnisotropic) {
-            this.extTextureFilterAnisotropicMax = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+            this.extTextureFilterAnisotropicMax = glContext.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
 
-        this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        this.maxTextureSize = glContext.getParameter(glContext.MAX_TEXTURE_SIZE);
 
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');

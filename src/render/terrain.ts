@@ -466,11 +466,36 @@ export class Terrain {
             this._buildSkirts(vertexArray, indexArray, meshSize, delta, northPole, southPole);
         }
 
+        // WebGPU has no sint16x3 vertex format, so it gets a padded 8-byte-stride copy of the vertex data
+        let webgpuPaddedBuffer: any = null;
+        if (context.device?.type === 'webgpu') {
+            const src = new Int16Array(vertexArray.arrayBuffer);
+            const numVerts = src.length / 3;
+            const padded = new Int16Array(numVerts * 4);
+            for (let i = 0; i < numVerts; i++) {
+                padded[i * 4 + 0] = src[i * 3 + 0];
+                padded[i * 4 + 1] = src[i * 3 + 1];
+                padded[i * 4 + 2] = src[i * 3 + 2];
+                padded[i * 4 + 3] = 0;
+            }
+            const gpuDevice = (context.device).handle;
+            if (gpuDevice) {
+                webgpuPaddedBuffer = gpuDevice.createBuffer({
+                    size: padded.byteLength,
+                    usage: 0x0020 | 0x0008, // VERTEX | COPY_DST
+                });
+                gpuDevice.queue.writeBuffer(webgpuPaddedBuffer, 0, padded.buffer);
+            }
+        }
+
         const mesh = new Mesh(
             context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             context.createIndexBuffer(indexArray),
             SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         );
+        if (webgpuPaddedBuffer) {
+            (mesh as any)._webgpuPaddedVertexBuf = webgpuPaddedBuffer;
+        }
         this._meshCache[key] = mesh;
         return mesh;
     }

@@ -125,7 +125,7 @@ describe('Terrain', () => {
             getUnpackVector: () => [6553.6, 25.6, 0.1, 10000.0],
         } as any as DEMData;
         const painter = {
-            context: new Context(gl),
+            context: new Context(gl, null),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -152,7 +152,7 @@ describe('Terrain', () => {
     test('Return null elevation values when no tile', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const painter = {
-            context: new Context(gl),
+            context: new Context(gl, null),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -182,7 +182,7 @@ describe('Terrain', () => {
         const tile = new Tile(tileID, 256);
         tile.dem = null;
         const painter = {
-            context: new Context(gl),
+            context: new Context(gl, null),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -338,7 +338,7 @@ describe('Terrain', () => {
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
         const zoom = 10;
         const painter = {
-            context: new Context(gl),
+            context: new Context(gl, null),
             width: 1,
             height: 1,
             getTileTexture: () => null

@@ -8,6 +8,8 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
 import {type Terrain} from '../../render/terrain.ts';
 
+import {drawTerrainWebGPU} from '../../webgpu/draw/draw_terrain_webgpu.ts';
+
 /**
  * Redraw the Depth Framebuffer
  * @param painter - the painter
@@ -36,6 +38,11 @@ function drawDepth(painter: Painter, terrain: Terrain): void {
 }
 
 function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions): void {
+    if (painter.device?.type === 'webgpu') {
+        drawTerrainWebGPU(painter, terrain, tiles, renderOptions);
+        return;
+    }
+
     const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
@@ -57,7 +64,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOp
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
         const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
         const projectionData = tr.getProjectionData({overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true});
-        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues as any, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 

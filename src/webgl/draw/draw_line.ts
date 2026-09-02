@@ -23,6 +23,8 @@ import type {Context} from '../context.ts';
 import type {ProgramConfiguration} from '../../data/program_configuration.ts';
 import type {RGBAImage} from '../../util/image.ts';
 
+import {drawLineWebGPU} from '../../webgpu/draw/draw_line_webgpu.ts';
+
 type GradientTexture = {
     texture?: Texture;
     gradient?: RGBAImage;
@@ -169,6 +171,12 @@ function drawLineTiles(
 ) {
     const {isRenderingToTexture} = renderOptions;
 
+    // Use drawable path if enabled
+    if (painter.useDrawables?.has('line')) {
+        drawLineWebGPU(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
+
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
@@ -258,3 +266,4 @@ function drawLineTiles(
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }
 }
+

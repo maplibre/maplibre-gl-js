@@ -3,7 +3,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {CoverageReport} from 'monocart-coverage-reports';
 
-export async function launchPuppeteer(headless = true): Promise<Browser> {
+export async function launchPuppeteer(headless = true, backend: 'webgl2' | 'webgpu' = 'webgl2'): Promise<Browser> {
+    if (backend === 'webgpu') {
+        // WebGPU needs a real GPU and a Chrome build that ships it
+        return puppeteer.launch({
+            headless,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist']
+        });
+    }
     return puppeteer.launch({
         headless,
         args: [

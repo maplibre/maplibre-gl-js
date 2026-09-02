@@ -274,6 +274,8 @@ export class ScrollZoomHandler implements Handler {
         this._needsRerender = false;
 
         if (!this.isActive()) return;
+        if (!this._map.painter) return;
+
         const tr = this._tr.transform;
 
         // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)

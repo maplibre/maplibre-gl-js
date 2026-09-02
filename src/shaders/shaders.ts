@@ -71,6 +71,27 @@ import atmosphereFrag from './glsl/atmosphere.fragment.glsl.g.ts';
 import atmosphereVert from './glsl/atmosphere.vertex.glsl.g.ts';
 import skyFrag from './glsl/sky.fragment.glsl.g.ts';
 import skyVert from './glsl/sky.vertex.glsl.g.ts';
+// WGSL shaders, generated from src/shaders/wgsl
+import circleWgsl from './wgsl/circle.wgsl.g.ts';
+import backgroundWgsl from './wgsl/background.wgsl.g.ts';
+import backgroundPatternWgsl from './wgsl/background_pattern.wgsl.g.ts';
+import fillWgsl from './wgsl/fill.wgsl.g.ts';
+import fillPatternWgsl from './wgsl/fill_pattern.wgsl.g.ts';
+import fillOutlineWgsl from './wgsl/fill_outline.wgsl.g.ts';
+import fillOutlinePatternWgsl from './wgsl/fill_outline_pattern.wgsl.g.ts';
+import lineWgsl from './wgsl/line.wgsl.g.ts';
+import linePatternWgsl from './wgsl/line_pattern.wgsl.g.ts';
+import lineGradientWgsl from './wgsl/line_gradient.wgsl.g.ts';
+import fillExtrusionWgsl from './wgsl/fill_extrusion.wgsl.g.ts';
+import lineSDFWgsl from './wgsl/line_sdf.wgsl.g.ts';
+import rasterWgsl from './wgsl/raster.wgsl.g.ts';
+import symbolSDFWgsl from './wgsl/symbol_sdf.wgsl.g.ts';
+import symbolIconWgsl from './wgsl/symbol_icon.wgsl.g.ts';
+import heatmapWgsl from './wgsl/heatmap.wgsl.g.ts';
+import heatmapTextureWgsl from './wgsl/heatmap_texture.wgsl.g.ts';
+import hillshadeWgsl from './wgsl/hillshade.wgsl.g.ts';
+import hillshadePrepareWgsl from './wgsl/hillshade_prepare.wgsl.g.ts';
+import terrainWgsl from './wgsl/terrain.wgsl.g.ts';
 
 export type PreparedShader = {
     fragmentSource: string;
@@ -116,6 +137,26 @@ export const shaders: {
     terrainDepth: PreparedShader;
     atmosphere: PreparedShader;
     sky: PreparedShader;
+    circleWgsl: string;
+    backgroundWgsl: string;
+    backgroundPatternWgsl: string;
+    fillWgsl: string;
+    fillPatternWgsl: string;
+    fillOutlineWgsl: string;
+    fillOutlinePatternWgsl: string;
+    fillExtrusionWgsl: string;
+    lineWgsl: string;
+    linePatternWgsl: string;
+    lineGradientWgsl: string;
+    lineSDFWgsl: string;
+    rasterWgsl: string;
+    symbolSDFWgsl: string;
+    symbolIconWgsl: string;
+    heatmapWgsl: string;
+    heatmapTextureWgsl: string;
+    hillshadeWgsl: string;
+    hillshadePrepareWgsl: string;
+    terrainWgsl: string;
 } = {
     prelude: prepare(preludeFrag, preludeVert),
     projectionMercator: prepare(projectionMercatorFrag, projectionMercatorVert),
@@ -123,6 +164,26 @@ export const shaders: {
     background: prepare(backgroundFrag, backgroundVert),
     backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
     circle: prepare(circleFrag, circleVert),
+    circleWgsl,
+    backgroundWgsl,
+    backgroundPatternWgsl,
+    fillWgsl,
+    fillPatternWgsl,
+    fillOutlineWgsl,
+    fillOutlinePatternWgsl,
+    fillExtrusionWgsl,
+    lineWgsl,
+    linePatternWgsl,
+    lineGradientWgsl,
+    lineSDFWgsl,
+    rasterWgsl,
+    symbolSDFWgsl,
+    symbolIconWgsl,
+    heatmapWgsl,
+    heatmapTextureWgsl,
+    hillshadeWgsl,
+    hillshadePrepareWgsl,
+    terrainWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),

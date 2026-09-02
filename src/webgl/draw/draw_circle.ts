@@ -19,6 +19,8 @@ import type {TerrainData} from '../../render/terrain.ts';
 import {translatePosition} from '../../util/util.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
+import {drawCirclesWebGPU} from '../../webgpu/draw/draw_circle_webgpu.ts';
+
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;
     program: Program<any>;
@@ -48,6 +50,13 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         return;
     }
 
+    // Use drawable path if enabled
+    if (painter.useDrawables?.has('circle')) {
+        drawCirclesWebGPU(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
+
+    // Legacy path
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
@@ -118,10 +127,10 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
     for (const segmentsState of segmentsRenderStates) {
         const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrainData, projectionData} = segmentsState.state;
         const segments = segmentsState.segments;
-
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id,
+            uniformValues as any, terrainData, projectionData, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }
 }
+

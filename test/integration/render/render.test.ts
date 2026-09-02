@@ -75,6 +75,9 @@ type TestData = {
     reportWidth: number;
     reportHeight: number;
 
+    // Rendering backend: 'webgl', 'webgl2', or 'webgpu'
+    backend: 'webgl2' | 'webgpu';
+
     // base64-encoded content of the PNG results
     actual: string;
     diff: string;
@@ -673,7 +676,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             attributionControl: false,
             maxPitch: options.maxPitch,
             pixelRatio: options.pixelRatio,
-            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default', contextType: options.backend},
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false as any,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
@@ -694,8 +697,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         if (options.showOverdrawInspector) map.showOverdrawInspector = true;
         if (options.showPadding) map.showPadding = true;
 
-        const gl = map.painter.context.gl;
-
         await map.once('load');
         if (options.collisionDebug) {
             map.showCollisionBoxes = true;
@@ -707,22 +708,36 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         }
 
         await applyOperations(options, map as any, idle);
-        const viewport = gl.getParameter(gl.VIEWPORT);
-        const w = options.reportWidth ?? viewport[2];
-        const h = options.reportHeight ?? viewport[3];
+        let data: Uint8Array;
+        if (map.painter.device?.type === 'webgpu') {
+            // WebGPU: read the canvas back through a 2D context
+            const w = options.reportWidth ?? options.width;
+            const h = options.reportHeight ?? options.height;
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = w;
+            tmpCanvas.height = h;
+            const ctx2d = tmpCanvas.getContext('2d');
+            ctx2d.drawImage(map.getCanvas(), 0, 0, w, h);
+            data = new Uint8Array(ctx2d.getImageData(0, 0, w, h).data.buffer);
+        } else {
+            const gl = map.painter.context.gl;
+            const viewport = gl.getParameter(gl.VIEWPORT);
+            const w = options.reportWidth ?? viewport[2];
+            const h = options.reportHeight ?? viewport[3];
 
-        const data = new Uint8Array(w * h * 4);
-        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            data = new Uint8Array(w * h * 4);
+            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
-        // Flip the scanlines.
-        const stride = w * 4;
-        const tmp = new Uint8Array(stride);
-        for (let i = 0, j = h - 1; i < j; i++, j--) {
-            const start = i * stride;
-            const end = j * stride;
-            tmp.set(data.slice(start, start + stride), 0);
-            data.set(data.slice(end, end + stride), start);
-            data.set(tmp, end);
+            // Flip the scanlines.
+            const stride = w * 4;
+            const tmp = new Uint8Array(stride);
+            for (let i = 0, j = h - 1; i < j; i++, j--) {
+                const start = i * stride;
+                const end = j * stride;
+                tmp.set(data.slice(start, start + stride), 0);
+                data.set(data.slice(end, end + stride), start);
+                data.set(tmp, end);
+            }
         }
 
         map.remove();
@@ -880,7 +895,11 @@ describe('Render tests', () => {
     let workers: WebWorker[];
 
     const directory = path.join(__dirname);
+    const backend = (process.env.RENDER_BACKEND || 'webgl2') as 'webgl2' | 'webgpu';
     let testStyles = getTestStyles(directory);
+    for (const style of testStyles) {
+        (style.metadata.test as any).backend = backend;
+    }
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
         const splitCount = +process.env.SPLIT_COUNT;
         const currentSplitIndex = +process.env.CURRENT_SPLIT_INDEX;
@@ -889,7 +908,7 @@ describe('Render tests', () => {
 
     beforeAll(async () => {
         const setupStart = Date.now();
-        browser = await launchPuppeteer(true);
+        browser = await launchPuppeteer(true, backend);
         ({server, mvtServer} = await createServer());
         const serverPort = (server.address() as any).port;
         page = await browser.newPage();

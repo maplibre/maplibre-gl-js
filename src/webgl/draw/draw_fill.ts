@@ -10,6 +10,7 @@ import {
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
+import {drawFillWebGPU} from '../../webgpu/draw/draw_fill_webgpu.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter, RenderOptions} from '../../render/painter.ts';
@@ -23,6 +24,11 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     const opacity = layer.paint.get('fill-opacity');
     const layerOpacity = layer.paint.get('fill-layer-opacity');
     if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
+
+    if (painter.useDrawables?.has('fill')) {
+        drawFillWebGPU(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
 
     if (layerOpacity < 1) {
         if (painter.renderPass !== 'translucent') return;

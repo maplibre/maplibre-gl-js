@@ -1,6 +1,8 @@
 import Point from '@mapbox/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug.ts';
 
+import {drawSymbolsWebGPU} from '../../webgpu/draw/draw_symbol_webgpu.ts';
+
 import {SegmentVector} from '../../data/segment.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../../symbol/symbol_size.ts';
@@ -63,6 +65,12 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
     [_ in CrossTileID]: VariableOffset;
 }, renderOptions: RenderOptions): void {
     if (painter.renderPass !== 'translucent') return;
+
+    // Use drawable path for WebGPU
+    if (painter.useDrawables?.has('symbol')) {
+        drawSymbolsWebGPU(painter, tileManager, layer, coords, variableOffsets, renderOptions);
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
@@ -518,8 +526,9 @@ function drawSymbolElements(
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-        uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
+        uniformValues as any, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
 }
+
