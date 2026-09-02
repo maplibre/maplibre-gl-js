@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util';
-import {extend} from '../../util/util';
-import {type EvaluationParameters} from '../../style/evaluation_parameters';
+import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util.ts';
+import {extend} from '../../util/util.ts';
+import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {MessageType} from '../../util/actor_messages';
+import {MessageType} from '../../util/actor_messages.ts';
 
 let server: FakeServer;
 
@@ -21,7 +21,7 @@ test('moveLayer', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -31,12 +31,12 @@ test('moveLayer', async () => {
             layers: [{
                 id: 'layerId1',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }, {
                 id: 'layerId2',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }]
         })
@@ -52,13 +52,13 @@ test('getLayer', async () => {
     const layer = {
         id: 'layerId',
         type: 'circle',
-        source: 'mapbox',
+        source: 'maplibre',
         'source-layer': 'sourceLayer'
     };
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -80,7 +80,7 @@ test('removeLayer restores Map.loaded() to true', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -90,7 +90,7 @@ test('removeLayer restores Map.loaded() to true', async () => {
             layers: [{
                 id: 'layerId',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }]
         })
@@ -98,7 +98,8 @@ test('removeLayer restores Map.loaded() to true', async () => {
 
     await map.once('render');
     map.removeLayer('layerId');
-    await waitForEvent(map, 'render', () => map.loaded());
+    await expect(waitForEvent(map, 'render', () => map.loaded())).resolves.toBeDefined();
+
     map.remove();
 });
 

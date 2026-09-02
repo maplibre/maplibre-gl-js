@@ -1,21 +1,21 @@
 // WebGPU drawable path for fill-extrusion layers.
 // Extracted from src/render/draw_fill_extrusion.ts
 
-import {DepthMode} from '../../gl/depth_mode';
-import {StencilMode} from '../../gl/stencil_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {fillExtrusionUniformValues} from '../../render/program/fill_extrusion_program';
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {UniformBlock} from '../../gfx/uniform_block';
-import {LayerTweaker} from '../../gfx/layer_tweaker';
-import {translatePosition} from '../../util/util';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {StencilMode} from '../../webgl/stencil_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
+import {fillExtrusionUniformValues} from '../../webgl/program/fill_extrusion_program.ts';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {UniformBlock} from '../../gfx/uniform_block.ts';
+import {LayerTweaker} from '../../gfx/layer_tweaker.ts';
+import {translatePosition} from '../../util/util.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer';
-import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
+import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 class FillExtrusionLayerTweaker extends LayerTweaker {
     execute(drawables: any[], painter: Painter, layer: any, _coords: any[]): void {
@@ -24,14 +24,12 @@ class FillExtrusionLayerTweaker extends LayerTweaker {
 
             // FillExtrusionDrawableUBO: matrix(64) + lightpos_and_intensity(16) + lightcolor(16) +
             //   vertical_gradient(4) + opacity(4) + base_t(4) + height_t(4) + color_t(4) + pad(12) = 128
-            if (!drawable.drawableUBO) {
-                drawable.drawableUBO = new UniformBlock(128);
-            }
+            drawable.drawableUBO ||= new UniformBlock(128);
             drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
 
             // Set lighting and opacity from uniformValues
             if (drawable.uniformValues) {
-                const uv = drawable.uniformValues as any;
+                const uv = drawable.uniformValues;
                 if (uv.u_lightpos) drawable.drawableUBO.setVec4(64, uv.u_lightpos[0], uv.u_lightpos[1], uv.u_lightpos[2], uv.u_lightintensity || 0);
                 if (uv.u_lightcolor) drawable.drawableUBO.setVec4(80, uv.u_lightcolor[0], uv.u_lightcolor[1], uv.u_lightcolor[2], 0);
                 drawable.drawableUBO.setFloat(96, uv.u_vertical_gradient ? 1.0 : 0.0);
@@ -54,7 +52,7 @@ class FillExtrusionLayerTweaker extends LayerTweaker {
     }
 }
 
-export function drawFillExtrusionWebGPU(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFillExtrusionWebGPU(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const {isRenderingToTexture} = renderOptions;
     if (painter.renderPass !== 'translucent') return;
 
@@ -62,7 +60,7 @@ export function drawFillExtrusionWebGPU(painter: Painter, tileManager: TileManag
     const gl = context.gl;
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const pattern = layer.paint.get('fill-extrusion-pattern');
-    const image = pattern && pattern.constantOr(1 as any);
+    const image = pattern?.constantOr(1 as any);
     const transform = painter.transform;
 
     // Skip pattern variant for now
@@ -71,7 +69,7 @@ export function drawFillExtrusionWebGPU(painter: Painter, tileManager: TileManag
     const depthMode = new DepthMode(gl.LEQUAL || 515, DepthMode.ReadWrite, painter.depthRangeFor3D);
     const colorMode = painter.colorModeForRenderPass();
 
-    let tweaker = painter.layerTweakers.get(layer.id) as FillExtrusionLayerTweaker;
+    let tweaker = painter.layerTweakers.get(layer.id);
     if (!tweaker) {
         tweaker = new FillExtrusionLayerTweaker(layer.id);
         painter.layerTweakers.set(layer.id, tweaker);
@@ -91,7 +89,7 @@ export function drawFillExtrusionWebGPU(painter: Painter, tileManager: TileManag
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
         const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
 
         const translate = translatePosition(

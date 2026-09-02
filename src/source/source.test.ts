@@ -1,10 +1,12 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Dispatcher} from '../util/dispatcher';
-import {type SourceClass, addSourceType, create} from './source';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {type SourceClass, addSourceType, create} from './source.ts';
 
 describe('addSourceType', () => {
     test('adds factory function without a worker url does not dispatch to worker', async () => {
-        const sourceType = vi.fn().mockImplementation(function (id) { this.id = id; }) as SourceClass;
+        const sourceType = vi.fn().mockImplementation(function (this: {id: string}, id: string) {
+            this.id = id;
+        }) as SourceClass;
 
         // expect no call to load worker source
         const spy = vi.spyOn(Dispatcher.prototype, 'broadcast');
@@ -25,18 +27,18 @@ describe('addSourceType', () => {
         await addSourceType('foo2', sourceType);
         expect(spy).not.toHaveBeenCalled();
 
-        expect(() => create('id', {type: 'foo2'} as any, null, null)).toThrow();
+        expect(() => create('id', {type: 'foo2'} as any, null, null)).toThrow('Expected Source id to be id instead of undefined');
         expect(sourceType).toHaveBeenCalled();
     });
 
     test('refuses to add new type over existing name', async () => {
         const sourceType = function () {} as any as SourceClass;
-        await expect(addSourceType('canvas', sourceType)).rejects.toThrow();
-        await expect(addSourceType('geojson', sourceType)).rejects.toThrow();
-        await expect(addSourceType('image', sourceType)).rejects.toThrow();
-        await expect(addSourceType('raster', sourceType)).rejects.toThrow();
-        await expect(addSourceType('raster-dem', sourceType)).rejects.toThrow();
-        await expect(addSourceType('vector', sourceType)).rejects.toThrow();
-        await expect(addSourceType('video', sourceType)).rejects.toThrow();
+        await expect(addSourceType('canvas', sourceType)).rejects.toThrow('A source type called "canvas" already exists.');
+        await expect(addSourceType('geojson', sourceType)).rejects.toThrow('A source type called "geojson" already exists.');
+        await expect(addSourceType('image', sourceType)).rejects.toThrow('A source type called "image" already exists.');
+        await expect(addSourceType('raster', sourceType)).rejects.toThrow('A source type called "raster" already exists.');
+        await expect(addSourceType('raster-dem', sourceType)).rejects.toThrow('A source type called "raster-dem" already exists.');
+        await expect(addSourceType('vector', sourceType)).rejects.toThrow('A source type called "vector" already exists.');
+        await expect(addSourceType('video', sourceType)).rejects.toThrow('A source type called "video" already exists.');
     });
 });

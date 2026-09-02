@@ -1,23 +1,23 @@
 // WebGPU drawable path for circle layers.
 // Extracted from src/render/draw_circle.ts
 
-import {StencilMode} from '../../gl/stencil_mode';
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {circleUniformValues} from '../../render/program/circle_program';
-import {SegmentVector} from '../../data/segment';
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {CircleLayerTweaker} from '../../gfx/tweakers/circle_layer_tweaker';
-import {translatePosition} from '../../util/util';
+import {StencilMode} from '../../webgl/stencil_mode.ts';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
+import {circleUniformValues} from '../../webgl/program/circle_program.ts';
+import {SegmentVector} from '../../data/segment.ts';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {CircleLayerTweaker} from '../../gfx/tweakers/circle_layer_tweaker.ts';
+import {translatePosition} from '../../util/util.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
-import type {CircleBucket} from '../../data/bucket/circle_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
+import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawCirclesWebGPU(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawCirclesWebGPU(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const transform = painter.transform;
@@ -28,7 +28,7 @@ export function drawCirclesWebGPU(painter: Painter, tileManager: TileManager, la
     const colorMode = painter.colorModeForRenderPass();
 
     // Get or create tweaker for this layer
-    let tweaker = painter.layerTweakers.get(layer.id) as CircleLayerTweaker;
+    let tweaker = painter.layerTweakers.get(layer.id);
     if (!tweaker) {
         tweaker = new CircleLayerTweaker(layer.id);
         painter.layerTweakers.set(layer.id, tweaker);
@@ -69,7 +69,7 @@ export function drawCirclesWebGPU(painter: Painter, tileManager: TileManager, la
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('circle', programConfiguration);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         const styleTranslate = layer.paint.get('circle-translate');
         const styleTranslateAnchor = layer.paint.get('circle-translate-anchor');
@@ -99,7 +99,7 @@ export function drawCirclesWebGPU(painter: Painter, tileManager: TileManager, la
                     zoom: painter.transform.zoom,
                 });
                 drawable.uniformValues = uniformValues as any;
-                drawable.drawPriority = (segment.sortKey as any as number) || 0;
+                drawable.drawPriority = (segment.sortKey) || 0;
                 layerGroup.addDrawable(coord, drawable);
             }
         } else {

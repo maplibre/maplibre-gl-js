@@ -1,0 +1,341 @@
+import {IndexBuffer} from './index_buffer.ts';
+
+import {VertexBuffer} from './vertex_buffer.ts';
+import {Framebuffer} from './framebuffer.ts';
+import {type DepthMode} from './depth_mode.ts';
+import {type StencilMode} from './stencil_mode.ts';
+import {ColorMode} from './color_mode.ts';
+import {type CullFaceMode} from './cull_face_mode.ts';
+import {deepEqual} from '../util/util.ts';
+import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value.ts';
+
+import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
+import type {
+    StructArray,
+    StructArrayMember
+} from '../util/struct_array.ts';
+import type {Color} from '@maplibre/maplibre-gl-style-spec';
+
+type ClearArgs = {
+    color?: Color;
+    depth?: number;
+    stencil?: number;
+};
+
+/**
+ * @internal
+ * A webgl wrapper class to allow injection, mocking and abstraction
+ */
+export class Context {
+    gl: WebGL2RenderingContext;
+    device: any;
+
+    currentNumAttributes: number;
+    maxTextureSize: number;
+
+    clearColor: ClearColor;
+    clearDepth: ClearDepth;
+    clearStencil: ClearStencil;
+    colorMask: ColorMask;
+    depthMask: DepthMask;
+    stencilMask: StencilMask;
+    stencilFunc: StencilFunc;
+    stencilOp: StencilOp;
+    stencilTest: StencilTest;
+    depthRange: DepthRange;
+    depthTest: DepthTest;
+    depthFunc: DepthFunc;
+    blend: Blend;
+    blendFunc: BlendFunc;
+    blendColor: BlendColor;
+    blendEquation: BlendEquation;
+    cullFace: CullFace;
+    cullFaceSide: CullFaceSide;
+    frontFace: FrontFace;
+    program: ProgramValue;
+    activeTexture: ActiveTextureUnit;
+    viewport: Viewport;
+    bindFramebuffer: BindFramebuffer;
+    bindRenderbuffer: BindRenderbuffer;
+    bindTexture: BindTexture;
+    bindVertexBuffer: BindVertexBuffer;
+    bindElementBuffer: BindElementBuffer;
+    bindVertexArray: BindVertexArray;
+    pixelStoreUnpack: PixelStoreUnpack;
+    pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
+    pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+
+    extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
+    extTextureFilterAnisotropicMax?: GLfloat;
+
+    constructor(gl: WebGL2RenderingContext | null, device?: any) {
+        this.gl = gl || new Proxy({} as WebGL2RenderingContext, {
+            get: (target, prop) => {
+                if (typeof prop === 'string') {
+                    // Return correct GL enum values for WebGPU-only mode
+                    const glEnums: Record<string, number> = {
+                        'LINES': 1, 'LINE_STRIP': 3, 'TRIANGLES': 4,
+                        'TEXTURE_2D': 3553, 'TEXTURE0': 33984,
+                        'RGBA': 6408, 'ALPHA': 6406, 'LUMINANCE': 6409, 'LUMINANCE_ALPHA': 6410,
+                        'UNSIGNED_BYTE': 5121,
+                        'LINEAR': 9729, 'NEAREST': 9728, 'LINEAR_MIPMAP_NEAREST': 9985,
+                        'CLAMP_TO_EDGE': 33071, 'REPEAT': 10497, 'MIRRORED_REPEAT': 33648,
+                        'TEXTURE_MIN_FILTER': 10241, 'TEXTURE_MAG_FILTER': 10240,
+                        'TEXTURE_WRAP_S': 10242, 'TEXTURE_WRAP_T': 10243,
+                    };
+                    if (prop in glEnums) return glEnums[prop];
+                    if (prop === prop.toUpperCase()) return 0;
+                    return () => null;
+                }
+                return undefined;
+            }
+        });
+        this.device = device;
+        this.clearColor = new ClearColor(this);
+        this.clearDepth = new ClearDepth(this);
+        this.clearStencil = new ClearStencil(this);
+        this.colorMask = new ColorMask(this);
+        this.depthMask = new DepthMask(this);
+        this.stencilMask = new StencilMask(this);
+        this.stencilFunc = new StencilFunc(this);
+        this.stencilOp = new StencilOp(this);
+        this.stencilTest = new StencilTest(this);
+        this.depthRange = new DepthRange(this);
+        this.depthTest = new DepthTest(this);
+        this.depthFunc = new DepthFunc(this);
+        this.blend = new Blend(this);
+        this.blendFunc = new BlendFunc(this);
+        this.blendColor = new BlendColor(this);
+        this.blendEquation = new BlendEquation(this);
+        this.cullFace = new CullFace(this);
+        this.cullFaceSide = new CullFaceSide(this);
+        this.frontFace = new FrontFace(this);
+        this.program = new ProgramValue(this);
+        this.activeTexture = new ActiveTextureUnit(this);
+        this.viewport = new Viewport(this);
+        this.bindFramebuffer = new BindFramebuffer(this);
+        this.bindRenderbuffer = new BindRenderbuffer(this);
+        this.bindTexture = new BindTexture(this);
+        this.bindVertexBuffer = new BindVertexBuffer(this);
+        this.bindElementBuffer = new BindElementBuffer(this);
+        this.bindVertexArray = new BindVertexArray(this);
+        this.pixelStoreUnpack = new PixelStoreUnpack(this);
+        this.pixelStoreUnpackPremultiplyAlpha = new PixelStoreUnpackPremultiplyAlpha(this);
+        this.pixelStoreUnpackFlipY = new PixelStoreUnpackFlipY(this);
+
+        const glContext = this.gl;
+        this.extTextureFilterAnisotropic = glContext.getExtension('EXT_texture_filter_anisotropic');
+
+        if (this.extTextureFilterAnisotropic) {
+            this.extTextureFilterAnisotropicMax = glContext.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+        }
+
+        this.maxTextureSize = glContext.getParameter(glContext.MAX_TEXTURE_SIZE);
+
+        gl.getExtension('EXT_color_buffer_half_float');
+        gl.getExtension('EXT_color_buffer_float');
+    }
+
+    setDefault(): void {
+        this.unbindVAO();
+
+        this.clearColor.setDefault();
+        this.clearDepth.setDefault();
+        this.clearStencil.setDefault();
+        this.colorMask.setDefault();
+        this.depthMask.setDefault();
+        this.stencilMask.setDefault();
+        this.stencilFunc.setDefault();
+        this.stencilOp.setDefault();
+        this.stencilTest.setDefault();
+        this.depthRange.setDefault();
+        this.depthTest.setDefault();
+        this.depthFunc.setDefault();
+        this.blend.setDefault();
+        this.blendFunc.setDefault();
+        this.blendColor.setDefault();
+        this.blendEquation.setDefault();
+        this.cullFace.setDefault();
+        this.cullFaceSide.setDefault();
+        this.frontFace.setDefault();
+        this.program.setDefault();
+        this.activeTexture.setDefault();
+        this.bindFramebuffer.setDefault();
+        this.pixelStoreUnpack.setDefault();
+        this.pixelStoreUnpackPremultiplyAlpha.setDefault();
+        this.pixelStoreUnpackFlipY.setDefault();
+    }
+
+    setDirty(): void {
+        this.clearColor.dirty = true;
+        this.clearDepth.dirty = true;
+        this.clearStencil.dirty = true;
+        this.colorMask.dirty = true;
+        this.depthMask.dirty = true;
+        this.stencilMask.dirty = true;
+        this.stencilFunc.dirty = true;
+        this.stencilOp.dirty = true;
+        this.stencilTest.dirty = true;
+        this.depthRange.dirty = true;
+        this.depthTest.dirty = true;
+        this.depthFunc.dirty = true;
+        this.blend.dirty = true;
+        this.blendFunc.dirty = true;
+        this.blendColor.dirty = true;
+        this.blendEquation.dirty = true;
+        this.cullFace.dirty = true;
+        this.cullFaceSide.dirty = true;
+        this.frontFace.dirty = true;
+        this.program.dirty = true;
+        this.activeTexture.dirty = true;
+        this.viewport.dirty = true;
+        this.bindFramebuffer.dirty = true;
+        this.bindRenderbuffer.dirty = true;
+        this.bindTexture.dirty = true;
+        this.bindVertexBuffer.dirty = true;
+        this.bindElementBuffer.dirty = true;
+        this.bindVertexArray.dirty = true;
+        this.pixelStoreUnpack.dirty = true;
+        this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
+        this.pixelStoreUnpackFlipY.dirty = true;
+    }
+
+    /**
+     * Reset some GL state to default values before handing users the raw context, as we do for
+     * custom layers and WebGL style images, to avoid hard-to-debug bugs in their code.
+     *
+     * MapLibre restores all of its own state afterwards, so the only state worth resetting first
+     * is state users would be surprised to find dirty: `CULL_FACE`, `TEXTURE0` and the three
+     * `UNPACK_` settings, whose defaults are meaningful enough that most code assumes them.
+     * The vertex array is unbound rather than reset, so that MapLibre never has to track it and
+     * a user's `vertexAttribPointer` calls cannot land on one of ours.
+     */
+    setCustomLayerDefaults(): void {
+        this.unbindVAO();
+
+        this.cullFace.setDefault();
+        this.activeTexture.setDefault();
+        this.pixelStoreUnpack.setDefault();
+        this.pixelStoreUnpackPremultiplyAlpha.setDefault();
+        this.pixelStoreUnpackFlipY.setDefault();
+    }
+
+    createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean): IndexBuffer {
+        return new IndexBuffer(this, array, dynamicDraw);
+    }
+
+    createVertexBuffer(array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean): VertexBuffer {
+        return new VertexBuffer(this, array, attributes, dynamicDraw);
+    }
+
+    createRenderbuffer(storageFormat: number, width: number, height: number): WebGLRenderbuffer {
+        const gl = this.gl;
+
+        const rbo = gl.createRenderbuffer();
+        this.bindRenderbuffer.set(rbo);
+        gl.renderbufferStorage(gl.RENDERBUFFER, storageFormat, width, height);
+        this.bindRenderbuffer.set(null);
+
+        return rbo;
+    }
+
+    createFramebuffer(width: number, height: number, hasDepth: boolean, hasStencil: boolean): Framebuffer {
+        return new Framebuffer(this, width, height, hasDepth, hasStencil);
+    }
+
+    clear({
+        color,
+        depth,
+        stencil
+    }: ClearArgs): void {
+        const gl = this.gl;
+        let mask = 0;
+
+        if (color) {
+            mask |= gl.COLOR_BUFFER_BIT;
+            this.clearColor.set(color);
+            this.colorMask.set([true, true, true, true]);
+        }
+
+        if (typeof depth !== 'undefined') {
+            mask |= gl.DEPTH_BUFFER_BIT;
+
+            // Workaround for platforms where clearDepth doesn't seem to work
+            // without resetting the depthRange. See https://github.com/mapbox/mapbox-gl-js/issues/3437
+            this.depthRange.set([0, 1]);
+
+            this.clearDepth.set(depth);
+            this.depthMask.set(true);
+        }
+
+        if (typeof stencil !== 'undefined') {
+            mask |= gl.STENCIL_BUFFER_BIT;
+            this.clearStencil.set(stencil);
+            this.stencilMask.set(0xFF);
+        }
+
+        gl.clear(mask);
+    }
+
+    setCullFace(cullFaceMode: Readonly<CullFaceMode>): void {
+        if (cullFaceMode.enable === false) {
+            this.cullFace.set(false);
+        } else {
+            this.cullFace.set(true);
+            this.cullFaceSide.set(cullFaceMode.mode);
+            this.frontFace.set(cullFaceMode.frontFace);
+        }
+    }
+
+    setDepthMode(depthMode: Readonly<DepthMode>): void {
+        if (depthMode.func === this.gl.ALWAYS && !depthMode.mask) {
+            this.depthTest.set(false);
+        } else {
+            this.depthTest.set(true);
+            this.depthFunc.set(depthMode.func);
+            this.depthMask.set(depthMode.mask);
+            this.depthRange.set(depthMode.range);
+        }
+    }
+
+    setStencilMode(stencilMode: Readonly<StencilMode>): void {
+        if (stencilMode.test.func === this.gl.ALWAYS && !stencilMode.mask) {
+            this.stencilTest.set(false);
+        } else {
+            this.stencilTest.set(true);
+            this.stencilMask.set(stencilMode.mask);
+            this.stencilOp.set([stencilMode.fail, stencilMode.depthFail, stencilMode.pass]);
+            this.stencilFunc.set({
+                func: stencilMode.test.func,
+                ref: stencilMode.ref,
+                mask: stencilMode.test.mask
+            });
+        }
+    }
+
+    setColorMode(colorMode: Readonly<ColorMode>): void {
+        if (deepEqual(colorMode.blendFunction, ColorMode.Replace)) {
+            this.blend.set(false);
+        } else {
+            this.blend.set(true);
+            this.blendFunc.set(colorMode.blendFunction);
+            this.blendColor.set(colorMode.blendColor);
+        }
+
+        this.colorMask.set(colorMode.mask);
+    }
+
+    createVertexArray(): WebGLVertexArrayObject | undefined {
+        return this.gl.createVertexArray();
+    }
+
+    deleteVertexArray(x: WebGLVertexArrayObject | undefined): void {
+        this.gl.deleteVertexArray(x);
+    }
+
+    unbindVAO(): void {
+        // Unbinding the VAO prevents other things (custom layers, new buffer creation) from
+        // unintentionally changing the state of the last VAO used.
+        this.bindVertexArray.set(null);
+    }
+}

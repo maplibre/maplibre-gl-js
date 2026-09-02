@@ -1,29 +1,29 @@
-import {FeatureIndex} from '../data/feature_index';
-import {performSymbolLayout} from '../symbol/symbol_layout';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {DictionaryCoder} from '../util/dictionary_coder';
-import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {LineBucket} from '../data/bucket/line_bucket';
-import {FillBucket} from '../data/bucket/fill_bucket';
-import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
-import {warnOnce, mapObject} from '../util/util';
-import {ImageAtlas} from '../render/image_atlas';
-import {GlyphAtlas} from '../render/glyph_atlas';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {OverscaledTileID} from '../tile/tile_id';
+import {FeatureIndex} from '../data/feature_index.ts';
+import {performSymbolLayout} from '../symbol/symbol_layout.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {DictionaryCoder} from '../util/dictionary_coder.ts';
+import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {LineBucket} from '../data/bucket/line_bucket.ts';
+import {FillBucket} from '../data/bucket/fill_bucket.ts';
+import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket.ts';
+import {warnOnce, mapObject} from '../util/util.ts';
+import {ImageAtlas} from '../render/image_atlas.ts';
+import {GlyphAtlas} from '../render/glyph_atlas.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
 
-import type {Bucket} from '../data/bucket';
-import type {IActor} from '../util/actor';
-import type {StyleLayer} from '../style/style_layer';
-import type {StyleLayerIndex} from '../style/style_layer_index';
+import type {Bucket, PopulateParameters} from '../data/bucket.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
-} from './worker_source';
+} from './worker_source.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
-import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
-import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages.ts';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 export class WorkerTile {
     tileID: OverscaledTileID;
     uid: string | number;
@@ -37,12 +37,16 @@ export class WorkerTile {
     collectResourceTiming: boolean;
     returnDependencies: boolean;
 
-    status: 'parsing' | 'done';
     data: VectorTileLike;
     collisionBoxArray: CollisionBoxArray;
 
     abort: AbortController;
     vectorTile: VectorTileLike;
+    /**
+     * The etag of the response this tile was loaded from. A reload has no new response, so it is returned again
+     * to keep the main thread's tile etag intact for the next expiry refresh.
+     */
+    etag?: string;
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {
@@ -61,7 +65,6 @@ export class WorkerTile {
     }
 
     async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
-        this.status = 'parsing';
         this.data = data;
 
         this.collisionBoxArray = new CollisionBoxArray();
@@ -72,7 +75,7 @@ export class WorkerTile {
 
         const buckets: {[_: string]: Bucket} = {};
 
-        const options = {
+        const options: PopulateParameters = {
             featureIndex,
             iconDependencies: {},
             patternDependencies: {},
@@ -127,9 +130,7 @@ export class WorkerTile {
             }
         }
 
-        // options.glyphDependencies looks like: {"SomeFontName":{"10":true,"32":true}}
-        // this line makes an object like: {"SomeFontName":[10,32]}
-        const stacks: {[_: string]: number[]} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();
@@ -192,7 +193,6 @@ export class WorkerTile {
             }
         }
 
-        this.status = 'done';
         return {
             buckets: Object.values(buckets).filter(b => !b.isEmpty()),
             featureIndex,

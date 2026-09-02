@@ -1,19 +1,20 @@
-import {extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util.ts';
 
-import {ImageRequest} from '../util/image_request';
+import {ImageRequest} from '../util/image_request.ts';
 
-import {ResourceType} from '../util/request_manager';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {loadTileJson} from './load_tilejson';
-import {TileBounds} from '../tile/tile_bounds';
-import {Texture} from '../render/texture';
-import {isAbortError} from '../util/abort_error';
+import {ResourceType} from '../util/request_manager.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
+import {loadTileJson} from './load_tilejson.ts';
+import {TileBounds} from '../tile/tile_bounds.ts';
+import {Texture} from '../webgl/texture.ts';
+import {isAbortError} from '../util/abort_error.ts';
 
-import type {Source} from './source';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
+import type {Source} from './source.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
@@ -50,7 +51,7 @@ import type {
  * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-wms-source/)
  * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-satellite-map/)
  */
-export class RasterTileSource extends Evented implements Source {
+export class RasterTileSource extends Evented<SourceEventType> implements Source {
     type: 'raster' | 'raster-dem';
     id: string;
     minzoom: number;
@@ -68,6 +69,7 @@ export class RasterTileSource extends Evented implements Source {
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _premultiplyAlpha: boolean;
     _tileJSONRequest: AbortController;
 
     constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -83,14 +85,15 @@ export class RasterTileSource extends Evented implements Source {
         this.scheme = 'xyz';
         this.tileSize = 512;
         this._loaded = false;
+        this._premultiplyAlpha = true;
 
         this._options = extend({type: 'raster'}, options);
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
     }
 
-    async load(sourceDataChanged: boolean = false) {
+    async load(sourceDataChanged: boolean = false): Promise<void> {
         this._loaded = false;
-        this.fire(new Event('dataloading', {dataType: 'source'}));
+        this.fire(new MapSourceDataEvent('dataloading'));
         this._tileJSONRequest = new AbortController();
         try {
             const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest, this.map._ownerWindow);
@@ -103,8 +106,8 @@ export class RasterTileSource extends Evented implements Source {
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
                 // before the TileJSON arrives. this makes sure the tiles needed are loaded once TileJSON arrives
                 // ref: https://github.com/mapbox/mapbox-gl-js/pull/4347#discussion_r104418088
-                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
-                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged}));
+                this.fire(new MapSourceDataEvent('data', {sourceDataType: 'metadata'}));
+                this.fire(new MapSourceDataEvent('data', {sourceDataType: 'content', sourceDataChanged}));
             }
         } catch (err) {
             this._tileJSONRequest = null;
@@ -112,7 +115,7 @@ export class RasterTileSource extends Evented implements Source {
 
             // only fire error event if it is not due to aborting the request
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }
@@ -121,19 +124,19 @@ export class RasterTileSource extends Evented implements Source {
         return this._loaded;
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
 
-    onRemove() {
+    onRemove(): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
         }
     }
 
-    setSourceProperty(callback: Function) {
+    setSourceProperty(callback: Function): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
@@ -171,19 +174,48 @@ export class RasterTileSource extends Evented implements Source {
         return this;
     }
 
-    serialize() {
+    serialize(): RasterSourceSpecification | RasterDEMSourceSpecification {
         return extend({}, this._options);
     }
 
-    hasTile(tileID: OverscaledTileID) {
+    /**
+     * Sets whether alpha premultiplication is applied to raster tile images.
+     * Set to `false` to preserve exact RGBA byte values when alpha carries data instead of opacity.
+     *
+     * @param premultiplyAlpha - If `false`, disables alpha premultiplication for raster tile image decode and texture upload.
+     * @example
+     * ```ts
+     * map.getSource<RasterTileSource>('raster-source').setPremultiplyAlpha(false);
+     * ```
+     */
+    setPremultiplyAlpha(premultiplyAlpha: boolean): this {
+        if (this._premultiplyAlpha === premultiplyAlpha) return this;
+
+        this.setSourceProperty(() => {
+            this._premultiplyAlpha = premultiplyAlpha;
+        });
+
+        return this;
+    }
+
+    hasTile(tileID: OverscaledTileID): boolean {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const premultiply = this._premultiplyAlpha;
+        const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.transformAndGetImage(
+                this.map._requestManager,
+                url,
+                ResourceType.Tile,
+                tile.abortController,
+                this.map._refreshExpiredTiles,
+                imageBitmapOptions
+            );
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -198,9 +230,9 @@ export class RasterTileSource extends Evented implements Source {
                 const img = response.data;
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
-                    tile.texture.update(img, {useMipmap: true});
+                    tile.texture.update(img, {useMipmap: true, premultiply});
                 } else {
-                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
+                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true, premultiply});
                     tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
                 }
                 tile.state = 'loaded';
@@ -216,20 +248,20 @@ export class RasterTileSource extends Evented implements Source {
         }
     }
 
-    async abortTile(tile: Tile) {
+    async abortTile(tile: Tile): Promise<void> {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
         }
     }
 
-    async unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         if (tile.texture) {
             this.map.painter.saveTileTexture(tile.texture);
         }
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return false;
     }
 }

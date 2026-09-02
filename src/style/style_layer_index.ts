@@ -1,7 +1,7 @@
-import {createStyleLayer} from './create_style_layer';
+import {createStyleLayer} from './create_style_layer.ts';
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
-import type {StyleLayer} from './style_layer';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import type {StyleLayer} from './style_layer.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
@@ -24,18 +24,18 @@ export class StyleLayerIndex {
         }
     }
 
-    replace(layerConfigs: LayerSpecification[], globalState?: Record<string, any>) {
+    replace(layerConfigs: LayerSpecification[], globalState?: Record<string, any>): void {
         this._layerConfigs = {};
         this._layers = {};
         this.update(layerConfigs, [], globalState);
     }
 
-    update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>) {
+    update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>): void {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
 
             const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
-            layer._featureFilter = featureFilter(layer.filter, globalState);
+            layer._featureFilter = featureFilter(layer.filter, `layers[${layerConfig.id}].filter`, globalState);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }
@@ -59,15 +59,11 @@ export class StyleLayerIndex {
 
             const sourceId = layer.source || '';
             let sourceGroup = this.familiesBySource[sourceId];
-            if (!sourceGroup) {
-                sourceGroup = this.familiesBySource[sourceId] = {};
-            }
+            sourceGroup ||= this.familiesBySource[sourceId] = {};
 
             const sourceLayerId = layer.sourceLayer || GEOJSON_TILE_LAYER_NAME;
             let sourceLayerFamilies = sourceGroup[sourceLayerId];
-            if (!sourceLayerFamilies) {
-                sourceLayerFamilies = sourceGroup[sourceLayerId] = [];
-            }
+            sourceLayerFamilies ||= sourceGroup[sourceLayerId] = [];
 
             sourceLayerFamilies.push(layers);
         }

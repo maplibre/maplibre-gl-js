@@ -1,5 +1,5 @@
-import {RGBAImage} from './image';
-import {isPowerOfTwo} from './util';
+import {RGBAImage} from './image.ts';
+import {isPowerOfTwo} from './util.ts';
 
 import type {StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 

@@ -5,7 +5,7 @@ uniform float u_mix;
 uniform lowp float u_lineatlas_width;
 
 in vec2 v_normal;
-in vec2 v_width2;
+flat in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;
@@ -14,20 +14,22 @@ in highp vec2 v_uv;
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define mediump float width
-#pragma mapbox: define lowp float floorwidth
-#pragma mapbox: define mediump vec4 dasharray_from
-#pragma mapbox: define mediump vec4 dasharray_to
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define mediump float width
+#pragma maplibre: define lowp float floorwidth
+#pragma maplibre: define mediump vec4 dasharray_from
+#pragma maplibre: define mediump vec4 dasharray_to
 
 void main() {
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump float width
-    #pragma mapbox: initialize lowp float floorwidth
-    #pragma mapbox: initialize mediump vec4 dasharray_from
-    #pragma mapbox: initialize mediump vec4 dasharray_to
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump float width
+    #pragma maplibre: initialize lowp float floorwidth
+    #pragma maplibre: initialize mediump vec4 dasharray_from
+    #pragma maplibre: initialize mediump vec4 dasharray_to
+
+    clipAntimeridian();
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;

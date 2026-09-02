@@ -12,7 +12,7 @@
       "type": "vector",
       "maxzoom": 16,
       "tiles": [
-        "local://tiles/mapbox.mapbox-streets-v7/16-11235-26208.mvt"
+        "local://tiles/streets-v7/16-11235-26208.mvt"
       ]
     }
   },

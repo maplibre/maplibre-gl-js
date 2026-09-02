@@ -1,9 +1,9 @@
 import {describe, test, expect} from 'vitest';
-import {CollisionFeature} from './collision_feature';
-import {Anchor} from './anchor';
+import {CollisionFeature} from './collision_feature.ts';
+import {Anchor} from './anchor.ts';
 import Point from '@mapbox/point-geometry';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {type SymbolPadding} from '../style/style_layer/symbol_style_layer';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {type SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
 
 describe('CollisionFeature', () => {
 

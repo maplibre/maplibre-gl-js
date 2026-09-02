@@ -1,35 +1,33 @@
 // WebGPU drawable path for heatmap layers.
 // Extracted from src/render/draw_heatmap.ts
 
-import {UniformBlock} from '../../gfx/uniform_block';
-import {shaders} from '../../shaders/shaders';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+import {UniformBlock} from '../../gfx/uniform_block.ts';
+import {shaders} from '../../shaders/shaders.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {mat4} from 'gl-matrix';
 
-import type {Painter} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
+import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /** Upload UniformBlock as storage buffer */
 function uploadAsStorage(device: any, ubo: any): any {
-    if (!(ubo as any)._storageBuffer) {
-        (ubo as any)._storageBuffer = device.createBuffer({
-            byteLength: ubo._byteLength,
-            usage: 128 | 8, // STORAGE | COPY_DST
-        });
-    }
-    (ubo as any)._storageBuffer.write(new Uint8Array(ubo._data));
-    return (ubo as any)._storageBuffer;
+    (ubo)._storageBuffer ||= device.createBuffer({
+        byteLength: ubo._byteLength,
+        usage: 128 | 8, // STORAGE | COPY_DST
+    });
+    (ubo)._storageBuffer.write(new Uint8Array(ubo._data));
+    return (ubo)._storageBuffer;
 }
 
 /**
  * WebGPU heatmap Pass 1: Render kernel density to offscreen texture.
  * Called during 'offscreen' render pass (before main render pass starts).
  */
-export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>) {
-    const device = painter.device as any;
+export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[]): void {
+    const device = painter.device;
     const gpuDevice = device.handle;
     const transform = painter.transform;
     if (!gpuDevice) return;
@@ -39,7 +37,7 @@ export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager,
     const fboHeight = Math.max(Math.floor(painter.height / 4), 1);
 
     let heatmapState = (layer as any)._webgpuHeatmapState;
-    if (!heatmapState || heatmapState.width !== fboWidth || heatmapState.height !== fboHeight) {
+    if (heatmapState?.width !== fboWidth || heatmapState?.height !== fboHeight) {
         if (heatmapState?.texture) heatmapState.texture.destroy();
         const texture = gpuDevice.createTexture({
             size: [fboWidth, fboHeight],
@@ -69,7 +67,7 @@ export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager,
 
         // Generate VertexInput from a typical heatmap bucket
         // Heatmap has: a_pos (Int16 x2) + optional paint attributes (weight, radius)
-        let vertexInputStruct = 'struct VertexInput {\n    @location(0) pos: vec2<i32>,\n};\n';
+        const vertexInputStruct = 'struct VertexInput {\n    @location(0) pos: vec2<i32>,\n};\n';
         const vertexBufferLayouts: any[] = [{
             arrayStride: 4, // 2 × Int16
             stepMode: 'vertex',
@@ -106,15 +104,15 @@ export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager,
     offscreenPass.setPipeline(pipeline);
 
     // Render each tile's heatmap data
-    const intensity = layer.paint.get('heatmap-intensity') as number || 1;
-    const radiusVal = layer.paint.get('heatmap-radius').constantOr(undefined) as number ?? (layer.paint.get('heatmap-radius') as any)?.evaluate?.({zoom: transform.zoom}) ?? 30;
-    const weightVal = layer.paint.get('heatmap-weight').constantOr(undefined) as number ?? (layer.paint.get('heatmap-weight') as any)?.evaluate?.({zoom: transform.zoom}) ?? 1;
+    const intensity = layer.paint.get('heatmap-intensity') || 1;
+    const radiusVal = layer.paint.get('heatmap-radius').constantOr(undefined) ?? (layer.paint.get('heatmap-radius') as any)?.evaluate?.({zoom: transform.zoom}) ?? 30;
+    const weightVal = layer.paint.get('heatmap-weight').constantOr(undefined) ?? (layer.paint.get('heatmap-weight') as any)?.evaluate?.({zoom: transform.zoom}) ?? 1;
 
     for (const coord of tileIDs) {
         if (tileManager.hasRenderableParent(coord)) continue;
         const tile = tileManager.getTile(coord);
         const bucket: HeatmapBucket = (tile.getBucket(layer) as any);
-        if (!bucket || !bucket.layoutVertexBuffer || !bucket.indexBuffer) continue;
+        if (!bucket?.layoutVertexBuffer || !bucket.indexBuffer) continue;
 
         const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: false});
 
@@ -122,7 +120,7 @@ export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager,
 
         // Drawable UBO (80 bytes: matrix + extrude_scale + _t factors)
         const drawableUBO = new UniformBlock(80);
-        drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+        drawableUBO.setMat4(0, projectionData.mainMatrix);
         drawableUBO.setFloat(64, pixelsToTileUnits(tile, 1, transform.zoom));
 
         // Props UBO (16 bytes: weight + radius + intensity + pad, padded to 32 for WebGPU min)
@@ -168,15 +166,15 @@ export function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager,
  * WebGPU heatmap Pass 2: Composite offscreen texture with color ramp.
  * Called during 'translucent' render pass (main render pass is active).
  */
-export function compositeHeatmapWebGPU(painter: Painter, layer: HeatmapStyleLayer) {
-    const device = painter.device as any;
+export function compositeHeatmapWebGPU(painter: Painter, layer: HeatmapStyleLayer): void {
+    const device = painter.device;
     const gpuDevice = device.handle;
     if (!gpuDevice) return;
 
     const heatmapState = (layer as any)._webgpuHeatmapState;
     if (!heatmapState) return;
 
-    const mainRenderPass = (painter.renderPassWGSL as any)?.handle;
+    const mainRenderPass = (painter.renderPassWGSL)?.handle;
     if (!mainRenderPass) return;
 
     // Get or create color ramp GPU texture

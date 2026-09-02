@@ -1,9 +1,9 @@
 import {describe, test, expect, vi} from 'vitest';
-import {ColorReliefStyleLayer} from './color_relief_style_layer';
+import {ColorReliefStyleLayer} from './color_relief_style_layer.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {createStyleLayer} from '../create_style_layer';
-import {extend} from '../../util/util';
-import {type EvaluationParameters} from '../evaluation_parameters';
+import {createStyleLayer} from '../create_style_layer.ts';
+import {extend} from '../../util/util.ts';
+import {type EvaluationParameters} from '../evaluation_parameters.ts';
 
 function createColorReliefLayerSpec(properties?: {paint: {'color-relief-opacity'?: number; 'color-relief-color'?: any[]}}): LayerSpecification {
     return extend({
@@ -20,7 +20,7 @@ describe('ColorReliefStyleLayer', () => {
         const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
-        expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(1);
+        expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toBe(1);
         const colorRamp = colorReliefStyleLayer._createColorRamp(256);
         expect(colorRamp.elevationStops).toEqual([0,1]);
         expect(colorRamp.colorStops).toEqual([Color.transparent,Color.transparent]);

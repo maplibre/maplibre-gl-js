@@ -1,17 +1,84 @@
-import puppeteer, {type Browser} from 'puppeteer';
+import puppeteer, {type Browser, type Page, type WebWorker} from 'puppeteer';
+import fs from 'node:fs';
+import path from 'node:path';
+import {CoverageReport} from 'monocart-coverage-reports';
 
-export async function launchPuppeteer(headless = true, backend: 'webgl' | 'webgl2' | 'webgpu' = 'webgl2'): Promise<Browser> {
-    const args = [
-        '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
-        '--enable-unsafe-swiftshader',
-        '--ignore-gpu-blocklist'
-    ];
-    const launchOptions: any = {headless, args};
+export async function launchPuppeteer(headless = true, backend: 'webgl2' | 'webgpu' = 'webgl2'): Promise<Browser> {
     if (backend === 'webgpu') {
-        args.push('--enable-unsafe-webgpu');
-        // Use system Chrome for WebGPU support (Homebrew Chromium lacks it)
-        const systemChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-        launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || systemChrome;
+        // WebGPU needs a real GPU and a Chrome build that ships it
+        return puppeteer.launch({
+            headless,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            args: ['--enable-unsafe-webgpu', '--ignore-gpu-blocklist']
+        });
     }
-    return puppeteer.launch(launchOptions);
+    return puppeteer.launch({
+        headless,
+        args: [
+            '--disable-gpu',
+            '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
+            '--enable-unsafe-swiftshader'
+        ],
+    });
+}
+
+/** Start JS coverage on the page and on every worker it spawns. */
+export async function startCoverage(page: Page): Promise<WebWorker[]> {
+    const workers: WebWorker[] = [];
+    page.on('workercreated', async (worker: WebWorker) => {
+        workers.push(worker);
+        try {
+            await worker.client.send('Profiler.enable');
+            await worker.client.send('Profiler.startPreciseCoverage', {callCount: true, detailed: true});
+        } catch {}
+    });
+    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    return workers;
+}
+
+/** Harvest page + worker coverage, close the page, and write a monocart report to `coverage/<outputDir>`. */
+export async function stopCoverageAndReport(page: Page, workers: WebWorker[], outputDir: string): Promise<void> {
+    const coverage = await page.coverage.stopJSCoverage();
+
+    const workerCoverageEntries: any[] = [];
+    for (const worker of workers) {
+        try {
+            const result = await worker.client.send('Profiler.takePreciseCoverage');
+            workerCoverageEntries.push(...result.result);
+        } catch {}
+    }
+
+    await page.close();
+
+    const rawV8CoverageData: any[] = coverage.map((it) => {
+        const entry: any = {source: it.text, ...it.rawScriptCoverage};
+        if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
+            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map', 'utf-8'));
+        }
+        return entry;
+    });
+
+    const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
+    const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
+    for (const entry of workerCoverageEntries) {
+        if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
+            rawV8CoverageData.push({
+                source: workerSource,
+                url: entry.url,
+                scriptId: entry.scriptId,
+                functions: entry.functions,
+                sourceMap: workerSourceMap
+            });
+        }
+    }
+
+    const coverageReport = new CoverageReport({
+        name: 'MapLibre Coverage Report',
+        outputDir: `./coverage/${outputDir}`,
+        reports: [['v8'], ['json']],
+        sourcePath: (relativePath) => path.resolve(relativePath)
+    });
+    coverageReport.cleanCache();
+    await coverageReport.add(rawV8CoverageData);
+    await coverageReport.generate();
 }

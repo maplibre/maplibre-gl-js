@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {MercatorProjection} from '../../geo/projection/mercator_projection';
-import {createMap, beforeMapTest, sleep} from '../../util/test/util';
+import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -16,8 +16,8 @@ describe('resize', () => {
         Object.defineProperty(container, 'clientHeight', {value: 250});
         map.resize();
 
-        expect(map.transform.width).toBe(250);
-        expect(map.transform.height).toBe(250);
+        expect(map._camera.transform.width).toBe(250);
+        expect(map._camera.transform.height).toBe(250);
 
     });
 

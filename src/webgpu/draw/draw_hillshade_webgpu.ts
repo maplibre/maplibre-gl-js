@@ -1,14 +1,14 @@
 // WebGPU drawable path for hillshade layers.
 // Extracted from src/render/draw_hillshade.ts
 
-import {UniformBlock} from '../../gfx/uniform_block';
-import {shaders} from '../../shaders/shaders';
+import {UniformBlock} from '../../gfx/uniform_block.ts';
+import {shaders} from '../../shaders/shaders.ts';
 import {mat4} from 'gl-matrix';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /** Upload UniformBlock as storage buffer */
 function uploadAsStorage(device: any, ubo: UniformBlock): any {
@@ -22,8 +22,8 @@ function uploadAsStorage(device: any, ubo: UniformBlock): any {
     return (ubo as any)._storageBuffer;
 }
 
-export function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
-    const device = painter.device as any;
+export function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
+    const device = painter.device;
     const gpuDevice = device.handle;
     const transform = painter.transform;
     if (!gpuDevice) return;
@@ -34,7 +34,7 @@ export function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, 
     for (const coord of tileIDs) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
-        if (!dem || !dem.data) continue;
+        if (!dem?.data) continue;
         // Only prepare if needed (first time or DEM data changed)
         if (!tile.needsHillshadePrepare && (tile as any)._webgpuHillshade) continue;
 
@@ -43,7 +43,7 @@ export function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, 
 
         // Create offscreen slope texture for this tile
         let gpuState = (tile as any)._webgpuHillshade;
-        if (!gpuState || gpuState.size !== tileSize) {
+        if (gpuState?.size !== tileSize) {
             if (gpuState?.texture) gpuState.texture.destroy();
             gpuState = {
                 texture: gpuDevice.createTexture({
@@ -180,7 +180,7 @@ export function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, 
     }
 
     // === Pass 2: Render hillshade to main render target ===
-    const mainRenderPass = (painter.renderPassWGSL as any)?.handle;
+    const mainRenderPass = (painter.renderPassWGSL)?.handle;
     if (!mainRenderPass) return;
 
     // Get or create render pipeline
@@ -263,11 +263,11 @@ export function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, 
 
         // Drawable UBO
         const drawUBO = new UniformBlock(32);
-        drawUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+        drawUBO.setMat4(0, projectionData.mainMatrix);
 
         // Expand to include latrange, exaggeration, tex_offset, tex_scale
         const drawUBO2 = new UniformBlock(96);
-        drawUBO2.setMat4(0, projectionData.mainMatrix as Float32Array);
+        drawUBO2.setMat4(0, projectionData.mainMatrix);
         drawUBO2.setVec2(64, latN, latS);
         drawUBO2.setFloat(72, typeof exaggeration === 'number' ? exaggeration : 0.5);
 

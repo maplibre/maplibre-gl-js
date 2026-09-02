@@ -1,8 +1,8 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer} from '../style_layer.ts';
 
-import {SymbolBucket, type SymbolFeature} from '../../data/bucket/symbol_bucket';
-import {resolveTokens} from '../../util/resolve_tokens';
-import properties, {type SymbolLayoutPropsPossiblyEvaluated, type SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
+import {SymbolBucket, type SymbolFeature} from '../../data/bucket/symbol_bucket.ts';
+import {resolveTokens} from '../../util/resolve_tokens.ts';
+import properties, {type SymbolLayoutPropsPossiblyEvaluated, type SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g.ts';
 
 import {
     type Transitionable,
@@ -11,7 +11,7 @@ import {
     type PossiblyEvaluated,
     PossiblyEvaluatedPropertyValue,
     type PropertyValue
-} from '../properties';
+} from '../properties.ts';
 
 import {
     isExpression,
@@ -24,12 +24,12 @@ import {
     FormatExpression,
     Literal} from '@maplibre/maplibre-gl-style-spec';
 
-import type {BucketParameters} from '../../data/bucket';
-import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
-import type {EvaluationParameters} from '../evaluation_parameters';
+import type {BucketParameters} from '../../data/bucket.ts';
+import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g.ts';
+import type {EvaluationParameters} from '../evaluation_parameters.ts';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {CanonicalTileID} from '../../tile/tile_id';
-import {FormatSectionOverride} from '../format_section_override';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import {FormatSectionOverride} from '../format_section_override.ts';
 
 export const isSymbolStyleLayer = (layer: StyleLayer): layer is SymbolStyleLayer => layer.type === 'symbol';
 
@@ -45,15 +45,15 @@ export class SymbolStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
 
-        if (this.layout.get('icon-rotation-alignment') === 'auto') {
-            if (this.layout.get('symbol-placement') !== 'point') {
-                this.layout._values['icon-rotation-alignment'] = 'map';
-            } else {
-                this.layout._values['icon-rotation-alignment'] = 'viewport';
-            }
+        const iconRotationAlignment = this.layout.get('icon-rotation-alignment');
+        if (iconRotationAlignment.value.kind !== 'constant' || iconRotationAlignment.value.value === 'auto') {
+            this.layout._values['icon-rotation-alignment'] = new PossiblyEvaluatedPropertyValue(
+                iconRotationAlignment.property,
+                {kind: 'constant', value: this.layout.get('symbol-placement') !== 'point' ? 'map' : 'viewport'},
+                iconRotationAlignment.parameters);
         }
 
         if (this.layout.get('text-rotation-alignment') === 'auto') {
@@ -69,7 +69,7 @@ export class SymbolStyleLayer extends StyleLayer {
             this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment') === 'map' ? 'map' : 'viewport';
         }
         if (this.layout.get('icon-pitch-alignment') === 'auto') {
-            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment');
+            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment').constantOr('viewport');
         }
 
         if (this.layout.get('symbol-placement') === 'point') {
@@ -89,7 +89,7 @@ export class SymbolStyleLayer extends StyleLayer {
         this._setPaintOverrides();
     }
 
-    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]) {
+    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]): any {
         const value = this.layout.get(name).evaluate(feature, {}, canonical, availableImages);
         const unevaluated = this._unevaluatedLayout._values[name];
         if (!unevaluated.isDataDriven() && !isExpression(unevaluated.value) && value) {
@@ -99,7 +99,7 @@ export class SymbolStyleLayer extends StyleLayer {
         return value;
     }
 
-    createBucket(parameters: BucketParameters<any>) {
+    createBucket(parameters: BucketParameters<any>): SymbolBucket {
         return new SymbolBucket(parameters);
     }
 
@@ -111,14 +111,14 @@ export class SymbolStyleLayer extends StyleLayer {
         throw new Error('Should take a different path in FeatureIndex');
     }
 
-    _setPaintOverrides() {
+    _setPaintOverrides(): void {
         for (const overridable of properties.paint.overridableProperties) {
             if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) {
                 continue;
             }
             const overridden = this.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
             const override = new FormatSectionOverride(overridden);
-            const styleExpression = new StyleExpression(override, overridden.property.specification);
+            const styleExpression = new StyleExpression(override, `layers[${this.id}].paint.${overridden.property.name}`, overridden.property.specification);
             let expression = null;
             if (overridden.value.kind === 'constant' || overridden.value.kind === 'source') {
                 expression = new ZoomConstantExpression('source', styleExpression) as SourceExpression;

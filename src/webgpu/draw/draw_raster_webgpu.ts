@@ -1,24 +1,24 @@
 // WebGPU drawable path for raster layers.
 // Extracted from src/render/draw_raster.ts
 
-import {clamp} from '../../util/util';
-import {now} from '../../util/time_control';
-import {StencilMode} from '../../gl/stencil_mode';
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {rasterUniformValues} from '../../render/program/raster_program';
-import {EXTENT} from '../../data/extent';
-import {FadingDirections} from '../../tile/tile';
+import {clamp} from '../../util/util.ts';
+import {now} from '../../util/time_control.ts';
+import {StencilMode} from '../../webgl/stencil_mode.ts';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
+import {rasterUniformValues} from '../../webgl/program/raster_program.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {RasterLayerTweaker} from '../../gfx/tweakers/raster_layer_tweaker';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {RasterLayerTweaker} from '../../gfx/tweakers/raster_layer_tweaker.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import type {Tile} from '../../tile/tile';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Tile} from '../../tile/tile.ts';
 
 type FadeProperties = {
     parentTile: Tile;
@@ -33,6 +33,8 @@ type FadeValues = {
     fadeMix: { opacity: number; mix: number };
 };
 
+import {bilinearImageWarp} from '../../webgl/program/raster_program.ts';
+
 const cornerCoords = [
     new Point(0, 0),
     new Point(EXTENT, 0),
@@ -40,7 +42,7 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRasterWebGPU(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawRasterWebGPU(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
@@ -56,7 +58,7 @@ export function drawRasterWebGPU(painter: Painter, tileManager: TileManager, lay
     const textureFilter = rasterResampling === 'nearest' ? 9728 /* NEAREST */ : 9729 /* LINEAR */;
 
     // Get or create tweaker
-    let tweaker = painter.layerTweakers.get(layer.id) as RasterLayerTweaker;
+    let tweaker = painter.layerTweakers.get(layer.id);
     if (!tweaker) {
         tweaker = new RasterLayerTweaker(layer.id);
         painter.layerTweakers.set(layer.id, tweaker);
@@ -79,15 +81,15 @@ export function drawRasterWebGPU(painter: Painter, tileManager: TileManager, lay
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
-        if (!tile || !tile.texture) continue;
+        if (!tile?.texture) continue;
 
         const {parentTile, parentScaleBy, parentTopLeft, fadeValues} = getFadeProperties(tile, tileManager, fadeDuration, isTerrain);
         tile.fadeOpacity = fadeValues.tileOpacity;
         if (parentTile) parentTile.fadeOpacity = fadeValues.parentTileOpacity;
 
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
         const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
-        const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, cornerCoords);
+        const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, cornerCoords, bilinearImageWarp);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, false, true, 'raster');
 
@@ -101,7 +103,7 @@ export function drawRasterWebGPU(painter: Painter, tileManager: TileManager, lay
             .setLayerTweaker(tweaker);
 
         // Add tile texture (image0) and parent texture (image1)
-        const tileTexObj = tile.texture as any;
+        const tileTexObj = tile.texture;
         if (tileTexObj) {
             // image0: current tile
             const texEntry: any = {
@@ -115,7 +117,7 @@ export function drawRasterWebGPU(painter: Painter, tileManager: TileManager, lay
             builder.addTexture(texEntry);
 
             // image1: parent tile (for cross-fade) or same tile
-            const parentTexObj = parentTile?.texture as any || tileTexObj;
+            const parentTexObj = parentTile?.texture || tileTexObj;
             const texEntry1: any = {
                 name: 'image1',
                 textureUnit: 1,

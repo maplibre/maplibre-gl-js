@@ -1,18 +1,22 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Source} from './source';
-import {VectorTileSource} from './vector_tile_source';
-import {type Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {Evented} from '../util/evented';
-import {RequestManager} from '../util/request_manager';
+import {type Source} from './source.ts';
+import {VectorTileSource} from './vector_tile_source.ts';
+import {type Tile} from '../tile/tile.ts';
+import {AJAXError} from '../util/ajax.ts';
+import {AbortError} from '../util/abort_error.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Evented} from '../util/evented.ts';
+import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
-import {type Map} from '../ui/map';
-import {type WorkerTileParameters} from './worker_source';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type ActorMessage, MessageType} from '../util/actor_messages';
-import {type MapSourceDataEvent} from '../ui/events';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {type Map} from '../ui/map.ts';
+import {type WorkerTileParameters} from './worker_source.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
+import {type MapSourceDataEvent} from '../ui/events.ts';
+
+class StubbedEvented extends Evented {}
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -114,7 +118,7 @@ describe('VectorTileSource', () => {
 
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const evented = new Evented();
+        const evented = new StubbedEvented();
         const dataloadingSpy = vi.fn();
         evented.on('dataloading', dataloadingSpy);
         const source = createSource({url: '/source.json', eventedParent: evented});
@@ -252,9 +256,7 @@ describe('VectorTileSource', () => {
         const source = createSource({url: '/source.json'});
         source.dispatcher = getWrapDispatcher()({
             sendAsync(_message) {
-                const error = new Error();
-                (error as any).status = 404;
-                return Promise.reject(error);
+                return Promise.reject(new AJAXError(404, 'Not Found', 'http://localhost/tile', new Blob()));
             }
         });
         const promise = waitForMetadataEvent(source);
@@ -452,7 +454,7 @@ describe('VectorTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(server.requests.length).toBe(2);
+        expect(server.requests).toHaveLength(2);
         expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'vector',
@@ -513,6 +515,31 @@ describe('VectorTileSource', () => {
         expect(result).toBeUndefined();
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
         expect(tile.etag).toBeUndefined();
+    });
+
+    test('swallows an AbortError from the worker request', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            etag: undefined,
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync() {
+                return Promise.reject(new AbortError());
+            }
+        });
+
+        await expect(source.loadTile(tile)).resolves.toBeUndefined();
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 
     test('stores worker etag on tile when present', async () => {

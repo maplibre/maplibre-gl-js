@@ -1,10 +1,10 @@
-import {LayerTweaker} from '../layer_tweaker';
-import {UniformBlock} from '../uniform_block';
-import type {Drawable} from '../drawable';
-import type {Painter} from '../../render/painter';
-import type {StyleLayer} from '../../style/style_layer';
-import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import {LayerTweaker} from '../layer_tweaker.ts';
+import {UniformBlock} from '../uniform_block.ts';
+import type {Drawable} from '../drawable.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 // FillEvaluatedPropsUBO layout (48 bytes, 16-byte aligned):
 // color:           vec4<f32>     offset 0
@@ -29,15 +29,11 @@ export class FillLayerTweaker extends LayerTweaker {
 
     _patternPropsUBO: UniformBlock | null = null;
 
-    constructor(layerId: string) {
-        super(layerId);
-    }
-
     execute(
         drawables: Drawable[],
         painter: Painter,
         layer: StyleLayer,
-        _coords: Array<OverscaledTileID>
+        _coords: OverscaledTileID[]
     ): void {
         const fillLayer = layer as FillStyleLayer;
         const transform = painter.transform;
@@ -104,7 +100,7 @@ export class FillLayerTweaker extends LayerTweaker {
                     const zoom = transform.zoom;
                     for (const [prop, offset] of [['fill-color', 64], ['fill-opacity', 68], ['fill-outline-color', 64], ['fill-opacity', 68]] as const) {
                         const binder = binders[prop];
-                        if (binder && binder.expression && binder.expression.interpolationFactor) {
+                        if (binder?.expression?.interpolationFactor) {
                             const currentZoom = binder.useIntegerZoom ? Math.floor(zoom) : zoom;
                             const t = Math.max(0, Math.min(1, binder.expression.interpolationFactor(currentZoom, binder.zoom, binder.zoom + 1)));
                             drawable.drawableUBO.setFloat(offset, t);
@@ -162,7 +158,7 @@ export class FillLayerTweaker extends LayerTweaker {
             drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
 
             // Compute pixel coordinates for this tile (for pattern position calc)
-            const tileID = drawable.tileID!;
+            const tileID = drawable.tileID;
             const tileSize = transform.tileSize;
             const numTiles = Math.pow(2, tileID.overscaledZ);
             const tileSizeAtNearestZoom = tileSize * Math.pow(2, transform.tileZoom) / numTiles;

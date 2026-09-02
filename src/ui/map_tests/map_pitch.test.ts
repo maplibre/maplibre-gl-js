@@ -1,5 +1,5 @@
 import {beforeEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -11,6 +11,18 @@ test('setMinPitch', () => {
     map.setMinPitch(10);
     map.setPitch(0);
     expect(map.getPitch()).toBe(10);
+});
+
+test('setMinPitch raises the current pitch when it is below the new minimum', () => {
+    const map = createMap({pitch: 5});
+    map.setMinPitch(20);
+    expect(map.getPitch()).toBe(20);
+});
+
+test('setMaxPitch lowers the current pitch when it is above the new maximum', () => {
+    const map = createMap({pitch: 40});
+    map.setMaxPitch(20);
+    expect(map.getPitch()).toBe(20);
 });
 
 test('unset minPitch', () => {
@@ -31,7 +43,7 @@ test('ignore minPitchs over maxPitch', () => {
     const map = createMap({pitch: 0, maxPitch: 10});
     expect(() => {
         map.setMinPitch(20);
-    }).toThrow();
+    }).toThrow('minPitch must be between 0 and the current maxPitch, inclusive');
     map.setPitch(0);
     expect(map.getPitch()).toBe(0);
 });
@@ -89,7 +101,7 @@ test('ignore maxPitchs over minPitch', () => {
     const map = createMap({minPitch: 10});
     expect(() => {
         map.setMaxPitch(0);
-    }).toThrow();
+    }).toThrow('maxPitch must be greater than the current minPitch');
     map.setPitch(10);
     expect(map.getPitch()).toBe(10);
 });
@@ -140,8 +152,8 @@ test('fire move and pitch events when pitch is changed due to minPitch change', 
     map.on('pitch', handleEvent);
     map.on('pitchend', handleEvent);
     map.setMinPitch(11);
-    expect(map.getPitch()).toEqual(11);
-    expect(map.getMinPitch()).toEqual(11);
+    expect(map.getPitch()).toBe(11);
+    expect(map.getMinPitch()).toBe(11);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });
 
@@ -155,7 +167,7 @@ test('fire move and pitch events when pitch is changed due to maxPitch change', 
     map.on('pitch', handleEvent);
     map.on('pitchend', handleEvent);
     map.setMaxPitch(10);
-    expect(map.getPitch()).toEqual(10);
-    expect(map.getMaxPitch()).toEqual(10);
+    expect(map.getPitch()).toBe(10);
+    expect(map.getMaxPitch()).toBe(10);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });

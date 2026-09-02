@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import * as timeControl from '../../util/time_control';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import * as timeControl from '../../util/time_control.ts';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 let map;
 
@@ -69,7 +69,7 @@ describe('Map.isMoving', () => {
 
     test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
-        vi.spyOn(timeControl, 'now').mockImplementation(() => 0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);

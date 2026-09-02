@@ -1,16 +1,16 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import {Popup, type Offset} from './popup';
-import {LngLat} from '../geo/lng_lat';
+import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util.ts';
+import {Popup, type Offset} from './popup.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import simulate from '../../test/unit/lib/simulate_interaction';
-import {type PositionAnchor} from './anchor';
+import simulate from '../../test/unit/lib/simulate_interaction.ts';
+import {type PositionAnchor} from './anchor.ts';
 
 const containerWidth = 512;
 const containerHeight = 512;
 
 function createMap(options?) {
-    options = options || {};
+    options ||= {};
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});
@@ -32,7 +32,7 @@ describe('popup', () => {
             .addTo(map);
 
         expect(popup.isOpen()).toBeTruthy();
-        expect(popup.getElement().classList.contains('maplibregl-popup')).toBeTruthy();
+        expect(popup.getElement().classList).toContain('maplibregl-popup');
     });
 
     test('Popup.addTo adds a .maplibregl-popup element', () => {
@@ -258,10 +258,10 @@ describe('popup', () => {
     test('Popup provides LngLat accessors', () => {
         expect(new Popup().getLngLat()).toBeUndefined();
 
-        expect(new Popup().setLngLat([1, 2]).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Popup().setLngLat([1, 2]).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Popup().setLngLat([1, 2]).getLngLat()).toEqual(new LngLat(1, 2));
 
-        expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat() instanceof LngLat).toBeTruthy();
+        expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toBeInstanceOf(LngLat);
         expect(new Popup().setLngLat(new LngLat(1, 2)).getLngLat()).toEqual(new LngLat(1, 2));
 
     });
@@ -333,7 +333,7 @@ describe('popup', () => {
         expect(popup._pos).toEqual(map.project([5, 0]));
     });
 
-    test('Popup wraps position after map move if it would otherwise go offscreen (right)', () => {
+    test('Popup wraps position after map move if it would otherwise go offscreen (left)', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
 
         const popup = new Popup()
@@ -382,7 +382,7 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top-left')).toBeTruthy();
+        expect(popup.getElement().classList).toContain('maplibregl-popup-anchor-top-left');
     });
 
     const cases =  [
@@ -413,7 +413,7 @@ describe('popup', () => {
             vi.spyOn(map, 'project').mockReturnValue(point);
             popup.setLngLat([0, 0]);
 
-            expect(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`)).toBeTruthy();
+            expect(popup.getElement().classList).toContain(`maplibregl-popup-anchor-${anchor}`);
         });
 
     const transformCases = cases.map(([anchor, _point, transform]) => [anchor, transform] as const);
@@ -449,7 +449,7 @@ describe('popup', () => {
         vi.spyOn(map, 'project').mockReturnValue(point);
         popup.setLngLat([0, 0]);
 
-        expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top')).toBeTruthy();
+        expect(popup.getElement().classList).toContain('maplibregl-popup-anchor-top');
     });
 
     test('Popup is offset via a PointLike offset option', () => {
@@ -563,22 +563,22 @@ describe('popup', () => {
             .addTo(map);
 
         const popupContainer = popup.getElement();
-        expect(popupContainer.classList.contains('some')).toBeTruthy();
-        expect(popupContainer.classList.contains('classes')).toBeTruthy();
+        expect(popupContainer.classList).toContain('some');
+        expect(popupContainer.classList).toContain('classes');
 
         const addClassNameMethodPopupInstance = popup.addClassName('addedClass');
-        expect(popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(popupContainer.classList).toContain('addedClass');
         expect(addClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         const removeClassNameMethodPopupInstance = popup.removeClassName('addedClass');
-        expect(!popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(popupContainer.classList).not.toContain('addedClass');
         expect(removeClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         popup.toggleClassName('toggle');
-        expect(popupContainer.classList.contains('toggle')).toBeTruthy();
+        expect(popupContainer.classList).toContain('toggle');
 
         popup.toggleClassName('toggle');
-        expect(!popupContainer.classList.contains('toggle')).toBeTruthy();
+        expect(popupContainer.classList).not.toContain('toggle');
 
         expect(() => popup.addClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => popup.removeClassName('should throw exception')).toThrow(window.DOMException);
@@ -613,7 +613,7 @@ describe('popup', () => {
         ).toContain('maplibregl-popup-track-pointer');
     });
 
-    test('Pointer-tracked popup with content set later is tagged with right class ', () => {
+    test('Pointer-tracked popup with content set later is tagged with right class', () => {
         const map = createMap();
         const popup = new Popup()
             .trackPointer()
@@ -626,7 +626,7 @@ describe('popup', () => {
         ).toContain('maplibregl-popup-track-pointer');
     });
 
-    test('Pointer-tracked popup that is set afterwards is tagged with right class ', () => {
+    test('Pointer-tracked popup that is set afterwards is tagged with right class', () => {
         const map = createMap();
         const popup = new Popup()
             .addTo(map);
@@ -1063,10 +1063,49 @@ describe('popup', () => {
                 .trackPointer()
                 .addTo(map);
 
-            expect(popup.getElement().classList.contains('maplibregl-popup-track-pointer')).toBeTruthy();
-            expect(map._canvasContainer.classList.contains('maplibregl-track-pointer')).toBeTruthy();
+            expect(popup.getElement().classList).toContain('maplibregl-popup-track-pointer');
+            expect(map._canvasContainer.classList).toContain('maplibregl-track-pointer');
 
             popup.remove();
         });
+    });
+
+    test('Popup updates position when switching projection', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+
+        const popup = new Popup()
+            .setLngLat(new LngLat(20, 30))
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+
+        map.setProjection({type: 'globe'});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(536px,216px)');
+
+        map.setProjection({type: 'mercator'});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+
+        map.remove();
+    });
+
+    test('Popup updates position when terrain is enabled', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true, pitch: 60, zoom: 14});
+        await map.once('load');
+
+        const popup = new Popup()
+            .setLngLat(new LngLat(20, 30))
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.addSource('terrain', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'terrain'});
+
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.remove();
     });
 });

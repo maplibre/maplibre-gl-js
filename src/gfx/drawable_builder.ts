@@ -1,19 +1,19 @@
-import {Drawable} from './drawable';
-import type {DrawableTexture} from './drawable';
-import type {DepthMode} from '../gl/depth_mode';
-import type {StencilMode} from '../gl/stencil_mode';
-import type {ColorMode} from '../gl/color_mode';
-import type {CullFaceMode} from '../gl/cull_face_mode';
-import type {LayerTweaker} from './layer_tweaker';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {SegmentVector} from '../data/segment';
-import type {ProgramConfiguration} from '../data/program_configuration';
-import type {Program} from '../render/program';
-import type {StyleLayer} from '../style/style_layer';
-import type {ProjectionData} from '../geo/projection/projection_data';
-import type {TerrainData} from '../render/terrain';
+import {Drawable} from './drawable.ts';
+import type {DrawableTexture} from './drawable.ts';
+import type {DepthMode} from '../webgl/depth_mode.ts';
+import type {StencilMode} from '../webgl/stencil_mode.ts';
+import type {ColorMode} from '../webgl/color_mode.ts';
+import type {CullFaceMode} from '../webgl/cull_face_mode.ts';
+import type {LayerTweaker} from './layer_tweaker.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {IndexBuffer} from '../webgl/index_buffer.ts';
+import type {SegmentVector} from '../data/segment.ts';
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+import type {Program} from '../webgl/program.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import type {TerrainData} from '../render/terrain.ts';
 
 /**
  * Factory for creating Drawable objects from bucket data.

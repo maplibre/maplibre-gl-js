@@ -1,13 +1,13 @@
-import {LayerTweaker} from '../layer_tweaker';
-import {UniformBlock} from '../uniform_block';
-import type {Drawable} from '../drawable';
-import type {Painter} from '../../render/painter';
-import type {StyleLayer} from '../../style/style_layer';
-import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {EXTENT} from '../../data/extent';
-import {translatePosition} from '../../util/util';
+import {LayerTweaker} from '../layer_tweaker.ts';
+import {UniformBlock} from '../uniform_block.ts';
+import type {Drawable} from '../drawable.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {translatePosition} from '../../util/util.ts';
 
 // CircleDrawableUBO layout (112 bytes, 16-byte aligned):
 // matrix:            mat4x4<f32>   offset 0   (64 bytes)
@@ -43,24 +43,18 @@ const CIRCLE_PROPS_UBO_SIZE = 64;
  */
 export class CircleLayerTweaker extends LayerTweaker {
 
-    constructor(layerId: string) {
-        super(layerId);
-    }
-
     execute(
         drawables: Drawable[],
         painter: Painter,
         layer: StyleLayer,
-        _coords: Array<OverscaledTileID>
+        _coords: OverscaledTileID[]
     ): void {
         const circleLayer = layer as CircleStyleLayer;
         const transform = painter.transform;
 
         // Update evaluated props UBO if properties changed
         if (this.propertiesUpdated) {
-            if (!this.evaluatedPropsUBO) {
-                this.evaluatedPropsUBO = new UniformBlock(CIRCLE_PROPS_UBO_SIZE);
-            }
+            this.evaluatedPropsUBO ||= new UniformBlock(CIRCLE_PROPS_UBO_SIZE);
             const propsUBO = this.evaluatedPropsUBO;
             const paint = circleLayer.paint;
 
@@ -128,9 +122,7 @@ export class CircleLayerTweaker extends LayerTweaker {
             // The matrix and other per-tile data was already set up during drawable creation.
             // The tweaker's job is to UPDATE these values each frame when the camera moves.
 
-            if (!drawable.drawableUBO) {
-                drawable.drawableUBO = new UniformBlock(CIRCLE_DRAWABLE_UBO_SIZE);
-            }
+            drawable.drawableUBO ||= new UniformBlock(CIRCLE_DRAWABLE_UBO_SIZE);
             const ubo = drawable.drawableUBO;
 
             // projectionData is already set during drawable creation with correct RTT flags
@@ -146,7 +138,7 @@ export class CircleLayerTweaker extends LayerTweaker {
                 const pixelRatio = pixelsToTileUnits({tileID} as any, 1, scale);
                 extrudeScale = [pixelRatio, pixelRatio];
             } else {
-                extrudeScale = transform.pixelsToGLUnits as [number, number];
+                extrudeScale = transform.pixelsToGLUnits;
             }
             ubo.setVec2(64, extrudeScale[0], extrudeScale[1]);
 
@@ -160,7 +152,7 @@ export class CircleLayerTweaker extends LayerTweaker {
                     const offsets = [72, 76, 80, 84, 88, 92, 96];
                     for (let i = 0; i < props.length; i++) {
                         const binder = binders[`circle-${props[i].replace(/_/g, '-')}`];
-                        if (binder && binder.interpolationFactor) {
+                        if (binder?.interpolationFactor) {
                             ubo.setFloat(offsets[i], binder.interpolationFactor(zoom));
                         } else {
                             ubo.setFloat(offsets[i], 0);

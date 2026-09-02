@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
-import {type CanonicalTileID} from '../tile/tile_id';
+import {EXTENT} from '../data/extent.ts';
+import {type CanonicalTileID} from '../tile/tile_id.ts';
 import earcut from 'earcut';
-import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from './subdivision_granularity_settings';
-import {register} from '../util/web_worker_transfer';
+import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from './subdivision_granularity_settings.ts';
+import {register} from '../util/web_worker_transfer.ts';
 
 register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
 register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
@@ -612,11 +612,57 @@ class Subdivider {
         // Add pole geometry if needed
         this._handlePoles(subdividedTriangles);
 
+        if (this._granularity >= 2 && this._canonical?.z === 0) {
+            subdividedTriangles = this._removeTrianglesOutsideTileX(subdividedTriangles);
+            subdividedLines = subdividedLines.map(lines => this._removeLinesOutsideTileX(lines));
+        }
+
         return {
             verticesFlattened: this._vertexBuffer,
             indicesTriangles: subdividedTriangles,
             indicesLineList: subdividedLines,
         };
+    }
+
+    private _vertexOutsideTileX(index: number): boolean {
+        const x = this._vertexBuffer[index * 2];
+        return x < 0 || x > EXTENT;
+    }
+
+    /**
+     * Drops all triangles that reach beyond the tile's X extent.
+     *
+     * On globe the z0 tile's buffer wraps around the planet onto the tile itself, drawing buffered geometry twice.
+     * Only globe uses subdivision (`granularity >= 2`), so mercator is never affected.
+     * @param indices - Triangle indices into `this._vertexBuffer`.
+     * @returns The indices with every triangle that has a vertex outside the tile's X extent removed.
+     */
+    private _removeTrianglesOutsideTileX(indices: number[]): number[] {
+        const filtered: number[] = [];
+        for (let i = 0; i < indices.length; i += 3) {
+            if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1]) || this._vertexOutsideTileX(indices[i + 2])) {
+                continue;
+            }
+            filtered.push(indices[i], indices[i + 1], indices[i + 2]);
+        }
+        return filtered;
+    }
+
+    /**
+     * Drops all outline line segments that reach beyond the tile's X extent,
+     * for the same reason as {@link Subdivider._removeTrianglesOutsideTileX}.
+     * @param indices - Line segment indices into `this._vertexBuffer`.
+     * @returns The indices with every segment that has a vertex outside the tile's X extent removed.
+     */
+    private _removeLinesOutsideTileX(indices: number[]): number[] {
+        const filtered: number[] = [];
+        for (let i = 0; i < indices.length; i += 2) {
+            if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1])) {
+                continue;
+            }
+            filtered.push(indices[i], indices[i + 1]);
+        }
+        return filtered;
     }
 
     /**

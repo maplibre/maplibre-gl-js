@@ -1,18 +1,19 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map';
-import {Marker} from '../marker';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import {describe, beforeEach, test, expect, vi, onTestFinished} from 'vitest';
+import {Map} from '../map.ts';
+import {Marker} from '../marker.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
+import {restoreNow, setNow} from '../../util/time_control.ts';
 
 function createMap() {
-    return new Map({container: DOM.create('div', '', window.document.body)} as any as MapOptions);
+    return new Map({container: DOM.create('div', '', window.document.body)});
 }
 
 function createPinchZoomMap() {
     const map = createMap();
     map.touchZoomRotate.disableRotation();
-    map.handlers._handlersById.tapZoom.disable();
+    map._handlers._handlersById.tapZoom.disable();
     map.touchPitch.disable();
 
     return {map, target: map.getCanvas()};
@@ -48,7 +49,7 @@ describe('touch zoom rotate', () => {
         const zoom      = vi.fn();
         const zoomend   = vi.fn();
 
-        map.handlers._handlersById.tapZoom.disable();
+        map._handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();
         map.on('zoomstart', zoomstart);
         map.on('zoom',      zoom);
@@ -96,28 +97,38 @@ describe('touch zoom rotate', () => {
         map.on('rotate',      rotate);
         map.on('rotateend',   rotateend);
 
+        // Frozen time, so that the inertia does not depend on how long the test itself takes.
+        setNow(1000);
+        onTestFinished(restoreNow);
         simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(0);
         expect(rotate).toHaveBeenCalledTimes(0);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
+        setNow(1016);
         simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: -50, clientY: 0}, {target, identifier: 1, clientX: 50, clientY: 0}]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
+        setNow(1032);
         simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 0, clientX: 0, clientY: -50}, {target, identifier: 1, clientX: 0, clientY: 50}]});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(2);
         expect(rotateend).toHaveBeenCalledTimes(0);
 
+        setNow(1048);
         simulate.touchend(map.getCanvas(), {touches: []});
         map._renderTaskQueue.run();
-        expect(rotatestart).toHaveBeenCalledTimes(1);
-        expect(rotate).toHaveBeenCalledTimes(2);
+
+        // incremented because inertia starts a second rotation: the gesture was still
+        // rotating when it ended, even though it ended at the bearing it started from
+        expect(rotatestart).toHaveBeenCalledTimes(2);
+        map._renderTaskQueue.run();
+        expect(rotate).toHaveBeenCalledTimes(3);
         expect(rotateend).toHaveBeenCalledTimes(1);
 
         map.remove();
@@ -269,7 +280,7 @@ describe('touch zoom rotate', () => {
         const map = createMap();
         const target = map.getCanvas();
         map.touchZoomRotate.disableRotation();
-        map.handlers._handlersById.tapZoom.disable();
+        map._handlers._handlersById.tapZoom.disable();
 
         const zoomstart = vi.fn();
         const zoom      = vi.fn();
@@ -312,11 +323,11 @@ describe('touch zoom rotate', () => {
         const map = createMap();
 
         const className = 'maplibregl-touch-zoom-rotate';
-        expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
+        expect(map.getCanvasContainer().classList).toContain(className);
         map.touchZoomRotate.disable();
-        expect(map.getCanvasContainer().classList.contains(className)).toBeFalsy();
+        expect(map.getCanvasContainer().classList).not.toContain(className);
         map.touchZoomRotate.enable();
-        expect(map.getCanvasContainer().classList.contains(className)).toBeTruthy();
+        expect(map.getCanvasContainer().classList).toContain(className);
     });
 
     test('TwoFingersTouchZoomRotateHandler zooms when touching two markers on the same map', () => {
@@ -335,7 +346,7 @@ describe('touch zoom rotate', () => {
         const zoom      = vi.fn();
         const zoomend   = vi.fn();
 
-        map.handlers._handlersById.tapZoom.disable();
+        map._handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();
         map.on('zoomstart', zoomstart);
         map.on('zoom',      zoom);
@@ -388,7 +399,7 @@ describe('touch zoom rotate', () => {
         const zoom      = vi.fn();
         const zoomend   = vi.fn();
 
-        map.handlers._handlersById.tapZoom.disable();
+        map._handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();
         map.dragPan.disable();
         map.on('zoomstart', zoomstart);

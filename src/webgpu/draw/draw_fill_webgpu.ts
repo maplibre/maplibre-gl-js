@@ -2,31 +2,31 @@
 // Extracted from src/render/draw_fill.ts
 
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
 import {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
-} from '../../render/program/fill_program';
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {FillLayerTweaker} from '../../gfx/tweakers/fill_layer_tweaker';
-import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program';
-import {translatePosition} from '../../util/util';
+} from '../../webgl/program/fill_program.ts';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {FillLayerTweaker} from '../../gfx/tweakers/fill_layer_tweaker.ts';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
+import {translatePosition} from '../../util/util.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
-import type {FillBucket} from '../../data/bucket/fill_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /**
  * Drawable-based rendering path for fills.
  * Creates drawables for both fill triangles and outline lines per tile.
  */
-export function drawFillWebGPU(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFillWebGPU(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
@@ -36,7 +36,7 @@ export function drawFillWebGPU(painter: Painter, tileManager: TileManager, layer
     const opacity = layer.paint.get('fill-opacity');
     const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
-    const image = pattern && pattern.constantOr(1 as any);
+    const image = pattern?.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     const isWebGPU = painter.device?.type === 'webgpu';
 
@@ -84,7 +84,7 @@ export function drawFillWebGPU(painter: Painter, tileManager: TileManager, layer
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -118,7 +118,7 @@ export function drawFillWebGPU(painter: Painter, tileManager: TileManager, layer
 
             const fillBuilder = new DrawableBuilder()
                 .setShader(programName)
-                .setRenderPass(pass as 'opaque' | 'translucent')
+                .setRenderPass(pass)
                 .setDepthMode(depthMode)
                 .setStencilMode(stencil)
                 .setColorMode(colorMode)

@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {TransferableGridIndex} from './transferable_grid_index';
+import {TransferableGridIndex} from './transferable_grid_index.ts';
 
 describe('TransferableGridIndex', () => {
 
@@ -40,7 +40,7 @@ describe('TransferableGridIndex', () => {
         expect(grid.query(-6, 0, -7, 100)).toEqual([2]);
         expect(grid.query(-Infinity, -Infinity, Infinity, Infinity).sort()).toEqual([0, 1, 2]);
 
-        expect(() => grid.insert(3, 0, 0, 0, 0)).toThrow();
+        expect(() => grid.insert(3, 0, 0, 0, 0)).toThrow('Cannot insert into a GridIndex created from an ArrayBuffer.');
     });
 
     test('serialize round trip', () => {

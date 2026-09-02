@@ -1,23 +1,23 @@
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import {type ExpiryData, getArrayBuffer} from '../util/ajax';
-import {WorkerTile} from './worker_tile';
-import {WorkerTileState, type ParsingState} from './worker_tile_state';
-import {BoundedLRUCache} from '../tile/tile_cache';
-import {extend} from '../util/util';
-import {RequestPerformance} from '../util/request_performance';
-import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
-import {MLTVectorTile} from './vector_tile_mlt';
+import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
+import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
+import {WorkerTile} from './worker_tile.ts';
+import {WorkerTileState} from './worker_tile_state.ts';
+import {BoundedLRUCache} from '../tile/tile_cache.ts';
+import {ensureError, extend} from '../util/util.ts';
+import {RequestPerformance} from '../util/request_performance.ts';
+import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed.ts';
+import {MLTVectorTile} from './vector_tile_mlt.ts';
 import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
     WorkerTileResult
-} from '../source/worker_source';
-import type {IActor} from '../util/actor';
-import type {StyleLayer} from '../style/style_layer';
-import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
+} from '../source/worker_source.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
@@ -49,7 +49,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(rawData))
+                ? new VectorTile(new PbfReader(rawData))
                 : new MLTVectorTile(rawData);
 
             return {vectorTile, rawData};
@@ -60,7 +60,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (isGzipped) {
                 errorMessage += 'please make sure the data is not gzipped and that you have configured the relevant header in the server';
             } else {
-                errorMessage += `got error: ${ex.message}`;
+                errorMessage += `got error: ${ensureError(ex).message}`;
             }
             throw new Error(errorMessage);
         }
@@ -105,18 +105,14 @@ export class VectorTileWorkerSource implements WorkerSource {
             const resourceTiming = this._finishRequestTiming(timing);
 
             workerTile.vectorTile = vectorTile;
+            workerTile.etag = tileResponse.etag;
             this.tileState.markLoaded(uid, workerTile);
+            const parsingState = {rawData, cacheControl, resourceTiming};
+            this.tileState.setParsing(uid, parsingState);
 
-            const parseState = {rawData, cacheControl, resourceTiming};  // Keep data so reloadTile can access if parse is canceled.
-            this.tileState.setParsing(uid, parseState);
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.clearParsing(uid);
-            }
+            return await this._parseWorkerTile(workerTile, params);
         } catch (err) {
             this.tileState.finishLoading(uid);
-            workerTile.status = 'done';
             this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
@@ -128,13 +124,26 @@ export class VectorTileWorkerSource implements WorkerSource {
         return extend({etagUnmodified: true as const}, cacheControl, resourceTiming);
     }
 
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
+    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const parseState = this.tileState.getParsing(workerTile.uid);
+
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
+        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
+        // After the main thread has successfully received and stored rawTileData,
+        // we no longer need to store it in the worker or transfer additional copies of it.
         if (parseState) {
             const {rawData, cacheControl, resourceTiming} = parseState;
-            // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+            // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
+            const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
+            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
+            result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
+            this.tileState.removeParsing(workerTile.uid);
+        } else if (workerTile.etag) {
+            // Reload: return the stored etag since the main thread overwrites the tile's etag with every
+            // result (#3309). cacheControl/expires are deliberately not re-sent: the main thread anchors
+            // max-age to the time it receives them, and the tile's expiration already survives a reload.
+            result = extend(result, {etag: workerTile.etag});
         }
 
         return result;
@@ -172,7 +181,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID} = overzoomParameters;
 
-        const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
+        const cacheKey = `${maxZoomTileID.key}_${tileID.key}_${params.request?.url}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
 
         if (cachedOverzoomTile) {
@@ -193,7 +202,10 @@ export class VectorTileWorkerSource implements WorkerSource {
                 overzoomedVectorTile.addLayer(slicedTileLayer);
             }
         }
-        const overzoomedVectorTileResult = toVirtualVectorTile(overzoomedVectorTile);
+        const overzoomedVectorTileResult = {
+            vectorTile: overzoomedVectorTile,
+            rawData: fromVectorTileJs(overzoomedVectorTile).buffer
+        };
         this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
 
         return overzoomedVectorTileResult;
@@ -204,23 +216,16 @@ export class VectorTileWorkerSource implements WorkerSource {
      */
     async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
-
         const workerTile = this.tileState.getLoaded(uid);
         if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
 
+        // If there was no vector tile data on the initial load, don't try to reparse the tile.
+        if (!workerTile.vectorTile) {
+            return;
+        }
+
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
-
-        if (workerTile.status === 'parsing') {
-            // if we are cancelling the original parse, make sure to pass the rawTileData from the original parse
-            const parseState = this.tileState.consumeParsing(uid);
-            return await this._parseWorkerTile(workerTile, params, parseState);
-        }
-
-        // If there was no vector tile data on the initial load, don't try and reparse the tile.
-        // this seems like a missing case where cache control is lost? see #3309
-        if (workerTile.status === 'done' && workerTile.vectorTile) {
-            return await this._parseWorkerTile(workerTile, params);
-        }
+        return await this._parseWorkerTile(workerTile, params);
     }
 
     /**

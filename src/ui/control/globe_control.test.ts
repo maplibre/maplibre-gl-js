@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {GlobeControl} from './globe_control';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
+import {GlobeControl} from './globe_control.ts';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
 
 function createMap() {
     return globalCreateMap({
@@ -9,8 +9,10 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'maplibre',
-            id: 'basic'
+            metadata: {
+                owner: 'maplibre',
+                id: 'basic',
+            },
         },
         hash: true
     });
@@ -71,8 +73,8 @@ describe('GlobeControl', () => {
         test('default without call to setProjection', () => {
             const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
             expect(map.style.projection.name).toBe('mercator');
-            expect(button.classList.contains('maplibregl-ctrl-globe')).toBeTruthy();
-            expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBeFalsy();
+            expect(button.classList).toContain('maplibregl-ctrl-globe');
+            expect(button.classList).not.toContain('maplibregl-ctrl-globe-enabled');
         });
 
         test('setProjection({type: "mercator" -> "globe")', () => {
@@ -83,8 +85,8 @@ describe('GlobeControl', () => {
             const button = map.getContainer().querySelector('.maplibregl-ctrl-globe-enabled');
             expect(map.style.projection.name).toBe('globe');
             expect(button).not.toBeNull();
-            expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBeTruthy();
-            expect(button.classList.contains('maplibregl-ctrl-globe')).toBeFalsy();
+            expect(button.classList).toContain('maplibregl-ctrl-globe-enabled');
+            expect(button.classList).not.toContain('maplibregl-ctrl-globe');
         });
 
         test('setProjection({type: "globe" -> "mercator")', () => {
@@ -94,8 +96,8 @@ describe('GlobeControl', () => {
             // mercator = disabled state
             const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
             expect(map.style.projection.name).toBe('mercator');
-            expect(button.classList.contains('maplibregl-ctrl-globe')).toBeTruthy();
-            expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBeFalsy();
+            expect(button.classList).toContain('maplibregl-ctrl-globe');
+            expect(button.classList).not.toContain('maplibregl-ctrl-globe-enabled');
         });
     });
 });

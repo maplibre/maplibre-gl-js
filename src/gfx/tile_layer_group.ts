@@ -1,5 +1,5 @@
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {Drawable} from './drawable';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {Drawable} from './drawable.ts';
 
 /**
  * Container for drawables organized by layer and tile.

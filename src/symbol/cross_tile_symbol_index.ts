@@ -1,12 +1,12 @@
 import KDBush from 'kdbush';
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 
-import type {SymbolInstance} from '../data/array_types.g';
-import {type SymbolInstanceArray} from '../data/array_types.g';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
-import type {StyleLayer} from '../style/style_layer';
-import type {Tile} from '../tile/tile';
+import type {SymbolInstance} from '../data/array_types.g.ts';
+import {type SymbolInstanceArray} from '../data/array_types.g.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {Tile} from '../tile/tile.ts';
 
 /*
     The CrossTileSymbolIndex generally works on the assumption that
@@ -27,11 +27,11 @@ const roundingFactor = 512 / EXTENT / 2;
 
 export const KDBUSH_THRESHHOLD = 128;
 
-interface SymbolsByKeyEntry {
+type SymbolsByKeyEntry = {
     index?: KDBush;
     positions?: Array<{x: number; y: number}>;
     crossTileIDs: number[];
-}
+};
 
 class TileLayerIndex {
     _symbolsByKey: Record<number, SymbolsByKeyEntry> = {};
@@ -98,7 +98,7 @@ class TileLayerIndex {
 
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
         [crossTileID: number]: boolean;
-    }) {
+    }): void {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
 
         for (let i = 0; i < symbolInstances.length; i++) {
@@ -117,49 +117,79 @@ class TileLayerIndex {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
 
             if (entry.index) {
-                // Return any symbol with the same keys whose coordinates are within 1
-                // grid unit. (with a 4px grid, this covers a 12px by 12px area)
-                const indexes = entry.index.range(
-                    scaledSymbolCoord.x - tolerance,
-                    scaledSymbolCoord.y - tolerance,
-                    scaledSymbolCoord.x + tolerance,
-                    scaledSymbolCoord.y + tolerance).sort();
-
-                for (const i of indexes) {
-                    const crossTileID = entry.crossTileIDs[i];
-
-                    if (!zoomCrossTileIDs[crossTileID]) {
-                        // Once we've marked ourselves duplicate against this parent symbol,
-                        // don't let any other symbols at the same zoom level duplicate against
-                        // the same parent (see issue #5993)
-                        zoomCrossTileIDs[crossTileID] = true;
-                        symbolInstance.crossTileID = crossTileID;
-                        break;
-                    }
-                }
+                this.findMatchesForIndexedEntry(entry, symbolInstance, scaledSymbolCoord, tolerance, zoomCrossTileIDs);
             } else if (entry.positions) {
-                for (let i = 0; i < entry.positions.length; i++) {
-                    const thisTileSymbol = entry.positions[i];
-                    const crossTileID = entry.crossTileIDs[i];
-
-                    // Return any symbol with the same keys whose coordinates are within 1
-                    // grid unit. (with a 4px grid, this covers a 12px by 12px area)
-                    if (Math.abs(thisTileSymbol.x - scaledSymbolCoord.x) <= tolerance &&
-                        Math.abs(thisTileSymbol.y - scaledSymbolCoord.y) <= tolerance &&
-                        !zoomCrossTileIDs[crossTileID]) {
-                        // Once we've marked ourselves duplicate against this parent symbol,
-                        // don't let any other symbols at the same zoom level duplicate against
-                        // the same parent (see issue #5993)
-                        zoomCrossTileIDs[crossTileID] = true;
-                        symbolInstance.crossTileID = crossTileID;
-                        break;
-                    }
-                }
+                this.findMatchesForNonIndexedEntry(entry, symbolInstance, scaledSymbolCoord, tolerance, zoomCrossTileIDs);
             }
         }
     }
 
-    getCrossTileIDsLists() {
+    /**
+     * Matches a symbol instance against an entry backed by a KDBush spatial index
+     * (used for keys with more than {@link KDBUSH_THRESHHOLD} symbols).
+     *
+     * Matches any symbol with the same key whose coordinates are within one grid
+     * unit (with a 4px grid, this covers a 12px by 12px area). The lowest-index
+     * unclaimed candidate is claimed in a single pass rather than sorting the
+     * whole result set on every query: `range()` can return many candidates where
+     * symbols are coincident (e.g. stacked point markers), so a per-query sort
+     * would dominate placement cost on dense layers.
+     *
+     * Once a symbol is marked duplicate against a parent symbol, no other symbol
+     * at the same zoom level may duplicate against the same parent (see issue #5993).
+     */
+    private findMatchesForIndexedEntry(entry: SymbolsByKeyEntry, symbolInstance: SymbolInstance, scaledSymbolCoord: {x: number; y: number}, tolerance: number, zoomCrossTileIDs: {
+        [crossTileID: number]: boolean;
+    }): void {
+        const indexes = entry.index.range(
+            scaledSymbolCoord.x - tolerance,
+            scaledSymbolCoord.y - tolerance,
+            scaledSymbolCoord.x + tolerance,
+            scaledSymbolCoord.y + tolerance);
+
+        let bestIndex = Infinity;
+        for (const candidate of indexes) {
+            if (candidate < bestIndex && !zoomCrossTileIDs[entry.crossTileIDs[candidate]]) {
+                bestIndex = candidate;
+            }
+        }
+        if (bestIndex !== Infinity) {
+            const crossTileID = entry.crossTileIDs[bestIndex];
+            zoomCrossTileIDs[crossTileID] = true;
+            symbolInstance.crossTileID = crossTileID;
+        }
+    }
+
+    /**
+     * Matches a symbol instance against an entry that stores its positions as a
+     * plain array (used for keys with at most {@link KDBUSH_THRESHHOLD} symbols).
+     *
+     * Matches any symbol with the same key whose coordinates are within one grid
+     * unit (with a 4px grid, this covers a 12px by 12px area). Positions are
+     * stored in symbol-instance order, so the first unclaimed match is also the
+     * lowest-index one.
+     *
+     * Once a symbol is marked duplicate against a parent symbol, no other symbol
+     * at the same zoom level may duplicate against the same parent (see issue #5993).
+     */
+    private findMatchesForNonIndexedEntry(entry: SymbolsByKeyEntry, symbolInstance: SymbolInstance, scaledSymbolCoord: {x: number; y: number}, tolerance: number, zoomCrossTileIDs: {
+        [crossTileID: number]: boolean;
+    }): void {
+        for (let i = 0; i < entry.positions.length; i++) {
+            const thisTileSymbol = entry.positions[i];
+            const crossTileID = entry.crossTileIDs[i];
+
+            if (Math.abs(thisTileSymbol.x - scaledSymbolCoord.x) <= tolerance &&
+                Math.abs(thisTileSymbol.y - scaledSymbolCoord.y) <= tolerance &&
+                !zoomCrossTileIDs[crossTileID]) {
+                zoomCrossTileIDs[crossTileID] = true;
+                symbolInstance.crossTileID = crossTileID;
+                break;
+            }
+        }
+    }
+
+    getCrossTileIDsLists(): number[][] {
         return Object.values(this._symbolsByKey).map(({crossTileIDs}) => crossTileIDs);
     }
 }
@@ -169,7 +199,7 @@ class CrossTileIDs {
     constructor() {
         this.maxCrossTileID = 0;
     }
-    generate() {
+    generate(): number {
         return ++this.maxCrossTileID;
     }
 }
@@ -198,7 +228,7 @@ class CrossTileSymbolLayerIndex {
      * To prevent labels from flashing out and in we adjust the tileID values in the indexes
      * so that they match the new wrapped version of the map.
      */
-    handleWrapJump(lng: number) {
+    handleWrapJump(lng: number): void {
         const wrapDelta = Math.round((lng - this.lng) / 360);
         if (wrapDelta !== 0) {
             for (const zoom in this.indexes) {
@@ -216,7 +246,7 @@ class CrossTileSymbolLayerIndex {
         this.lng = lng;
     }
 
-    addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs) {
+    addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs): boolean {
         if (this.indexes[tileID.overscaledZ]?.[tileID.key]) {
             if (this.indexes[tileID.overscaledZ][tileID.key].bucketInstanceId ===
                 bucket.bucketInstanceId) {
@@ -237,9 +267,7 @@ class CrossTileSymbolLayerIndex {
             symbolInstance.crossTileID = 0;
         }
 
-        if (!this.usedCrossTileIDs[tileID.overscaledZ]) {
-            this.usedCrossTileIDs[tileID.overscaledZ] = {};
-        }
+        this.usedCrossTileIDs[tileID.overscaledZ] ||= {};
         const zoomCrossTileIDs = this.usedCrossTileIDs[tileID.overscaledZ];
 
         for (const zoom in this.indexes) {
@@ -277,7 +305,7 @@ class CrossTileSymbolLayerIndex {
         return true;
     }
 
-    removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex) {
+    removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex): void {
         for (const crossTileIDs of removedBucket.getCrossTileIDsLists()) {
             for (const crossTileID of crossTileIDs) {
                 delete this.usedCrossTileIDs[zoom][crossTileID];
@@ -287,7 +315,7 @@ class CrossTileSymbolLayerIndex {
 
     removeStaleBuckets(currentIDs: {
         [k in string | number]: boolean;
-    }) {
+    }): boolean {
         let tilesChanged = false;
         for (const z in this.indexes) {
             const zoomIndexes = this.indexes[z];
@@ -316,7 +344,7 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number) {
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number): boolean {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
@@ -333,7 +361,8 @@ export class CrossTileSymbolIndex {
                 continue;
 
             if (!symbolBucket.bucketInstanceId) {
-                symbolBucket.bucketInstanceId = ++this.maxBucketInstanceId;
+                this.maxBucketInstanceId += 1;
+                symbolBucket.bucketInstanceId = this.maxBucketInstanceId;
             }
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
@@ -349,7 +378,7 @@ export class CrossTileSymbolIndex {
         return symbolBucketsChanged;
     }
 
-    pruneUnusedLayers(usedLayers: string[]) {
+    pruneUnusedLayers(usedLayers: string[]): void {
         const usedLayerMap = {};
         for (const usedLayer of usedLayers) {
             usedLayerMap[usedLayer] = true;

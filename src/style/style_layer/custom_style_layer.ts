@@ -1,8 +1,53 @@
-import {StyleLayer} from '../style_layer';
-import type {Map} from '../../ui/map';
-import {type mat4} from 'gl-matrix';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import {StyleLayer} from '../style_layer.ts';
+import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
+import type {Map} from '../../ui/map.ts';
+import type {mat4} from 'gl-matrix';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {CustomLayerProjectionData, RendererProjectionData} from '../../geo/projection/projection_data.ts';
+
+/**
+ * Type for an object literal that specifies a map tile.
+ */
+export type UnwrappedTileIDLiteral = {
+    /**
+     * An optional wrap values.
+     * Useful in scenarios when multiple world copies are visible, such as a zoomed out map or a map centered around the antimeridian.
+     * Tiles from each world copy should have different wrap values, with wrap increasing for each copy from west to east.
+     */
+    wrap?: number;
+    /**
+     * The tile's XY coordinates and zoom level.
+     */
+    canonical: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
+
+/**
+ * Parameters object for the {@link CustomRenderMethodInput.getProjectionData} function.
+ * Contains the requested tile ID and more.
+ */
+export type CustomLayerProjectionDataParams = {
+    /**
+     * The coordinates of the current tile.
+     */
+    tileID: UnwrappedTileIDLiteral | null;
+    /**
+     * Set to true if a pixel-aligned matrix should be used, if possible.
+     * This flag is mostly used for raster tiles under mercator projection.
+     */
+    aligned?: boolean;
+    /**
+     * Set to true if the terrain matrix should be applied when pre-rendering tiles into textures for 3D terrain.
+     */
+    applyTerrainMatrix?: boolean;
+    /**
+     * Set to true if the globe matrix should be applied when using globe projection.
+     */
+    applyGlobeMatrix?: boolean;
+};
 
 /**
 * Input arguments exposed by custom render function.
@@ -25,14 +70,14 @@ export type CustomRenderMethodInput = {
      */
     fov: number;
     /**
-    * model view projection matrix
-    * represents the matrix converting from world space to clip space
+    * Model view projection matrix.
+    * Represents the matrix converting from world space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     * **/
     modelViewProjectionMatrix: mat4;
     /**
-    * projection matrix
-    * represents the matrix converting from view space to clip space
+    * Projection matrix.
+    * Represents the matrix converting from view space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     */
     projectionMatrix: mat4;
@@ -86,12 +131,12 @@ export type CustomRenderMethodInput = {
      * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
      *
      * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
-     * Use `map.transform.getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+     * Use `getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
      *
      * For projection 3D features, use `projectTileFor3D` in the shader.
      *
-     * If you just need a projection matrix, use `defaultProjectionData.projectionMatrix`.
-     * A projection matrix is sufficient for simple custom layers that also only support mercator projection.
+     * If you just need a projection matrix, use `defaultProjectionData.mainMatrix`.
+     * A projection matrix is sufficient for simple custom layers that only support mercator projection.
      *
      * Under mercator projection, when these uniforms are used, the shader's `projectTile` function projects spherical mercator
      * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
@@ -104,14 +149,23 @@ export type CustomRenderMethodInput = {
      * passed to `projectTileFor3D` in the shader is elevation in meters above "sea level",
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
-    defaultProjectionData: ProjectionData;
+    defaultProjectionData: CustomLayerProjectionData;
+
+    /**
+     * Generates a {@link ProjectionData} instance to be used while rendering a given tile.
+     * In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.
+     *
+     * @see [Add a custom layer with tiles to a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-layer-with-tiles-to-a-globe)
+     * @param params - Parameters for the projection data generation.
+     */
+    getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
 };
 
 /**
  * @param gl - The map's gl context.
  * @param options - Argument object with render inputs like camera properties.
  */
-export type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
+export type CustomRenderMethod = (gl: WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
@@ -141,7 +195,7 @@ export type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingConte
  *         this.renderingMode = '2d';
  *     }
  *
- *      onAdd(map: maplibregl.Map, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+ *      onAdd(map: maplibregl.Map, gl: WebGL2RenderingContext) {
  *         const vertexSource = `
  *         uniform mat4 u_matrix;
  *         void main() {
@@ -171,7 +225,7 @@ export type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingConte
  *      gl,
  *      modelViewProjectionMatrix: matrix
  *      }: {
- *      gl: WebGLRenderingContext | WebGL2RenderingContext;
+ *      gl: WebGL2RenderingContext;
  *      modelViewProjectionMatrix: Float32Array;
  *      }) {
  *         gl.useProgram(this.program);
@@ -228,7 +282,7 @@ export interface CustomLayerInterface {
      * @param map - The Map this custom layer was just added to.
      * @param gl - The gl context for the map.
      */
-    onAdd?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
+    onAdd?(map: Map, gl: WebGL2RenderingContext): void;
     /**
      * Optional method called when the layer has been removed from the Map with {@link Map.removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
@@ -236,31 +290,25 @@ export interface CustomLayerInterface {
      * @param map - The Map this custom layer was just added to.
      * @param gl - The gl context for the map.
      */
-    onRemove?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
+    onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
-    const errors = [];
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): ValidationError[] {
+    const errors: ValidationError[] = [];
     const id = layerObject.id;
 
     if (id === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required property "id"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required property "id"'));
     }
 
     if (layerObject.render === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required method "render"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required method "render"'));
     }
 
     if (layerObject.renderingMode &&
         layerObject.renderingMode !== '2d' &&
         layerObject.renderingMode !== '3d') {
-        errors.push({
-            message: `layers.${id}: property "renderingMode" must be either "2d" or "3d"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'property "renderingMode" must be either "2d" or "3d"'));
     }
 
     return errors;
@@ -277,29 +325,29 @@ export class CustomStyleLayer extends StyleLayer {
         this.implementation = implementation;
     }
 
-    is3D() {
+    is3D(): boolean {
         return this.implementation.renderingMode === '3d';
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return this.implementation.prerender !== undefined;
     }
 
-    recalculate() {}
-    updateTransitions() {}
-    hasTransition() { return false; }
+    recalculate(): void {}
+    updateTransitions(): void {}
+    hasTransition(): boolean { return false; }
 
     serialize(): LayerSpecification {
         throw new Error('Custom layers cannot be serialized');
     }
 
-    onAdd = (map: Map) => {
+    onAdd: (map: Map) => void = (map: Map) => {
         if (this.implementation.onAdd) {
             this.implementation.onAdd(map, map.painter.context.gl);
         }
     };
 
-    onRemove = (map: Map) => {
+    onRemove: (map: Map) => void = (map: Map) => {
         if (this.implementation.onRemove) {
             this.implementation.onRemove(map, map.painter.context.gl);
         }

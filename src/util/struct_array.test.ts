@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types.g';
+import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types.g.ts';
 
 describe('StructArray', () => {
     class TestArray extends StructArrayLayout3i6 {}
@@ -87,8 +87,8 @@ describe('StructArray', () => {
         // Typed views should no longer reference the original buffer
         expect(array.uint8.buffer).not.toBe(originalBuffer);
         expect(array.int16.buffer).not.toBe(originalBuffer);
-        expect(array.uint8.length).toBe(0);
-        expect(array.int16.length).toBe(0);
+        expect(array.uint8).toHaveLength(0);
+        expect(array.int16).toHaveLength(0);
     });
 });
 

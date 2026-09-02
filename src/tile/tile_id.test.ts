@@ -1,22 +1,22 @@
 import {describe, test, expect} from 'vitest';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {EXTENT} from '../data/extent';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
+import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
+import {EXTENT} from '../data/extent.ts';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 
 describe('CanonicalTileID', () => {
     test('constructor', () => {
         expect(() => {
             new CanonicalTileID(MIN_TILE_ZOOM - 1, 0, 0);
-        }).toThrow();
+        }).toThrow(`x=0, y=0, z=${MIN_TILE_ZOOM - 1} outside of bounds`);
         expect(() => {
             new CanonicalTileID(MAX_TILE_ZOOM + 1, 0, 0);
-        }).toThrow();
+        }).toThrow(`x=0, y=0, z=${MAX_TILE_ZOOM + 1} outside of bounds`);
         expect(() => {
             new CanonicalTileID(2, 4, 0);
-        }).toThrow();
+        }).toThrow('x=4, y=0, z=2 outside of bounds');
         expect(() => {
             new CanonicalTileID(2, 0, 4);
-        }).toThrow();
+        }).toThrow('x=0, y=4, z=2 outside of bounds');
     });
 
     test('.key', () => {
@@ -63,11 +63,11 @@ describe('CanonicalTileID', () => {
 
 describe('OverscaledTileID', () => {
     test('constructor', () => {
-        expect(new OverscaledTileID(0, 0, 0, 0, 0) instanceof OverscaledTileID).toBeTruthy();
+        expect(new OverscaledTileID(0, 0, 0, 0, 0)).toBeInstanceOf(OverscaledTileID);
     });
 
     test('constructor - deeper canonicalZ than overscaledZ disallowed', () => {
-        expect(() => new OverscaledTileID(7, 0, 8, 0, 0)).toThrow();
+        expect(() => new OverscaledTileID(7, 0, 8, 0, 0)).toThrow('overscaledZ should be >= z; overscaledZ = 7; z = 8');
     });
 
     test('.key', () => {

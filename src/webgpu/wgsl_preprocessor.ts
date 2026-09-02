@@ -2,11 +2,11 @@ export function preprocessWGSL(source: string, defines: Record<string, boolean>)
     const lines = source.split('\n');
     const output: string[] = [];
 
-    interface ConditionalFrame {
+    type ConditionalFrame = {
         parentActive: boolean;
         condition: boolean;
         elseSeen: boolean;
-    }
+    };
 
     const stack: ConditionalFrame[] = [];
     let currentActive = true;
@@ -19,8 +19,8 @@ export function preprocessWGSL(source: string, defines: Record<string, boolean>)
             if (match) {
                 const symbol = match[1];
                 const condition = !!defines[symbol];
-                stack.push({ parentActive: currentActive, condition, elseSeen: false });
-                currentActive = currentActive && condition;
+                stack.push({parentActive: currentActive, condition, elseSeen: false});
+                currentActive &&= condition;
             }
             continue;
         }
@@ -30,8 +30,8 @@ export function preprocessWGSL(source: string, defines: Record<string, boolean>)
             if (match) {
                 const symbol = match[1];
                 const condition = !defines[symbol];
-                stack.push({ parentActive: currentActive, condition, elseSeen: false });
-                currentActive = currentActive && condition;
+                stack.push({parentActive: currentActive, condition, elseSeen: false});
+                currentActive &&= condition;
             }
             continue;
         }

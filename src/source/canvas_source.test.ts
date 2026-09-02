@@ -1,14 +1,16 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
-import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source';
-import {Event, Evented} from '../util/evented';
-import {extend} from '../util/util';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {waitForEvent} from '../util/test/util';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {Dispatcher} from '../util/dispatcher';
-import type {MapSourceDataEvent} from '../ui/events';
+import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {extend} from '../util/util.ts';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {waitForEvent} from '../util/test/util.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+
+class StubbedEvented extends Evented {}
 
 function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<CanvasSourceSpecification>) {
     const c = options?.canvas || window.document.createElement('canvas');
@@ -67,14 +69,14 @@ describe('CanvasSource', () => {
         source.onAdd(map);
         await promise;
 
-        expect(typeof source.play).toBe('function');
+        expect(source.play).toBeTypeOf('function');
     });
 
     describe('Validations', () => {
         const errorSpy = vi.fn();
         let eventedParent: Evented;
         beforeEach(() => {
-            eventedParent = new Evented();
+            eventedParent = new StubbedEvented();
             eventedParent.on('error', errorSpy);
         });
         afterEach(() => {
@@ -199,6 +201,37 @@ describe('CanvasSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
+    test('deletes its texture when a static source is removed', () => {
+        const source = createSource({animate: false});
+        source.onAdd(map);
+
+        const texture = {update: vi.fn(), destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        source.onRemove();
+
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+    });
+
+    test('deletes its texture when an animating source is removed, without uploading the canvas into it first', () => {
+        const source = createSource({animate: true});
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        source.onAdd(map);
+        source.tiles[String(tile.tileID.wrap)] = tile;
+
+        const texture = {update: vi.fn(), destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        expect(source.hasTransition()).toBe(true);
+
+        source.onRemove();
+
+        expect(texture.update).not.toHaveBeenCalled();
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+        expect(source.hasTransition()).toBe(false);
+    });
 });
 
 test('CanvasSource.serialize', () => {

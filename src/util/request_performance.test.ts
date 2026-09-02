@@ -1,5 +1,5 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
-import {RequestPerformance} from './request_performance';
+import {RequestPerformance} from './request_performance.ts';
 
 describe('RequestPerformance', () => {
     const url = 'http://example.com/test.json';

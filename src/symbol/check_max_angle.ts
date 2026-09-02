@@ -1,5 +1,5 @@
 import type Point from '@mapbox/point-geometry';
-import type {Anchor} from './anchor';
+import type {Anchor} from './anchor.ts';
 
 /**
  * Labels placed around really sharp angles aren't readable. Check if any
@@ -13,7 +13,7 @@ import type {Anchor} from './anchor';
  *
  * @returns whether the label should be placed
  */
-export function checkMaxAngle(line: Point[], anchor: Anchor, labelLength: number, windowSize: number, maxAngle: number) {
+export function checkMaxAngle(line: Point[], anchor: Anchor, labelLength: number, windowSize: number, maxAngle: number): boolean {
 
     // horizontal labels and labels with length 0 always pass
     if (anchor.segment === undefined || labelLength === 0) return true;

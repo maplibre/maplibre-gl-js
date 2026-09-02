@@ -1,5 +1,5 @@
 import {beforeEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -42,7 +42,7 @@ test('set tile LOD params for a non-existent source', async () => {
 
     expect(map.getSource('source-id1').calculateTileZoom).toBeUndefined();
     expect(map.getSource('source-id2').calculateTileZoom).toBeUndefined();
-    expect(() => {map.setSourceTileLodParams(1, 1, 'non-existent-source-id');}).toThrowError();
+    expect(() => {map.setSourceTileLodParams(1, 1, 'non-existent-source-id');}).toThrow('There is no source with ID "non-existent-source-id", cannot set LOD parameters');
     expect(map.getSource('source-id1').calculateTileZoom).toBeUndefined();
     expect(map.getSource('source-id2').calculateTileZoom).toBeUndefined();
 });

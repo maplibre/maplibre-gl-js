@@ -1,9 +1,10 @@
 import {describe, beforeEach, test, expect, vi, type MockInstance} from 'vitest';
-import * as timeControl from '../../util/time_control';
-import {Map, type MapOptions} from '../../ui/map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util';
+import Point from '@mapbox/point-geometry';
+import * as timeControl from '../../util/time_control.ts';
+import {Map, type MapOptions} from '../../ui/map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util.ts';
 
 function createMap(options: Partial<MapOptions> = {}) {
     return new Map({
@@ -23,8 +24,8 @@ function scrollOutAtLat(map: Map, lat: number, timeControlNow: MockInstance<() =
     for (let i = 0; i < 200; i++) {
         simulate.wheel(map.getCanvas(), {
             deltaY,
-            clientX: map.transform.width / 2,
-            clientY: map.transform.height / 2});
+            clientX: map._camera.transform.width / 2,
+            clientY: map._camera.transform.height / 2});
         timeControlNow.mockReturnValue(timeControl.now() + 10);
         map._renderTaskQueue.run();
     }
@@ -359,6 +360,7 @@ describe('ScrollZoomHandler', () => {
 
         const map = createMap();
         map._renderTaskQueue.run();
+        const startZoom = map.getZoom();
 
         simulate.wheel(map.getCanvas(), {deltaY: -1});
         simulate.wheel(map.getCanvas(), {deltaY: -1});
@@ -372,6 +374,7 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
         map._renderTaskQueue.run();
 
+        expect(map.getZoom()).toBeCloseTo(startZoom);
         map.remove();
     });
 
@@ -525,7 +528,6 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
 
         const map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
 
@@ -550,7 +552,6 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
 
         const map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
 
@@ -575,7 +576,6 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
 
         let map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
         map.setZoom(5);
@@ -599,7 +599,6 @@ describe('ScrollZoomHandler', () => {
 
         // do the same test on the bottom
         map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
         map.setZoom(5);
@@ -656,6 +655,55 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(0, 2);
 
         map.remove();
+    });
+
+    describe('globe zooms around the pointer', () => {
+        async function zoomInAtOffset(offset: Point) {
+            const timeControlNow = vi.spyOn(timeControl, 'now');
+            timeControlNow.mockReturnValue(1555555555555);
+            const map = createMap();
+            await map.once('load');
+            map.setProjection({type: 'globe'});
+            map.setCenter([0, 0]);
+            map.setZoom(0);
+            map._renderTaskQueue.run();
+
+            const pointer = map._camera.transform.centerPoint.add(offset);
+            const locationBefore = map.unproject(pointer);
+
+            simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta * 4, clientX: pointer.x, clientY: pointer.y});
+            map._renderTaskQueue.run();
+
+            const locationAfter = map.unproject(pointer);
+            const result = {
+                driftLng: locationAfter.lng - locationBefore.lng,
+                driftLat: locationAfter.lat - locationBefore.lat,
+                center: map.getCenter()
+            };
+            map.remove();
+            return result;
+        }
+
+        test('keeps the location under the pointer while the globe is small on screen, and still zooms towards it', async () => {
+            const wellInsideTheGlobe = new Point(0, -40);
+            const {driftLng, driftLat, center} = await zoomInAtOffset(wellInsideTheGlobe);
+            expect(driftLng).toBeCloseTo(0, 6);
+            expect(driftLat).toBeCloseTo(0, 6);
+            expect(center.lat).toBeCloseTo(0.5972, 3);
+        });
+
+        test('eases the anchoring off near the horizon instead of dropping it', async () => {
+            const nearTheHorizon = new Point(0, -67.5);
+            const {driftLat} = await zoomInAtOffset(nearTheHorizon);
+            expect(Math.abs(driftLat)).toBeGreaterThan(0.5);
+            expect(Math.abs(driftLat)).toBeLessThan(1.5);
+        });
+
+        test('leaves zooming with the pointer off the planet unchanged', async () => {
+            const offThePlanet = new Point(0, -85);
+            const {center} = await zoomInAtOffset(offThePlanet);
+            expect(center.lat).toBeCloseTo(0.3545, 3);
+        });
     });
 
     test('Clamps to min/max zoom when using mercator projection', async () => {

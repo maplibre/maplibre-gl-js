@@ -1,14 +1,14 @@
 import {beforeAll, describe, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {SegmentVector} from '../segment';
-import {LineBucket} from './line_bucket';
-import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../../style/evaluation_parameters';
-import {type ZoomHistory} from '../../../src/style/zoom_history';
-import {type BucketFeature, type BucketParameters} from '../bucket';
-import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
+import {SegmentVector} from '../segment.ts';
+import {LineBucket} from './line_bucket.ts';
+import {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {ZoomHistory} from '../../../src/style/zoom_history.ts';
+import type {BucketFeature, BucketParameters} from '../bucket.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
@@ -118,7 +118,7 @@ describe('LineBucket', () => {
     });
 
     test('LineBucket segmentation', () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
         // breaking across array groups without tests taking a _long_ time.
@@ -187,5 +187,41 @@ describe('LineBucket', () => {
         expect(bucket.patternFeatures[0].dashes).toEqual({
             test: {min: '3,3,false', mid: '3,3,false', max: '3,3,false'}
         });
+    });
+
+    test('LineBucket ignores geometry with insufficient unique vertices after trimming duplicates', () => {
+        const bucket = createLineBucket({id: 'test'});
+
+        const line = {
+            type: 2,
+            properties: {}
+        } as BucketFeature;
+
+        const polygon = {
+            type: 3,
+            properties: {}
+        } as BucketFeature;
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, 0)
+        ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(10, 10),
+            new Point(10, 10)
+        ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(10, 10)
+        ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+        expect(bucket.isEmpty()).toBe(true);
     });
 });

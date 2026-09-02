@@ -1,22 +1,22 @@
-import {ImageRequest} from '../util/image_request';
-import {ResourceType} from '../util/request_manager';
-import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util';
-import {type Evented} from '../util/evented';
-import {browser} from '../util/browser';
-import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
-import {OverscaledTileID} from '../tile/tile_id';
-import {RasterTileSource} from './raster_tile_source';
+import {ImageRequest} from '../util/image_request.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util.ts';
+import {type Evented} from '../util/evented.ts';
+import {browser} from '../util/browser.ts';
+import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {RasterTileSource} from './raster_tile_source.ts';
 // ensure DEMData is registered for worker transfer on main thread:
-import '../data/dem_data';
-import type {DEMEncoding} from '../data/dem_data';
+import '../data/dem_data.ts';
+import type {DEMEncoding} from '../data/dem_data.ts';
 
-import type {Source} from './source';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
+import type {Source} from './source.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
-import {RGBAImage} from '../util/image';
-import {MessageType} from '../util/actor_messages';
+import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted.ts';
+import {RGBAImage} from '../util/image.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -55,11 +55,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.transformAndGetImage(this.map._requestManager, url, ResourceType.Tile, tile.abortController, this.map._refreshExpiredTiles, {colorSpaceConversion: 'none'});
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -87,12 +86,14 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (tile.actor && tile.state !== 'expired' && tile.state !== 'reloading') {
                     return;
                 }
+                await this.dispatcher.waitForInitComplete();
                 if (!tile.actor || tile.state === 'expired') {
-                    tile.actor = this.dispatcher.getActor();
+                    tile.actor = this.dispatcher.getReadyActor();
                 }
                 tile.dem = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                 tile.needsHillshadePrepare = true;
                 tile.needsTerrainPrepare = true;
+                tile.needsColorReliefPrepare = true;
                 tile.state = 'loaded';
             }
         } catch (err) {
@@ -149,7 +150,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         return neighboringTiles;
     }
 
-    async unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         if (tile.demTexture) this.map.painter.saveTileTexture(tile.demTexture);
         if (tile.fbo) {
             tile.fbo.destroy();

@@ -26,7 +26,7 @@ export class TaskQueue {
         return id;
     }
 
-    remove(id: TaskID) {
+    remove(id: TaskID): void {
         const running = this._currentlyRunning;
         const queue = running ? this._queue.concat(running) : this._queue;
         for (const task of queue) {
@@ -37,7 +37,7 @@ export class TaskQueue {
         }
     }
 
-    run(timeStamp: number = 0) {
+    run(timeStamp: number = 0): void {
         if (this._currentlyRunning) throw new Error('Attempting to run(), but is already running.');
         const queue = this._currentlyRunning = this._queue;
 
@@ -55,7 +55,7 @@ export class TaskQueue {
         this._currentlyRunning = false;
     }
 
-    clear() {
+    clear(): void {
         if (this._currentlyRunning) {
             this._cleared = true;
         }

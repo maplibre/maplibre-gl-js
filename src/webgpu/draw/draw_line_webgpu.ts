@@ -1,29 +1,29 @@
 // WebGPU drawable path for line layers.
 // Extracted from src/render/draw_line.ts
 
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
 import {
     lineUniformValues,
     linePatternUniformValues,
     lineSDFUniformValues,
     lineGradientUniformValues,
     lineGradientSDFUniformValues
-} from '../../render/program/line_program';
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {LineLayerTweaker} from '../../gfx/tweakers/line_layer_tweaker';
+} from '../../webgl/program/line_program.ts';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {LineLayerTweaker} from '../../gfx/tweakers/line_layer_tweaker.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {LineBucket} from '../../data/bucket/line_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import type {LineBucket} from '../../data/bucket/line_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /**
  * Drawable-based rendering path for lines.
  */
-export function drawLineWebGPU(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawLineWebGPU(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
@@ -81,10 +81,10 @@ export function drawLineWebGPU(painter: Painter, tileManager: TileManager, layer
         const prevProgram = context.program.get();
         const program = isWebGPU ? null : painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || (program && program.program !== prevProgram);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
-        const constantDasharray = dasharrayProperty && dasharrayProperty.constantOr(null);
+        const constantDasharray = dasharrayProperty?.constantOr(null);
 
         if (constantPattern && tile.imageAtlas) {
             const atlas = tile.imageAtlas;
@@ -216,7 +216,7 @@ export function drawLineWebGPU(painter: Painter, tileManager: TileManager, layer
             paintProperties: layer.paint,
             zoom: painter.transform.zoom,
         });
-        drawable.uniformValues = uniformValues as any;
+        drawable.uniformValues = uniformValues;
 
         // Store per-tile pattern data for WebGPU linePattern tweaker
         if (image && isWebGPU && tile.imageAtlas) {
@@ -256,14 +256,14 @@ export function drawLineWebGPU(painter: Painter, tileManager: TileManager, layer
 
 // Helper functions copied from draw_line.ts (used only by the drawable path's texture binding)
 
-import type {Context} from '../../gl/context';
-import type {Tile} from '../../tile/tile';
-import type {ProgramConfiguration} from '../../data/program_configuration';
-import {Texture} from '../../render/texture';
-import {clamp, nextPowerOfTwo} from '../../util/util';
-import {renderColorRamp} from '../../util/color_ramp';
-import {EXTENT} from '../../data/extent';
-import type {RGBAImage} from '../../util/image';
+import type {Context} from '../../webgl/context.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {ProgramConfiguration} from '../../data/program_configuration.ts';
+import {Texture} from '../../webgl/texture.ts';
+import {clamp, nextPowerOfTwo} from '../../util/util.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {EXTENT} from '../../data/extent.ts';
+import type {RGBAImage} from '../../util/image.ts';
 
 type GradientTexture = {
     texture?: Texture;

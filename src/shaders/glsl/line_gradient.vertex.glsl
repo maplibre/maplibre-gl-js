@@ -6,10 +6,10 @@
 // #define scale 63.0
 #define scale 0.015873016
 
-in vec2 a_pos_normal;
-in vec4 a_data;
-in float a_uv_x;
-in float a_split_index;
+layout(location = 0) in ivec2 a_pos_normal;
+layout(location = 1) in uvec4 a_data;
+layout(location = 2) in float a_uv_x;
+layout(location = 3) in float a_split_index;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
@@ -18,43 +18,49 @@ uniform vec2 u_units_to_pixels;
 uniform float u_image_height;
 
 out vec2 v_normal;
-out vec2 v_width2;
+flat out vec2 v_width2;
 out float v_gamma_scale;
 out highp vec2 v_uv;
 #ifdef GLOBE
 out float v_depth;
 #endif
 
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define mediump float gapwidth
-#pragma mapbox: define lowp float offset
-#pragma mapbox: define mediump float width
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define mediump float gapwidth
+#pragma maplibre: define lowp float offset
+#pragma maplibre: define mediump float width
 
 void main() {
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump float gapwidth
-    #pragma mapbox: initialize lowp float offset
-    #pragma mapbox: initialize mediump float width
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump float gapwidth
+    #pragma maplibre: initialize lowp float offset
+    #pragma maplibre: initialize mediump float width
+
+    // Move vertex outside clip space to discard triangle when opacity is negligible
+    if (opacity < 0.01) {
+        gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
+        return;
+    }
 
     // the distance over which the line edge fades out.
     // Retina devices need a smaller distance to avoid aliasing.
     float ANTIALIASING = 1.0 / u_device_pixel_ratio / 2.0;
 
-    vec2 a_extrude = a_data.xy - 128.0;
-    float a_direction = mod(a_data.z, 4.0) - 1.0;
+    vec2 a_extrude = vec2(ivec2(a_data.xy) - 128);
+    float a_direction = float(int(a_data.z & 3u) - 1);
 
     highp float texel_height = 1.0 / u_image_height;
     highp float half_texel_height = 0.5 * texel_height;
     v_uv = vec2(a_uv_x, a_split_index * texel_height - half_texel_height);
 
-    vec2 pos = floor(a_pos_normal * 0.5);
+    vec2 pos = vec2(a_pos_normal >> 1);
 
     // x is 1 if it's a round cap, 0 otherwise
     // y is 1 if the normal points up, and -1 if it points down
     // We store these in the least significant bit of a_pos_normal
-    mediump vec2 normal = a_pos_normal - 2.0 * pos;
+    mediump vec2 normal = vec2(a_pos_normal & 1);
     normal.y = normal.y * 2.0 - 1.0;
     v_normal = normal;
 

@@ -1,9 +1,9 @@
 import {describe, test, expect} from 'vitest';
 import {mat4, vec3} from 'gl-matrix';
-import {Frustum} from './frustum';
-import {IntersectionResult} from './bounding_volume';
-import {createTestCameraFrustum, expectToBeCloseToArray} from '../test/util';
-import {ConvexVolume} from './convex_volume';
+import {Frustum} from './frustum.ts';
+import {IntersectionResult} from './bounding_volume.ts';
+import {createTestCameraFrustum, expectToBeCloseToArray} from '../test/util.ts';
+import {ConvexVolume} from './convex_volume.ts';
 
 describe('convex bounding volume', () => {
     describe('fromCenterSizeAngles', () => {

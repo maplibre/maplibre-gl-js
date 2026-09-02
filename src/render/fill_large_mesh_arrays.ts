@@ -1,6 +1,6 @@
-import {type LineIndexArray, type TriangleIndexArray} from '../data/array_types.g';
-import {type Segment, SegmentVector} from '../data/segment';
-import {type StructArray} from '../util/struct_array';
+import {type LineIndexArray, type TriangleIndexArray} from '../data/array_types.g.ts';
+import {type Segment, SegmentVector} from '../data/segment.ts';
+import {type StructArray} from '../util/struct_array.ts';
 
 /**
  * This function will take any "mesh" and fill in into vertex buffers, breaking it up into multiple drawcalls as needed
@@ -32,7 +32,7 @@ export function fillLargeMeshArrays(
     triangleIndices: number[],
     segmentsLines?: SegmentVector,
     lineIndexArray?: LineIndexArray,
-    lineList?: number[][]) {
+    lineList?: number[][]): void {
 
     const numVertices = flattened.length / 2;
     const hasLines = segmentsLines && lineIndexArray && lineList;

@@ -1,72 +1,62 @@
-import {now} from '../util/time_control';
+import {now} from '../util/time_control.ts';
 import {mat4} from 'gl-matrix';
-import {TileManager} from '../tile/tile_manager';
-import {EXTENT} from '../data/extent';
-import {SegmentVector} from '../data/segment';
-import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import posAttributes from '../data/pos_attributes';
-import {type ProgramConfiguration} from '../data/program_configuration';
-import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
-import {shaders} from '../shaders/shaders';
-import {Program} from './program';
-import {programUniforms} from './program/program_uniforms';
-import {Context} from '../gl/context';
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {ColorMode} from '../gl/color_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {Texture} from './texture';
+import {TileManager} from '../tile/tile_manager.ts';
+import {EXTENT} from '../data/extent.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g.ts';
+import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
+import posAttributes from '../data/pos_attributes.ts';
+import {type ProgramConfiguration} from '../data/program_configuration.ts';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
+import {shaders} from '../shaders/shaders.ts';
+import {Program} from '../webgl/program.ts';
+import {programUniforms} from '../webgl/program/program_uniforms.ts';
+import {Context} from '../webgl/context.ts';
+import {DepthMode} from '../webgl/depth_mode.ts';
+import {StencilMode} from '../webgl/stencil_mode.ts';
+import {ColorMode} from '../webgl/color_mode.ts';
+import {CullFaceMode} from '../webgl/cull_face_mode.ts';
+import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {drawSymbols} from './draw_symbol';
-import {drawCircles} from './draw_circle';
-import {drawHeatmap} from './draw_heatmap';
-import {drawLine} from './draw_line';
-import {drawFill} from './draw_fill';
-import {drawFillExtrusion} from './draw_fill_extrusion';
-import {drawHillshade} from './draw_hillshade';
-import {drawColorRelief} from './draw_color_relief';
-import {drawRaster} from './draw_raster';
-import {drawBackground} from './draw_background';
-import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
-import {drawCustom} from './draw_custom';
-import {drawDepth, drawCoords} from './draw_terrain';
-import {type OverscaledTileID} from '../tile/tile_id';
-import {drawSky, drawAtmosphere} from './draw_sky';
-import {Mesh} from './mesh';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
+import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
+import {type OverscaledTileID} from '../tile/tile_id.ts';
+import {Mesh} from './mesh.ts';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 
 // Drawable architecture imports
-import {TileLayerGroup} from '../gfx/tile_layer_group';
-import {PipelineCache} from '../gfx/pipeline_cache';
-import {UniformBlock} from '../gfx/uniform_block';
-import type {LayerTweaker} from '../gfx/layer_tweaker';
+import {type TileLayerGroup} from '../gfx/tile_layer_group.ts';
+import {PipelineCache} from '../gfx/pipeline_cache.ts';
+import {UniformBlock} from '../gfx/uniform_block.ts';
+import type {LayerTweaker} from '../gfx/layer_tweaker.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {Style} from '../style/style';
-import type {StyleLayer} from '../style/style_layer';
-import type {CrossFaded} from '../style/properties';
-import type {LineAtlas} from './line_atlas';
-import type {ImageManager} from './image_manager';
-import type {GlyphManager} from './glyph_manager';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Style} from '../style/style.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CrossFaded} from '../style/properties.ts';
+import type {LineAtlas} from './line_atlas.ts';
+import type {ImageManager} from './image_manager.ts';
+import type {PatternAtlas} from './pattern_atlas.ts';
+import type {GlyphManager} from './glyph_manager.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {IndexBuffer} from '../webgl/index_buffer.ts';
+import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {RenderToTexture} from './render_to_texture';
-import type {ProjectionData} from '../geo/projection/projection_data';
-import {coveringTiles} from '../geo/projection/covering_tiles';
-import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer';
-import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
-import {isLineStyleLayer} from '../style/style_layer/line_style_layer';
-import {isFillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
-import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
-import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer';
+import type {IRenderToTexture} from './render_to_texture_interface.ts';
+import type {TerrainData} from './terrain.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
+import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -88,17 +78,51 @@ export type RenderOptions = {
 };
 
 /**
+ * Holds the texture used to render a 2D tile so it can be draped over 3D
+ * terrain. All RTTObjects share a single FBO owned by the Painter; the
+ * texture is swapped in via `Painter.bindRTT` before each render pass.
+ * Owned by a `Tile` while in use, recycled via `Painter.releaseRTT` when
+ * the tile no longer needs it.
+ */
+export type RTTObject = {
+    texture: Texture;
+    size: number;
+};
+
+/**
  * @internal
  * Initialize a new painter object.
  */
 export class Painter {
+    drawFunctions: DrawFunctions;
     context: Context;
     device: any;
     transform: IReadonlyTransform;
-    renderToTexture: RenderToTexture;
+    renderToTexture: IRenderToTexture;
     _tileTextures: {
         [_: number]: Texture[];
     };
+    /**
+     * A pool of recyclable {@link RTTObject}s (textures only; the FBO is shared).
+     */
+    _rttObjectRecyclePool: RTTObject[];
+    /**
+     * Shared FBO used by all RTT render passes. The color attachment is
+     * swapped to the target RTTObject's texture via {@link bindRTT}.
+     * Created lazily on first use.
+     */
+    _rttSharedFbo: {
+        fbo: Framebuffer;
+        depthRenderbuffer: WebGLRenderbuffer;
+        size: number;
+    } | null;
+    /**
+     * Shared scratch FBO (color + depth-stencil) used by `{line,fill}-layer-opacity`.
+     * The layer is rendered into this FBO, then composited into whatever framebuffer was previously bound
+     * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
+     * Resized in place to match the target dimensions.
+     */
+    layerOpacityFbo: Framebuffer | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -125,6 +149,7 @@ export class Painter {
     options: PainterOptions;
     lineAtlas: LineAtlas;
     imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
     depthRangeFor3D: DepthRangeType;
     opaquePassCutoff: number;
@@ -146,9 +171,9 @@ export class Painter {
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
-    // of the terrain-facilitators. e.g. depth & coords framebuffers
-    // every time the camera-matrix changes the terrain-facilitators will be redrawn.
-    terrainFacilitator: { dirty: boolean; matrix: mat4; renderTime: number };
+    // of the terrain depth framebuffer.
+    // every time the camera-matrix changes the depth framebuffer will be redrawn.
+    terrainFacilitator: {depthDirty: boolean; matrix: mat4; renderTime: number};
 
     // Drawable architecture fields
     layerGroups: Map<string, TileLayerGroup>;
@@ -163,12 +188,16 @@ export class Painter {
     _webgpuNextStencilID: number;
     _webgpuCurrentStencilSource: string;
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: any, transform: IReadonlyTransform) {
+    constructor(gl: WebGL2RenderingContext | null, transform: IReadonlyTransform, device?: any) {
+        this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl, device);
         this.device = device;
         this.transform = transform;
+        this.layerOpacityFbo = null;
         this._tileTextures = {};
-        this.terrainFacilitator = {dirty: true, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
+        this._rttObjectRecyclePool = [];
+        this._rttSharedFbo = null;
+        this.terrainFacilitator = {depthDirty: true, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         // Initialize drawable architecture
         this.layerGroups = new Map();
@@ -179,7 +208,7 @@ export class Painter {
 
         // Drawables are ONLY used for WebGPU.
         // WebGL1/2 uses the original program.draw() path from main branch — unchanged.
-        if (this.device && this.device.type === 'webgpu') {
+        if (this.device?.type === 'webgpu') {
             this.useDrawables.add('background');
             this.useDrawables.add('circle');
             this.useDrawables.add('fill');
@@ -203,7 +232,7 @@ export class Painter {
      * Update the GL viewport, projection matrix, and transforms to compensate
      * for a new width and height value.
      */
-    resize(width: number, height: number, pixelRatio: number) {
+    resize(width: number, height: number, pixelRatio: number): void {
         this.width = Math.floor(width * pixelRatio);
         this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
@@ -216,7 +245,7 @@ export class Painter {
         }
     }
 
-    setup() {
+    setup(): void {
         const context = this.context;
 
         const tileExtentArray = new PosArray();
@@ -282,7 +311,7 @@ export class Painter {
      * Reset the drawing canvas by clearing the stencil buffer so that we can draw
      * new tiles at the same location, while retaining previously drawn pixels.
      */
-    clearStencil() {
+    clearStencil(): void {
         const context = this.context;
         const gl = context.gl;
 
@@ -304,6 +333,7 @@ export class Painter {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0,
             fallbackMatrix: matrix,
+            clipAntimeridian: false,
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
@@ -315,7 +345,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean) {
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -338,18 +368,20 @@ export class Painter {
             stencilRefs[tileID.key] = this.nextStencilID++;
         }
 
-        // A two-pass approach is needed. See comment in draw_raster.ts for more details.
-        // However, we use a simpler approach because we don't care about overdraw here.
+        // A two-pass approach is needed for subdivided projections. See comment in draw_raster.ts
+        // for more details. In non-subdivided projections the border flag does not change the mesh,
+        // so one pass produces the same stencil mask.
+        if (this.style.projection.useSubdivision) {
+            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+        }
 
-        // First pass - draw tiles with borders and with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
-        // Second pass - draw borderless tiles with GL_ALWAYS
+        // Final pass - draw borderless tiles with GL_ALWAYS
         this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
 
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -360,7 +392,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
+            const terrainData = this.getTerrainDataForTile(tileID, renderToTexture);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -369,17 +401,22 @@ export class Painter {
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
-                terrainData as any, projectionData as any, '$clipping', mesh.vertexBuffer,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
+    }
+
+    getTerrainDataForTile(tileID: OverscaledTileID, isRenderingToTexture: boolean): TerrainData | null {
+        if (isRenderingToTexture && this.style.projection?.name === 'mercator') return null;
+        return this.style.map.terrain?.getTerrainData(tileID) || null;
     }
 
     /**
      * WebGPU stencil clipping: writes unique stencil IDs per tile.
      * Called before rendering layers that need tile clipping (fill, line, etc).
      */
-    _renderTileClippingMasksWebGPU(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
-        if (!this.renderPassWGSL || !tileIDs || !tileIDs.length) return;
+    _renderTileClippingMasksWebGPU(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+        if (!this.renderPassWGSL || !tileIDs?.length) return;
         if (!layer.isTileClipped()) return;
 
         // Skip if we already rendered stencil masks for this source (same tiles)
@@ -390,7 +427,7 @@ export class Painter {
             this._webgpuNextStencilID = 1;
         }
 
-        const gpuDevice = (this.device as any).handle;
+        const gpuDevice = (this.device).handle;
         const rpEncoder = this.renderPassWGSL.handle;
         const projection = this.style.projection;
         const transform = this.transform;
@@ -452,12 +489,10 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const pipeline = this._webgpuStencilClipPipeline;
         rpEncoder.setPipeline(pipeline);
 
-
         // Draw each tile's stencil mask with a unique ref.
         // Create a fresh UBO buffer per tile (matching native's approach) to avoid
         // writeBuffer race conditions with reused buffers.
-        for (let i = 0; i < tileIDs.length; i++) {
-            const tileID = tileIDs[i];
+        for (const tileID of tileIDs) {
             const stencilRef = this._webgpuNextStencilID++;
             this._webgpuTileStencilRefs[tileID.key] = stencilRef;
 
@@ -502,8 +537,8 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * Call endWebGPURttPass() when done.
      */
     beginWebGPURttPass(key: string, size: number): any | null {
-        if (!this.device || this.device.type !== 'webgpu') return null;
-        const gpuDevice = (this.device as any).handle;
+        if (this.device?.type !== 'webgpu') return null;
+        const gpuDevice = (this.device).handle;
         if (!gpuDevice) return null;
 
         // Save current (main) render pass. Always overwrite since it changes each frame.
@@ -512,11 +547,11 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             this._webgpuMainRenderPass = this.renderPassWGSL;
         }
 
-        if (!this._webgpuRttTextures) this._webgpuRttTextures = new Map();
+        this._webgpuRttTextures ||= new Map();
 
         // Get or create RTT color texture for this key
         let colorTex = this._webgpuRttTextures.get(key);
-        if (!colorTex || colorTex._size !== size) {
+        if (colorTex?._size !== size) {
             if (colorTex) colorTex.destroy();
             colorTex = gpuDevice.createTexture({
                 size: [size, size],
@@ -528,7 +563,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         }
 
         // Shared depth-stencil texture (reused across tiles since we clear each pass)
-        if (!this._webgpuRttDepthTexture || this._webgpuRttDepthTexture._size !== size) {
+        if (this._webgpuRttDepthTexture?._size !== size) {
             if (this._webgpuRttDepthTexture) this._webgpuRttDepthTexture.destroy();
             this._webgpuRttDepthTexture = gpuDevice.createTexture({
                 size: [size, size],
@@ -573,8 +608,8 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * End the current RTT render pass, submit it, and restore the main render pass.
      */
     endWebGPURttPass(): void {
-        if (!this.renderPassWGSL || !this.renderPassWGSL._isRtt) return;
-        const gpuDevice = (this.device as any).handle;
+        if (!this.renderPassWGSL?._isRtt) return;
+        const gpuDevice = (this.device).handle;
         try {
             this.renderPassWGSL.handle.end();
             const cmdBuffer = this.renderPassWGSL._cmdEncoder.finish();
@@ -612,7 +647,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * Fills the depth buffer with the geometry of all supplied tiles.
      * Does not change the color buffer or the stencil buffer.
      */
-    _renderTilesDepthBuffer() {
+    _renderTilesDepthBuffer(): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -630,7 +665,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
-                terrainData as any, projectionData as any, '$clipping', mesh.vertexBuffer,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
     }
@@ -753,23 +788,23 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * This returns true for layers that can be drawn using the
      * opaque pass.
      */
-    opaquePassEnabledForLayer() {
+    opaquePassEnabledForLayer(): boolean {
         return this.currentLayer < this.opaquePassCutoff;
     }
 
-    render(style: Style, options: PainterOptions) {
+    render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
 
-        if (this.device && this.device.type === 'webgpu') {
+        if (this.device?.type === 'webgpu') {
             try {
                 // Create a fresh command encoder for this frame
-                if ((this.device as any).beginFrame) {
-                    (this.device as any).beginFrame();
+                if ((this.device).beginFrame) {
+                    (this.device).beginFrame();
                 }
 
-                const gpuDevice = (this.device as any).handle;
-                const canvasCtx = (this.device as any).canvasContext;
+                const gpuDevice = (this.device).handle;
+                const canvasCtx = (this.device).canvasContext;
                 const currentTexture = canvasCtx.handle.getCurrentTexture();
                 const colorView = currentTexture.createView();
 
@@ -787,7 +822,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 const dsView = this._webgpuDepthStencilTexture.createView();
 
                 // Use the device command encoder
-                const commandEncoder = (this.device as any).commandEncoder.handle;
+                const commandEncoder = (this.device).commandEncoder.handle;
                 const rpEncoder = commandEncoder.beginRenderPass({
                     colorAttachments: [{
                         view: colorView,
@@ -820,10 +855,11 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
+        this.patternAtlas = style.patternAtlas;
         this.glyphManager = style.glyphManager;
 
         // Update global UBO once per frame (for drawable architecture)
-        if (this.useDrawables.size > 0 || (this.device && this.device.type === 'webgpu')) {
+        if (this.useDrawables.size > 0 || (this.device?.type === 'webgpu')) {
             this.updateGlobalUBO();
         }
 
@@ -859,7 +895,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             }
         }
 
-        this.maybeDrawDepthAndCoords(false);
+        this.maybeDrawDepth();
 
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
@@ -883,30 +919,24 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
 
-        // Execute offscreen GPU tasks of the projection manager
-        this.style.projection?.updateGPUdependent({
-            context: this.context,
-            useProgram: (name: string) => this.useProgram(name)
-        });
-
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.bindFramebuffer.set(null);
 
         // Clear buffers in preparation for drawing to the main framebuffer
-        if (!(this.device && this.device.type === 'webgpu')) {
+        if (!(this.device?.type === 'webgpu')) {
             this.context.clear({color: options.showOverdrawInspector ? Color.black : Color.transparent, depth: 1});
         }
         this.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (this.style.sky) drawSky(this, this.style.sky);
+        if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
 
         // For WebGPU, pass the renderPass to all draw calls
-        if (this.device && this.device.type === 'webgpu' && this.renderPassWGSL) {
+        if (this.device?.type === 'webgpu' && this.renderPassWGSL) {
             renderOptions.renderPass = this.renderPassWGSL;
         }
 
@@ -923,7 +953,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 if (this.device?.type === 'webgpu') {
                     this._renderTileClippingMasksWebGPU(layer, coords, false);
                 } else {
-                    this._renderTileClippingMasks(layer, coords, false);
+                    this.renderTileClippingMasks(layer, coords, false);
                 }
                 this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
@@ -953,7 +983,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             if (this.device?.type === 'webgpu') {
                 this._renderTileClippingMasksWebGPU(layer, coordsAscending[layer.source], !!this.renderToTexture);
             } else {
-                this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+                this.renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             }
 
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
@@ -961,18 +991,18 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
 
         // Render atmosphere, only for Globe projection
         if (renderOptions.isRenderingGlobe) {
-            drawAtmosphere(this, this.style.sky, this.style.light);
+            this.drawFunctions.atmosphere(this, this.style.sky, this.style.light);
         }
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                drawDebug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
         }
 
         if (this.options.showPadding) {
-            drawDebugPadding(this);
+            this.drawFunctions.debugPadding(this);
         }
 
         // End the WebGPU render pass to submit GPU commands
@@ -982,15 +1012,15 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 this.renderPassWGSL.handle.end();
                 this.renderPassWGSL = null;
                 this._webgpuMainRenderPass = null;
-                if (this.device && (this.device as any).submit) {
-                    (this.device as any).submit();
+                if (this.device?.submit) {
+                    (this.device).submit();
                 }
             } else {
                 this.renderPassWGSL.end();
                 this.renderPassWGSL = null;
                 this._webgpuMainRenderPass = null;
-                if (this.device && (this.device as any).submit) {
-                    (this.device as any).submit();
+                if (this.device?.submit) {
+                    (this.device).submit();
                 }
             }
         }
@@ -1001,11 +1031,9 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
     }
 
     /**
-     * Update the depth and coords framebuffers, if the contents of those frame buffers is out of date.
-     * If requireExact is false, then the contents of those frame buffers is not updated if it is close
-     * to accurate (that is, the camera has not moved much since it was updated last).
+     * Update the depth framebuffer if the camera has moved or tiles have reloaded.
      */
-    maybeDrawDepthAndCoords(requireExact: boolean) {
+    maybeDrawDepth(): void {
         if (!this.style?.map?.terrain) {
             return;
         }
@@ -1016,9 +1044,9 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const prevMatrix = this.terrainFacilitator.matrix;
         const currMatrix = this.transform.modelViewProjectionMatrix;
 
-        // Update coords/depth-framebuffer on camera movement, or tile reloading
-        let doUpdate = this.terrainFacilitator.dirty;
-        doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
+        // Update depth-framebuffer on camera movement, or tile reloading
+        let doUpdate = this.terrainFacilitator.depthDirty;
+        doUpdate ||= !mat4.equals(prevMatrix, currMatrix);
         doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
@@ -1026,45 +1054,45 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         }
 
         mat4.copy(prevMatrix, currMatrix);
-        this.terrainFacilitator.renderTime = Date.now();
-        this.terrainFacilitator.dirty = false;
-        drawDepth(this, this.style.map.terrain);
-        drawCoords(this, this.style.map.terrain);
+        this.terrainFacilitator.renderTime = now();
+        this.terrainFacilitator.depthDirty = false;
+        this.drawFunctions.terrainDepth(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
+        const draw = this.drawFunctions;
         if (isSymbolStyleLayer(layer)) {
-            drawSymbols(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
+            draw.symbol(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
         } else if (isCircleStyleLayer(layer)) {
-            drawCircles(painter, tileManager, layer, coords, renderOptions);
+            draw.circle(painter, tileManager, layer, coords, renderOptions);
         } else if (isHeatmapStyleLayer(layer)) {
-            drawHeatmap(painter, tileManager, layer, coords, renderOptions);
+            draw.heatmap(painter, tileManager, layer, coords, renderOptions);
         } else if (isLineStyleLayer(layer)) {
-            drawLine(painter, tileManager, layer, coords, renderOptions);
+            draw.line(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillStyleLayer(layer)) {
-            drawFill(painter, tileManager, layer, coords, renderOptions);
+            draw.fill(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            drawFillExtrusion(painter, tileManager, layer, coords, renderOptions);
+            draw.fillExtrusion(painter, tileManager, layer, coords, renderOptions);
         } else if (isHillshadeStyleLayer(layer)) {
-            drawHillshade(painter, tileManager, layer, coords, renderOptions);
+            draw.hillshade(painter, tileManager, layer, coords, renderOptions);
         } else if (isColorReliefStyleLayer(layer)) {
-            drawColorRelief(painter, tileManager, layer, coords, renderOptions);
+            draw.colorRelief(painter, tileManager, layer, coords, renderOptions);
         } else if (isRasterStyleLayer(layer)) {
-            drawRaster(painter, tileManager, layer, coords, renderOptions);
+            draw.raster(painter, tileManager, layer, coords, renderOptions);
         } else if (isBackgroundStyleLayer(layer)) {
-            drawBackground(painter, tileManager, layer, coords, renderOptions);
+            draw.background(painter, tileManager, layer, coords, renderOptions);
         } else if (isCustomStyleLayer(layer)) {
-            drawCustom(painter, tileManager, layer, renderOptions);
+            draw.custom(painter, tileManager, layer, renderOptions);
         }
     }
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
 
-    saveTileTexture(texture: Texture) {
+    saveTileTexture(texture: Texture): void {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
             this._tileTextures[texture.size[0]] = [texture];
@@ -1075,9 +1103,65 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         }
     }
 
-    getTileTexture(size: number) {
+    getTileTexture(size: number): Texture {
         const textures = this._tileTextures[size];
         return textures && textures.length > 0 ? textures.pop() : null;
+    }
+
+    acquireRTT(size: number): RTTObject {
+        const gl = this.context.gl;
+        const obj = this._rttObjectRecyclePool.pop();
+        if (obj) {
+            if (obj.size !== size) {
+                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                obj.texture.size = [size, size];
+                obj.size = size;
+            }
+            return obj;
+        }
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        if (this.context.extTextureFilterAnisotropic) {
+            gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+        }
+        return {texture, size};
+    }
+
+    /**
+     * Binds the shared RTT FBO with the given RTTObject's texture attached
+     * as color target. Creates / resizes the shared FBO and depth-stencil
+     * renderbuffer lazily.
+     */
+    bindRTT(obj: RTTObject): void {
+        const gl = this.context.gl;
+        const size = obj.size;
+
+        // Lazy-create the shared FBO + depth-stencil renderbuffer
+        if (!this._rttSharedFbo) {
+            const fbo = this.context.createFramebuffer(size, size, true, true);
+            const depthRenderbuffer = this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size);
+            fbo.depthAttachment.set(depthRenderbuffer);
+            this._rttSharedFbo = {fbo, depthRenderbuffer, size};
+        }
+
+        // Resize the shared depth-stencil renderbuffer if needed
+        if (this._rttSharedFbo.size !== size) {
+            this.context.bindRenderbuffer.set(this._rttSharedFbo.depthRenderbuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
+            this.context.bindRenderbuffer.set(null);
+            this._rttSharedFbo.fbo.width = size;
+            this._rttSharedFbo.fbo.height = size;
+            this._rttSharedFbo.size = size;
+        }
+
+        // Swap in the target texture and bind
+        this._rttSharedFbo.fbo.colorAttachment.set(obj.texture.texture);
+        this.context.bindFramebuffer.set(this._rttSharedFbo.fbo.framebuffer);
+    }
+
+    releaseRTT(obj: RTTObject): void {
+        this._rttObjectRecyclePool.push(obj);
     }
 
     /**
@@ -1088,8 +1172,8 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
     isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean {
         if (!image) return false;
         if (!image.from || !image.to) return true;
-        const imagePosA = this.imageManager.getPattern(image.from.toString());
-        const imagePosB = this.imageManager.getPattern(image.to.toString());
+        const imagePosA = this.patternAtlas.getPattern(image.from.toString());
+        const imagePosB = this.patternAtlas.getPattern(image.to.toString());
         return !imagePosA || !imagePosB;
     }
 
@@ -1103,7 +1187,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * @returns
      */
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
-        this.cache = this.cache || {};
+        this.cache ||= {};
         const useTerrain = !!this.style.map.terrain;
 
         const projection = this.style.projection;
@@ -1119,20 +1203,18 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
 
         const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 
-        if (!this.cache[key]) {
-            this.cache[key] = new Program(
-                this.context,
-                shaders[name],
-                programConfiguration,
-                programUniforms[name],
-                this._showOverdrawInspector,
-                useTerrain,
-                projectionPrelude,
-                projectionDefine,
-                defines,
-                name
-            );
-        }
+        this.cache[key] ||= new Program(
+            this.context,
+            shaders[name],
+            programConfiguration,
+            programUniforms[name],
+            this._showOverdrawInspector,
+            useTerrain,
+            projectionPrelude,
+            projectionDefine,
+            defines,
+            name
+        );
         return this.cache[key];
     }
 
@@ -1140,32 +1222,21 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * Reset some GL state to default values to avoid hard-to-debug bugs
      * in custom layers.
      */
-    setCustomLayerDefaults() {
-        // Prevent custom layers from unintentionally modify the last VAO used.
-        // All other state is state is restored on it's own, but for VAOs it's
-        // simpler to unbind so that we don't have to track the state of VAOs.
-        this.context.unbindVAO();
-
-        // The default values for this state is meaningful and often expected.
-        // Leaving this state dirty could cause a lot of confusion for users.
-        this.context.cullFace.setDefault();
-        this.context.activeTexture.setDefault();
-        this.context.pixelStoreUnpack.setDefault();
-        this.context.pixelStoreUnpackPremultiplyAlpha.setDefault();
-        this.context.pixelStoreUnpackFlipY.setDefault();
+    setCustomLayerDefaults(): void {
+        this.context.setCustomLayerDefaults();
     }
 
     /*
-     * Set GL state that is shared by all layers.
+     * Set GL state shared by all layers.
      */
-    setBaseState() {
+    setBaseState(): void {
         const gl = this.context.gl;
         this.context.cullFace.set(false);
         this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.blendEquation.set(gl.FUNC_ADD);
     }
 
-    initDebugOverlayCanvas() {
+    initDebugOverlayCanvas(): void {
         if (this.debugOverlayCanvas == null) {
             this.debugOverlayCanvas = document.createElement('canvas');
             this.debugOverlayCanvas.width = 512;
@@ -1206,7 +1277,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         ubo.setFloat(40, transform.zoom);
     }
 
-    destroy() {
+    destroy(): void {
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
                 const textures = this._tileTextures[size];
@@ -1218,6 +1289,25 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             }
             this._tileTextures = {};
         }
+
+        for (const obj of this._rttObjectRecyclePool) {
+            obj.texture.destroy();
+        }
+        this._rttObjectRecyclePool = [];
+
+        if (this._rttSharedFbo) {
+            // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
+            // that we already manage separately.
+            this._rttSharedFbo.fbo.colorAttachment.set(null);
+            this._rttSharedFbo.fbo.depthAttachment.set(null);
+            const gl = this.context.gl;
+            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+            this._rttSharedFbo = null;
+        }
+
+        this.layerOpacityFbo?.destroy();
+        this.layerOpacityFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
@@ -1273,7 +1363,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * That means that we've reached GL limits somehow.
      * Note: drawing buffer size changes only when canvas size changes
      */
-    overLimit() {
+    overLimit(): boolean {
         const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }

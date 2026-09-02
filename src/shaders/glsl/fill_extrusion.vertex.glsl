@@ -6,27 +6,27 @@ uniform float u_vertical_gradient;
 uniform lowp float u_opacity;
 uniform vec2 u_fill_translate;
 
-in vec2 a_pos;
-in vec4 a_normal_ed;
+layout(location = 0) in vec2 a_pos;
+layout(location = 1) in ivec4 a_normal_ed;
 
 #ifdef TERRAIN3D
-    in vec2 a_centroid;
+    layout(location = 2) in vec2 a_centroid;
 #endif
 
 
 out vec4 v_color;
 
-#pragma mapbox: define highp float base
-#pragma mapbox: define highp float height
+#pragma maplibre: define highp float base
+#pragma maplibre: define highp float height
 
-#pragma mapbox: define highp vec4 color
+#pragma maplibre: define highp vec4 color
 
 void main() {
-    #pragma mapbox: initialize highp float base
-    #pragma mapbox: initialize highp float height
-    #pragma mapbox: initialize highp vec4 color
+    #pragma maplibre: initialize highp float base
+    #pragma maplibre: initialize highp float height
+    #pragma maplibre: initialize highp vec4 color
 
-    vec3 normal = a_normal_ed.xyz;
+    vec3 normal = vec3(a_normal_ed.xyz);
 
     #ifdef TERRAIN3D
 	    // Raise the "ceiling" of elements by the elevation of the centroid, in meters.
@@ -44,7 +44,7 @@ void main() {
     base = max(0.0, base) + base_terrain3d_offset;
     height = max(0.0, height) + height_terrain3d_offset;
 
-    float t = mod(normal.x, 2.0);
+    float t = float(a_normal_ed.x & 1);
     float elevation = t > 0.0 ? height : base;
     vec2 posInTile = a_pos + u_fill_translate;
 

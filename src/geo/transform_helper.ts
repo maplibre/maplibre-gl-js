@@ -1,17 +1,16 @@
-import {LngLat, type LngLatLike} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
+import {LngLat, type LngLatLike} from './lng_lat.ts';
+import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
-import {EdgeInsets} from './edge_insets';
-import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate';
-import {cameraMercatorCoordinateFromCenterAndRotation, cameraDirectionFromPitchBearing} from './projection/mercator_utils';
-import {EXTENT} from '../data/extent';
+import {EdgeInsets} from './edge_insets.ts';
+import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
+import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {EXTENT} from '../data/extent.ts';
 
-import type {PaddingOptions} from './edge_insets';
-import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
-import type {OverscaledTileID} from '../tile/tile_id';
-import {Bounds} from './bounds';
+import type {PaddingOptions} from './edge_insets.ts';
+import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
+import {Bounds} from './bounds.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.
@@ -65,11 +64,13 @@ export type TransformHelperCallbacks = {
 
 export type TransformOptions = {
     /**
-     * The minimum zoom level of the map.
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
+     * @defaultValue 0
      */
     minZoom?: number;
     /**
-     * The maximum zoom level of the map.
+     * The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
+     * @defaultValue 22
      */
     maxZoom?: number;
     /**
@@ -137,6 +138,10 @@ export class TransformHelper implements ITransformGetters {
     _minElevationForCurrentTile: number;
     _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
+    /**
+     * Whether the camera was never deliberately positioned, in which case a loading style may apply its own camera.
+     * Cleared by the setters that move the camera, but not by ones that only snap it into a valid range.
+     */
     _unmodified: boolean;
 
     _constraining: boolean;
@@ -221,7 +226,7 @@ export class TransformHelper implements ITransformGetters {
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
-    setMinElevationForCurrentTile(ele: number) {
+    setMinElevationForCurrentTile(ele: number): void {
         this._minElevationForCurrentTile = ele;
     }
 
@@ -250,35 +255,43 @@ export class TransformHelper implements ITransformGetters {
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
 
     get minZoom(): number { return this._minZoom; }
-    setMinZoom(zoom: number) {
+    setMinZoom(zoom: number): void {
         if (this._minZoom === zoom) return;
         this._minZoom = zoom;
+        const unmodified = this._unmodified;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
+        this._unmodified = unmodified;
     }
 
     get maxZoom(): number { return this._maxZoom; }
-    setMaxZoom(zoom: number) {
+    setMaxZoom(zoom: number): void {
         if (this._maxZoom === zoom) return;
         this._maxZoom = zoom;
+        const unmodified = this._unmodified;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
+        this._unmodified = unmodified;
     }
 
     get minPitch(): number { return this._minPitch; }
-    setMinPitch(pitch: number) {
+    setMinPitch(pitch: number): void {
         if (this._minPitch === pitch) return;
         this._minPitch = pitch;
+        const unmodified = this._unmodified;
         this.setPitch(Math.max(this.pitch, pitch));
+        this._unmodified = unmodified;
     }
 
     get maxPitch(): number { return this._maxPitch; }
-    setMaxPitch(pitch: number) {
+    setMaxPitch(pitch: number): void {
         if (this._maxPitch === pitch) return;
         this._maxPitch = pitch;
+        const unmodified = this._unmodified;
         this.setPitch(Math.min(this.pitch, pitch));
+        this._unmodified = unmodified;
     }
 
     get renderWorldCopies(): boolean { return this._renderWorldCopies; }
-    setRenderWorldCopies(renderWorldCopies: boolean) {
+    setRenderWorldCopies(renderWorldCopies: boolean): void {
         if (renderWorldCopies === undefined) {
             renderWorldCopies = true;
         } else if (renderWorldCopies === null) {
@@ -289,7 +302,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get constrainOverride(): TransformConstrainFunction { return this._constrainOverride; }
-    setConstrainOverride(constrain?: TransformConstrainFunction | null) {
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void {
         if (constrain === undefined) constrain = null;
         if (this._constrainOverride === constrain) return;
         this._constrainOverride = constrain;
@@ -315,7 +328,7 @@ export class TransformHelper implements ITransformGetters {
     get bearing(): number {
         return this._bearingInRadians / Math.PI * 180;
     }
-    setBearing(bearing: number) {
+    setBearing(bearing: number): void {
         const b = wrap(bearing, -180, 180) * Math.PI / 180;
         if (this._bearingInRadians === b) return;
         this._unmodified = false;
@@ -335,7 +348,7 @@ export class TransformHelper implements ITransformGetters {
     get pitch(): number {
         return this._pitchInRadians / Math.PI * 180;
     }
-    setPitch(pitch: number) {
+    setPitch(pitch: number): void {
         const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
         if (this._pitchInRadians === p) return;
         this._unmodified = false;
@@ -349,7 +362,7 @@ export class TransformHelper implements ITransformGetters {
     get roll(): number {
         return this._rollInRadians / Math.PI * 180;
     }
-    setRoll(roll: number) {
+    setRoll(roll: number): void {
         const r = roll / 180 * Math.PI;
         if (this._rollInRadians === r) return;
         this._unmodified = false;
@@ -363,7 +376,7 @@ export class TransformHelper implements ITransformGetters {
     get fov(): number {
         return radiansToDegrees(this._fovInRadians);
     }
-    setFov(fov: number) {
+    setFov(fov: number): void {
         fov = clamp(fov, 0.1, 150);
         if (this.fov === fov) return;
         this._unmodified = false;
@@ -372,7 +385,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get zoom(): number { return this._zoom; }
-    setZoom(zoom: number) {
+    setZoom(zoom: number): void {
         const constrainedZoom = this.applyConstrain(this._center, zoom).zoom;
         if (this._zoom === constrainedZoom) return;
         this._unmodified = false;
@@ -384,7 +397,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get center(): LngLat { return this._center; }
-    setCenter(center: LngLat) {
+    setCenter(center: LngLat): void {
         if (center.lat === this._center.lat && center.lng === this._center.lng) return;
         this._unmodified = false;
         this._center = center;
@@ -396,7 +409,7 @@ export class TransformHelper implements ITransformGetters {
      * Elevation at current center point, meters above sea level
      */
     get elevation(): number { return this._elevation; }
-    setElevation(elevation: number) {
+    setElevation(elevation: number): void {
         if (elevation === this._elevation) return;
         this._elevation = elevation;
         this.constrainInternal();
@@ -404,7 +417,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get padding(): PaddingOptions { return this._edgeInsets.toJSON(); }
-    setPadding(padding: PaddingOptions) {
+    setPadding(padding: PaddingOptions): void {
         if (this._edgeInsets.equals(padding)) return;
         this._unmodified = false;
         // Update edge-insets in-place
@@ -557,12 +570,12 @@ export class TransformHelper implements ITransformGetters {
         if (this._width && this._height) {
             this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
 
-            let m = mat4.identity(new Float64Array(16) as any);
+            let m = mat4.identity(new Float64Array(16));
             mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
             mat4.translate(m, m, [1, -1, 0]);
             this._clipSpaceToPixelsMatrix = m;
 
-            m = mat4.identity(new Float64Array(16) as any);
+            m = mat4.identity(new Float64Array(16));
             mat4.scale(m, m, [1, -1, 1]);
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
@@ -675,13 +688,10 @@ export class TransformHelper implements ITransformGetters {
     }
 
     getCameraLngLat(): LngLat {
-        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = this.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
-        return camMercator.toLngLat();
+        return cameraMercatorCoordinate(this).toLngLat();
     }
 
-    getMercatorTileCoordinates(overscaledTileID: OverscaledTileID): [number, number, number, number] {
+    getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
         if (!overscaledTileID) {
             return [0, 0, 1, 1];
         }

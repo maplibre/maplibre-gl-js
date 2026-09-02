@@ -1,6 +1,7 @@
-import {describe, test, expect, beforeEach, vi, afterEach, type Mock} from 'vitest';
-import {beforeMapTest, createMap as globalCreateMap} from './test/util';
-import {browser} from './browser';
+import {describe, test, expect, beforeEach, vi, afterEach} from 'vitest';
+import {beforeMapTest, createMap as globalCreateMap} from './test/util.ts';
+import {browser} from './browser.ts';
+import {AbortError} from './abort_error.ts';
 
 describe('browser', () => {
     describe('frame',() => {
@@ -56,7 +57,7 @@ describe('browser', () => {
 
             expect(fn).toHaveBeenCalledTimes(1);
             const callArg = fn.mock.calls[0][0];
-            expect(typeof callArg).toBe('number');
+            expect(callArg).toBeTypeOf('number');
 
             expect(window.cancelAnimationFrame).not.toHaveBeenCalled();
             expect(reject).not.toHaveBeenCalled();
@@ -69,11 +70,8 @@ describe('browser', () => {
         test('when AbortController is aborted before frame fires, calls cancelAnimationFrame and reject', () => {
             // We override the default mock so that the callback is NOT called immediately
             // giving us time to abort.
-            (window.requestAnimationFrame as Mock).mockImplementation(
-                () => {
-                    // Return ID but do not invoke cb
-                    return 42;
-                }
+            (vi.mocked(window.requestAnimationFrame)).mockReturnValue(
+                42
             );
 
             const abortController = new AbortController();
@@ -145,7 +143,7 @@ describe('browser', () => {
             const abortController = new AbortController();
             const promise = browser.frameAsync(abortController);
             abortController.abort();
-            await expect(promise).rejects.toThrow();
+            await expect(promise).rejects.toThrow(AbortError);
         });
     });
 
@@ -177,6 +175,6 @@ describe('browser', () => {
     });
 
     test('hardwareConcurrency', () => {
-        expect(typeof browser.hardwareConcurrency).toBe('number');
+        expect(browser.hardwareConcurrency).toBeTypeOf('number');
     });
 });

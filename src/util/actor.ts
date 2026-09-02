@@ -1,12 +1,13 @@
-import {type Subscription, isWorker, subscribe} from './util';
-import {serialize, deserialize, type Serialized} from './web_worker_transfer';
-import {ThrottledInvoker} from './throttled_invoker';
+import {type Subscription, ensureError, isWorker, subscribe} from './util.ts';
+import {AbortError} from './abort_error.ts';
+import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
+import {ThrottledInvoker} from './throttled_invoker.ts';
 
 import {
     type MessageType,
     type ActorMessage,
     type RequestResponseMessageMap,
-} from './actor_messages';
+} from './actor_messages.ts';
 
 /**
  * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread
@@ -64,7 +65,7 @@ export class Actor implements IActor {
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: MessageHandler<MessageType>};
+    messageHandlers: { [K in MessageType]?: MessageHandler<K>};
     subscription: Subscription;
 
     /**
@@ -84,11 +85,11 @@ export class Actor implements IActor {
         this.globalScope = isWorker(self) ? target : window;
     }
 
-    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
-        this.messageHandlers[type] = handler;
+    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
+        (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
     }
 
-    unregisterMessageHandler<T extends MessageType>(type: T) {
+    unregisterMessageHandler<T extends MessageType>(type: T): void {
         delete this.messageHandlers[type];
     }
 
@@ -118,7 +119,9 @@ export class Actor implements IActor {
                     sourceMapId: this.mapId
                 };
                 this.target.postMessage(cancelMessage);
-                // In case of abort the current behavior is to keep the promise pending.
+                // Reject the promise so the awaiting caller unwinds; leaving it pending kept the
+                // suspended async frame (and everything it captured) alive forever.
+                reject(new AbortError(abortController.signal.reason));
             }, addEventDefaultOptions) : null;
 
             this.resolveRejects[id] = {
@@ -144,7 +147,7 @@ export class Actor implements IActor {
         });
     }
 
-    receive(message: {data: MessageData}) {
+    receive(message: {data: MessageData}): void {
         const data = message.data;
         const id = data.id;
 
@@ -190,7 +193,7 @@ export class Actor implements IActor {
         this.processTask(id, data);
     }
 
-    process() {
+    process(): void {
         if (this.taskQueue.length === 0) {
             return;
         }
@@ -211,7 +214,7 @@ export class Actor implements IActor {
         this.processTask(id, task);
     }
 
-    async processTask(id: string, task: MessageData) {
+    async processTask(id: string, task: MessageData): Promise<void> {
         if (task.type === '<response>') {
             // The `completeTask` function in the counterpart actor has been called, and we are now
             // resolving or rejecting the promise in the originating actor, if there is one.
@@ -222,14 +225,17 @@ export class Actor implements IActor {
                 return;
             }
             if (task.error) {
-                resolveReject.reject(deserialize(task.error) as Error);
+                resolveReject.reject(ensureError(deserialize(task.error)));
             } else {
                 resolveReject.resolve(deserialize(task.data));
             }
             return;
         }
         if (!this.messageHandlers[task.type]) {
-            this.completeTask(id, new Error(`Could not find a registered handler for ${task.type}, map ID: ${this.mapId}, available handlers: ${Object.keys(this.messageHandlers).join(', ')}`));
+            // This might be the case of a custom worker code sending messages to the main thread. 
+            // No need to do anything.
+            // This can be changed for debug in case there's a need to make sure all messages are being handled.
+            this.completeTask(id, null, null);
             return;
         }
         const params = deserialize(task.data) as RequestResponseMessageMap[MessageType][0];
@@ -239,11 +245,11 @@ export class Actor implements IActor {
             const data = await this.messageHandlers[task.type](task.sourceMapId, params, abortController);
             this.completeTask(id, null, data);
         } catch (err) {
-            this.completeTask(id, err);
+            this.completeTask(id, ensureError(err));
         }
     }
 
-    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]) {
+    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]): void {
         const buffers: Transferable[] = [];
         delete this.abortControllers[id];
         const responseMessage: MessageData = {
@@ -257,7 +263,7 @@ export class Actor implements IActor {
         this.target.postMessage(responseMessage, {transfer: buffers});
     }
 
-    remove() {
+    remove(): void {
         this.invoker.remove();
         this.subscription.unsubscribe();
     }

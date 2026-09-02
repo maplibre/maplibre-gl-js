@@ -1,8 +1,9 @@
-in vec4 a_pos_offset;
-in vec4 a_data;
-in vec4 a_pixeloffset;
-in vec3 a_projected_pos;
-in float a_fade_opacity;
+layout(location = 0) in vec4 a_pos_offset;
+layout(location = 1) in uvec4 a_data;
+layout(location = 2) in vec4 a_pixeloffset;
+layout(location = 3) in vec3 a_projected_pos;
+layout(location = 4) in uint a_fade_opacity;
+layout(location = 5) in float a_height_offset;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -22,26 +23,28 @@ uniform bool u_is_along_line;
 uniform bool u_is_variable_anchor;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
+uniform bool u_is_offset;
+uniform bool u_height_anchor_ground;
 
 out vec2 v_tex;
-out float v_total_opacity;
+flat out float v_total_opacity;
 
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float opacity
 
     vec2 a_pos = a_pos_offset.xy;
     vec2 a_offset = a_pos_offset.zw;
 
-    vec2 a_tex = a_data.xy;
-    vec2 a_size = a_data.zw;
+    vec2 a_tex = vec2(a_data.xy);
+    vec2 a_size = vec2(a_data.zw);
 
-    float a_size_min = floor(a_size[0] * 0.5);
+    float a_size_min = float(a_data.z >> 1u);
     vec2 a_pxoffset = a_pixeloffset.xy;
     vec2 a_minFontScale = a_pixeloffset.zw / 256.0;
 
-    float ele = get_elevation(a_pos);
+    float ele = a_height_offset + (u_height_anchor_ground ? get_elevation(a_pos) : 0.0);
     highp float segment_angle = -a_projected_pos[2];
     float size;
 
@@ -59,6 +62,7 @@ void main() {
     // compute opacity and exit if too transparent:
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
+    // Terrain can hide the ground anchor while the elevated symbol remains visible.
     float visibility = calculate_visibility(projectedPoint);
     v_total_opacity = opacity * max(0.0, min(visibility, fade_opacity[0] + fade_change));
     if (v_total_opacity < 0.1){
@@ -76,7 +80,9 @@ void main() {
             0.0, // Prevents oversized near-field symbols in pitched/overzoomed tiles
             4.0);
 
-    size *= perspective_ratio;
+    if (!u_is_offset) {
+        size *= perspective_ratio;
+    }
 
     float fontScale = u_is_text ? size / 24.0 : size;
 

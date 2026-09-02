@@ -1,10 +1,10 @@
-import {LayerTweaker} from '../layer_tweaker';
-import {UniformBlock} from '../uniform_block';
-import type {Drawable} from '../drawable';
-import type {Painter} from '../../render/painter';
-import type {StyleLayer} from '../../style/style_layer';
-import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import {LayerTweaker} from '../layer_tweaker.ts';
+import {UniformBlock} from '../uniform_block.ts';
+import type {Drawable} from '../drawable.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 // BackgroundDrawableUBO: matrix mat4x4<f32> = 64 bytes
 const BACKGROUND_DRAWABLE_UBO_SIZE = 64;
@@ -21,15 +21,11 @@ const BACKGROUND_PATTERN_PROPS_UBO_SIZE = 96;
 
 export class BackgroundLayerTweaker extends LayerTweaker {
 
-    constructor(layerId: string) {
-        super(layerId);
-    }
-
     execute(
         drawables: Drawable[],
         painter: Painter,
         layer: StyleLayer,
-        _coords: Array<OverscaledTileID>
+        _coords: OverscaledTileID[]
     ): void {
         const bgLayer = layer as BackgroundStyleLayer;
 
@@ -83,11 +79,11 @@ export class BackgroundLayerTweaker extends LayerTweaker {
 
         if (!image || !crossfade) return;
 
-        const imagePosA = painter.imageManager.getPattern((image as any).from.toString());
-        const imagePosB = painter.imageManager.getPattern((image as any).to.toString());
+        const imagePosA = painter.patternAtlas.getPattern((image as any).from.toString());
+        const imagePosB = painter.patternAtlas.getPattern((image as any).to.toString());
         if (!imagePosA || !imagePosB) return;
 
-        const {width: texsizeW, height: texsizeH} = painter.imageManager.getPixelSize();
+        const {width: texsizeW, height: texsizeH} = painter.patternAtlas.getPixelSize();
 
         // Props UBO (shared across all drawables for this layer)
         if (!this.evaluatedPropsUBO || (this.evaluatedPropsUBO as any)._byteLength !== BACKGROUND_PATTERN_PROPS_UBO_SIZE) {

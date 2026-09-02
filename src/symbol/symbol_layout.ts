@@ -1,39 +1,39 @@
-import {Anchor} from './anchor';
+import {Anchor} from './anchor.ts';
 
-import {getAnchors, getCenterAnchor} from './get_anchors';
-import {clipLine} from './clip_line';
-import {shapeText, shapeIcon, WritingMode, fitIconToText} from './shaping';
-import {getGlyphQuads, getIconQuads} from './quads';
-import {CollisionFeature} from './collision_feature';
-import {warnOnce} from '../util/util';
+import {getAnchors, getCenterAnchor} from './get_anchors.ts';
+import {clipLine} from './clip_line.ts';
+import {shapeText, shapeIcon, WritingMode, fitIconToText} from './shaping.ts';
+import {getGlyphQuads, getIconQuads} from './quads.ts';
+import {CollisionFeature} from './collision_feature.ts';
+import {warnOnce} from '../util/util.ts';
 import {
     allowsVerticalWritingMode,
     allowsLetterSpacing
-} from '../util/script_detection';
-import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility';
-import {EXTENT} from '../data/extent';
-import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size';
-import ONE_EM from './one_em';
-import type {CanonicalTileID} from '../tile/tile_id';
-import type {Shaping, PositionedIcon, TextJustify} from './shaping';
-import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types.g';
-import type {SymbolFeature} from '../data/bucket/symbol_bucket';
-import type {StyleImage} from '../style/style_image';
-import type {StyleGlyph} from '../style/style_glyph';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import type {ImagePosition} from '../render/image_atlas';
-import type {GlyphPosition} from '../render/glyph_atlas';
-import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
+} from '../util/script_detection.ts';
+import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility.ts';
+import {EXTENT} from '../data/extent.ts';
+import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size.ts';
+import ONE_EM from './one_em.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
+import type {Shaping, PositionedIcon, TextJustify} from './shaping.ts';
+import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types.g.ts';
+import type {SymbolFeature} from '../data/bucket/symbol_bucket.ts';
+import type {StyleImage} from '../style/style_image.ts';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {GlyphPosition} from '../render/glyph_atlas.ts';
+import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 
 import type Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
-import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_style_layer';
+import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
 import {type VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
-import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {subdivideVertexLine} from '../render/subdivision';
-import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
+import {subdivideVertexLine} from '../render/subdivision.ts';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -79,7 +79,7 @@ export function performSymbolLayout(args: {
     showCollisionBoxes: boolean;
     canonical: CanonicalTileID;
     subdivisionGranularity: SubdivisionGranularitySetting;
-}) {
+}): void {
     args.bucket.createArrays();
 
     const tileSize = 512 * args.bucket.overscaling;
@@ -316,7 +316,7 @@ function addFeature(bucket: SymbolBucket,
         iconPadding = getIconPadding(layout, feature, canonical, bucket.tilePixelRatio),
         textMaxAngle = layout.get('text-max-angle') / 180 * Math.PI,
         textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point',
-        iconAlongLine = layout.get('icon-rotation-alignment') === 'map' && layout.get('symbol-placement') !== 'point',
+        iconAlongLine = layout.get('icon-rotation-alignment').constantOr('viewport') === 'map' && layout.get('symbol-placement') !== 'point',
         symbolPlacement = layout.get('symbol-placement'),
         textRepeatDistance = symbolMinDistance / 2;
 
@@ -435,6 +435,7 @@ function addTextVertices(bucket: SymbolBucket,
     textAlongLine: boolean,
     feature: SymbolFeature,
     textOffset: [number, number],
+    elevation: number,
     lineArray: {
         lineStartIndex: number;
         lineLength: number;
@@ -480,7 +481,8 @@ function addTextVertices(bucket: SymbolBucket,
         lineArray.lineStartIndex,
         lineArray.lineLength,
         placedIconIndex,
-        canonical);
+        canonical,
+        elevation);
 
     // The placedSymbolArray is used at render time in drawTileSymbols
     // These indices allow access to the array at collision detection time
@@ -532,6 +534,7 @@ function addSymbol(bucket: SymbolBucket,
     layoutTextSize: number) {
 
     const lineArray = bucket.addToLineVertexArray(anchor, line);
+    const elevation = layer.layout.get('symbol-height-offset').evaluate(feature, {}, canonical);
 
     let textCollisionFeature, iconCollisionFeature, verticalTextCollisionFeature, verticalIconCollisionFeature;
 
@@ -600,7 +603,9 @@ function addSymbol(bucket: SymbolBucket,
             lineArray.lineStartIndex,
             lineArray.lineLength,
             // The icon itself does not have an associated symbol since the text isn't placed yet
-            -1, canonical);
+            -1, 
+            canonical, 
+            elevation);
 
         placedIconSymbolIndex = bucket.icon.placedSymbolArray.length - 1;
 
@@ -619,7 +624,9 @@ function addSymbol(bucket: SymbolBucket,
                 lineArray.lineStartIndex,
                 lineArray.lineLength,
                 // The icon itself does not have an associated symbol since the text isn't placed yet
-                -1, canonical);
+                -1, 
+                canonical, 
+                elevation);
 
             verticalPlacedIconSymbolIndex = bucket.icon.placedSymbolArray.length - 1;
         }
@@ -639,7 +646,7 @@ function addSymbol(bucket: SymbolBucket,
 
         const singleLine = shaping.positionedLines.length === 1;
         numHorizontalGlyphVertices += addTextVertices(
-            bucket, anchor, shaping, imageMap, layer, textAlongLine, feature, textOffset, lineArray,
+            bucket, anchor, shaping, imageMap, layer, textAlongLine, feature, textOffset, elevation, lineArray,
             shapedTextOrientations.vertical ? WritingMode.horizontal : WritingMode.horizontalOnly,
             singleLine ? justifications : [justification],
             placedTextSymbolIndices, placedIconSymbolIndex, sizes, canonical);
@@ -652,7 +659,7 @@ function addSymbol(bucket: SymbolBucket,
     if (shapedTextOrientations.vertical) {
         numVerticalGlyphVertices += addTextVertices(
             bucket, anchor, shapedTextOrientations.vertical, imageMap, layer, textAlongLine, feature,
-            textOffset, lineArray, WritingMode.vertical, ['vertical'], placedTextSymbolIndices, verticalPlacedIconSymbolIndex, sizes, canonical);
+            textOffset, elevation, lineArray, WritingMode.vertical, ['vertical'], placedTextSymbolIndices, verticalPlacedIconSymbolIndex, sizes, canonical);
     }
 
     const textBoxStartIndex = textCollisionFeature ? textCollisionFeature.boxStartIndex : bucket.collisionBoxArray.length;
@@ -727,7 +734,8 @@ function addSymbol(bucket: SymbolBucket,
         textBoxScale,
         collisionCircleDiameter,
         textAnchorOffsetStartIndex,
-        textAnchorOffsetEndIndex);
+        textAnchorOffsetEndIndex,
+        elevation);
 }
 
 function anchorIsTooClose(bucket: SymbolBucket, text: string, repeatDistance: number, anchor: Point) {

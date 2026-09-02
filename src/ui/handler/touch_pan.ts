@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {indexTouches} from './handler_util';
-import {type Handler} from '../handler_manager';
-import type {Map} from '../map';
+import {indexTouches} from './handler_util.ts';
+import {type Handler} from '../handler_manager.ts';
+import type {Map} from '../map.ts';
 
 /**
  * A `TouchPanHandler` allows the user to pan the map using touch gestures.
@@ -23,22 +23,22 @@ export class TouchPanHandler implements Handler {
         this.reset();
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
         this._touches = {};
         this._sum = new Point(0, 0);
     }
 
-    _shouldBePrevented(touchesCount: number) {
+    _shouldBePrevented(touchesCount: number): boolean {
         const minTouches = this._map.cooperativeGestures.isEnabled() ? 2 : 1;
         return touchesCount < minTouches;
     }
 
-    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
         return this._calculateTransform(e, points, mapTouches);
     }
 
-    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
         if (!this._active) return;
         if (this._shouldBePrevented(mapTouches.length)) {
             this._map.cooperativeGestures.notifyGestureBlocked('touch_pan', e);
@@ -48,7 +48,7 @@ export class TouchPanHandler implements Handler {
         return this._calculateTransform(e, points, mapTouches);
     }
 
-    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         this._calculateTransform(e, points, mapTouches);
 
         if (this._active && this._shouldBePrevented(mapTouches.length)) {
@@ -56,11 +56,11 @@ export class TouchPanHandler implements Handler {
         }
     }
 
-    touchcancel() {
+    touchcancel(): void {
         this.reset();
     }
 
-    _calculateTransform(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    _calculateTransform(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
         if (mapTouches.length > 0) this._active = true;
 
         const touches = indexTouches(mapTouches, points);
@@ -96,20 +96,20 @@ export class TouchPanHandler implements Handler {
         };
     }
 
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
         this.reset();
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
-    isActive() {
+    isActive(): boolean {
         return this._active;
     }
 }

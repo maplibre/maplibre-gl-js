@@ -1,15 +1,28 @@
 import fs from 'fs';
 import path from 'path';
+
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';
 import sharp from 'sharp';
+import EXAMPLE_CATEGORY_GROUPS from '../docs/example-categories.json' with {type: 'json'};
 
 type HtmlDoc = {
     title: string;
     description: string;
     mdFileName: string;
+    isNew: boolean;
+    category: string;
+    order: number;
 };
+
+/**
+ * Reads the `content` of the `<meta>` tag with the given `property`, e.g. `og:description`.
+ */
+function extractMetaContent(htmlContentLines: string[], property: string): string | undefined {
+    const line = htmlContentLines.find(l => l.includes(property));
+    return line?.match(/content=(["'])(.*?)\1/)?.[2];
+}
 
 function generateAPIIntroMarkdown(lines: string[]): string {
     let intro = `# Intro
@@ -33,36 +46,131 @@ Import declarations are omitted from the examples for brevity.
     return intro;
 }
 
-function generateMarkdownForExample(title: string, description: string, file: string, htmlContent: string): string {
-    return `
+function isNewExample(htmlContentLines: string[]): boolean {
+    const createdLine = htmlContentLines.find(l => l.includes('og:created'));
+    if (!createdLine) return false;
+    const match = createdLine.match(/content=["'](\d{4}-\d{2}-\d{2})["']/);
+    if (!match) return false;
+    const createdDate = new Date(match[1]);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    return createdDate >= sixMonthsAgo;
+}
+
+function extractJsFromHtml(htmlContent: string): string | null {
+    const scriptRegex = /<script(?![^>]*\bsrc\b)(?![^>]*type="importmap")[^>]*>([\s\S]*?)<\/script>/g;
+    const scripts: string[] = [];
+    let match;
+    while ((match = scriptRegex.exec(htmlContent)) !== null) {
+        if (match[1].trim()) {
+            scripts.push(match[1]);
+        }
+    }
+    if (scripts.length === 0) return null;
+
+    let js = scripts.join('\n\n');
+
+    // Strip common leading whitespace
+    const lines = js.split('\n');
+    const nonEmptyLines = lines.filter(l => l.trim().length > 0);
+    if (nonEmptyLines.length > 0) {
+        const minIndent = Math.min(...nonEmptyLines.map(l => l.match(/^\s*/)[0].length));
+        if (minIndent > 0) {
+            js = lines.map(l => l.length >= minIndent ? l.slice(minIndent) : l).join('\n');
+        }
+    }
+
+    return js.trim();
+}
+
+function indentBlock(text: string, spaces: number = 4): string {
+    const indent = ' '.repeat(spaces);
+    return text.split('\n').map(line => line.length > 0 ? `${indent}${line}` : '').join('\n');
+}
+
+function generateMarkdownForExample(title: string, description: string, file: string, htmlContent: string, isNew: boolean): string {
+    const frontmatter = isNew ? '---\nstatus: new\n---\n' : '';
+    const jsContent = extractJsFromHtml(htmlContent);
+
+    let codeBlock: string;
+    if (jsContent) {
+        const jsBlock = indentBlock(`\`\`\`js\n${jsContent}\n\`\`\``);
+        const htmlBlock = indentBlock(`\`\`\`html\n${htmlContent.trimEnd()}\n\`\`\``);
+        codeBlock = `=== "Only JS"\n\n${jsBlock}\n\n=== "Full HTML"\n\n${htmlBlock}`;
+    } else {
+        codeBlock = `\`\`\`html\n${htmlContent}\n\`\`\``;
+    }
+
+    return `${frontmatter}
 # ${title}
 
 ${description}
 
-<iframe src="../${file}" width="100%" style="border:none; height:400px"></iframe>
+<iframe src="${file}" width="100%" style="border:none; height:400px"></iframe>
 
-\`\`\`html
-${htmlContent}
-\`\`\`
+${codeBlock}
 `;
 }
 
-async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
-    let indexMarkdown = '# Overview \n\n';
+/**
+ * This method converts png files to webp files in order to improve performance of docs,
+ * This is considered a build artifact and should not be checked in, but generated as part of the docs generation process.
+ */
+async function packImages(indexArray: HtmlDoc[]) {
     const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
-        indexMarkdown += `
-## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
-
-![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
-
-${indexArrayItem.description}
-`;
     }
     await Promise.all(promises);
+}
+
+function renderExampleCard(indexArrayItem: HtmlDoc): string {
+    const cardImg = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
+    const desc = indexArrayItem.description || '';
+    const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
+    const badge = indexArrayItem.isNew ? '\n<span class="example-card-badge">new</span>' : '';
+    return `<a class="example-card" href="./${cardFileName}">
+<div class="example-card-image">
+<img src="${cardImg}" loading="lazy" alt="${desc}">${badge}
+</div>
+<div class="example-card-content">
+<h3>${indexArrayItem.title}</h3>
+<p>${desc}</p>
+</div>
+</a>`;
+}
+
+function renderExampleGrid(examples: HtmlDoc[]): string {
+    const cards = examples
+        // Examples with an explicit `og:order` come first (ascending); the rest fall back to alphabetical.
+        .sort((a, b) => (a.order !== b.order ? a.order - b.order : a.title.localeCompare(b.title)))
+        .map(renderExampleCard)
+        .join('\n');
+    return `<div class="examples-grid">\n${cards}\n</div>`;
+}
+
+/**
+ * Builds the examples overview page:
+ * a section per group, with content tabs when a group holds more than one category.
+ */
+function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
+    const byCategory = Map.groupBy(indexArray, item => item.category);
+
+    let indexMarkdown = '# Overview\n\n';
+    for (const group of EXAMPLE_CATEGORY_GROUPS) {
+        const categories = group.categories.filter(category => byCategory.has(category));
+        if (categories.length === 0) continue;
+        indexMarkdown += `## ${group.title}\n\n`;
+        if (categories.length === 1) {
+            indexMarkdown += `${renderExampleGrid(byCategory.get(categories[0]))}\n\n`;
+            continue;
+        }
+        for (const category of categories) {
+            indexMarkdown += `=== "${category}"\n\n${indentBlock(renderExampleGrid(byCategory.get(category)))}\n\n`;
+        }
+    }
     return indexMarkdown;
 }
 
@@ -98,22 +206,30 @@ async function generateExamplesFolder() {
         const htmlFile = path.join(examplesFolder, file);
         let htmlContent = fs.readFileSync(htmlFile, 'utf-8');
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
-        htmlContent = htmlContent.replace(/-dev.js/g, '.js');
+        htmlContent = htmlContent.replace(/-dev\.js/g, '.js');
+        htmlContent = htmlContent.replace(/-dev\.mjs/g, '.mjs');
         const htmlContentLines = htmlContent.split('\n');
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
-        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
+        const description = extractMetaContent(htmlContentLines, 'og:description');
+        const category = extractMetaContent(htmlContentLines, 'og:category');
+        const orderMeta = extractMetaContent(htmlContentLines, 'og:order');
+        const order = orderMeta === undefined ? Number.POSITIVE_INFINITY : Number(orderMeta);
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
+        const isNew = isNewExample(htmlContentLines);
         indexArray.push({
             title,
             description,
-            mdFileName
+            mdFileName,
+            isNew,
+            category,
+            order
         });
-        const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent);
+        const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent, isNew);
         fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);
     }
-
-    const indexMarkdown = await generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray);
+    await packImages(indexArray);
+    const indexMarkdown = generateMarkdownIndexFileOfAllExamples(indexArray);
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 
@@ -178,7 +294,7 @@ function updateMapLibreVersionForUNPKG() {
     let indexContent = fs.readFileSync(indexPath, 'utf-8');
 
     // Replace the version number
-    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
+    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^[^/'"]+/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
 
     // Save index.md
     fs.writeFileSync(indexPath, indexContent);
@@ -193,4 +309,5 @@ generateReadme();
 await generateExamplesFolder();
 await generatePluginsPage();
 updateMapLibreVersionForUNPKG();
+fs.rmSync(path.join(typedocConfig.out, '_media'), {recursive: true, force: true}); // this folder is redundant
 console.log('Docs generation completed, to see it in action run\n npm run start-docs');

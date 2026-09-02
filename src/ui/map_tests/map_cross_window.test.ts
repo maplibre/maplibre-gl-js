@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
-import {Map} from '../map';
-import {beforeMapTest} from '../../util/test/util';
+import {Map} from '../map.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -36,8 +36,8 @@ describe('Map cross-window support', () => {
             expect(iframeDocument).not.toBe(window.document);
             expect(iframeWindow).not.toBe(window);
 
-            expect(container instanceof HTMLElement).toBe(false);
-            expect(container instanceof iframeDocument.defaultView.HTMLElement).toBe(true);
+            expect(container).not.toBeInstanceOf( HTMLElement);
+            expect(container).toBeInstanceOf(iframeDocument.defaultView.HTMLElement);
 
             const map = new Map({
                 container,

@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {DOM} from './dom';
+import {DOM} from './dom.ts';
 
 describe('DOM', () => {
 
@@ -38,6 +38,19 @@ describe('DOM', () => {
             const input = '<div><a href=\'javascript:alert(1)\'>click me</a></div>';
             const output = DOM.sanitize(input);
             expect(output).toBe('<div><a>click me</a></div>');
+        });
+
+        test('should remove multiple consecutive dangerous attributes', () => {
+            const input = '<details open onload="1" ontoggle="alert(1)">x</details>';
+            const output = DOM.sanitize(input);
+            expect(output).not.toContain('onload');
+            expect(output).not.toContain('ontoggle');
+        });
+
+        test('should remove dangerous attributes that follow a removed attribute', () => {
+            const input = '<a href=\'javascript:alert(1)\' onclick=\'alert(1)\'>click me</a>';
+            const output = DOM.sanitize(input);
+            expect(output).toBe('<a>click me</a>');
         });
     });
 });

@@ -1,6 +1,6 @@
-import {defineConfig} from 'vitest/config';
+import {defineConfig, type ViteUserConfig} from 'vitest/config';
 
-export default defineConfig({
+const config: ViteUserConfig = defineConfig({
     test: {
         name: 'unit',
         environment: 'jsdom',
@@ -19,9 +19,11 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['json', 'html'],
-            exclude: ['**/*.test.ts'],
+            exclude: ['**/*.test.ts', '**/*.bench.ts'],
             include: ['src/**/*.{ts,js}'],
             reportsDirectory: './coverage/vitest/unit',
         },
     },
 });
+
+export default config;

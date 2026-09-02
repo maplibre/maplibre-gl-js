@@ -1,24 +1,24 @@
 // WebGPU drawable path for terrain rendering.
 // Extracted from src/render/draw_terrain.ts
 
-import {UniformBlock} from '../../gfx/uniform_block';
-import {shaders} from '../../shaders/shaders';
+import {UniformBlock} from '../../gfx/uniform_block.ts';
+import {shaders} from '../../shaders/shaders.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {Tile} from '../../tile/tile';
-import type {Terrain} from '../../render/terrain';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {Terrain} from '../../render/terrain.ts';
 
-export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Array<Tile>, renderOptions: RenderOptions) {
-    const device = painter.device as any;
+export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions): void {
+    const device = painter.device;
     const gpuDevice = device?.handle;
     if (!gpuDevice) return;
 
-    const rp = (painter.renderPassWGSL as any)?.handle;
+    const rp = (painter.renderPassWGSL)?.handle;
     if (!rp) return;
 
     const tr = painter.transform;
     const isRenderingGlobe = renderOptions.isRenderingGlobe;
-    const eleDelta = terrain.getMeshFrameDelta(tr.zoom);
+    const eleDelta = terrain.getSkirtLength(tr.zoom);
     const sky = painter.style.sky;
 
     // Cache pipeline
@@ -80,7 +80,7 @@ export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Arr
 
         // Build TerrainDrawableUBO (288 bytes rounded to 288)
         const ubo = new UniformBlock(288);
-        ubo.setMat4(0, projectionData.mainMatrix as Float32Array);
+        ubo.setMat4(0, projectionData.mainMatrix);
         ubo.setMat4(64, fogMatrix as Float32Array);
         ubo.setMat4(128, (terrainData as any).u_terrain_matrix as Float32Array);
         ubo.setFloat(192, eleDelta);
@@ -103,7 +103,6 @@ export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Arr
 
         const drawableBuf = (ubo as any)._uploadAsStorage ? (ubo as any)._uploadAsStorage(device) : null;
         // Fall back to manual storage upload
-        let drawableBufHandle;
         if (!(ubo as any)._storageBuffer) {
             (ubo as any)._storageBuffer = device.createBuffer({
                 byteLength: (ubo as any)._byteLength,
@@ -111,7 +110,7 @@ export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Arr
             });
         }
         (ubo as any)._storageBuffer.write(new Uint8Array((ubo as any)._data));
-        drawableBufHandle = (ubo as any)._storageBuffer.handle;
+        const drawableBufHandle = (ubo as any)._storageBuffer.handle;
 
         const globalIndexBuf = globalIndexUBO.upload(device);
 
@@ -133,7 +132,7 @@ export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Arr
         const sourceTile = (terrainData as any).tile;
         if (sourceTile?.dem) {
             // Cache the WebGPU DEM texture on the source tile
-            if (!(sourceTile as any)._webgpuDemTex) {
+            if (!(sourceTile)._webgpuDemTex) {
                 const pixels = sourceTile.dem.getPixels();
                 const w = pixels.width;
                 const h = pixels.height;
@@ -148,9 +147,9 @@ export function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Arr
                     {bytesPerRow: w * 4},
                     [w, h]
                 );
-                (sourceTile as any)._webgpuDemTex = tex;
+                (sourceTile)._webgpuDemTex = tex;
             }
-            demGpuTex = (sourceTile as any)._webgpuDemTex;
+            demGpuTex = (sourceTile)._webgpuDemTex;
         }
         if (!demGpuTex) {
             if (!(painter as any)._dummyDemTex) {

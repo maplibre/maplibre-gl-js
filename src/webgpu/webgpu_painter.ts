@@ -1,10 +1,10 @@
-import {TileLayerGroup} from '../gfx/tile_layer_group';
-import {PipelineCache} from '../gfx/pipeline_cache';
-import {UniformBlock} from '../gfx/uniform_block';
-import type {LayerTweaker} from '../gfx/layer_tweaker';
-import type {Painter} from '../render/painter';
-import type {StyleLayer} from '../style/style_layer';
-import type {OverscaledTileID} from '../tile/tile_id';
+import {type TileLayerGroup} from '../gfx/tile_layer_group.ts';
+import {PipelineCache} from '../gfx/pipeline_cache.ts';
+import {UniformBlock} from '../gfx/uniform_block.ts';
+import type {LayerTweaker} from '../gfx/layer_tweaker.ts';
+import type {Painter} from '../render/painter.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 /**
  * Manages all WebGPU-specific rendering state and operations.
@@ -60,7 +60,7 @@ export class WebGPUPainter {
 
         // Drawables are ONLY used for WebGPU.
         // WebGL1/2 uses the original program.draw() path from main branch — unchanged.
-        if (this.device && this.device.type === 'webgpu') {
+        if (this.device?.type === 'webgpu') {
             this.useDrawables.add('background');
             this.useDrawables.add('circle');
             this.useDrawables.add('fill');
@@ -79,12 +79,12 @@ export class WebGPUPainter {
     beginFrame(): void {
         try {
             // Create a fresh command encoder for this frame
-            if ((this.device as any).beginFrame) {
-                (this.device as any).beginFrame();
+            if ((this.device).beginFrame) {
+                (this.device).beginFrame();
             }
 
-            const gpuDevice = (this.device as any).handle;
-            const canvasCtx = (this.device as any).canvasContext;
+            const gpuDevice = (this.device).handle;
+            const canvasCtx = (this.device).canvasContext;
             const currentTexture = canvasCtx.handle.getCurrentTexture();
             const colorView = currentTexture.createView();
 
@@ -102,7 +102,7 @@ export class WebGPUPainter {
             const dsView = this._webgpuDepthStencilTexture.createView();
 
             // Use the device command encoder
-            const commandEncoder = (this.device as any).commandEncoder.handle;
+            const commandEncoder = (this.device).commandEncoder.handle;
             const rpEncoder = commandEncoder.beginRenderPass({
                 colorAttachments: [{
                     view: colorView,
@@ -145,15 +145,15 @@ export class WebGPUPainter {
                 this.renderPassWGSL.handle.end();
                 this.renderPassWGSL = null;
                 this._webgpuMainRenderPass = null;
-                if (this.device && (this.device as any).submit) {
-                    (this.device as any).submit();
+                if (this.device?.submit) {
+                    (this.device).submit();
                 }
             } else {
                 this.renderPassWGSL.end();
                 this.renderPassWGSL = null;
                 this._webgpuMainRenderPass = null;
-                if (this.device && (this.device as any).submit) {
-                    (this.device as any).submit();
+                if (this.device?.submit) {
+                    (this.device).submit();
                 }
             }
         }
@@ -163,8 +163,8 @@ export class WebGPUPainter {
      * WebGPU stencil clipping: writes unique stencil IDs per tile.
      * Called before rendering layers that need tile clipping (fill, line, etc).
      */
-    renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
-        if (!this.renderPassWGSL || !tileIDs || !tileIDs.length) return;
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+        if (!this.renderPassWGSL || !tileIDs?.length) return;
         if (!layer.isTileClipped()) return;
 
         // Skip if we already rendered stencil masks for this source (same tiles)
@@ -175,7 +175,7 @@ export class WebGPUPainter {
             this._webgpuNextStencilID = 1;
         }
 
-        const gpuDevice = (this.device as any).handle;
+        const gpuDevice = (this.device).handle;
         const rpEncoder = this.renderPassWGSL.handle;
         const projection = this.painter.style.projection;
         const transform = this.painter.transform;
@@ -237,12 +237,10 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const pipeline = this._webgpuStencilClipPipeline;
         rpEncoder.setPipeline(pipeline);
 
-
         // Draw each tile's stencil mask with a unique ref.
         // Create a fresh UBO buffer per tile (matching native's approach) to avoid
         // writeBuffer race conditions with reused buffers.
-        for (let i = 0; i < tileIDs.length; i++) {
-            const tileID = tileIDs[i];
+        for (const tileID of tileIDs) {
             const stencilRef = this._webgpuNextStencilID++;
             this._webgpuTileStencilRefs[tileID.key] = stencilRef;
 
@@ -287,8 +285,8 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * Call endRttPass() when done.
      */
     beginRttPass(key: string, size: number): any | null {
-        if (!this.device || this.device.type !== 'webgpu') return null;
-        const gpuDevice = (this.device as any).handle;
+        if (this.device?.type !== 'webgpu') return null;
+        const gpuDevice = (this.device).handle;
         if (!gpuDevice) return null;
 
         // Save current (main) render pass. Always overwrite since it changes each frame.
@@ -297,11 +295,11 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             this._webgpuMainRenderPass = this.renderPassWGSL;
         }
 
-        if (!this._webgpuRttTextures) this._webgpuRttTextures = new Map();
+        this._webgpuRttTextures ||= new Map();
 
         // Get or create RTT color texture for this key
         let colorTex = this._webgpuRttTextures.get(key);
-        if (!colorTex || colorTex._size !== size) {
+        if (colorTex?._size !== size) {
             if (colorTex) colorTex.destroy();
             colorTex = gpuDevice.createTexture({
                 size: [size, size],
@@ -313,7 +311,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         }
 
         // Shared depth-stencil texture (reused across tiles since we clear each pass)
-        if (!this._webgpuRttDepthTexture || this._webgpuRttDepthTexture._size !== size) {
+        if (this._webgpuRttDepthTexture?._size !== size) {
             if (this._webgpuRttDepthTexture) this._webgpuRttDepthTexture.destroy();
             this._webgpuRttDepthTexture = gpuDevice.createTexture({
                 size: [size, size],
@@ -358,8 +356,8 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * End the current RTT render pass, submit it, and restore the main render pass.
      */
     endRttPass(): void {
-        if (!this.renderPassWGSL || !this.renderPassWGSL._isRtt) return;
-        const gpuDevice = (this.device as any).handle;
+        if (!this.renderPassWGSL?._isRtt) return;
+        const gpuDevice = (this.device).handle;
         try {
             this.renderPassWGSL.handle.end();
             const cmdBuffer = this.renderPassWGSL._cmdEncoder.finish();

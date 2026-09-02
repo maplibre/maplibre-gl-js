@@ -1,24 +1,24 @@
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {SegmentVector} from '../data/segment';
-import type {ProgramConfiguration} from '../data/program_configuration';
-import type {Program} from '../render/program';
-import type {Context} from '../gl/context';
-import type {Painter} from '../render/painter';
-import type {UniformValues} from '../render/uniform_binding';
-import type {DepthMode} from '../gl/depth_mode';
-import type {StencilMode} from '../gl/stencil_mode';
-import type {ColorMode} from '../gl/color_mode';
-import type {CullFaceMode} from '../gl/cull_face_mode';
-import type {LayerTweaker} from './layer_tweaker';
-import {UniformBlock} from './uniform_block';
-import type {ProjectionData} from '../geo/projection/projection_data';
-import type {TerrainData} from '../render/terrain';
-import {VertexArrayObject} from '../render/vertex_array_object';
-import {shaders} from '../shaders/shaders';
-import {preprocessWGSL} from '../webgpu/wgsl_preprocessor';
-import {renderStateHash} from './render_state';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {IndexBuffer} from '../webgl/index_buffer.ts';
+import type {SegmentVector} from '../data/segment.ts';
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+import type {Program} from '../webgl/program.ts';
+import type {Context} from '../webgl/context.ts';
+import type {Painter} from '../render/painter.ts';
+import type {UniformValues} from '../webgl/uniform_binding.ts';
+import type {DepthMode} from '../webgl/depth_mode.ts';
+import type {StencilMode} from '../webgl/stencil_mode.ts';
+import type {ColorMode} from '../webgl/color_mode.ts';
+import type {CullFaceMode} from '../webgl/cull_face_mode.ts';
+import type {LayerTweaker} from './layer_tweaker.ts';
+import {UniformBlock} from './uniform_block.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import type {TerrainData} from '../render/terrain.ts';
+import {VertexArrayObject} from '../webgl/vertex_array_object.ts';
+import {shaders} from '../shaders/shaders.ts';
+import {preprocessWGSL} from '../webgpu/wgsl_preprocessor.ts';
+import {renderStateHash} from './render_state.ts';
 
 function wgslTypeFromFormat(format: string): string {
     if (format.startsWith('sint16')) return format === 'sint16' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
@@ -32,13 +32,13 @@ function wgslTypeFromFormat(format: string): string {
 
 let nextDrawableId = 0;
 
-export interface DrawableTexture {
+export type DrawableTexture = {
     name: string;
     textureUnit: number;
     texture: any; // WebGLTexture or GPUTexture
     filter?: number;
     wrap?: number;
-}
+};
 
 /**
  * A self-contained draw call object created once (when tile data arrives)
@@ -113,15 +113,15 @@ export class Drawable {
         this.tileID = null;
         this.shaderName = '';
         this.programConfiguration = null;
-        this.layoutVertexBuffer = null as any;
-        this.indexBuffer = null as any;
-        this.segments = null as any;
+        this.layoutVertexBuffer = null;
+        this.indexBuffer = null;
+        this.segments = null;
         this.dynamicLayoutBuffer = null;
         this.dynamicLayoutBuffer2 = null;
-        this.depthMode = null as any;
-        this.stencilMode = null as any;
-        this.colorMode = null as any;
-        this.cullFaceMode = null as any;
+        this.depthMode = null;
+        this.stencilMode = null;
+        this.colorMode = null;
+        this.cullFaceMode = null;
         this.drawMode = null; // null = gl.TRIANGLES (default)
         this.renderPass = 'translucent';
         this.drawPriority = 0;
@@ -152,7 +152,7 @@ export class Drawable {
     draw(context: Context, device: any | null, painter: Painter, renderPass?: any): void {
         if (!this.enabled) return;
 
-        const isWebGPU = device && device.type === 'webgpu';
+        const isWebGPU = device?.type === 'webgpu';
         if (isWebGPU) {
             this._drawWebGPU(device, painter, renderPass);
         } else {
@@ -211,7 +211,7 @@ export class Drawable {
             };
             for (const fieldName in this.projectionData) {
                 const uniformName = projMap[fieldName];
-                if (program.projectionUniforms && program.projectionUniforms[uniformName]) {
+                if (program.projectionUniforms?.[uniformName]) {
                     program.projectionUniforms[uniformName].set((this.projectionData as any)[fieldName]);
                 }
             }
@@ -230,7 +230,7 @@ export class Drawable {
                 context,
                 program.binderUniforms,
                 this._paintProperties,
-                {zoom: this._zoom as any}
+                {zoom: this._zoom}
             );
         }
 
@@ -238,8 +238,8 @@ export class Drawable {
         const mode = this.drawMode ?? gl.TRIANGLES;
         const verticesPerPrimitive = mode === gl.LINES ? 2 : 3;
         for (const segment of this.segments.get()) {
-            const vaos = segment.vaos || (segment.vaos = {});
-            const vao: VertexArrayObject = vaos[this._layerID] || (vaos[this._layerID] = new VertexArrayObject());
+            const vaos = (segment.vaos ||= {});
+            const vao: VertexArrayObject = (vaos[this._layerID] ||= new VertexArrayObject());
 
             vao.bind(
                 context,
@@ -281,8 +281,8 @@ export class Drawable {
         }
 
         try {
-            const gpuDevice = (device as any).handle;
-            const rpEncoder = (renderPass as any).handle;
+            const gpuDevice = (device).handle;
+            const rpEncoder = (renderPass).handle;
             if (!gpuDevice || !rpEncoder) {
                 if (!(this as any)._loggedRP) {
                     (this as any)._loggedRP = true;
@@ -310,7 +310,7 @@ export class Drawable {
             if (!(painter as any)._rawPipelines) (painter as any)._rawPipelines = {};
             if (!(painter as any)._rawPipelines[cacheKey]) {
                 const wgslKey = `${this.shaderName}Wgsl`;
-                let rawWgsl = (shaders as any)[wgslKey];
+                const rawWgsl = (shaders as any)[wgslKey];
                 if (!rawWgsl) return;
 
                 // Preprocess WGSL (handle #ifdef/#ifndef for data-driven properties)
@@ -321,15 +321,15 @@ export class Drawable {
                     const shaderName = this.shaderName;
                     const prefix = shaderName === 'line' || shaderName === 'lineSDF' || shaderName === 'lineGradient' || shaderName === 'lineGradientSDF' || shaderName === 'linePattern' ? 'line' :
                         shaderName === 'circle' ? 'circle' :
-                        shaderName === 'fill' || shaderName === 'fillOutline' || shaderName === 'fillPattern' || shaderName === 'fillOutlinePattern' ? 'fill' :
-                        shaderName === 'fillExtrusion' || shaderName === 'fillExtrusionPattern' ? 'fill-extrusion' : '';
+                            shaderName === 'fill' || shaderName === 'fillOutline' || shaderName === 'fillPattern' || shaderName === 'fillOutlinePattern' ? 'fill' :
+                                shaderName === 'fillExtrusion' || shaderName === 'fillExtrusionPattern' ? 'fill-extrusion' : '';
                     const paintProperties = ['color', 'radius', 'blur', 'opacity', 'stroke_color', 'stroke_width', 'stroke_opacity',
                         'outline_color', 'width', 'gapwidth', 'offset', 'floorwidth', 'base', 'height'];
                     for (const prop of paintProperties) {
                         // Convert shader prop (e.g. 'color') to style prop (e.g. 'fill-color')
                         const styleProp = prefix ? `${prefix}-${prop.replace(/_/g, '-')}` : prop;
                         const binder = binders[styleProp] || null;
-                        const hasPaintBuffer = binder && binder.paintVertexBuffer;
+                        const hasPaintBuffer = binder?.paintVertexBuffer;
                         const isComposite = hasPaintBuffer && binder.uniformNames && binder.uniformNames.length > 0;
                         const isSource = hasPaintBuffer && !isComposite;
                         defines[`HAS_UNIFORM_u_${prop}`] = !isSource && !isComposite;
@@ -432,7 +432,7 @@ export class Drawable {
 
                 // Cache @group(1) binding layout for texture bind group creation
                 if (!(painter as any)._rawGroup1Bindings) (painter as any)._rawGroup1Bindings = {};
-                const group1Bindings: {binding: number; type: string}[] = [];
+                const group1Bindings: Array<{binding: number; type: string}> = [];
                 const g1Regex = /@group\(1\)\s*@binding\((\d+)\)\s*var\s*\S+\s*:\s*(\w+)/g;
                 let g1m: RegExpExecArray | null;
                 while ((g1m = g1Regex.exec(wgslSource)) !== null) {
@@ -547,7 +547,7 @@ export class Drawable {
                     const dummySampler = (painter as any)._dummyGPUSampler;
 
                     // Use cached @group(1) binding layout
-                    const group1Bindings: {binding: number; type: string}[] =
+                    const group1Bindings: Array<{binding: number; type: string}> =
                         (painter as any)._rawGroup1Bindings?.[cacheKey] || [];
 
                     // Build bind group entries matching shader declarations
@@ -756,6 +756,6 @@ function getWebGPUVertexFormat(type: string, components: number): string {
         case 'Float32': baseType = 'float32'; break;
         default: baseType = 'float32'; break;
     }
-    if (components === 1) return baseType as string;
-    return `${baseType}x${components}` as string;
+    if (components === 1) return baseType;
+    return `${baseType}x${components}`;
 }

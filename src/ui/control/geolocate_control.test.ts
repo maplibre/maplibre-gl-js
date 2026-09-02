@@ -1,15 +1,15 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
-import {createMap, beforeMapTest, sleep} from '../../util/test/util';
-import {GeolocateControl} from './geolocate_control';
-vi.mock('../../util/geolocation_support', () => (
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
+import {GeolocateControl} from './geolocate_control.ts';
+vi.mock(import('../../util/geolocation_support'), () => (
     {
         checkGeolocationSupport: vi.fn()
     }
 ));
-import {checkGeolocationSupport} from '../../util/geolocation_support';
-import type {LngLat} from '../../geo/lng_lat';
+import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
+import type {LngLat} from '../../geo/lng_lat.ts';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
@@ -61,7 +61,7 @@ describe('GeolocateControl with no options', () => {
     beforeEach(() => {
         beforeMapTest();
         map = createMap();
-        (checkGeolocationSupport as unknown as MockInstance).mockImplementationOnce(() => Promise.resolve(true));
+        (checkGeolocationSupport as unknown as MockInstance).mockResolvedValueOnce(true);
         createResizeObserverEntryMock();
     });
 
@@ -70,7 +70,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('is disabled when there is no support', async () => {
-        (checkGeolocationSupport as unknown as MockInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
+        (checkGeolocationSupport as unknown as MockInstance).mockReset().mockResolvedValueOnce(false);
         const geolocate = new GeolocateControl(undefined);
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.addControl(geolocate);
@@ -237,13 +237,13 @@ describe('GeolocateControl with no options', () => {
 
     test('does not throw if removed quickly', () => {
         (checkGeolocationSupport as unknown as MockInstance).mockReset()
-            .mockImplementationOnce(() => {
-                return sleep(10);
-            });
+            .mockReturnValueOnce(sleep(10));
 
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         map.removeControl(geolocate);
+
+        expect(map.hasControl(geolocate)).toBe(false);
     });
 
     test('outofmaxbounds event in waiting active state', async () => {
@@ -418,11 +418,11 @@ describe('GeolocateControl with no options', () => {
         geolocate.trigger();
         geolocation.sendError({code: 2, message: 'error message'});
         expect(geolocate._watchState).toBe('ACTIVE_ERROR');
-        expect(geolocate._geolocateButton.classList.contains('maplibregl-ctrl-geolocate-active-error')).toBeTruthy();
+        expect(geolocate._geolocateButton.classList).toContain('maplibregl-ctrl-geolocate-active-error');
     });
 
     test('trigger before added to map', () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const geolocate = new GeolocateControl(undefined);
 
@@ -538,9 +538,7 @@ describe('GeolocateControl with no options', () => {
 
         expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '10.0000', lng: '20.0000'});
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-        expect(
-            geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
-        ).toBeFalsy();
+        expect(geolocate._userLocationDotMarker._element.classList).not.toContain('maplibregl-user-location-dot-stale');
         const secontMoveEnd = map.once('moveend');
         geolocation.change({latitude: 40, longitude: 50, accuracy: 60});
         await secontMoveEnd;
@@ -549,7 +547,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.changeError({code: 2, message: 'position unavailable'});
         await errorPromise;
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
-        expect(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')).toBeTruthy();
+        expect(geolocate._userLocationDotMarker._element.classList).toContain('maplibregl-user-location-dot-stale');
     });
 
     /**
@@ -724,7 +722,7 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
 
         const moveStartPromise = map.once('movestart');
-        map._moving = false;
+        map._camera._moving = false;
         map.resize([new ResizeObserverEntry()]);
         await moveStartPromise;
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
@@ -832,29 +830,6 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBe('4766.49px');
-    });
-
-    test('shown even if trackUserLocation = false', async () => {
-        const geolocate = new GeolocateControl({
-            trackUserLocation: false,
-            showUserLocation: true,
-            showAccuracyCircle: true,
-        });
-        map.addControl(geolocate);
-        await sleep(0);
-        const click = new window.Event('click');
-
-        const geolocatePromise = geolocate.once('geolocate');
-        geolocate._geolocateButton.dispatchEvent(click);
-        geolocation.send({latitude: 10, longitude: 20, accuracy: 700});
-        await geolocatePromise;
-        map.jumpTo({
-            center: [10, 20]
-        });
-        const zoomendPromise = map.once('zoomend');
-        map.zoomTo(10, {duration: 0});
-        await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBeTruthy();
     });
 
     test('shown even if trackUserLocation = false', async () => {

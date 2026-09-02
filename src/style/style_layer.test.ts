@@ -1,19 +1,19 @@
-import {describe, test, expect} from 'vitest';
-import {createStyleLayer} from './create_style_layer';
-import {FillStyleLayer} from './style_layer/fill_style_layer';
-import {extend} from '../util/util';
+import {describe, test, expect, vi} from 'vitest';
+import {createStyleLayer} from './create_style_layer.ts';
+import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
+import {extend} from '../util/util.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from './evaluation_parameters';
-import {type TransitionParameters} from './properties';
-import {type BackgroundStyleLayer} from './style_layer/background_style_layer';
-import {type SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import {type CircleStyleLayer} from './style_layer/circle_style_layer';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {type TransitionParameters} from './properties.ts';
+import {type BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import {type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
+import {type CircleStyleLayer} from './style_layer/circle_style_layer.ts';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification, {});
 
-        expect(layer instanceof FillStyleLayer).toBeTruthy();
+        expect(layer).toBeInstanceOf(FillStyleLayer);
     });
 });
 
@@ -72,7 +72,7 @@ describe('StyleLayer.setPaintProperty', () => {
                 'background-color-transition': {
                     duration: 600
                 }
-            } as any
+            }
         }, {});
 
         layer.setPaintProperty('background-color', 'blue');
@@ -171,8 +171,8 @@ describe('StyleLayer.setPaintProperty', () => {
         layer.updateTransitions({} as TransitionParameters);
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
-        layer.paint.get('fill-outline-color');
-
+        const outlineColor = layer.paint.get('fill-outline-color');
+        expect(outlineColor.value).toMatchObject({kind: 'constant', value: {r: 1, g: 0, b: 0, a: 1}});
     });
 
     test('sets null property value', () => {
@@ -196,7 +196,7 @@ describe('StyleLayer.setPaintProperty', () => {
         } as LayerSpecification, {});
 
         const errorPromise = layer.once('error');
-        layer.setPaintProperty('visibility', 'visible');
+        layer.setPaintProperty('visibility' as any, 'visible');
         const {error} = await errorPromise;
         expect(error.message).toContain('Use get/setLayoutProperty instead?');
     });
@@ -212,7 +212,7 @@ describe('StyleLayer.getPaintProperty', () => {
             }
         } as LayerSpecification, {});
 
-        expect(() => layer.getPaintProperty('text-transform')).toThrow(
+        expect(() => layer.getPaintProperty('text-transform' as any)).toThrow(
             'Use get/setLayoutProperty instead?'
         );
     });
@@ -226,7 +226,7 @@ describe('StyleLayer.getPaintProperty', () => {
             }
         } as LayerSpecification, {});
 
-        expect(() => layer.getPaintProperty('text-transform-transition')).toThrow(
+        expect(() => layer.getPaintProperty('text-transform-transition' as any)).toThrow(
             'Use get/setLayoutProperty instead?'
         );
     });
@@ -237,7 +237,7 @@ describe('StyleLayer.getPaintProperty', () => {
             'type': 'symbol',
         } as LayerSpecification, {});
 
-        expect(() => layer.getPaintProperty('visibility')).toThrow(
+        expect(() => layer.getPaintProperty('visibility' as any)).toThrow(
             'Use get/setLayoutProperty instead?'
         );
     });
@@ -248,9 +248,9 @@ describe('StyleLayer.getLayoutProperty', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background',
-        } as LayerSpecification, {});
+        }, {});
 
-        expect(() => layer.getLayoutProperty('some-property')).toThrow(
+        expect(() => layer.getLayoutProperty('some-property' as any)).toThrow(
             'Cannot get layout property "some-property" on layer type "background" which has no layout properties.'
         );
     });
@@ -264,7 +264,7 @@ describe('StyleLayer.getLayoutProperty', () => {
             }
         } as LayerSpecification, {});
 
-        expect(() => layer.getLayoutProperty('text-color')).toThrow(
+        expect(() => layer.getLayoutProperty('text-color' as any)).toThrow(
             'Use get/setPaintProperty instead?'
         );
     });
@@ -290,7 +290,7 @@ describe('StyleLayer.setLayoutProperty', () => {
 
         const errorPromise = layer.once('error');
 
-        layer.setLayoutProperty('text-transform', 'invalidValue');
+        layer.setLayoutProperty('text-transform', 'invalidValue' as any);
         await expect(errorPromise).resolves.toBeDefined();
     });
 
@@ -333,7 +333,7 @@ describe('StyleLayer.setLayoutProperty', () => {
         } as LayerSpecification, {});
 
         const errorPromise = layer.once('error');
-        layer.setLayoutProperty('text-color', 'blue');
+        layer.setLayoutProperty('text-color' as any, 'blue' as any);
         const {error} = await errorPromise;
         expect(error.message).toContain('Use get/setPaintProperty instead?');
     });
@@ -347,7 +347,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
             'paint': {
                 'background-color': '#000000'
             }
-        } as LayerSpecification, {});
+        }, {});
 
         expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set<string>());
     });
@@ -379,13 +379,14 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
     });
 
     test('returns global-state references from visibility', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const layer = createStyleLayer({
             id: 'background',
             type: 'background',
             layout: {
                 'visibility': ['global-state', 'visibility']
             }
-        } as LayerSpecification, {});
+        }, {});
 
         expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set<string>(['visibility']));
     });
@@ -399,7 +400,7 @@ describe('StyleLayer.getPaintAffectingGlobalStateRefs', () => {
             'paint': {
                 'background-color': '#000000'
             }
-        } as LayerSpecification, {});
+        }, {});
 
         expect(layer.getPaintAffectingGlobalStateRefs()).toEqual(new Map<string, Array<{name: string; value: any}>>());
     });
@@ -507,54 +508,7 @@ describe('StyleLayer.serialize', () => {
 
 });
 
-describe('StyleLayer.serialize', () => {
-
-    function createSymbolLayer(layer?) {
-        return extend({
-            id: 'symbol',
-            type: 'symbol',
-            paint: {
-                'text-color': 'blue'
-            },
-            layout: {
-                'text-transform': 'uppercase'
-            }
-        }, layer);
-    }
-
-    test('serializes layers', () => {
-        expect(createStyleLayer(createSymbolLayer(), {}).serialize()).toEqual(createSymbolLayer());
-    });
-
-    test('serializes functions', () => {
-        const layerPaint = {
-            'text-color': {
-                base: 2,
-                stops: [[0, 'red'], [1, 'blue']]
-            }
-        };
-
-        expect(createStyleLayer(createSymbolLayer({paint: layerPaint}), {}).serialize().paint).toEqual(layerPaint);
-    });
-
-    test('serializes added paint properties', () => {
-        const layer = createStyleLayer(createSymbolLayer(), {});
-        layer.setPaintProperty('text-halo-color', 'orange');
-
-        expect(layer.serialize().paint['text-halo-color']).toBe('orange');
-        expect(layer.serialize().paint['text-color']).toBe('blue');
-
-    });
-
-    test('serializes added layout properties', () => {
-        const layer = createStyleLayer(createSymbolLayer(), {});
-        layer.setLayoutProperty('text-size', 20);
-
-        expect(layer.serialize().layout['text-transform']).toBe('uppercase');
-        expect(layer.serialize().layout['text-size']).toBe(20);
-
-    });
-
+describe('StyleLayer.paint', () => {
     test('layer.paint is never undefined', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification, {});
         // paint is never undefined
@@ -604,7 +558,7 @@ describe('StyleLayer.globalState', () => {
             layout: {
                 'visibility': ['global-state', 'visibility']
             }
-        } as LayerSpecification, globalState) as BackgroundStyleLayer;
+        }, globalState) as BackgroundStyleLayer;
 
         expect(layer.isHidden()).toBe(true);
 

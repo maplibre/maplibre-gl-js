@@ -3,27 +3,27 @@ import {
     codePointHasUprightVerticalOrientation,
     codePointHasNeutralVerticalOrientation,
     codePointRequiresComplexTextShaping
-} from '../util/unicode_properties.g';
+} from '../util/unicode_properties.g.ts';
 
-export function charIsWhitespace(char: number) {
+export function charIsWhitespace(char: number): boolean {
     return /\s/u.test(String.fromCodePoint(char));
 }
 
-export function allowsIdeographicBreaking(chars: string) {
+export function allowsIdeographicBreaking(chars: string): boolean {
     for (const char of chars) {
         if (!codePointAllowsIdeographicBreaking(char.codePointAt(0))) return false;
     }
     return true;
 }
 
-export function allowsVerticalWritingMode(chars: string) {
+export function allowsVerticalWritingMode(chars: string): boolean {
     for (const char of chars) {
         if (codePointHasUprightVerticalOrientation(char.codePointAt(0))) return true;
     }
     return false;
 }
 
-export function allowsLetterSpacing(chars: string) {
+export function allowsLetterSpacing(chars: string): boolean {
     for (const char of chars) {
         if (!charAllowsLetterSpacing(char.codePointAt(0))) return false;
     }
@@ -61,7 +61,7 @@ const cursiveScriptCodes = [
 
 const cursiveScriptRegExp = sanitizedRegExpFromScriptCodes(cursiveScriptCodes);
 
-export function charAllowsLetterSpacing(char: number) {
+export function charAllowsLetterSpacing(char: number): boolean {
     return !cursiveScriptRegExp.test(String.fromCodePoint(char));
 }
 
@@ -74,12 +74,12 @@ export function charAllowsLetterSpacing(char: number) {
  * example, a Latin letter is drawn rotated along a vertical line. A rotated
  * character causes an adjacent “neutral” character to be drawn rotated as well.
  */
-export function charHasRotatedVerticalOrientation(char: number) {
+export function charHasRotatedVerticalOrientation(char: number): boolean {
     return !(codePointHasUprightVerticalOrientation(char) ||
              codePointHasNeutralVerticalOrientation(char));
 }
 
-export function charInComplexShapingScript(char: number) {
+export function charInComplexShapingScript(char: number): boolean {
     return /\p{sc=Arab}/u.test(String.fromCodePoint(char));
 }
 
@@ -128,11 +128,11 @@ const rtlScriptCodes = [
 
 const rtlScriptRegExp = sanitizedRegExpFromScriptCodes(rtlScriptCodes);
 
-export function charInRTLScript(char: number) {
+export function charInRTLScript(char: number): boolean {
     return rtlScriptRegExp.test(String.fromCodePoint(char));
 }
 
-export function charInSupportedScript(char: number, canRenderRTL: boolean) {
+export function charInSupportedScript(char: number, canRenderRTL: boolean): boolean {
     // This is a rough heuristic: whether we "can render" a script
     // actually depends on the properties of the font being used
     // and whether differences from the ideal rendering are considered
@@ -156,7 +156,7 @@ export function stringContainsRTLText(chars: string): boolean {
     return false;
 }
 
-export function isStringInSupportedScript(chars: string, canRenderRTL: boolean) {
+export function isStringInSupportedScript(chars: string, canRenderRTL: boolean): boolean {
     for (const char of chars) {
         if (!charInSupportedScript(char.codePointAt(0), canRenderRTL)) {
             return false;

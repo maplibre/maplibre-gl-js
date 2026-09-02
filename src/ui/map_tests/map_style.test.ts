@@ -1,13 +1,14 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
-import {Event as EventedEvent} from '../../util/evented';
-import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {extend} from '../../util/util';
+import {Map} from '../map.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
+import {ErrorEvent} from '../../util/evented.ts';
+import {MapSourceDataEvent, MapStyleDataEvent} from '../events.ts';
+import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
+import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {Style} from '../../style/style';
-import {type GeoJSONSourceSpecification, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
+import {Style} from '../../style/style.ts';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
+import type {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -23,7 +24,7 @@ afterEach(() => {
 
 describe('setStyle', () => {
     test('returns self', () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
         expect(map.setStyle({
             version: 8,
             sources: {},
@@ -42,9 +43,9 @@ describe('setStyle', () => {
         map.on('data', recordEvent);
         map.on('dataloading', recordEvent);
 
-        map.style.fire(new EventedEvent('error'));
-        map.style.fire(new EventedEvent('data'));
-        map.style.fire(new EventedEvent('dataloading'));
+        map.style.fire(new ErrorEvent(new Error('test')));
+        map.style.fire(new MapSourceDataEvent('data'));
+        map.style.fire(new MapSourceDataEvent('dataloading'));
 
         expect(events).toEqual([
             'error',
@@ -64,32 +65,28 @@ describe('setStyle', () => {
         map.on('styledataloading', recordEvent);
         map.on('sourcedata', recordEvent);
         map.on('sourcedataloading', recordEvent);
-        map.on('tiledata', recordEvent);
-        map.on('tiledataloading', recordEvent);
 
-        map.style.fire(new EventedEvent('data', {dataType: 'style'}));
-        map.style.fire(new EventedEvent('dataloading', {dataType: 'style'}));
-        map.style.fire(new EventedEvent('data', {dataType: 'source'}));
-        map.style.fire(new EventedEvent('dataloading', {dataType: 'source'}));
-        map.style.fire(new EventedEvent('data', {dataType: 'tile'}));
-        map.style.fire(new EventedEvent('dataloading', {dataType: 'tile'}));
+        map.style.fire(new MapStyleDataEvent('data'));
+        map.style.fire(new MapStyleDataEvent('dataloading'));
+        map.style.fire(new MapSourceDataEvent('data'));
+        map.style.fire(new MapSourceDataEvent('dataloading'));
 
         expect(events).toEqual([
             'styledata',
             'styledataloading',
             'sourcedata',
-            'sourcedataloading',
-            'tiledata',
-            'tiledataloading'
+            'sourcedataloading'
         ]);
     });
 
-    test('can be called more than once', () => {
+    test('can be called more than once', async () => {
         const map = createMap();
 
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        await map.once('style.load');
 
+        expect(map.getStyle()).toEqual({version: 8, sources: {}, layers: []});
     });
 
     test('setStyle back to the first style should work', async () => {
@@ -109,43 +106,65 @@ describe('setStyle', () => {
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-        map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
-        map.transform.resize(600, 400, true);
-        expect(map.transform.zoom).toBe(0.6983039737971013);
-        expect(map.transform.unmodified).toBeTruthy();
-        map.setStyle(createStyle());
+    test('style transform overrides unmodified map transform when max bounds are set for a large area', async () => {
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 600});
+        Object.defineProperty(container, 'clientHeight', {value: 400});
+        const map = createMap({container, deleteStyle: true});
+        map.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
+        expect(map.getZoom()).toBeCloseTo(0.6983039737971013, 10);
+        const style = createStyle();
+        map.setStyle(style);
         await map.once('style.load');
-        expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -73.9749, lat: 40.7736}));
-        expect(fixedNum(map.transform.zoom)).toBe(12.5);
-        expect(fixedNum(map.transform.bearing)).toBe(29);
-        expect(fixedNum(map.transform.pitch)).toBe(50);
+        expect(fixedLngLat(map.getCenter())).toEqual({lng: style.center[0], lat: style.center[1]});
+        expect(fixedNum(map.getZoom())).toBe(style.zoom);
+        expect(fixedNum(map.getBearing())).toBe(style.bearing);
+        expect(fixedNum(map.getPitch())).toBe(style.pitch);
+    });
+
+    test('style transform overrides map transform when zoom and pitch limits are set in options', async () => {
+        const map = createMap({deleteStyle: true, minZoom: 1, minPitch: 10});
+        const style = createStyle();
+        map.setStyle(style);
+        await map.once('style.load');
+        expect(fixedLngLat(map.getCenter())).toEqual({lng: style.center[0], lat: style.center[1]});
+        expect(fixedNum(map.getZoom())).toBe(style.zoom);
+        expect(fixedNum(map.getBearing())).toBe(style.bearing);
+        expect(fixedNum(map.getPitch())).toBe(style.pitch);
+    });
+
+    test('style transform overrides map transform when a max zoom limit is set in options', async () => {
+        const map = createMap({deleteStyle: true, maxZoom: -1});
+        const style = createStyle();
+        map.setStyle(style);
+        await map.once('style.load');
+        expect(fixedNum(map.getCenter().lng)).toBe(style.center[0]);
+        expect(fixedNum(map.getBearing())).toBe(style.bearing);
+        expect(fixedNum(map.getPitch())).toBe(style.pitch);
+        expect(fixedNum(map.getZoom())).toBe(-1);
+        expect(fixedNum(map.getCenter().lat)).toBe(36.5978911823);
     });
 
     test('style transform does not override map transform modified via options', async () => {
-        const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
-        expect(map.transform.unmodified).toBeFalsy();
+        const map = createMap({deleteStyle: true, zoom: 10, center: [-77.0186, 38.8888]});
         map.setStyle(createStyle());
         await map.once('style.load');
-        expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
-        expect(fixedNum(map.transform.zoom)).toBe(10);
-        expect(fixedNum(map.transform.bearing)).toBe(0);
-        expect(fixedNum(map.transform.pitch)).toBe(0);
+        expect(fixedLngLat(map.getCenter())).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+        expect(fixedNum(map.getZoom())).toBe(10);
+        expect(fixedNum(map.getBearing())).toBe(0);
+        expect(fixedNum(map.getPitch())).toBe(0);
     });
 
     test('style transform does not override map transform modified via setters', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-        expect(map.transform.unmodified).toBeTruthy();
+        const map = createMap({deleteStyle: true});
         map.setZoom(10);
         map.setCenter([-77.0186, 38.8888]);
-        expect(map.transform.unmodified).toBeFalsy();
         map.setStyle(createStyle());
-        map.once('style.load');
-        expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
-        expect(fixedNum(map.transform.zoom)).toBe(10);
-        expect(fixedNum(map.transform.bearing)).toBe(0);
-        expect(fixedNum(map.transform.pitch)).toBe(0);
+        await map.once('style.load');
+        expect(fixedLngLat(map.getCenter())).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
+        expect(fixedNum(map.getZoom())).toBe(10);
+        expect(fixedNum(map.getBearing())).toBe(0);
+        expect(fixedNum(map.getPitch())).toBe(0);
     });
 
     test('passing null removes style', () => {
@@ -355,7 +374,7 @@ describe('setStyle', () => {
         });
 
         const map = createMap({deleteStyle: true});
-        const initialTransform = map.transform;
+        const initialTransform = map._camera.transform;
         const initialPainterTransform = map.painter.transform;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
@@ -371,7 +390,7 @@ describe('setStyle', () => {
 
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
-        expect(map.transform).toBe(initialTransform);
+        expect(map._camera.transform).toBe(initialTransform);
         expect(map.painter.transform).toBe(initialPainterTransform);
     });
 
@@ -483,12 +502,16 @@ describe('getStyle', () => {
             type: 'background'
         } as LayerSpecification;
         map.addLayer(layer);
+
+        expect(map.getLayer('background')).toBeDefined();
     });
 
     test('a source can be added even if a map is created without a style', () => {
         const map = createMap({deleteStyle: true});
         const source = createStyleSource();
         map.addSource('fill', source);
+
+        expect(map.getSource('fill')).toBeDefined();
     });
 
     test('a layer can be added with an embedded source specification', () => {
@@ -502,6 +525,8 @@ describe('getStyle', () => {
             type: 'symbol',
             source
         });
+
+        expect(map.getLayer('foo')).toBeDefined();
     });
 
     test('returns the style with added source and layer', async () => {
@@ -584,6 +609,23 @@ describe('getStyle', () => {
             map.getLight();
 
             expect(spy).toHaveBeenCalled();
+        });
+    });
+
+    describe('setFontFaces', () => {
+        test('round-trips the font files the style draws text with', async () => {
+            const map = createMap();
+            await map.once('style.load');
+            expect(map.getFontFaces()).toBeNull();
+
+            const fontFaces = {
+                'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+            };
+            map.setFontFaces(fontFaces);
+            expect(map.getFontFaces()).toEqual(fontFaces);
+
+            map.setFontFaces(null);
+            expect(map.getFontFaces()).toBeNull();
         });
     });
 

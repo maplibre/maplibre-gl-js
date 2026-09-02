@@ -10,14 +10,14 @@ in vec2 v_pos;
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;

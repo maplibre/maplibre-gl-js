@@ -1,31 +1,31 @@
 // WebGPU drawable path for symbol layers.
 // Extracted from src/render/draw_symbol.ts
 
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {UniformBlock} from '../../gfx/uniform_block';
-import {LayerTweaker} from '../../gfx/layer_tweaker';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {evaluateSizeForZoom} from '../../symbol/symbol_size';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {UniformBlock} from '../../gfx/uniform_block.ts';
+import {LayerTweaker} from '../../gfx/layer_tweaker.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {evaluateSizeForZoom} from '../../symbol/symbol_size.ts';
 import {mat4} from 'gl-matrix';
-import {StencilMode} from '../../gl/stencil_mode';
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
+import {StencilMode} from '../../webgl/stencil_mode.ts';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
 import {
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
-} from '../../render/program/symbol_program';
-import {getGlCoordMatrix, getPitchedLabelPlaneMatrix, updateLineLabels} from '../../symbol/projection';
-import {translatePosition} from '../../util/util';
+} from '../../webgl/program/symbol_program.ts';
+import {getGlCoordMatrix, getPitchedLabelPlaneMatrix, updateLineLabels} from '../../symbol/projection.ts';
+import {translatePosition} from '../../util/util.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import type {CrossTileID, VariableOffset} from '../../symbol/placement';
-import type {SymbolBucket} from '../../data/bucket/symbol_bucket';
-import {updateVariableAnchors} from '../../symbol/variable_anchors';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {CrossTileID, VariableOffset} from '../../symbol/placement.ts';
+import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
+import {updateVariableAnchors} from '../../symbol/variable_anchors.ts';
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
@@ -42,14 +42,12 @@ class SymbolLayerTweaker extends LayerTweaker {
             // texsize(8) + texsize_icon(8) + gamma_scale(4) + is_text(4) +
             // is_along_line(4) + is_size_zoom_constant(4) + is_size_feature_constant(4) +
             // size_t(4) + size(4) + rotate_symbol(4) + is_halo(4) + pad(12) = 256
-            if (!drawable.drawableUBO) {
-                drawable.drawableUBO = new UniformBlock(272);
-            }
+            drawable.drawableUBO ||= new UniformBlock(272);
             drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
 
             // Set remaining fields from uniformValues
             if (drawable.uniformValues) {
-                const uv = drawable.uniformValues as any;
+                const uv = drawable.uniformValues;
                 // Offsets must match SymbolDrawableUBO struct layout exactly:
                 if (uv.u_label_plane_matrix) drawable.drawableUBO.setMat4(64, uv.u_label_plane_matrix);
                 if (uv.u_coord_matrix) drawable.drawableUBO.setMat4(128, uv.u_coord_matrix);
@@ -70,9 +68,7 @@ class SymbolLayerTweaker extends LayerTweaker {
             }
 
             // Props UBO for evaluated paint properties (update every frame for zoom-dependent values)
-            if (!drawable.layerUBO) {
-                drawable.layerUBO = new UniformBlock(48);
-            }
+            drawable.layerUBO ||= new UniformBlock(48);
             {
                 const propsUBO = drawable.layerUBO;
                 const paint = (layer as SymbolStyleLayer).paint;
@@ -83,7 +79,7 @@ class SymbolLayerTweaker extends LayerTweaker {
                     if (val && typeof val === 'object' && 'r' in val) return val;
                     const c = val?.constantOr?.(undefined);
                     if (c && typeof c === 'object' && 'r' in c) return c;
-                    if (val && typeof (val as any).evaluate === 'function') return (val as any).evaluate({zoom: painter.transform.zoom});
+                    if (val && typeof (val).evaluate === 'function') return (val).evaluate({zoom: painter.transform.zoom});
                     return null;
                 };
                 const getFloat = (prop: string) => {
@@ -92,7 +88,7 @@ class SymbolLayerTweaker extends LayerTweaker {
                     if (val === null || val === undefined) return null;
                     const c = val.constantOr(undefined);
                     if (c !== undefined) return c as number;
-                    if (typeof (val as any).evaluate === 'function') return (val as any).evaluate({zoom: painter.transform.zoom});
+                    if (typeof (val).evaluate === 'function') return (val).evaluate({zoom: painter.transform.zoom});
                     return null;
                 };
 
@@ -101,7 +97,6 @@ class SymbolLayerTweaker extends LayerTweaker {
 
                 const haloColor = getColor(isText ? 'text-halo-color' : 'icon-halo-color');
                 if (haloColor) propsUBO.setVec4(16, haloColor.r, haloColor.g, haloColor.b, haloColor.a);
-
 
                 const opacity = getFloat(isText ? 'text-opacity' : 'icon-opacity');
                 if (opacity !== null) propsUBO.setFloat(32, opacity);
@@ -134,8 +129,8 @@ function getWebGPUOpacityBuffer(device: any, opacityArray: any): any {
     if (numVertices === 0) return null;
 
     // Get or create cached Float32 buffer
-    let cached = (opacityArray as any)._webgpuOpacityBuf;
-    if (!cached || cached._numVertices !== numVertices) {
+    let cached = (opacityArray)._webgpuOpacityBuf;
+    if (cached?._numVertices !== numVertices) {
         const f32Data = new Float32Array(numVertices);
         cached = {
             itemSize: 4,
@@ -144,7 +139,7 @@ function getWebGPUOpacityBuffer(device: any, opacityArray: any): any {
             _f32Data: f32Data,
             _numVertices: numVertices,
         };
-        (opacityArray as any)._webgpuOpacityBuf = cached;
+        (opacityArray)._webgpuOpacityBuf = cached;
     }
 
     // Update float data from raw bytes (1 byte per vertex)
@@ -170,10 +165,10 @@ export function drawSymbolsWebGPU(
     painter: Painter,
     tileManager: TileManager,
     layer: SymbolStyleLayer,
-    coords: Array<OverscaledTileID>,
+    coords: OverscaledTileID[],
     variableOffsets: { [_ in CrossTileID]: VariableOffset },
     renderOptions: RenderOptions
-) {
+): void {
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
@@ -195,7 +190,7 @@ export function drawSymbolsWebGPU(
     }
 
     // Get or create tweaker and layer group
-    let tweaker = painter.layerTweakers.get(layer.id) as SymbolLayerTweaker;
+    let tweaker = painter.layerTweakers.get(layer.id);
     if (!tweaker) {
         tweaker = new SymbolLayerTweaker(layer.id);
         painter.layerTweakers.set(layer.id, tweaker);
@@ -228,7 +223,7 @@ export function drawSymbolsWebGPU(
             const bucket = tile.getBucket(layer) as SymbolBucket;
             if (!bucket) continue;
             const buffers = isText ? bucket.text : bucket.icon;
-            if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
+            if (!buffers?.segments.get().length || !buffers.hasVisibleVertices) continue;
 
             const programConfiguration = buffers.programConfigurations.get(layer.id);
             const isSDF = isText || bucket.sdfIcons;
@@ -258,23 +253,25 @@ export function drawSymbolsWebGPU(
 
             const size = evaluateSizeForZoom(sizeData, transform.zoom);
 
+            const isOffset = layer._unevaluatedLayout.hasValue('icon-offset');
+            const heightAnchorGround = layer.layout.get('symbol-height-anchor') === 'ground';
             let uniformValues: any;
             if (isSDF && !bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText,
                     isText ? tile.glyphAtlasTexture?.size || [0, 0] : tile.imageAtlasTexture?.size || [0, 0],
-                    true, pitchedTextRescaling);
+                    true, pitchedTextRescaling, isOffset, heightAnchorGround);
             } else if (isSDF) {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation,
-                    tile.glyphAtlasTexture?.size || [0, 0], tile.imageAtlasTexture?.size || [0, 0], pitchedTextRescaling);
+                    tile.glyphAtlasTexture?.size || [0, 0], tile.imageAtlasTexture?.size || [0, 0], pitchedTextRescaling, isOffset, heightAnchorGround);
             } else {
                 uniformValues = symbolIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText,
-                    tile.imageAtlasTexture?.size || [0, 0], pitchedTextRescaling);
+                    tile.imageAtlasTexture?.size || [0, 0], pitchedTextRescaling, isOffset, heightAnchorGround);
             }
 
             const shaderName = isSDF ? (bucket.iconsInText ? 'symbolTextAndIcon' : 'symbolSDF') : 'symbolIcon';

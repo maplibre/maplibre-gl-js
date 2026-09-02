@@ -1,5 +1,5 @@
-import {AbortError} from './abort_error';
-import {subscribe} from './util';
+import {AbortError} from './abort_error.ts';
+import {subscribe} from './util.ts';
 
 let linkEl;
 
@@ -61,22 +61,22 @@ export const browser = {
         return context;
     },
 
-    resolveURL(path: string) {
-        if (!linkEl) linkEl = document.createElement('a');
+    resolveURL(path: string): string {
+        linkEl ||= document.createElement('a');
         linkEl.href = path;
         return linkEl.href;
     },
 
-    hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
+    get hardwareConcurrency(): number {
+        return (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
+    },
 
     get prefersReducedMotion(): boolean {
         if (reducedMotionOverride !== undefined) return reducedMotionOverride;
         // In case your test crashes when checking matchMedia, call setMatchMedia from 'src/util/test/util'
         if (!matchMedia) return false;
         //Lazily initialize media query
-        if (reducedMotionQuery == null) {
-            reducedMotionQuery = matchMedia('(prefers-reduced-motion: reduce)');
-        }
+        reducedMotionQuery ??= matchMedia('(prefers-reduced-motion: reduce)');
         return reducedMotionQuery.matches;
     },
 

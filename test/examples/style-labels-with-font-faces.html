@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Style labels with font faces</title>
+    <meta property="og:description" content="Point your style at the font files used to draw its text labels. The font-faces property names a font file per text-font name, optionally narrowed to a unicode-range, so a style can cover scripts its glyphs server does not. Anything the browser can render text with may be used, and it is understood by Android and iOS as well. Here Georgian and Armenian labels come from font files while the Latin ones still come from the glyphs URL.">
+    <meta property="og:category" content="Labels & Fonts" />
+    <meta property="og:order" content="3" />
+    <meta property="og:created" content="2026-08-23" />
+    <!-- cspell:ignore თბილისი ბათუმი Երևան Գյումրի -->
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css'>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 5.8,
+        center: [42.3, 40.95],
+        style: {
+            "version": 8,
+            // Latin labels are drawn from this glyph server, which has no Georgian or Armenian.
+            "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+            // ...so the style points at a font file for each of those two scripts instead. Both are
+            // listed under the same name the layer asks for in its `text-font`.
+            "font-faces": {
+                "Noto Sans Regular": [
+                    {
+                        "url": "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansGeorgian/hinted/ttf/NotoSansGeorgian-Regular.ttf",
+                        "unicode-range": ["U+10A0-10FF", "U+1C90-1CBF"]
+                    },
+                    {
+                        "url": "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansArmenian/hinted/ttf/NotoSansArmenian-Regular.ttf",
+                        "unicode-range": ["U+0530-058F"]
+                    }
+                ]
+            },
+            "sources": {
+                "satellite": {
+                    "type": "raster",
+                    "tiles": [
+                        "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg"
+                    ],
+                    "tileSize": 256
+                },
+                "places": {
+                    "type": "geojson",
+                    "data": {
+                        "type": "FeatureCollection",
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "თბილისი"},
+                                "geometry": {"type": "Point", "coordinates": [44.8271, 41.7151]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "ბათუმი"},
+                                "geometry": {"type": "Point", "coordinates": [41.6367, 41.6168]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "Երևան"},
+                                "geometry": {"type": "Point", "coordinates": [44.5152, 40.1872]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "Գյումրի"},
+                                "geometry": {"type": "Point", "coordinates": [43.8453, 40.7894]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "Trabzon"},
+                                "geometry": {"type": "Point", "coordinates": [39.7168, 41.0027]}
+                            },
+                            {
+                                "type": "Feature",
+                                "properties": {"name": "Erzurum"},
+                                "geometry": {"type": "Point", "coordinates": [41.2769, 39.9043]}
+                            }
+                        ]
+                    }
+                }
+            },
+            "layers": [
+                {
+                    "id": "satellite",
+                    "type": "raster",
+                    "source": "satellite"
+                },
+                {
+                    "id": "places",
+                    "type": "symbol",
+                    "source": "places",
+                    "layout": {
+                        "text-font": ["Noto Sans Regular"],
+                        "text-size": 20,
+                        "text-field": ["get", "name"]
+                    },
+                    "paint": {
+                        "text-color": "white",
+                        "text-halo-color": "black",
+                        "text-halo-width": 1
+                    }
+                }
+            ]
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {createStyleLayer} from '../create_style_layer';
-import {extend} from '../../util/util';
+import {createStyleLayer} from '../create_style_layer.ts';
+import {extend} from '../../util/util.ts';
 
 function createLayerSpec(properties?): LayerSpecification {
     return extend({
@@ -18,7 +18,7 @@ describe('RasterStyleLayer correctly handles "resampling" and "raster-resampling
         const layer = createStyleLayer(layerSpec, {});
     
         const rasterResampling = layer.getPaintProperty('raster-resampling');
-        expect(rasterResampling).toEqual(undefined);
+        expect(rasterResampling).toBeUndefined();
     });
 
     test('"resampling" is undefined when instantiated with "raster-resampling"', () => {
@@ -26,7 +26,7 @@ describe('RasterStyleLayer correctly handles "resampling" and "raster-resampling
         const layer = createStyleLayer(layerSpec, {});
     
         const resampling = layer.getPaintProperty('resampling');
-        expect(resampling).toEqual(undefined);
+        expect(resampling).toBeUndefined();
     });
 
 });

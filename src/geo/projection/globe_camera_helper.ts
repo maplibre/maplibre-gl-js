@@ -1,14 +1,14 @@
-import {MercatorCameraHelper} from './mercator_camera_helper';
-import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper';
+import {MercatorCameraHelper} from './mercator_camera_helper.ts';
+import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper';
-import type {LngLat, LngLatLike} from '../lng_lat';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {GlobeProjection} from './globe_projection';
-import type {CameraForBoundsOptions} from '../../ui/camera';
-import type {LngLatBounds} from '../lng_lat_bounds';
-import type {PaddingOptions} from '../edge_insets';
+import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper.ts';
+import type {LngLat, LngLatLike} from '../lng_lat.ts';
+import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
+import type {GlobeProjection} from './globe_projection.ts';
+import type {CameraForBoundsOptions} from '../../ui/camera.ts';
+import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
 
 /**
  * @internal

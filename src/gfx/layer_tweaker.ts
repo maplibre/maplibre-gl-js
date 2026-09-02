@@ -1,8 +1,8 @@
-import type {Drawable} from './drawable';
-import type {Painter} from '../render/painter';
-import type {StyleLayer} from '../style/style_layer';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {UniformBlock} from './uniform_block';
+import type {Drawable} from './drawable.ts';
+import type {Painter} from '../render/painter.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {UniformBlock} from './uniform_block.ts';
 
 /**
  * Base class for per-frame uniform updaters.
@@ -28,7 +28,7 @@ export abstract class LayerTweaker {
         drawables: Drawable[],
         painter: Painter,
         layer: StyleLayer,
-        coords: Array<OverscaledTileID>
+        coords: OverscaledTileID[]
     ): void;
 
     destroy(): void {

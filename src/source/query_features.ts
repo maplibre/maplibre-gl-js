@@ -1,14 +1,14 @@
 import {mat4} from 'gl-matrix';
 import type Point from '@mapbox/point-geometry';
-import type {TileManager} from '../tile/tile_manager';
-import type {StyleLayer} from '../style/style_layer';
-import type {CollisionIndex} from '../symbol/collision_index';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {RetainedQueryData} from '../symbol/placement';
+import type {TileManager} from '../tile/tile_manager.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CollisionIndex} from '../symbol/collision_index.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {RetainedQueryData} from '../symbol/placement.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {QueryResults, QueryResultsItem} from '../data/feature_index';
-import type {OverscaledTileID} from '../tile/tile_id';
+import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import type {QueryResults, QueryResultsItem} from '../data/feature_index.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
@@ -33,7 +33,7 @@ export type QueryRenderedFeaturesOptions = {
      */
     availableImages?: string[];
     /**
-     * Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * Whether to check if the `options.filter` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      */
     validate?: boolean;
 };
@@ -61,7 +61,7 @@ export type QuerySourceFeatureOptions = {
      */
     filter?: FilterSpecification;
     /**
-     * Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * Whether to check if the `parameters.filter` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @defaultValue true
      */
     validate?: boolean;
@@ -186,7 +186,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
             styleLayers);
 
         for (const layerID in bucketSymbols) {
-            const resultFeatures = result[layerID] = result[layerID] || [];
+            result[layerID] ||= [];
             const layerSymbols = bucketSymbols[layerID];
             layerSymbols.sort((a, b) => {
                 // Match topDownFeatureComparator from FeatureIndex, but using
@@ -195,7 +195,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
                 if (featureSortOrder) {
                     // queryRenderedSymbols documentation says we'll return features in
                     // "top-to-bottom" rendering order (aka last-to-first).
-                    // Actually there can be multiple symbol instances per feature, so
+                    // Actually, there can be multiple symbol instances per feature, so
                     // we sort each feature based on the first matching symbol instance.
                     const sortedA = featureSortOrder.indexOf(a.featureIndex);
                     const sortedB = featureSortOrder.indexOf(b.featureIndex);
@@ -207,7 +207,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
                 }
             });
             for (const symbolFeature of layerSymbols) {
-                resultFeatures.push(symbolFeature);
+                result[layerID].push(symbolFeature);
             }
         }
     }
@@ -245,18 +245,18 @@ function mergeRenderedFeatureLayers(tiles: RenderedFeatureLayer[]): QueryResults
     // wrapped ID, don't duplicate features between the two tiles
     const result: QueryResults = {};
     const wrappedIDLayerMap = {};
-    for (const tile of tiles) {
-        const queryResults = tile.queryResults;
-        const wrappedID = tile.wrappedTileID;
-        const wrappedIDLayers = wrappedIDLayerMap[wrappedID] = wrappedIDLayerMap[wrappedID] || {};
+    for (const {queryResults, wrappedTileID} of tiles) {
+        wrappedIDLayerMap[wrappedTileID] ||= {};
+        const wrappedIDLayers = wrappedIDLayerMap[wrappedTileID];
         for (const layerID in queryResults) {
             const tileFeatures = queryResults[layerID];
-            const wrappedIDFeatures = wrappedIDLayers[layerID] = wrappedIDLayers[layerID] || {};
-            const resultFeatures = result[layerID] = result[layerID] || [];
+            wrappedIDLayers[layerID] ||= {};
+            const wrappedIDFeatures = wrappedIDLayers[layerID];
+            result[layerID] ||= [];
             for (const tileFeature of tileFeatures) {
                 if (!wrappedIDFeatures[tileFeature.featureIndex]) {
                     wrappedIDFeatures[tileFeature.featureIndex] = true;
-                    resultFeatures.push(tileFeature);
+                    result[layerID].push(tileFeature);
                 }
             }
         }
@@ -269,7 +269,7 @@ function convertFeaturesToMapFeatures(result: QueryResults, tileManager: TileMan
     for (const layerID in result) {
         for (const featureWrapper of result[layerID]) {
             convertFeatureToMapFeature(featureWrapper, tileManager);
-        };
+        }
     }
     return result as QueryRenderedFeaturesResults;
 }

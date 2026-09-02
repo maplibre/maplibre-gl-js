@@ -1,12 +1,13 @@
 import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
-import ONE_EM from './one_em';
-import type {ImagePosition} from '../render/image_atlas';
-import type {StyleGlyph} from '../style/style_glyph';
-import {verticalizePunctuation} from '../util/verticalize_punctuation';
-import {charIsWhitespace} from '../util/script_detection';
-import {codePointAllowsIdeographicBreaking} from '../util/unicode_properties.g';
-import {warnOnce} from '../util/util';
+import ONE_EM from './one_em.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
+import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
+import {charIsWhitespace} from '../util/script_detection.ts';
+import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
+import {warnOnce} from '../util/util.ts';
 
 export type TextSectionOptions = {
     scale: number;
@@ -37,10 +38,12 @@ type Break = {
 // using computed properties due to https://github.com/facebook/flow/issues/380
 /* eslint no-useless-computed-key: 0 */
 
-const breakable: {
-    [_: number]: boolean;
-} = {
+/**
+ * Characters a line may end on.
+ */
+const breakable: Record<number, boolean> = {
     [0x0a]: true, // newline
+    [0x0d]: true, // carriage return, on its own or starting a CRLF cluster
     [0x20]: true, // space
     [0x26]: true, // ampersand
     [0x29]: true, // right parenthesis
@@ -58,30 +61,38 @@ const breakable: {
     // See https://github.com/mapbox/mapbox-gl-js/issues/3658
 };
 
-// Allow breaks depending on the following character
-const breakableBefore: {
-    [_: number]: boolean;
-} = {
+/**
+ * Characters a line may begin with, whatever precedes them.
+ */
+const breakableBefore: Record<number, boolean> = {
     [0x28]: true, // left parenthesis
 };
 
+/**
+ * Returns how far a grapheme cluster advances the pen, including any letter spacing after it.
+ *
+ * Where a font file covers the cluster it advances as the one shape it is drawn as. Where none does
+ * it is drawn a codepoint at a time, and has to be measured the same way. See `shapeLines`.
+ */
 function getGlyphAdvance(
-    codePoint: number,
+    grapheme: string,
     section: SectionOptions,
-    glyphMap: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    },
-    imagePositions: {[_: string]: ImagePosition},
+    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    imagePositions: Record<string, ImagePosition>,
     spacing: number,
     layoutTextSize: number
 ): number {
     if ('fontStack' in section) {
         const positions = glyphMap[section.fontStack];
-        const glyph = positions?.[codePoint];
-        if (!glyph) return 0;
-        return glyph.metrics.advance * section.scale + spacing;
+        const glyph = positions?.[grapheme];
+        if (glyph) return glyph.metrics.advance * section.scale + spacing;
+
+        let advance = 0;
+        for (const char of grapheme) {
+            const fallback = positions?.[char];
+            if (fallback) advance += fallback.metrics.advance * section.scale + spacing;
+        }
+        return advance;
     } else {
         const imagePosition = imagePositions[section.imageName];
         if (!imagePosition) return 0;
@@ -106,24 +117,34 @@ function calculateBadness(lineWidth: number,
     return raggedness + Math.abs(penalty) * penalty;
 }
 
+/**
+ * Whether a grapheme cluster is entirely whitespace, and so can be trimmed off the end of a line.
+ */
+function isWhitespaceGrapheme(grapheme: string): boolean {
+    return /^\s+$/u.test(grapheme);
+}
+
+/**
+ * Scores a candidate break, lower being better: a newline is one the text asked for, an opening
+ * bracket left at the end of a line is merely allowed.
+ *
+ * `codePoint` and `nextCodePoint` are the first codepoints of the clusters either side, which is
+ * what decides how a cluster breaks -- a CRLF is one cluster, so a newline is seen as its CR.
+ *
+ * @param penalizableIdeographicBreak - whether this falls between ideographs in text that also
+ * carries zero-width space hints, which are the better places to break
+ */
 function calculatePenalty(codePoint: number, nextCodePoint: number, penalizableIdeographicBreak: boolean) {
     let penalty = 0;
-    // Force break on newline
-    if (codePoint === 0x0a) {
+    if (codePoint === 0x0a || codePoint === 0x0d) {
         penalty -= 10000;
     }
-    // Penalize breaks between characters that allow ideographic breaking because
-    // they are less preferable than breaks at spaces (or zero width spaces).
     if (penalizableIdeographicBreak) {
         penalty += 150;
     }
-
-    // Penalize open parenthesis at end of line
     if (codePoint === 0x28 || codePoint === 0xff08) {
         penalty += 50;
     }
-
-    // Penalize close parenthesis at beginning of line
     if (nextCodePoint === 0x29 || nextCodePoint === 0xff09) {
         penalty += 50;
     }
@@ -174,18 +195,33 @@ function leastBadBreaks(lastLineBreak?: Break | null): number[] {
 export class TaggedString {
     text: string;
     sections: SectionOptions[];
-    /** Maps each character in `text` to its corresponding entry in `sections`. */
+    /** Maps each grapheme cluster in `text` to its corresponding entry in `sections`. */
     sectionIndex: number[];
     imageSectionID: number | null;
+    /**
+     * `text` split into the units it is laid out in. Derived from `text`, so anything that changes
+     * `text` clears it.
+     */
+    _graphemes: string[] | null;
 
     constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
         this.imageSectionID = null;
+        this._graphemes = null;
     }
 
-    static fromFeature(text: Formatted, defaultFontStack: string) {
+    /**
+     * The units this text is laid out in: grapheme clusters, so that a letter and the marks that
+     * belong to it stay together.
+     */
+    graphemes(): string[] {
+        this._graphemes ??= toGraphemes(this.text);
+        return this._graphemes;
+    }
+
+    static fromFeature(text: Formatted, defaultFontStack: string): TaggedString {
         const result = new TaggedString();
         for (const section of text.sections) {
             if (!section.image) {
@@ -198,7 +234,7 @@ export class TaggedString {
     }
 
     length(): number {
-        return [...this.text].length;
+        return this.graphemes().length;
     }
 
     getSection(index: number): SectionOptions {
@@ -209,52 +245,61 @@ export class TaggedString {
         return this.sectionIndex[index];
     }
 
-    verticalizePunctuation() {
+    verticalizePunctuation(): void {
         this.text = verticalizePunctuation(this.text);
+        this._graphemes = null;
     }
 
     /**
      * Returns whether the text contains zero-width spaces.
      *
-     * Some tilesets such as Mapbox Streets insert ZWSPs as hints for line
+     * Some tilesets such as Streets insert ZWSPs as hints for line
      * breaking in CJK text.
      */
     hasZeroWidthSpaces(): boolean {
         return this.text.includes('\u200b');
     }
 
-    trim() {
-        const leadingWhitespace = this.text.match(/^\s*/);
-        const leadingLength = leadingWhitespace ? leadingWhitespace[0].length : 0;
-        // Require a preceding non-space character to avoid overlapping leading and trailing matches.
-        const trailingWhitespace = this.text.match(/\S\s*$/);
-        const trailingLength = trailingWhitespace ? trailingWhitespace[0].length - 1 : 0;
-        this.text = this.text.substring(leadingLength, this.text.length - trailingLength);
-        this.sectionIndex = this.sectionIndex.slice(leadingLength, this.sectionIndex.length - trailingLength);
+    /**
+     * Drops the whitespace at each end of the line.
+     *
+     * Counted in clusters, which is what `sectionIndex` is indexed by: a CRLF is one cluster of two
+     * code units, so counting code units would leave the sections short of the text.
+     */
+    trim(): void {
+        const graphemes = this.graphemes();
+        let start = 0;
+        while (start < graphemes.length && isWhitespaceGrapheme(graphemes[start])) start++;
+        let end = graphemes.length;
+        while (end > start && isWhitespaceGrapheme(graphemes[end - 1])) end--;
+
+        this.text = graphemes.slice(start, end).join('');
+        this.sectionIndex = this.sectionIndex.slice(start, end);
+        this._graphemes = null;
     }
 
     substring(start: number, end: number): TaggedString {
-        const text = [...this.text].slice(start, end).join('');
+        const text = this.graphemes().slice(start, end).join('');
         const sectionIndex = this.sectionIndex.slice(start, end);
         return new TaggedString(text, this.sections, sectionIndex);
     }
 
     /**
-     * Converts a UTF-16 character index to a UTF-16 code unit (JavaScript character index).
+     * Converts a grapheme cluster index to a UTF-16 code unit (JavaScript character index).
      */
-    toCodeUnitIndex(unicodeIndex: number): number {
-        return [...this.text].slice(0, unicodeIndex).join('').length;
+    toCodeUnitIndex(graphemeIndex: number): number {
+        return this.graphemes().slice(0, graphemeIndex).join('').length;
     }
 
     toString(): string {
         return this.text;
     }
 
-    getMaxScale() {
+    getMaxScale(): number {
         return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
     }
 
-    getMaxImageSize(imagePositions: {[_: string]: ImagePosition}): {
+    getMaxImageSize(imagePositions: Record<string, ImagePosition>): {
         maxImageWidth: number;
         maxImageHeight: number;
     } {
@@ -273,18 +318,37 @@ export class TaggedString {
         return {maxImageWidth, maxImageHeight};
     }
 
-    addTextSection(section: FormattedSection, defaultFontStack: string) {
-        this.text += section.text;
+    /**
+     * Appends one section's text, recording which section each cluster it adds belongs to.
+     *
+     * A cluster belongs to the section its first character came from, so a section that only joins
+     * the cluster before it -- an accent given its own formatting -- adds none of its own. Only the
+     * last cluster and the new text are segmented, not the label from the start.
+     */
+    _appendSection(text: string, sectionIndex: number): void {
+        const graphemes = this.graphemes();
+        const tail = graphemes.length > 0 ? graphemes[graphemes.length - 1] : '';
+        const joined = toGraphemes(tail + text);
+
+        this.text += text;
+        this._graphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
+
+        const added = joined.length - (tail ? 1 : 0);
+        for (let i = 0; i < added; i++) {
+            this.sectionIndex.push(sectionIndex);
+        }
+    }
+
+    addTextSection(section: FormattedSection, defaultFontStack: string): void {
         this.sections.push({
             scale: section.scale || 1,
             verticalAlign: section.verticalAlign || 'bottom',
             fontStack: section.fontStack || defaultFontStack,
-        } as TextSectionOptions);
-        const index = this.sections.length - 1;
-        this.sectionIndex.push(...[...section.text].map(() => index));
+        });
+        this._appendSection(section.text, this.sections.length - 1);
     }
 
-    addImageSection(section: FormattedSection) {
+    addImageSection(section: FormattedSection): void {
         const imageName = section.image ? section.image.name : '';
         if (imageName.length === 0) {
             warnOnce('Can\'t add FormattedSection with an empty image.');
@@ -297,13 +361,12 @@ export class TaggedString {
             return;
         }
 
-        this.text += String.fromCharCode(nextImageSectionCharCode);
         this.sections.push({
             scale: 1,
             verticalAlign: section.verticalAlign || 'bottom',
             imageName,
-        } as ImageSectionOptions);
-        this.sectionIndex.push(this.sections.length - 1);
+        });
+        this._appendSection(String.fromCharCode(nextImageSectionCharCode), this.sections.length - 1);
     }
 
     getNextImageSectionCharCode(): number | null {
@@ -316,15 +379,20 @@ export class TaggedString {
         return ++this.imageSectionID;
     }
 
+    /**
+     * Returns the cluster indices to break at for lines of roughly `maxWidth`, weighing each
+     * candidate by how ragged it leaves the line.
+     *
+     * Breaks fall between clusters, never inside one, at a character or image a line may end on --
+     * plus, in scripts that do not space their words and so offer no such character, wherever the
+     * word segmenter finds a word. It is not consulted elsewhere, isolating a comma as a word of its
+     * own, nor until such a script turns up, costing more than the rest of this put together.
+     */
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
-        glyphMap: {
-            [_: string]: {
-                [_: number]: StyleGlyph;
-            };
-        },
-        imagePositions: {[_: string]: ImagePosition},
+        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
         const potentialLineBreaks = [];
@@ -332,45 +400,43 @@ export class TaggedString {
 
         const hasZeroWidthSpaces = this.hasZeroWidthSpaces();
 
+        const graphemes = this.graphemes();
+        let wordStarts: Set<number> | null = null;
+
         let currentX = 0;
+        let codeUnit = 0;
 
-        let i = 0;
-        const chars = this.text[Symbol.iterator]();
-        let char = chars.next();
-        const nextChars = this.text[Symbol.iterator]();
-        nextChars.next();
-        let nextChar = nextChars.next();
-        const nextNextChars = this.text[Symbol.iterator]();
-        nextNextChars.next();
-        nextNextChars.next();
-        let nextNextChar = nextNextChars.next();
+        for (let i = 0; i < graphemes.length; i++) {
+            const grapheme = graphemes[i];
 
-        while (!char.done) {
-            const section = this.getSection(i);
-            const codePoint = char.value.codePointAt(0);
-            if (!charIsWhitespace(codePoint)) currentX += getGlyphAdvance(codePoint, section, glyphMap, imagePositions, spacing, layoutTextSize);
+            if (i > 0) {
+                const previousCodePoint = graphemes[i - 1].codePointAt(0);
+                const codePoint = grapheme.codePointAt(0);
+                const ideographicBreak = codePointAllowsIdeographicBreaking(previousCodePoint);
+                const withinAWordlessScript = codePointIsWrittenWithoutSpaces(previousCodePoint) &&
+                    codePointIsWrittenWithoutSpaces(codePoint);
 
-            // Ideographic characters, spaces, and word-breaking punctuation that often appear without
-            // surrounding spaces.
-            if (!nextChar.done) {
-                const ideographicBreak = codePointAllowsIdeographicBreaking(codePoint);
-                const nextCodePoint = nextChar.value.codePointAt(0);
-                if (breakable[codePoint] || ideographicBreak || 'imageName' in section || (!nextNextChar.done && breakableBefore[nextCodePoint])) {
-
+                if (breakable[previousCodePoint] ||
+                    ideographicBreak ||
+                    'imageName' in this.getSection(i - 1) ||
+                    (graphemes[i + 1] !== undefined && breakableBefore[codePoint]) ||
+                    (withinAWordlessScript && (wordStarts ??= wordBoundaries(this.text)).has(codeUnit))) {
                     potentialLineBreaks.push(
                         evaluateBreak(
-                            i + 1,
+                            i,
                             currentX,
                             targetWidth,
                             potentialLineBreaks,
-                            calculatePenalty(codePoint, nextCodePoint, ideographicBreak && hasZeroWidthSpaces),
+                            calculatePenalty(previousCodePoint, codePoint, ideographicBreak && hasZeroWidthSpaces),
                             false));
                 }
             }
-            i++;
-            char = chars.next();
-            nextChar = nextChars.next();
-            nextNextChar = nextNextChars.next();
+
+            const codePoint = grapheme.codePointAt(0);
+            if (!charIsWhitespace(codePoint)) {
+                currentX += getGlyphAdvance(grapheme, this.getSection(i), glyphMap, imagePositions, spacing, layoutTextSize);
+            }
+            codeUnit += grapheme.length;
         }
 
         return leastBadBreaks(
@@ -386,19 +452,15 @@ export class TaggedString {
     determineAverageLineWidth(
         spacing: number,
         maxWidth: number,
-        glyphMap: {
-            [_: string]: {
-                [_: number]: StyleGlyph;
-            };
-        },
-        imagePositions: {[_: string]: ImagePosition},
-        layoutTextSize: number) {
+        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        imagePositions: Record<string, ImagePosition>,
+        layoutTextSize: number): number {
         let totalWidth = 0;
 
         let index = 0;
-        for (const char of this.text) {
+        for (const grapheme of this.graphemes()) {
             const section = this.getSection(index);
-            totalWidth += getGlyphAdvance(char.codePointAt(0), section, glyphMap, imagePositions, spacing, layoutTextSize);
+            totalWidth += getGlyphAdvance(grapheme, section, glyphMap, imagePositions, spacing, layoutTextSize);
             index++;
         }
 

@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
-import {LngLat} from '../lng_lat';
-import {getGlobeCircumferencePixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils';
+import {LngLat} from '../lng_lat.ts';
+import {getGlobeCircumferencePixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
 
 describe('globe utils', () => {
     const digitsPrecision = 10;

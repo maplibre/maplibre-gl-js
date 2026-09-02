@@ -1,7 +1,7 @@
 import type Point from '@mapbox/point-geometry';
-import {DOM} from '../../util/dom';
-import type {Map} from '../map';
-import {type Handler, type HandlerResult} from '../handler_manager';
+import {DOM} from '../../util/dom.ts';
+import type {Map} from '../map.ts';
+import {type Handler, type HandlerResult} from '../handler_manager.ts';
 
 /**
  * An options object sent to the enable function of some of the handlers
@@ -172,7 +172,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
      * map.touchZoomRotate.setZoomRate(0.5);
      * ```
      */
-    setZoomRate(zoomRate?: number) {
+    setZoomRate(zoomRate?: number): void {
         this._zoomRate = zoomRate ?? defaultZoomRate;
     }
 
@@ -185,11 +185,11 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
      * map.touchZoomRotate.setZoomThreshold(0.3);
      * ```
      */
-    setZoomThreshold(zoomThreshold?: number) {
+    setZoomThreshold(zoomThreshold?: number): void {
         this._zoomThreshold = zoomThreshold ?? defaultZoomThreshold;
     }
 
-    reset() {
+    reset(): void {
         super.reset();
         delete this._distance;
         delete this._startDistance;

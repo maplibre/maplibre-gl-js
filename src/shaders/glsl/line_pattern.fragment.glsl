@@ -9,29 +9,31 @@ uniform mediump vec3 u_scale;
 uniform sampler2D u_image;
 
 in vec2 v_normal;
-in vec2 v_width2;
+flat in vec2 v_width2;
 in float v_linesofar;
 in float v_gamma_scale;
-in float v_width;
+flat in float v_width;
 #ifdef GLOBE
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
-#pragma mapbox: define lowp float pixel_ratio_from
-#pragma mapbox: define lowp float pixel_ratio_to
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float pixel_ratio_from
+#pragma maplibre: define lowp float pixel_ratio_to
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
-    #pragma mapbox: initialize lowp float pixel_ratio_from
-    #pragma mapbox: initialize lowp float pixel_ratio_to
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float pixel_ratio_from
+    #pragma maplibre: initialize lowp float pixel_ratio_to
 
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+
+    clipAntimeridian();
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;

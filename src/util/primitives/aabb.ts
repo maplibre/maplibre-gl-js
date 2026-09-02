@@ -1,6 +1,6 @@
 import {vec3, type vec4} from 'gl-matrix';
-import {type Frustum} from './frustum';
-import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
+import {type Frustum} from './frustum.ts';
+import {IntersectionResult, type IBoundingVolume} from './bounding_volume.ts';
 
 export class Aabb implements IBoundingVolume {
     min: vec3;
@@ -10,7 +10,7 @@ export class Aabb implements IBoundingVolume {
     constructor(min_: vec3, max_: vec3) {
         this.min = min_;
         this.max = max_;
-        this.center = vec3.scale([] as any, vec3.add([] as any, this.min, this.max), 0.5);
+        this.center = vec3.scale([], vec3.add([], this.min, this.max), 0.5);
     }
 
     quadrant(index: number): Aabb {

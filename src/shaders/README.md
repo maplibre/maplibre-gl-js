@@ -13,10 +13,10 @@ Some variables change type depending on their context:
 We abstract over this functionality using pragmas.
 
 ```glsl
-#pragma mapbox: define highp vec4 color
+#pragma maplibre: define highp vec4 color
 
 main() {
-    #pragma mapbox: initialize highp vec4 color
+    #pragma maplibre: initialize highp vec4 color
     ...
     fragColor = color;
 }
@@ -27,7 +27,7 @@ This program defines a variable within `main` called `color`, initialize the val
 Pragmas take the following form.
 
 ```glsl
-#pragma mapbox: (define|initialize) (lowp|mediump|highp) (float|vec2|vec3|vec4) {name}
+#pragma maplibre: (define|initialize) (lowp|mediump|highp) (float|vec2|vec3|vec4) {name}
 ```
 
 When using pragmas, the following requirements apply.

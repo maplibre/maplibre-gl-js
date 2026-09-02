@@ -1,8 +1,8 @@
 import {VariableAnchorOffsetCollection, type VariableAnchorOffsetCollectionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type SymbolFeature} from '../../data/bucket/symbol_bucket';
-import {type CanonicalTileID} from '../../tile/tile_id';
-import ONE_EM from '../../symbol/one_em';
-import {type SymbolStyleLayer} from './symbol_style_layer';
+import {type SymbolFeature} from '../../data/bucket/symbol_bucket.ts';
+import {type CanonicalTileID} from '../../tile/tile_id.ts';
+import ONE_EM from '../../symbol/one_em.ts';
+import {type SymbolStyleLayer} from './symbol_style_layer.ts';
 
 export enum TextAnchorEnum {
     'center' = 1,
@@ -24,7 +24,7 @@ export type TextAnchor = keyof typeof TextAnchorEnum;
 // We don't actually load baseline data, but we assume an offset of ONE_EM - 17
 // (see "yOffset" in shaping.js)
 const baselineOffset = 7;
-export const INVALID_TEXT_OFFSET = Number.POSITIVE_INFINITY;
+export const INVALID_TEXT_OFFSET: number = Number.POSITIVE_INFINITY;
 
 export function evaluateVariableOffset(anchor: TextAnchor, offset: [number, number]): [number, number] {
 

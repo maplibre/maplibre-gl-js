@@ -1,5 +1,5 @@
-import {type OverscaledTileID} from './tile_id';
-import type {Tile} from './tile';
+import {type OverscaledTileID} from './tile_id.ts';
+import type {Tile} from './tile.ts';
 
 /**
  * @internal
@@ -36,7 +36,7 @@ export class TileCache {
      *
      * @returns this cache
      */
-    reset() {
+    reset(): this {
         for (const key in this.data) {
             for (const removedData of this.data[key]) {
                 if (removedData.timeout) clearTimeout(removedData.timeout);
@@ -59,7 +59,7 @@ export class TileCache {
      *
      * @returns this cache
      */
-    add(tileID: OverscaledTileID, data: Tile, expiryTimeout: number | void) {
+    add(tileID: OverscaledTileID, data: Tile, expiryTimeout: number | void): this {
         const key = tileID.wrapped().key;
         if (this.data[key] === undefined) {
             this.data[key] = [];
@@ -156,7 +156,7 @@ export class TileCache {
     remove(tileID: OverscaledTileID, value?: {
         value: Tile;
         timeout: ReturnType<typeof setTimeout>;
-    }) {
+    }): this {
         if (!this.has(tileID)) { return this; }
         const key = tileID.wrapped().key;
 
@@ -196,7 +196,7 @@ export class TileCache {
      *
      * @param filterFn - Determines whether the tile is filtered. If the supplied function returns false, the tile will be filtered out.
      */
-    filter(filterFn: (tile: Tile) => boolean) {
+    filter(filterFn: (tile: Tile) => boolean): void {
         const removed = [];
         for (const key in this.data) {
             for (const entry of this.data[key]) {

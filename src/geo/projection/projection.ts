@@ -1,11 +1,10 @@
-import type {CanonicalTileID} from '../../tile/tile_id';
-import type {PreparedShader} from '../../shaders/shaders';
-import type {Context} from '../../gl/context';
-import type {Mesh} from '../../render/mesh';
-import type {Program} from '../../render/program';
-import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import type {PreparedShader} from '../../shaders/shaders.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {Mesh} from '../../render/mesh.ts';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from '../../style/evaluation_parameters';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -22,14 +21,6 @@ import type {EvaluationParameters} from '../../style/evaluation_parameters';
  * - may create heavy resources that should not exist in multiple copies (projection is never cloned) - for example, see the GPU inaccuracy mitigation for globe projection
  * - must be explicitly disposed of after usage using the `destroy` function - this allows the implementing class to free any allocated resources
  */
-
-/**
- * @internal
- */
-export type ProjectionGPUContext = {
-    context: Context;
-    useProgram: (name: string) => Program<any>;
-};
 
 /**
  * @internal
@@ -101,21 +92,9 @@ export interface Projection {
 
     /**
      * @internal
-     * Gets the error correction latitude in radians.
-     */
-    get latitudeErrorCorrectionRadians(): number;
-
-    /**
-     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;
-
-    /**
-     * @internal
-     * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
-     */
-    updateGPUdependent(renderContext: ProjectionGPUContext): void;
 
     /**
      * @internal
@@ -140,10 +119,4 @@ export interface Projection {
      * Returns true if the projection is currently transitioning between two states.
      */
     hasTransition(): boolean;
-
-    /**
-     * @internal
-     * Sets the error query latidude in degrees
-     */
-    setErrorQueryLatitudeDegrees(value: number);
 }

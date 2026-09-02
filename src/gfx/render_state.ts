@@ -1,7 +1,7 @@
-import type {DepthMode} from '../gl/depth_mode';
-import type {StencilMode} from '../gl/stencil_mode';
-import type {ColorMode} from '../gl/color_mode';
-import type {CullFaceMode} from '../gl/cull_face_mode';
+import type {DepthMode} from '../webgl/depth_mode.ts';
+import type {StencilMode} from '../webgl/stencil_mode.ts';
+import type {ColorMode} from '../webgl/color_mode.ts';
+import type {CullFaceMode} from '../webgl/cull_face_mode.ts';
 
 // GL constants
 const GL_NEVER    = 0x0200;
@@ -38,7 +38,7 @@ type CompareFunction = 'never' | 'less' | 'equal' | 'less-equal' | 'greater' | '
 type StencilOperation = 'keep' | 'zero' | 'replace' | 'invert' | 'increment-clamp' | 'decrement-clamp' | 'increment-wrap' | 'decrement-wrap';
 type BlendFactor = 'zero' | 'one' | 'src' | 'one-minus-src' | 'src-alpha' | 'one-minus-src-alpha' | 'dst' | 'one-minus-dst' | 'dst-alpha' | 'one-minus-dst-alpha' | 'constant';
 
-export interface RenderPipelineParameters {
+export type RenderPipelineParameters = {
     depthWriteEnabled: boolean;
     depthCompare: CompareFunction;
     stencilReadMask: number;
@@ -55,7 +55,7 @@ export interface RenderPipelineParameters {
     colorWriteMask: number;
     cullMode: 'none' | 'front' | 'back';
     frontFace: 'ccw' | 'cw';
-}
+};
 
 function glCompareFuncToWebGPU(func: number): CompareFunction {
     switch (func) {

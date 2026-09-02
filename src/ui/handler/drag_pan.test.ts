@@ -1,16 +1,16 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
-import {Map, type MapOptions} from '../map';
-import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
+import {Map} from '../map.ts';
+import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
 
 function createMap(clickTolerance?, dragPan?) {
     return new Map({
         container: DOM.create('div', '', window.document.body),
         clickTolerance: clickTolerance || 0,
         dragPan: dragPan || true,
-    } as any as MapOptions);
+    });
 }
 
 beforeEach(() => {
@@ -178,7 +178,7 @@ describe('drag_pan', () => {
 
     test('DragPanHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
-        const requestFrame = vi.spyOn(map.handlers, '_requestFrame');
+        const requestFrame = vi.spyOn(map._handlers, '_requestFrame');
 
         simulate.mousedown(map.getCanvas());
         simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});

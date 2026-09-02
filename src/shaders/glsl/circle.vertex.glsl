@@ -6,35 +6,35 @@ uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform vec2 u_translate;
 
-in vec2 a_pos;
+layout(location = 0) in ivec2 a_pos;
 
 out vec3 v_data;
-out float v_visibility;
+flat out float v_visibility;
 
-#pragma mapbox: define highp vec4 color
-#pragma mapbox: define mediump float radius
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define highp vec4 stroke_color
-#pragma mapbox: define mediump float stroke_width
-#pragma mapbox: define lowp float stroke_opacity
+#pragma maplibre: define highp vec4 color
+#pragma maplibre: define mediump float radius
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define highp vec4 stroke_color
+#pragma maplibre: define mediump float stroke_width
+#pragma maplibre: define lowp float stroke_opacity
 
 void main(void) {
-    #pragma mapbox: initialize highp vec4 color
-    #pragma mapbox: initialize mediump float radius
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize highp vec4 stroke_color
-    #pragma mapbox: initialize mediump float stroke_width
-    #pragma mapbox: initialize lowp float stroke_opacity
+    #pragma maplibre: initialize highp vec4 color
+    #pragma maplibre: initialize mediump float radius
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize highp vec4 stroke_color
+    #pragma maplibre: initialize mediump float stroke_width
+    #pragma maplibre: initialize lowp float stroke_opacity
 
     // decode the extrusion vector that we snuck into the a_pos vector
-    vec2 pos_raw = a_pos + 32768.0;
-    vec2 extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
+    ivec2 pos_raw = a_pos + 32768;
+    vec2 extrude = vec2(pos_raw & 7) / 7.0 * 2.0 - 1.0;
 
     // Divide a_pos by 8, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(pos_raw / 8.0) + u_translate;
+    vec2 circle_center = vec2(pos_raw >> 3) + u_translate;
     float ele = get_elevation(circle_center);
     v_visibility = calculate_visibility(projectTileWithElevation(circle_center, ele));
 

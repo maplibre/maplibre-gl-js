@@ -1,5 +1,5 @@
-in float v_placed;
-in float v_notUsed;
+flat in float v_placed;
+flat in float v_notUsed;
 
 void main() {
 

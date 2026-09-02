@@ -1,9 +1,9 @@
-import {AlphaImage} from '../util/image';
-import {register} from '../util/web_worker_transfer';
+import {AlphaImage} from '../util/image.ts';
+import {register} from '../util/web_worker_transfer.ts';
 import potpack from 'potpack';
 
-import type {GlyphMetrics} from '../style/style_glyph';
-import type {GetGlyphsResponse} from '../util/actor_messages';
+import type {GlyphMetrics} from '../style/style_glyph.ts';
+import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 
 const padding = 1;
 
@@ -28,11 +28,7 @@ export type GlyphPosition = {
 /**
  * The glyphs' positions
  */
-export type GlyphPositions = {
-    [_: string]: {
-        [_: number]: GlyphPosition;
-    };
-};
+export type GlyphPositions = Record<string, Record<string, GlyphPosition>>;
 
 export class GlyphAtlas {
     image: AlphaImage;
@@ -47,7 +43,7 @@ export class GlyphAtlas {
             const stackPositions = positions[stack] = {};
 
             for (const id in glyphs) {
-                const src = glyphs[+id];
+                const src = glyphs[id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
 
                 const bin = {
@@ -68,7 +64,7 @@ export class GlyphAtlas {
             const glyphs = stacks[stack];
 
             for (const id in glyphs) {
-                const src = glyphs[+id];
+                const src = glyphs[id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
                 const bin = positions[stack][id].rect;
                 AlphaImage.copy(src.bitmap, image, {x: 0, y: 0}, {x: bin.x + padding, y: bin.y + padding}, src.bitmap);

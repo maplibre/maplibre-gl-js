@@ -1,15 +1,16 @@
-import {EXTENT} from '../../data/extent';
-import {projectTileCoordinatesToSphere} from './globe_utils';
-import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache';
-import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles';
+import {EXTENT} from '../../data/extent.ts';
+import {projectTileCoordinatesToSphere} from './globe_utils.ts';
+import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache.ts';
+import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import {vec3, type vec4} from 'gl-matrix';
-import type {IReadonlyTransform} from '../transform_interface';
-import type {MercatorCoordinate} from '../mercator_coordinate';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
-import {OverscaledTileID} from '../../tile/tile_id';
-import {earthRadius} from '../lng_lat';
-import {ConvexVolume} from '../../util/primitives/convex_volume';
-import {threePlaneIntersection} from '../../util/util';
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {earthRadius} from '../lng_lat.ts';
+import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
+import {threePlaneIntersection} from '../../util/util.ts';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -47,7 +48,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     /**
      * Prepares the internal bounding volume cache for the next frame.
      */
-    prepareNextFrame() {
+    prepareNextFrame(): void {
         this._boundingVolumeCache.swapBuffers();
     }
 
@@ -57,7 +58,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: ConvexVolume): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: IBoundingVolume): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1
@@ -104,18 +105,18 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return false;
     }
 
-    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) {
+    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
     private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
-        let minElevation = 0;
-        let maxElevation = 0;
+        let minElevation = Math.min(0, elevation);
+        let maxElevation = Math.max(0, elevation);
         if (options?.terrain) {
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
-            minElevation = minMax.minElevation ?? Math.min(0, elevation);
-            maxElevation = minMax.maxElevation ?? Math.max(0, elevation);
+            minElevation = minMax.minElevation ?? minElevation;
+            maxElevation = minMax.maxElevation ?? maxElevation;
         }
         // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
         minElevation /= earthRadius;
@@ -149,13 +150,13 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const extremesPoints = [];
 
             for (const c of corners) {
-                extremesPoints.push(vec3.scale([] as any, c, maxElevation));
+                extremesPoints.push(vec3.scale([], c, maxElevation));
             }
 
             if (maxElevation !== minElevation) {
                 // Only add additional points if terrain is enabled and is not flat.
                 for (const c of corners) {
-                    extremesPoints.push(vec3.scale([] as any, c, minElevation));
+                    extremesPoints.push(vec3.scale([], c, minElevation));
                 }
             }
 
@@ -189,23 +190,23 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // Vector "center" (from planet center to tile center) will be our up/down axis.
             const center = projectTileCoordinatesToSphere(EXTENT / 2, EXTENT / 2, tileID.x, tileID.y, tileID.z);
             // Vector to the east of "center".
-            const centerEast = vec3.cross([] as any, [0, 1, 0], center);
+            const centerEast = vec3.cross([], [0, 1, 0], center);
             vec3.normalize(centerEast, centerEast);
             // Vector to the north of "center" will be our north/south axis.
-            const north = vec3.cross([] as any, center, centerEast);
+            const north = vec3.cross([], center, centerEast);
             vec3.normalize(north, north);
 
             // Axes for the east and west edge of our bounding volume.
             // These axes are NOT opposites of each other, they differ!
             // They are also not orthogonal to the up/down and north/south axes.
-            const axisEast = vec3.cross([] as any, corners[2], corners[1]);
+            const axisEast = vec3.cross([], corners[2], corners[1]);
             vec3.normalize(axisEast, axisEast);
-            const axisWest = vec3.cross([] as any, corners[0], corners[3]);
+            const axisWest = vec3.cross([], corners[0], corners[3]);
             vec3.normalize(axisWest, axisWest);
 
             // Now we will expand the extremes point set for bounding volume creation.
             // We will also include the tile center point, since it will always be an extreme for the "center" axis.
-            extremesPoints.push(vec3.scale([] as any, center, maxElevation));
+            extremesPoints.push(vec3.scale([], center, maxElevation));
             // No need to include a minElevation-scaled center, since we already have minElevation corners in the set and these will always lie lower than the center.
 
             // The extremes might also lie on the midpoint of the north or south edge.
@@ -230,12 +231,12 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             
             if (tileID.y >= (1 << tileID.z) / 2) {
                 // South hemisphere - include the tile's north edge midpoint
-                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
+                extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
                 // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
             if (tileID.y < (1 << tileID.z) / 2) {
                 // North hemisphere - include the tile's south edge midpoint
-                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
+                extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
                 // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
 

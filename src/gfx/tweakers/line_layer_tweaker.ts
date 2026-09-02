@@ -1,11 +1,11 @@
-import {LayerTweaker} from '../layer_tweaker';
-import {UniformBlock} from '../uniform_block';
-import type {Drawable} from '../drawable';
-import type {Painter} from '../../render/painter';
-import type {StyleLayer} from '../../style/style_layer';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+import {LayerTweaker} from '../layer_tweaker.ts';
+import {UniformBlock} from '../uniform_block.ts';
+import type {Drawable} from '../drawable.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 
 // LineEvaluatedPropsUBO layout (48 bytes, 16-byte aligned):
 // color:       vec4<f32>     offset 0   (16 bytes)
@@ -32,17 +32,13 @@ const LINE_PATTERN_DRAWABLE_UBO_SIZE = 128;
  */
 export class LineLayerTweaker extends LayerTweaker {
 
-    constructor(layerId: string) {
-        super(layerId);
-    }
-
     _patternPropsUBOByKey: {[key: string]: UniformBlock} = {};
 
     execute(
         drawables: Drawable[],
         painter: Painter,
         layer: StyleLayer,
-        _coords: Array<OverscaledTileID>
+        _coords: OverscaledTileID[]
     ): void {
         const lineLayer = layer as LineStyleLayer;
         const transform = painter.transform;
@@ -62,8 +58,8 @@ export class LineLayerTweaker extends LayerTweaker {
             if (val === null || val === undefined) return null;
             const c = val.constantOr(undefined);
             if (c !== undefined) return c as number;
-            if (typeof (val as any).evaluate === 'function') {
-                return (val as any).evaluate(evalParams);
+            if (typeof (val).evaluate === 'function') {
+                return (val).evaluate(evalParams);
             }
             return null;
         };
@@ -97,7 +93,6 @@ export class LineLayerTweaker extends LayerTweaker {
         // floorwidth f32 = max(width, 1.0)
         const floorwidth = Math.max(width || 0, 1.0);
         propsUBO.setFloat(36, floorwidth);
-
 
         this.propertiesUpdated = false;
 
@@ -162,8 +157,8 @@ export class LineLayerTweaker extends LayerTweaker {
                         const binders = (drawable.programConfiguration as any).binders;
                         for (const key in binders) {
                             const b = binders[key];
-                            if (b && b.dashFrom) { dashFrom = b.dashFrom; }
-                            if (b && b.dashTo) { dashTo = b.dashTo; }
+                            if (b?.dashFrom) { dashFrom = b.dashFrom; }
+                            if (b?.dashTo) { dashTo = b.dashTo; }
                         }
                     }
 
@@ -196,7 +191,7 @@ export class LineLayerTweaker extends LayerTweaker {
                 if (drawable.programConfiguration) {
                     const binders = (drawable.programConfiguration as any).binders;
                     if (binders) {
-                        const props: [string, number][] = [
+                        const props: Array<[string, number]> = [
                             ['line-color', 80],
                             ['line-opacity', 84],
                             ['line-blur', 88],

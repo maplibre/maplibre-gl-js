@@ -1,5 +1,5 @@
-import {describe, beforeEach, test, expect, vitest} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -27,7 +27,7 @@ describe('setGlobalStateProperty', () => {
         });
 
         await map.once('style.load');
-        map._update = vitest.fn();
+        map._update = vi.fn();
 
         map.setGlobalStateProperty('backgroundColor', 'blue');
 
@@ -56,7 +56,7 @@ describe('setGlobalStateProperty', () => {
         });
 
         await map.once('style.load');
-        map._update = vitest.fn();
+        map._update = vi.fn();
 
         map.setGlobalStateProperty('backgroundColor', 'blue');
 

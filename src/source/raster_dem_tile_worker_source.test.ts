@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
-import {DEMData} from '../data/dem_data';
-import {type WorkerDEMTileParameters} from './worker_source';
+import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source.ts';
+import {DEMData} from '../data/dem_data.ts';
+import {type WorkerDEMTileParameters} from './worker_source.ts';
 
 describe('loadTile', () => {
     test('loads DEM tile', async () => {
@@ -14,7 +14,7 @@ describe('loadTile', () => {
             dim: 256
         } as any as WorkerDEMTileParameters);
         expect(Object.keys(source.loaded)).toEqual(['0']);
-        expect(data instanceof DEMData).toBeTruthy();
+        expect(data).toBeInstanceOf(DEMData);
     });
 });
 

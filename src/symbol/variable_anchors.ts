@@ -2,24 +2,24 @@
 // Extracted from draw_symbol.ts to avoid circular dependencies.
 
 import Point from '@mapbox/point-geometry';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from './symbol_size';
-import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
-import {getAnchorAlignment, WritingMode} from './shaping';
-import ONE_EM from './one_em';
-import {getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext} from './projection';
-import {translatePosition} from '../util/util';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
+import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from './symbol_size.ts';
+import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
+import {getAnchorAlignment, WritingMode} from './shaping.ts';
+import ONE_EM from './one_em.ts';
+import {elevationAt, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext} from './projection.ts';
+import {translatePosition} from '../util/util.ts';
 
 import type {mat4} from 'gl-matrix';
-import type {Painter} from '../render/painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
-import type {CrossTileID, VariableOffset} from './placement';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
+import type {Painter} from '../render/painter.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import type {CrossTileID, VariableOffset} from './placement.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
 
 function calculateVariableRenderShift(
     anchor: TextAnchor,
@@ -45,7 +45,7 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: Symbol
             adjustedShift = adjustedShift.rotate(-transformAngle);
         }
         const tileAnchorShifted = translatedAnchor.add(adjustedShift);
-        return projectWithMatrix(tileAnchorShifted.x, tileAnchorShifted.y, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation).point;
+        return projectWithMatrix(tileAnchorShifted.x, tileAnchorShifted.y, projectionContext.pitchedLabelPlaneMatrix, elevationAt(projectionContext, tileAnchorShifted.x, tileAnchorShifted.y)).point;
     } else {
         if (rotateWithMap) {
             const projectedAnchorRight = projectTileCoordinatesToLabelPlane(projectionContext.tileAnchorPoint.x + 1, projectionContext.tileAnchorPoint.y, projectionContext);
@@ -147,14 +147,14 @@ function updateVariableAnchorsForBucket(
     bucket.text.dynamicLayoutVertexBuffer.updateData(dynamicTextLayoutVertexArray);
 }
 
-export function updateVariableAnchors(coords: Array<OverscaledTileID>,
+export function updateVariableAnchors(coords: OverscaledTileID[],
     painter: Painter,
     layer: SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
-    variableOffsets: { [_ in CrossTileID]: VariableOffset }) {
+    variableOffsets: { [_ in CrossTileID]: VariableOffset }): void {
     const transform = painter.transform;
     const terrain = painter.style.map.terrain;
     const rotateWithMap = rotationAlignment === 'map';
@@ -163,7 +163,7 @@ export function updateVariableAnchors(coords: Array<OverscaledTileID>,
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket = tile.getBucket(layer) as SymbolBucket;
-        if (!bucket || !bucket.text || !bucket.text.segments.get().length) continue;
+        if (!bucket?.text?.segments.get().length) continue;
 
         const sizeData = bucket.textSizeData;
         const size = evaluateSizeForZoom(sizeData, transform.zoom);

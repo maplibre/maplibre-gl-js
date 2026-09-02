@@ -1,7 +1,7 @@
-import {RGBAImage} from '../util/image';
+import {RGBAImage} from '../util/image.ts';
 
-import {warnOnce} from '../util/util';
-import {register} from '../util/web_worker_transfer';
+import {warnOnce} from '../util/util.ts';
+import {register} from '../util/web_worker_transfer.ts';
 
 /**
  * The possible DEM encoding types
@@ -20,6 +20,8 @@ export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom';
  * tile's edge without backfilling from neighboring tiles.
  */
 export class DEMData {
+    private static readonly byteViewCache = new WeakMap<DEMData, Uint8Array>();
+
     uid: string | number;
     data: Uint32Array;
     stride: number;
@@ -52,6 +54,7 @@ export class DEMData {
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);
+        DEMData.byteViewCache.set(this, new Uint8Array(this.data.buffer));
         switch (encoding) {
             case 'terrarium':
                 // unpacking formula for mapzen terrarium:
@@ -98,33 +101,58 @@ export class DEMData {
         this.data[this._idx(dim, dim)] = this.data[this._idx(dim - 1, dim - 1)];
 
         // calculate min/max values
+        const pixels = this._getByteView();
         this.min = Number.MAX_SAFE_INTEGER;
         this.max = Number.MIN_SAFE_INTEGER;
         for (let x = 0; x < dim; x++) {
             for (let y = 0; y < dim; y++) {
-                const ele = this.get(x, y);
+                const index = this._idx(x, y) * 4;
+                const ele = this._unpackAtIndex(pixels, index);
                 if (ele > this.max) this.max = ele;
                 if (ele < this.min) this.min = ele;
             }
         }
     }
 
-    get(x: number, y: number) {
-        const pixels = new Uint8Array(this.data.buffer);
+    get(x: number, y: number): number {
+        const pixels = this._getByteView();
         const index = this._idx(x, y) * 4;
-        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+        return this._unpackAtIndex(pixels, index);
     }
 
-    getUnpackVector() {
+    sampleBilinear(x: number, y: number): number {
+        const cx = Math.floor(x);
+        const cy = Math.floor(y);
+        if (cx < -1 || cx >= this.dim || cy < -1 || cy >= this.dim) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
+
+        const pixels = this._getByteView();
+        const index = ((cy + 1) * this.stride + cx + 1) * 4;
+        const strideByteWidth = this.stride * 4;
+        const tx = x - cx;
+        const ty = y - cy;
+        const z00 = this._unpackAtIndex(pixels, index);
+        const z10 = this._unpackAtIndex(pixels, index + 4);
+        const z01 = this._unpackAtIndex(pixels, index + strideByteWidth);
+        const z11 = this._unpackAtIndex(pixels, index + strideByteWidth + 4);
+
+        return (
+            z00 * (1 - tx) * (1 - ty) +
+            z10 * tx * (1 - ty) +
+            z01 * (1 - tx) * ty +
+            z11 * tx * ty
+        );
+    }
+
+    getUnpackVector(): number[] {
         return [this.redFactor, this.greenFactor, this.blueFactor, this.baseShift];
     }
 
-    _idx(x: number, y: number) {
+    _idx(x: number, y: number): number {
         if (x < -1 || x >= this.dim + 1 ||  y < -1 || y >= this.dim + 1) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
         return (y + 1) * this.stride + (x + 1);
     }
 
-    unpack(r: number, g: number, b: number) {
+    unpack(r: number, g: number, b: number): number {
         return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
     }
 
@@ -132,11 +160,11 @@ export class DEMData {
         return packDEMData(v, this.getUnpackVector());
     }
 
-    getPixels() {
-        return new RGBAImage({width: this.stride, height: this.stride}, new Uint8Array(this.data.buffer));
+    getPixels(): RGBAImage {
+        return new RGBAImage({width: this.stride, height: this.stride}, this._getByteView());
     }
 
-    backfillBorder(borderTile: DEMData, dx: number, dy: number) {
+    backfillBorder(borderTile: DEMData, dx: number, dy: number): void {
         if (this.dim !== borderTile.dim) throw new Error('dem dimension mismatch');
 
         let xMin = dx * this.dim,
@@ -169,6 +197,19 @@ export class DEMData {
                 this.data[this._idx(x, y)] = borderTile.data[this._idx(x + ox, y + oy)];
             }
         }
+    }
+
+    private _getByteView(): Uint8Array {
+        let byteView = DEMData.byteViewCache.get(this);
+        if (byteView?.buffer !== this.data.buffer) {
+            byteView = new Uint8Array(this.data.buffer);
+            DEMData.byteViewCache.set(this, byteView);
+        }
+        return byteView;
+    }
+
+    private _unpackAtIndex(pixels: Uint8Array, index: number): number {
+        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 }
 

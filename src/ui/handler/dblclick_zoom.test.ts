@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest, sleep} from '../../util/test/util';
-import {Map, type MapOptions} from '../map';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest, sleep} from '../../util/test/util.ts';
+import {Map, type MapOptions} from '../map.ts';
 
 function createMap(options: any = {}) {
     return new Map({
@@ -63,7 +63,7 @@ describe('dbclick_zoom', () => {
             container: window.document.createElement('div'),
             zoomSnap: 1.0,
             zoom: 9.7
-        } as any);
+        });
         const spy = vi.spyOn(map, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
@@ -79,7 +79,7 @@ describe('dbclick_zoom', () => {
             container: window.document.createElement('div'),
             zoomSnap: 1.0,
             zoom: 9.7
-        } as any);
+        });
         const spy = vi.spyOn(map, 'easeTo');
 
         const canvas = map.getCanvas();
@@ -191,7 +191,7 @@ describe('dbclick_zoom', () => {
         expect(zoom).not.toHaveBeenCalled();
     });
 
-    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap on a non-interactive map', () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
         const spy = vi.spyOn(map, 'easeTo');
 
@@ -203,7 +203,7 @@ describe('dbclick_zoom', () => {
         map.remove();
     });
 
-    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap on a non-interactive map', async () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
         const spy = vi.spyOn(map, 'easeTo');
 

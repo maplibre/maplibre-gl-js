@@ -1,20 +1,20 @@
 // WebGPU drawable path for background layers.
 // Extracted from src/render/draw_background.ts
 
-import {StencilMode} from '../../gl/stencil_mode';
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {backgroundUniformValues} from '../../render/program/background_program';
-import {DrawableBuilder} from '../../gfx/drawable_builder';
-import {TileLayerGroup} from '../../gfx/tile_layer_group';
-import {BackgroundLayerTweaker} from '../../gfx/tweakers/background_layer_tweaker';
-import {coveringTiles} from '../../geo/projection/covering_tiles';
+import {StencilMode} from '../../webgl/stencil_mode.ts';
+import {DepthMode} from '../../webgl/depth_mode.ts';
+import {CullFaceMode} from '../../webgl/cull_face_mode.ts';
+import {backgroundUniformValues} from '../../webgl/program/background_program.ts';
+import {DrawableBuilder} from '../../gfx/drawable_builder.ts';
+import {TileLayerGroup} from '../../gfx/tile_layer_group.ts';
+import {BackgroundLayerTweaker} from '../../gfx/tweakers/background_layer_tweaker.ts';
+import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawBackgroundWebGPU(painter: Painter, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawBackgroundWebGPU(painter: Painter, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
@@ -66,9 +66,9 @@ export function drawBackgroundWebGPU(painter: Painter, layer: BackgroundStyleLay
         .setLayerTweaker(tweaker);
 
     if (hasPattern && isWebGPU) {
-        painter.imageManager.bind(context);
-        const atlasImage = (painter.imageManager as any).atlasImage;
-        const atlasTexture = (painter.imageManager as any).atlasTexture;
+        painter.patternAtlas.bind(context);
+        const atlasImage = (painter.patternAtlas as any).atlasImage;
+        const atlasTexture = (painter.patternAtlas as any).atlasTexture;
         if (atlasImage?.data && atlasImage.width > 0 && atlasImage.height > 0) {
             builder.addTexture({
                 name: 'pattern_texture',
@@ -96,7 +96,7 @@ export function drawBackgroundWebGPU(painter: Painter, layer: BackgroundStyleLay
             applyGlobeMatrix: !isRenderingToTexture,
             applyTerrainMatrix: true
         });
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
+        const terrainData = painter.style.map.terrain?.getTerrainData(tileID);
 
         const drawable = builder.flush({
             tileID,

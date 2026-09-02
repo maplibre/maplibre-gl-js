@@ -1,15 +1,27 @@
-import type {LngLat, LngLatLike} from './lng_lat';
-import type {LngLatBounds} from './lng_lat_bounds';
-import type {MercatorCoordinate} from './mercator_coordinate';
+import type {LngLat, LngLatLike} from './lng_lat.ts';
+import type {LngLatBounds} from './lng_lat_bounds.ts';
+import type {MercatorCoordinate} from './mercator_coordinate.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
-import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
-import type {PaddingOptions} from './edge_insets';
-import type {Terrain} from '../render/terrain';
-import type {PointProjection} from '../symbol/projection';
-import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
-import type {Frustum} from '../util/primitives/frustum';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
+import type {PaddingOptions} from './edge_insets.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {PointProjection} from '../symbol/projection.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
+import type {Frustum} from '../util/primitives/frustum.ts';
+
+/**
+ * Samples the terrain elevation, in meters, at a point given in tile coordinates.
+ *
+ * Implementations are bound to a specific tile, so `x` and `y` are interpreted within that tile.
+ * A missing function means the map has no terrain, in which case callers treat the elevation as 0.
+ *
+ * @param x - the x coordinate within the tile
+ * @param y - the y coordinate within the tile
+ * @returns the terrain elevation in meters
+ */
+export type GetElevation = (x: number, y: number) => number;
 
 /**
  * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
@@ -204,8 +216,10 @@ interface ITransformMutators {
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
+     * @param elevation - Optional ground elevation in meters above sea level at `lnglat`,
+     * defaults to the elevation at the map's center. Ignored when rendering the globe.
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void;
 
     /**
      * Sets or clears the map's geographical constraints.
@@ -232,9 +246,8 @@ interface ITransformMutators {
      * @internal
      * Sets the transform's transition state from one projection to another.
      * @param value - The transition state value.
-     * @param error - The error value.
      */
-    setTransitionState(value: number, error: number): void;
+    setTransitionState(value: number): void;
 }
 
 /**
@@ -334,12 +347,31 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Given a point on screen, return its LngLat location assuming the ground there
+     * lies at the given elevation. When rendering the globe the elevation is ignored.
+     * @param p - screen point
+     * @param elevation - ground elevation in meters above sea level
+     * @returns lnglat location
+     */
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat;
+
+    /**
+     * @internal
      * Given a point on screen, return its mercator coordinate.
      * @param p - the point
      * @param terrain - optional terrain
      * @returns lnglat
      */
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+
+    /**
+     * @internal
+     * Given a point on screen, return the mercator coordinate where its ray hits the rendered terrain surface.
+     * @param p - the point
+     * @param terrain - the terrain
+     * @returns the hit with z in meters, or null when the terrain has no renderable tiles or the ray never crosses the terrain surface
+     */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
 
     /**
      * @internal
@@ -446,7 +478,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param params - Parameters for the projection data generation.
      */
-    getProjectionData(params: ProjectionDataParams): ProjectionData;
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData;
 
     /**
      * @internal
@@ -491,21 +523,12 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
-
-    /**
-     * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
-     * while also being projected by the custom layer matrix.
-     * This function is intended to be called from custom layers.
-     * @param location - Location of the model.
-     * @param altitude - Altitude of the model. May be undefined.
-     */
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection;
 
     /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
      */
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): ProjectionData;
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): CustomLayerProjectionData;
 
     /**
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
