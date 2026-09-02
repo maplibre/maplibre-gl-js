@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Name the glyph range URL and say the response was not a glyph range PBF file, instead of failing with `Unimplemented type: 4`, when the style's `glyphs` URL doesn't serve glyph ranges ([#6453](https://github.com/maplibre/maplibre-gl-js/issues/6453)) (by [@ethanstoner](https://github.com/ethanstoner))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

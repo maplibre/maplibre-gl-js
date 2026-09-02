@@ -82,6 +82,23 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
  */
 const clusterEmsWide = 3;
 
+// `stacks` is the only field of the `Glyphs` message, so a glyph range PBF starts with its tag.
+const glyphsStacksTag = 0x0a;
+
+function parseGlyphRange(data: ArrayBuffer, url: string): StyleGlyph[] {
+    if (data.byteLength === 0) {
+        throw new Error(`Unable to parse the glyph range at ${url}, the response is empty`);
+    }
+    try {
+        return parseGlyphPbf(data);
+    } catch (ex) {
+        if (new Uint8Array(data)[0] !== glyphsStacksTag) {
+            throw new Error(`Unable to parse the glyph range at ${url}, the response is not a glyph range PBF file`);
+        }
+        throw new Error(`Unable to parse the glyph range at ${url}, got error: ${ensureError(ex).message}`);
+    }
+}
+
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string | false;
@@ -238,7 +255,7 @@ export class GlyphManager {
         }
 
         const glyphs = {};
-        for (const glyph of parseGlyphPbf(response.data)) {
+        for (const glyph of parseGlyphRange(response.data, request.url)) {
             glyphs[glyph.id] = glyph;
         }
         return glyphs;

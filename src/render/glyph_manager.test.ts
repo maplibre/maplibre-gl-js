@@ -225,6 +225,45 @@ describe('GlyphManager', () => {
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Unable to load glyph range'));
     });
 
+    test('GlyphManager names the URL when the glyphs URL serves something else', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        server.respondWith(/\.pbf$/, function (request) {
+            request.respond(200, {'Content-Type': 'text/html'}, '<!DOCTYPE html>\n<html><body>Not found</body></html>');
+        });
+        const manager = createGlyphManager(true, 'sans-serif');
+
+        await manager.getGlyphs({'Arial Unicode MS': [char(0x10e1)]});
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(
+            'Unable to parse the glyph range at https://localhost/fonts/v1/Arial Unicode MS/4096-4351.pbf, the response is not a glyph range PBF file'));
+    });
+
+    test('GlyphManager reports an empty glyph range instead of silently returning none', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        server.respondWith(/\.pbf$/, function (request) {
+            request.respond(200, {'Content-Type': 'application/x-protobuf'}, '');
+        });
+        const manager = createGlyphManager(true, 'sans-serif');
+
+        await manager.getGlyphs({'Arial Unicode MS': [char(0x10e1)]});
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(
+            'Unable to parse the glyph range at https://localhost/fonts/v1/Arial Unicode MS/4096-4351.pbf, the response is empty'));
+    });
+
+    test('GlyphManager keeps the parse error for a corrupt glyph range', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        server.respondWith(/\.pbf$/, function (request) {
+            request.respond(200, undefined, bufferToArrayBuffer(pbf.subarray(0, 5000)) as unknown as string);
+        });
+        const manager = createGlyphManager(true, 'sans-serif');
+
+        await manager.getGlyphs({'Arial Unicode MS': [char(0x10e1)]});
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(
+            'Unable to parse the glyph range at https://localhost/fonts/v1/Arial Unicode MS/4096-4351.pbf, got error: '));
+    });
+
     test('GlyphManager caches locally generated glyphs', async () => {
 
         const manager = createGlyphManager(true, 'sans-serif');
