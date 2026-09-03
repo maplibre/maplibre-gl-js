@@ -2857,6 +2857,26 @@ describe('Style.moveLayer', () => {
         style.moveLayer('b', 'b');
         expect(style._order).toEqual(['a', 'b', 'c']);
     });
+
+    test('keeps the order when the before layer does not exist', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            layers: [
+                {id: 'a', type: 'background'},
+                {id: 'b', type: 'background'}
+            ]
+        }));
+
+        await style.once('style.load');
+        const promise = style.once('error');
+        style.moveLayer('a', 'c');
+        const {error} = await promise;
+        expect(error.message).toMatch(/Cannot move layer "a" before non-existing layer "c"/);
+        expect(style.getLayersOrder()).toEqual(['a', 'b']);
+
+        style.removeLayer('a');
+        expect(style.getLayersOrder()).toEqual(['b']);
+    });
 });
 
 describe('Style.setPaintProperty', () => {
