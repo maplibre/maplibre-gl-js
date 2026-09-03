@@ -2872,10 +2872,10 @@ describe('Style.moveLayer', () => {
         style.moveLayer('a', 'c');
         const {error} = await promise;
         expect(error.message).toMatch(/Cannot move layer "a" before non-existing layer "c"/);
-        expect(style._order).toEqual(['a', 'b']);
+        expect(style.getLayersOrder()).toEqual(['a', 'b']);
 
         style.removeLayer('a');
-        expect(style._order).toEqual(['b']);
+        expect(style.getLayersOrder()).toEqual(['b']);
     });
 });
 
