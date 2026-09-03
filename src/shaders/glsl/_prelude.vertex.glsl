@@ -88,11 +88,13 @@ mat3 rotationMatrixFromAxisAngle(vec3 u, float angle) {
 
 #ifdef TERRAIN3D
 uniform sampler2D u_terrain;
-uniform float u_terrain_dim;
-uniform mat4 u_terrain_matrix;
-uniform vec4 u_terrain_unpack;
-uniform float u_terrain_exaggeration;
 uniform highp sampler2D u_depth;
+layout(std140) uniform TerrainUBO {
+    highp mat4 u_terrain_matrix;
+    highp vec4 u_terrain_unpack;
+    highp float u_terrain_dim;
+    highp float u_terrain_exaggeration;
+};
 #endif
 
 // methods for pack/unpack depth value to texture rgba
