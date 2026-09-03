@@ -109,6 +109,7 @@ export class NullWebGL2RenderingContext {
     STATIC_DRAW: number = 0x88E4;
     DYNAMIC_DRAW: number = 0x88E8;
     UNIFORM_BUFFER: number = 0x8A11;
+    INVALID_INDEX: number = 0xFFFFFFFF;
     VERTEX_SHADER: number = 0x8B31;
     FRAGMENT_SHADER: number = 0x8B30;
     COMPILE_STATUS: number = 0x8B81;
@@ -199,6 +200,8 @@ export class NullWebGL2RenderingContext {
     getBufferSubData: Mock<GL['getBufferSubData']> = vi.fn();
     bindBufferBase: Mock<GL['bindBufferBase']> = vi.fn();
     bindBufferRange: Mock<GL['bindBufferRange']> = vi.fn();
+    getUniformBlockIndex: Mock<GL['getUniformBlockIndex']> = vi.fn((): number => 0xFFFFFFFF);
+    uniformBlockBinding: Mock<GL['uniformBlockBinding']> = vi.fn();
     beginQuery: Mock<GL['beginQuery']> = vi.fn();
     endQuery: Mock<GL['endQuery']> = vi.fn();
     getQuery: Mock<GL['getQuery']> = vi.fn();
