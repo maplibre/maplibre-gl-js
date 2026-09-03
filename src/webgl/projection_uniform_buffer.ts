@@ -1,7 +1,18 @@
 import type {Context} from './context.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
-export const PROJECTION_UBO_BINDING_POINT = 0;
+export const UBO_BINDINGS = {
+    ProjectionUBO: 0,
+};
+
+export function applyUBOBindings(gl: WebGL2RenderingContext, program: WebGLProgram): void {
+    for (const [name, binding] of Object.entries(UBO_BINDINGS)) {
+        const index = gl.getUniformBlockIndex(program, name);
+        if (index !== gl.INVALID_INDEX) {
+            gl.uniformBlockBinding(program, index, binding);
+        }
+    }
+}
 
 const PROJECTION_UBO_MEMBERS = [
     {name: 'u_projection_matrix', type: 'mat4', offset: 0},
@@ -38,7 +49,7 @@ export class ProjectionUniformBuffer {
         this.buffer = gl.createBuffer();
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
         gl.bufferData(gl.UNIFORM_BUFFER, PROJECTION_UBO_SIZE_WORDS * 4, gl.DYNAMIC_DRAW);
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, PROJECTION_UBO_BINDING_POINT, this.buffer);
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, this.buffer);
         this.uploaded = new Float32Array(PROJECTION_UBO_SIZE_WORDS);
         this.pending = new Float32Array(PROJECTION_UBO_SIZE_WORDS);
         this.uploadedWords = new Uint32Array(this.uploaded.buffer);
@@ -70,7 +81,7 @@ export class ProjectionUniformBuffer {
         }
 
         if (this.bindingDirty) {
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, PROJECTION_UBO_BINDING_POINT, this.buffer);
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, this.buffer);
             this.bindingDirty = false;
         }
 

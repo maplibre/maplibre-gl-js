@@ -14,7 +14,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
-import {PROJECTION_UBO_BINDING_POINT} from './projection_uniform_buffer.ts';
+import {applyUBOBindings} from './projection_uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -148,10 +148,7 @@ export class Program<Us extends UniformBindings> {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
 
-        const projectionBlockIndex = gl.getUniformBlockIndex(this.program, 'ProjectionUBO');
-        if (projectionBlockIndex !== gl.INVALID_INDEX) {
-            gl.uniformBlockBinding(this.program, projectionBlockIndex, PROJECTION_UBO_BINDING_POINT);
-        }
+        applyUBOBindings(gl, this.program);
 
         const integerAttributeNames = getIntegerAttributeNames(gl, this.program);
         for (const name of allAttrInfo) {
