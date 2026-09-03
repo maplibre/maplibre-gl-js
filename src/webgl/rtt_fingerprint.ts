@@ -1,12 +1,12 @@
 import {type OverscaledTileID} from '../tile/tile_id.ts';
 
 /**
- * @internal
  * Immutable value describing the state a render-to-texture tile's textures
  * were rendered from: the source tiles drawn into them, the source data
  * revision, and the map zoom at render time (zoom-dependent style properties
- * are evaluated then). A cached texture matches the screen exactly when its
- * fingerprint equals the one computed for the current frame.
+ * are evaluated then).
+ *
+ * @internal
  */
 export class RTTFingerprint {
     private readonly _tileKeys: string;
@@ -24,10 +24,9 @@ export class RTTFingerprint {
     }
 
     /**
-     * Same source tiles at the same revision, regardless of the zoom the
-     * texture was rendered at: such a texture only shows zoom-dependent style
-     * properties at a stale zoom, so it can stay on screen while the zoom is
-     * still changing and be re-rendered once the zoom settles.
+     * Returns whether the source tiles and revision match, without comparing zoom.
+     * Used to keep a texture on screen while the zoom is still changing and only
+     * re-render it once the zoom has settled.
      */
     equalsIgnoringZoom(other: RTTFingerprint | undefined): boolean {
         if (other === undefined) return false;

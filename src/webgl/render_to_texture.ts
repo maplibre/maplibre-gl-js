@@ -40,10 +40,8 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: OverscaledTileID[]}};
     /**
-     * the state each render-to-texture tile's textures would be rendered from
-     * this frame, per source. Compared against the fingerprint stored on the
-     * tile when its textures were last rendered to detect changes and trigger
-     * re-rendering.
+     * This frame's fingerprint for each render-to-texture tile, keyed by source id
+     * then tile key. A tile whose stored fingerprint differs has stale textures.
      */
     _rttFingerprints: Record<string, Record<string, RTTFingerprint>>;
     /**
@@ -74,10 +72,7 @@ export class RenderToTexture {
      */
     _lastPrepareZoom: number;
     /**
-     * true when a kept texture was rendered at another zoom than the current
-     * one. The map's render loop must then schedule one follow-up frame — a
-     * finished animation schedules none on its own — so the texture is
-     * released and re-rendered once the zoom settles.
+     * whether the render loop needs a follow-up frame to refresh cached textures retained while zooming.
      */
     needsFollowUpFrame: boolean = false;
     constructor(painter: Painter, terrain: Terrain) {

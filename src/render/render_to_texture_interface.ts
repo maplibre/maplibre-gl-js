@@ -9,9 +9,7 @@ import type {RenderOptions} from './painter.ts';
  */
 export interface IRenderToTexture {
     /**
-     * true when prepareForRender kept a texture rendered at another zoom while
-     * the zoom is changing: the render loop must schedule one follow-up frame
-     * so the texture is re-rendered once the zoom settles.
+     * Whether the render loop needs a follow-up frame to refresh cached textures retained while zooming.
      */
     needsFollowUpFrame: boolean;
     prepareForRender(style: Style, zoom: number): void;
