@@ -375,6 +375,19 @@ describe('popup', () => {
         expect(popup._pos).toEqual(map.project([0, 0]));
     });
 
+    test('Popup whose location is behind the camera is not positioned inside the viewport', () => {
+        const map = createMap({maxPitch: 85, pitch: 80, zoom: 10, center: [0, 0]});
+        const popup = new Popup()
+            .setLngLat([0, -2])
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup._pos.x).toBeGreaterThan(containerWidth);
+        expect(popup._pos.y).toBeGreaterThan(containerHeight);
+
+        map.remove();
+    });
+
     test('Popup anchors as specified by the anchor option', () => {
         const map = createMap();
         const popup = new Popup({anchor: 'top-left'})
