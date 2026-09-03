@@ -1,4 +1,4 @@
-import {quat, type ReadonlyVec4, vec3} from 'gl-matrix';
+import {type mat4, quat, type ReadonlyVec4, vec3, vec4} from 'gl-matrix';
 import {clamp, createVec3f64, createVec4f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
 import {LngLat} from '../lng_lat.ts';
 import {EXTENT} from '../../data/extent.ts';
@@ -86,6 +86,15 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
     // should be the same for both globe and flat view.
     // For this reason we scale the globe up when map center is nearer to the poles.
     return worldSize / (2.0 * Math.PI) / Math.cos(latitudeDegrees * Math.PI / 180);
+}
+
+/**
+ * Returns the globe center in view space, in pixels: the camera is at the origin and looks down the negative Z axis.
+ */
+export function getGlobeCenterInViewSpace(transform: {modelViewProjectionMatrix: mat4; inverseProjectionMatrix: mat4}): vec3 {
+    const position = vec4.transformMat4(createVec4f64(), [0, 0, 0, 1], transform.modelViewProjectionMatrix);
+    vec4.transformMat4(position, position, transform.inverseProjectionMatrix);
+    return [position[0] / position[3], position[1] / position[3], position[2] / position[3]];
 }
 
 /**
