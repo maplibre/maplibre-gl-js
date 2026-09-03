@@ -1079,6 +1079,24 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker whose location is behind the camera is not positioned inside the viewport', () => {
+        const containerSize = 512;
+        const map = createMap();
+        map.setMaxPitch(85);
+        map.setZoom(10);
+        map.setCenter([0, 0]);
+        map.setPitch(80);
+
+        const marker = new Marker()
+            .setLngLat([0, -2])
+            .addTo(map);
+
+        expect(marker._pos.x).toBeGreaterThan(containerSize);
+        expect(marker._pos.y).toBeGreaterThan(containerSize);
+
+        map.remove();
+    });
+
     test('Marker transforms pitch with the map', () => {
         const map = createMap();
         const marker = new Marker({pitchAlignment: 'map'})
