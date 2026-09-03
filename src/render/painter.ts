@@ -392,12 +392,6 @@ export class Painter {
         }
     }
 
-    /**
-     * The far plane is derived from the lowest point the camera has to reach, which until now only
-     * came from terrain. Geometry extruded below the datum has to be counted too, otherwise it
-     * falls outside the frustum and disappears, most visibly at low pitch.
-     */
-
     stencilModeFor3D(): StencilMode {
         this.currentStencilSource = undefined;
 
