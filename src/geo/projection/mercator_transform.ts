@@ -479,12 +479,18 @@ export class MercatorTransform implements ITransform {
      * @param coord - the coordinates
      * @param elevation - the elevation
      * @param pixelMatrix - the pixel matrix
-     * @returns screen point
+     * @returns screen point, or a point holding `Number.MAX_VALUE` in both components
+     * when the coordinate is behind camera
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
-        return new Point(p[0] / p[3], p[1] / p[3]);
+        const w = p[3];
+        if (w <= 0) {
+            // Behind the camera plane, so no pixel corresponds to this coordinate.
+            return new Point(Number.MAX_VALUE, Number.MAX_VALUE);
+        }
+        return new Point(p[0] / w, p[1] / w);
     }
 
     getBounds(): LngLatBounds {
