@@ -4,6 +4,7 @@
       "positionedGlyphs": [
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": -38.5,
           "y": -17,
@@ -27,6 +28,7 @@
         },
         {
           "glyph": 98,
+          "grapheme": "b",
           "imageName": null,
           "x": -22.5,
           "y": -17,
@@ -50,6 +52,7 @@
         },
         {
           "glyph": 99,
+          "grapheme": "c",
           "imageName": null,
           "x": -5.5,
           "y": -17,
@@ -73,6 +76,7 @@
         },
         {
           "glyph": 100,
+          "grapheme": "d",
           "imageName": null,
           "x": 8.5,
           "y": -17,
@@ -96,6 +100,7 @@
         },
         {
           "glyph": 101,
+          "grapheme": "e",
           "imageName": null,
           "x": 25.5,
           "y": -17,
