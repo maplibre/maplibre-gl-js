@@ -49,4 +49,12 @@ describe('ProjectionUniformBuffer', () => {
         expect(gl.bindBufferBase).toHaveBeenCalledTimes(2);
         expect(gl.bufferSubData).toHaveBeenCalledTimes(1);
     });
+
+    test('destroy deletes the buffer once', () => {
+        const buffer = ubo.buffer;
+        ubo.destroy();
+        ubo.destroy();
+        expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
+        expect(gl.deleteBuffer).toHaveBeenCalledWith(buffer);
+    });
 });
