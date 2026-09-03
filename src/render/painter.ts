@@ -917,6 +917,7 @@ export class Painter {
         }
 
         this.context.projectionUniformBuffer.destroy();
+        this.context.terrainUniformBuffer.destroy();
 
         if (this.cache) {
             for (const key in this.cache) {

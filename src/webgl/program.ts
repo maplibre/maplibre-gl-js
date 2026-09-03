@@ -16,6 +16,7 @@ import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program
 import type {TerrainData} from '../render/terrain.ts';
 import {applyUBOBindings} from './uniform_buffer.ts';
 import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -216,6 +217,7 @@ export class Program<Us extends UniformBindings> {
             for (const name in this.terrainUniforms) {
                 this.terrainUniforms[name].set(terrain[name]);
             }
+            updateTerrainUniformBuffer(context.terrainUniformBuffer, terrain);
         }
 
         if (projectionData) {
