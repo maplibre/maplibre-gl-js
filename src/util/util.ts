@@ -781,9 +781,6 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * @returns - A  promise resolved when the conversion is finished
  */
 export const arrayBufferToImageBitmap = async (data: ArrayBuffer, options?: ImageBitmapOptions): Promise<ImageBitmap> => {
-    if (data.byteLength === 0) {
-        return createImageBitmap(new ImageData(1, 1), options);
-    }
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     try {
         return createImageBitmap(blob, options);
@@ -818,7 +815,7 @@ export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement>
         };
         img.onerror = () => reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
         const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-        img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
+        img.src = URL.createObjectURL(blob);
     });
 };
 
