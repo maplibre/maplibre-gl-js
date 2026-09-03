@@ -167,4 +167,12 @@ float get_elevation(vec2 pos) {
 
 const float PI = 3.141592653589793;
 
-uniform mat4 u_projection_matrix;
+#define PROJECTION_UBO
+layout(std140) uniform ProjectionUBO {
+    highp mat4 u_projection_matrix;
+    highp mat4 u_projection_fallback_matrix;
+    highp vec4 u_projection_tile_mercator_coords;
+    highp vec4 u_projection_clipping_plane;
+    highp float u_projection_transition;
+    highp int u_projection_clip_antimeridian;
+};

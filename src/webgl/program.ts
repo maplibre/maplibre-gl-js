@@ -14,7 +14,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
-import {type ProjectionPreludeUniformsType, projectionUniforms, projectionUniformValues} from './program/projection_program.ts';
+import {applyUBOBindings} from './uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -61,7 +61,6 @@ export class Program<Us extends UniformBindings> {
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
-    projectionUniforms: ProjectionPreludeUniformsType;
     binderUniforms: BinderUniform[];
     failedToCreate: boolean;
 
@@ -83,11 +82,10 @@ export class Program<Us extends UniformBindings> {
         const allAttrInfo = staticAttrInfo.concat(dynamicAttrInfo);
 
         const preludeUniformsInfo = shaders.prelude.staticUniforms ? getTokenizedAttributesAndUniforms(shaders.prelude.staticUniforms) : [];
-        const projectionPreludeUniformsInfo = projectionPrelude.staticUniforms ? getTokenizedAttributesAndUniforms(projectionPrelude.staticUniforms) : [];
         const staticUniformsInfo = source.staticUniforms ? getTokenizedAttributesAndUniforms(source.staticUniforms) : [];
         const dynamicUniformsInfo = configuration ? configuration.getBinderUniforms() : [];
         // remove duplicate uniforms
-        const uniformList = preludeUniformsInfo.concat(projectionPreludeUniformsInfo).concat(staticUniformsInfo).concat(dynamicUniformsInfo);
+        const uniformList = preludeUniformsInfo.concat(staticUniformsInfo).concat(dynamicUniformsInfo);
         const allUniformsInfo = [];
         for (const uniform of uniformList) {
             if (!allUniformsInfo.includes(uniform)) allUniformsInfo.push(uniform);
@@ -150,6 +148,8 @@ export class Program<Us extends UniformBindings> {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
 
+        applyUBOBindings(gl, this.program);
+
         const integerAttributeNames = getIntegerAttributeNames(gl, this.program);
         for (const name of allAttrInfo) {
             if (!name) continue;
@@ -173,7 +173,6 @@ export class Program<Us extends UniformBindings> {
 
         this.fixedUniforms = fixedUniforms(context, uniformLocations);
         this.terrainUniforms = terrainPreludeUniforms(context, uniformLocations);
-        this.projectionUniforms = projectionUniforms(context, uniformLocations);
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
     }
 
@@ -219,10 +218,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (projectionData) {
-            const values = projectionUniformValues(projectionData);
-            for (const name in this.projectionUniforms) {
-                this.projectionUniforms[name].set(values[name]);
-            }
+            context.projectionUniformBuffer.update(projectionData);
         }
 
         if (uniformValues) {
