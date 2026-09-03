@@ -36,7 +36,7 @@
         "line-cap": "butt"
       },
       "paint": {
-        "line-width": 10,
+        "line-width": 8,
         "line-color": "#000",
         "line-opacity": 1
       }

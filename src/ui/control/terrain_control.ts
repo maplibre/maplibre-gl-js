@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {IControl} from './control';
+import type {Map} from '../map.ts';
+import type {IControl} from './control.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
@@ -16,6 +16,10 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  *         source: "terrain"
  *     }));
  * ```
+ * @see [3D Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/)
+ * @see [Create a Heatmap layer on a globe with terrain elevation](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer-on-a-globe-with-terrain-elevation/)
+ * @see [Display a hybrid satellite map with terrain elevation](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-hybrid-satellite-map-with-terrain-elevation/)
+ * @see [Sky, Fog, Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/sky-fog-terrain/)
  */
 export class TerrainControl implements IControl {
     options: TerrainSpecification;
@@ -31,7 +35,7 @@ export class TerrainControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._terrainButton = DOM.create('button', 'maplibregl-ctrl-terrain', this._container);
@@ -45,13 +49,13 @@ export class TerrainControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
-        DOM.remove(this._container);
+    onRemove(): void {
+        this._container.remove();
         this._map.off('terrain', this._updateTerrainIcon);
         this._map = undefined;
     }
 
-    _toggleTerrain = () => {
+    _toggleTerrain = (): void => {
         if (this._map.getTerrain()) {
             this._map.setTerrain(null);
         } else {
@@ -60,7 +64,7 @@ export class TerrainControl implements IControl {
         this._updateTerrainIcon();
     };
 
-    _updateTerrainIcon = () => {
+    _updateTerrainIcon = (): void => {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
         if (this._map.terrain) {

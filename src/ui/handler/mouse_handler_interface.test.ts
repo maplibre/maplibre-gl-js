@@ -1,8 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
-import {generateMousePanHandler, generateMousePitchHandler, generateMouseRollHandler, generateMouseRotationHandler} from './mouse';
-import {type DragRotateResult} from './drag_handler';
+import {generateMousePanHandler, generateMousePitchHandler, generateMouseRollHandler, generateMouseRotationHandler} from './mouse.ts';
+import {type DragPitchResult, type DragRotateResult} from './drag_handler.ts';
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {
@@ -38,6 +38,26 @@ describe('mouse handler tests', () => {
 
         expect(mouseRotate.dragMove(overToleranceMove, new Point(10, 10))).toBeUndefined();
         expect(mouseRotate.isActive()).toBe(false);
+    });
+
+    test('MouseRotateHandler rotates 2 degrees per dragged pixel when rotateSpeed is 2', () => {
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2, rotateSpeed: 2}, () => new Point(10, 10));
+
+        mouseRotate.enable();
+        mouseRotate.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2}), new Point(0, 0));
+
+        const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
+        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(20);
+    });
+
+    test('MousePitchHandler pitches 2 degrees per dragged pixel when pitchSpeed is -2', () => {
+        const mousePitch = generateMousePitchHandler({clickTolerance: 2, pitchSpeed: -2});
+
+        mousePitch.enable();
+        mousePitch.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2}), new Point(0, 0));
+
+        const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 0, clientY: 10});
+        expect((mousePitch.dragMove(overToleranceMove, new Point(0, 10)) as DragPitchResult).pitchDelta).toBeCloseTo(-20);
     });
 
     test('MousePitchHandler', () => {

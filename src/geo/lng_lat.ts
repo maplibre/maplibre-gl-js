@@ -1,4 +1,4 @@
-import {wrap} from '../util/util';
+import {wrap} from '../util/util.ts';
 
 /*
 * Approximate radius of the earth in meters.
@@ -46,9 +46,7 @@ export type LngLatLike = LngLat | {
  * let ll = new LngLat(-123.9749, 40.7736);
  * ll.lng; // = -123.9749
  * ```
- * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
- * @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
- * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
+ * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/)
  */
 export class LngLat {
     /**
@@ -87,7 +85,7 @@ export class LngLat {
      * wrapped.lng; // = -73.9749
      * ```
      */
-    wrap() {
+    wrap(): LngLat {
         return new LngLat(wrap(this.lng, -180, 180), this.lat);
     }
 
@@ -138,8 +136,7 @@ export class LngLat {
         const lat2 = lngLat.lat * rad;
         const a = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos((lngLat.lng - this.lng) * rad);
 
-        const maxMeters = earthRadius * Math.acos(Math.min(a, 1));
-        return maxMeters;
+        return earthRadius * Math.acos(Math.min(a, 1));
     }
 
     /**

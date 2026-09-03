@@ -3,9 +3,11 @@ import {
     getArrayBuffer,
     getJSON,
     type AJAXError,
+    getReferrer,
     sameOrigin
-} from './ajax';
-import {isAbortError} from './abort_error';
+} from './ajax.ts';
+import {isAbortError} from './abort_error.ts';
+import {ensureError} from './util.ts';
 
 import {fakeServer, type FakeServer} from 'nise';
 
@@ -16,6 +18,12 @@ function readAsText(blob) {
         fileReader.onerror = () => reject(fileReader.error);
         fileReader.readAsText(blob);
     });
+}
+
+async function expectRejection(promise: Promise<unknown>): Promise<AJAXError> {
+    const error = await promise.catch((e) => e);
+    expect(error).toBeInstanceOf(Error);
+    return error as AJAXError;
 }
 
 const originalFetch = global.fetch;
@@ -35,18 +43,14 @@ describe('ajax', () => {
             request.respond(404, undefined, '404 Not Found');
         });
 
-        try {
-            const promise =  getArrayBuffer({url: 'http://example.com/test.bin'}, new AbortController());
-            server.respond();
-            await promise;
-        } catch (error) {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.bin');
-            expect(body).toBe('404 Not Found');
-        }
+        const promise = getArrayBuffer({url: 'http://example.com/test.bin'}, new AbortController());
+        server.respond();
+
+        const ajaxError = await expectRejection(promise);
+        expect(ajaxError.status).toBe(404);
+        expect(ajaxError.statusText).toBe('Not Found');
+        expect(ajaxError.url).toBe('http://example.com/test.bin');
+        await expect(readAsText(ajaxError.body)).resolves.toBe('404 Not Found');
     });
 
     test('getJSON', async () => {
@@ -66,11 +70,8 @@ describe('ajax', () => {
         });
         const promise = getJSON({url: ''}, new AbortController());
         server.respond();
-        try {
-            await promise;
-        } catch (error) {
-            expect(error).toBeTruthy();
-        }
+
+        await expect(promise).rejects.toThrow(SyntaxError);
     });
 
     test('getJSON, 404', async () => {
@@ -80,16 +81,11 @@ describe('ajax', () => {
         const promise = getJSON({url: 'http://example.com/test.json'}, new AbortController());
         server.respond();
 
-        try {
-            await promise;
-        } catch (error) {
-            const ajaxError = error as AJAXError;
-            const body = await readAsText(ajaxError.body);
-            expect(ajaxError.status).toBe(404);
-            expect(ajaxError.statusText).toBe('Not Found');
-            expect(ajaxError.url).toBe('http://example.com/test.json');
-            expect(body).toBe('404 Not Found');
-        }
+        const ajaxError = await expectRejection(promise);
+        expect(ajaxError.status).toBe(404);
+        expect(ajaxError.statusText).toBe('Not Found');
+        expect(ajaxError.url).toBe('http://example.com/test.json');
+        await expect(readAsText(ajaxError.body)).resolves.toBe('404 Not Found');
     });
 
     test('getJSON, aborted', async () => {
@@ -101,12 +97,9 @@ describe('ajax', () => {
         abortController.abort();
         server.respond();
 
-        try {
-            await promise;
-        } catch (error) {
-            expect(error.name).toBe('AbortError');
-            expect(isAbortError(error)).toBe(true);
-        }
+        const error = await expectRejection(promise);
+        expect(ensureError(error).name).toBe('AbortError');
+        expect(isAbortError(error)).toBe(true);
     });
 
     test('getJSON with fetch, aborted', async () => {
@@ -124,12 +117,81 @@ describe('ajax', () => {
         abortController.abort();
         server.respond();
 
-        try {
-            await promise;
-        } catch (error) {
-            expect(error.name).toBe('AbortError');
-            expect(isAbortError(error)).toBe(true);
-        }
+        const error = await expectRejection(promise);
+        expect(ensureError(error).name).toBe('AbortError');
+        expect(isAbortError(error)).toBe(true);
+    });
+
+    test('getReferrer method (outside Worker), same origin https URL', () => {
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
+            href: 'https://somewhere.com',
+            protocol: 'https:'
+        } as any);
+
+        expect(getReferrer()).toBe('https://somewhere.com');
+    });
+
+    test('getReferrer method (outside Worker), same origin blob URL', () => {
+        vi.spyOn(window, 'parent', 'get').mockReturnValue({
+            location: {
+                href: 'https://somewhere.com',
+                protocol: 'https:',
+                host: 'somewhere.com'
+            }
+        } as any);
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
+            href: 'blob:https://somewhere.com/123e4567-e89b-12d3-a456-426614174000',
+            protocol: 'blob:',
+            host: ''
+        } as any);
+
+        expect(getReferrer()).toBe('https://somewhere.com');
+    });
+
+    test('getReferrer method (outside Worker), different origin https URL', () => {
+        vi.spyOn(window, 'parent', 'get').mockReturnValue({
+            location: {
+                get href() {
+                    throw new DOMException();
+                },
+                get protocol() {
+                    throw new DOMException();
+                },
+                get host() {
+                    throw new DOMException();
+                }
+            }
+        } as any);
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
+            href: 'https://somewhere.com',
+            protocol: 'https:',
+            host: 'somewhere.com'
+        } as any);
+
+        expect(getReferrer()).toBe('https://somewhere.com');
+    });
+
+    test('getReferrer method (outside Worker), different origin blob URL', () => {
+        vi.spyOn(window, 'parent', 'get').mockReturnValue({
+            location: {
+                get href() {
+                    throw new DOMException();
+                },
+                get protocol() {
+                    throw new DOMException();
+                },
+                get host() {
+                    throw new DOMException();
+                }
+            }
+        } as any);
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
+            href: 'blob:https://somewhere.com/123e4567-e89b-12d3-a456-426614174000',
+            protocol: 'blob:',
+            host: ''
+        } as any);
+
+        expect(getReferrer()).toBe('blob:https://somewhere.com/123e4567-e89b-12d3-a456-426614174000');
     });
 
     test('sameOrigin method', () => {
@@ -145,7 +207,10 @@ describe('ajax', () => {
         expect(sameOrigin('https://somewhere.com:443/path')).toBe(true);
 
         expect(sameOrigin('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=')).toBe(true);
-        expect(sameOrigin('blob:https://www.bing.com/09f36686-e57a-420f-9004-918548219b75')).toBe(true);
+        expect(sameOrigin('blob:https://www.bing.com/09f36686-e57a-420f-9004-918548219b75')).toBe(false);
+        expect(sameOrigin('blob:https://somewhere.com/123e4567-e89b-12d3-a456-426614174000')).toBe(true);
+        expect(sameOrigin('blob:http://somewhere.com/123e4567-e89b-12d3-a456-426614174000')).toBe(false);
+        expect(sameOrigin('blob:null/123e4567-e89b-12d3-a456-426614174000')).toBe(false);
 
         // relative URL is same origin for sure
         expect(sameOrigin('/foo')).toBe(true);
@@ -277,5 +342,36 @@ describe('ajax', () => {
             expect(server.requests[0].requestHeaders['Accept']).toBe('application/geo+json');
         });
 
+    });
+
+    describe('referrerPolicy', () => {
+
+        test('should pass referrerPolicy to fetch Request', async () => {
+            global.fetch = originalFetch;
+
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(1)));
+
+            await getArrayBuffer({url: 'http://example.com/test.json', referrerPolicy: 'origin-when-cross-origin'}, new AbortController());
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const request = fetchSpy.mock.calls[0][0] as Request;
+            expect(request.referrerPolicy).toBe('origin-when-cross-origin');
+
+            fetchSpy.mockRestore();
+        });
+
+        test('should default referrerPolicy to empty string when not provided', async () => {
+            global.fetch = originalFetch;
+
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(1)));
+
+            await getArrayBuffer({url: 'http://example.com/test.json'}, new AbortController());
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const request = fetchSpy.mock.calls[0][0] as Request;
+            expect(request.referrerPolicy).toBe('');
+
+            fetchSpy.mockRestore();
+        });
     });
 });

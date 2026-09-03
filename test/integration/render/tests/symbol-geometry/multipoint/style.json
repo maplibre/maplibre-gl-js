@@ -39,7 +39,7 @@
       "source": "geometry",
       "layout": {
           "icon-image": "rocket-12",
-          "text-field": "Mapbox",
+          "text-field": "MapLibre",
           "text-font": [
             "Open Sans Semibold",
             "Arial Unicode MS Bold"

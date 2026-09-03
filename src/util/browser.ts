@@ -1,5 +1,5 @@
-import {AbortError} from './abort_error';
-import {subscribe} from './util';
+import {AbortError} from './abort_error.ts';
+import {subscribe} from './util.ts';
 
 let linkEl;
 
@@ -46,37 +46,37 @@ export const browser = {
 
     getImageData(img:  HTMLImageElement | ImageBitmap, padding: number = 0): ImageData {
         const context = this.getImageCanvasContext(img);
-        return context.getImageData(-padding, -padding, img.width as number + 2 * padding, img.height as number + 2 * padding);
+        return context.getImageData(-padding, -padding, img.width + 2 * padding, img.height + 2 * padding);
     },
 
     getImageCanvasContext(img: HTMLImageElement | ImageBitmap): CanvasRenderingContext2D {
-        const canvas = window.document.createElement('canvas') as HTMLCanvasElement;
+        const canvas = window.document.createElement('canvas');
         const context = canvas.getContext('2d', {willReadFrequently: true});
         if (!context) {
             throw new Error('failed to create canvas 2d context');
         }
-        canvas.width = img.width as number;
-        canvas.height = img.height as number;
-        context.drawImage(img, 0, 0, img.width as number, img.height as number);
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0, img.width, img.height);
         return context;
     },
 
-    resolveURL(path: string) {
-        if (!linkEl) linkEl = document.createElement('a');
+    resolveURL(path: string): string {
+        linkEl ||= document.createElement('a');
         linkEl.href = path;
         return linkEl.href;
     },
 
-    hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
+    get hardwareConcurrency(): number {
+        return (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
+    },
 
     get prefersReducedMotion(): boolean {
         if (reducedMotionOverride !== undefined) return reducedMotionOverride;
         // In case your test crashes when checking matchMedia, call setMatchMedia from 'src/util/test/util'
         if (!matchMedia) return false;
         //Lazily initialize media query
-        if (reducedMotionQuery == null) {
-            reducedMotionQuery = matchMedia('(prefers-reduced-motion: reduce)');
-        }
+        reducedMotionQuery ??= matchMedia('(prefers-reduced-motion: reduce)');
         return reducedMotionQuery.matches;
     },
 

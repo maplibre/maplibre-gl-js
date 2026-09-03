@@ -1,14 +1,13 @@
-import {describe, test, expect} from 'vitest';
-import {VideoSource} from './video_source';
-import {extend} from '../util/util';
-import {getMockDispatcher, waitForEvent} from '../util/test/util';
-
-import type {Coordinates} from './image_source';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {Evented} from '../util/evented';
-import {type IReadonlyTransform} from '../geo/transform_interface';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {describe, expect, test, vi} from 'vitest';
+import {getMockDispatcher, waitForEvent} from '../util/test/util.ts';
+import {extend} from '../util/util.ts';
+import {VideoSource} from './video_source.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Evented} from '../util/evented.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Coordinates} from './image_source.ts';
 
 class StubMap extends Evented {
     transform: IReadonlyTransform;
@@ -30,7 +29,7 @@ class StubMap extends Evented {
 }
 
 function createSource(options) {
-    const c = options && options.video || window.document.createElement('video');
+    const c = options?.video || window.document.createElement('video');
 
     options = extend({coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]}, options);
 
@@ -115,5 +114,28 @@ describe('VideoSource', () => {
         source.prepare();
         await dataEvent;
         expect(tile.state).toBe('loaded');
+    });
+
+    test('onRemove removes playing listener, pauses video and deletes the texture', () => {
+        const video = window.document.createElement('video');
+        const removeListenerSpy = vi.spyOn(video, 'removeEventListener');
+        const pauseSpy = vi.spyOn(video, 'pause').mockImplementation(() => {});
+
+        const source = createSource({
+            type: 'video',
+            urls: [],
+            coordinates: [[-76.54, 39.18], [-76.52, 39.18], [-76.52, 39.17], [-76.54, 39.17]]
+        });
+        source.video = video;
+
+        const texture = {destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        source.onRemove();
+
+        expect(removeListenerSpy).toHaveBeenCalledWith('playing', expect.any(Function));
+        expect(pauseSpy).toHaveBeenCalled();
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
     });
 });

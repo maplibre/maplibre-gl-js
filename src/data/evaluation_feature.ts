@@ -1,9 +1,9 @@
-import {loadGeometry} from './load_geometry';
+import {loadGeometry} from './load_geometry.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
-type EvaluationFeature = Feature & { geometry: Array<Array<Point>> };
+type EvaluationFeature = Feature & { geometry: Point[][] };
 /**
  * Construct a new feature based on a VectorTileFeatureLike for expression evaluation, the geometry of which
  * will be loaded based on necessity.

@@ -1,10 +1,12 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
+import {createMap, beforeMapTest, waitForEvent, createTerrain} from '../../util/test/util.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Terrain} from '../../render/terrain';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import {type Map} from '../map';
+import {type Terrain} from '../../render/terrain.ts';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
+import {type Map} from '../map.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -42,6 +44,109 @@ describe('setTerrain', () => {
         expect(console.warn).toHaveBeenCalledTimes(1);
         console.warn = originalWarn;
     });
+
+    test('fires an error and does not apply terrain the spec rejects', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        const errorSpy = vi.fn();
+        map.on('error', errorSpy);
+
+        map.setTerrain({source: 'dem', nonsense: 1} as any);
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy.mock.calls[0][0].error.message).toContain('unknown property "nonsense"');
+        expect(map.getTerrain()).toBeNull();
+    });
+
+    test('applies terrain the spec accepts', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        const errorSpy = vi.fn();
+        map.on('error', errorSpy);
+
+        map.setTerrain({source: 'dem', exaggeration: 2});
+
+        expect(errorSpy).not.toHaveBeenCalled();
+        expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
+    });
+
+    test('drops the previous source attribution when switching terrain to a new source', async () => {
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
+        await map.once('style.load');
+        const demALoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'dem-a' && e.sourceDataType === 'metadata');
+        const demBLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'dem-b' && e.sourceDataType === 'metadata');
+        map.addSource('dem-a', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256, attribution: 'DEM A'});
+        map.addSource('dem-b', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256, attribution: 'DEM B'});
+        await Promise.all([demALoaded, demBLoaded]);
+
+        map.setTerrain({source: 'dem-a'});
+        const terrainEvent = map.once('terrain');
+        map.setTerrain({source: 'dem-b'});
+        await terrainEvent;
+
+        const innerContainer = map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner');
+        expect(innerContainer.innerHTML).toBe(`DEM B | ${defaultAttributionControlOptions.customAttribution}`);
+    });
+
+    test('invalidates cached elevation when terrain source data changes without a tile', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.setTerrain({source: 'terrainrgb'});
+        if (!map.terrain) throw new Error('Expected terrain to be set');
+        const resetElevationCache = vi.spyOn(map.terrain, 'resetElevationCache');
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'terrainrgb',
+            sourceDataType: 'content',
+            source: {type: 'raster-dem'}
+        } as any);
+
+        expect(resetElevationCache).toHaveBeenCalledTimes(1);
+    });
+
+    test('re-places symbols when terrain is set', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const triggerSymbolPlacement = vi.spyOn(map.style, 'triggerSymbolPlacement');
+
+        map.setTerrain({source: 'terrainrgb'});
+
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(1);
+    });
+
+    test('re-places symbols when terrain source data changes, but not for data from another source', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.setTerrain({source: 'terrainrgb'});
+        const triggerSymbolPlacement = vi.spyOn(map.style, 'triggerSymbolPlacement');
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'other',
+            sourceDataType: 'content',
+            source: {type: 'geojson'}
+        } as any);
+        expect(triggerSymbolPlacement).not.toHaveBeenCalled();
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'terrainrgb',
+            sourceDataType: 'content',
+            source: {type: 'raster-dem'}
+        } as any);
+        expect(triggerSymbolPlacement).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe('getTerrain', () => {
@@ -55,8 +160,7 @@ describe('getCameraTargetElevation', () => {
     test('Elevation is zero without terrain, and matches any given terrain', () => {
         expect(map.getCameraTargetElevation()).toBe(0);
 
-        const terrainStub = {} as Terrain;
-        map.terrain = terrainStub;
+        map.terrain = {} as Terrain;
 
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
@@ -64,9 +168,27 @@ describe('getCameraTargetElevation', () => {
         transform.setZoom(14);
         transform.resize(512, 512);
         transform.setElevation(2000);
-        map.transform = transform;
+        map._camera.transform = transform;
 
         expect(map.getCameraTargetElevation()).toBe(2000);
+    });
+});
+
+describe('Gesture end on terrain', () => {
+    test('the center elevation after a drag is the rendered surface elevation, not the tile-zoom DEM sample', async () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        await map.once('style.load');
+        map.terrain = {
+            ...createTerrain(),
+            getElevationForLngLat: () => 400,
+            getElevationForLngLatZoom: () => 1000,
+        } as any as Terrain;
+        map._camera.terrain = map.terrain;
+
+        simulate.dragWithMove(map.getCanvas(), {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+
+        expect(map.getCenterElevation()).toBe(400);
     });
 });
 
@@ -77,14 +199,16 @@ describe('Keep camera outside terrain', () => {
         terrainStub.getElevationForLngLatZoom = vi.fn(
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
+        terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
         map.terrain = terrainStub;
+        map._camera.terrain = terrainStub;
 
         // Terrain elevation is 10 everywhere, we are above it at zoom level 15
         // with pitch 45 deg.
         map.jumpTo({center: [0.0, 0.0], bearing: 0, pitch: 45, zoom: 15});
-        const initialLngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
-        const initialAltitude = map.transform.getCameraAltitude();
-        expect(initialAltitude).toBeCloseTo(506, 0);
+        const initialLngLat = map._camera.transform.screenPointToLocation(map._camera.transform.getCameraPoint());
+        const initialAltitude = map._camera.transform.getCameraAltitude();
+        expect(initialAltitude).toBeCloseTo(516, 0);
 
         // Now we set the elevation to 5000 everywhere and try to jump to the
         // same position. This would lead to a jump into the terrain, which
@@ -94,11 +218,31 @@ describe('Keep camera outside terrain', () => {
         terrainElevation = 5000;
         map.jumpTo({center: [0.0, 0.0], pitch: 45, zoom: 15});
 
-        const lngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
+        const lngLat = map._camera.transform.screenPointToLocation(map._camera.transform.getCameraPoint());
         expect(lngLat.lng).toBeCloseTo(initialLngLat.lng);
         expect(lngLat.lat).toBeCloseTo(initialLngLat.lat);
-        expect(map.transform.pitch).toBeLessThan(45);
-        expect(map.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
-        expect(map.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
+    });
+});
+
+describe('queryTerrainElevation', () => {
+    test('should return null if terrain is not set', () => {
+        map.terrain = null;
+        const result = map.queryTerrainElevation([0, 0]);
+        expect(result).toBeNull();
+    });
+
+    test('Calls getElevationForLngLatZoom with correct arguments', () => {
+        const getElevationForLngLat = vi.fn();
+        map.terrain = {getElevationForLngLat} as any as Terrain;
+        map._camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+
+        map.queryTerrainElevation([1, 2]);
+
+        expect(map.terrain.getElevationForLngLat).toHaveBeenCalledWith(
+            expect.objectContaining({lng: 1, lat: 2,}),
+            map._camera.transform
+        );
     });
 });

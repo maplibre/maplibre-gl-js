@@ -1,15 +1,17 @@
-import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax';
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
-import {webpSupported} from './webp_supported';
-import {config} from './config';
-import {AbortError} from './abort_error';
-import {getProtocol} from '../source/protocol_crud';
+import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax.ts';
+import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util.ts';
+import {config} from './config.ts';
+import {AbortError, throwIfAborted} from './abort_error.ts';
+import {getProtocol} from '../source/protocol_crud.ts';
+
+import type {RequestManager, ResourceType} from './request_manager.ts';
 
 type ImageQueueThrottleControlCallback = () => boolean;
 
 export type ImageRequestQueueItem  = {
     requestParameters: RequestParameters;
     supportImageRefresh: boolean;
+    imageBitmapOptions?: ImageBitmapOptions;
     state: 'queued' | 'running' | 'completed';
     abortController: AbortController;
     onError: (error: Error) => void;
@@ -98,25 +100,55 @@ export namespace ImageRequest {
     };
 
     /**
+     * Transform `url` through {@link RequestManager.transformRequest} and load the image.
+     * The transform may be async; if `abortController` aborts while it is pending, the
+     * request is never issued and the returned promise rejects with an `AbortError`.
+     * @param requestManager - The request manager whose transform to apply.
+     * @param url - The image URL, before transformation.
+     * @param resourceType - The resource type to pass to the transform.
+     * @param abortController - allows to abort the request.
+     * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @param imageBitmapOptions - Options for `createImageBitmap`. Pass `{colorSpaceConversion: 'none'}` for images
+     * whose pixels hold data rather than color, such as raster-DEM tiles, so the browser does not color manage them.
+     * @returns - A promise resolved when the image is loaded.
+     */
+    export async function transformAndGetImage(
+        requestManager: RequestManager,
+        url: string,
+        resourceType: ResourceType,
+        abortController: AbortController,
+        supportImageRefresh: boolean = true,
+        imageBitmapOptions?: ImageBitmapOptions
+    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> {
+        const requestParameters = await requestManager.transformRequest(url, resourceType);
+        throwIfAborted(abortController.signal);
+        return ImageRequest.getImage(requestParameters, abortController, supportImageRefresh, imageBitmapOptions);
+    }
+
+    /**
      * Request to load an image.
      * @param requestParameters - Request parameters.
      * @param abortController - allows to abort the request.
      * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @param imageBitmapOptions - Options for `createImageBitmap`. Pass `{colorSpaceConversion: 'none'}` for images
+     * whose pixels hold data rather than color, such as raster-DEM tiles, so the browser does not color manage them.
      * @returns - A promise resolved when the image is loaded.
      */
-    export const getImage = (requestParameters: RequestParameters, abortController: AbortController, supportImageRefresh: boolean = true): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
+    export const getImage = (
+        requestParameters: RequestParameters,
+        abortController: AbortController,
+        supportImageRefresh: boolean = true,
+        imageBitmapOptions?: ImageBitmapOptions
+    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
-            if (webpSupported.supported) {
-                if (!requestParameters.headers) {
-                    requestParameters.headers = {};
-                }
-                requestParameters.headers.accept = 'image/webp,*/*';
-            }
+            requestParameters.headers ||= {};
+            requestParameters.headers.accept = 'image/webp,*/*';
             extend(requestParameters, {type: 'image'});
             const request: ImageRequestQueueItem = {
                 abortController,
                 requestParameters,
                 supportImageRefresh,
+                imageBitmapOptions,
                 state: 'queued',
                 onError: (error: Error) => {
                     reject(error);
@@ -131,18 +163,25 @@ export namespace ImageRequest {
         });
     };
 
-    const arrayBufferToCanvasImageSource = (data: ArrayBuffer): Promise<HTMLImageElement | ImageBitmap | null> => {
+    const arrayBufferToCanvasImageSource = (data: ArrayBuffer, imageBitmapOptions?: ImageBitmapOptions): Promise<HTMLImageElement | ImageBitmap | null> => {
         const imageBitmapSupported = typeof createImageBitmap === 'function';
         if (imageBitmapSupported) {
-            return arrayBufferToImageBitmap(data);
+            return arrayBufferToImageBitmap(data, imageBitmapOptions);
         } else {
             return arrayBufferToImage(data);
         }
     };
 
+    /**
+     * Runs one queued image request.
+     *
+     * An empty response body (e.g. HTTP 204 for a tile without content) resolves with
+     * `data: null`, keeping the expiry headers, so callers can handle the absence
+     * explicitly and re-request when the headers say so.
+     */
     const doImageRequest = async (itemInQueue: ImageRequestQueueItem) => {
         itemInQueue.state = 'running';
-        const {requestParameters, supportImageRefresh, onError, onSuccess, abortController} = itemInQueue;
+        const {requestParameters, supportImageRefresh, imageBitmapOptions, onError, onSuccess, abortController} = itemInQueue;
         // - If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
         // - Fetch/XHR (via MakeRequest API) will be used to download images for following scenarios:
         //      1. Style image sprite will had a issue with HTMLImageElement as described
@@ -153,6 +192,7 @@ export namespace ImageRequest {
         //      let makeRequest handle it.
         // - HtmlImageElement request automatically adds accept header for all the browser supported images
         const canUseHTMLImageElement = supportImageRefresh === false &&
+            !imageBitmapOptions &&
             !isWorker(self) &&
             !getProtocol(requestParameters.url) &&
             (!requestParameters.headers ||
@@ -171,14 +211,16 @@ export namespace ImageRequest {
             if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) {
                 // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
-                onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
-            } else if (response.data) {
-                const img = await arrayBufferToCanvasImageSource(response.data);
+                onSuccess(response);
+            } else if (!response.data || response.data.byteLength === 0) {
+                onSuccess({data: null, cacheControl: response.cacheControl, expires: response.expires});
+            } else {
+                const img = await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
             }
         } catch (err) {
             delete itemInQueue.abortController;
-            onError(err);
+            onError(ensureError(err));
         } finally {
             currentParallelImageRequests--;
             processQueue();

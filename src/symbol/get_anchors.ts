@@ -1,14 +1,14 @@
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
-import {Anchor} from '../symbol/anchor';
-import {checkMaxAngle} from './check_max_angle';
+import {Anchor} from '../symbol/anchor.ts';
+import {checkMaxAngle} from './check_max_angle.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {Shaping, PositionedIcon} from './shaping';
+import type {Shaping, PositionedIcon} from './shaping.ts';
 
 export {getAnchors, getCenterAnchor};
 
-function getLineLength(line: Array<Point>): number {
+function getLineLength(line: Point[]): number {
     let lineLength = 0;
     for (let k = 0; k < line.length - 1; k++) {
         lineLength += line[k].dist(line[k + 1]);
@@ -32,12 +32,12 @@ function getShapedLabelLength(shapedText?: Shaping | null, shapedIcon?: Position
         shapedIcon ? shapedIcon.right - shapedIcon.left : 0);
 }
 
-function getCenterAnchor(line: Array<Point>,
+function getCenterAnchor(line: Point[],
     maxAngle: number,
     shapedText: Shaping,
     shapedIcon: PositionedIcon,
     glyphSize: number,
-    boxScale: number) {
+    boxScale: number): Anchor {
     const angleWindowSize = getAngleWindowSize(shapedText, glyphSize, boxScale);
     const labelLength = getShapedLabelLength(shapedText, shapedIcon) * boxScale;
 
@@ -70,7 +70,7 @@ function getCenterAnchor(line: Array<Point>,
     }
 }
 
-function getAnchors(line: Array<Point>,
+function getAnchors(line: Point[],
     spacing: number,
     maxAngle: number,
     shapedText: Shaping,

@@ -1,10 +1,10 @@
-import {LngLat} from './lng_lat';
-import type {LngLatLike} from './lng_lat';
-import {wrap} from '../util/util';
+import {LngLat} from './lng_lat.ts';
+import type {LngLatLike} from './lng_lat.ts';
+import {wrap} from '../util/util.ts';
 
 /**
- * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in [sw, ne] order,
- * or an array of numbers in [west, south, east, north] order.
+ * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in `[sw, ne]` order,
+ * or an array of numbers in `[west, south, east, north]` order.
  *
  * @group Geography and Geometry
  *
@@ -26,7 +26,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  *
  * If no arguments are provided to the constructor, a `null` bounding box is created.
  *
- * Note that any Mapbox GL method that accepts a `LngLatBounds` object as an argument or option
+ * Note that any MapLibre GL method that accepts a `LngLatBounds` object as an argument or option
  * can also accept an `Array` of two {@link LngLatLike} constructs and will perform an implicit conversion.
  * This flexible type is documented as {@link LngLatBoundsLike}.
  *
@@ -38,6 +38,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * let ne = new LngLat(-73.9397, 40.8002);
  * let llb = new LngLatBounds(sw, ne);
  * ```
+ * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js/docs/examples/fit-to-the-bounds-of-a-linestring/)
  */
 export class LngLatBounds {
     _ne: LngLat;
@@ -46,7 +47,7 @@ export class LngLatBounds {
     /**
      * @param sw - The southwest corner of the bounding box.
      * OR array of 4 numbers in the order of  west, south, east, north
-     * OR array of 2 LngLatLike: [sw,ne]
+     * OR array of 2 LngLatLike: `[sw, ne]`
      * @param ne - The northeast corner of the bounding box.
      * @example
      * ```ts
@@ -230,7 +231,7 @@ export class LngLatBounds {
      * llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
      * ```
      */
-    toArray() {
+    toArray(): [[number, number], [number, number]] {
         return [this._sw.toArray(), this._ne.toArray()];
     }
 
@@ -254,7 +255,7 @@ export class LngLatBounds {
      *
      * @returns True if bounds have been defined, otherwise false.
      */
-    isEmpty() {
+    isEmpty(): boolean {
         return !(this._sw && this._ne);
     }
 
@@ -275,7 +276,7 @@ export class LngLatBounds {
      * console.log(llb.contains(ll)); // = true
      * ```
      */
-    contains(lnglat: LngLatLike) {
+    contains(lnglat: LngLatLike): boolean {
         const {lng, lat} = LngLat.convert(lnglat);
 
         const containsLatitude = this._sw.lat <= lat && lat <= this._ne.lat;
@@ -321,8 +322,9 @@ export class LngLatBounds {
         const otherEast = wrap(other.getEast(), -180, 180);
 
         // Check if either bounds wraps around the antimeridian
-        const thisWraps = thisWest >= thisEast;
-        const otherWraps = otherWest >= otherEast;
+        // Use strict inequality: equal values indicate zero-width bounds (e.g., a point), not wrapping
+        const thisWraps = thisWest > thisEast;
+        const otherWraps = otherWest > otherEast;
 
         // Both wrap: they always intersect
         if (thisWraps && otherWraps) {

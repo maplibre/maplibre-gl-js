@@ -3,10 +3,12 @@
 <head>
     <title>Add Contour Lines</title>
     <meta property="og:description" content="Add contour lines to your map from a raster-dem source." />
+    <meta property="og:category" content="Terrain & Hillshade" />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -15,7 +17,9 @@
 <body>
 <div id="map"></div>
 <script src="https://unpkg.com/maplibre-contour@0.0.5/dist/index.min.js"></script>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
     const demSource = new mlcontour.DemSource({
         url: 'https://demotiles.maplibre.org/terrain-tiles/{z}/{x}/{y}.png',
         encoding: 'mapbox',
@@ -29,7 +33,7 @@
     // tile for each tile request from maplibre
     demSource.setupMaplibre(maplibregl);
 
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 13,
         center: [11.3229, 47.2738],
@@ -110,7 +114,7 @@
                 }
             ]
         }
-    }));
+    });
 </script>
 </body>
 </html>

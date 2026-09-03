@@ -4,9 +4,10 @@ import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
 
-import {sleep} from '../../../src/util/test/util';
-import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+import {sleep} from '../../../src/util/test/util.ts';
+import {launchPuppeteer} from '../lib/puppeteer_config.ts';
+import type {Map} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -56,9 +57,7 @@ describe('Browser tests', () => {
 
     afterAll(async () => {
         await browser.close();
-        if (server) {
-            server.close();
-        }
+        server?.close();
     }, 40000);
 
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
@@ -78,7 +77,7 @@ describe('Browser tests', () => {
 
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
         const mouseMoveFired = await page.evaluate(() => {
-            return new Promise<Array<number>>((resolve, _reject) => {
+            return new Promise<number[]>((resolve, _reject) => {
                 let mouseMoveCount = 0;
                 let wheelCount = 0;
                 map.on('mousemove', () => {mouseMoveCount++;});
@@ -140,7 +139,7 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
 
         const dragToLeft = async () => {
-            await page.mouse.move(canvasBB!.x, canvasBB!.y);
+            await page.mouse.move(canvasBB.x, canvasBB.y);
             await page.mouse.down();
             await page.mouse.move(100, 0, {
                 steps: 10
@@ -183,22 +182,22 @@ describe('Browser tests', () => {
     test('Resize div', {retry: 3, timeout: 20000}, async () => {
 
         await page.evaluate(() => {
-            document.getElementById('map')!.style.width = '200px';
-            document.getElementById('map')!.style.height = '200px';
+            document.getElementById('map').style.width = '200px';
+            document.getElementById('map').style.height = '200px';
         });
         await sleep(1000);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
-        expect(canvasBB!.width).toBeCloseTo(200);
-        expect(canvasBB!.height).toBeCloseTo(200);
+        expect(canvasBB.width).toBeCloseTo(200);
+        expect(canvasBB.height).toBeCloseTo(200);
     });
 
     test('Zoom: Double click at the center', {retry: 3, timeout: 20000}, async () => {
 
         const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox()!;
-        await page.mouse.click(canvasBB?.x!, canvasBB?.y!, {clickCount: 2});
+        const canvasBB = await canvas?.boundingBox();
+        await page.mouse.click(canvasBB?.x, canvasBB?.y, {count: 2});
 
         // Wait until the map has settled, then report the zoom level back.
         const zoom = await page.evaluate(() => {
@@ -212,7 +211,7 @@ describe('Browser tests', () => {
 
     test('Marker scaled: correct drag', {retry: 3}, async () => {
         await page.evaluate(() => {
-            document.getElementById('map')!.style.transform = 'scale(0.5)';
+            document.getElementById('map').style.transform = 'scale(0.5)';
             const markerMapPosition = map.getCenter();
             (window as any).marker = new maplibregl.Marker({draggable: true})
                 .setLngLat(markerMapPosition)
@@ -220,11 +219,11 @@ describe('Browser tests', () => {
             return map.getCenter();
         });
         const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox()!;
+        const canvasBB = await canvas?.boundingBox();
         const dragToLeft = async () => {
-            await page.mouse.move(canvasBB!.x + canvasBB!.width / 2, canvasBB!.y + canvasBB!.height / 2);
+            await page.mouse.move(canvasBB.x + canvasBB.width / 2, canvasBB.y + canvasBB.height / 2);
             await page.mouse.down();
-            await page.mouse.move(canvasBB!.x, canvasBB!.y, {
+            await page.mouse.move(canvasBB.x, canvasBB.y, {
                 steps: 100
             });
             await page.mouse.up();
@@ -365,7 +364,7 @@ describe('Browser tests', () => {
             await sleepInBrowser(100);
 
             await map.once('idle');
-            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector('.maplibregl-ctrl-fullscreen') as HTMLButtonElement;
+            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector<HTMLButtonElement>('.maplibregl-ctrl-fullscreen');
             fullscreenButton.click();
             await sleepInBrowser(1000);
 
@@ -411,7 +410,7 @@ describe('Browser tests', () => {
             return new Promise<any>((resolve) => {
                 map.once('idle', () => {
                     map.once('idle', () => {
-                        document.getElementById('map')!.style.width = '250px';
+                        document.getElementById('map').style.width = '250px';
                         setTimeout(() => {
                             resolve(marker.getElement().style.opacity);
                         }, 100);
@@ -426,18 +425,18 @@ describe('Browser tests', () => {
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
 
-        const rtlPromise = page.evaluate(() => {
-            // console.log('Testing start');
-            return maplibregl.setRTLTextPlugin('badURL', false);
+        const errorMessage = await page.evaluate(async () => {
+            try {
+                await maplibregl.setRTLTextPlugin('badURL', false);
+                return null;
+            } catch (e) {
+                return (e as Error).message;
+            }
         });
 
-        // exact message looks like
-        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
-        const regex = new RegExp('Failed to execute \'importScripts\'.*');
+        expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
-        await expect(rtlPromise).rejects.toThrow(regex);
-
-    }, 2000);
+    }, 5000);
 
     test('Movement with transformCameraUpdate and terrain', {retry: 3, timeout: 20000}, async () => {
         await page.evaluate(async () => {
@@ -460,12 +459,12 @@ describe('Browser tests', () => {
                     }
                 });
             await map.once('idle');
-            map.transformCameraUpdate = () => ({});
+            map.setTransformCameraUpdate(() => ({}));
         });
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
-        await page.mouse.move(canvasBB!.x, canvasBB!.y);
+        await page.mouse.move(canvasBB.x, canvasBB.y);
         await page.mouse.down();
         await page.mouse.move(100, 0, {
             steps: 10,
@@ -485,7 +484,7 @@ describe('Browser tests', () => {
             function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             // Context loss and restore
             const restored: Promise<void> = new Promise(resolve => {
                 const onRestored = () => {
@@ -534,7 +533,7 @@ describe('Browser tests', () => {
         await page.evaluate(() => {
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             if (ext) {
                 ext.loseContext();
                 setTimeout(() => ext.restoreContext(), 50);
@@ -554,7 +553,7 @@ describe('Browser tests', () => {
         await page.evaluate(async () => {
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             (window as any).ext = ext;
             ext.loseContext();
         });
@@ -592,5 +591,42 @@ describe('Browser tests', () => {
         expect(pixel[1]).toBeGreaterThan(0);
         expect(pixel[2]).toBeGreaterThan(0);
         expect(pixel[3]).toBeGreaterThan(0);
+    });
+
+    test('An icon that renders itself with WebGL paints its atlas slot', {retry: 3, timeout: 20000}, async () => {
+        const pixel = await page.evaluate(async () => {
+            const image = {
+                width: 64,
+                height: 64,
+                data: {
+                    renderWithWebGL({gl, texture, x, y, width, height}) {
+                        const framebuffer = gl.createFramebuffer();
+                        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+                        gl.enable(gl.SCISSOR_TEST);
+                        gl.scissor(x, y, width, height);
+                        gl.clearColor(1, 0, 0, 1);
+                        gl.clear(gl.COLOR_BUFFER_BIT);
+                        gl.disable(gl.SCISSOR_TEST);
+                        gl.deleteFramebuffer(framebuffer);
+                    }
+                }
+            };
+
+            map.addImage('square', image);
+            map.addSource('point', {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]} as any});
+            map.addLayer({id: 'point', type: 'symbol', source: 'point', layout: {'icon-image': 'square'}});
+            await map.once('idle');
+
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2');
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.finish();
+            const rgba = new Uint8Array(4);
+            gl.readPixels(canvas.width / 2, canvas.height / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+            return Array.from(rgba);
+        });
+
+        expect(pixel).toEqual([255, 0, 0, 255]);
     });
 });

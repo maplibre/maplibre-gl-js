@@ -12,32 +12,9 @@
       "data": {
         "type": "FeatureCollection",
         "features": [
-          {
-            "type": "Feature",
-            "properties": {
-              "opacity": 0.5
-            },
-            "geometry": {
-              "type": "Point",
-              "coordinates": [
-                -10,
-                0
-              ]
-            }
-          },
-          {
-            "type": "Feature",
-            "properties": {
-              "opacity": 0.8
-            },
-            "geometry": {
-              "type": "Point",
-              "coordinates": [
-                10,
-                0
-              ]
-            }
-          }
+          { "type": "Feature", "properties": { "opacity": 0.3}, "geometry": { "type": "Point", "coordinates": [-10, 0] } },
+          { "type": "Feature", "properties": { "opacity": 0.6}, "geometry": { "type": "Point", "coordinates": [0, 0] } },
+          { "type": "Feature", "properties": { "opacity": 1.0}, "geometry": { "type": "Point", "coordinates": [10, 0] } }
         ]
       }
     }

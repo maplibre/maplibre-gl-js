@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {getIntersectionDistance, Point3D} from './fill_extrusion_style_layer';
+import {getIntersectionDistance, Point3D} from './fill_extrusion_style_layer.ts';
 
 describe('getIntersectionDistance', () => {
     const queryPoint = [new Point3D(100, 100)];

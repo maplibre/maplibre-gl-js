@@ -1,13 +1,13 @@
-import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
-import type {CanonicalTileID} from '../../tile/tile_id';
-import {EXTENT} from '../../data/extent';
-import {type PreparedShader, shaders} from '../../shaders/shaders';
-import type {Context} from '../../gl/context';
-import {Mesh} from '../../render/mesh';
-import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
-import {SegmentVector} from '../../data/segment';
-import posAttributes from '../../data/pos_attributes';
-import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import type {Projection, TileMeshUsage} from './projection.ts';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {type PreparedShader, shaders} from '../../shaders/shaders.ts';
+import type {Context} from '../../webgl/context.ts';
+import {Mesh} from '../../render/mesh.ts';
+import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
+import {SegmentVector} from '../../data/segment.ts';
+import posAttributes from '../../data/pos_attributes.ts';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -52,15 +52,7 @@ export class MercatorProjection implements Projection {
         return 0;
     }
 
-    get latitudeErrorCorrectionRadians(): number {
-        return 0;
-    }
-
     public destroy(): void {
-        // Do nothing.
-    }
-
-    public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 
@@ -94,9 +86,5 @@ export class MercatorProjection implements Projection {
 
     public hasTransition(): boolean {
         return false;
-    }
-
-    setErrorQueryLatitudeDegrees(_value: number) {
-        // Do nothing.
     }
 }

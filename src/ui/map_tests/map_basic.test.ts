@@ -1,12 +1,13 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Tile} from '../../tile/tile';
-import {OverscaledTileID} from '../../tile/tile_id';
-import {fixedLngLat} from '../../../test/unit/lib/fixed';
-import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
-import {type MapSourceDataEvent} from '../events';
-import {MessageType} from '../../util/actor_messages';
+import {Map} from '../map.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep, waitForEvent} from '../../util/test/util.ts';
+import {Tile} from '../../tile/tile.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {fixedLngLat} from '../../../test/unit/lib/fixed.ts';
+import {type RequestTransformFunction, ResourceType} from '../../util/request_manager.ts';
+import {type MapSourceDataEvent} from '../events.ts';
+import {MessageType} from '../../util/actor_messages.ts';
+import {Style} from '../../style/style.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -40,24 +41,16 @@ describe('Map', () => {
         expect(() => {
             new Map({
                 container: 'anElementIdWhichDoesNotExistInTheDocument'
-            } as any as MapOptions);
+            });
         }).toThrow(
             new Error('Container \'anElementIdWhichDoesNotExistInTheDocument\' not found.')
         );
     });
 
-    test('bad map-specific token breaks map', () => {
-        const container = window.document.createElement('div');
-        Object.defineProperty(container, 'offsetWidth', {value: 512});
-        Object.defineProperty(container, 'offsetHeight', {value: 512});
-        createMap();
-        //t.error();
-    });
-
     describe('setTransformRequest', () => {
         test('returns self', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
-            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+            const map = new Map({container: window.document.createElement('div')});
             expect(map.setTransformRequest(transformRequest)).toBe(map);
             expect(map._requestManager._transformRequestFn).toBe(transformRequest);
         });
@@ -68,6 +61,8 @@ describe('Map', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
+
+            expect(map._requestManager._transformRequestFn).toBe(transformRequest);
         });
 
         test('removes function when called with null', () => {
@@ -88,17 +83,12 @@ describe('Map', () => {
             const map = createMap({style});
 
             await map.once('load');
-            const promise = new Promise<void>((resolve) => {
-                map.on('data', (e) => {
-                    if (e.dataType === 'source' && e.sourceDataType === 'idle') {
-                        expect(map.isSourceLoaded('geojson')).toBe(true);
-                        resolve();
-                    }
-                });
-            });
+            const idlePromise = waitForEvent(map, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'idle');
             map.addSource('geojson', createStyleSource());
             expect(map.isSourceLoaded('geojson')).toBe(false);
-            await promise;
+
+            await idlePromise;
+            expect(map.isSourceLoaded('geojson')).toBe(true);
         });
 
         test('Map.isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
@@ -108,11 +98,10 @@ describe('Map', () => {
             await map.once('load');
             const promise = new Promise<void>((resolve) => {
                 map.on('data', (e: MapSourceDataEvent) => {
-                    if (e.dataType === 'source' && 'source' in e) {
-                        expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
-                        if (e.sourceDataType === 'idle') {
-                            resolve();
-                        }
+                    if (e.dataType !== 'source' || !('source' in e)) return;
+                    expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
+                    if (e.sourceDataType === 'idle') {
+                        resolve();
                     }
                 });
             });
@@ -154,6 +143,121 @@ describe('Map', () => {
 
         // Cleanup
         spyWorkerPoolRelease.mockClear();
+    });
+    
+    test('remove while style is loading via URL does not crash', async () => {
+        global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(createStyle())));
+        let loadURLPromise: Promise<void>;
+        const originalLoadURL = Style.prototype.loadURL;
+        const loadURLSpy = vi.spyOn(Style.prototype, 'loadURL').mockImplementation(function (...args) {
+            loadURLPromise = originalLoadURL.apply(this, args);
+            return loadURLPromise;
+        });
+        const map = createMap({style: 'https://example.com/style.json'});
+        const onErrorFired = vi.fn();
+        map.on('error', onErrorFired);
+        map.remove();
+        await loadURLPromise;
+        expect(onErrorFired).not.toHaveBeenCalled();
+        loadURLSpy.mockRestore();
+    });
+
+    test('remove while setStyle is fetching a new style via URL does not crash', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        map.remove();
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('second setStyle with URL aborts the first', async () => {
+        const style = createStyle();
+        const map = createMap({style});
+        await map.once('style.load');
+        const abortControllers: AbortController[] = [];
+        const getJSONSpy = vi.spyOn(await import('../../util/ajax.ts'), 'getJSON')
+            .mockImplementation((_req, abortController) => {
+                abortControllers.push(abortController);
+                return Promise.resolve({data: style, cacheControl: null, expires: null});
+            });
+        map.setStyle('https://example.com/style1.json');
+        const firstDiffRequest = map._diffStyleRequest;
+        map.setStyle('https://example.com/style2.json');
+        expect(firstDiffRequest.signal.aborted).toBe(true);
+        await sleep(0);
+        expect(abortControllers).toHaveLength(1);
+        expect(abortControllers[0].signal.aborted).toBe(false);
+        getJSONSpy.mockRestore();
+    });
+
+    test('setStyle with object aborts a pending diff URL fetch', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        const diffRequest = map._diffStyleRequest;
+        map.setStyle(createStyle());
+        expect(diffRequest.signal.aborted).toBe(true);
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('setStyle with diff:false aborts a pending diff fetch', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        const diffRequest = map._diffStyleRequest;
+        map.setStyle(createStyle(), {diff: false});
+        expect(diffRequest.signal.aborted).toBe(true);
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('setStyle with null aborts a pending diff fetch', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        const diffRequest = map._diffStyleRequest;
+        map.setStyle(null);
+        expect(diffRequest.signal.aborted).toBe(true);
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
     });
 
     test('remove calls onRemove on added controls', () => {

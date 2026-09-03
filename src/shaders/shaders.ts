@@ -1,88 +1,125 @@
 // Disable Flow annotations here because Flow doesn't support importing GLSL files
 
-import preludeFrag from './_prelude.fragment.glsl.g';
-import preludeVert from './_prelude.vertex.glsl.g';
-import backgroundFrag from './background.fragment.glsl.g';
-import backgroundVert from './background.vertex.glsl.g';
-import backgroundPatternFrag from './background_pattern.fragment.glsl.g';
-import backgroundPatternVert from './background_pattern.vertex.glsl.g';
-import circleFrag from './circle.fragment.glsl.g';
-import circleVert from './circle.vertex.glsl.g';
-import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
-import clippingMaskVert from './clipping_mask.vertex.glsl.g';
-import heatmapFrag from './heatmap.fragment.glsl.g';
-import heatmapVert from './heatmap.vertex.glsl.g';
-import heatmapTextureFrag from './heatmap_texture.fragment.glsl.g';
-import heatmapTextureVert from './heatmap_texture.vertex.glsl.g';
-import collisionBoxFrag from './collision_box.fragment.glsl.g';
-import collisionBoxVert from './collision_box.vertex.glsl.g';
-import collisionCircleFrag from './collision_circle.fragment.glsl.g';
-import collisionCircleVert from './collision_circle.vertex.glsl.g';
-import colorReliefFrag from './color_relief.fragment.glsl.g';
-import colorReliefVert from './color_relief.vertex.glsl.g';
-import debugFrag from './debug.fragment.glsl.g';
-import debugVert from './debug.vertex.glsl.g';
-import depthVert from './depth.vertex.glsl.g';
-import fillFrag from './fill.fragment.glsl.g';
-import fillVert from './fill.vertex.glsl.g';
-import fillOutlineFrag from './fill_outline.fragment.glsl.g';
-import fillOutlineVert from './fill_outline.vertex.glsl.g';
-import fillOutlinePatternFrag from './fill_outline_pattern.fragment.glsl.g';
-import fillOutlinePatternVert from './fill_outline_pattern.vertex.glsl.g';
-import fillPatternFrag from './fill_pattern.fragment.glsl.g';
-import fillPatternVert from './fill_pattern.vertex.glsl.g';
-import fillExtrusionFrag from './fill_extrusion.fragment.glsl.g';
-import fillExtrusionVert from './fill_extrusion.vertex.glsl.g';
-import fillExtrusionPatternFrag from './fill_extrusion_pattern.fragment.glsl.g';
-import fillExtrusionPatternVert from './fill_extrusion_pattern.vertex.glsl.g';
-import hillshadePrepareFrag from './hillshade_prepare.fragment.glsl.g';
-import hillshadePrepareVert from './hillshade_prepare.vertex.glsl.g';
-import hillshadeFrag from './hillshade.fragment.glsl.g';
-import hillshadeVert from './hillshade.vertex.glsl.g';
-import lineFrag from './line.fragment.glsl.g';
-import lineVert from './line.vertex.glsl.g';
-import lineGradientFrag from './line_gradient.fragment.glsl.g';
-import lineGradientVert from './line_gradient.vertex.glsl.g';
-import linePatternFrag from './line_pattern.fragment.glsl.g';
-import linePatternVert from './line_pattern.vertex.glsl.g';
-import lineSDFFrag from './line_sdf.fragment.glsl.g';
-import lineSDFVert from './line_sdf.vertex.glsl.g';
-import lineGradientSDFFrag from './line_gradient_sdf.fragment.glsl.g';
-import lineGradientSDFVert from './line_gradient_sdf.vertex.glsl.g';
-import rasterFrag from './raster.fragment.glsl.g';
-import rasterVert from './raster.vertex.glsl.g';
-import symbolIconFrag from './symbol_icon.fragment.glsl.g';
-import symbolIconVert from './symbol_icon.vertex.glsl.g';
-import symbolSDFFrag from './symbol_sdf.fragment.glsl.g';
-import symbolSDFVert from './symbol_sdf.vertex.glsl.g';
-import symbolTextAndIconFrag from './symbol_text_and_icon.fragment.glsl.g';
-import symbolTextAndIconVert from './symbol_text_and_icon.vertex.glsl.g';
-import terrainDepthFrag from './terrain_depth.fragment.glsl.g';
-import terrainCoordsFrag from './terrain_coords.fragment.glsl.g';
-import terrainFrag from './terrain.fragment.glsl.g';
-import terrainVert from './terrain.vertex.glsl.g';
-import terrainVertDepth from './terrain_depth.vertex.glsl.g';
-import terrainVertCoords from './terrain_coords.vertex.glsl.g';
-import projectionErrorMeasurementVert from './projection_error_measurement.vertex.glsl.g';
-import projectionErrorMeasurementFrag from './projection_error_measurement.fragment.glsl.g';
-import projectionMercatorVert from './_projection_mercator.vertex.glsl.g';
-import projectionGlobeVert from './_projection_globe.vertex.glsl.g';
-import atmosphereFrag from './atmosphere.fragment.glsl.g';
-import atmosphereVert from './atmosphere.vertex.glsl.g';
-import skyFrag from './sky.fragment.glsl.g';
-import skyVert from './sky.vertex.glsl.g';
+import preludeFrag from './glsl/_prelude.fragment.glsl.g.ts';
+import preludeVert from './glsl/_prelude.vertex.glsl.g.ts';
+import backgroundFrag from './glsl/background.fragment.glsl.g.ts';
+import backgroundVert from './glsl/background.vertex.glsl.g.ts';
+import backgroundPatternFrag from './glsl/background_pattern.fragment.glsl.g.ts';
+import backgroundPatternVert from './glsl/background_pattern.vertex.glsl.g.ts';
+import circleFrag from './glsl/circle.fragment.glsl.g.ts';
+import circleVert from './glsl/circle.vertex.glsl.g.ts';
+import clippingMaskFrag from './glsl/clipping_mask.fragment.glsl.g.ts';
+import clippingMaskVert from './glsl/clipping_mask.vertex.glsl.g.ts';
+import heatmapFrag from './glsl/heatmap.fragment.glsl.g.ts';
+import heatmapVert from './glsl/heatmap.vertex.glsl.g.ts';
+import heatmapTextureFrag from './glsl/heatmap_texture.fragment.glsl.g.ts';
+import heatmapTextureVert from './glsl/heatmap_texture.vertex.glsl.g.ts';
+import collisionBoxFrag from './glsl/collision_box.fragment.glsl.g.ts';
+import collisionBoxVert from './glsl/collision_box.vertex.glsl.g.ts';
+import collisionCircleFrag from './glsl/collision_circle.fragment.glsl.g.ts';
+import collisionCircleVert from './glsl/collision_circle.vertex.glsl.g.ts';
+import colorReliefFrag from './glsl/color_relief.fragment.glsl.g.ts';
+import colorReliefVert from './glsl/color_relief.vertex.glsl.g.ts';
+import debugFrag from './glsl/debug.fragment.glsl.g.ts';
+import debugVert from './glsl/debug.vertex.glsl.g.ts';
+import depthVert from './glsl/depth.vertex.glsl.g.ts';
+import fillFrag from './glsl/fill.fragment.glsl.g.ts';
+import fillVert from './glsl/fill.vertex.glsl.g.ts';
+import fillOutlineFrag from './glsl/fill_outline.fragment.glsl.g.ts';
+import fillOutlineVert from './glsl/fill_outline.vertex.glsl.g.ts';
+import fillOutlinePatternFrag from './glsl/fill_outline_pattern.fragment.glsl.g.ts';
+import fillOutlinePatternVert from './glsl/fill_outline_pattern.vertex.glsl.g.ts';
+import fillPatternFrag from './glsl/fill_pattern.fragment.glsl.g.ts';
+import fillPatternVert from './glsl/fill_pattern.vertex.glsl.g.ts';
+import fillExtrusionFrag from './glsl/fill_extrusion.fragment.glsl.g.ts';
+import fillExtrusionVert from './glsl/fill_extrusion.vertex.glsl.g.ts';
+import fillExtrusionPatternFrag from './glsl/fill_extrusion_pattern.fragment.glsl.g.ts';
+import fillExtrusionPatternVert from './glsl/fill_extrusion_pattern.vertex.glsl.g.ts';
+import hillshadePrepareFrag from './glsl/hillshade_prepare.fragment.glsl.g.ts';
+import hillshadePrepareVert from './glsl/hillshade_prepare.vertex.glsl.g.ts';
+import hillshadeFrag from './glsl/hillshade.fragment.glsl.g.ts';
+import hillshadeVert from './glsl/hillshade.vertex.glsl.g.ts';
+import lineFrag from './glsl/line.fragment.glsl.g.ts';
+import lineVert from './glsl/line.vertex.glsl.g.ts';
+import lineGradientFrag from './glsl/line_gradient.fragment.glsl.g.ts';
+import lineGradientVert from './glsl/line_gradient.vertex.glsl.g.ts';
+import linePatternFrag from './glsl/line_pattern.fragment.glsl.g.ts';
+import linePatternVert from './glsl/line_pattern.vertex.glsl.g.ts';
+import lineSDFFrag from './glsl/line_sdf.fragment.glsl.g.ts';
+import lineSDFVert from './glsl/line_sdf.vertex.glsl.g.ts';
+import lineGradientSDFFrag from './glsl/line_gradient_sdf.fragment.glsl.g.ts';
+import lineGradientSDFVert from './glsl/line_gradient_sdf.vertex.glsl.g.ts';
+import layerOpacityFrag from './glsl/layer_opacity.fragment.glsl.g.ts';
+import layerOpacityVert from './glsl/layer_opacity.vertex.glsl.g.ts';
+import rasterFrag from './glsl/raster.fragment.glsl.g.ts';
+import rasterVert from './glsl/raster.vertex.glsl.g.ts';
+import symbolIconFrag from './glsl/symbol_icon.fragment.glsl.g.ts';
+import symbolIconVert from './glsl/symbol_icon.vertex.glsl.g.ts';
+import symbolSDFFrag from './glsl/symbol_sdf.fragment.glsl.g.ts';
+import symbolSDFVert from './glsl/symbol_sdf.vertex.glsl.g.ts';
+import symbolTextAndIconFrag from './glsl/symbol_text_and_icon.fragment.glsl.g.ts';
+import symbolTextAndIconVert from './glsl/symbol_text_and_icon.vertex.glsl.g.ts';
+import terrainDepthFrag from './glsl/terrain_depth.fragment.glsl.g.ts';
+import terrainFrag from './glsl/terrain.fragment.glsl.g.ts';
+import terrainVert from './glsl/terrain.vertex.glsl.g.ts';
+import terrainVertDepth from './glsl/terrain_depth.vertex.glsl.g.ts';
+import projectionMercatorVert from './glsl/_projection_mercator.vertex.glsl.g.ts';
+import projectionMercatorFrag from './glsl/_projection_mercator.fragment.glsl.g.ts';
+import projectionGlobeVert from './glsl/_projection_globe.vertex.glsl.g.ts';
+import projectionGlobeFrag from './glsl/_projection_globe.fragment.glsl.g.ts';
+import atmosphereFrag from './glsl/atmosphere.fragment.glsl.g.ts';
+import atmosphereVert from './glsl/atmosphere.vertex.glsl.g.ts';
+import skyFrag from './glsl/sky.fragment.glsl.g.ts';
+import skyVert from './glsl/sky.vertex.glsl.g.ts';
 
 export type PreparedShader = {
     fragmentSource: string;
     vertexSource: string;
-    staticAttributes: Array<string>;
-    staticUniforms: Array<string>;
+    staticAttributes: string[];
+    staticUniforms: string[];
 };
 
-export const shaders = {
+export const shaders: {
+    prelude: PreparedShader;
+    projectionMercator: PreparedShader;
+    projectionGlobe: PreparedShader;
+    background: PreparedShader;
+    backgroundPattern: PreparedShader;
+    circle: PreparedShader;
+    clippingMask: PreparedShader;
+    heatmap: PreparedShader;
+    heatmapTexture: PreparedShader;
+    collisionBox: PreparedShader;
+    collisionCircle: PreparedShader;
+    colorRelief: PreparedShader;
+    debug: PreparedShader;
+    depth: PreparedShader;
+    fill: PreparedShader;
+    fillOutline: PreparedShader;
+    fillOutlinePattern: PreparedShader;
+    fillPattern: PreparedShader;
+    fillExtrusion: PreparedShader;
+    fillExtrusionPattern: PreparedShader;
+    hillshadePrepare: PreparedShader;
+    hillshade: PreparedShader;
+    line: PreparedShader;
+    lineGradient: PreparedShader;
+    linePattern: PreparedShader;
+    lineSDF: PreparedShader;
+    lineGradientSDF: PreparedShader;
+    layerOpacity: PreparedShader;
+    raster: PreparedShader;
+    symbolIcon: PreparedShader;
+    symbolSDF: PreparedShader;
+    symbolTextAndIcon: PreparedShader;
+    terrain: PreparedShader;
+    terrainDepth: PreparedShader;
+    atmosphere: PreparedShader;
+    sky: PreparedShader;
+} = {
     prelude: prepare(preludeFrag, preludeVert),
-    projectionMercator: prepare('', projectionMercatorVert),
-    projectionGlobe: prepare('', projectionGlobeVert),
+    projectionMercator: prepare(projectionMercatorFrag, projectionMercatorVert),
+    projectionGlobe: prepare(projectionGlobeFrag, projectionGlobeVert),
     background: prepare(backgroundFrag, backgroundVert),
     backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
     circle: prepare(circleFrag, circleVert),
@@ -107,26 +144,28 @@ export const shaders = {
     linePattern: prepare(linePatternFrag, linePatternVert),
     lineSDF: prepare(lineSDFFrag, lineSDFVert),
     lineGradientSDF: prepare(lineGradientSDFFrag, lineGradientSDFVert),
+    layerOpacity: prepare(layerOpacityFrag, layerOpacityVert),
     raster: prepare(rasterFrag, rasterVert),
     symbolIcon: prepare(symbolIconFrag, symbolIconVert),
     symbolSDF: prepare(symbolSDFFrag, symbolSDFVert),
     symbolTextAndIcon: prepare(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: prepare(terrainFrag, terrainVert),
     terrainDepth: prepare(terrainDepthFrag, terrainVertDepth),
-    terrainCoords: prepare(terrainCoordsFrag, terrainVertCoords),
-    projectionErrorMeasurement: prepare(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
     atmosphere: prepare(atmosphereFrag, atmosphereVert),
     sky: prepare(skyFrag, skyVert),
 };
 
 /** Expand #pragmas to #ifdefs, extract attributes and uniforms */
 function prepare(fragmentSource: string, vertexSource: string): PreparedShader {
-    const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
+    const re = /#pragma maplibre: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
     const vertexAttributes = vertexSource.match(/in ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const vertexUniforms = vertexSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const shaderUniforms = vertexUniforms ? vertexUniforms.concat(fragmentUniforms) : fragmentUniforms;
+
+    const staticLayoutCount = vertexAttributes ? vertexAttributes.length : 0;
+    let locationCounter = staticLayoutCount;
 
     const fragmentPragmas = {};
 
@@ -155,10 +194,11 @@ uniform ${precision} ${type} u_${name};
 
         if (fragmentPragmas[name]) {
             if (operation === 'define') {
+                const loc = locationCounter++;
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-in ${precision} ${attrType} a_${name};
+layout(location = ${loc}) in ${precision} ${attrType} a_${name};
 out ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
@@ -186,10 +226,11 @@ uniform ${precision} ${type} u_${name};
             }
         } else {
             if (operation === 'define') {
+                const loc = locationCounter++;
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-in ${precision} ${attrType} a_${name};
+layout(location = ${loc}) in ${precision} ${attrType} a_${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -220,19 +261,3 @@ uniform ${precision} ${type} u_${name};
     return {fragmentSource, vertexSource, staticAttributes: vertexAttributes, staticUniforms: shaderUniforms};
 }
 
-/** Transpile WebGL2 vertex shader source to WebGL1 */
-export function transpileVertexShaderToWebGL1(source: string): string {
-    return source
-        .replace(/\bin\s/g, 'attribute ')
-        .replace(/\bout\s/g, 'varying ')
-        .replace(/texture\(/g, 'texture2D(');
-}
-
-/** Transpile WebGL2 fragment shader source to WebGL1 */
-export function transpileFragmentShaderToWebGL1(source: string): string {
-    return source
-        .replace(/\bin\s/g, 'varying ')
-        .replace('out highp vec4 fragColor;', '')
-        .replace(/fragColor/g, 'gl_FragColor')
-        .replace(/texture\(/g, 'texture2D(');
-}

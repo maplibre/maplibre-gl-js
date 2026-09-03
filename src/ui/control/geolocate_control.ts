@@ -1,14 +1,14 @@
-import {Event, Evented} from '../../util/evented';
-import {DOM} from '../../util/dom';
-import {extend, warnOnce} from '../../util/util';
-import {checkGeolocationSupport} from '../../util/geolocation_support';
-import {LngLat} from '../../geo/lng_lat';
-import {Marker} from '../marker';
+import {Event, Evented} from '../../util/evented.ts';
+import {DOM} from '../../util/dom.ts';
+import {extend, warnOnce} from '../../util/util.ts';
+import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
+import {Marker} from '../marker.ts';
 
-import type {Map} from '../map';
-import type {FitBoundsOptions} from '../camera';
-import type {IControl} from './control';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
+import type {Map} from '../map.ts';
+import type {FitBoundsOptions} from '../camera.ts';
+import type {IControl} from './control.ts';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
 
 /**
  * The {@link GeolocateControl} options object
@@ -56,6 +56,101 @@ const defaultOptions: GeolocateControlOptions = {
 
 let numberOfWatches = 0;
 let noTimeout = false;
+
+/**
+ * The event class for geolocate control state events
+ * (`trackuserlocationstart`, `trackuserlocationend`, `userlocationfocus` and `userlocationlostfocus`).
+ *
+ * @group Event Related
+ */
+export class GeolocateEvent extends Event {
+    type: 'trackuserlocationstart' | 'trackuserlocationend' | 'userlocationfocus' | 'userlocationlostfocus';
+    /**
+     * The `GeolocateControl` object that fired the event.
+     */
+    target: GeolocateControl;
+}
+
+/**
+ * The event class for the geolocate control `geolocate` and `outofmaxbounds` events.
+ * Carries the [Position](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition) returned by the Geolocation API.
+ *
+ * @group Event Related
+ */
+export class GeolocatePositionEvent extends Event {
+    type: 'geolocate' | 'outofmaxbounds';
+    /**
+     * The `GeolocateControl` object that fired the event.
+     */
+    target: GeolocateControl;
+    /**
+     * The geographic position returned by the Geolocation API.
+     */
+    coords: GeolocationCoordinates;
+    /**
+     * The time at which the position was acquired, in milliseconds since the Unix epoch.
+     */
+    timestamp: number;
+}
+
+/**
+ * The event class for the geolocate control `error` event.
+ * Carries the [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPositionError) returned by the Geolocation API.
+ *
+ * @group Event Related
+ */
+export class GeolocateErrorEvent extends Event {
+    type: 'error';
+    /**
+     * The `GeolocateControl` object that fired the event.
+     */
+    target: GeolocateControl;
+    /**
+     * The error code returned by the Geolocation API.
+     */
+    code: number;
+    /**
+     * The error message returned by the Geolocation API.
+     */
+    message: string;
+}
+
+/**
+ * `GeolocateControlEventType` - a mapping between the geolocate control event name and the event value.
+ * These events are used with the {@link GeolocateControl.on} method.
+ *
+ * @group Event Related
+ */
+export type GeolocateControlEventType = {
+    /**
+     * Fired on each Geolocation API position update which returned as success.
+     */
+    geolocate: GeolocatePositionEvent;
+    /**
+     * Fired on each Geolocation API position update which returned as an error.
+     */
+    error: GeolocateErrorEvent;
+    /**
+     * Fired on each Geolocation API position update which returned as success but the user position is out of map `maxBounds`.
+     */
+    outofmaxbounds: GeolocatePositionEvent;
+    /**
+     * Fired when the geolocate control changes to the active lock state.
+     */
+    trackuserlocationstart: GeolocateEvent;
+    /**
+     * Fired when the geolocate control changes to the background state.
+     */
+    trackuserlocationend: GeolocateEvent;
+    /**
+     * Fired when the geolocate control's button is clicked in the active lock state.
+     */
+    userlocationfocus: GeolocateEvent;
+    /**
+     * Fired when the user changes the viewport while in the active lock state.
+     */
+    userlocationlostfocus: GeolocateEvent;
+};
 
 /**
  * A `GeolocateControl` control provides a button that uses the browser's geolocation
@@ -237,7 +332,7 @@ let noTimeout = false;
  * });
  * ```
  */
-export class GeolocateControl extends Evented implements IControl {
+export class GeolocateControl extends Evented<GeolocateControlEventType> implements IControl {
     _map: Map;
     options: GeolocateControlOptions;
     _container: HTMLElement;
@@ -278,7 +373,7 @@ export class GeolocateControl extends Evented implements IControl {
     }
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._setupUI();
@@ -287,7 +382,7 @@ export class GeolocateControl extends Evented implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
+    onRemove(): void {
         // clear the geolocation watch if exists
         if (this._geolocationWatchID !== undefined) {
             window.navigator.geolocation.clearWatch(this._geolocationWatchID);
@@ -302,7 +397,8 @@ export class GeolocateControl extends Evented implements IControl {
             this._accuracyCircleMarker.remove();
         }
 
-        DOM.remove(this._container);
+        this._container.remove();
+        this._map.off('movestart', this._onMoveStart);
         this._map.off('zoom', this._onUpdate);
         this._map.off('move', this._onUpdate);
         this._map.off('rotate', this._onUpdate);
@@ -318,7 +414,7 @@ export class GeolocateControl extends Evented implements IControl {
      * @param position - the Geolocation API Position
      * @returns `true` if position is outside the map's `maxBounds`, otherwise returns `false`.
      */
-    _isOutOfMapMaxBounds(position: GeolocationPosition) {
+    _isOutOfMapMaxBounds(position: GeolocationPosition): boolean {
         const bounds = this._map.getMaxBounds();
         const coordinates = position.coords;
 
@@ -330,7 +426,7 @@ export class GeolocateControl extends Evented implements IControl {
         );
     }
 
-    _setErrorState() {
+    _setErrorState(): void {
         switch (this._watchState) {
             case 'WAITING_ACTIVE':
                 this._watchState = 'ACTIVE_ERROR';
@@ -371,7 +467,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param position - the Geolocation API Position
      */
-    _onSuccess = (position: GeolocationPosition) => {
+    _onSuccess = (position: GeolocationPosition): void => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -380,7 +476,7 @@ export class GeolocateControl extends Evented implements IControl {
         if (this._isOutOfMapMaxBounds(position)) {
             this._setErrorState();
 
-            this.fire(new Event('outofmaxbounds', position));
+            this.fire(new GeolocatePositionEvent('outofmaxbounds', position));
             this._updateMarker();
             this._finish();
 
@@ -429,7 +525,7 @@ export class GeolocateControl extends Evented implements IControl {
             this._dotElement.classList.remove('maplibregl-user-location-dot-stale');
         }
 
-        this.fire(new Event('geolocate', position));
+        this.fire(new GeolocatePositionEvent('geolocate', position));
         this._finish();
     };
 
@@ -438,7 +534,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param position - the Geolocation API Position
      */
-    _updateCamera = (position: GeolocationPosition) => {
+    _updateCamera = (position: GeolocationPosition): void => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
@@ -455,7 +551,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param position - the Geolocation API Position
      */
-    _updateMarker = (position?: GeolocationPosition | null) => {
+    _updateMarker = (position?: GeolocationPosition | null): void => {
         if (position) {
             const center = new LngLat(position.coords.longitude, position.coords.latitude);
             this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
@@ -468,7 +564,7 @@ export class GeolocateControl extends Evented implements IControl {
         }
     };
 
-    _updateCircleRadiusIfNeeded() {
+    _updateCircleRadiusIfNeeded(): void {
         const userLocation = this._userLocationDotMarker.getLngLat();
         if (!this.options.showUserLocation || !this.options.showAccuracyCircle || !this._accuracy || !userLocation) {
             return;
@@ -481,11 +577,11 @@ export class GeolocateControl extends Evented implements IControl {
         this._circleElement.style.height = `${circleDiameter.toFixed(2)}px`;
     }
 
-    _onUpdate = () => {
+    _onUpdate = (): void => {
         this._updateCircleRadiusIfNeeded();
     };
 
-    _onError = (error: GeolocationPositionError) => {
+    _onError = (error: GeolocationPositionError): void => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -521,30 +617,43 @@ export class GeolocateControl extends Evented implements IControl {
             this._dotElement.classList.add('maplibregl-user-location-dot-stale');
         }
 
-        this.fire(new Event('error', error));
+        this.fire(new GeolocateErrorEvent('error', error));
 
         this._finish();
     };
 
-    _finish = () => {
+    _finish = (): void => {
         if (this._timeoutId) { clearTimeout(this._timeoutId); }
         this._timeoutId = undefined;
     };
 
-    _setupUI = () => {
+    _onMoveStart = (event: any): void => {
+        if (!this._map) return;
+        const fromResize = event?.[0] instanceof ResizeObserverEntry;
+        if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
+            this._watchState = 'BACKGROUND';
+            this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
+
+            this.fire(new GeolocateEvent('trackuserlocationend'));
+            this.fire(new GeolocateEvent('userlocationlostfocus'));
+        }
+    };
+
+    _setupUI = (): void => {
         // the control could have been removed before reaching here
         if (!this._map) {
             return;
         }
 
-        this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
+        this._container.addEventListener('contextmenu', (e: MouseEvent) => { e.preventDefault(); });
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';
         this._geolocateButton.disabled = true;
     };
 
-    _finishSetupUI = (supported: boolean) => {
+    _finishSetupUI = (supported: boolean): void => {
         // this method is called asynchronously during onAdd
         if (!this._map) {
             // control has since been removed
@@ -593,17 +702,7 @@ export class GeolocateControl extends Evented implements IControl {
         // when the camera is changed (and it's not as a result of the Geolocation Control) change
         // the watch mode to background watch, so that the marker is updated but not the camera.
         if (this.options.trackUserLocation) {
-            this._map.on('movestart', (event: any) => {
-                const fromResize = event?.[0] instanceof ResizeObserverEntry;
-                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
-                    this._watchState = 'BACKGROUND';
-                    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
-                    this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
-
-                    this.fire(new Event('trackuserlocationend'));
-                    this.fire(new Event('userlocationlostfocus'));
-                }
-            });
+            this._map.on('movestart', this._onMoveStart);
         }
     };
 
@@ -639,7 +738,7 @@ export class GeolocateControl extends Evented implements IControl {
                 // turn on the Geolocate Control
                     this._watchState = 'WAITING_ACTIVE';
 
-                    this.fire(new Event('trackuserlocationstart'));
+                    this.fire(new GeolocateEvent('trackuserlocationstart'));
                     break;
                 case 'WAITING_ACTIVE':
                 case 'ACTIVE_LOCK':
@@ -655,7 +754,7 @@ export class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background-error');
 
-                    this.fire(new Event('trackuserlocationend'));
+                    this.fire(new GeolocateEvent('trackuserlocationend'));
                     break;
                 case 'BACKGROUND':
                     this._watchState = 'ACTIVE_LOCK';
@@ -663,8 +762,8 @@ export class GeolocateControl extends Evented implements IControl {
                     // set camera to last known location
                     if (this._lastKnownPosition) this._updateCamera(this._lastKnownPosition);
 
-                    this.fire(new Event('trackuserlocationstart'));
-                    this.fire(new Event('userlocationfocus'));
+                    this.fire(new GeolocateEvent('trackuserlocationstart'));
+                    this.fire(new GeolocateEvent('userlocationfocus'));
                     break;
                 default:
                     throw new Error(`Unexpected watchState ${this._watchState}`);
@@ -720,7 +819,7 @@ export class GeolocateControl extends Evented implements IControl {
         return true;
     }
 
-    _clearWatch() {
+    _clearWatch(): void {
         window.navigator.geolocation.clearWatch(this._geolocationWatchID);
 
         this._geolocationWatchID = undefined;

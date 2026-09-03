@@ -1,11 +1,26 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
+import {MapBoxZoomEvent} from '../events.ts';
 
-import {Event} from '../../util/evented';
-import {TransformProvider} from './transform-provider';
-
-import type {Map} from '../map';
+import type {Map} from '../map.ts';
+import type {Handler} from '../handler_manager.ts';
+import type {TransformProvider} from './transform-provider.ts';
 import type Point from '@mapbox/point-geometry';
-import {type Handler} from '../handler_manager';
+
+/**
+ * Callback for customizing what happens when a box zoom gesture ends.
+ */
+export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
+
+/**
+ * A {@link BoxZoomHandler} options object.
+ */
+export type BoxZoomHandlerOptions = {
+    /**
+     * A callback that runs when the user completes the Shift-drag box gesture.
+     * Providing this callback suppresses the default fit-to-box zoom behavior.
+     */
+    boxZoomEnd?: BoxZoomEndHandler;
+};
 
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
@@ -24,16 +39,21 @@ export class BoxZoomHandler implements Handler {
     _lastPos: Point;
     _box: HTMLElement;
     _clickTolerance: number;
+    _boxZoomEnd?: BoxZoomEndHandler;
 
     /** @internal */
     constructor(map: Map, options: {
         clickTolerance: number;
-    }) {
+        boxZoom?: boolean | BoxZoomHandlerOptions;
+    }, transformProvider: TransformProvider) {
         this._map = map;
-        this._tr = new TransformProvider(map);
+        this._tr = transformProvider;
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;
+        if (options.boxZoom && typeof options.boxZoom === 'object') {
+            this._boxZoomEnd = options.boxZoom.boxZoomEnd;
+        }
     }
 
     /**
@@ -41,7 +61,7 @@ export class BoxZoomHandler implements Handler {
      *
      * @returns `true` if the "box zoom" interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return !!this._enabled;
     }
 
@@ -50,7 +70,7 @@ export class BoxZoomHandler implements Handler {
      *
      * @returns `true` if the "box zoom" interaction is active.
      */
-    isActive() {
+    isActive(): boolean {
         return !!this._active;
     }
 
@@ -62,7 +82,7 @@ export class BoxZoomHandler implements Handler {
      * map.boxZoom.enable();
      * ```
      */
-    enable() {
+    enable(): void {
         if (this.isEnabled()) return;
         this._enabled = true;
     }
@@ -75,12 +95,12 @@ export class BoxZoomHandler implements Handler {
      * map.boxZoom.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         if (!this.isEnabled()) return;
         this._enabled = false;
     }
 
-    mousedown(e: MouseEvent, point: Point) {
+    mousedown(e: MouseEvent, point: Point): void {
         if (!this.isEnabled()) return;
         if (!(e.shiftKey && e.button === 0)) return;
 
@@ -89,7 +109,7 @@ export class BoxZoomHandler implements Handler {
         this._active = true;
     }
 
-    mousemoveWindow(e: MouseEvent, point: Point) {
+    mousemoveWindow(e: MouseEvent, point: Point): void {
         if (!this._active) return;
 
         const pos = point;
@@ -112,13 +132,13 @@ export class BoxZoomHandler implements Handler {
             minY = Math.min(p0.y, pos.y),
             maxY = Math.max(p0.y, pos.y);
 
-        DOM.setTransform(this._box, `translate(${minX}px,${minY}px)`);
+        this._box.style.transform = `translate(${minX}px,${minY}px)`;
 
         this._box.style.width = `${maxX - minX}px`;
         this._box.style.height = `${maxY - minY}px`;
     }
 
-    mouseupWindow(e: MouseEvent, point: Point) {
+    mouseupWindow(e: MouseEvent, point: Point): {cameraAnimation: (map: Map) => Map} | void {
         if (!this._active) return;
 
         if (e.button !== 0) return;
@@ -133,14 +153,18 @@ export class BoxZoomHandler implements Handler {
         if (p0.x === p1.x && p0.y === p1.y) {
             this._fireEvent('boxzoomcancel', e);
         } else {
-            this._map.fire(new Event('boxzoomend', {originalEvent: e}));
+            this._map.fire(new MapBoxZoomEvent('boxzoomend', {originalEvent: e}));
+            if (this._boxZoomEnd) {
+                this._boxZoomEnd(this._map, p0, p1, e);
+                return;
+            }
             return {
                 cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
             };
         }
     }
 
-    keydown(e: KeyboardEvent) {
+    keydown(e: KeyboardEvent): void {
         if (!this._active) return;
 
         if (e.keyCode === 27) {
@@ -149,13 +173,13 @@ export class BoxZoomHandler implements Handler {
         }
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
 
         this._container.classList.remove('maplibregl-crosshair');
 
         if (this._box) {
-            DOM.remove(this._box);
+            this._box.remove();
             this._box = null;
         }
 
@@ -165,7 +189,7 @@ export class BoxZoomHandler implements Handler {
         delete this._lastPos;
     }
 
-    _fireEvent(type: string, e: any) {
-        return this._map.fire(new Event(type, {originalEvent: e}));
+    _fireEvent(type: string, e: MouseEvent | KeyboardEvent): Map {
+        return this._map.fire(new MapBoxZoomEvent(type, {originalEvent: e}));
     }
 }

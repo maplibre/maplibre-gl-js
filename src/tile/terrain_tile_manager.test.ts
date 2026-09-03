@@ -1,15 +1,17 @@
-import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {TerrainTileManager} from './terrain_tile_manager';
-import {Style} from '../style/style';
-import {RequestManager} from '../util/request_manager';
-import {type Dispatcher} from '../util/dispatcher';
+import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
+import {TerrainTileManager} from './terrain_tile_manager.ts';
+import {Style} from '../style/style.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {type Dispatcher} from '../util/dispatcher.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
-import {OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {type DEMData} from '../data/dem_data';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {StubMap} from '../util/test/util';
+import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {Tile} from './tile.ts';
+import {type DEMData} from '../data/dem_data.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {StubMap} from '../util/test/util.ts';
+import {type Painter, type RTTObject} from '../render/painter.ts';
 
 const transform = new MercatorTransform();
 
@@ -54,7 +56,7 @@ describe('TerrainTileManager', () => {
         await loadPromise;
         const source = createSource({url: '/source.json'});
         server.respond();
-        style.addSource('terrain', source as any);
+        style.addSource('terrain', source.serialize());
         tsc = new TerrainTileManager(style.tileManagers.terrain);
     });
 
@@ -88,6 +90,28 @@ describe('TerrainTileManager', () => {
         tsc.tileManager._outOfViewCache.add(underzoomTileID, tile);
         expect(tsc.tileManager._inViewTiles.getTileById(underzoomTileID.key)).toBeUndefined();
         expect(tsc.getSourceTile(tileID, true).tileID.key).toBe(underzoomTileID.key);
+    });
+
+    describe('update', () => {
+        test('reports whether the renderable tiles changed', () => {
+            const manager = new TerrainTileManager(style.tileManagers.terrain);
+            const transform = new MercatorTransform();
+            transform.resize(512, 512);
+            transform.setCenter(new LngLat(-46, -6));
+            transform.setZoom(8);
+            const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
+
+            expect(manager.update(transform, null)).toBe(true);
+            const keys = renderableKeys();
+            expect(keys.length).toBeGreaterThan(0);
+
+            expect(manager.update(transform, null)).toBe(false);
+            expect(renderableKeys()).toEqual(keys);
+
+            transform.setZoom(9);
+            expect(manager.update(transform, null)).toBe(true);
+            expect(renderableKeys()).not.toEqual(keys);
+        });
     });
 
     describe('getTerrainCoords', () => {
@@ -215,4 +239,59 @@ describe('TerrainTileManager', () => {
         });
     });
 
+    describe('releaseRTT', () => {
+        function setupTilesWithRttObjects() {
+            const parent = new OverscaledTileID(1, 0, 1, 0, 0);
+            const same = new OverscaledTileID(2, 0, 2, 1, 1);
+            const child = new OverscaledTileID(3, 0, 3, 3, 2);
+            const sibling = new OverscaledTileID(2, 0, 2, 0, 0);
+
+            const tiles = {
+                [parent.key]: new Tile(parent, 256),
+                [same.key]: new Tile(same, 256),
+                [child.key]: new Tile(child, 256),
+                [sibling.key]: new Tile(sibling, 256),
+            };
+
+            const rttObjects: Record<string, RTTObject> = {};
+            for (const key in tiles) {
+                rttObjects[key] = {texture: {}, size: 512, _key: key} as unknown as RTTObject;
+                tiles[key].rttObjects[0] = rttObjects[key];
+            }
+
+            tsc._tiles = tiles;
+            const painter = {releaseRTT: vi.fn()} as unknown as Painter;
+            tsc.tileManager.map.painter = painter;
+
+            return {parent, same, child, sibling, tiles, rttObjects, painter};
+        }
+
+        test('with no tileID releases every cached tile', () => {
+            const {tiles, rttObjects, painter} = setupTilesWithRttObjects();
+
+            tsc.releaseAllRTT();
+
+            expect((vi.mocked(painter.releaseRTT))).toHaveBeenCalledTimes(Object.keys(tiles).length);
+            for (const key in rttObjects) {
+                expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[key]);
+                expect(tiles[key].getRTT(0)).toBeUndefined();
+            }
+        });
+
+        test('with a tileID releases the matching tile, its ancestors, and its descendants', () => {
+            const {parent, same, child, sibling, tiles, rttObjects, painter} = setupTilesWithRttObjects();
+
+            tsc.releaseRTT(same);
+
+            expect(tiles[parent.key].getRTT(0)).toBeUndefined();
+            expect(tiles[same.key].getRTT(0)).toBeUndefined();
+            expect(tiles[child.key].getRTT(0)).toBeUndefined();
+            expect(tiles[sibling.key].getRTT(0)).toBeTruthy();
+
+            expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[parent.key]);
+            expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[same.key]);
+            expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[child.key]);
+            expect(painter.releaseRTT).not.toHaveBeenCalledWith(rttObjects[sibling.key]);
+        });
+    });
 });

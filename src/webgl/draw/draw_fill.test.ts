@@ -1,0 +1,164 @@
+import {describe, test, expect, vi} from 'vitest';
+import {mat4} from 'gl-matrix';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {TileManager} from '../../tile/tile_manager.ts';
+import {Tile} from '../../tile/tile.ts';
+import {Painter, type RenderOptions} from '../../render/painter.ts';
+import {Program} from '../program.ts';
+import type {ZoomHistory} from '../../style/zoom_history.ts';
+import type {Map} from '../../ui/map.ts';
+import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
+import {type Style} from '../../style/style.ts';
+import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import {drawFill} from './draw_fill.ts';
+import {FillBucket} from '../../data/bucket/fill_bucket.ts';
+import {type ProgramConfiguration, type ProgramConfigurationSet} from '../../data/program_configuration.ts';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
+import {createIdentityMat4f32} from '../../util/util.ts';
+
+vi.mock(import('../../render/painter'));
+vi.mock(import('../program'));
+vi.mock(import('../../tile/tile_manager'));
+vi.mock(import('../../tile/tile'));
+
+vi.mock(import('../../data/bucket/symbol_bucket'), () => {
+    return {
+        SymbolBucket: vi.fn()
+    } as any;
+});
+vi.mock(import('../../symbol/projection'));
+
+describe('drawFill', () => {
+    test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
+
+        const painterMock: Painter = constructMockPainter();
+        const layer: FillStyleLayer = constructMockLayer();
+
+        const programMock = new Program(null, null, null, null, null, null, null, null);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+
+        const mockTile = constructMockTile(layer);
+
+        const tileManagerMock = new TileManager(null, null, null);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
+
+        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
+
+        // twice: first for fill, second for stroke
+        expect(programMock.draw).toHaveBeenCalledTimes(2);
+
+        const bucket: FillBucket = (mockTile.getBucket(layer) as any);
+        const programConfiguration = bucket.programConfigurations.get(layer.id);
+
+        expect(programConfiguration.setConstantPatternPositions).toHaveBeenCalled();
+    });
+
+    function constructMockLayer(): FillStyleLayer {
+        const layerSpec = {
+            id: 'mock-layer',
+            source: 'empty-source',
+            type: 'fill',
+            layout: {},
+            'paint': {
+                'fill-pattern': 'pattern0'
+            }
+        } as FillLayerSpecification;
+        const layer = new FillStyleLayer(layerSpec, {});
+        layer.getCrossfadeParameters = () => ({} as any);
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+
+        // Important: this setup is on purpose -- to NOT match layerspec
+        // 'fill-pattern': 'pattern0'
+        // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
+        // mimicking the transitioning fill-pattern value
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
+        layer.getPaintProperty = (() => {
+            return 'pattern1';
+        }) as <K extends keyof AllPaintProperties>(name: K) => AllPaintProperties[K];
+
+        return layer;
+    }
+
+    function constructMockPainter(): Painter {
+        const painterMock = new Painter(null, null);
+        painterMock.context = {
+            gl: {},
+            activeTexture: {
+                set: () => {}
+            }
+        } as any;
+        painterMock.renderPass = 'translucent';
+        painterMock.transform = {
+            pitch: 0,
+            labelPlaneMatrix: mat4.create(),
+            zoom: 0,
+            angle: 0,
+            getProjectionData(_canonical, fallback): ProjectionData {
+                return {
+                    mainMatrix: fallback,
+                    tileMercatorCoords: [0, 0, 1, 1],
+                    clippingPlane: [0, 0, 0, 0],
+                    projectionTransition: 0.0,
+                    fallbackMatrix: fallback,
+                    clipAntimeridian: false,
+                };
+            },
+        } as any as IReadonlyTransform;
+        painterMock.options = {} as any;
+        painterMock.style = {
+            map: {
+                projection: {}
+            }
+        } as any as Style;
+
+        return painterMock;
+    }
+
+    function constructMockTile(layer: FillStyleLayer): Tile {
+        const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
+        tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
+
+        const tile = new Tile(tileId, 256);
+        tile.tileID = tileId;
+
+        // Important: this setup is on purpose -- to NOT match layerspec
+        // 'fill-pattern': 'pattern0'
+        // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
+        // mimicking the transitioning fill-pattern value
+        tile.imageAtlas = {
+            patternPositions: {
+                'pattern1': {}
+            }
+        } as any;
+        tile.imageAtlasTexture = {
+            bind: () => {}
+        } as any;
+
+        const bucketMock = constructMockBucket(layer);
+
+        (vi.mocked(tile.getBucket)).mockReturnValue(bucketMock);
+        (vi.mocked(tile.patternsLoaded)).mockReturnValue(true);
+        return tile;
+    }
+
+    function constructMockBucket(layer: FillStyleLayer) {
+        const bucketMock = new FillBucket({
+            layers: [layer]
+        } as any);
+
+        const mockProgramConfigurations: ProgramConfigurationSet<FillStyleLayer> = {} as any;
+        const mockProgramConfiguration: ProgramConfiguration = {} as any;
+        mockProgramConfiguration.updatePaintBuffers = () => {};
+        mockProgramConfiguration.setConstantPatternPositions = vi.fn();
+
+        mockProgramConfigurations.get = () => mockProgramConfiguration;
+
+        bucketMock.programConfigurations = mockProgramConfigurations;
+
+        return bucketMock;
+    }
+});

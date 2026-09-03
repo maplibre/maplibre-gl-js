@@ -1,8 +1,8 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
-import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision';
-import {CanonicalTileID} from '../tile/tile_id';
+import {EXTENT} from '../data/extent.ts';
+import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision.ts';
+import {CanonicalTileID} from '../tile/tile_id.ts';
 
 /**
  * With this granularity, all geometry should be subdivided along axes divisible by 4.
@@ -215,7 +215,7 @@ describe('Fill subdivision', () => {
             20000, 20000,
             0, 20000
         ]);
-        expect(result.indicesTriangles).toEqual([2, 0, 3, 0, 2, 1]);
+        expect(result.indicesTriangles).toEqual([2, 0, 3, 2, 1, 0]);
         expect(result.indicesLineList).toEqual([
             [
                 0, 1,
@@ -224,7 +224,7 @@ describe('Fill subdivision', () => {
                 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Polygon is unchanged when granularity=1, but winding order is corrected.', () => {
@@ -250,7 +250,7 @@ describe('Fill subdivision', () => {
             20000, 20000,
             20000, 0
         ]);
-        expect(result.indicesTriangles).toEqual([1, 3, 0, 3, 1, 2]);
+        expect(result.indicesTriangles).toEqual([1, 3, 0, 1, 2, 3]);
         expect(result.indicesLineList).toEqual([
             [
                 0, 1,
@@ -259,7 +259,7 @@ describe('Fill subdivision', () => {
                 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Polygon inside cell is unchanged', () => {
@@ -294,7 +294,7 @@ describe('Fill subdivision', () => {
                 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Subdivide a polygon', () => {
@@ -323,12 +323,12 @@ describe('Fill subdivision', () => {
             1, 5, //  5
             1, 4, //  6
             4, 1, //  7
-            0, 4, //  8
-            4, 0, //  9
-            4, 4, // 10
-            2, 4, // 11
-            4, 3, // 12
-            4, 2  // 13
+            4, 0, //  8
+            4, 4, //  9
+            3, 4, // 10
+            4, 2, // 11
+            0, 4, // 12
+            2, 4  // 13
         ]);
         //   X: 0   1   2   3   4   5   6   7   8
         // Y:   |   |   |   |   |   |   |   |   |
@@ -350,21 +350,21 @@ describe('Fill subdivision', () => {
         //
         //  8:  2
         expect(result.indicesTriangles).toEqual([
-            3,   0,  6,
-            7,   0,  3,
-            0,   8,  6,
-            6,   8,  2,
-            6,   2,  5,
-            9,   0,  7,
-            9,   7,  4,
-            9,   4,  1,
-            12, 11, 10,
-            12, 10,  1,
-            5,   2, 11,
-            11,  2, 10,
-            13, 11, 12,
-            13, 12,  4,
-            4,  12,  1
+            3, 0, 6,
+            7, 0, 3,
+            8, 0, 7,
+            8, 7, 4,
+            8, 4, 1,
+            11, 10, 9,
+            11, 9, 4,
+            4, 9, 1,
+            10, 2, 9,
+            0, 12, 6,
+            6, 12, 2,
+            6, 2, 5,
+            11, 13, 10,
+            5, 2, 13, 
+            13, 2, 10
         ]);
         //   X: 0   1   2   3   4   5   6   7   8
         // Y:   |   |   |   |   |   |   |   |   |
@@ -387,24 +387,24 @@ describe('Fill subdivision', () => {
         //  8:  2╱
         expect(result.indicesLineList).toEqual([
             [
-                0,  9,
-                9,  1,
-                1, 10,
-                10, 2,
-                2,  8,
-                8,  0
+                0,  8,
+                8,  1,
+                1, 9,
+                9, 2,
+                2,  12,
+                12,  0
             ],
             [
                 3,   7,
                 7,   4,
-                4,  13,
-                13, 11,
-                11,  5,
+                4,   11,
+                11,  13,
+                13,  5,
                 5,   6,
                 6,   3
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     describe('Polygon outline line list is correct', () => {
@@ -419,7 +419,7 @@ describe('Fill subdivision', () => {
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testMeshIntegrity(result.indicesTriangles);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Small polygon', () => {
@@ -433,7 +433,7 @@ describe('Fill subdivision', () => {
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testMeshIntegrity(result.indicesTriangles);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Medium polygon', () => {
@@ -447,7 +447,7 @@ describe('Fill subdivision', () => {
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testMeshIntegrity(result.indicesTriangles);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Large polygon', () => {
@@ -461,7 +461,7 @@ describe('Fill subdivision', () => {
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testMeshIntegrity(result.indicesTriangles);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Large polygon with hole', () => {
@@ -480,7 +480,7 @@ describe('Fill subdivision', () => {
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testMeshIntegrity(result.indicesTriangles);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Large polygon with hole, granularity=0', () => {
@@ -499,7 +499,7 @@ describe('Fill subdivision', () => {
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testMeshIntegrity(result.indicesTriangles);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Large polygon with hole, finer granularity', () => {
@@ -517,7 +517,7 @@ describe('Fill subdivision', () => {
             ], canonicalDefault, EXTENT / 8);
 
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
 
             // This polygon subdivision results in at least one edge that is shared among more than 2 triangles.
             // This is not ideal, but it is also an edge case of a weird triangle getting subdivided by a very fine grid.
@@ -569,10 +569,10 @@ describe('Fill subdivision', () => {
             expect(result.indicesTriangles).toEqual([
                 2, 4, 5,
                 3, 2, 5,
-                1, 4, 2,
                 3, 0, 2,
-                0, 4, 1,
-                4, 0, 3
+                3, 1, 0,
+                1, 4, 2,
+                1, 3, 4
             ]);
             expect(result.indicesLineList).toEqual([
                 [
@@ -586,7 +586,7 @@ describe('Fill subdivision', () => {
                     5, 3
                 ]
             ]);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Polygon with duplicate vertex with hole inside cell', () => {
@@ -626,7 +626,7 @@ describe('Fill subdivision', () => {
                 2, 3, 4,
                 0, 2, 4,
                 3, 1, 0,
-                1, 3, 2
+                3, 2, 1
             ]);
             expect(result.indicesLineList).toEqual([
                 [
@@ -640,7 +640,7 @@ describe('Fill subdivision', () => {
                     4, 0
                 ]
             ]);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
 
         test('Polygon with duplicate edge inside cell', () => {
@@ -683,10 +683,10 @@ describe('Fill subdivision', () => {
             expect(result.indicesTriangles).toEqual([
                 3, 1, 0,
                 2, 3, 0,
-                5, 1, 3,
                 2, 4, 3,
-                4, 1, 5,
-                1, 4, 2
+                2, 5, 4,
+                5, 1, 3,
+                5, 2, 1,
             ]);
             expect(result.indicesLineList).toEqual([
                 [
@@ -700,7 +700,7 @@ describe('Fill subdivision', () => {
                     3, 0
                 ]
             ]);
-            checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+            expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
         });
     });
 
@@ -777,7 +777,7 @@ describe('Fill subdivision', () => {
                 4, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Generates pole geometry for north pole only (geometry not bordering other pole)', () => {
@@ -803,8 +803,8 @@ describe('Fill subdivision', () => {
             0,    -32768
         ]);
         expect(result.indicesTriangles).toEqual([
-            2, 0, 3, 0, 2,
-            1, 0, 1, 4, 5,
+            2, 0, 3, 2, 1,
+            0, 0, 1, 4, 5,
             0, 4
         ]);
         expect(result.indicesLineList).toEqual([
@@ -813,7 +813,7 @@ describe('Fill subdivision', () => {
                 2, 3, 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Generates pole geometry for south pole only (geometry not bordering other pole)', () => {
@@ -839,8 +839,8 @@ describe('Fill subdivision', () => {
             8192, 32767
         ]);
         expect(result.indicesTriangles).toEqual([
-            2, 0, 3, 0, 2,
-            1, 2, 3, 4, 5,
+            2, 0, 3, 2, 1,
+            0, 2, 3, 4, 5,
             2, 4
         ]);
         expect(result.indicesLineList).toEqual([
@@ -849,7 +849,7 @@ describe('Fill subdivision', () => {
                 2, 3, 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Generates pole geometry for north pole only (tile not bordering other pole)', () => {
@@ -875,8 +875,8 @@ describe('Fill subdivision', () => {
             0,    -32768
         ]);
         expect(result.indicesTriangles).toEqual([
-            2, 0, 3, 0, 2,
-            1, 0, 1, 4, 5,
+            2, 0, 3, 2, 1,
+            0, 0, 1, 4, 5,
             0, 4
         ]);
         expect(result.indicesLineList).toEqual([
@@ -885,7 +885,7 @@ describe('Fill subdivision', () => {
                 2, 3, 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Generates pole geometry for south pole only (tile not bordering other pole)', () => {
@@ -911,8 +911,8 @@ describe('Fill subdivision', () => {
             8192, 32767
         ]);
         expect(result.indicesTriangles).toEqual([
-            2, 0, 3, 0, 2,
-            1, 2, 3, 4, 5,
+            2, 0, 3, 2, 1,
+            0, 2, 3, 4, 5,
             2, 4
         ]);
         expect(result.indicesLineList).toEqual([
@@ -921,7 +921,7 @@ describe('Fill subdivision', () => {
                 2, 3, 3, 0
             ]
         ]);
-        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
     test('Scanline subdivision ring generation case 1', () => {
@@ -951,7 +951,7 @@ describe('Fill subdivision', () => {
         const ring = [0, 1, 2, 3, 4, 5, 6, 7];
         const finalIndices = [];
         scanlineTriangulateVertexRing(vertices, ring, finalIndices);
-        checkWindingOrder(vertices, finalIndices);
+        expectWindingOrder(vertices, finalIndices);
     });
 
     test('Scanline subdivision ring generation case 2', () => {
@@ -960,7 +960,7 @@ describe('Fill subdivision', () => {
         const ring = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         const finalIndices = [];
         scanlineTriangulateVertexRing(vertices, ring, finalIndices);
-        checkWindingOrder(vertices, finalIndices);
+        expectWindingOrder(vertices, finalIndices);
     });
 });
 
@@ -969,18 +969,18 @@ describe('Fill subdivision', () => {
  * Jest prints much nicer comparisons on arrays of these simple objects than on
  * arrays of points.
  */
-function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
+function toSimplePoints(a: Point[]): Array<{x: number; y: number}> {
     const result = [];
-    for (let i = 0; i < a.length; i++) {
+    for (const point of a) {
         result.push({
-            x: a[i].x,
-            y: a[i].y,
+            x: point.x,
+            y: point.y,
         });
     }
     return result;
 }
 
-function getEdgeOccurrencesMap(triangleIndices: Array<number>): Map<string, number> {
+function getEdgeOccurrencesMap(triangleIndices: number[]): Map<string, number> {
     const edgeOccurrences = new Map<string, number>();
     for (let triangleIndex = 0; triangleIndex < triangleIndices.length; triangleIndex += 3) {
         const i0 = triangleIndices[triangleIndex];
@@ -1003,7 +1003,7 @@ function getEdgeOccurrencesMap(triangleIndices: Array<number>): Map<string, numb
 /**
  * Checks that the supplied mesh has no edge that is shared by more than 2 triangles.
  */
-function testMeshIntegrity(triangleIndices: Array<number>) {
+function testMeshIntegrity(triangleIndices: number[]) {
     const edgeOccurrences = getEdgeOccurrencesMap(triangleIndices);
     for (const pair of edgeOccurrences) {
         if (pair[1] > 2) {
@@ -1015,7 +1015,7 @@ function testMeshIntegrity(triangleIndices: Array<number>) {
 /**
  * Checks that the lines in `lineIndicesLists` actually match the exposed edges of the triangle mesh in `triangleIndices`.
  */
-function testPolygonOutlineMatches(triangleIndices: Array<number>, lineIndicesLists: Array<Array<number>>): void {
+function testPolygonOutlineMatches(triangleIndices: number[], lineIndicesLists: number[][]): void {
     const edgeOccurrences = getEdgeOccurrencesMap(triangleIndices);
     const uncoveredEdges = new Set<string>();
 
@@ -1058,7 +1058,7 @@ function isSubsetOf(a: Set<string>, b: Set<string>): boolean {
     return true;
 }
 
-function hasDuplicateVertices(flattened: Array<number>): boolean {
+function hasDuplicateVertices(flattened: number[]): boolean {
     const set = new Set<string>();
     for (let i = 0; i < flattened.length; i += 2) {
         const vx = flattened[i];
@@ -1075,7 +1075,7 @@ function hasDuplicateVertices(flattened: Array<number>): boolean {
 /**
  * Passes if all triangles have the correct winding order, otherwise throws.
  */
-function checkWindingOrder(flattened: Array<number>, indices: Array<number>): void {
+function expectWindingOrder(flattened: number[], indices: number[]): void {
     for (let i = 0; i < indices.length; i += 3) {
         const i0 = indices[i];
         const i1 = indices[i + 1];

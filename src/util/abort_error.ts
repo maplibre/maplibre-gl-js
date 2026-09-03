@@ -4,7 +4,7 @@
 export const ABORT_ERROR = 'AbortError';
 
 export class AbortError extends Error {
-    name = ABORT_ERROR;
+    name: string = ABORT_ERROR;
 
     constructor(messageOrError: string | Error = ABORT_ERROR) {
         super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
@@ -19,6 +19,18 @@ export class AbortError extends Error {
  * @param error - An error object
  * @returns - true if the error is an abort error
  */
-export function isAbortError(error: Error): boolean {
-    return error.name === ABORT_ERROR;
+export function isAbortError(error: unknown): boolean {
+    return error instanceof Error && error.name === ABORT_ERROR;
+}
+
+/**
+ * Throws an AbortError if the provided abort signal has already been aborted.
+ *
+ * @param signal - The abort signal to check.
+ * @throws AbortError If the signal is aborted.
+ */
+export function throwIfAborted(signal: AbortSignal): void {
+    if (signal.aborted) {
+        throw new AbortError(signal.reason);
+    }
 }

@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {FeaturePositionMap} from './feature_position_map';
-import {serialize, deserialize} from '../util/web_worker_transfer';
+import {FeaturePositionMap} from './feature_position_map.ts';
+import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 
 describe('FeaturePositionMap', () => {
     test('Can be queried after serialization/deserialization', () => {
@@ -29,6 +29,6 @@ describe('FeaturePositionMap', () => {
 
         expect(() => {
             featureMap.getPositions(0);
-        }).toThrow();
+        }).toThrow('Trying to get index, but feature positions are not indexed');
     });
 });

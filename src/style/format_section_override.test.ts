@@ -1,9 +1,9 @@
 import {describe, test, expect} from 'vitest';
 import {EvaluationContext, type FormattedSection, createExpression, type StyleExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
-import properties from './style_layer/symbol_style_layer_properties.g';
-import {PossiblyEvaluatedPropertyValue} from './properties';
-import {FormatSectionOverride} from './format_section_override';
-import {type EvaluationParameters} from './evaluation_parameters';
+import properties from './style_layer/symbol_style_layer_properties.g.ts';
+import {PossiblyEvaluatedPropertyValue} from './properties.ts';
+import {FormatSectionOverride} from './format_section_override.ts';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('evaluate', () => {
 
@@ -35,6 +35,7 @@ describe('evaluate', () => {
         const overriddenColor = {'r': 0, 'g': 0, 'b': 1, 'a': 1};
         const styleExpr = createExpression(
             ['get', 'color'],
+            'text-color',
             properties.paint.properties['text-color'].specification);
 
         const sourceExpr = new ZoomConstantExpression('source', styleExpr.value as StyleExpression);

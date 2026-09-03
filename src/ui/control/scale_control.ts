@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {ControlPosition, IControl} from './control';
+import type {Map} from '../map.ts';
+import type {ControlPosition, IControl} from './control.ts';
 
 /**
  * The unit type for length to use for the {@link ScaleControl}
@@ -61,12 +61,12 @@ export class ScaleControl implements IControl {
         return 'bottom-left';
     }
 
-    _onMove = () => {
+    _onMove = (): void => {
         updateScale(this._map, this._container, this.options);
     };
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale', map.getContainer());
 
@@ -77,8 +77,8 @@ export class ScaleControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
-        DOM.remove(this._container);
+    onRemove(): void {
+        this._container.remove();
         this._map.off('move', this._onMove);
         this._map = undefined;
     }
@@ -88,19 +88,19 @@ export class ScaleControl implements IControl {
      *
      * @param unit - Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
      */
-    setUnit = (unit: Unit) => {
+    setUnit = (unit: Unit): void => {
         this.options.unit = unit;
         updateScale(this._map, this._container, this.options);
     };
 }
 
-function updateScale(map: Map, container: HTMLElement, options: ScaleControlOptions) {
+function updateScale(map: Map, container: HTMLElement, options: ScaleControlOptions): void {
     // A horizontal scale is imagined to be present at center of the map
     // container with maximum length (Default) as 100px.
     // Using spherical law of cosines approximation, the real distance is
     // found between the two coordinates.
     // Minimum maxWidth is calculated for the scale box.
-    const optWidth = options && options.maxWidth || 100;
+    const optWidth = options?.maxWidth || 100;
     const y = map._container.clientHeight / 2;
     const x = map._container.clientWidth / 2;
     const left = map.unproject([x - optWidth / 2, y]);
@@ -113,7 +113,7 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
     // The real distance corresponding to 100px scale length is rounded off to
     // near pretty number and the scale length for the same is found out.
     // Default unit of the scale is based on User's locale.
-    if (options && options.unit === 'imperial') {
+    if (options?.unit === 'imperial') {
         const maxFeet = 3.2808 * maxMeters;
         if (maxFeet > 5280) {
             const maxMiles = maxFeet / 5280;
@@ -121,7 +121,7 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
         } else {
             setScale(container, maxWidth, maxFeet, map._getUIString('ScaleControl.Feet'));
         }
-    } else if (options && options.unit === 'nautical') {
+    } else if (options?.unit === 'nautical') {
         const maxNauticals = maxMeters / 1852;
         setScale(container, maxWidth, maxNauticals, map._getUIString('ScaleControl.NauticalMiles'));
     } else if (maxMeters >= 1000) {
@@ -131,7 +131,7 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
     }
 }
 
-function setScale(container: HTMLElement, maxWidth: number, maxDistance: number, unit: string) {
+function setScale(container: HTMLElement, maxWidth: number, maxDistance: number, unit: string): void {
     const distance = getRoundNum(maxDistance);
     const ratio = distance / maxDistance;
     container.style.width = `${maxWidth * ratio}px`;

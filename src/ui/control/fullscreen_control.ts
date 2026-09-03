@@ -1,10 +1,10 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import {warnOnce} from '../../util/util';
+import {warnOnce} from '../../util/util.ts';
 
-import {Event, Evented} from '../../util/evented';
-import type {Map} from '../map';
-import type {IControl} from './control';
+import {Event, Evented} from '../../util/evented.ts';
+import type {Map} from '../map.ts';
+import type {IControl} from './control.ts';
 
 /**
  * The {@link FullscreenControl} options object
@@ -14,6 +14,42 @@ export type FullscreenControlOptions = {
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
      */
     container?: HTMLElement;
+    /**
+     * If `true`, the fullscreen control will always use pseudo fullscreen mode (CSS-based, expanding to browser viewport) instead of native fullscreen API.
+     * This can be useful for faster transitions and to allow multiple maps to be "fullscreen" simultaneously in different browser windows.
+     * @defaultValue false
+     */
+    pseudo?: boolean;
+};
+
+/**
+ * The event class for fullscreen control events (`fullscreenstart` and `fullscreenend`).
+ *
+ * @group Event Related
+ */
+export class FullscreenEvent extends Event {
+    type: 'fullscreenstart' | 'fullscreenend';
+    /**
+     * The `FullscreenControl` object that fired the event.
+     */
+    target: FullscreenControl;
+}
+
+/**
+ * `FullscreenControlEventType` - a mapping between the fullscreen control event name and the event value.
+ * These events are used with the {@link FullscreenControl.on} method.
+ *
+ * @group Event Related
+ */
+export type FullscreenControlEventType = {
+    /**
+     * Fired when fullscreen mode has started.
+     */
+    fullscreenstart: FullscreenEvent;
+    /**
+     * Fired when fullscreen mode has ended.
+     */
+    fullscreenend: FullscreenEvent;
 };
 
 /**
@@ -29,15 +65,15 @@ export type FullscreenControlOptions = {
  * ```ts
  * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
  * ```
- * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
+ * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/view-a-fullscreen-map/)
  *
  * ## Events
  *
- * **Event** `fullscreenstart` of type {@link Event} will be fired when fullscreen mode has started.
+ * **Event** `fullscreenstart` of type {@link FullscreenEvent} will be fired when fullscreen mode has started.
  *
- * **Event** `fullscreenend` of type {@link Event} will be fired when fullscreen mode has ended.
+ * **Event** `fullscreenend` of type {@link FullscreenEvent} will be fired when fullscreen mode has ended.
  */
-export class FullscreenControl extends Evented implements IControl {
+export class FullscreenControl extends Evented<FullscreenControlEventType> implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
@@ -45,6 +81,7 @@ export class FullscreenControl extends Evented implements IControl {
     _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
+    _pseudo: boolean;
 
     /**
      * @param options - the control's options
@@ -52,8 +89,9 @@ export class FullscreenControl extends Evented implements IControl {
     constructor(options: FullscreenControlOptions = {}) {
         super();
         this._fullscreen = false;
+        this._pseudo = options.pseudo ?? false;
 
-        if (options && options.container) {
+        if (options?.container) {
             if (options.container instanceof HTMLElement) {
                 this._container = options.container;
             } else {
@@ -75,20 +113,20 @@ export class FullscreenControl extends Evented implements IControl {
     /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map): HTMLElement {
         this._map = map;
-        if (!this._container) this._container = this._map.getContainer();
+        this._container ||= this._map.getContainer();
         this._controlContainer = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._setupUI();
         return this._controlContainer;
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
-        DOM.remove(this._controlContainer);
+    onRemove(): void {
+        this._controlContainer.remove();
         this._map = null;
         window.document.removeEventListener(this._fullscreenchange, this._onFullscreenChange);
     }
 
-    _setupUI() {
+    _setupUI(): void {
         const button = this._fullscreenButton = DOM.create('button', (('maplibregl-ctrl-fullscreen')), this._controlContainer);
         DOM.create('span', 'maplibregl-ctrl-icon', button).setAttribute('aria-hidden', 'true');
         button.type = 'button';
@@ -97,26 +135,25 @@ export class FullscreenControl extends Evented implements IControl {
         window.document.addEventListener(this._fullscreenchange, this._onFullscreenChange);
     }
 
-    _updateTitle() {
+    _updateTitle(): void {
         const title = this._getTitle();
         this._fullscreenButton.setAttribute('aria-label', title);
         this._fullscreenButton.title = title;
     }
 
-    _getTitle() {
+    _getTitle(): string {
         return this._map._getUIString(this._isFullscreen() ? 'FullscreenControl.Exit' : 'FullscreenControl.Enter');
     }
 
-    _isFullscreen() {
+    _isFullscreen(): boolean {
         return this._fullscreen;
     }
 
-    _onFullscreenChange = () => {
+    _onFullscreenChange = (): void => {
+        // WebKit due to https://caniuse.com/mdn-api_document_fullscreenelement
         let fullscreenElement =
             window.document.fullscreenElement ||
-            (window.document as any).mozFullScreenElement ||
-            (window.document as any).webkitFullscreenElement ||
-            (window.document as any).msFullscreenElement;
+            (window.document as any).webkitFullscreenElement;
 
         while (fullscreenElement?.shadowRoot?.fullscreenElement) {
             fullscreenElement = fullscreenElement.shadowRoot.fullscreenElement;
@@ -127,25 +164,25 @@ export class FullscreenControl extends Evented implements IControl {
         }
     };
 
-    _handleFullscreenChange() {
+    _handleFullscreenChange(): void {
         this._fullscreen = !this._fullscreen;
         this._fullscreenButton.classList.toggle('maplibregl-ctrl-shrink');
         this._fullscreenButton.classList.toggle('maplibregl-ctrl-fullscreen');
         this._updateTitle();
 
         if (this._fullscreen) {
-            this.fire(new Event('fullscreenstart'));
+            this.fire(new FullscreenEvent('fullscreenstart'));
             this._prevCooperativeGesturesEnabled = this._map.cooperativeGestures.isEnabled();
             this._map.cooperativeGestures.disable();
         } else {
-            this.fire(new Event('fullscreenend'));
+            this.fire(new FullscreenEvent('fullscreenend'));
             if (this._prevCooperativeGesturesEnabled) {
                 this._map.cooperativeGestures.enable();
             }
         }
     }
 
-    _onClickFullscreen = () => {
+    _onClickFullscreen = (): void => {
         if (this._isFullscreen()) {
             this._exitFullscreen();
         } else {
@@ -153,35 +190,33 @@ export class FullscreenControl extends Evented implements IControl {
         }
     };
 
-    _exitFullscreen() {
-        if (window.document.exitFullscreen) {
+    _exitFullscreen(): void {
+        if (this._pseudo) {
+            this._togglePseudoFullScreen();
+        } else if (window.document.exitFullscreen) {
             (window.document as any).exitFullscreen();
-        } else if ((window.document as any).mozCancelFullScreen) {
-            (window.document as any).mozCancelFullScreen();
-        } else if ((window.document as any).msExitFullscreen) {
-            (window.document as any).msExitFullscreen();
         } else if ((window.document as any).webkitCancelFullScreen) {
+            // due to https://caniuse.com/mdn-api_document_exitfullscreen
             (window.document as any).webkitCancelFullScreen();
         } else {
             this._togglePseudoFullScreen();
         }
     }
 
-    _requestFullscreen() {
-        if (this._container.requestFullscreen) {
+    _requestFullscreen(): void {
+        if (this._pseudo) {
+            this._togglePseudoFullScreen();
+        } else if (this._container.requestFullscreen) {
             this._container.requestFullscreen();
-        } else if ((this._container as any).mozRequestFullScreen) {
-            (this._container as any).mozRequestFullScreen();
-        } else if ((this._container as any).msRequestFullscreen) {
-            (this._container as any).msRequestFullscreen();
         } else if ((this._container as any).webkitRequestFullscreen) {
+            // due to https://caniuse.com/mdn-api_element_requestfullscreen
             (this._container as any).webkitRequestFullscreen();
         } else {
             this._togglePseudoFullScreen();
         }
     }
 
-    _togglePseudoFullScreen() {
+    _togglePseudoFullScreen(): void {
         this._container.classList.toggle('maplibregl-pseudo-fullscreen');
         this._handleFullscreenChange();
         this._map.resize();

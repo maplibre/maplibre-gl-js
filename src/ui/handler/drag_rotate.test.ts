@@ -1,11 +1,11 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {extend} from '../../util/util';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import * as timeControl from '../../util/time_control';
+import {extend} from '../../util/util.ts';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
 
-import {beforeMapTest} from '../../util/test/util';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(options?) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
@@ -523,7 +523,7 @@ describe('drag rotate', () => {
 
     test('DragRotateHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
-        const requestRenderFrame = vi.spyOn(map.handlers, '_requestFrame');
+        const requestRenderFrame = vi.spyOn(map._handlers, '_requestFrame');
 
         // Prevent inertial rotation.
         vi.spyOn(timeControl, 'now').mockReturnValue(0);
@@ -570,8 +570,8 @@ describe('drag rotate', () => {
         expect(rotateend).toHaveBeenCalledTimes(0);
 
         // simulates another handler taking over
-        // simulate a scroll zoom
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        // simulate scroll zoom
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
@@ -736,7 +736,7 @@ describe('drag rotate', () => {
     test('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();

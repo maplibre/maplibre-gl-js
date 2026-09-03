@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {GridIndex} from './grid_index';
-import type {GridKey} from './grid_index';
+import {GridIndex} from './grid_index.ts';
+import type {GridKey} from './grid_index.ts';
 
 describe('GridIndex', () => {
 
@@ -71,6 +71,26 @@ describe('GridIndex', () => {
         expect(grid.hitTest(15, 15, 25, 25, 'cooperative')).toBeTruthy();
         expect(grid.hitTest(35, 15, 45, 25, 'cooperative')).toBeFalsy();
         expect(grid.hitTest(55, 15, 65, 25, 'cooperative')).toBeFalsy();
+    });
+
+    test('hitTest detects overlap despite floating-point imprecision at boundary', () => {
+        const grid = new GridIndex(1000, 1000, 25);
+
+        // Simulate two collision boxes whose boundaries should be mathematically
+        // equal but differ by floating-point rounding (different projection paths).
+        // Box A: y1 is computed via one path
+        const y_boundary_a = 406.20432662000000;
+        grid.insert({overlapMode: 'never'}, 700, y_boundary_a, 740, y_boundary_a + 22);
+
+        // Box B: y2 is computed via a different path, producing a value that
+        // differs from y_boundary_a by less than 1e-10 (1-2 ULPs)
+        const y_boundary_b = 406.2043266199999;
+        // y_boundary_b < y_boundary_a, so strict >= would fail
+        expect(y_boundary_b).toBeLessThan(y_boundary_a);
+
+        // Despite the floating-point difference, hitTest should detect overlap
+        expect(grid.hitTest(660, 366, y_boundary_b, y_boundary_b, 'never')).toBeFalsy();
+        expect(grid.hitTest(660, 366, 740, y_boundary_b, 'never')).toBeTruthy();
     });
 
 });

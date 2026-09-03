@@ -1,9 +1,9 @@
-import {warnOnce} from '../util/util';
+import {warnOnce} from '../util/util.ts';
 
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.ts';
 
-import type {VertexArrayObject} from '../render/vertex_array_object';
-import type {StructArray} from '../util/struct_array';
+import type {VertexArrayObject} from '../webgl/vertex_array_object.ts';
+import type {StructArray} from '../util/struct_array.ts';
 
 /**
  * @internal
@@ -24,10 +24,10 @@ export type Segment = {
  */
 export class SegmentVector {
     static MAX_VERTEX_ARRAY_LENGTH: number;
-    segments: Array<Segment>;
+    segments: Segment[];
     private _forceNewSegmentOnNextPrepare: boolean = false;
 
-    constructor(segments: Array<Segment> = []) {
+    constructor(segments: Segment[] = []) {
         this.segments = segments;
     }
 
@@ -96,15 +96,15 @@ export class SegmentVector {
      * Causes the next call to {@link prepareSegment} to always return a new segment,
      * not reusing the current segment even if the new geometry would fit it.
      */
-    forceNewSegmentOnNextPrepare() {
+    forceNewSegmentOnNextPrepare(): void {
         this._forceNewSegmentOnNextPrepare = true;
     }
 
-    get() {
+    get(): Segment[] {
         return this.segments;
     }
 
-    destroy() {
+    destroy(): void {
         for (const segment of this.segments) {
             for (const k in segment.vaos) {
                 segment.vaos[k].destroy();

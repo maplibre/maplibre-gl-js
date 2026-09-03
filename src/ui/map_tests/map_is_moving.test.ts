@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import * as timeControl from '../../util/time_control';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import * as timeControl from '../../util/time_control.ts';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 let map;
 
@@ -69,7 +69,7 @@ describe('Map.isMoving', () => {
 
     test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return 0; });
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
@@ -98,7 +98,7 @@ describe('Map.isMoving', () => {
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
 
-        await expect(moveEndPromise).resolves.toBeDefined();        
+        await expect(moveEndPromise).resolves.toBeDefined();
     });
 
     test('returns true when scroll zooming', async () => {
@@ -109,9 +109,9 @@ describe('Map.isMoving', () => {
         const moveEndPromise = map.once('zoomend');
 
         let now = 0;
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;
@@ -148,9 +148,9 @@ describe('Map.isMoving', () => {
         map._renderTaskQueue.run();
 
         let now = 0;
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;

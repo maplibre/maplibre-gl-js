@@ -1,0 +1,31 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "center": [-113.26903, 35.9654],
+  "zoom": 15,
+  "sources": {
+    "source": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "source",
+      "paint": {
+        "resampling": "nearest"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {setPerformance} from '../util/test/util';
-import {type GeoJSONFeatureId, type GeoJSONSourceDiff, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff';
+import {setPerformance} from '../util/test/util.ts';
+import {type GeoJSONFeatureId, type GeoJSONSourceDiff, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff.ts';
 
 beforeEach(() => {
     setPerformance();
@@ -325,7 +325,7 @@ describe('applySourceDiff', () => {
         const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: point.id,
-                newGeometry: newGeometry,
+                newGeometry,
             }]
         });
         expect(updateable.size).toBe(1);
@@ -345,7 +345,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        const properties = updateable.get(point.id)?.properties!;
+        const properties = updateable.get(point.id)?.properties;
         expect(Object.keys(properties)).toHaveLength(2);
         expect(properties.prop).toBe('value');
         expect(properties.prop2).toBe('value2');
@@ -363,7 +363,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        const properties2 = updateable.get(point.id)?.properties!;
+        const properties2 = updateable.get(point.id)?.properties;
         expect(Object.keys(properties2)).toHaveLength(2);
         expect(properties2.prop).toBe('value');
         expect(properties2.prop2).toBe('value3');
@@ -379,7 +379,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        const properties3 = updateable.get(point.id)?.properties!;
+        const properties3 = updateable.get(point.id)?.properties;
         expect(Object.keys(properties3)).toHaveLength(1);
         expect(properties3.prop).toBe('value');
         expect(affectedGeometries).toStrictEqual([point.geometry]);
@@ -394,7 +394,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        expect(Object.keys(updateable.get(point.id)?.properties!)).toHaveLength(0);
+        expect(Object.keys(updateable.get(point.id)?.properties)).toHaveLength(0);
         expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 
@@ -562,7 +562,7 @@ describe('mergeSourceDiffs', () => {
         } satisfies GeoJSONSourceDiff;
 
         const merged = mergeSourceDiffs(diff1, diff2);
-        expect(merged.update.length).toBe(1);
+        expect(merged.update).toHaveLength(1);
         expect(merged.update[0].removeAllProperties).toBe(true);
         expect(merged.update[0].removeProperties).toBeUndefined();
         expect(merged.update[0].addOrUpdateProperties).toEqual([{key: 'fresh', value: 2}]);
@@ -604,7 +604,7 @@ describe('mergeSourceDiffs', () => {
 
         const merged = mergeSourceDiffs(diff1, diff2, 'promoted');
         expect(merged.add).toBeDefined();
-        expect(merged.add.length).toBe(2);
+        expect(merged.add).toHaveLength(2);
     });
 
     test('merges two diffs update feature then remove', () => {

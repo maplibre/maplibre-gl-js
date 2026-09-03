@@ -1,22 +1,22 @@
 import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {TransformHelper} from '../transform_helper';
-import {MercatorTransform} from './mercator_transform';
-import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
-import {type LngLat, type LngLatLike,} from '../lng_lat';
-import {lerp} from '../../util/util';
-import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id';
+import {TransformHelper} from '../transform_helper.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
+import {type LngLat, type LngLatLike,} from '../lng_lat.ts';
+import {lerp} from '../../util/util.ts';
+import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {MercatorCoordinate} from '../mercator_coordinate';
-import type {LngLatBounds} from '../lng_lat_bounds';
-import type {Frustum} from '../../util/primitives/frustum';
-import type {Terrain} from '../../render/terrain';
-import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
-import type {TransformOptions} from '../transform_helper';
-import type {PaddingOptions} from '../edge_insets';
-import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {Frustum} from '../../util/primitives/frustum.ts';
+import type {Terrain} from '../../render/terrain.ts';
+import type {PointProjection} from '../../symbol/projection.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {TransformOptions} from '../transform_helper.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.
@@ -95,7 +95,7 @@ export class GlobeTransform implements ITransform {
         this._helper.setPadding(padding);
     }
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
-        return this._helper.interpolatePadding(start, target, t);
+        this._helper.interpolatePadding(start, target, t);
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
@@ -209,20 +209,18 @@ export class GlobeTransform implements ITransform {
     get constrainOverride(): TransformConstrainFunction {
         return this._helper.constrainOverride;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     //
     // Implementation of globe transform
     //
-
-    private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -233,9 +231,8 @@ export class GlobeTransform implements ITransform {
         return this._globeness > 0;
     }
 
-    setTransitionState(globeness: number, errorCorrectionValue: number): void {
+    setTransitionState(globeness: number): void {
         this._globeness = globeness;
-        this._globeLatitudeErrorCorrectionRadians = errorCorrectionValue;
         this._calcMatrices();
         this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
         this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
@@ -255,7 +252,7 @@ export class GlobeTransform implements ITransform {
 
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
-            calcMatrices: () => { this._calcMatrices(); },
+            calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
@@ -266,7 +263,6 @@ export class GlobeTransform implements ITransform {
     clone(): ITransform {
         const clone = new GlobeTransform();
         clone._globeness = this._globeness;
-        clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
         clone.apply(this, false);
         return clone;
     }
@@ -274,7 +270,7 @@ export class GlobeTransform implements ITransform {
     public apply(that: IReadonlyTransform, constrain: boolean): void {
         this._helper.apply(that, constrain);
         this._mercatorTransform.apply(this, false);
-        this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
+        this._verticalPerspectiveTransform.apply(this, false);
     }
 
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
@@ -285,7 +281,7 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
-    getProjectionData(params: ProjectionDataParams): ProjectionData {
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
         const verticalPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
 
@@ -295,6 +291,7 @@ export class GlobeTransform implements ITransform {
             tileMercatorCoords: verticalPerspectiveProjectionData.tileMercatorCoords,
             projectionTransition: params.applyGlobeMatrix ? this._globeness : 0,
             fallbackMatrix: mercatorProjectionData.fallbackMatrix,
+            clipAntimeridian: verticalPerspectiveProjectionData.clipAntimeridian,
         };
     }
 
@@ -320,8 +317,8 @@ export class GlobeTransform implements ITransform {
         return lerp(mercatorCorrection, verticalCorrection, this._globeness);
     }
 
-    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
-        return this.currentTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
+        return this.currentTransform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
     }
 
     private _calcMatrices(): void {
@@ -332,7 +329,7 @@ export class GlobeTransform implements ITransform {
         // - if autoCalculateNearFarZ is true then it computes globe Z values
         // - if autoCalculateNearFarZ is false then it inherits our Z values
         // In either case, its Z values are consistent with out settings and we want to copy its Z values to our helper.
-        this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
+        this._verticalPerspectiveTransform.apply(this, false);
         this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
         this._helper._farZ = this._verticalPerspectiveTransform.farZ;
 
@@ -365,8 +362,7 @@ export class GlobeTransform implements ITransform {
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        this._mercatorTransform.recalculateZoomAndCenter(terrain);
-        this._verticalPerspectiveTransform.recalculateZoomAndCenter(terrain);
+        this.currentTransform.recalculateZoomAndCenter(terrain);
     }
 
     maxPitchScaleFactor(): number {
@@ -415,13 +411,13 @@ export class GlobeTransform implements ITransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
         if (!this.isGlobeRendering) {
-            this._mercatorTransform.setLocationAtPoint(lnglat, point);
+            this._mercatorTransform.setLocationAtPoint(lnglat, point, elevation);
             this.apply(this._mercatorTransform, false);
             return;
         }
-        this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point);
+        this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point, elevation);
         this.apply(this._verticalPerspectiveTransform, false);
         return;
     }
@@ -434,8 +430,17 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.screenPointToMercatorCoordinate(p, terrain);
     }
 
+    /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        return this.currentTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
+    }
+
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         return this.currentTransform.screenPointToLocation(p, terrain);
+    }
+
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
+        return this.currentTransform.screenPointToLocationAtElevation(p, elevation);
     }
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
@@ -449,11 +454,7 @@ export class GlobeTransform implements ITransform {
         return this._verticalPerspectiveTransform.getRayDirectionFromPixel(p);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        return this.currentTransform.getMatrixForModel(location, altitude);
-    }
-
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 
         if (!this.isGlobeRendering) {
@@ -462,6 +463,7 @@ export class GlobeTransform implements ITransform {
 
         const globeData = this._verticalPerspectiveTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
         globeData.fallbackMatrix = mercatorData.mainMatrix;
+        globeData.projectionTransition = this._globeness;
         return globeData;
     }
 

@@ -1,8 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import {vec3, type vec4} from 'gl-matrix';
-import {Aabb} from './aabb';
-import {IntersectionResult} from './bounding_volume';
-import {createTestCameraFrustum} from '../test/util';
+import {Aabb} from './aabb.ts';
+import {IntersectionResult} from './bounding_volume.ts';
+import {createTestCameraFrustum} from '../test/util.ts';
 
 describe('aabb', () => {
     test('Create an aabb', () => {

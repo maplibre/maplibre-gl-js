@@ -1,17 +1,27 @@
-import {vi, expect} from 'vitest';
-import {Map} from '../../ui/map';
-import {extend} from '../../util/util';
-import {type Dispatcher} from '../../util/dispatcher';
-import {type IActor} from '../actor';
-import {Evented} from '../evented';
+import {vi, expect, onTestFinished, type Mock} from 'vitest';
+import {Map, type MapOptions} from '../../ui/map.ts';
+import {NullWebGL2RenderingContext} from './null_gl.ts';
+import {extend} from '../../util/util.ts';
+import {type Dispatcher} from '../../util/dispatcher.ts';
+import {type IActor} from '../actor.ts';
+import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
+import {Evented} from '../evented.ts';
+import {type SourceEventType} from '../../ui/events.ts';
 import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import {RequestManager} from '../request_manager';
-import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
-import {type Style} from '../../style/style';
-import {type Terrain} from '../../render/terrain';
-import {Frustum} from '../primitives/frustum';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {RequestManager} from '../request_manager.ts';
+import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
+import {type Style} from '../../style/style.ts';
+import {Terrain} from '../../render/terrain.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
+import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
+import {DEMData} from '../../data/dem_data.ts';
+import {RGBAImage} from '../image.ts';
+import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {Painter} from '../../render/painter.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -25,24 +35,24 @@ export class StubMap extends Evented {
         this._requestManager = new RequestManager();
     }
 
-    _getMapId() {
+    _getMapId(): number {
         return 1;
     }
 
-    getPixelRatio() {
+    getPixelRatio(): number {
         return 1;
     }
 
-    setTerrain(terrain) { this._terrain = terrain; }
-    getTerrain() { return this._terrain; }
+    setTerrain(terrain: TerrainSpecification): void { this._terrain = terrain; }
+    getTerrain(): TerrainSpecification { return this._terrain; }
 
-    migrateProjection(newTransform: ITransform) {
+    migrateProjection(newTransform: ITransform): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
     }
 }
 
-export function createMap(options?) {
+export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean}): Map {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,
@@ -62,26 +72,31 @@ export function createMap(options?) {
 
     if (options?.deleteStyle) delete defaultOptions.style;
 
-    const map = new Map(extend(defaultOptions, options));
-
-    return map;
+    return new Map(extend(defaultOptions, options));
 }
 
-export function equalWithPrecision(test, expected, actual, multiplier, message, extra) {
-    message = message || `should be equal to within ${multiplier}`;
+export function equalWithPrecision(
+    test: {equal: (a: number, b: number, message: string, extra?: unknown) => unknown},
+    expected: number,
+    actual: number,
+    multiplier: number,
+    message?: string,
+    extra?: unknown
+): unknown {
+    message ||= `should be equal to within ${multiplier}`;
     const expectedRounded = Math.round(expected / multiplier) * multiplier;
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
     return test.equal(expectedRounded, actualRounded, message, extra);
 }
 
-export function setPerformance() {
+export function setPerformance(): void {
     window.performance.mark = vi.fn();
     window.performance.clearMeasures = vi.fn();
     window.performance.clearMarks = vi.fn();
 }
 
-export function setMatchMedia() {
+export function setMatchMedia(): void {
     // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
     Object.defineProperty(window, 'matchMedia', {
         writable: true,
@@ -105,49 +120,54 @@ function setResizeObserver() {
         disconnect = vi.fn();
     });
 }
+let _originalGetContext: typeof HTMLCanvasElement.prototype.getContext | undefined;
 
-export function beforeMapTest() {
+function setNullGLGetContext() {
+    _originalGetContext ??= HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any): any {
+        if (type === 'webgl2') return new NullWebGL2RenderingContext(this, attributes);
+        return _originalGetContext.call(this, type, attributes);
+    } as any;
+}
+
+export function beforeMapTest(): void {
+    setNullGLGetContext();
     setPerformance();
     setMatchMedia();
     setResizeObserver();
-    // remove the following when the following is merged and released: https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5
-    (WebGLRenderingContext.prototype as any).bindVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').bindVertexArrayOES;
-    (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
-    if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
-        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
-            get: vi.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
-            get: vi.fn(),
-            configurable: true,
-        });
-    }
+    onTestFinished(() => {
+        HTMLCanvasElement.prototype.getContext = _originalGetContext;
+    });
 }
 
-export function getWrapDispatcher() {
-    const wrapDispatcher = (actor: IActor) => {
+export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
+    return (actor: IActor) => {
         return {
+            actorsPromise: Promise.resolve([actor]),
+            waitForInitComplete() {
+                return Promise.resolve();
+            },
             getActor() {
+                return Promise.resolve(actor);
+            },
+            getReadyActor() {
                 return actor;
             }
         } as any as Dispatcher;
     };
-
-    return wrapDispatcher;
 }
 
-export function getMockDispatcher() {
+export function getMockDispatcher(): Dispatcher {
     const wrapDispatcher = getWrapDispatcher();
 
-    const mockDispatcher = wrapDispatcher({
-        sendAsync() { return Promise.resolve({}); },
+    return wrapDispatcher({
+        sendAsync() {
+            return Promise.resolve({});
+        },
     });
-
-    return mockDispatcher;
 }
 
-export function stubAjaxGetImage(createImageBitmap) {
+export function stubAjaxGetImage(createImageBitmap: typeof global.createImageBitmap): void {
     global.createImageBitmap = createImageBitmap;
 
     global.URL.revokeObjectURL = () => {};
@@ -181,11 +201,11 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  * @param milliseconds - the amount of time to wait in milliseconds
  * @returns - a promise that resolves after the specified amount of time
  */
-export const sleep = (milliseconds: number = 0) => {
+export const sleep: (milliseconds?: number) => Promise<void> = (milliseconds: number = 0) => {
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 };
 
-export function waitForMetadataEvent(source: Evented): Promise<void> {
+export function waitForMetadataEvent(source: Evented<SourceEventType>): Promise<void> {
     return new Promise((resolve) => {
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
@@ -195,14 +215,14 @@ export function waitForMetadataEvent(source: Evented): Promise<void> {
     });
 }
 
-export function createStyleSource() {
+export function createStyleSource(): SourceSpecification {
     return {
         type: 'geojson',
         data: {
             type: 'FeatureCollection',
             features: []
         }
-    } as SourceSpecification;
+    };
 }
 
 export function createStyle(): StyleSpecification {
@@ -217,7 +237,7 @@ export function createStyle(): StyleSpecification {
     };
 }
 
-export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
+export function expectToBeCloseToArray(actual: number[], expected: number[], precision?: number): void {
     expect(actual).toHaveLength(expected.length);
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], precision);
@@ -226,12 +246,12 @@ export function expectToBeCloseToArray(actual: Array<number>, expected: Array<nu
 
 export function createTerrain(): Terrain {
     return {
-        pointCoordinate: () => null,
+        getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
+        resetElevationCache: () => {},
         getFramebuffer: () => ({}),
-        getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
         tileManager: {
             update: () => {},
@@ -241,7 +261,7 @@ export function createTerrain(): Terrain {
     } as any as Terrain;
 }
 
-export function createFramebuffer() {
+export function createFramebuffer(): Framebuffer {
     return {
         colorAttachment: {
             get: () => null,
@@ -252,7 +272,7 @@ export function createFramebuffer() {
             set: () => {}
         },
         destroy: () => {}
-    };
+    } as unknown as Framebuffer;
 }
 
 export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<any> {
@@ -279,4 +299,74 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     mat4.invert(invProj, proj);
 
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
+}
+
+export function createDEM(heightFn: (x: number, y: number) => number, dim: number = 8): DEMData {
+    const stride = dim + 2;
+    const pixels = new Uint8Array(stride * stride * 4);
+    for (let y = 0; y < dim; y++) {
+        for (let x = 0; x < dim; x++) {
+            const value = heightFn(x, y) + 32768;
+            const index = ((y + 1) * stride + x + 1) * 4;
+            pixels[index] = Math.floor(value / 256);
+            pixels[index + 1] = Math.floor(value) % 256;
+            pixels[index + 2] = Math.round((value - Math.floor(value)) * 256);
+            pixels[index + 3] = 255;
+        }
+    }
+    return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
+}
+
+export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | null, exaggeration: number = 1): Terrain {
+    const painter = {} as Painter;
+    const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
+    const terrain = new Terrain(painter, tileManager, {exaggeration} as TerrainSpecification);
+    terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as Tile);
+    terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
+    terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
+    return terrain;
+}
+
+const fakeImages = {
+    hello: {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}
+};
+
+/**
+ * The glyph a {@link createFakeActor} answers a `getGlyphs` request with, keyed by the grapheme
+ * cluster layout asks for it by.
+ */
+const fakeGlyphs = {
+    'StandardFont-Bold': {
+        e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+    }
+};
+
+/**
+ * An actor that answers a worker source's requests for images and glyphs with fixtures, after a
+ * delay long enough that a test can abort the request part-way.
+ *
+ * @param shouldAbort - consulted on every request. Where it is given, the actor also rejects a
+ * request that is aborted while in flight; where it is not, an aborted request is simply never
+ * answered, as it is for a source that has moved on.
+ * @param onAbort - called whenever a request in flight is aborted
+ */
+export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => void): IActor & {sendAsync: Mock} {
+    return {
+        sendAsync: vi.fn(<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> => {
+            if (shouldAbort?.()) return Promise.reject('aborted by test');
+
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    const response = message.type === MessageType.getImages ? fakeImages : fakeGlyphs;
+                    resolve(response as RequestResponseMessageMap[T][1]);
+                }, 100);
+
+                abortController?.signal.addEventListener('abort', () => {
+                    clearTimeout(timeout);
+                    onAbort?.();
+                    if (shouldAbort) reject('aborted by abortController');
+                });
+            });
+        })
+    };
 }

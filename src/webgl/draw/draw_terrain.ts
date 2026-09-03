@@ -1,0 +1,67 @@
+import {StencilMode} from '../stencil_mode.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {terrainUniformValues, terrainDepthUniformValues} from '../program/terrain_program.ts';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Tile} from '../../tile/tile.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {ColorMode} from '../color_mode.ts';
+import {type Terrain} from '../../render/terrain.ts';
+
+/**
+ * Redraw the Depth Framebuffer
+ * @param painter - the painter
+ * @param terrain - the terrain
+ */
+function drawDepth(painter: Painter, terrain: Terrain): void {
+    const context = painter.context;
+    const gl = context.gl;
+    const tr = painter.transform;
+    const colorMode = ColorMode.unblended;
+    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
+    const tiles = terrain.tileManager.getRenderableTiles();
+    const program = painter.useProgram('terrainDepth');
+    context.bindFramebuffer.set(terrain.getFramebuffer().framebuffer);
+    context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
+    context.clear({color: Color.white, depth: 1});
+    for (const tile of tiles) {
+        const mesh = terrain.getTerrainMesh(tile.tileID);
+        const terrainData = terrain.getTerrainData(tile.tileID);
+        const projectionData = tr.getProjectionData({overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true});
+        const uniformValues = terrainDepthUniformValues(terrain.getSkirtLength(tr.zoom));
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    }
+    context.bindFramebuffer.set(null);
+    context.viewport.set([0, 0, painter.width, painter.height]);
+}
+
+function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions): void {
+    const {isRenderingGlobe} = renderOptions;
+    const context = painter.context;
+    const gl = context.gl;
+    const tr = painter.transform;
+    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = painter.getDepthModeFor3D();
+    const program = painter.useProgram('terrain');
+
+    context.bindFramebuffer.set(null);
+    context.viewport.set([0, 0, painter.width, painter.height]);
+
+    for (const tile of tiles) {
+        const mesh = terrain.getTerrainMesh(tile.tileID);
+        const texture = painter.renderToTexture.getTexture(tile);
+        const terrainData = terrain.getTerrainData(tile.tileID);
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+        const eleDelta = terrain.getSkirtLength(tr.zoom);
+        const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
+        const projectionData = tr.getProjectionData({overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true});
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    }
+}
+
+export {
+    drawTerrain,
+    drawDepth
+};

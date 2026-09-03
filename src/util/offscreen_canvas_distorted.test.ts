@@ -1,7 +1,7 @@
 import {test, expect, vi, describe, beforeEach} from 'vitest';
-import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
 import {Canvas} from 'canvas';
-import {offscreenCanvasSupported} from './offscreen_canvas_supported';
+import {offscreenCanvasSupported} from './offscreen_canvas_supported.ts';
 
 describe('Offscreen canvas', () => {
     let OffscreenCanvasMock: any;

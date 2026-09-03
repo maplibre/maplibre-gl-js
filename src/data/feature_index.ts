@@ -1,30 +1,32 @@
-import type Point from '@mapbox/point-geometry';
-import {loadGeometry} from './load_geometry';
-import {toEvaluationFeature} from './evaluation_feature';
-import {EXTENT} from './extent';
-import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import {TransferableGridIndex} from '../util/transferable_grid_index';
-import {DictionaryCoder} from '../util/dictionary_coder';
-import Protobuf from 'pbf';
-import {GeoJSONFeature} from '../util/vectortile_to_geojson';
-import {mapObject, extend} from '../util/util';
-import {register} from '../util/web_worker_transfer';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {polygonIntersectsBox} from '../util/intersection_tests';
-import {PossiblyEvaluated} from '../style/properties';
-import {FeatureIndexArray} from './array_types.g';
-
-import {MLTVectorTile} from '../source/vector_tile_mlt';
-import {Bounds} from '../geo/bounds';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {SourceFeatureState} from '../source/source_state';
-import type {mat4} from 'gl-matrix';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {StyleLayer} from '../style/style_layer';
-import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../geo/transform_interface';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
+import {loadGeometry} from './load_geometry.ts';
+import {toEvaluationFeature} from './evaluation_feature.ts';
+import {EXTENT} from './extent.ts';
+import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
+import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
+import {DictionaryCoder} from '../util/dictionary_coder.ts';
+import {PbfReader} from 'pbf';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import {mapObject, extend} from '../util/util.ts';
+import {register} from '../util/web_worker_transfer.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {polygonIntersectsBox} from '../util/intersection_tests.ts';
+import {PossiblyEvaluated} from '../style/properties.ts';
+import {FeatureIndexArray} from './array_types.g.ts';
+import {MLTVectorTile} from '../source/vector_tile_mlt.ts';
+import {Bounds} from '../geo/bounds.ts';
 import {VectorTile} from '@mapbox/vector-tile';
+
+import type Point from '@mapbox/point-geometry';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {SourceFeatureState} from '../source/source_state.ts';
+import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
+import type {mat4} from 'gl-matrix';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
@@ -33,14 +35,14 @@ type QueryParameters = {
     pixelPosMatrix: mat4;
     transform: IReadonlyTransform;
     tileSize: number;
-    queryGeometry: Array<Point>;
-    cameraQueryGeometry: Array<Point>;
+    queryGeometry: Point[];
+    cameraQueryGeometry: Point[];
     queryPadding: number;
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
-        availableImages?: Array<string>;
+        availableImages?: string[];
         globalState?: Record<string, any>;
     };
 };
@@ -67,9 +69,9 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: string;
+    encoding: TileEncoding;
     rawTileData: ArrayBuffer;
-    bucketLayerIDs: Array<Array<string>>;
+    bucketLayerIDs: string[][];
 
     vtLayers: {[_: string]: VectorTileLayerLike};
     sourceLayerCoder: DictionaryCoder;
@@ -85,18 +87,16 @@ export class FeatureIndex {
         this.promoteId = promoteId;
     }
 
-    insert(feature: VectorTileFeatureLike, geometry: Array<Array<Point>>, featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
+    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean): void {
         const key = this.featureIndexArray.length;
         this.featureIndexArray.emplaceBack(featureIndex, sourceLayerIndex, bucketIndex);
 
         const grid = is3D ? this.grid3D : this.grid;
 
-        for (let r = 0; r < geometry.length; r++) {
-            const ring = geometry[r];
+        for (const ring of geometry) {
 
             const bbox = [Infinity, Infinity, -Infinity, -Infinity];
-            for (let i = 0; i < ring.length; i++) {
-                const p = ring[i];
+            for (const p of ring) {
                 bbox[0] = Math.min(bbox[0], p.x);
                 bbox[1] = Math.min(bbox[1], p.y);
                 bbox[2] = Math.max(bbox[2], p.x);
@@ -114,9 +114,14 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(this.rawTileData)).layers
-                : new MLTVectorTile(this.rawTileData).layers;
+            switch (this.encoding) {
+                case 'mlt':
+                    this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
+                    break;
+                case 'mvt':
+                default:
+                    this.vtLayers = new VectorTile(new PbfReader(this.rawTileData)).layers;
+            }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
         return this.vtLayers;
@@ -133,7 +138,7 @@ export class FeatureIndex {
 
         const params = args.params;
         const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
-        const filter = featureFilter(params.filter, params.globalState);
+        const filter = featureFilter(params.filter, 'queryRenderedFeatures filter', params.globalState);
 
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
@@ -156,8 +161,7 @@ export class FeatureIndex {
 
         const result: QueryResults = {};
         let previousIndex;
-        for (let k = 0; k < matching.length; k++) {
-            const index = matching[k];
+        for (const index of matching) {
 
             // don't check the same feature more than once
             if (index === previousIndex) continue;
@@ -177,9 +181,7 @@ export class FeatureIndex {
                 serializedLayers,
                 sourceFeatureState,
                 (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
-                    if (!featureGeometry) {
-                        featureGeometry = loadGeometry(feature);
-                    }
+                    featureGeometry ||= loadGeometry(feature);
 
                     return styleLayer.queryIntersectsFeature({
                         queryGeometry,
@@ -207,7 +209,7 @@ export class FeatureIndex {
         featureIndex: number,
         filter: FeatureFilter,
         filterLayerIDs: Set<string> | undefined,
-        availableImages: Array<string>,
+        availableImages: string[],
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
         sourceFeatureState?: SourceFeatureState,
@@ -216,7 +218,7 @@ export class FeatureIndex {
             styleLayer: StyleLayer,
             featureState: any,
             id: string | number | void
-        ) => boolean | number) {
+        ) => boolean | number): void {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
         if (filterLayerIDs && !layerIDs.some(id => filterLayerIDs.has(id)))
@@ -237,8 +239,7 @@ export class FeatureIndex {
 
         const id = this.getId(feature, sourceLayerName);
 
-        for (let l = 0; l < layerIDs.length; l++) {
-            const layerID = layerIDs[l];
+        for (const layerID of layerIDs) {
 
             if (filterLayerIDs && !filterLayerIDs.has(layerID)) {
                 continue;
@@ -277,7 +278,7 @@ export class FeatureIndex {
 
     // Given a set of symbol indexes that have already been looked up,
     // return a matching set of GeoJSONFeatures
-    lookupSymbolFeatures(symbolFeatureIndexes: Array<number>,
+    lookupSymbolFeatures(symbolFeatureIndexes: number[],
         serializedLayers: {[_: string]: StyleLayer},
         bucketIndex: number,
         sourceLayerIndex: number,
@@ -286,12 +287,12 @@ export class FeatureIndex {
             globalState: Record<string, any>;
         },
         filterLayerIDs: Set<string> | null,
-        availableImages: Array<string>,
+        availableImages: string[],
         styleLayers: {[_: string]: StyleLayer}): QueryResults {
         const result: QueryResults = {};
         this.loadVTLayers();
 
-        const filter = featureFilter(filterParams.filterSpec, filterParams.globalState);
+        const filter = featureFilter(filterParams.filterSpec, 'queryRenderedFeatures symbol filter', filterParams.globalState);
 
         for (const symbolFeatureIndex of symbolFeatureIndexes) {
             this.loadMatchingFeature(
@@ -310,7 +311,7 @@ export class FeatureIndex {
         return result;
     }
 
-    hasLayer(id: string) {
+    hasLayer(id: string): boolean {
         for (const layerIDs of this.bucketLayerIDs) {
             for (const layerID of layerIDs) {
                 if (id === layerID) return true;
@@ -342,13 +343,41 @@ register(
     {omit: ['rawTileData', 'sourceLayerCoder']}
 );
 
-function evaluateProperties(serializedProperties, styleLayerProperties, feature, featureState, availableImages) {
-    return mapObject(serializedProperties, (property, key) => {
-        const prop = styleLayerProperties instanceof PossiblyEvaluated ? styleLayerProperties.get(key) : null;
-        return prop && prop.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
+/**
+ * Whether a possibly-evaluated property still has to be evaluated against a feature, as a
+ * data-driven one does.
+ *
+ * A data-constant property is already the value it will be drawn with, and that value is often a
+ * primitive -- `'map'` for an alignment, a number for an opacity -- which the `in` operator throws
+ * on, so it is not reached for until the value is known to be an object.
+ */
+function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValue<unknown> {
+    return typeof value === 'object' && value !== null && 'evaluate' in value;
+}
+
+/**
+ * Evaluates a serialized layer's paint or layout properties against one feature, so that a queried
+ * feature reports the values it was actually drawn with.
+ *
+ * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
+ * value, is passed through as it is.
+ */
+
+function evaluateProperties<Props, PossiblyEvaluatedProps>(
+    serializedProperties: Record<string, unknown>,
+    styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
+    feature: Feature,
+    featureState: FeatureState,
+    availableImages: string[]
+): Record<string, unknown> {
+    return mapObject(serializedProperties, (_property, key) => {
+        const value = styleLayerProperties instanceof PossiblyEvaluated ?
+            styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
+            null;
+        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
     });
 }
 
-function topDownFeatureComparator(a, b) {
+function topDownFeatureComparator(a: number, b: number) {
     return b - a;
 }

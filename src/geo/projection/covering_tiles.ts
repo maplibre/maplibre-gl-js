@@ -1,13 +1,13 @@
-import {OverscaledTileID} from '../../tile/tile_id';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec4} from 'gl-matrix';
-import {MercatorCoordinate} from '../mercator_coordinate';
-import {degreesToRadians, scaleZoom} from '../../util/util';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 
-import type {IReadonlyTransform} from '../transform_interface';
-import type {Terrain} from '../../render/terrain';
-import type {Frustum} from '../../util/primitives/frustum';
-import {maxMercatorHorizonAngle} from './mercator_utils';
-import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume';
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {Terrain} from '../../render/terrain.ts';
+import type {Frustum} from '../../util/primitives/frustum.ts';
+import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
+import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -100,7 +100,7 @@ export function isTileVisible(frustum: Frustum, tileBoundingVolume: IBoundingVol
 /**
  * Definite integral of cos(x)^p. The analytical solution is described in `developer-guides/covering-tiles.md`,
  * but here the integral is evaluated numerically.
- * @param p - the power to raise cos(x) to inside the itegral
+ * @param p - the power to raise cos(x) to inside the integral
  * @param x1 - the starting point of the integral.
  * @param x2 - the ending point of the integral.
  * @return the integral of cos(x)^p from x=x1 to x=x2
@@ -169,6 +169,40 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
 }
 
 /**
+ * Without terrain, `getTileBoundingVolume` has no knowledge of extruded features
+ * (eg. 3D buildings): every tile's bounding box is flat at the camera's `elevation`.
+ * That's a fine approximation of what's visible for most views, but it breaks down
+ * as the frustum's bottom edge approaches horizontal (which depends on both `pitch`
+ * and `fov`, not pitch alone) - a tall building can still be poking up into view
+ * long after its tile's ground point has dropped out of the frustum.
+ *
+ * This is an assumed upper bound on real-world feature height (in metres), used to
+ * grow the elevation used for tile culling as that bottom edge nears horizontal, so
+ * such tiles are not dropped too early. It has no effect away from that edge case.
+ */
+const ASSUMED_MAX_FEATURE_HEIGHT_METERS = 500;
+
+/**
+ * Angle between the frustum's bottom edge and the mercator horizon below which
+ * the culling elevation starts to grow.
+ */
+const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
+
+/**
+ * Returns the elevation to use when computing tile bounding volumes for culling:
+ * `transform.elevation`, growing by up to `ASSUMED_MAX_FEATURE_HEIGHT_METERS` as
+ * the frustum's bottom edge approaches the horizon, where a ground-level bounding
+ * box would cull tiles whose extruded features are still visible.
+ */
+function getElevationForTileCulling(transform: IReadonlyTransform): number {
+    const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;
+    const proximityToHorizon = clamp(
+        (TILE_CULLING_HORIZON_ONSET_DEGREES - bottomEdgeDegreesAboveHorizontal) / TILE_CULLING_HORIZON_ONSET_DEGREES,
+        0, 1);
+    return transform.elevation + proximityToHorizon * ASSUMED_MAX_FEATURE_HEIGHT_METERS;
+}
+
+/**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
  * @param transform - The transform instance.
@@ -183,9 +217,9 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
 export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     const frustum = transform.getCameraFrustum();
     const plane = transform.getClippingPlane();
-    const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
+    const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
-    cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
+    const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
     
@@ -212,8 +246,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     };
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<CoveringTilesStackEntry> = [];
-    const result: Array<CoveringTilesResult> = [];
+    const stack: CoveringTilesStackEntry[] = [];
+    const result: CoveringTilesResult[] = [];
 
     if (transform.renderWorldCopies && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides
@@ -231,7 +265,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         const y = it.y;
         let fullyVisible = it.fullyVisible;
         const tileID = {x, y, z: it.zoom};
-        const boundingVolume = detailsProvider.getTileBoundingVolume(tileID, it.wrap, transform.elevation, options);
+        const boundingVolume = detailsProvider.getTileBoundingVolume(tileID, it.wrap, elevationForTileCulling, options);
 
         // Visibility of a tile is not required if any of its ancestor is fully visible
         if (!fullyVisible) {

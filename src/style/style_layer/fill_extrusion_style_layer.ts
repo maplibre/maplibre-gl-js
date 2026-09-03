@@ -1,15 +1,15 @@
-import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 
-import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket';
-import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
-import {translateDistance, translate} from '../query_utils';
-import properties, {type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g';
-import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
+import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
+import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
+import {translateDistance, translate} from '../query_utils.ts';
+import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
+import {type Layout, type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties.ts';
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {BucketParameters} from '../../data/bucket';
-import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
+import type {BucketParameters} from '../../data/bucket.ts';
+import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
 
 export class Point3D extends Point {
     z: number;
@@ -18,6 +18,9 @@ export class Point3D extends Point {
 export const isFillExtrusionStyleLayer = (layer: StyleLayer): layer is FillExtrusionStyleLayer => layer.type === 'fill-extrusion';
 
 export class FillExtrusionStyleLayer extends StyleLayer {
+    _unevaluatedLayout: Layout<FillExtrusionLayoutProps>;
+    layout: PossiblyEvaluated<FillExtrusionLayoutProps, FillExtrusionLayoutPropsPossiblyEvaluated>;
+
     _transitionablePaint: Transitionable<FillExtrusionPaintProps>;
     _transitioningPaint: Transitioning<FillExtrusionPaintProps>;
     paint: PossiblyEvaluated<FillExtrusionPaintProps, FillExtrusionPaintPropsPossiblyEvaluated>;
@@ -26,7 +29,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>) {
+    createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>): FillExtrusionBucket {
         return new FillExtrusionBucket(parameters);
     }
 
@@ -69,7 +72,7 @@ function dot(a, b) {
     return a.x * b.x + a.y * b.y;
 }
 
-export function getIntersectionDistance(projectedQueryGeometry: Array<Point3D>, projectedFace: Array<Point3D>) {
+export function getIntersectionDistance(projectedQueryGeometry: Point3D[], projectedFace: Point3D[]): number {
 
     if (projectedQueryGeometry.length === 1) {
         // For point queries calculate the z at which the point intersects the face
@@ -132,7 +135,7 @@ export function getIntersectionDistance(projectedQueryGeometry: Array<Point3D>, 
     }
 }
 
-function checkIntersection(projectedBase: Array<Array<Point3D>>, projectedTop: Array<Array<Point3D>>, projectedQueryGeometry: Array<Point3D>) {
+function checkIntersection(projectedBase: Point3D[][], projectedTop: Point3D[][], projectedQueryGeometry: Point3D[]) {
     let closestDistance = Infinity;
 
     if (polygonIntersectsMultiPolygon(projectedQueryGeometry, projectedTop)) {
@@ -164,9 +167,9 @@ function checkIntersection(projectedBase: Array<Array<Point3D>>, projectedTop: A
  * different points can only be done once. This produced a measurable
  * performance improvement.
  */
-function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: number, m: mat4): [Array<Array<Point3D>>, Array<Array<Point3D>>] {
-    const projectedBase = [] as Array<Array<Point3D>>;
-    const projectedTop = [] as Array<Array<Point3D>>;
+function projectExtrusion(geometry: Point[][], zBase: number, zTop: number, m: mat4): [Point3D[][], Point3D[][]] {
+    const projectedBase = [] as Point3D[][];
+    const projectedTop = [] as Point3D[][];
     const baseXZ = m[8] * zBase;
     const baseYZ = m[9] * zBase;
     const baseZZ = m[10] * zBase;
@@ -177,8 +180,8 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     const topWZ = m[11] * zTop;
 
     for (const r of geometry) {
-        const ringBase = [] as Array<Point3D>;
-        const ringTop = [] as Array<Point3D>;
+        const ringBase = [] as Point3D[];
+        const ringTop = [] as Point3D[];
         for (const p of r) {
             const x = p.x;
             const y = p.y;
@@ -212,7 +215,7 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     return [projectedBase, projectedTop];
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, z: number) {
+function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
         const v = [p.x, p.y, z, 1] as vec4;

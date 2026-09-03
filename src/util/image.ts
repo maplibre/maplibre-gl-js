@@ -1,5 +1,5 @@
 import {type Color} from '@maplibre/maplibre-gl-style-spec';
-import {register} from './web_worker_transfer';
+import {register} from './web_worker_transfer.ts';
 
 export type Size = {
     width: number;
@@ -94,22 +94,22 @@ export class AlphaImage {
         createImage(this, size, 1, data);
     }
 
-    resize(size: Size) {
+    resize(size: Size): void {
         resizeImage(this, size, 1);
     }
 
-    clone() {
+    clone(): AlphaImage {
         return new AlphaImage({width: this.width, height: this.height}, new Uint8Array(this.data));
     }
 
-    static copy(srcImg: AlphaImage, dstImg: AlphaImage, srcPt: Point2D, dstPt: Point2D, size: Size) {
+    static copy(srcImg: AlphaImage, dstImg: AlphaImage, srcPt: Point2D, dstPt: Point2D, size: Size): void {
         copyImage(srcImg, dstImg, srcPt, dstPt, size, 1);
     }
 }
 
 /**
  * An object to store image data not premultiplied, because ImageData is not premultiplied.
- * UNPACK_PREMULTIPLY_ALPHA_WEBGL must be used when uploading to a texture.
+ * Premultiplication is applied in JS before uploading to a texture.
  */
 export class RGBAImage {
     width: number;
@@ -124,11 +124,11 @@ export class RGBAImage {
         createImage(this, size, 4, data);
     }
 
-    resize(size: Size) {
+    resize(size: Size): void {
         resizeImage(this, size, 4);
     }
 
-    replace(data: Uint8Array | Uint8ClampedArray, copy?: boolean) {
+    replace(data: Uint8Array | Uint8ClampedArray, copy?: boolean): void {
         if (copy) {
             this.data.set(data);
         } else if (data instanceof Uint8ClampedArray) {
@@ -138,21 +138,34 @@ export class RGBAImage {
         }
     }
 
-    clone() {
+    clone(): RGBAImage {
         return new RGBAImage({width: this.width, height: this.height}, new Uint8Array(this.data));
     }
 
-    static copy(srcImg: RGBAImage | ImageData, dstImg: RGBAImage, srcPt: Point2D, dstPt: Point2D, size: Size) {
+    static copy(srcImg: RGBAImage | ImageData, dstImg: RGBAImage, srcPt: Point2D, dstPt: Point2D, size: Size): void {
         copyImage(srcImg, dstImg, srcPt, dstPt, size, 4);
     }
 
-    setPixel(row: number, col: number, value: Color) {
+    setPixel(row: number, col: number, value: Color): void {
         const rLocation = (row * this.width + col) * 4;
         this.data[rLocation + 0] = Math.round(value.r * 255 / value.a);
         this.data[rLocation + 1] = Math.round(value.g * 255 / value.a);
         this.data[rLocation + 2] = Math.round(value.b * 255 / value.a);
         this.data[rLocation + 3] = Math.round(value.a * 255);
     }
+}
+
+/** Returns a copy of RGBA data with premultiplied alpha. */
+export function premultiplyAlpha(data: Uint8Array): Uint8Array {
+    const out = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i += 4) {
+        const a = data[i + 3];
+        out[i + 0] = Math.round(data[i + 0] * a / 255);
+        out[i + 1] = Math.round(data[i + 1] * a / 255);
+        out[i + 2] = Math.round(data[i + 2] * a / 255);
+        out[i + 3] = a;
+    }
+    return out;
 }
 
 register('AlphaImage', AlphaImage);

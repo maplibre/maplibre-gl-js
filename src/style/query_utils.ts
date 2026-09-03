@@ -1,12 +1,12 @@
 import Point from '@mapbox/point-geometry';
+import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
 
-import type {PossiblyEvaluatedPropertyValue} from './properties';
-import type {StyleLayer} from '../style/style_layer';
-import type {CircleBucket} from '../data/bucket/circle_bucket';
-import type {LineBucket} from '../data/bucket/line_bucket';
-import {polygonIntersectsBufferedPoint} from '../util/intersection_tests';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {UnwrappedTileID} from '../tile/tile_id';
+import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
+import type {LineBucket} from '../data/bucket/line_bucket.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
 
 export function getMaximumPaintValue(
     property: string,
@@ -21,7 +21,7 @@ export function getMaximumPaintValue(
     }
 }
 
-export function translateDistance(translate: [number, number]) {
+export function translateDistance(translate: [number, number]): number {
     return Math.sqrt(translate[0] * translate[0] + translate[1] * translate[1]);
 }
 
@@ -35,7 +35,7 @@ export function translateDistance(translate: [number, number]) {
  * @param pixelsToTileUnits - The scale factor from pixels to tile units
  * @returns the translated geometry in tile coordinates
  */
-export function translate(queryGeometry: Array<Point>,
+export function translate(queryGeometry: Point[],
     translate: [number, number],
     translateAnchor: 'viewport' | 'map',
     bearing: number,
@@ -50,8 +50,7 @@ export function translate(queryGeometry: Array<Point>,
     }
 
     const translated: Point[] = [];
-    for (let i = 0; i < queryGeometry.length; i++) {
-        const point = queryGeometry[i];
+    for (const point of queryGeometry) {
         translated.push(point.sub(pt));
     }
     return translated;
@@ -60,8 +59,8 @@ export function translate(queryGeometry: Array<Point>,
 /**
  * Filter out consecutive duplicate points from a line
  */
-function _stripDuplicates(ring: Array<Point>): Array<Point> {
-    const filteredRing: Array<Point> = [];
+function _stripDuplicates(ring: Point[]): Point[] {
+    const filteredRing: Point[] = [];
     for (let index = 0; index < ring.length; index++) {
         const point = ring[index];
         const prevPoint = filteredRing.at(-1);
@@ -72,11 +71,11 @@ function _stripDuplicates(ring: Array<Point>): Array<Point> {
     return filteredRing;
 }
 
-export function offsetLine(rings: Array<Array<Point>>, offset: number) {
-    const newRings: Array<Array<Point>> = [];
-    for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
-        const ring = _stripDuplicates(rings[ringIndex]);
-        const newRing: Array<Point> = [];
+export function offsetLine(rings: Point[][], offset: number): Point[][] {
+    const newRings: Point[][] = [];
+    for (const rawRing of rings) {
+        const ring = _stripDuplicates(rawRing);
+        const newRing: Point[] = [];
         for (let index = 0; index < ring.length; index++) {
             const point = ring[index];
             const prevPoint = ring[index - 1];
@@ -99,11 +98,11 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
 }
 
 type CircleIntersectionTestParams = {
-    queryGeometry: Array<Point>;
+    queryGeometry: Point[];
     size: number;
     transform: IReadonlyTransform;
     unwrappedTileID: UnwrappedTileID;
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
     pitchAlignment?: 'map' | 'viewport';
     pitchScale?: 'map' | 'viewport';
 };
@@ -113,13 +112,13 @@ function intersectionTestMapMap({queryGeometry, size}: CircleIntersectionTestPar
 }
 
 function intersectionTestMapViewport({queryGeometry, size, transform, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
-    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
+    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (w / transform.cameraToCenterDistance);
     return polygonIntersectsBufferedPoint(queryGeometry, point, adjustedSize);
 }
 
 function intersectionTestViewportMap({queryGeometry, size, transform, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
-    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
+    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (transform.cameraToCenterDistance / w);
     return polygonIntersectsBufferedPoint(queryGeometry, projectPoint(point, transform, unwrappedTileID, getElevation), adjustedSize);
 }
@@ -136,7 +135,7 @@ export function circleIntersection({
     getElevation,
     pitchAlignment = 'map',
     pitchScale = 'map'
-}: CircleIntersectionTestParams, geometry): boolean {
+}: CircleIntersectionTestParams, geometry: Point[][]): boolean {
     const intersectionTest = pitchAlignment === 'map'
         ? (pitchScale === 'map' ? intersectionTestMapMap : intersectionTestMapViewport)
         : (pitchScale === 'map' ? intersectionTestViewportMap : intersectionTestViewportViewport);
@@ -152,18 +151,17 @@ export function circleIntersection({
     return false;
 }
 
-function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point {
+function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point {
     // Convert `tilePoint` from tile coordinates to clip coordinates.
-    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
+    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation?.(tilePoint.x, tilePoint.y)).point;
     // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
-    const pixelPoint = new Point(
+    return new Point(
         (clipPoint.x * 0.5 + 0.5) * transform.width,
         (-clipPoint.y * 0.5 + 0.5) * transform.height
     );
-    return pixelPoint;
 }
 
-export function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {
+export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point[] {
     return queryGeometry.map((p) => {
         return projectPoint(p, transform, unwrappedTileID, getElevation);
     });

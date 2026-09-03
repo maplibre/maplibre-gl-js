@@ -1,18 +1,12 @@
 import {beforeEach, describe, expect, test} from 'vitest';
-import {GlobeTransform} from './globe_transform';
-import {LngLat} from '../lng_lat';
-import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles';
-import {OverscaledTileID} from '../../tile/tile_id';
-import {MercatorTransform} from './mercator_transform';
-import {globeConstants} from './vertical_perspective_projection';
+import {GlobeTransform} from './globe_transform.ts';
+import {LngLat} from '../lng_lat.ts';
+import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {MercatorTransform} from './mercator_transform.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
-
-        beforeEach(() => {
-            // Force faster animations so we can use shorter sleeps when testing them
-            globeConstants.errorTransitionTimeSeconds = 0.1;
-        });
 
         test('zoomed out', () => {
             const transform = new GlobeTransform();
@@ -86,9 +80,11 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(6, 0, 6, 31, 31),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512),
+                new OverscaledTileID(10, 0, 10, 511, 513),
+                new OverscaledTileID(10, 0, 10, 512, 513),
             ]);
         });
-    
+
         test('pitched+rotated', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
@@ -112,6 +108,42 @@ describe('coveringTiles', () => {
             ]);
         });
     
+        test('tile zoom stays at the nominal zoom for a distant pitched camera', () => {
+            const transform = new GlobeTransform();
+            transform.resize(2560, 1265);
+            transform.setCenter(new LngLat(-140, -52));
+            transform.setZoom(5.66);
+            transform.setMaxPitch(60);
+            transform.setPitch(60);
+            transform.setFov(15);
+
+            const tiles = coveringTiles(transform, {tileSize: 512});
+            const nominalZ = coveringZoomLevel(transform, {tileSize: 512});
+            const levels = tiles.map(tile => tile.canonical.z);
+
+            expect(nominalZ).toBe(5);
+            expect(Math.max(...levels)).toBeLessThanOrEqual(nominalZ + 1);
+            expect(Math.min(...levels)).toBeLessThanOrEqual(nominalZ);
+        });
+
+        test('tile zoom stays at the nominal zoom for a distant camera with a narrow field of view', () => {
+            const transform = new GlobeTransform();
+            transform.resize(2560, 1265);
+            transform.setCenter(new LngLat(-140, 0));
+            transform.setZoom(5.5);
+            transform.setMaxPitch(60);
+            transform.setPitch(15);
+            transform.setFov(5);
+
+            const tiles = coveringTiles(transform, {tileSize: 512});
+            const nominalZ = coveringZoomLevel(transform, {tileSize: 512});
+            const levels = tiles.map(tile => tile.canonical.z);
+
+            expect(nominalZ).toBe(5);
+            expect(Math.max(...levels)).toBeLessThanOrEqual(nominalZ + 1);
+            expect(Math.min(...levels)).toBeLessThanOrEqual(nominalZ);
+        });
+
         test('antimeridian1', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
@@ -261,24 +293,127 @@ describe('coveringTiles', () => {
             ]);
         });
 
-        test('nonzero center elevation', () => {
-            const options = {
-                minzoom: 1,
-                maxzoom: 15,
-                tileSize: 512,
-                reparseOverscaled: true
-            };
-        
-            const transform = new GlobeTransform();
-            transform.resize(128, 128);
-            transform.setZoom(11);
-            transform.setCenter(new LngLat(0.021, 0.0915));
-            transform.setElevation(20000);
+        describe('nonzero center elevation', () => {
+            test('looking down', () => {
+                const options = {
+                    minzoom: 1,
+                    maxzoom: 15,
+                    tileSize: 512,
+                    reparseOverscaled: true
+                };
 
-            expect(coveringTiles(transform, options)).toEqual([
-                new OverscaledTileID(11, 0, 11, 1024, 1023),
-                new OverscaledTileID(11, 0, 11, 1023, 1023)
-            ]);
+                const transform = new GlobeTransform();
+                transform.resize(128, 128);
+                transform.setZoom(11);
+                transform.setCenter(new LngLat(0.021, 0.0915));
+                transform.setElevation(20000);
+
+                expect(coveringTiles(transform, options)).toEqual([
+                    new OverscaledTileID(11, 0, 11, 1024, 1023),
+                    new OverscaledTileID(10, 0, 10, 511, 511),
+                ]);
+            });
+
+            describe('high pitch', () => {
+
+                test('bearing 0', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(0);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(11, 0, 11, 1023, 1023),
+                        new OverscaledTileID(11, 0, 11, 1024, 1022),
+                        new OverscaledTileID(11, 0, 11, 1023, 1022),
+                        new OverscaledTileID(12, 0, 12, 2048, 2046),
+                        new OverscaledTileID(12, 0, 12, 2048, 2047),
+                    ]);
+                });
+
+                test('bearing 90', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(90);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(11, 0, 11, 1024, 1023),
+                        new OverscaledTileID(9, 0, 9, 256, 256),
+                        new OverscaledTileID(12, 0, 12, 2047, 2046),
+                        new OverscaledTileID(12, 0, 12, 2047, 2047),
+                    ]);
+                });
+
+                test('bearing 180', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(180);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(11, 0, 11, 1023, 1023),
+                        new OverscaledTileID(8, 0, 8, 128, 128),
+                        new OverscaledTileID(8, 0, 8, 127, 128),
+                        new OverscaledTileID(12, 0, 12, 2048, 2046),
+                        new OverscaledTileID(12, 0, 12, 2048, 2047),
+                    ]);
+                });
+
+                test('bearing 270', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(270);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(10, 0, 10, 511, 511),
+                        new OverscaledTileID(9, 0, 9, 255, 256),
+                        new OverscaledTileID(12, 0, 12, 2048, 2046),
+                        new OverscaledTileID(12, 0, 12, 2048, 2047),
+                    ]);
+                });
+            });
         });
     });
 

@@ -1,13 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {type IReadonlyTransform, type ITransform} from '../transform_interface';
-import {type LngLat, type LngLatLike} from '../lng_lat';
-import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera';
-import {type PaddingOptions} from '../edge_insets';
-import {type LngLatBounds} from '../lng_lat_bounds';
-import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util';
+import {type IReadonlyTransform, type ITransform} from '../transform_interface.ts';
+import {type LngLat, type LngLatLike} from '../lng_lat.ts';
+import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera.ts';
+import {type PaddingOptions} from '../edge_insets.ts';
+import {type LngLatBounds} from '../lng_lat_bounds.ts';
+import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 
 export type MapControlsDeltas = {
     panDelta: Point;
@@ -16,6 +16,11 @@ export type MapControlsDeltas = {
     pitchDelta: number;
     rollDelta: number;
     around: Point;
+    /**
+     * Elevation in meters of the terrain under `around` at gesture start; when set,
+     * pan and zoom keep the terrain at this elevation under `around`.
+     */
+    aroundElevation?: number;
 };
 
 export type CameraForBoxAndBearingHandlerResult = {
@@ -58,7 +63,7 @@ export type FlyToHandlerOptions = {
 export type FlyToHandlerResult = {
     easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
     scaleOfZoom: number;
-    scaleOfMinZoom?: number;
+    scaleOfMinZoom: number;
     targetCenter: LngLat;
     pixelPathLength: number;
 };
@@ -93,7 +98,7 @@ export type UpdateRotationArgs = {
 /**
  * @internal
  */
-export function cameraBoundsWarning() {
+export function cameraBoundsWarning(): void {
     warnOnce(
         'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
     );
@@ -128,14 +133,14 @@ export interface ICameraHelper {
  * @internal
  * Set a transform's rotation to a value interpolated between startEulerAngles and endEulerAngles
  */
-export function updateRotation(args: UpdateRotationArgs) {
+export function updateRotation(args: UpdateRotationArgs): void {
     if (args.useSlerp) {
         // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
         // to the representation requested by the caller
         if (args.k < 1) {
             const startRotation = rollPitchBearingToQuat(args.startEulerAngles.roll, args.startEulerAngles.pitch, args.startEulerAngles.bearing);
             const endRotation = rollPitchBearingToQuat(args.endEulerAngles.roll, args.endEulerAngles.pitch, args.endEulerAngles.bearing);
-            const rotation: quat = new Float64Array(4) as any;
+            const rotation: quat = new Float64Array(4);
             quat.slerp(rotation, startRotation, endRotation, args.k);
             const eulerAngles = getRollPitchBearing(rotation);
             args.tr.setRoll(eulerAngles.roll);
@@ -211,11 +216,9 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
         nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
     );
 
-    const result = {
+    return {
         center,
         zoom,
         bearing
     };
-
-    return result;
 }

@@ -1,6 +1,8 @@
-import {createLayout} from '../util/struct_array';
+import {createLayout, type StructArrayLayout} from '../util/struct_array.ts';
 
-export default createLayout([
+const rasterBoundsAttributes: StructArrayLayout = createLayout([
     {name: 'a_pos', type: 'Int16', components: 2},
     {name: 'a_texture_pos', type: 'Int16', components: 2}
 ]);
+
+export default rasterBoundsAttributes;

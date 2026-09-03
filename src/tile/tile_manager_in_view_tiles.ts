@@ -1,12 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {type LayerFeatureStates} from '../source/source_state';
-import {type Tile} from './tile';
-import {compareTileId, type OverscaledTileID} from './tile_id';
+import {type LayerFeatureStates} from '../source/source_state.ts';
+import {type Tile} from './tile.ts';
+import {compareTileId, type OverscaledTileID} from './tile_id.ts';
+import type {Painter} from '../render/painter.ts';
 
 export class InViewTiles {
     private _tiles: Record<string, Tile> = {};
 
-    public handleWrapJump(wrapDelta: number) {
+    public handleWrapJump(wrapDelta: number): void {
         const tiles: Record<string, Tile> = {};
         for (const id in this._tiles) {
             const tile = this._tiles[id];
@@ -16,10 +17,10 @@ export class InViewTiles {
         this._tiles = tiles;
     }
 
-    public setFeatureState(featuresChanged: LayerFeatureStates, painter: any) {
+    public setFeatureState(featuresChanged: LayerFeatureStates, painter: Painter, revision: number): void {
         for (const id in this._tiles) {
             const tile = this._tiles[id];
-            tile.setFeatureState(featuresChanged, painter);
+            tile.setFeatureState(featuresChanged, painter, revision);
         }
     }
 
@@ -38,11 +39,11 @@ export class InViewTiles {
         return this._tiles[key];
     }
 
-    public setTile(key: string, tile: Tile) {
+    public setTile(key: string, tile: Tile): void {
         this._tiles[key] = tile;
     }
 
-    public deleteTileById(key: string) {
+    public deleteTileById(key: string): void {
         delete this._tiles[key];
     }
 
@@ -59,12 +60,12 @@ export class InViewTiles {
         return null;
     }
 
-    public isIdRenderable(id: string, symbolLayer: boolean = false) {
+    public isIdRenderable(id: string, symbolLayer: boolean = false): boolean {
         return this.getTileById(id)?.isRenderable(symbolLayer);
     }
 
-    public getRenderableIds(bearingInRadians: number = 0, symbolLayer?: boolean): Array<string> {
-        const renderables: Array<Tile> = [];
+    public getRenderableIds(bearingInRadians: number = 0, symbolLayer?: boolean): string[] {
+        const renderables: Tile[] = [];
         for (const id of this.getAllIds()) {
             if (this.isIdRenderable(id, symbolLayer)) {
                 renderables.push(this.getTileById(id));

@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util';
-import {extend} from '../../util/util';
-import {type EvaluationParameters} from '../../style/evaluation_parameters';
+import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util.ts';
+import {extend} from '../../util/util.ts';
+import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {MessageType} from '../../util/actor_messages';
+import {MessageType} from '../../util/actor_messages.ts';
 
 let server: FakeServer;
 
@@ -21,7 +21,7 @@ test('moveLayer', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -31,12 +31,12 @@ test('moveLayer', async () => {
             layers: [{
                 id: 'layerId1',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }, {
                 id: 'layerId2',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }]
         })
@@ -52,13 +52,13 @@ test('getLayer', async () => {
     const layer = {
         id: 'layerId',
         type: 'circle',
-        source: 'mapbox',
+        source: 'maplibre',
         'source-layer': 'sourceLayer'
     };
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -80,7 +80,7 @@ test('removeLayer restores Map.loaded() to true', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -90,7 +90,7 @@ test('removeLayer restores Map.loaded() to true', async () => {
             layers: [{
                 id: 'layerId',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }]
         })
@@ -98,7 +98,8 @@ test('removeLayer restores Map.loaded() to true', async () => {
 
     await map.once('render');
     map.removeLayer('layerId');
-    await waitForEvent(map, 'render', () => map.loaded());
+    await expect(waitForEvent(map, 'render', () => map.loaded())).resolves.toBeDefined();
+
     map.remove();
 });
 
@@ -158,7 +159,7 @@ describe('setLayoutProperty', () => {
         await map.once('style.load');
         map.style.dispatcher.broadcast = function (key, value: any) {
             expect(key).toBe(MessageType.updateLayers);
-            expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+            expect(value.layers.map((layer) => layer.id)).toEqual(['symbol']);
             return Promise.resolve({} as any);
         };
 
@@ -193,9 +194,9 @@ describe('setLayoutProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
+        map.setLayoutProperty('non-existent', 'text-transform', 'lowercase');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existent"./);
     });
 
     test('fires a data event', async () => {
@@ -348,9 +349,9 @@ describe('getLayoutProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.getLayoutProperty('non-existant', 'text-transform');
+        map.getLayoutProperty('non-existent', 'text-transform');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existent"./);
     });
 });
 
@@ -423,8 +424,8 @@ describe('setPaintProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.setPaintProperty('non-existant', 'background-color', 'red');
+        map.setPaintProperty('non-existent', 'background-color', 'red');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existent"./);
     });
 });

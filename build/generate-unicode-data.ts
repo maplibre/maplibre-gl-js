@@ -11,7 +11,7 @@ import * as regenerate from 'regenerate';
  */
 const unicodeVersion = '17.0.0';
 
-async function createSet(blocks: Array<string>, scripts: Array<string>): Promise<regenerate.regenerate> {
+async function createSet(blocks: string[], scripts: string[]): Promise<regenerate.regenerate> {
     const set = regenerate.default();
 
     for (const block of blocks) {
@@ -313,6 +313,61 @@ async function requiresComplexTextShaping(): Promise<string> {
     return set.toString();
 }
 
+/**
+ * Returns a character class matching every character that can take part in a grapheme cluster of
+ * more than one codepoint.
+ *
+ * These are the characters the grapheme break rules of UAX #29 join to their neighbours: combining
+ * marks, the joiners, the Hangul jamo that build a syllable, the regional indicators that pair into
+ * a flag, and the carriage return that pairs with a line feed. Text with none of them has one
+ * cluster per codepoint, and does not need segmenting at all.
+ */
+async function canFormGraphemeCluster(): Promise<string> {
+    const set = regenerate.default();
+    for (const category of ['CR', 'Extend', 'L', 'LV', 'LVT', 'Prepend', 'Regional_Indicator', 'SpacingMark', 'T', 'V', 'ZWJ']) {
+        set.add((await import(`@unicode/unicode-${unicodeVersion}/Grapheme_Cluster_Break/${category}/code-points.js`)).default);
+    }
+
+    return set.toString();
+}
+
+/**
+ * Returns a character class matching the scripts that do not put spaces between words.
+ *
+ * Text in these has no punctuation to break a line at, so the only way to wrap it is to ask the
+ * browser's word segmenter where the words are. Elsewhere the segmenter is the wrong tool: it
+ * isolates a comma as a word of its own, and a line must not begin with one.
+ */
+async function isWrittenWithoutSpaces(): Promise<string> {
+    const set = await createSet([], [
+        'Balinese',
+        'Javanese',
+        'Khmer',
+        'Lao',
+        'Myanmar',
+        'Thai',
+        'Tibetan',
+    ]);
+
+    return set.toString();
+}
+
+/**
+ * Returns a character class matching the characters that join the grapheme cluster they end to the
+ * one after it.
+ *
+ * An invisible stacker -- a virama and its equivalents in other scripts -- joins the consonant
+ * before it to the one after it, and a zero-width joiner does the same for emoji. `Intl.Segmenter`
+ * puts a cluster boundary after both, so the two halves have to be put back together.
+ */
+async function joinsToTheFollowingGrapheme(): Promise<string> {
+    const set = regenerate.default();
+    set.add((await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Invisible_Stacker/code-points.js`)).default);
+    set.add(0x200d);
+
+    return set.toString();
+}
+
 fs.writeFileSync('src/util/unicode_properties.g.ts',
     `// This file is generated. Edit build/generate-unicode-data.ts, then run \`npm run generate-unicode-data\`.
 
@@ -366,5 +421,33 @@ export function codePointHasNeutralVerticalOrientation(codePoint: number): boole
  */
 export function codePointRequiresComplexTextShaping(codePoint: number): boolean {
     return /${await requiresComplexTextShaping()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether the text could hold a grapheme cluster of more than one codepoint, and so is worth
+ * segmenting. A negative answer means every codepoint of it stands alone.
+ */
+export function textCanContainGraphemeClusters(text: string): boolean {
+    return /${await canFormGraphemeCluster()}/.test(text);
+}
+
+/**
+ * Returns whether the given codepoint belongs to a script that does not put spaces between words,
+ * and so can only be wrapped by asking the word segmenter where its words are.
+ */
+export function codePointIsWrittenWithoutSpaces(codePoint: number): boolean {
+    return /${await isWrittenWithoutSpaces()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether two grapheme clusters found by \`Intl.Segmenter\` are really one unit of writing,
+ * and so have to be measured and drawn as a whole.
+ *
+ * The segmenter follows the tailored rules CLDR uses for stepping a cursor through text, which put a
+ * boundary after an invisible stacker and before a spacing mark. Laying text out wants the untailored
+ * rules of UAX #29 instead: \`လ\`, \`ာ\` and \`း\` are one Burmese syllable, not three.
+ */
+export function canCombineGraphemes(former: string, latter: string): boolean {
+    return /(?:${await joinsToTheFollowingGrapheme()})$/.test(former) || /^\\p{gc=Mc}/u.test(latter);
 }
 `);

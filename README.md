@@ -16,10 +16,9 @@ It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox
 
 ## Getting Started
 
-Include the JavaScript and CSS files in the `<head>` of your HTML file.
+Include the CSS file in the `<head>` of your HTML file.
 
 ```html
-<script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
 <link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
 ```
 
@@ -27,8 +26,10 @@ Include the following code in the `<body>` of your HTML file.
 
 ```html
 <div id='map' style='width: 400px; height: 300px;'></div>
-<script>
-var map = new maplibregl.Map({
+<script type='module'>
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
   container: 'map',
   style: 'https://demotiles.maplibre.org/style.json', // stylesheet location
   center: [-74.5, 40], // starting position [lng, lat]
@@ -74,16 +75,6 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 > **MapLibre GL JS** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
-### Bounties
-
-We offer Bounties for some tasks in the MapLibre GL JS repo. Read more about the Bounties in our step-by-step guide:
-
-https://maplibre.org/jobs/step-by-step-bounties-guide/
-
-And find all currently published Bounties in MapLibre GL JS [here](https://github.com/maplibre/maplibre-gl-js/issues?q=is%3Aissue+is%3Aopen+label%3A%22%F0%9F%92%B0+bounty+L%22%2C%22%F0%9F%92%B0+bounty+S%22%2C%22%F0%9F%92%B0+bounty+M%22%2C%22%F0%9F%92%B0+bounty+XL%22%2C%22%F0%9F%92%B0+bounty+XXL%22+).
-
-<br />
-
 ## Sponsors
 
 We thank everyone who supported us financially in the past and special thanks to the people and organizations who support us with recurring donations!
@@ -93,6 +84,9 @@ Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponso
 Gold:
 
 <a href="https://www.microsoft.com/"><img src="https://maplibre.org/img/msft-logo.svg" alt="Logo MSFT" width="25%"/></a>
+
+<a href="https://aws.amazon.com/location"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
+
 
 Silver:
 
@@ -108,7 +102,9 @@ Silver:
 
 <a href="https://www.maptiler.com/"><img src="https://maplibre.org/img/maptiler-logo.svg" alt="Logo maptiler" width="25%"/></a>
 
-<a href="https://aws.amazon.com/location"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
+<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/caltopo-logo.svg" alt="Logo Caltopo" width="25%"/></a>
+
+<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/smartmaps-logo.svg" alt="Logo SmartMaps" width="25%"/></a>
 
 Backers and Supporters:
 

@@ -1,14 +1,15 @@
 /* eslint-disable key-spacing */
-import {RGBAImage} from '../util/image';
-import {register} from '../util/web_worker_transfer';
+import {RGBAImage} from '../util/image.ts';
+import {register} from '../util/web_worker_transfer.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 import potpack from 'potpack';
 
-import type {StyleImage} from '../style/style_image';
-import {type TextFit} from '../style/style_image';
-import type {ImageManager} from './image_manager';
-import type {Texture} from './texture';
-import type {Rect} from './glyph_atlas';
-import type {GetImagesResponse} from '../util/actor_messages';
+import type {StyleImage} from '../style/style_image.ts';
+import {type TextFit} from '../style/style_image.ts';
+import type {ImageManager} from './image_manager.ts';
+import type {Texture} from '../webgl/texture.ts';
+import type {Rect} from './glyph_atlas.ts';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 
 const IMAGE_PADDING: number = 1;
 export {IMAGE_PADDING};
@@ -17,6 +18,7 @@ export class ImagePosition {
     paddedRect: Rect;
     pixelRatio: number;
     version: number;
+    needsFirstWebGLRender: boolean;
     stretchY: Array<[number, number]>;
     stretchX: Array<[number, number]>;
     content: [number, number, number, number];
@@ -26,6 +28,7 @@ export class ImagePosition {
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
+        isWebGLImage = false,
         stretchX,
         stretchY,
         content,
@@ -38,6 +41,7 @@ export class ImagePosition {
         this.stretchY = stretchY;
         this.content = content;
         this.version = version;
+        this.needsFirstWebGLRender = isWebGLImage;
         this.textFitWidth = textFitWidth;
         this.textFitHeight = textFitHeight;
     }
@@ -56,7 +60,7 @@ export class ImagePosition {
         ];
     }
 
-    get tlbr(): Array<number> {
+    get tlbr(): number[] {
         return this.tl.concat(this.br);
     }
 
@@ -69,18 +73,29 @@ export class ImagePosition {
 }
 
 /**
- * A class holding all the images
+ * A single tile's packed copy of the icons and patterns its features reference, built in the
+ * worker so that the symbol layout can bake the positions within it straight into the vertex
+ * buffers. Each tile owns one, along with the texture it is uploaded to - as opposed to
+ * {@link ImageManager}, which owns the images of the whole style.
+ * @internal
  */
 export class ImageAtlas {
     image: RGBAImage;
-    iconPositions: {[_: string]: ImagePosition};
-    patternPositions: {[_: string]: ImagePosition};
-    haveRenderCallbacks: Array<string>;
+    iconPositions: Record<string, ImagePosition>;
+    patternPositions: Record<string, ImagePosition>;
+    haveRenderCallbacks: string[];
     uploaded: boolean;
+    /**
+     * The {@link ImageManager.updateVersion} this atlas' texture was last patched against.
+     * Starts out at `-1` so that a freshly transferred atlas always patches once: images may have
+     * been updated between the moment the worker snapshotted them and the moment the atlas arrives.
+     */
+    patchedUpdateVersion: number;
 
     constructor(icons: GetImagesResponse, patterns: GetImagesResponse) {
         const iconPositions = {}, patternPositions = {};
         this.haveRenderCallbacks = [];
+        this.patchedUpdateVersion = -1;
 
         const bins = [];
 
@@ -92,6 +107,7 @@ export class ImageAtlas {
 
         for (const id in icons) {
             const src = icons[id];
+            if (src.isWebGLImage) continue;
             const bin = iconPositions[id].paddedRect;
             RGBAImage.copy(src.data, image, {x: 0, y: 0}, {x: bin.x + IMAGE_PADDING, y: bin.y + IMAGE_PADDING}, src.data);
         }
@@ -117,7 +133,7 @@ export class ImageAtlas {
         this.patternPositions = patternPositions;
     }
 
-    addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Array<Rect>) {
+    addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Rect[]): void {
         for (const id in images) {
             const src = images[id];
             const bin = {
@@ -135,22 +151,52 @@ export class ImageAtlas {
         }
     }
 
-    patchUpdatedImages(imageManager: ImageManager, texture: Texture) {
+    /**
+     * Brings this atlas' texture back in sync with the images it was built from, re-uploading the
+     * ones that were replaced in the meantime.
+     *
+     * This runs for every in-view tile on every frame, so the common case of nothing having
+     * changed has to cost nothing: a single comparison against {@link ImageManager.updateVersion}
+     * ends the call. When something did change, only the images this atlas actually holds are
+     * looked at - a handful per tile - and {@link ImageAtlas.patchUpdatedImage} then skips the
+     * ones whose version still matches, leaving just the genuinely stale ones to upload.
+     *
+     * The render callbacks are dispatched first because they may update images themselves, and
+     * those updates have to be part of the version this call catches up with - otherwise an
+     * animated image would always be uploaded a frame late.
+     */
+    patchUpdatedImages(imageManager: ImageManager, texture: Texture): void {
         imageManager.dispatchRenderCallbacks(this.haveRenderCallbacks);
-        for (const name in imageManager.updatedImages) {
+
+        if (this.patchedUpdateVersion === imageManager.updateVersion) return;
+        this.patchedUpdateVersion = imageManager.updateVersion;
+
+        for (const name in this.iconPositions) {
             this.patchUpdatedImage(this.iconPositions[name], imageManager.getImage(name), texture);
+        }
+        for (const name in this.patternPositions) {
             this.patchUpdatedImage(this.patternPositions[name], imageManager.getImage(name), texture);
         }
     }
 
-    patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture) {
+    patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void {
         if (!position || !image) return;
 
-        if (position.version === image.version) return;
+        if (!position.needsFirstWebGLRender && position.version === image.version) return;
 
+        position.needsFirstWebGLRender = false;
         position.version = image.version;
         const [x, y] = position.tl;
-        texture.update(image.data, undefined, {x, y});
+        const data = image.userImage?.data;
+        if (!isStyleImageWebGLData(data)) {
+            texture.update(image.data, undefined, {x, y});
+            return;
+        }
+
+        const {width, height} = image.data;
+        texture.context.setCustomLayerDefaults();
+        data.renderWithWebGL({gl: texture.context.gl, texture: texture.texture, x, y, width, height});
+        texture.context.setDirty();
     }
 
 }

@@ -1,13 +1,13 @@
-import {type GetResourceResponse, getJSON} from '../util/ajax';
-import {ImageRequest} from '../util/image_request';
-import {ResourceType} from '../util/request_manager';
+import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
+import {ImageRequest} from '../util/image_request.ts';
+import {ResourceType} from '../util/request_manager.ts';
 
-import {browser} from '../util/browser';
-import {coerceSpriteToArray} from '../util/style';
+import {browser} from '../util/browser.ts';
+import {coerceSpriteToArray} from '../util/style.ts';
 
 import type {SpriteSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {SpriteJSON, StyleImage} from './style_image';
-import type {RequestManager} from '../util/request_manager';
+import type {SpriteJSON, StyleImage} from './style_image.ts';
+import type {RequestManager} from '../util/request_manager.ts';
 
 export type LoadSpriteResult = {
     [spriteName: string]: {
@@ -39,10 +39,10 @@ export async function loadSprite(
     const imagesMap: {[id: string]: Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>>} = {};
 
     for (const {id, url} of spriteArray) {
-        const jsonRequestParameters = requestManager.transformRequest(normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
+        const jsonRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
         jsonsMap[id] = getJSON<SpriteJSON>(jsonRequestParameters, abortController);
 
-        const imageRequestParameters = requestManager.transformRequest(normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
+        const imageRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
         imagesMap[id] = ImageRequest.getImage(imageRequestParameters, abortController);
     }
 
@@ -62,7 +62,11 @@ async function doOnceCompleted(
     for (const spriteName in jsonsMap) {
         result[spriteName] = {};
 
-        const context = browser.getImageCanvasContext((await imagesMap[spriteName]).data);
+        const image = (await imagesMap[spriteName]).data;
+        if (!image) {
+            throw new Error(`Could not load sprite image for ${spriteName}: the response is empty`);
+        }
+        const context = browser.getImageCanvasContext(image);
         const json = (await jsonsMap[spriteName]).data;
 
         for (const id in json) {

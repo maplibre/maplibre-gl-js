@@ -1,13 +1,13 @@
-import {type Tile} from './tile';
-import {type InViewTiles} from './tile_manager_in_view_tiles';
+import {type Tile} from './tile.ts';
+import {type InViewTiles} from './tile_manager_in_view_tiles.ts';
 
 /**
  * For raster terrain source, backfill DEM to eliminate visible tile boundaries
  */
-export function backfillDEM(tile: Tile, inViewTiles: InViewTiles) {
+export function backfillDEM(tile: Tile, inViewTiles: InViewTiles): void {
     const renderables = inViewTiles.getRenderableIds();
     for (const borderId of renderables) {
-        if (!tile.neighboringTiles || !tile.neighboringTiles[borderId]) {
+        if (!tile.neighboringTiles?.[borderId]) {
             continue;
         }
         const borderTile = inViewTiles.getTileById(borderId);
@@ -24,6 +24,7 @@ export function backfillDEM(tile: Tile, inViewTiles: InViewTiles) {
 function fillBorder(tile: Tile, borderTile: Tile) {
     tile.needsHillshadePrepare = true;
     tile.needsTerrainPrepare = true;
+    tile.needsColorReliefPrepare = true;
     let dx = borderTile.tileID.canonical.x - tile.tileID.canonical.x;
     const dy = borderTile.tileID.canonical.y - tile.tileID.canonical.y;
     const dim = Math.pow(2, tile.tileID.canonical.z);

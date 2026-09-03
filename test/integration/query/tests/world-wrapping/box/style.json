@@ -23,7 +23,7 @@
   ],
   "zoom": 0,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -35,7 +35,7 @@
     {
       "id": "countries",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "hillshade",
       "filter": [
         "==",

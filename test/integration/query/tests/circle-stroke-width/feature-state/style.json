@@ -10,7 +10,7 @@
                 ],
                 [
                   "setFeatureState",
-                  { "source": "mapbox", "id": 1},
+                  { "source": "maplibre", "id": 1},
                   { "big": true }
                 ],
                 [
@@ -24,7 +24,7 @@
         }
     },
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "geojson",
             "data": {
                 "type": "FeatureCollection",
@@ -59,7 +59,7 @@
         {
             "id": "circle",
             "type": "circle",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "circle-radius": 3,
                 "circle-stroke-width": ["case",

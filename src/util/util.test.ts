@@ -1,22 +1,36 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util.ts';
 import {Canvas} from 'canvas';
-import {OverscaledTileID} from '../tile/tile_id';
-import {expectToBeCloseToArray} from './test/util';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {expectToBeCloseToArray} from './test/util.ts';
 import {vec3, type vec4} from 'gl-matrix';
 
 describe('util', () => {
-    expect(easeCubicInOut(0)).toBe(0);
-    expect(easeCubicInOut(0.2)).toBe(0.03200000000000001);
-    expect(easeCubicInOut(0.5)).toBe(0.5);
-    expect(easeCubicInOut(1)).toBe(1);
-    expect(keysDifference({a: 1}, {})).toEqual(['a']);
-    expect(keysDifference({a: 1}, {a: 1})).toEqual([]);
-    expect(extend({a: 1}, {b: 2})).toEqual({a: 1, b: 2});
-    expect(pick({a: 1, b: 2, c: 3}, ['a', 'c'])).toEqual({a: 1, c: 3});
-    expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'] as any)).toEqual({a: 1, c: 3});
-    expect(typeof uniqueId() === 'number').toBeTruthy();
+    test('easeCubicInOut', () => {
+        expect(easeCubicInOut(0)).toBe(0);
+        expect(easeCubicInOut(0.2)).toBe(0.03200000000000001);
+        expect(easeCubicInOut(0.5)).toBe(0.5);
+        expect(easeCubicInOut(1)).toBe(1);
+    });
+
+    test('keysDifference', () => {
+        expect(keysDifference({a: 1}, {})).toEqual(['a']);
+        expect(keysDifference({a: 1}, {a: 1})).toEqual([]);
+    });
+
+    test('extend', () => {
+        expect(extend({a: 1}, {b: 2})).toEqual({a: 1, b: 2});
+    });
+
+    test('pick', () => {
+        expect(pick({a: 1, b: 2, c: 3}, ['a', 'c'])).toEqual({a: 1, c: 3});
+        expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'] as any)).toEqual({a: 1, c: 3});
+    });
+
+    test('uniqueId', () => {
+        expect(uniqueId()).toBeTypeOf('number');
+    });
 
     test('isPowerOfTwo', () => {
         expect(isPowerOfTwo(1)).toBe(true);
@@ -38,7 +52,7 @@ describe('util', () => {
         expect(nextPowerOfTwo(42)).toBe(64);
     });
 
-    test('nextPowerOfTwo', () => {
+    test('nextPowerOfTwo always returns a power of two', () => {
         expect(isPowerOfTwo(nextPowerOfTwo(1))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(2))).toBe(true);
         expect(isPowerOfTwo(nextPowerOfTwo(256))).toBe(true);
@@ -64,7 +78,7 @@ describe('util', () => {
 
     test('bezier', () => {
         const curve = bezier(0, 0, 0.25, 1);
-        expect(curve instanceof Function).toBeTruthy();
+        expect(curve).toBeInstanceOf(Function);
         expect(curve(0)).toBe(0);
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
@@ -72,7 +86,7 @@ describe('util', () => {
 
     test('mapObject', () => {
         expect.assertions(5);
-        expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
+        expect(mapObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
         expect(mapObject({map: 'box'}, (value, key, object) => {
             expect(value).toBe('box');
@@ -84,9 +98,9 @@ describe('util', () => {
 
     test('filterObject', () => {
         expect.assertions(6);
-        expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
+        expect(filterObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
-        filterObject({map: 'box'}, function(value, key, object) {
+        filterObject({map: 'box'}, function(this: Record<string, never>, value: string, key: string, object: Record<string, string>) {
             expect(value).toBe('box');
             expect(key).toBe('map');
             expect(object).toEqual({map: 'box'});
@@ -435,7 +449,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     test('ignore bad format', async () => {
         format = 'OTHER';
-        await expect(readImageUsingVideoFrame(canvas, 0, 0, 2, 2)).rejects.toThrow();
+        await expect(readImageUsingVideoFrame(canvas, 0, 0, 2, 2)).rejects.toThrow('Unrecognized format OTHER');
         expect(frame.close).toHaveBeenCalledTimes(1);
     });
 
@@ -590,7 +604,7 @@ describe('util getAngleDelta', () => {
         expect(getAngleDelta(lastPoint, currentPoint, center)).toBe(90);
     });
 
-    test('positive direction', () => {
+    test('negative direction', () => {
         const lastPoint = new Point(1, 0);
         const currentPoint = new Point(0, 1);
         const center = new Point(0, 0);
@@ -631,8 +645,8 @@ describe('threePlaneIntersection', () => {
     const precision = 10;
 
     function createPlane(origin: number[], direction: number[]): vec4 {
-        const normalized = vec3.normalize([] as any, direction as vec3);
-        const dist = vec3.dot(normalized, origin as vec3);
+        const normalized = vec3.normalize([], direction);
+        const dist = vec3.dot(normalized, origin);
         return [normalized[0], normalized[1], normalized[2], -dist];
     }
 

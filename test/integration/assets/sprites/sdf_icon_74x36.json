@@ -1,0 +1,11 @@
+{
+  "sdf": {
+    "x": 0,
+    "y": 0,
+    "width": 74,
+    "height": 36,
+    "pixelRatio": 1,
+    "sdf": true,
+    "content": [4, 4, 70, 32]
+  }
+}

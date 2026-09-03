@@ -1,8 +1,8 @@
 import {describe, expect, test} from 'vitest';
-import {FillLayoutArray, LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
-import {SegmentVector} from '../data/segment';
-import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
-import {type SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils';
+import {FillLayoutArray, LineIndexArray, TriangleIndexArray} from '../data/array_types.g.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {fillLargeMeshArrays} from './fill_large_mesh_arrays.ts';
+import {type SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils.ts';
 
 describe('fillArrays', () => {
     test('Mesh comparison works', () => {
@@ -315,7 +315,7 @@ function createMeshBuffers(): MeshBuffers {
  * Creates a mesh the geometry of which is a merge of the specified input meshes,
  * useful for comparing the result of using {@link fillLargeMeshArrays} on several meshes.
  */
-function mergeMeshes(meshes: Array<SimpleMesh>): SimpleMesh {
+function mergeMeshes(meshes: SimpleMesh[]): SimpleMesh {
     const result: SimpleMesh = {
         vertices: [],
         indicesTriangles: [],

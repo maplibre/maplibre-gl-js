@@ -1,42 +1,11 @@
-import {DataConstantProperty, type PossiblyEvaluated, Properties, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties';
-import {Evented} from '../util/evented';
-import {EvaluationParameters} from './evaluation_parameters';
-import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
-import {extend} from '../util/util';
-import {type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {type Mesh} from '../render/mesh';
-import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {StyleSetterOptions} from './style';
-
-type SkyProps = {
-    'sky-color': DataConstantProperty<Color>;
-    'horizon-color': DataConstantProperty<Color>;
-    'fog-color': DataConstantProperty<Color>;
-    'fog-ground-blend': DataConstantProperty<number>;
-    'horizon-fog-blend': DataConstantProperty<number>;
-    'sky-horizon-blend': DataConstantProperty<number>;
-    'atmosphere-blend': DataConstantProperty<number>;
-};
-
-type SkyPropsPossiblyEvaluated = {
-    'sky-color': Color;
-    'horizon-color': Color;
-    'fog-color': Color;
-    'fog-ground-blend': number;
-    'horizon-fog-blend': number;
-    'sky-horizon-blend': number;
-    'atmosphere-blend': number;
-};
-
-const properties: Properties<SkyProps> = new Properties({
-    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification),
-    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification),
-    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification),
-    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification),
-    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification),
-    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification),
-    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification)
-});
+import {type PossiblyEvaluated, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
+import {Evented} from '../util/evented.ts';
+import {EvaluationParameters} from './evaluation_parameters.ts';
+import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
+import {getProperties, type SkyProps, type SkyPropsPossiblyEvaluated} from './sky_properties.g.ts';
+import type {Mesh} from '../render/mesh.ts';
+import type {SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSetterOptions} from './style.ts';
 
 export class Sky extends Evented {
     properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
@@ -49,26 +18,24 @@ export class Sky extends Evented {
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
-    constructor(sky?: SkySpecification) {
+    constructor(sky: SkySpecification | undefined, globalState: Record<string, any>) {
         super();
-        this._transitionable = new Transitionable(properties, undefined);
+        this._transitionable = new Transitionable(getProperties(), 'sky', globalState);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
     }
 
-    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
-        if (this._validate(validateSky, sky, options)) return;
+    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): void {
+        if (this._validate(validateStyle.sky, sky, options)) return;
 
-        if (!sky) {
-            sky = {
-                'sky-color': 'transparent',
-                'horizon-color': 'transparent',
-                'fog-color': 'transparent',
-                'fog-ground-blend': 1,
-                'atmosphere-blend': 0,
-            };
-        }
+        sky ||= {
+            'sky-color': 'transparent',
+            'horizon-color': 'transparent',
+            'fog-color': 'transparent',
+            'fog-ground-blend': 1,
+            'atmosphere-blend': 0,
+        };
 
         for (const name in sky) {
             const value = sky[name];
@@ -84,28 +51,20 @@ export class Sky extends Evented {
         return this._transitionable.serialize();
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioning.hasTransition();
     }
 
-    recalculate(parameters: EvaluationParameters) {
+    recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown, options: StyleSetterOptions = {}) {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
-            value,
-            // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
-            style: {glyphs: true, sprite: true},
-            styleSpec
-        })));
+    _validate(validate: Validator, value: unknown, options: StyleSetterOptions = {}): boolean {
+        return validateAndEmit(this, validate, {value}, options);
     }
 
     /**
@@ -118,7 +77,7 @@ export class Sky extends Evented {
      * the corresponding opacity values. Below pitch 60 the fog is completely
      * invisible.
      */
-    calculateFogBlendOpacity(pitch: number) {
+    calculateFogBlendOpacity(pitch: number): number {
         if (pitch < 60) return 0; // disable
         if (pitch < 70) return (pitch - 60) / 10; // fade in
         return 1;

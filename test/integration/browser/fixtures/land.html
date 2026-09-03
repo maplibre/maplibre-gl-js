@@ -15,11 +15,14 @@
 <body>
 <div id='map'></div>
 
-<script src='../../../../dist/maplibre-gl-dev.js'></script>
+<script type='module'>
+import * as maplibregl from '../../../../dist/maplibre-gl-dev.mjs';
 
-<script>
-// the following variable is important for the browser test to run properly
-const map = window.map = new maplibregl.Map({
+maplibregl.setWorkerUrl('../../../../dist/maplibre-gl-worker-dev.mjs');
+window.maplibregl = maplibregl;
+
+// `map` is read from `window` by the browser test; module scope doesn't expose it.
+window.map = new maplibregl.Map({
     container: 'map',
     preserveDrawingBuffer: true,
     zoom: 1,
@@ -52,7 +55,6 @@ const map = window.map = new maplibregl.Map({
         ]
     }
 });
-
 </script>
 
 </body>

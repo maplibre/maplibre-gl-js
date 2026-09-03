@@ -1,94 +1,79 @@
-/* eslint-disable key-spacing */
-import potpack from 'potpack';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapStyleImageMissingEvent} from '../ui/events.ts';
+import {RGBAImage} from '../util/image.ts';
+import {renderStyleImage} from '../style/style_image.ts';
+import {warnOnce} from '../util/util.ts';
 
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {RGBAImage} from '../util/image';
-import {ImagePosition} from './image_atlas';
-import {Texture} from './texture';
-import {renderStyleImage} from '../style/style_image';
-import {warnOnce} from '../util/util';
+import type {StyleImage} from '../style/style_image.ts';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 
-import type {StyleImage} from '../style/style_image';
-import type {Context} from '../gl/context';
-import type {PotpackBox} from 'potpack';
-import type {GetImagesResponse} from '../util/actor_messages';
+export type MissingImageRequestHandler = (id: string) => void | Promise<void>;
 
-type Pattern = {
-    bin: PotpackBox;
-    position: ImagePosition;
+type ImageManagerEventType = {
+    error: ErrorEvent;
+    styleimagemissing: MapStyleImageMissingEvent;
 };
 
 /**
- * When copied into the atlas texture, image data is padded by one pixel on each side. Icon
- * images are padded with fully transparent pixels, while pattern images are padded with a
- * copy of the image data wrapped from the opposite side. In both cases, this ensures the
- * correct behavior of GL_LINEAR texture sampling mode.
- */
-const padding = 1;
-
-/**
- * ImageManager does three things:
- *
- * 1. Tracks requests for icon images from tile workers and sends responses when the requests are fulfilled.
- * 2. Builds a texture atlas for pattern images.
- * 3. Rerenders renderable images once per frame
- *
- * These are disparate responsibilities and should eventually be handled by different classes. When we implement
- * data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
- * to refactor this.
+ * Owns every image of the style - the ones the sprites bring in as well as the ones added at
+ * runtime - and tracks requests for them from the tile workers, sending responses when the
+ * requests are fulfilled.
 */
-export class ImageManager extends Evented {
-    images: {[_: string]: StyleImage};
-    updatedImages: {[_: string]: boolean};
-    callbackDispatchedThisFrame: {[_: string]: boolean};
+export class ImageManager extends Evented<ImageManagerEventType> {
+    images: Record<string, StyleImage>;
+    /**
+     * Incremented on every {@link ImageManager.updateImage} call. {@link ImageAtlas} instances
+     * compare it against the value they last patched against, so that a tile whose atlas is up to
+     * date can skip its patching work entirely.
+     */
+    updateVersion: number;
     loaded: boolean;
     /**
      * This is used to track requests for images that are not yet available. When the image is loaded,
      * the requestors will be notified.
      */
     requestors: Array<{
-        ids: Array<string>;
-        promiseResolve: (value: GetImagesResponse) => void;
+        ids: string[];
+        promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
     }>;
-
-    patterns: {[_: string]: Pattern};
-    atlasImage: RGBAImage;
-    atlasTexture: Texture;
-    dirty: boolean;
+    missingImageResolver: MissingImageRequestHandler | null;
+    /**
+     * The images whose `render` callback already ran in the current frame. A given image usually
+     * sits in the atlas of several tiles, so it would otherwise be asked to re-render once per
+     * tile that holds it.
+     */
+    private _renderCallbacksDispatchedThisFrame: Record<string, boolean>;
+    /**
+     * The ids of the images each sprite has brought in, keyed by sprite id, so that they can be
+     * removed again when that sprite is reloaded or removed.
+     */
+    private _spriteImagesIds: Record<string, string[]>;
+    /** Cached result of {@link ImageManager.listImages}, invalidated whenever an image is added or removed */
+    private _imagesIds: string[] | null;
 
     constructor() {
         super();
         this.images = {};
-        this.updatedImages = {};
-        this.callbackDispatchedThisFrame = {};
+        this.updateVersion = 0;
         this.loaded = false;
         this.requestors = [];
-
-        this.patterns = {};
-        this.atlasImage = new RGBAImage({width: 1, height: 1});
-        this.dirty = true;
+        this.missingImageResolver = null;
+        this._spriteImagesIds = {};
+        this._imagesIds = null;
+        this._renderCallbacksDispatchedThisFrame = {};
     }
 
-    destroy() {
-        // Destroy atlas texture if it exists
-        if (this.atlasTexture) {
-            this.atlasTexture.destroy();
-            this.atlasTexture = null;
-        }
-        // Remove all images and patterns
+    destroy(): void {
         for (const id of Object.keys(this.images)) {
             this.removeImage(id);
         }
-
-        this.patterns = {};
-        this.atlasImage = new RGBAImage({width: 1, height: 1});
-        this.dirty = true;
+        this._spriteImagesIds = {};
     }
-    isLoaded() {
+    isLoaded(): boolean {
         return this.loaded;
     }
 
-    setLoaded(loaded: boolean) {
+    setLoaded(loaded: boolean): void {
         if (this.loaded === loaded) {
             return;
         }
@@ -122,21 +107,23 @@ export class ImageManager extends Evented {
         return image;
     }
 
-    addImage(id: string, image: StyleImage) {
+    addImage(id: string, image: StyleImage): void {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
+            this._imagesIds = null;
+            if (image.isWebGLImage) this.updateImage(id, image, false);
         }
     }
 
-    _validate(id: string, image: StyleImage) {
+    _validate(id: string, image: StyleImage): boolean {
         let valid = true;
         const data = image.data || image.spriteData;
-        if (!this._validateStretch(image.stretchX, data && data.width)) {
+        if (!this._validateStretch(image.stretchX, data?.width)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchX" value`)));
             valid = false;
         }
-        if (!this._validateStretch(image.stretchY, data && data.height)) {
+        if (!this._validateStretch(image.stretchY, data?.height)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchY" value`)));
             valid = false;
         }
@@ -147,7 +134,7 @@ export class ImageManager extends Evented {
         return valid;
     }
 
-    _validateStretch(stretch: Array<[number, number]>, size: number) {
+    _validateStretch(stretch: Array<[number, number]>, size: number): boolean {
         if (!stretch) return true;
         let last = 0;
         for (const part of stretch) {
@@ -157,46 +144,141 @@ export class ImageManager extends Evented {
         return true;
     }
 
-    _validateContent(content: [number, number, number, number], image: StyleImage) {
+    _validateContent(content: [number, number, number, number], image: StyleImage): boolean {
         if (!content) return true;
         if (content.length !== 4) return false;
         const spriteData = image.spriteData;
-        const width = (spriteData && spriteData.width) || image.data.width;
-        const height = (spriteData && spriteData.height) || image.data.height;
+        const width = (spriteData?.width) || image.data.width;
+        const height = (spriteData?.height) || image.data.height;
         if (content[0] < 0 || width < content[0]) return false;
         if (content[1] < 0 || height < content[1]) return false;
         if (content[2] < 0 || width < content[2]) return false;
         if (content[3] < 0 || height < content[3]) return false;
         if (content[2] < content[0]) return false;
-        if (content[3] < content[1]) return false;
-        return true;
+        return content[3] >= content[1];
     }
 
-    updateImage(id: string, image: StyleImage, validate = true) {
-        const oldImage = this.getImage(id);
-        if (validate && (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height)) {
-            throw new Error(`size mismatch between old image (${oldImage.data.width}x${oldImage.data.height}) and new image (${image.data.width}x${image.data.height}).`);
+    /**
+     * Replaces an image that is already known under this id, bumping its version so that the
+     * atlases holding it notice.
+     *
+     * The old record is read directly rather than through {@link ImageManager.getImage}, which
+     * would force a synchronous decode of the sprite data of the very image being replaced. Its
+     * size therefore comes from whichever of the two the pixels are still in, since an image that
+     * came from a sprite and was never rendered has not been decoded yet, and its version is
+     * defaulted, since images start out without one.
+     *
+     * @param validate - whether to reject an image of a different size than the one it replaces
+     */
+    updateImage(id: string, image: StyleImage, validate: boolean = true): void {
+        const oldImage = this.images[id];
+        if (validate) {
+            const oldData = oldImage.data || oldImage.spriteData;
+            if (oldData.width !== image.data.width || oldData.height !== image.data.height) {
+                throw new Error(`size mismatch between old image (${oldData.width}x${oldData.height}) and new image (${image.data.width}x${image.data.height}).`);
+            }
         }
-        image.version = oldImage.version + 1;
+        image.version = (oldImage.version ?? 0) + 1;
         this.images[id] = image;
-        this.updatedImages[id] = true;
+        this.updateVersion++;
     }
 
-    removeImage(id: string) {
+    removeImage(id: string): void {
         const image = this.images[id];
+        if (!image) return;
         delete this.images[id];
-        delete this.patterns[id];
+        this._imagesIds = null;
 
-        if (image.userImage && image.userImage.onRemove) {
+        if (image.userImage?.onRemove) {
             image.userImage.onRemove();
         }
     }
 
-    listImages(): Array<string> {
-        return Object.keys(this.images);
+    /**
+     * @returns the ids of every image currently held, sprite images and runtime ones alike. The
+     * returned array is shared between callers and must not be modified.
+     */
+    listImages(): string[] {
+        this._imagesIds ??= Object.keys(this.images);
+        return this._imagesIds;
     }
 
-    getImages(ids: Array<string>): Promise<GetImagesResponse> {
+    /**
+     * Images of the `default` sprite keep their plain id, the ones of any other sprite are
+     * namespaced by their sprite's id.
+     */
+    private _getSpriteImageId(spriteId: string, imageId: string): string {
+        return spriteId === 'default' ? imageId : `${spriteId}:${imageId}`;
+    }
+
+    /**
+     * Takes over the images of a single sprite: adds the new ones, updates the ones that are
+     * already known, and removes the ones that a previous load of this same sprite had brought in
+     * but that are not part of it anymore.
+     *
+     * @param spriteId - the id of the sprite the images belong to
+     * @param images - the sprite's images, keyed by their id within the sprite
+     * @returns the ids of the images that this sprite now provides, and the ids of the ones that
+     * were removed because they are no longer part of it
+     */
+    setSpriteImages(spriteId: string, images: Record<string, StyleImage>): {loaded: string[]; removed: string[]} {
+        const previousIds = this._spriteImagesIds[spriteId] ?? [];
+        const loaded: string[] = [];
+
+        for (const id in images) {
+            const imageId = this._getSpriteImageId(spriteId, id);
+            loaded.push(imageId);
+
+            if (imageId in this.images) {
+                this.updateImage(imageId, images[id], false);
+            } else {
+                this.addImage(imageId, images[id]);
+            }
+        }
+
+        const loadedIds = new Set(loaded);
+        const removed = previousIds.filter(imageId => !loadedIds.has(imageId));
+        for (const imageId of removed) {
+            this.removeImage(imageId);
+        }
+
+        this._spriteImagesIds[spriteId] = loaded;
+        return {loaded, removed};
+    }
+
+    /**
+     * Removes all the images a single sprite has brought in.
+     * @returns the ids of the removed images
+     */
+    removeSpriteImages(spriteId: string): string[] {
+        const removed = this._spriteImagesIds[spriteId] ?? [];
+        for (const imageId of removed) {
+            this.removeImage(imageId);
+        }
+
+        delete this._spriteImagesIds[spriteId];
+        return removed;
+    }
+
+    /**
+     * Removes the images of every sprite, leaving the images added at runtime alone.
+     * @returns the ids of the removed images
+     */
+    removeAllSpriteImages(): string[] {
+        const removed = Object.values(this._spriteImagesIds).flat();
+        for (const imageId of removed) {
+            this.removeImage(imageId);
+        }
+
+        this._spriteImagesIds = {};
+        return removed;
+    }
+
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void {
+        this.missingImageResolver = resolver;
+    }
+
+    getImages(ids: string[]): Promise<GetImagesResponse> {
         return new Promise<GetImagesResponse>((resolve, _reject) => {
             // If the sprite has been loaded, or if all the icon dependencies are already present
             // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
@@ -218,19 +300,21 @@ export class ImageManager extends Evented {
         });
     }
 
-    _getImagesForIds(ids: Array<string>): GetImagesResponse {
+    async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
+        const unresolvedIds = new Set(ids.filter((id) => !this.getImage(id)));
+        const resolver = this.missingImageResolver;
+
+        if (resolver) {
+            await Promise.allSettled(Array.from(unresolvedIds, (id) => resolver(id)));
+        }
+
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
-            let image = this.getImage(id);
-
-            if (!image) {
-                this.fire(new Event('styleimagemissing', {id}));
-                //Try to acquire image again in case styleimagemissing has populated it
-                image = this.getImage(id);
-            }
+            const image = this.getImage(id);
 
             if (image) {
+                unresolvedIds.delete(id);
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),
@@ -242,102 +326,32 @@ export class ImageManager extends Evented {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage && image.userImage.render)
+                    hasRenderCallback: Boolean(image.userImage?.render),
+                    isWebGLImage: image.isWebGLImage
                 };
-            } else {
-                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
             }
         }
+
+        for (const id of unresolvedIds) {
+            this.fire(new MapStyleImageMissingEvent({id}));
+            warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
+        }
+
         return response;
     }
 
-    // Pattern stuff
-
-    getPixelSize() {
-        const {width, height} = this.atlasImage;
-        return {width, height};
+    beginFrame(): void {
+        this._renderCallbacksDispatchedThisFrame = {};
     }
 
-    getPattern(id: string): ImagePosition {
-        const pattern = this.patterns[id];
-
-        const image = this.getImage(id);
-        if (!image) {
-            return null;
-        }
-
-        if (pattern && pattern.position.version === image.version) {
-            return pattern.position;
-        }
-
-        if (!pattern) {
-            const w = image.data.width + padding * 2;
-            const h = image.data.height + padding * 2;
-            const bin = {w, h, x: 0, y: 0};
-            const position = new ImagePosition(bin, image);
-            this.patterns[id] = {bin, position};
-        } else {
-            pattern.position.version = image.version;
-        }
-
-        this._updatePatternAtlas();
-
-        return this.patterns[id].position;
-    }
-
-    bind(context: Context) {
-        const gl = context.gl;
-        if (!this.atlasTexture) {
-            this.atlasTexture = new Texture(context, this.atlasImage, gl.RGBA);
-        } else if (this.dirty) {
-            this.atlasTexture.update(this.atlasImage);
-            this.dirty = false;
-        }
-
-        this.atlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
-    }
-
-    _updatePatternAtlas() {
-        const bins = [];
-        for (const id in this.patterns) {
-            bins.push(this.patterns[id].bin);
-        }
-
-        const {w, h} = potpack(bins);
-
-        const dst = this.atlasImage;
-        dst.resize({width: w || 1, height: h || 1});
-
-        for (const id in this.patterns) {
-            const {bin} = this.patterns[id];
-            const x = bin.x + padding;
-            const y = bin.y + padding;
-            const src = this.getImage(id).data;
-            const w = src.width;
-            const h = src.height;
-
-            RGBAImage.copy(src, dst, {x: 0, y: 0}, {x, y}, {width: w, height: h});
-
-            // Add 1 pixel wrapped padding on each side of the image.
-            RGBAImage.copy(src, dst, {x: 0, y: h - 1}, {x, y: y - 1}, {width: w, height: 1}); // T
-            RGBAImage.copy(src, dst, {x: 0, y:     0}, {x, y: y + h}, {width: w, height: 1}); // B
-            RGBAImage.copy(src, dst, {x: w - 1, y: 0}, {x: x - 1, y}, {width: 1, height: h}); // L
-            RGBAImage.copy(src, dst, {x: 0,     y: 0}, {x: x + w, y}, {width: 1, height: h}); // R
-        }
-
-        this.dirty = true;
-    }
-
-    beginFrame() {
-        this.callbackDispatchedThisFrame = {};
-    }
-
-    dispatchRenderCallbacks(ids: Array<string>) {
+    /**
+     * Re-renders the images among `ids` that were added with a `render` callback (see
+     * `StyleImageInterface`), at most once per frame each.
+     */
+    dispatchRenderCallbacks(ids: string[]): void {
         for (const id of ids) {
-
-            // the callback for the image was already dispatched for a different frame
-            if (this.callbackDispatchedThisFrame[id]) continue;
-            this.callbackDispatchedThisFrame[id] = true;
+            if (this._renderCallbacksDispatchedThisFrame[id]) continue;
+            this._renderCallbacksDispatchedThisFrame[id] = true;
 
             const image = this.getImage(id);
             if (!image) warnOnce(`Image with ID: "${id}" was not found`);
@@ -349,7 +363,7 @@ export class ImageManager extends Evented {
         }
     }
 
-    cloneImages() {
+    cloneImages(): Record<string, StyleImage> {
         const clonedImages: Record<string, StyleImage> = {};
         for (const id in this.images) {
             const image = this.images[id];

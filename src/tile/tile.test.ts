@@ -1,14 +1,15 @@
 import {describe, test, expect, vi} from 'vitest';
-import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
 import fs from 'fs';
 import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {extend} from '../util/util';
-import {serialize, deserialize} from '../util/web_worker_transfer';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {extend} from '../util/util.ts';
+import {serialize, deserialize} from '../util/web_worker_transfer.ts';
+import type {Painter} from '../render/painter.ts';
 
 describe('querySourceFeatures', () => {
     const features = [{
@@ -39,7 +40,7 @@ describe('querySourceFeatures', () => {
             expect(result).toHaveLength(1);
             expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
             result = [];
-            tile.querySourceFeatures(result, {} as any);
+            tile.querySourceFeatures(result, {});
             expect(result).toHaveLength(1);
             expect(result[0].properties).toEqual(features[0].tags);
         });
@@ -79,7 +80,7 @@ describe('querySourceFeatures', () => {
         geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
 
         result = [];
-        expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
+        expect(() => tile.querySourceFeatures(result)).not.toThrow();
         expect(result).toHaveLength(0);
     });
 
@@ -117,11 +118,21 @@ describe('querySourceFeatures', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
         const spy = vi.spyOn(tile, 'unloadVectorData');
-        const painter = {};
+        const painter = createPainter();
 
         tile.loadVectorData(null, painter);
 
         expect(spy).toHaveBeenCalledWith();
+    });
+
+    test('loadVectorData should not do anything if etag was unchanged', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        tile.state = 'loading';
+        const painter = createPainter();
+
+        tile.loadVectorData({etagUnmodified: true}, painter);
+
+        expect(tile.state).toBe('loaded');
     });
 
     test('loadVectorData preserves the most recent rawTileData', () => {
@@ -287,6 +298,30 @@ describe('rtl text detection', () => {
 
 });
 
+describe('setFeatureState', () => {
+    test('skips bucket updates when revision has already been processed', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        tile.loadVectorData(
+            createVectorData({rawTileData: createRawTileData()}),
+            createPainter()
+        );
+
+        const loadVTLayersSpy = vi.spyOn(tile.latestFeatureIndex, 'loadVTLayers');
+        const states = {road: [{id: '1', state: {hover: true}}]};
+        const painter = createPainter({
+            hasLayer: () => true,
+            getLayer: () => ({queryRadius: () => 0}),
+        });
+
+        // Simulate that revision 5 was already processed
+        tile.featureStateRevision = 5;
+
+        // Calling with the same revision should not trigger any work
+        tile.setFeatureState(states, painter, 5);
+        expect(loadVTLayersSpy).not.toHaveBeenCalled();
+    });
+});
+
 function createRawTileData() {
     return fs.readFileSync(path.join(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 }
@@ -300,6 +335,6 @@ function createVectorData(options?) {
     }, options);
 }
 
-function createPainter(styleStub = {}) {
-    return {style: styleStub};
+function createPainter(styleStub = {}): Painter {
+    return {style: styleStub} as unknown as Painter;
 }

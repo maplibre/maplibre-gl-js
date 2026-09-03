@@ -1,0 +1,56 @@
+uniform vec2 u_world;
+uniform vec2 u_pixel_coord_upper;
+uniform vec2 u_pixel_coord_lower;
+uniform vec3 u_scale;
+uniform vec2 u_fill_translate;
+
+layout(location = 0) in vec2 a_pos;
+
+out vec2 v_pos_a;
+out vec2 v_pos_b;
+out vec2 v_pos;
+#ifdef GLOBE
+out float v_depth;
+#endif
+
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float pixel_ratio_from
+#pragma maplibre: define lowp float pixel_ratio_to
+
+void main() {
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float pixel_ratio_from
+    #pragma maplibre: initialize lowp float pixel_ratio_to
+
+    // Move vertex outside clip space to discard triangle when opacity is negligible
+    if (opacity < 0.01) {
+        gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
+        return;
+    }
+
+    vec2 pattern_tl_a = pattern_from.xy;
+    vec2 pattern_br_a = pattern_from.zw;
+    vec2 pattern_tl_b = pattern_to.xy;
+    vec2 pattern_br_b = pattern_to.zw;
+
+    float tileRatio = u_scale.x;
+    float fromScale = u_scale.y;
+    float toScale = u_scale.z;
+
+    gl_Position = projectTile(a_pos + u_fill_translate, a_pos);
+
+    vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
+    vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
+
+    v_pos_a = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, fromScale * display_size_a, tileRatio, a_pos);
+    v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileRatio, a_pos);
+
+    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;
+    #ifdef GLOBE
+    v_depth = gl_Position.z / gl_Position.w;
+    #endif
+}
