@@ -28,9 +28,10 @@ export async function startCoverage(page: Page): Promise<WebWorker[]> {
     return workers;
 }
 
-/** Harvest page + worker coverage, close the page, and write a monocart report to `coverage/<outputDir>`. */
-export async function stopCoverageAndReport(page: Page, workers: WebWorker[], outputDir: string): Promise<void> {
-    const coverage = await page.coverage.stopJSCoverage();
+/** Harvest page + worker coverage, close the page(s), and write a monocart report to `coverage/<outputDir>`. */
+export async function stopCoverageAndReport(pageOrPages: Page | Page[], workers: WebWorker[], outputDir: string): Promise<void> {
+    const pages = Array.isArray(pageOrPages) ? pageOrPages : [pageOrPages];
+    const coverage = (await Promise.all(pages.map((page) => page.coverage.stopJSCoverage()))).flat();
 
     const workerCoverageEntries: any[] = [];
     for (const worker of workers) {
@@ -40,7 +41,7 @@ export async function stopCoverageAndReport(page: Page, workers: WebWorker[], ou
         } catch {}
     }
 
-    await page.close();
+    await Promise.all(pages.map((page) => page.close()));
 
     const rawV8CoverageData: any[] = coverage.map((it) => {
         const entry: any = {source: it.text, ...it.rawScriptCoverage};
