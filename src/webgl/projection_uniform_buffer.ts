@@ -1,18 +1,6 @@
 import type {Context} from './context.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
-
-export const UBO_BINDINGS = {
-    ProjectionUBO: 0,
-};
-
-export function applyUBOBindings(gl: WebGL2RenderingContext, program: WebGLProgram): void {
-    for (const [name, binding] of Object.entries(UBO_BINDINGS)) {
-        const index = gl.getUniformBlockIndex(program, name);
-        if (index !== gl.INVALID_INDEX) {
-            gl.uniformBlockBinding(program, index, binding);
-        }
-    }
-}
+import {UBO_BINDINGS} from './uniform_buffer.ts';
 
 const PROJECTION_UBO_MEMBERS = [
     {name: 'u_projection_matrix', type: 'mat4', offset: 0},
