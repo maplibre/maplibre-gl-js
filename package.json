@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "6.6.0",
+  "version": "6.7.0",
   "module": "dist/maplibre-gl.mjs",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -83,7 +83,7 @@
     "canvas": "^3.2.3",
     "cross-env": "^10.1.0",
     "cspell": "^10.1.1",
-    "cssnano": "^9.0.0",
+    "cssnano": "^9.0.1",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
     "devtools-protocol": "^0.0.1687809",
