@@ -60,6 +60,32 @@ describe('Max Canvas Size option', () => {
     });
 });
 
+describe('Container dimensions read', () => {
+    test('reads container dimensions before mutating the container', () => {
+        const container = window.document.createElement('div');
+        const readOrder: string[] = [];
+        Object.defineProperty(container, 'clientWidth', {
+            get() {
+                readOrder.push('read');
+                return 512;
+            }
+        });
+        Object.defineProperty(container, 'clientHeight', {value: 256});
+
+        const originalClassListAdd = container.classList.add.bind(container.classList);
+        vi.spyOn(container.classList, 'add').mockImplementation((...args) => {
+            readOrder.push('write');
+            return originalClassListAdd(...args);
+        });
+
+        const map = createMap({container});
+
+        expect(readOrder.indexOf('read')).toBeLessThan(readOrder.indexOf('write'));
+        expect(map.getCanvas().style.width).toBe('512px');
+        expect(map.getCanvas().style.height).toBe('256px');
+    });
+});
+
 describe('WebGLContextAttributes options', () => {
     test('Optional values can be set correctly', () => {
         const container = window.document.createElement('div');

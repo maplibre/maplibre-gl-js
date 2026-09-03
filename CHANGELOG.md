@@ -5,6 +5,7 @@
 ### 🐞 Bug fixes
 - Fix a gap between the sky and the ground at high pitch while globe transitions to mercator ([#7382](https://github.com/maplibre/maplibre-gl-js/issues/7382)) (by [@birkskyum](https://github.com/birkskyum))
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Read the map container's dimensions before mutating it in `Map#_setupContainer`, avoiding a forced synchronous layout reflow on every map initialization ([#8307](https://github.com/maplibre/maplibre-gl-js/issues/8307)) (by [@lazerg](https://github.com/lazerg))
 - _...Add new stuff here..._
 
 ## 6.7.0
