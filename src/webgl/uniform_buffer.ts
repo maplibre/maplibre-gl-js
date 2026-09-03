@@ -14,12 +14,12 @@ export function applyUBOBindings(gl: WebGL2RenderingContext, program: WebGLProgr
 }
 
 export type Std140Member = {name: string; type: 'float' | 'int' | 'vec2' | 'vec4' | 'mat4'};
-export type Std140Layout = {offsets: {[_: string]: number}; contentWords: number; sizeWords: number};
+export type Std140Layout = {offsets: Record<string, number>; contentWords: number; sizeWords: number};
 
 const STD140_SIZE_AND_ALIGNMENT_WORDS = {float: [1, 1], int: [1, 1], vec2: [2, 2], vec4: [4, 4], mat4: [16, 4]};
 
 export function std140Layout(members: readonly Std140Member[]): Std140Layout {
-    const offsets: {[_: string]: number} = {};
+    const offsets: Record<string, number> = {};
     let words = 0;
     for (const {name, type} of members) {
         const [size, alignment] = STD140_SIZE_AND_ALIGNMENT_WORDS[type];
