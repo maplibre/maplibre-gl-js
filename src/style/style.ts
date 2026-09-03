@@ -45,6 +45,7 @@ import type {
     LayerSpecification,
     FilterSpecification,
     StyleSpecification,
+    FontFacesSpecification,
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
@@ -491,6 +492,7 @@ export class Style extends Evented<MapEventType> {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
+        this.glyphManager.setFontFaces(nextState['font-faces']);
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
@@ -920,6 +922,9 @@ export class Style extends Evented<MapEventType> {
                     break;
                 case 'setGlyphs':
                     operations.push(() => this.setGlyphs.apply(this, op.args));
+                    break;
+                case 'setFontFaces':
+                    operations.push(() => this.setFontFaces.apply(this, op.args));
                     break;
                 case 'setSprite':
                     operations.push(() => this.setSprite.apply(this, op.args));
@@ -1485,6 +1490,7 @@ export class Style extends Evented<MapEventType> {
             pitch: myStyleSheet.pitch,
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
+            'font-faces': myStyleSheet['font-faces'],
             transition: myStyleSheet.transition,
             projection: myStyleSheet.projection,
             state: myStyleSheet.state,
@@ -1971,10 +1977,24 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
+        this._changed = true;
         this._glyphsDidChange = true;
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
+    }
+
+    getFontFaces(): FontFacesSpecification | null {
+        return this.stylesheet['font-faces'] || null;
+    }
+
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): void {
+        this._checkLoaded();
+
+        this._changed = true;
+        this._glyphsDidChange = true;
+        this.stylesheet['font-faces'] = fontFaces;
+        this.glyphManager.setFontFaces(fontFaces);
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {

@@ -38,6 +38,12 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
 }
 
 let textureMaxSize = 0;
+/**
+ * Draws the color-relief tiles of one pass.
+ *
+ * A loaded raster-DEM tile can carry no DEM at all (e.g. an empty 204 response);
+ * such tiles are skipped before the first-tile setup reads from them.
+ */
 function renderColorRelief(
     painter: Painter,
     tileManager: TileManager,
@@ -64,6 +70,9 @@ function renderColorRelief(
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
+        if (!dem?.data) {
+            continue;
+        }
         if(firstTile) {
             // we should avoid calling gl.getParameter at runtime (GPU stall risk)
             textureMaxSize ||= gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -75,10 +84,6 @@ function renderColorRelief(
             colorTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             firstTile = false;
             colorRampSize = elevationTexture.size[0];
-        }
-
-        if (!dem?.data) {
-            continue;
         }
 
         const textureStride = dem.stride;
