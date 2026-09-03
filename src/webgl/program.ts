@@ -15,6 +15,7 @@ import type {BinderUniform} from '../data/program_configuration.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
 import {applyUBOBindings} from './uniform_buffer.ts';
+import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -218,7 +219,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (projectionData) {
-            context.projectionUniformBuffer.update(projectionData);
+            updateProjectionUniformBuffer(context.projectionUniformBuffer, projectionData);
         }
 
         if (uniformValues) {
