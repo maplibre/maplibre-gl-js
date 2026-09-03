@@ -172,6 +172,13 @@ export namespace ImageRequest {
         }
     };
 
+    /**
+     * Runs one queued image request.
+     *
+     * An empty response body (e.g. HTTP 204 for a tile without content) resolves with
+     * `data: null`, keeping the expiry headers, so callers can handle the absence
+     * explicitly and re-request when the headers say so.
+     */
     const doImageRequest = async (itemInQueue: ImageRequestQueueItem) => {
         itemInQueue.state = 'running';
         const {requestParameters, supportImageRefresh, imageBitmapOptions, onError, onSuccess, abortController} = itemInQueue;
@@ -205,7 +212,9 @@ export namespace ImageRequest {
                 // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response);
-            } else if (response.data) {
+            } else if (!response.data || response.data.byteLength === 0) {
+                onSuccess({data: null, cacheControl: response.cacheControl, expires: response.expires});
+            } else {
                 const img = await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
             }

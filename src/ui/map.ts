@@ -3359,7 +3359,7 @@ export class Map extends Evented<MapEventType> {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @returns a promise that is resolved when the image is loaded
+     * @returns a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)
      *
      * @example
      * Load an image from an external URL.
@@ -3371,7 +3371,11 @@ export class Map extends Evented<MapEventType> {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        const response = await ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        if (!response.data) {
+            throw new Error(`Could not load image ${url}: the response is empty`);
+        }
+        return response;
     }
 
     /**
