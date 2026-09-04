@@ -91,7 +91,7 @@
     "eslint": "^10.9.1",
     "eslint-plugin-html": "^8.2.0",
     "eslint-plugin-tsdoc": "0.5.2",
-    "expect": "^30.5.0",
+    "expect": "^30.5.1",
     "glob": "^13.0.6",
     "globals": "^17.11.0",
     "is-builtin-module": "^5.0.0",
