@@ -16,7 +16,6 @@ export type SkyUniformsType = {
     'u_inv_proj_matrix': UniformMatrix4f;
     'u_globe_position': Uniform3f;
     'u_globe_radius': Uniform1f;
-    'u_camera_to_center_distance': Uniform1f;
 };
 
 const skyUniforms = (context: Context, locations: UniformLocations): SkyUniformsType => ({
@@ -29,7 +28,6 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
     'u_inv_proj_matrix': new UniformMatrix4f(context, locations.u_inv_proj_matrix),
     'u_globe_position': new Uniform3f(context, locations.u_globe_position),
     'u_globe_radius': new Uniform1f(context, locations.u_globe_radius),
-    'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
 });
 
 const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
@@ -49,7 +47,6 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
         'u_inv_proj_matrix': transform.inverseProjectionMatrix,
         'u_globe_position': getGlobeCenterInViewSpace(transform),
         'u_globe_radius': getGlobeRadiusPixels(transform.worldSize, transform.center.lat),
-        'u_camera_to_center_distance': transform.cameraToCenterDistance * pixelRatio,
     };
 };
 
