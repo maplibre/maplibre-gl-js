@@ -583,6 +583,31 @@ describe('GlobeTransform', () => {
             expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
             expect(projection.isOccluded).toBe(true);
         });
+
+        test('elevated points use line-of-sight occlusion', () => {
+            const transform = new GlobeTransform();
+            transform.resize(512, 512);
+            transform.setCenter(new LngLat(10.0, 50.0));
+            transform.setZoom(-1);
+            transform.setBearing(-90);
+            transform.setPitch(60);
+
+            const visibleProjection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 2000000);
+            expect(visibleProjection.isOccluded).toBe(false);
+
+            const occludedProjection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 1000);
+            expect(occludedProjection.isOccluded).toBe(true);
+        });
+
+        test('points below the surface use ground-anchor occlusion', () => {
+            const transform = new GlobeTransform();
+            transform.resize(512, 512);
+            transform.setCenter(new LngLat(10.0, 50.0));
+            transform.setZoom(-1);
+
+            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), -100);
+            expect(projection.isOccluded).toBe(false);
+        });
     });
 
     describe('isLocationOccluded', () => {
