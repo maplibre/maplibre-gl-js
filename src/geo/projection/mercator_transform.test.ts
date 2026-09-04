@@ -446,6 +446,30 @@ describe('transform', () => {
         expect(projection.isOccluded).toBe(false);
     });
 
+    test('locationToScreenPoint projects a location in front of the camera', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setPitch(80);
+
+        const inFrontOfCamera = transform.locationToScreenPoint(new LngLat(0, 0.05));
+        expect(inFrontOfCamera.x).toBeCloseTo(256, 1);
+        expect(inFrontOfCamera.y).toBeCloseTo(244.4, 1);
+    });
+
+    test('locationToScreenPoint returns Number.MAX_VALUE for a location behind the camera', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setPitch(80);
+
+        const behindCamera = transform.locationToScreenPoint(new LngLat(0, -2));
+        expect(behindCamera.x).toBe(Number.MAX_VALUE);
+        expect(behindCamera.y).toBe(Number.MAX_VALUE);
+    });
+
     test('getCameraLngLat', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.setElevation(200);
