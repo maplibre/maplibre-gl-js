@@ -169,10 +169,9 @@ function drawFillTiles(
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
-            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
-                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, translateForUniforms) :
+                fillOutlineUniformValues(translateForUniforms);
         }
 
         const stencil = painter.stencilModeForClipping(coord);
