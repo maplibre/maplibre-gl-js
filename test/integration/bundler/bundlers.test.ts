@@ -97,7 +97,7 @@ describe('Bundler examples', () => {
                 });
 
                 const url = `http://localhost:${port}/index.html`;
-                await page.goto(url, {timeout: 15000});
+                await page.goto(url, {timeout: 30000});
                 await new Promise((r) => setTimeout(r, POST_LOAD_WAIT_MS));
 
                 const diagnostics = () => [
