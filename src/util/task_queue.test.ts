@@ -123,4 +123,13 @@ describe('TaskQueue', () => {
         q.run();
         expect(afterError).toHaveBeenCalledTimes(1);
     });
+
+    test('Runs the tasks queued after a task that throws, and rethrows the error afterwards', () => {
+        const q = new TaskQueue();
+        const second = vi.fn();
+        q.add(() => { throw new Error('Task error'); });
+        q.add(second);
+        expect(() => q.run()).toThrow('Task error');
+        expect(second).toHaveBeenCalledTimes(1);
+    });
 });
