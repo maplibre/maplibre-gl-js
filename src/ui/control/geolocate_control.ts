@@ -38,6 +38,11 @@ export type GeolocateControlOptions = {
      * @defaultValue true
      */
     showUserLocation?: boolean;
+    /**
+     * If `true`, location updates while tracking adjust the zoom level to fit the GPS accuracy circle (via `fitBoundsOptions`). If `false`, only the map center follows the user and the current zoom level is preserved. Only applies when `trackUserLocation` is `true`.
+     * @defaultValue true
+     */
+    trackZoom?: boolean;
 };
 
 const defaultOptions: GeolocateControlOptions = {
@@ -51,7 +56,8 @@ const defaultOptions: GeolocateControlOptions = {
     },
     trackUserLocation: false,
     showAccuracyCircle: true,
-    showUserLocation: true
+    showUserLocation: true,
+    trackZoom: true
 };
 
 let numberOfWatches = 0;
@@ -536,14 +542,21 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
      */
     _updateCamera = (position: GeolocationPosition): void => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
-        const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
-        const options = extend({bearing}, this.options.fitBoundsOptions);
-        const newBounds = LngLatBounds.fromLngLat(center, radius);
 
-        this._map.fitBounds(newBounds, options, {
-            geolocateSource: true // tag this camera change so it won't cause the control to change to background state
-        });
+        if (this.options.trackZoom === false) {
+            this._map.flyTo({center, bearing, zoom: this._map.getZoom()}, {
+                geolocateSource: true
+            });
+        } else {
+            const radius = position.coords.accuracy;
+            const options = extend({bearing}, this.options.fitBoundsOptions);
+            const newBounds = LngLatBounds.fromLngLat(center, radius);
+
+            this._map.fitBounds(newBounds, options, {
+                geolocateSource: true
+            });
+        }
     };
 
     /**
@@ -630,7 +643,7 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
     _onMoveStart = (event: any): void => {
         if (!this._map) return;
         const fromResize = event?.[0] instanceof ResizeObserverEntry;
-        if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
+        if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
             this._watchState = 'BACKGROUND';
             this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
             this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');

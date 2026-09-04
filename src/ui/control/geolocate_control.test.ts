@@ -728,7 +728,7 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
-    test('switches to BACKGROUND state on zoom', async () => {
+    test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on zoom', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
         });
@@ -746,7 +746,66 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
 
-        expect(geolocate._watchState).toBe('BACKGROUND');
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+    });
+
+    test('trackZoom false preserves zoom on location update', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            trackZoom: false,
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const geolocatePromise = geolocate.once('geolocate');
+        geolocate._geolocateButton.dispatchEvent(click);
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await geolocatePromise;
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+
+        const userZoom = 12;
+        const zoomendPromise = map.once('zoomend');
+        map.zoomTo(userZoom, {duration: 0});
+        await zoomendPromise;
+        expect(map.getZoom()).toBe(userZoom);
+
+        const flyToSpy = vi.spyOn(map, 'flyTo');
+        geolocate._onSuccess({coords: {latitude: 11, longitude: 21, accuracy: 500}, timestamp: 50} as GeolocationPosition);
+
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+        expect(flyToSpy).toHaveBeenCalledWith(
+            expect.objectContaining({zoom: userZoom}),
+            expect.objectContaining({geolocateSource: true})
+        );
+        flyToSpy.mockRestore();
+    });
+
+    test('trackZoom true calls fitBounds on location update', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            trackZoom: true,
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const geolocatePromise = geolocate.once('geolocate');
+        geolocate._geolocateButton.dispatchEvent(click);
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await geolocatePromise;
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+
+        const fitBoundsSpy = vi.spyOn(map, 'fitBounds');
+        geolocate._onSuccess({coords: {latitude: 11, longitude: 21, accuracy: 500}, timestamp: 50} as GeolocationPosition);
+
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+        expect(fitBoundsSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            expect.objectContaining({geolocateSource: true})
+        );
+        fitBoundsSpy.mockRestore();
     });
 
     test('switches to BACKGROUND state on map manipulation', async () => {
