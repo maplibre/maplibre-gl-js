@@ -1,7 +1,8 @@
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -46,7 +47,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
 
-    if (painter.renderPass === 'offscreen') {
+    if (renderOptions.currentPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
             painter.setCustomLayerDefaults();
@@ -57,7 +58,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
             context.setDirty();
             painter.setBaseState();
         }
-    } else if (painter.renderPass === 'translucent') {
+    } else if (renderOptions.currentPass === 'translucent') {
 
         painter.setCustomLayerDefaults();
 

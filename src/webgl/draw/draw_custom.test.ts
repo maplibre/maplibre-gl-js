@@ -2,7 +2,8 @@ import {describe, test, expect, vi} from 'vitest';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
-import {Painter, type RenderOptions} from '../../render/painter.ts';
+import {Painter} from '../../render/painter.ts';
+import {RenderOptions} from '../../render/render_options.ts';
 import type {Map} from '../../ui/map.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
@@ -33,8 +34,10 @@ describe('drawCustom', () => {
         mockPainter.style = {
             projection: new MercatorProjection(),
         } as any;
-        mockPainter.renderPass = 'translucent';
         mockPainter.transform = transform;
+        const renderOptions = new RenderOptions(transform, mockPainter.style.projection, null);
+        renderOptions.currentPass = 'translucent';
+        mockPainter.renderOptions = renderOptions;
         mockPainter.context = {
             gl: {},
             setColorMode: () => {},
@@ -70,7 +73,6 @@ describe('drawCustom', () => {
                 };
             },
         }, {});
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawCustom(mockPainter, tileManagerMock, mockLayer, renderOptions);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);

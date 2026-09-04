@@ -8,13 +8,14 @@ import {
     hillshadeUniformPrepareValues
 } from '../program/hillshade_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
+    if (renderOptions.currentPass !== 'offscreen' && renderOptions.currentPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
@@ -24,11 +25,11 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
-    if (painter.renderPass === 'offscreen') {
+    if (renderOptions.currentPass === 'offscreen') {
         // Prepare tiles
         prepareHillshade(painter, tileManager, tileIDs, layer, depthMode, StencilMode.disabled, colorMode);
         context.viewport.set([0, 0, painter.width, painter.height]);
-    } else if (painter.renderPass === 'translucent') {
+    } else if (renderOptions.currentPass === 'translucent') {
         // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
         // See comments in draw_raster.ts for more details.
         if (useSubdivision) {
