@@ -30,6 +30,8 @@ import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibr
 import type {Terrain} from '../render/terrain.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
 type TileResult = {
     tile: Tile;
@@ -494,6 +496,31 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     /**
+     * The highest elevation this source's symbols may reach, in meters: `symbol-height-offset`
+     * constants read from the visible symbol layers, data-driven maxima tracked by the loaded
+     * buckets at layout time. Tiles not yet loaded only contribute through the constants.
+     */
+    _getMaxContentElevation(): number {
+        let maxElevation = 0;
+        const layers = this.map?.style?._layers;
+        if (!layers) return maxElevation;
+        for (const layerId in layers) {
+            const layer = layers[layerId];
+            if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(this.transform.zoom)) continue;
+            const symbolLayer = layer as SymbolStyleLayer;
+            if (!symbolLayer.layout) continue;
+            maxElevation = Math.max(maxElevation, symbolLayer.layout.get('symbol-height-offset').constantOr(0));
+            for (const tile of this._inViewTiles.getAllTiles()) {
+                const bucket = tile.getBucket(layer) as SymbolBucket;
+                if (bucket && bucket.maxHeightOffset > maxElevation) {
+                    maxElevation = bucket.maxHeightOffset;
+                }
+            }
+        }
+        return maxElevation;
+    }
+
+    /**
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
@@ -525,6 +552,7 @@ export class TileManager extends Evented<SourceEventType> {
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
                 calculateTileZoom: this._source.calculateTileZoom,
+                maxContentElevation: this._getMaxContentElevation(),
             });
 
             if (this._source.hasTile) { // tile should be in bounds
