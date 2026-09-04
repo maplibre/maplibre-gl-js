@@ -428,14 +428,9 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         let isOccluded: boolean;
         if (vectorMultiplier <= 1.0) {
-            // Point on or below the surface: hidden when it is on the backfacing side of the
-            // sphere. A below-surface point would always fail the line-of-sight test.
             const plane = this._cachedClippingPlane;
             isOccluded = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3] < 0.0;
         } else {
-            // Point above the surface: hidden only when the line of sight from the camera
-            // passes through the globe. The surface test would cull it as soon as the
-            // ground below it is behind the horizon, even when the point itself is still visible.
             isOccluded = this._isLineOfSightBlocked(elevatedX, elevatedY, elevatedZ);
         }
 
@@ -447,8 +442,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * True when the segment from the camera to the given point (unit-globe coordinates)
-     * intersects the globe.
+     * True when the segment from the camera to the given point, both in unit-globe coordinates, passes through the planet.
      */
     private _isLineOfSightBlocked(x: number, y: number, z: number): boolean {
         const cam = this._cameraPosition;
@@ -457,7 +451,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         const dz = z - cam[2];
         const lengthSq = dx * dx + dy * dy + dz * dz;
         if (lengthSq === 0) return false;
-        // Parameter of the closest point of the segment to the globe centre.
         const t = clamp(-(cam[0] * dx + cam[1] * dy + cam[2] * dz) / lengthSq, 0, 1);
         const cx = cam[0] + t * dx;
         const cy = cam[1] + t * dy;
