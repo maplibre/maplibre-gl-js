@@ -6,6 +6,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
 
 import type {Painter} from '../../render/painter.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import {type Style} from '../../style/style.ts';
@@ -59,13 +60,13 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-export function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[]): void {
+export function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     for (const coord of coords) {
-        drawDebugTile(painter, tileManager, coord);
+        drawDebugTile(painter, tileManager, coord, renderOptions);
     }
 }
 
-function drawDebugTile(painter: Painter, tileManager: TileManager, coord: OverscaledTileID) {
+function drawDebugTile(painter: Painter, tileManager: TileManager, coord: OverscaledTileID, renderOptions: RenderOptions) {
     const context = painter.context;
     const gl = context.gl;
 
@@ -91,7 +92,7 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
 
-    const projectionData = painter.transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true});
+    const projectionData = getProjectionDataForTile(renderOptions, coord);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
         debugUniformValues(Color.transparent, scaleRatio), null, projectionData, id,

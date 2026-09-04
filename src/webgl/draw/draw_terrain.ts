@@ -2,7 +2,7 @@ import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {terrainUniformValues, terrainDepthUniformValues} from '../program/terrain_program.ts';
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {Tile} from '../../tile/tile.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
@@ -57,7 +57,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOp
         const eleDelta = terrain.getSkirtLength(tr.zoom);
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
         const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
-        const projectionData = tr.getProjectionData({overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true});
+        const projectionData = getProjectionDataForTile(renderOptions, tile.tileID, {applyTerrainMatrix: false});
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

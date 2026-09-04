@@ -8,7 +8,7 @@ import {
 } from '../program/fill_extrusion_program.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
@@ -23,27 +23,26 @@ export function drawFillExtrusion(painter: Painter, tileManager: TileManager, la
         return;
     }
 
-    const {isRenderingToTexture} = renderOptions;
     if (renderOptions.currentPass === 'translucent') {
         const depthMode = new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, renderOptions.depthRangeFor3D);
 
         if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
             const colorMode = painter.colorModeForRenderPass();
-            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, isRenderingToTexture);
+            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, renderOptions);
 
         } else {
             // Draw transparent buildings in two passes so that only the closest surface is drawn.
             // First draw all the extrusions into only the depth buffer. No colors are drawn.
             drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
                 StencilMode.disabled,
-                ColorMode.disabled, isRenderingToTexture);
+                ColorMode.disabled, renderOptions);
 
             // Then draw all the extrusions a second type, only coloring fragments if they have the
             // same depth value as the closest fragment in the previous pass. Use the stencil buffer
             // to prevent the second draw in cases where we have coincident polygons.
             drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
                 painter.stencilModeFor3D(),
-                painter.colorModeForRenderPass(), isRenderingToTexture);
+                painter.colorModeForRenderPass(), renderOptions);
         }
     }
 }
@@ -56,7 +55,7 @@ function drawExtrusionTiles(
     depthMode: DepthMode,
     stencilMode: Readonly<StencilMode>,
     colorMode: Readonly<ColorMode>,
-    isRenderingToTexture: boolean) {
+    renderOptions: RenderOptions) {
     const context = painter.context;
     const gl = context.gl;
     const fillPropertyName = 'fill-extrusion-pattern';
@@ -82,7 +81,7 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const projectionData = getProjectionDataForTile(renderOptions, coord);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(

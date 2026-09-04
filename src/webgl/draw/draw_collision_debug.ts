@@ -1,4 +1,5 @@
 import type {Painter} from '../../render/painter.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {StyleLayer} from '../../style/style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -20,9 +21,8 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean): void {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, renderOptions: RenderOptions): void {
     const context = painter.context;
-    const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
     const tileBatches: TileBatch[] = [];
@@ -60,7 +60,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             CullFaceMode.disabled,
             null,
             painter.style.map.terrain?.getTerrainData(coord),
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            getProjectionDataForTile(renderOptions, coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);

@@ -13,7 +13,7 @@ import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
@@ -27,9 +27,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
 
     if (layerOpacity < 1) {
         if (renderOptions.currentPass !== 'translucent') return;
-        const useTerrain = !!painter.style.map.terrain;
-
-        const results = prepareDrawLayerOpacity(painter,layer, coords, useTerrain);
+        const results = prepareDrawLayerOpacity(painter, layer, coords);
         drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
         drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
@@ -44,10 +42,9 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     if (fillEligibleForOpaque && renderOptions.currentPass === 'opaque') {
         // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
         // its outline (always translucent) runs in the translucent pass below.
-        const {isRenderingToTexture} = renderOptions;
         const colorMode = painter.colorModeForRenderPass();
         const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadWrite);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, renderOptions);
         return;
     }
     if (fillEligibleForOpaque && renderOptions.currentPass === 'translucent') {
@@ -72,11 +69,10 @@ function drawFillAndOutline(
     coords: OverscaledTileID[],
     renderOptions: RenderOptions
 ) {
-    const {isRenderingToTexture} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
 
     const fillDepthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
-    drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, isRenderingToTexture);
+    drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, renderOptions);
 
     drawOutline(painter, tileManager, layer, coords, renderOptions);
 }
@@ -98,11 +94,10 @@ function drawOutline(
     // or stroke color is translucent. If we wouldn't clip to outside
     // the current shape, some pixels from the outline stroke overlapped
     // the (non-antialiased) fill.
-    const {isRenderingToTexture} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
     const depthMode = painter.getDepthModeForSublayer(
         layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
+    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, renderOptions);
 }
 
 function drawFillTiles(
@@ -113,7 +108,7 @@ function drawFillTiles(
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     isOutline: boolean,
-    isRenderingToTexture: boolean) {
+    renderOptions: RenderOptions) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -146,7 +141,7 @@ function drawFillTiles(
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
+        const terrainData = painter.getTerrainDataForTile(coord, renderOptions.isRenderingToTexture);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -156,11 +151,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: coord,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
+        const projectionData = getProjectionDataForTile(renderOptions, coord);
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 

@@ -168,6 +168,26 @@ describe('render to texture', () => {
         );
     });
 
+    test('sets the terrain-texture flag for the stack and clears it before drawing the terrain mesh', () => {
+        const terrainTextureDraws: boolean[] = [];
+        const renderLayer = vi.mocked(painter.renderLayer);
+        renderLayer.mockClear();
+        const getProjectionData = vi.spyOn(painter.transform, 'getProjectionData');
+        renderLayer.mockImplementation((_painter, _tileManager, _layer, _coords, renderOptions) => { terrainTextureDraws.push(renderOptions.isRenderingToTexture); });
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
+
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(terrainTextureDraws).toEqual([true]);
+        expect(renderLayer.mock.calls[0][4]).toBe(renderOptions);
+        expect(getProjectionData).toHaveBeenCalledWith(expect.objectContaining({applyGlobeMatrix: true, applyTerrainMatrix: false}));
+        expect(renderOptions.isRenderingToTexture).toBe(false);
+        renderLayer.mockReset();
+    });
+
     test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 

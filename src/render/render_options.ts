@@ -1,6 +1,8 @@
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Projection} from '../geo/projection/projection.ts';
 import type {Terrain} from './terrain.ts';
+import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {DepthRangeType} from '../webgl/types.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
@@ -35,4 +37,13 @@ export function createRenderOptions(transform: IReadonlyTransform, projection: P
         projectionTransition,
         isRenderingGlobe: projectionTransition > 0
     };
+}
+
+export function getProjectionDataForTile(renderOptions: RenderOptions, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
+    return renderOptions.transform.getProjectionData({
+        overscaledTileID: tileID,
+        aligned: options.aligned,
+        applyGlobeMatrix: !renderOptions.isRenderingToTexture,
+        applyTerrainMatrix: options.applyTerrainMatrix ?? true
+    });
 }

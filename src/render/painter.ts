@@ -37,7 +37,7 @@ import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
-import {createRenderOptions, type RenderOptions} from './render_options.ts';
+import {createRenderOptions, getProjectionDataForTile, type RenderOptions} from './render_options.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -289,7 +289,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[]): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -316,36 +316,36 @@ export class Painter {
         // for more details. In non-subdivided projections the border flag does not change the mesh,
         // so one pass produces the same stencil mask.
         if (this.style.projection.useSubdivision) {
-            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+            this._renderTileMasks(stencilRefs, tileIDs, true);
         }
 
         // Final pass - draw borderless tiles with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+        this._renderTileMasks(stencilRefs, tileIDs, false);
 
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean): void {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], useBorders: boolean): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
-        const transform = this.transform;
+        const renderOptions = this.renderOptions;
 
         const program = this.useProgram('clippingMask');
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.getTerrainDataForTile(tileID, renderToTexture);
+            const terrainData = this.getTerrainDataForTile(tileID, renderOptions.isRenderingToTexture);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: !renderToTexture, applyTerrainMatrix: true});
+            const projectionData = getProjectionDataForTile(renderOptions, tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
-                ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
+                ColorMode.disabled, renderOptions.isRenderingToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
@@ -375,7 +375,7 @@ export class Painter {
             const terrainData = this.style.map.terrain?.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
+            const projectionData = getProjectionDataForTile(this.renderOptions, tileID);
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -597,7 +597,7 @@ export class Painter {
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                this.renderTileClippingMasks(layer, coords, false);
+                this.renderTileClippingMasks(layer, coords);
                 this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
@@ -629,7 +629,7 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this.renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+            this.renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
@@ -641,7 +641,7 @@ export class Painter {
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates(), renderOptions);
             }
         }
 

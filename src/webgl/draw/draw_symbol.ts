@@ -23,7 +23,7 @@ import {
 } from '../program/symbol_program.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {Texture, TextureFilter} from '../texture.ts';
@@ -65,7 +65,6 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
 }, renderOptions: RenderOptions): void {
     if (renderOptions.currentPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderOptions;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
@@ -90,7 +89,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('icon-rotation-alignment').constantOr('viewport'),
             layer.layout.get('icon-pitch-alignment'),
             layer.layout.get('icon-keep-upright'),
-            stencilMode, colorMode, isRenderingToTexture
+            stencilMode, colorMode, renderOptions
         );
     }
 
@@ -101,13 +100,13 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
             layer.layout.get('text-keep-upright'),
-            stencilMode, colorMode, isRenderingToTexture
+            stencilMode, colorMode, renderOptions
         );
     }
 
     if (tileManager.map.showCollisionBoxes) {
-        drawCollisionDebug(painter, tileManager, layer, coords, true);
-        drawCollisionDebug(painter, tileManager, layer, coords, false);
+        drawCollisionDebug(painter, tileManager, layer, coords, true, renderOptions);
+        drawCollisionDebug(painter, tileManager, layer, coords, false, renderOptions);
     }
 }
 
@@ -309,7 +308,7 @@ function drawLayerSymbols(
     keepUpright: boolean,
     stencilMode: StencilMode,
     colorMode: Readonly<ColorMode>,
-    isRenderingToTexture: boolean) {
+    renderOptions: RenderOptions) {
 
     const context = painter.context;
     const gl = context.gl;
@@ -383,7 +382,7 @@ function drawLayerSymbols(
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const projectionData = getProjectionDataForTile(renderOptions, coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&

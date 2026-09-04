@@ -14,7 +14,7 @@ import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {LineBucket} from '../../data/bucket/line_bucket.ts';
@@ -151,7 +151,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const useTerrain = !!painter.style.map.terrain;
 
     if (layerOpacity < 1) {
-        const results = prepareDrawLayerOpacity(painter, layer, coords, useTerrain);
+        const results = prepareDrawLayerOpacity(painter, layer, coords);
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
         drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
@@ -168,8 +168,6 @@ function drawLineTiles(
     renderOptions: RenderOptions,
     useTerrain: boolean
 ) {
-    const {isRenderingToTexture} = renderOptions;
-
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
@@ -206,7 +204,7 @@ function drawLineTiles(
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, isRenderingToTexture) : null;
+        const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, renderOptions.isRenderingToTexture) : null;
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);
@@ -223,11 +221,7 @@ function drawLineTiles(
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);
         }
 
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: coord,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
+        const projectionData = getProjectionDataForTile(renderOptions, coord);
 
         const pixelRatio = transform.getPixelScale();
 

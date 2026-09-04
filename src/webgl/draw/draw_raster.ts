@@ -15,7 +15,7 @@ import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -47,7 +47,6 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
-    const {isRenderingToTexture} = renderOptions;
     const source = tileManager.getSource();
 
     const projection = painter.style.projection;
@@ -65,16 +64,16 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, isRenderingToTexture, source.getMesh(painter.context, useSubdivision));
+        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, renderOptions, source.getMesh(painter.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, isRenderingToTexture); // draw without borders
-        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, isRenderingToTexture); // draw with borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, renderOptions); // draw without borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, renderOptions); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, isRenderingToTexture);
+        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, renderOptions);
     }
 }
 
@@ -89,14 +88,13 @@ function drawTiles(
     corners: Point[],
     imageWarp: RasterImageWarp,
     flipCullfaceMode: boolean = false,
-    isRenderingToTexture: boolean = false,
+    renderOptions: RenderOptions,
     sourceMesh: Mesh | null = null) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('raster');
-    const transform = painter.transform;
 
     const projection = painter.style.projection;
 
@@ -139,8 +137,8 @@ function drawTiles(
                 context.extTextureFilterAnisotropicMax);
         }
 
-        const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const terrainData = painter.getTerrainDataForTile(coord, renderOptions.isRenderingToTexture);
+        const projectionData = getProjectionDataForTile(renderOptions, coord, {aligned: align});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 
         const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');

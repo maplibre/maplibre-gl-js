@@ -180,13 +180,12 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
-     * @param renderOptions - flags describing how to render the layer
+     * @param renderOptions - shared state for the current render
      * @returns if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
 
-        const options: RenderOptions = {...renderOptions, isRenderingToTexture: true};
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
@@ -206,6 +205,7 @@ export class RenderToTexture {
         if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
+            renderOptions.isRenderingToTexture = true;
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
@@ -218,13 +218,14 @@ export class RenderToTexture {
                     const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
-                    painter.renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
+                    painter.renderTileClippingMasks(layer, coords);
+                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, renderOptions);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
                 obj.texture.generateMipmap();
             }
-            drawTerrain(this.painter, this.terrain, this._rttTiles, options);
+            renderOptions.isRenderingToTexture = false;
+            drawTerrain(this.painter, this.terrain, this._rttTiles, renderOptions);
             this._rttTiles = [];
 
             return LAYERS_TO_TEXTURES[type];
