@@ -13,15 +13,11 @@ import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 export type LineUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
 };
 
 export type LineGradientUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_image': Uniform1i;
     'u_image_height': Uniform1f;
 };
@@ -30,8 +26,6 @@ export type LinePatternUniformsType = {
     'u_translation': Uniform2f;
     'u_texsize': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_image': Uniform1i;
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
@@ -40,8 +34,6 @@ export type LinePatternUniformsType = {
 export type LineSDFUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_tileratio': Uniform1f;
     'u_crossfade_from': Uniform1f;
     'u_crossfade_to': Uniform1f;
@@ -54,8 +46,6 @@ export type LineSDFUniformsType = {
 export type LineGradientSDFUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_image': Uniform1i;
     'u_image_height': Uniform1f;
     'u_tileratio': Uniform1f;
@@ -70,15 +60,11 @@ export type LineGradientSDFUniformsType = {
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels)
 });
 
 const lineGradientUniforms = (context: Context, locations: UniformLocations): LineGradientUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_image_height': new Uniform1f(context, locations.u_image_height)
 });
@@ -87,9 +73,7 @@ const linePatternUniforms = (context: Context, locations: UniformLocations): Lin
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_image': new Uniform1i(context, locations.u_image),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade)
 });
@@ -97,8 +81,6 @@ const linePatternUniforms = (context: Context, locations: UniformLocations): Lin
 const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDFUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
@@ -111,8 +93,6 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
 const lineGradientSDFUniforms = (context: Context, locations: UniformLocations): LineGradientSDFUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_image_height': new Uniform1f(context, locations.u_image_height),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
@@ -135,11 +115,6 @@ const lineUniformValues = (
     return {
         'u_translation': calculateTranslation(painter, tile, layer),
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),
-        'u_device_pixel_ratio': painter.pixelRatio,
-        'u_units_to_pixels': [
-            1 / transform.pixelsToGLUnits[0],
-            1 / transform.pixelsToGLUnits[1]
-        ]
     };
 };
 
@@ -170,14 +145,9 @@ const linePatternUniformValues = (
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),
-        'u_device_pixel_ratio': painter.pixelRatio,
         'u_image': 0,
         'u_scale': [tileZoomRatio, crossfade.fromScale, crossfade.toScale],
         'u_fade': crossfade.t,
-        'u_units_to_pixels': [
-            1 / transform.pixelsToGLUnits[0],
-            1 / transform.pixelsToGLUnits[1]
-        ]
     };
 };
 
