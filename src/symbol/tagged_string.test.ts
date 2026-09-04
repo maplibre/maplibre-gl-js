@@ -1,4 +1,5 @@
 import {describe, test, expect} from 'vitest';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
@@ -9,6 +10,21 @@ describe('TaggedString', () => {
         verticalAlign: 'bottom',
         fontStack: 'Test',
     } as TextSectionOptions;
+
+    describe('sectionIndex', () => {
+        test('keeps the following section aligned when a letter and its accent are in different sections', () => {
+            const formatted = new Formatted([
+                new FormattedSection('a', null, 1, null, null, null),
+                new FormattedSection('\u0301', null, 0.5, null, null, null),
+                new FormattedSection('b', null, 2, null, null, null),
+            ]);
+
+            const tagged = TaggedString.fromFeature(formatted, 'Test');
+
+            expect(tagged.graphemes()).toEqual(['a\u0301', 'b']);
+            expect(tagged.sectionIndex).toEqual([0, 2]);
+        });
+    });
 
     describe('length', () => {
         test('counts a surrogate pair as a single character', () => {
@@ -37,6 +53,13 @@ describe('TaggedString', () => {
             tagged.trim();
             expect(tagged.text).toBe('茹𦨭');
             expect(tagged.sectionIndex).toHaveLength(2);
+        });
+
+        test('counts a CRLF as the single grapheme cluster it is, so the sections stay level with the text', () => {
+            const tagged = new TaggedString('\r\nabc\r\n', [textSection], Array(5).fill(0));
+            tagged.trim();
+            expect(tagged.text).toBe('abc');
+            expect(tagged.sectionIndex).toHaveLength(tagged.length());
         });
     });
 
@@ -84,12 +107,12 @@ describe('TaggedString', () => {
         };
         const glyphs = {
             'Test': {
-                '97': {id: 0x61, metrics, rect},
-                '98': {id: 0x62, metrics, rect},
-                '99': {id: 0x63, metrics, rect},
-                '40629': {id: 0x9EB5, metrics, rect},
-                '200414': {id: 0x30EDE, metrics, rect},
-            } as any as StyleGlyph,
+                'a': {id: 0x61, metrics, rect},
+                'b': {id: 0x62, metrics, rect},
+                'c': {id: 0x63, metrics, rect},
+                '\u9EB5': {id: 0x9EB5, metrics, rect},
+                '\u{30EDE}': {id: 0x30EDE, metrics, rect},
+            } as unknown as Record<string, StyleGlyph>,
         };
         const textSection = {
             scale: 1,

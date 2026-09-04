@@ -1,9 +1,12 @@
 #define GLOBE_RADIUS 6371008.8
 
+// Custom layers get this prelude without _prelude.vertex.glsl, which defines PROJECTION_UBO, so they set these as plain uniforms.
+#ifndef PROJECTION_UBO
 uniform highp vec4 u_projection_tile_mercator_coords;
 uniform highp vec4 u_projection_clipping_plane;
 uniform highp float u_projection_transition;
 uniform mat4 u_projection_fallback_matrix;
+#endif
 
 // The in-tile X coordinate of the projected vertex, used by clipAntimeridian() in the fragment shader (see _projection_globe.fragment.glsl).
 out highp float v_projection_tile_x;

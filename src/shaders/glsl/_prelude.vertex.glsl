@@ -88,11 +88,13 @@ mat3 rotationMatrixFromAxisAngle(vec3 u, float angle) {
 
 #ifdef TERRAIN3D
 uniform sampler2D u_terrain;
-uniform float u_terrain_dim;
-uniform mat4 u_terrain_matrix;
-uniform vec4 u_terrain_unpack;
-uniform float u_terrain_exaggeration;
 uniform highp sampler2D u_depth;
+layout(std140) uniform TerrainUBO {
+    highp mat4 u_terrain_matrix;
+    highp vec4 u_terrain_unpack;
+    highp float u_terrain_dim;
+    highp float u_terrain_exaggeration;
+};
 #endif
 
 // methods for pack/unpack depth value to texture rgba
@@ -167,4 +169,12 @@ float get_elevation(vec2 pos) {
 
 const float PI = 3.141592653589793;
 
-uniform mat4 u_projection_matrix;
+#define PROJECTION_UBO
+layout(std140) uniform ProjectionUBO {
+    highp mat4 u_projection_matrix;
+    highp mat4 u_projection_fallback_matrix;
+    highp vec4 u_projection_tile_mercator_coords;
+    highp vec4 u_projection_clipping_plane;
+    highp float u_projection_transition;
+    highp int u_projection_clip_antimeridian;
+};

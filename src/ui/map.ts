@@ -54,6 +54,7 @@ import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_
 import type {TaskID} from '../util/task_queue.ts';
 import type {
     FilterSpecification,
+    FontFacesSpecification,
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
@@ -1774,13 +1775,18 @@ export class Map extends Evented<MapEventType> {
     /**
      * Returns the map's minimum allowable zoom level.
      *
+     * @param constrained - If `true`, returns the effective minimum zoom after applying the map's viewport constraints.
+     * If `false` or omitted, returns the configured minimum zoom.
      * @returns minZoom
      * @example
      * ```ts
      * let minZoom = map.getMinZoom();
      * ```
      */
-    getMinZoom(): number { return this._camera.transform.minZoom; }
+    getMinZoom(constrained = false): number {
+        const transform = this._camera.transform;
+        return constrained ? transform.applyConstrain(transform.center, transform.minZoom).zoom : transform.minZoom;
+    }
 
     /**
      * Sets or clears the map's maximum zoom level.
@@ -3364,7 +3370,7 @@ export class Map extends Evented<MapEventType> {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @returns a promise that is resolved when the image is loaded
+     * @returns a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)
      *
      * @example
      * Load an image from an external URL.
@@ -3376,7 +3382,11 @@ export class Map extends Evented<MapEventType> {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        const response = await ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        if (!response.data) {
+            throw new Error(`Could not load image ${url}: the response is empty`);
+        }
+        return response;
     }
 
     /**
@@ -3705,6 +3715,44 @@ export class Map extends Evented<MapEventType> {
      */
     getGlyphs(): string | null {
         return this.style.getGlyphsUrl();
+    }
+
+    /**
+     * Sets the value of the style's `font-faces` property, which points at the font files used to
+     * draw text that the style's `glyphs` URL does not cover. Pass a falsy value (null or undefined)
+     * to unset it.
+     *
+     * The files are handed to the browser's CSS Font Loading API, so any format the browser can
+     * render text with may be used, and requests for them go through `transformRequest` as glyph
+     * requests do. Text is drawn a grapheme cluster at a time, so a letter and the marks written on
+     * it are handed to the browser's text engine together and come back as the one shape they are
+     * written as -- which is what a `glyphs` URL, serving one codepoint at a time, cannot do.
+     *
+     * @param fontFaces - The font faces to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/root/#font-faces).
+     * A declaration this cannot make sense of is skipped with a warning, as is a font file that
+     * fails to load, so the text it would have drawn falls back to the `glyphs` URL.
+     * @example
+     * ```ts
+     * map.setFontFaces({
+     *     'Noto Sans Regular': [
+     *         {url: 'https://example.com/NotoSansKhmer-Regular.ttf', 'unicode-range': ['U+1780-17FF']}
+     *     ]
+     * });
+     * ```
+     */
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): this {
+        this._lazyInitEmptyStyle();
+        this.style.setFontFaces(fontFaces);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's `font-faces` property.
+     *
+     * @returns The style's font faces, or `null` if it declares none.
+     */
+    getFontFaces(): FontFacesSpecification | null {
+        return this.style.getFontFaces();
     }
 
     /**
