@@ -1102,7 +1102,6 @@ describe('marker', () => {
     });
 
     test('Marker whose location is behind the camera is not positioned inside the viewport', () => {
-        const containerSize = 512;
         const map = createMap();
         map.setMaxPitch(85);
         map.setZoom(10);
@@ -1113,8 +1112,8 @@ describe('marker', () => {
             .setLngLat([0, -2])
             .addTo(map);
 
-        expect(marker._pos.x).toBeGreaterThan(containerSize);
-        expect(marker._pos.y).toBeGreaterThan(containerSize);
+        expect(marker._pos.x).toBeGreaterThan(map.getContainer().clientWidth);
+        expect(marker._pos.y).toBeGreaterThan(map.getContainer().clientHeight);
 
         map.remove();
     });
