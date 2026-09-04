@@ -37,7 +37,11 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
                     params.tileID.canonical.x,
                     params.tileID.canonical.y,
                 ),
-                aligned: params.aligned,
+                // Custom layers are not gated on `painter.options.moving` the way the raster paths are:
+                // a layer that asks for the aligned matrix keeps getting it while the camera moves, as before.
+                // The `rasterPixelAlignment` map option still turns it off, so a custom layer cannot end up
+                // aligned while the raster layers around it are not.
+                aligned: params.aligned && painter.options.rasterPixelAlignment,
                 applyGlobeMatrix: params.applyGlobeMatrix,
                 applyTerrainMatrix: params.applyTerrainMatrix,
             });

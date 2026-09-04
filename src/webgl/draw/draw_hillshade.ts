@@ -62,7 +62,7 @@ function renderHillshade(
 
     const defines = [`#define NUM_ILLUMINATION_SOURCES ${layer.paint.get('hillshade-highlight-color').values.length}`];
     const program = painter.useProgram('hillshade', null, false, defines);
-    const align = !painter.options.moving;
+    const align = painter.shouldAlignRasterToPixelGrid();
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);

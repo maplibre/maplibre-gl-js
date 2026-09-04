@@ -62,6 +62,7 @@ type PainterOptions = {
     rotating: boolean;
     zooming: boolean;
     moving: boolean;
+    rasterPixelAlignment: boolean;
     fadeDuration: number;
     anisotropicFilterPitch: number;
 };
@@ -492,6 +493,10 @@ export class Painter {
         } else {
             return ColorMode.alphaBlended;
         }
+    }
+
+    shouldAlignRasterToPixelGrid(): boolean {
+        return this.options.rasterPixelAlignment && !this.options.moving;
     }
 
     getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {

@@ -10,6 +10,7 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
 import {type CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 
 vi.mock(import('../../render/painter'));
 vi.mock(import('../program'));
@@ -34,6 +35,7 @@ describe('drawCustom', () => {
             projection: new MercatorProjection(),
         } as any;
         mockPainter.renderPass = 'translucent';
+        mockPainter.options = {rasterPixelAlignment: true} as any;
         mockPainter.transform = transform;
         mockPainter.context = {
             gl: {},
@@ -105,5 +107,52 @@ describe('drawCustom', () => {
         expect(tileProjectionData.mainMatrix[15]).toBeCloseTo(794.4539184570312, 6);
         expect(tileProjectionData.projectionTransition).toBe(0);
         expect(tileProjectionData.mainMatrix).toEqual(tileProjectionData.fallbackMatrix);
+    });
+    test('rasterPixelAlignment: false makes a custom layer asking for an aligned matrix get the unaligned one', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setZoom(4);
+        transform.setCenter(new LngLat(0.0001234, 0.0004321));
+
+        const tileID = {wrap: 0, canonical: {z: 4, x: 8, y: 8}};
+
+        function getMatrices(rasterPixelAlignment: boolean) {
+            const mockPainter = new Painter(null, null);
+            mockPainter.style = {projection: new MercatorProjection()} as any;
+            mockPainter.renderPass = 'translucent';
+            mockPainter.transform = transform;
+            mockPainter.options = {rasterPixelAlignment} as any;
+            mockPainter.context = {
+                gl: {},
+                setColorMode: () => {},
+                setStencilMode: () => {},
+                setDepthMode: () => {},
+                setDirty: () => {},
+                bindFramebuffer: {set: () => {}}
+            } as any;
+
+            let input: CustomRenderMethodInput;
+            const layer = new CustomStyleLayer({
+                id: 'custom-layer',
+                type: 'custom',
+                render(_gl, args) {
+                    input = args;
+                },
+            }, {});
+            const tileManagerMock = new TileManager(null, null, null);
+            tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
+            drawCustom(mockPainter, tileManagerMock, layer, {isRenderingToTexture: false, isRenderingGlobe: false});
+
+            return {
+                aligned: Array.from(input.getProjectionData({tileID, aligned: true}).mainMatrix),
+                unaligned: Array.from(input.getProjectionData({tileID, aligned: false}).mainMatrix),
+            };
+        }
+
+        const enabled = getMatrices(true);
+        expect(enabled.aligned).not.toEqual(enabled.unaligned);
+
+        const disabled = getMatrices(false);
+        expect(disabled.aligned).toEqual(disabled.unaligned);
     });
 });
