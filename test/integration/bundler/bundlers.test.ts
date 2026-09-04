@@ -50,7 +50,7 @@ describe('Bundler examples', () => {
 
     for (const dir of examples) {
         test(`${dir} builds and runs in a browser`, {timeout: TEST_TIMEOUT_MS}, async () => {
-            execSync('npm install', {cwd: dir, stdio: 'inherit'});
+            execSync('npm ci', {cwd: dir, stdio: 'inherit'});
             execSync('npm run build', {cwd: dir, stdio: 'inherit'});
 
             // Serve the example's own build output as the site root, so that
