@@ -39,6 +39,7 @@ import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
+import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -524,6 +525,7 @@ export class Painter {
         this.glyphManager = style.glyphManager;
 
         this.symbolFadeChange = style.placement.symbolFadeChange(now());
+        updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
 
         this.imageManager.beginFrame();
 
@@ -920,6 +922,7 @@ export class Painter {
 
         this.context.projectionUniformBuffer.destroy();
         this.context.terrainUniformBuffer.destroy();
+        this.context.frameUniformBuffer.destroy();
 
         if (this.cache) {
             for (const key in this.cache) {

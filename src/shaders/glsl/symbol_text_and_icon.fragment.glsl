@@ -8,8 +8,6 @@ uniform bool u_is_text;
 uniform sampler2D u_texture;
 uniform sampler2D u_texture_icon;
 uniform highp float u_gamma_scale;
-uniform lowp float u_device_pixel_ratio;
-
 in vec4 v_data0;
 in vec3 v_data1;
 flat in float v_is_sdf;

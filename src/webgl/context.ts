@@ -3,6 +3,7 @@ import {IndexBuffer} from './index_buffer.ts';
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
 import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
 import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import type {UniformBuffer} from './uniform_buffer.ts';
 import {type DepthMode} from './depth_mode.ts';
@@ -68,6 +69,7 @@ export class Context {
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
     projectionUniformBuffer: UniformBuffer;
     terrainUniformBuffer: UniformBuffer;
+    frameUniformBuffer: UniformBuffer;
 
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
@@ -119,6 +121,7 @@ export class Context {
 
         this.projectionUniformBuffer = createProjectionUniformBuffer(this);
         this.terrainUniformBuffer = createTerrainUniformBuffer(this);
+        this.frameUniformBuffer = createFrameUniformBuffer(this);
     }
 
     setDefault(): void {
@@ -185,6 +188,7 @@ export class Context {
         this.pixelStoreUnpackFlipY.dirty = true;
         this.projectionUniformBuffer.bindingDirty = true;
         this.terrainUniformBuffer.bindingDirty = true;
+        this.frameUniformBuffer.bindingDirty = true;
     }
 
     /**

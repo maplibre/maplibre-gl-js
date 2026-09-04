@@ -9,21 +9,17 @@ import type {Painter} from '../../render/painter.ts';
 import {EXTENT} from '../../data/extent.ts';
 
 export type CircleUniformsType = {
-    'u_camera_to_center_distance': Uniform1f;
     'u_scale_with_map': Uniform1i;
     'u_pitch_with_map': Uniform1i;
     'u_extrude_scale': Uniform2f;
-    'u_device_pixel_ratio': Uniform1f;
     'u_globe_extrude_scale': Uniform1f;
     'u_translate': Uniform2f;
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
-    'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
     'u_scale_with_map': new Uniform1i(context, locations.u_scale_with_map),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_globe_extrude_scale': new Uniform1f(context, locations.u_globe_extrude_scale),
     'u_translate': new Uniform2f(context, locations.u_translate),
 });
@@ -53,10 +49,8 @@ const circleUniformValues = (
     }
 
     return {
-        'u_camera_to_center_distance': transform.cameraToCenterDistance,
         'u_scale_with_map': +(layer.paint.get('circle-pitch-scale') === 'map'),
         'u_pitch_with_map': +(pitchWithMap),
-        'u_device_pixel_ratio': painter.pixelRatio,
         'u_extrude_scale': extrudeScale,
         'u_globe_extrude_scale': globeExtrudeScale,
         'u_translate': translate,

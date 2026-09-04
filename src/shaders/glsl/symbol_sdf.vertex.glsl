@@ -22,11 +22,7 @@ uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform bool u_is_along_line;
 uniform bool u_is_variable_anchor;
-uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
-uniform highp float u_aspect_ratio;
-uniform highp float u_camera_to_center_distance;
-uniform float u_fade_change;
 uniform vec2 u_texsize;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
@@ -78,7 +74,7 @@ void main() {
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     // Terrain can hide the ground anchor while the elevated symbol remains visible.
     float visibility = calculate_visibility(projectedPoint);
-    float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
+    float fade_change = fade_opacity[1] > 0.5 ? u_symbol_fade_change : -u_symbol_fade_change;
     float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
 
     // Move vertex outside clip space to discard triangle when opacity is negligible

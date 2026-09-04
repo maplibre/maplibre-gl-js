@@ -1,0 +1,70 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 512,
+      "operations": [["wait"]]
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [0, 0],
+  "zoom": 1,
+  "sprite": "local://sprites/sprite",
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": {"type": "globe"},
+  "sources": {
+    "satellites": {
+      "type": "geojson",
+      "maxzoom": 0,
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"label": "350 km", "height": 350000},
+            "geometry": {"type": "Point", "coordinates": [92, 15]}
+          },
+          {
+            "type": "Feature",
+            "properties": {"label": "50 km", "height": 50000},
+            "geometry": {"type": "Point", "coordinates": [92, -15]}
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "#c9d9e8"}
+    },
+    {
+      "id": "satellites",
+      "type": "symbol",
+      "source": "satellites",
+      "layout": {
+        "symbol-height-offset": ["get", "height"],
+        "symbol-height-anchor": "absolute",
+        "icon-image": "rocket-12",
+        "icon-size": 2,
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "text-field": ["get", "label"],
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        "text-size": 16,
+        "text-offset": [0, 1.5],
+        "text-allow-overlap": true,
+        "text-ignore-placement": true
+      },
+      "paint": {
+        "text-color": "#c00",
+        "text-halo-color": "#fff",
+        "text-halo-width": 2
+      }
+    }
+  ]
+}
