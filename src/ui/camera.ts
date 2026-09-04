@@ -103,6 +103,31 @@ export type JumpToOptions = CameraOptions & {
 };
 
 /**
+ * Options for {@link Map.calculateCameraOptions}. Omitted camera properties inherit
+ * their values from the map's current camera state.
+ */
+export type CameraCalculationOptions = JumpToOptions & {
+    /** The geographic location to keep fixed on screen. */
+    around?: LngLatLike;
+    /**
+     * The screen point at which `around` should remain. If omitted, the current
+     * projected screen position of `around` is used. Must not be supplied without `around`.
+     */
+    aroundPoint?: PointLike;
+};
+
+/** A complete public camera state returned by {@link Map.calculateCameraOptions}. */
+export type CameraState = {
+    center: LngLat;
+    zoom: number;
+    bearing: number;
+    pitch: number;
+    roll: number;
+    elevation: number;
+    padding: PaddingOptions;
+};
+
+/**
  * A options object for the {@link Map.cameraForBounds} method
  */
 export type CameraForBoundsOptions = CameraOptions & {
@@ -345,6 +370,8 @@ export class Camera extends Evented<MapEventType> {
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
+    /** Reusable scratch transform for stateless camera calculations. */
+    _cameraOptionsTransform?: ITransform;
     /**
      * A callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
@@ -408,6 +435,7 @@ export class Camera extends Evented<MapEventType> {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
+        delete this._cameraOptionsTransform;
     }
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
@@ -706,6 +734,64 @@ export class Camera extends Evented<MapEventType> {
         }
 
         return this.fire(new MapMovementEvent('moveend', eventData));
+    }
+
+    calculateCameraOptions(options: CameraCalculationOptions): CameraState {
+        if (options.aroundPoint !== undefined && options.around === undefined) {
+            throw new Error('`aroundPoint` requires `around` to be specified');
+        }
+
+        this._cameraOptionsTransform ||= this.transform.clone();
+        this._cameraOptionsTransform.apply(this.transform, false);
+        const tr = this._cameraOptionsTransform;
+        const bearing = 'bearing' in options ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
+        const pitch = 'pitch' in options ? +options.pitch : tr.pitch;
+        const roll = 'roll' in options ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
+        const padding = options.padding ?? tr.padding;
+        const around = options.around === undefined ? undefined : LngLat.convert(options.around);
+        const aroundPoint = around === undefined ? undefined :
+            (options.aroundPoint === undefined ? tr.locationToScreenPoint(around) : Point.convert(options.aroundPoint));
+        let zoom = options.zoom;
+        if (zoom !== undefined && this._zoomSnap) zoom = evaluateZoomSnap(+zoom, this._zoomSnap);
+
+        if (this.terrain) {
+            const elevationCenter = options.center ? LngLat.convert(options.center) : tr.center;
+            tr.setElevation(this.terrain.getElevationForLngLat(elevationCenter, tr));
+        }
+
+        const handler = this.cameraHelper.handleEaseTo(tr, {
+            bearing,
+            pitch,
+            roll,
+            padding,
+            around,
+            aroundPoint,
+            offsetAsPoint: new Point(0, 0),
+            offset: [0, 0],
+            zoom,
+            center: options.center
+        });
+        handler.easeFunc(1);
+
+        if (this.terrain && options.elevation === undefined) {
+            tr.setElevation(this.terrain.getElevationForLngLat(handler.elevationCenter, tr));
+        } else if (options.elevation !== undefined) {
+            tr.setElevation(+options.elevation);
+        }
+
+        const elevated = this._elevateCameraIfInsideTerrain(tr);
+        if (elevated.zoom !== undefined) tr.setZoom(elevated.zoom);
+        if (elevated.pitch !== undefined) tr.setPitch(elevated.pitch);
+
+        return {
+            center: tr.center,
+            zoom: tr.zoom,
+            bearing: tr.bearing,
+            pitch: tr.pitch,
+            roll: tr.roll,
+            elevation: tr.elevation,
+            padding: tr.padding
+        };
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {

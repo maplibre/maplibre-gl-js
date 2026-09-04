@@ -51,7 +51,7 @@ import {EXTENT} from './data/extent.ts';
 
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
-import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
+import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike, CameraCalculationOptions, CameraState} from './ui/camera.ts';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
@@ -281,6 +281,8 @@ export {
     type Subscription,
     type Complete,
     type CameraOptions,
+    type CameraCalculationOptions,
+    type CameraState,
     type CenterZoomBearing,
     type StyleImage,
     type StyleImageData,

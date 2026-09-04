@@ -112,3 +112,107 @@ describe('calculateCameraOptionsFromTo', () => {
         expect(mockedGetElevation).toHaveBeenCalledTimes(0);
     });
 });
+
+describe('calculateCameraOptions', () => {
+    test('returns a complete state without changing the map or firing movement events', () => {
+        const map = createMap({center: [12, 34], zoom: 4, bearing: 20, pitch: 30, roll: 5});
+        const before = map.calculateCameraOptions({});
+        const move = vi.fn();
+        map.on('move', move);
+
+        const result = map.calculateCameraOptions({
+            center: [40, 20], zoom: 7, bearing: 80, pitch: 45, roll: 10,
+            elevation: 123, padding: {top: 1, right: 2, bottom: 3, left: 4}
+        });
+
+        expect(result).toMatchObject({zoom: 7, bearing: 80, pitch: 45, roll: 10, elevation: 123});
+        expect(result.center.lng).toBeCloseTo(40);
+        expect(result.center.lat).toBeCloseTo(20);
+        expect(result.padding).toEqual({top: 1, right: 2, bottom: 3, left: 4});
+        expect(map.calculateCameraOptions({})).toEqual(before);
+        expect(move).not.toHaveBeenCalled();
+    });
+
+    test('matches the endpoint of easeTo, including constraints and normalization', () => {
+        const options = {center: [190, 89] as [number, number], zoom: 100, bearing: 370, pitch: 100, roll: -350};
+        const calculatedMap = createMap({center: [170, 10], zoom: 3, bearing: 5, pitch: 20});
+        const appliedMap = createMap({center: [170, 10], zoom: 3, bearing: 5, pitch: 20});
+        const result = calculatedMap.calculateCameraOptions(options);
+        appliedMap.easeTo({...options, duration: 0});
+
+        expect(result.center.lng).toBeCloseTo(appliedMap.getCenter().lng);
+        expect(result.center.lat).toBeCloseTo(appliedMap.getCenter().lat);
+        expect(result.zoom).toBeCloseTo(appliedMap.getZoom());
+        expect(result.bearing).toBeCloseTo(appliedMap.getBearing());
+        expect(result.pitch).toBeCloseTo(appliedMap.getPitch());
+        expect(result.roll).toBeCloseTo(appliedMap.getRoll());
+    });
+
+    test('keeps an around location at its current point with pitch and bearing', () => {
+        const map = createMap({center: [0, 0], zoom: 3, pitch: 50, bearing: 35});
+        const around = new LngLat(5, 3);
+        const point = map.project(around);
+        const result = map.calculateCameraOptions({around, zoom: 6});
+        map.jumpTo(result);
+        expect(map.project(around).x).toBeCloseTo(point.x);
+        expect(map.project(around).y).toBeCloseTo(point.y);
+    });
+
+    test('supports an explicit aroundPoint and validates a missing around', () => {
+        const map = createMap({center: [0, 0], zoom: 3, pitch: 35, bearing: 25});
+        const around = new LngLat(2, 1);
+        const aroundPoint: [number, number] = [100, 150];
+        const projected = map.project(around);
+        expect(Math.hypot(projected.x - aroundPoint[0], projected.y - aroundPoint[1])).toBeGreaterThan(1);
+
+        const result = map.calculateCameraOptions({around, aroundPoint, zoom: 5});
+        map.jumpTo(result);
+        expect(map.project(around).x).toBeCloseTo(aroundPoint[0]);
+        expect(map.project(around).y).toBeCloseTo(aroundPoint[1]);
+        expect(() => map.calculateCameraOptions({aroundPoint})).toThrow('`aroundPoint` requires `around`');
+    });
+
+    test('repeated calculations are independent and preserve world-copy behavior', () => {
+        const map = createMap({center: [350, 0], zoom: 3, renderWorldCopies: true});
+        const clone = vi.spyOn(map._camera.transform, 'clone');
+        const options = {center: [-350, 5] as [number, number], zoom: 4};
+        const first = map.calculateCameraOptions(options);
+        const second = map.calculateCameraOptions(options);
+        expect(second).toEqual(first);
+        expect(clone).toHaveBeenCalledTimes(1);
+
+        const applied = createMap({center: [350, 0], zoom: 3, renderWorldCopies: true});
+        applied.easeTo({...options, duration: 0});
+        expect(first.center.lng).toBeCloseTo(applied.getCenter().lng);
+    });
+
+    test('matches easeTo under globe projection', () => {
+        const style = {version: 8 as const, sources: {}, layers: [], projection: {type: 'globe' as const}};
+        const calculatedMap = createMap({center: [10, 20], zoom: 2, style});
+        const appliedMap = createMap({center: [10, 20], zoom: 2, style});
+        const options = {center: [70, 35] as [number, number], zoom: 4, bearing: 25};
+        const result = calculatedMap.calculateCameraOptions(options);
+        appliedMap.easeTo({...options, duration: 0});
+
+        expect(result.center.lng).toBeCloseTo(appliedMap.getCenter().lng);
+        expect(result.center.lat).toBeCloseTo(appliedMap.getCenter().lat);
+        expect(result.zoom).toBeCloseTo(appliedMap.getZoom());
+    });
+
+    test('uses terrain elevation without mutating the live elevation', () => {
+        const map = createMap({center: [0, 0], zoom: 10});
+        const terrain = {
+            getElevationForLngLat: vi.fn(() => 50),
+            getElevationForLngLatZoom: vi.fn(() => -1000)
+        } as unknown as Terrain;
+        map.terrain = terrain;
+        map._camera.terrain = terrain;
+        const before = map.getCenterElevation();
+
+        const result = map.calculateCameraOptions({center: [1, 1]});
+
+        expect(result.elevation).toBe(50);
+        expect(map.getCenterElevation()).toBe(before);
+    });
+
+});
