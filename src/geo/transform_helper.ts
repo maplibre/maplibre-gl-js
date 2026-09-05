@@ -1,7 +1,7 @@
 import {LngLat, type LngLatLike} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
@@ -14,11 +14,11 @@ import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} 
 import {Bounds} from './bounds.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
- * interpolating between the two endpoints will cross it.
+ * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
  * @param center - The LngLat object of the desired center. This object will be mutated.
  */
 export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
-    if (!tr.renderWorldCopies || tr.lngRange) return;
+    if (!tr.renderWorldCopies || !tr.worldCoordinateHelper.wraps || tr.lngRange) return;
     const delta = center.lng - tr.center.lng;
     center.lng +=
         delta > 180 ? -360 :
@@ -90,6 +90,11 @@ export type TransformOptions = {
      * An override of the transform's default constraining function for respecting its longitude and latitude bounds.
      */
     constrainOverride?: TransformConstrainFunction | null;
+    /**
+     * The lng/lat to world coordinate mapping the transform positions the camera in. Defaults to mercator;
+     * the projection factory passes a registered CRS's mapping here.
+     */
+    worldCoordinateHelper?: WorldCoordinateHelper;
 };
 
 function getTileZoom(zoom: number): number {
@@ -108,7 +113,12 @@ export class TransformHelper implements ITransformGetters {
     _tileSize: number; // constant
     _tileZoom: number; // integer zoom level for tiles
     _lngRange: [number, number];
-    _latRange: [number, number];
+    /**
+     * The latitude range the center is constrained to: the max bounds' when set, otherwise the valid mercator range
+     * for a wrapping world, and `null` for a world that does not wrap (a planar CRS), which is constrained to its
+     * world square instead.
+     */
+    _latRange: [number, number] | null;
     _scale: number; // computed based on zoom
     _width: number;
     _height: number;
@@ -163,7 +173,7 @@ export class TransformHelper implements ITransformGetters {
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
-        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
+        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -254,7 +264,7 @@ export class TransformHelper implements ITransformGetters {
     get bearingInRadians(): number { return this._bearingInRadians; }
 
     get lngRange(): [number, number] { return this._lngRange; }
-    get latRange(): [number, number] { return this._latRange; }
+    get latRange(): [number, number] | null { return this._latRange; }
     get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
 
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
@@ -303,6 +313,9 @@ export class TransformHelper implements ITransformGetters {
             renderWorldCopies = false;
         }
 
+        if (renderWorldCopies && !this._worldCoordinateHelper.wraps) {
+            warnOnce('renderWorldCopies has no effect in a projection whose world does not wrap.');
+        }
         this._renderWorldCopies = renderWorldCopies;
     }
 
@@ -514,7 +527,7 @@ export class TransformHelper implements ITransformGetters {
             this.constrainInternal();
         } else {
             this._lngRange = null;
-            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
+            this._latRange = this._worldCoordinateHelper.wraps ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE] : null;
         }
     }
 

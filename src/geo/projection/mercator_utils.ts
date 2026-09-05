@@ -44,11 +44,11 @@ export function tileCoordinatesToLocation(inTileX: number, inTileY: number, cano
  * Convert from LngLat to world coordinates (the projection's 0..1 world square scaled by world size).
  * @param worldSize - World size computed from zoom level and tile size.
  * @param lnglat - The location to convert.
- * @param helper - The lng/lat to world mapping.
+ * @param helper - The lng/lat to world mapping; latitude is clamped to the valid mercator range only for a wrapping (mercator) helper.
  * @returns Point
  */
 export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat, helper: WorldCoordinateHelper): Point {
-    const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+    const lat = helper.wraps ? clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE) : lnglat.lat;
     const {x, y} = helper.worldFromLngLat(lnglat.lng, lat);
     return new Point(x * worldSize, y * worldSize);
 }
@@ -133,4 +133,45 @@ export function cameraDirectionFromPitchBearing(pitch: number, bearing: number):
     const x = h * Math.sin(bearingRadians);
     const y = -h * Math.cos(bearingRadians);
     return {x, y, z};
+}
+
+/**
+ * Projects the four corners of a lng/lat box and returns the world rectangle that contains them.
+ * For a cylindrical mapping like mercator this is exactly the projected box; for a mapping where
+ * `x` and `y` both depend on `lng` and `lat` it is the axis-aligned hull of the corners, which is
+ * correct for axis-aligned lng/lat boxes up to the curvature of the box edges.
+ */
+export function lngLatBoxToWorldBox(worldCoordinateHelper: WorldCoordinateHelper, west: number, south: number, east: number, north: number): {minX: number; minY: number; maxX: number; maxY: number} {
+    const corners = [
+        worldCoordinateHelper.worldFromLngLat(west, north),
+        worldCoordinateHelper.worldFromLngLat(east, north),
+        worldCoordinateHelper.worldFromLngLat(east, south),
+        worldCoordinateHelper.worldFromLngLat(west, south),
+    ];
+    return {
+        minX: Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+        minY: Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+        maxX: Math.max(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+        maxY: Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+    };
+}
+
+/**
+ * Maps the four corners of a world rectangle back to lng/lat and returns the box that contains them:
+ * the inverse of {@link lngLatBoxToWorldBox}, with the same axis-aligned hull where `x` and `y` both
+ * depend on `lng` and `lat`.
+ */
+export function worldBoxToLngLatBox(worldCoordinateHelper: WorldCoordinateHelper, minX: number, minY: number, maxX: number, maxY: number): {west: number; south: number; east: number; north: number} {
+    const corners = [
+        worldCoordinateHelper.lngLatFromWorld(minX, minY),
+        worldCoordinateHelper.lngLatFromWorld(maxX, minY),
+        worldCoordinateHelper.lngLatFromWorld(maxX, maxY),
+        worldCoordinateHelper.lngLatFromWorld(minX, maxY),
+    ];
+    return {
+        west: Math.min(corners[0].lng, corners[1].lng, corners[2].lng, corners[3].lng),
+        south: Math.min(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
+        east: Math.max(corners[0].lng, corners[1].lng, corners[2].lng, corners[3].lng),
+        north: Math.max(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
+    };
 }

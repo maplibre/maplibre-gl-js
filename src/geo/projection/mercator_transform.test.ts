@@ -11,6 +11,7 @@ import {createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {Tile} from '../../tile/tile.ts';
+import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -877,5 +878,150 @@ describe('mercator transform bit identity with the pre-refactor transform', () =
             fromCamera.center.lng, fromCamera.center.lat, fromCamera.elevation, fromCamera.zoom,
             screen.lng, screen.lat, depth,
         ]).toEqual(expected);
+    });
+});
+
+function createSimpleTransform(width: number, height: number): MercatorTransform {
+    const transform = new MercatorTransform({
+        minZoom: -5,
+        maxZoom: 22,
+        minPitch: 0,
+        maxPitch: 85,
+        renderWorldCopies: true,
+        worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs),
+    });
+    transform.resize(width, height);
+    return transform;
+}
+
+describe('MercatorTransform over the simple CRS', () => {
+    test('uses a non-wrapping helper', () => {
+        const transform = createSimpleTransform(200, 200);
+        expect(transform.worldCoordinateHelper.wraps).toBe(false);
+    });
+
+    test('keeps the helper across clone', () => {
+        const transform = createSimpleTransform(200, 200);
+        expect(transform.clone().worldCoordinateHelper).toBe(transform.worldCoordinateHelper);
+    });
+
+    test('sets no default lng/lat ranges', () => {
+        const transform = createSimpleTransform(200, 200);
+        expect(transform.latRange).toBeNull();
+        expect(transform.lngRange).toBeNull();
+        expect(transform.getMaxBounds()).toBeNull();
+    });
+
+    describe('constrain', () => {
+        test('clamps the center so the viewport stays inside the square', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(1);
+            const worldSizeAtZoom1 = 1024;
+            const halfViewport = 100;
+            const maxOffset = 180 * (1 - halfViewport / worldSizeAtZoom1) - 90;
+
+            transform.setCenter(new LngLat(89, 89));
+            expect(transform.center.lng).toBeCloseTo(maxOffset, 6);
+            expect(transform.center.lat).toBeCloseTo(maxOffset, 6);
+
+            transform.setCenter(new LngLat(-89, -89));
+            expect(transform.center.lng).toBeCloseTo(-maxOffset, 6);
+            expect(transform.center.lat).toBeCloseTo(-maxOffset, 6);
+        });
+
+        test('zooms in so the square fills the viewport when zoomed out too far', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(-2);
+            transform.setCenter(new LngLat(0, 0));
+            const viewport = 200;
+            const worldSizeAtZoom0 = 512;
+            expect(transform.zoom).toBeCloseTo(Math.log2(viewport / worldSizeAtZoom0), 6);
+            expect(transform.center.lng).toBeCloseTo(0, 6);
+            expect(transform.center.lat).toBeCloseTo(0, 6);
+        });
+
+        test('keeps the viewport inside explicit max bounds set inside the square', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(4);
+            transform.setMaxBounds(new LngLatBounds([-10, -10], [10, 10]));
+            const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
+            const halfViewport = 100;
+
+            transform.setCenter(new LngLat(80, 80));
+
+            expect(transform.center.lng).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
+            expect(transform.center.lat).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
+        });
+
+        test('stops the center at the east edge of the square instead of wrapping', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(4);
+            const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
+            const halfViewport = 100;
+
+            transform.setCenter(new LngLat(89, 0));
+
+            expect(transform.center.lng).toBeCloseTo(90 - halfViewport * degreesPerPixel, 6);
+        });
+
+        test('setLocationAtPoint keeps the longitude it was given instead of wrapping it', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(4);
+
+            transform.setLocationAtPoint(new LngLat(85, 0), transform.centerPoint);
+
+            expect(transform.center.lng).toBeCloseTo(85, 6);
+        });
+    });
+
+    test('returns only the main world from getVisibleUnwrappedCoordinates while renderWorldCopies is on', () => {
+        const transform = createSimpleTransform(512, 512);
+        transform.setZoom(0);
+        transform.setCenter(new LngLat(0, 0));
+        expect(transform.renderWorldCopies).toBe(true);
+        expect(transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0))).toHaveLength(1);
+    });
+
+    test('apply carries a renderWorldCopies of false through the non-wrapping transform and back', () => {
+        const simple = createSimpleTransform(200, 200);
+        simple.apply(new MercatorTransform({renderWorldCopies: false}), false);
+        expect(simple.renderWorldCopies).toBe(false);
+
+        const mercator = new MercatorTransform({renderWorldCopies: true});
+        mercator.apply(simple, false);
+        expect(mercator.renderWorldCopies).toBe(false);
+    });
+
+    describe('lng/lat and screen points', () => {
+        test('round trips a location through screen space with the identity mapping', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(2);
+            transform.setCenter(new LngLat(30, -20));
+            const point = transform.locationToScreenPoint(new LngLat(35, -25));
+            const back = transform.screenPointToLocation(point);
+            expect(back.lng).toBeCloseTo(35, 6);
+            expect(back.lat).toBeCloseTo(-25, 6);
+        });
+
+        test('places lng/lat 45,45 in the top-right quarter of the square', () => {
+            const transform = createSimpleTransform(512, 512);
+            transform.setZoom(0);
+            transform.setCenter(new LngLat(0, 0));
+            const worldSizeAtZoom0 = 512;
+            const point = transform.locationToScreenPoint(new LngLat(45, 45));
+            expect(point.x).toBeCloseTo(0.75 * worldSizeAtZoom0, 6);
+            expect(point.y).toBeCloseTo(0.25 * worldSizeAtZoom0, 6);
+        });
+
+        test('puts the camera above the center when unpitched', () => {
+            const transform = createSimpleTransform(512, 512);
+            transform.setZoom(3);
+            transform.setCenter(new LngLat(10, 20));
+            const camera = transform.getCameraLngLat();
+            expect(camera.lng).toBeCloseTo(10, 6);
+            expect(camera.lat).toBeCloseTo(20, 6);
+        });
     });
 });
