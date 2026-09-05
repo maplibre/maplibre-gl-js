@@ -13,11 +13,15 @@ import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding, EmptyTileBehavior} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
+    /**
+     * How a tile response with an empty body, or a 404, is handled, see {@link EmptyTileBehavior}.
+     */
+    emptyTileBehavior?: EmptyTileBehavior;
 };
 
 export type LoadTileResult = {
@@ -73,7 +77,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     tileSize: number;
     promoteId: PromoteIdSpecification;
 
-    _options: VectorSourceSpecification;
+    _options: VectorTileSourceOptions;
     _collectResourceTiming: boolean;
     dispatcher: Dispatcher;
     map: Map;
@@ -290,7 +294,12 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         tile.etag = data?.etag;
 
-        tile.loadVectorData(data, this.map.painter);
+        const noContent = !data || (data.etagUnmodified !== true && data.emptyBody);
+        if (noContent && this._options.emptyTileBehavior === 'missing') {
+            tile.state = 'errored';
+        } else {
+            tile.loadVectorData(data, this.map.painter);
+        }
 
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;

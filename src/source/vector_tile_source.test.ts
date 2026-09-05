@@ -322,6 +322,56 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
+    test('a 404 with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                return Promise.reject(new AJAXError(404, 'Not Found', 'http://localhost/tile', new Blob()));
+            }
+        });
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect(tile.state).toBe('errored');
+        expect(tile.loadVectorData).not.toHaveBeenCalled();
+    });
+
+    test('an empty tile body with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                return Promise.resolve({emptyBody: true} as any);
+            }
+        });
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect(tile.state).toBe('errored');
+        expect(tile.loadVectorData).not.toHaveBeenCalled();
+    });
+
     test('reloads a loading tile properly', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']

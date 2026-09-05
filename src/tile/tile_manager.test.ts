@@ -479,6 +479,34 @@ describe('TileManager / Source lifecycle', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
+    test('requests the parent when an ideal tile loads without data and without an error', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        const tileManager = createTileManager();
+        const idealZoom = 1;
+        const requestedZooms: number[] = [];
+        tileManager._source.loadTile = async (tile) => {
+            requestedZooms.push(tile.tileID.canonical.z);
+            tile.state = tile.tileID.canonical.z === idealZoom ? 'errored' : 'loaded';
+        };
+        const updateAsTheMapDoesOnItsNextFrame = () => tileManager.update(transform);
+        const parentRequested = new Promise<void>((resolve) => {
+            tileManager.on('data', (e) => {
+                if (e.dataType === 'source' && e.sourceDataType === 'metadata') updateAsTheMapDoesOnItsNextFrame();
+                if (e.dataType === 'source' && e.tile) {
+                    updateAsTheMapDoesOnItsNextFrame();
+                    if (requestedZooms.includes(idealZoom - 1)) resolve();
+                }
+            });
+        });
+
+        tileManager.onAdd(undefined);
+        await parentRequested;
+
+        expect(requestedZooms).toContain(idealZoom - 1);
+    });
+
     test('loaded() true after tile error', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);
