@@ -359,7 +359,6 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
         source.setPremultiplyAlpha(false);
-        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
         source.map._refreshExpiredTiles = false;
 
         const image = {width: 256, height: 256} as ImageBitmap;
@@ -497,7 +496,6 @@ describe('RasterTileSource', () => {
                 releaseTransform = resolve;
             });
         });
-        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
 
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),

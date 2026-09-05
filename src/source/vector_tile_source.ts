@@ -68,18 +68,17 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     id: string;
     minzoom: number;
     maxzoom: number;
-    url: string;
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
     promoteId: PromoteIdSpecification;
 
     _options: VectorSourceSpecification;
+    _tileJSONTiles: string[];
     _collectResourceTiming: boolean;
     dispatcher: Dispatcher;
     map: Map;
     bounds: [number, number, number, number];
-    tiles: string[];
     tileBounds: TileBounds;
     reparseOverscaled: boolean;
     isTileClipped: boolean;
@@ -100,7 +99,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.isTileClipped = true;
         this._loaded = false;
 
-        extend(this, pick(options, ['url', 'scheme', 'tileSize', 'promoteId', 'encoding']));
+        extend(this, pick(options, ['scheme', 'tileSize', 'promoteId', 'encoding']));
         this._options = extend({type: 'vector'}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -112,6 +111,20 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.setEventedParent(eventedParent);
     }
 
+    /**
+     * The URL of the TileJSON the source was given, if any.
+     */
+    get url(): string {
+        return this._options.url;
+    }
+
+    /**
+     * The tile URL templates in use: the `tiles` option when the source has one, otherwise the tiles of its TileJSON.
+     */
+    get tiles(): string[] {
+        return this._options.tiles ?? this._tileJSONTiles;
+    }
+
     async load(sourceDataChanged: boolean = false): Promise<void> {
         this._loaded = false;
         this.fire(new MapSourceDataEvent('dataloading'));
@@ -121,7 +134,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             this._tileJSONRequest = null;
             this._loaded = true;
             if (tileJSON) {
-                extend(this, tileJSON);
+                const {tiles, ...tileJSONProperties} = tileJSON;
+                this._tileJSONTiles = tiles;
+                extend(this, tileJSONProperties);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
@@ -171,7 +186,6 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
      */
     setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
-            this.tiles = tiles;
             this._options.tiles = tiles;
         });
 
@@ -185,7 +199,6 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
      */
     setUrl(url: string): this {
         this.setSourceProperty(() => {
-            this.url = url;
             this._options.url = url;
         });
 

@@ -57,7 +57,6 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     id: string;
     minzoom: number;
     maxzoom: number;
-    url: string;
     scheme: string;
     tileSize: number;
 
@@ -66,10 +65,10 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     roundZoom: boolean;
     dispatcher: Dispatcher;
     map: Map;
-    tiles: string[];
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _tileJSONTiles: string[];
     _premultiplyAlpha: boolean;
     _tileJSONRequest: AbortController;
 
@@ -89,7 +88,21 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         this._premultiplyAlpha = true;
 
         this._options = extend({type: 'raster'}, options);
-        extend(this, pick(options, ['url', 'scheme', 'tileSize']));
+        extend(this, pick(options, ['scheme', 'tileSize']));
+    }
+
+    /**
+     * The URL of the TileJSON the source was given, if any.
+     */
+    get url(): string {
+        return this._options.url;
+    }
+
+    /**
+     * The tile URL templates in use: the `tiles` option when the source has one, otherwise the tiles of its TileJSON.
+     */
+    get tiles(): string[] {
+        return this._options.tiles ?? this._tileJSONTiles;
     }
 
     async load(sourceDataChanged: boolean = false): Promise<void> {
@@ -101,7 +114,9 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
             this._tileJSONRequest = null;
             this._loaded = true;
             if (tileJSON) {
-                extend(this, tileJSON);
+                const {tiles, ...tileJSONProperties} = tileJSON;
+                this._tileJSONTiles = tiles;
+                extend(this, tileJSONProperties);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
@@ -155,7 +170,6 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
      */
     setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
-            this.tiles = tiles;
             this._options.tiles = tiles;
         });
 
@@ -169,7 +183,6 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
      */
     setUrl(url: string): this {
         this.setSourceProperty(() => {
-            this.url = url;
             this._options.url = url;
         });
 
