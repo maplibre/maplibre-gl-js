@@ -258,7 +258,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 
@@ -269,7 +269,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 
