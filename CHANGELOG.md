@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
 
 ### 🐞 Bug fixes
 - Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251))
