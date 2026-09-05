@@ -32,11 +32,12 @@ const KEYBOARD_DRAG_SMALL_STEP = 1;
 const KEYBOARD_DRAG_LARGE_STEP = 10;
 
 /**
- * Firefox snaps an element to whole device pixels when its CSS transform is axis-aligned, so a marker at a
- * fractional position judders while the camera animates (#7522). A rotation this small is invisible (0.036 px
- * at the corner of the default pin) and is past that alignment tolerance, which 0.01 degrees is not.
+ * Firefox snaps an element to whole device pixels when its CSS transform is axis-aligned, so a marker judders
+ * while the camera animates (#7522). While the map moves, a marker with no rotation of its own is rotated by
+ * this much instead: invisible (0.036 px at the corner of the default pin) but past that alignment tolerance,
+ * which 0.01 degrees is not. At rest the transform is left exactly as it was.
  */
-const SUBPIXEL_ROTATION_DEGREES = 0.05;
+const MOVING_MARKER_ROTATION_DEGREES = 0.05;
 
 /**
  * The {@link Marker} options object
@@ -787,11 +788,12 @@ export class Marker extends Evented<MarkerEventType> {
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker.setLngLat is invoked).
-        const roundToWholePixels = !this._subpixelPositioning && (!e || e.type === 'moveend');
-        if (roundToWholePixels) {
+        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
-        } else if (rotationDegrees === 0) {
-            rotationDegrees = SUBPIXEL_ROTATION_DEGREES;
+        }
+
+        if (e?.type === 'move' && rotationDegrees === 0) {
+            rotationDegrees = MOVING_MARKER_ROTATION_DEGREES;
         }
 
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} rotateZ(${rotationDegrees}deg)`;
