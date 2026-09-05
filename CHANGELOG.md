@@ -1,6 +1,8 @@
 ## main
 ### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
+- Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#8328](https://github.com/maplibre/maplibre-gl-js/pull/8328), continues [#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix a marker's popup jumping to another world copy when the marker is moved across the antimeridian on a zoomed-out map ([#5655](https://github.com/maplibre/maplibre-gl-js/issues/5655), [#8326](https://github.com/maplibre/maplibre-gl-js/pull/8326), continues [#5956](https://github.com/maplibre/maplibre-gl-js/pull/5956)) (by [@yuiseki](https://github.com/yuiseki))

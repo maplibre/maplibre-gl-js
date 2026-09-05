@@ -196,6 +196,7 @@ export class RenderToTexture {
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
+                obj.texture.generateMipmap();
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];

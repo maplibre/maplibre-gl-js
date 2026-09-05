@@ -65,6 +65,12 @@ describe('render to texture', () => {
     } as any as SymbolStyleLayer;
 
     let layersDrawn = 0;
+    function createMockRTTObject(size: number) {
+        return {
+            texture: {texture: gl.createTexture(), bind: vi.fn(), generateMipmap: vi.fn()},
+            size
+        };
+    }
     const painter = {
         layersDrawn: 0,
         context: new Context(gl),
@@ -74,7 +80,7 @@ describe('render to texture', () => {
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
-        acquireRTT: (size: number) => ({texture: {}, size}),
+        acquireRTT: (size: number) => createMockRTTObject(size),
         bindRTT: vi.fn(),
         releaseRTT: vi.fn(),
         drawFunctions: {
@@ -248,11 +254,33 @@ describe('render to texture', () => {
         expect(tile.getRTT(0).size).toBe(rtt.rttSize);
     });
 
+    test('rebuilds the texture mip chain once the stack has been rendered into it', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(tile.getRTT(0).texture.generateMipmap).toHaveBeenCalledTimes(1);
+    });
+
+    test('terrain samples the texture with trilinear filtering', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(tile.getRTT(0).texture.bind).toHaveBeenCalledWith(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+    });
+
     test('cache hit reuses cached RTT and skips acquireRTT', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const cached = {texture: {}, size: rtt.rttSize} as unknown as RTTObject;
+        const cached = createMockRTTObject(rtt.rttSize) as unknown as RTTObject;
         tile.rttObjects[0] = cached;
 
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
