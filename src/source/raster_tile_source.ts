@@ -21,6 +21,15 @@ import type {
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 
+export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
+    /**
+     * How a tile response with an empty body, such as HTTP 204, is handled.
+     * `transparent` (the default) loads the tile without content: a raster tile draws fully transparent, a raster-dem tile has no elevation.
+     * `missing` treats it like a 404 response: the tile is left without data, so a loaded tile from another zoom level shows through in its place.
+     */
+    emptyTileBehavior?: 'transparent' | 'missing';
+};
+
 /**
  * A source containing raster tiles (See the [raster source documentation](https://maplibre.org/maplibre-style-spec/sources/#raster) for detailed documentation of options.)
  *
@@ -69,11 +78,11 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     tiles: string[];
 
     _loaded: boolean;
-    _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _options: RasterTileSourceOptions;
     _premultiplyAlpha: boolean;
     _tileJSONRequest: AbortController;
 
-    constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: RasterTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -226,9 +235,13 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
+                if (!response.data && this._options.emptyTileBehavior === 'missing') {
+                    tile.state = 'errored';
+                    return;
+                }
                 const context = this.map.painter.context;
                 const gl = context.gl;
-                // An empty response (e.g. HTTP 204) is a tile that exists but has no content:
+                // An empty response (e.g. HTTP 204) is otherwise a tile that exists but has no content:
                 // it is drawn as fully transparent, which keeps it distinct from a missing
                 // tile (404), where the parent tile shows through instead.
                 const img = response.data ?? new RGBAImage({width: 1, height: 1}, new Uint8Array(4));

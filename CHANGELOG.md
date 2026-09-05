@@ -1,6 +1,8 @@
 ## main
 ### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
+- Add the `emptyTileBehavior` option to raster and raster-dem sources: `missing` treats an empty (HTTP 204) tile like a 404, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix a marker's popup jumping to another world copy when the marker is moved across the antimeridian on a zoomed-out map ([#5655](https://github.com/maplibre/maplibre-gl-js/issues/5655), [#8326](https://github.com/maplibre/maplibre-gl-js/pull/8326), continues [#5956](https://github.com/maplibre/maplibre-gl-js/pull/5956)) (by [@yuiseki](https://github.com/yuiseki))
