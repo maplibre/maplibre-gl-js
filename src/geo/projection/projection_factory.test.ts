@@ -10,10 +10,14 @@ afterEach(() => {
 });
 
 describe('createProjectionFromName', () => {
-    test('resolves the built-in simple projection to a mercator projection under that name over a non-wrapping transform', () => {
-        const {projection, transform, cameraHelper} = createProjectionFromName('simple', undefined, {});
+    test('resolves the built-in simple projection to a mercator projection named simple', () => {
+        const {projection} = createProjectionFromName('simple', undefined, {});
         expect(projection).toBeInstanceOf(MercatorProjection);
         expect(projection.name).toBe('simple');
+    });
+
+    test('runs the simple projection on the mercator transform and camera helper over a non-wrapping world', () => {
+        const {transform, cameraHelper} = createProjectionFromName('simple', undefined, {});
         expect(transform).toBeInstanceOf(MercatorTransform);
         expect(transform.worldCoordinateHelper.wraps).toBe(false);
         expect(cameraHelper).toBeInstanceOf(MercatorCameraHelper);

@@ -940,24 +940,38 @@ describe('MercatorTransform over the simple CRS', () => {
             expect(transform.center.lat).toBeCloseTo(0, 6);
         });
 
-        test('respects explicit max bounds inside the square', () => {
+        test('keeps the viewport inside explicit max bounds set inside the square', () => {
             const transform = createSimpleTransform(200, 200);
             transform.setZoom(4);
             transform.setMaxBounds(new LngLatBounds([-10, -10], [10, 10]));
+            const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
+            const halfViewport = 100;
+
             transform.setCenter(new LngLat(80, 80));
-            expect(transform.center.lng).toBeLessThanOrEqual(10);
-            expect(transform.center.lat).toBeLessThanOrEqual(10);
+
+            expect(transform.center.lng).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
+            expect(transform.center.lat).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
         });
 
-        test('does not wrap the center past the antimeridian', () => {
+        test('stops the center at the east edge of the square instead of wrapping', () => {
             const transform = createSimpleTransform(200, 200);
             transform.setZoom(4);
-            transform.setCenter(new LngLat(89, 0));
             const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
             const halfViewport = 100;
-            expect(transform.center.lng).toBeCloseTo(90 - 180 * halfViewport / worldSizeAtZoom4, 6);
+
+            transform.setCenter(new LngLat(89, 0));
+
+            expect(transform.center.lng).toBeCloseTo(90 - halfViewport * degreesPerPixel, 6);
+        });
+
+        test('setLocationAtPoint keeps the longitude it was given instead of wrapping it', () => {
+            const transform = createSimpleTransform(200, 200);
+            transform.setZoom(4);
 
             transform.setLocationAtPoint(new LngLat(85, 0), transform.centerPoint);
+
             expect(transform.center.lng).toBeCloseTo(85, 6);
         });
     });
@@ -995,9 +1009,10 @@ describe('MercatorTransform over the simple CRS', () => {
             const transform = createSimpleTransform(512, 512);
             transform.setZoom(0);
             transform.setCenter(new LngLat(0, 0));
+            const worldSizeAtZoom0 = 512;
             const point = transform.locationToScreenPoint(new LngLat(45, 45));
-            expect(point.x).toBeCloseTo(384, 6);
-            expect(point.y).toBeCloseTo(128, 6);
+            expect(point.x).toBeCloseTo(0.75 * worldSizeAtZoom0, 6);
+            expect(point.y).toBeCloseTo(0.25 * worldSizeAtZoom0, 6);
         });
 
         test('puts the camera above the center when unpitched', () => {
