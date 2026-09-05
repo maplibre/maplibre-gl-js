@@ -3,7 +3,8 @@ import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
-import {Painter, type RenderOptions} from '../../render/painter.ts';
+import {Painter} from '../../render/painter.ts';
+import {RenderOptions} from '../../render/render_options.ts';
 import {Program} from '../program.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
 import type {Map} from '../../ui/map.ts';
@@ -45,8 +46,7 @@ describe('drawFill', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderOptions);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);
@@ -91,7 +91,6 @@ describe('drawFill', () => {
                 set: () => {}
             }
         } as any;
-        painterMock.renderPass = 'translucent';
         painterMock.transform = {
             pitch: 0,
             labelPlaneMatrix: mat4.create(),
@@ -108,6 +107,8 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
+        painterMock.renderOptions = new RenderOptions(painterMock.transform, undefined, null);
+        painterMock.renderOptions.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
             map: {
