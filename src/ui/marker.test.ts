@@ -477,6 +477,20 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Popup follows its marker onto the same world copy when the marker crosses the antimeridian', () => {
+        const map = createMap({width: 1024});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup();
+
+        marker.setLngLat([-179, 0]);
+
+        expect(marker.getPopup().getLngLat().lng).toBe(marker.getLngLat().lng);
+        map.remove();
+    });
+
     test('Marker drag functionality can be added with drag option', () => {
         const map = createMap();
         const marker = new Marker({draggable: true})

@@ -515,8 +515,9 @@ export class Marker extends Evented<MarkerEventType> {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
-        if (this._popup) this._popup.setLngLat(this._lngLat);
         this._update();
+        // _update has wrapped the location onto the world copy the marker is drawn on, so the popup lands on the same copy
+        if (this._popup) this._popup.setLngLat(this._lngLat);
         return this;
     }
 
