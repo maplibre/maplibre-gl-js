@@ -28,14 +28,14 @@ function createSource(options, transformCallback?) {
 }
 
 function createDEMData(elevations: number[][]): DEMData {
-    // a DEM image carries one pixel of border on each side, filled here from the nearest inner pixel
+    // a DEM image carries two pixels of border on each side, filled here from the nearest inner pixel
     const dim = elevations.length;
-    const stride = dim + 2;
+    const stride = dim + 4;
     const pixels = new Uint8Array(stride * stride * 4);
     for (let y = 0; y < stride; y++) {
         for (let x = 0; x < stride; x++) {
-            const row = elevations[Math.min(Math.max(y - 1, 0), dim - 1)];
-            pixels[(y * stride + x) * 4] = row[Math.min(Math.max(x - 1, 0), dim - 1)];
+            const row = elevations[Math.min(Math.max(y - 2, 0), dim - 1)];
+            pixels[(y * stride + x) * 4] = row[Math.min(Math.max(x - 2, 0), dim - 1)];
             pixels[(y * stride + x) * 4 + 3] = 255;
         }
     }
