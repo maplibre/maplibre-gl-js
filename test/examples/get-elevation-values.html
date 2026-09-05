@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Get elevation values from raster DEM</title>
+    <meta property="og:description" content="Show mouse position and sampled elevation from loaded raster DEM tiles using queryElevations()." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #info {
+            display: block;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            width: min(760px, calc(100% - 40px));
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #222;
+            background: rgb(255 255 255 / 92%);
+            box-shadow: 0 2px 10px rgb(0 0 0 / 15%);
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<pre id="info">Move the mouse over the map to query DEM elevation.</pre>
+<script>
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap contributors'
+                },
+                dem: {
+                    type: 'raster-dem',
+                    tiles: ['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'],
+                    tileSize: 512,
+                    maxzoom: 15,
+                    encoding: 'terrarium'
+                }
+            },
+            layers: [
+                {
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
+                },
+                {
+                    id: 'hillshade',
+                    type: 'hillshade',
+                    source: 'dem',
+                    paint: {
+                        'hillshade-exaggeration': 0.35
+                    }
+                }
+            ]
+        },
+        center: [7.3, 46.6],
+        zoom: 11
+    });
+
+    const info = document.getElementById('info');
+
+    map.on('mousemove', (e) => {
+        const demSource = map.getSource('dem');
+        if (!demSource) {
+            info.textContent = 'DEM source is not ready yet (style not loaded).';
+            return;
+        }
+        if (typeof demSource.queryElevations !== 'function') {
+            info.textContent = 'queryElevations() is unavailable in the currently loaded maplibre-gl-dev.js build.';
+            return;
+        }
+
+        const [result] = demSource.queryElevations([e.lngLat]);
+        const lngLat = e.lngLat.wrap();
+
+        const lines = [`lngLat: ${lngLat.lng.toFixed(6)}, ${lngLat.lat.toFixed(6)}`];
+
+        if (result) {
+            lines.push(`elevation (m): ${result.elevation.toFixed(2)}`);
+            lines.push(`tile zoom used: ${result.tileZoom}`);
+        } else {
+            lines.push('elevation: unavailable (no loaded DEM tile at this location yet)');
+        }
+
+        info.textContent = lines.join('\n');
+    });
+</script>
+</body>
+</html>
