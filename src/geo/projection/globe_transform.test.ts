@@ -641,6 +641,38 @@ describe('GlobeTransform', () => {
         });
     });
 
+    describe('getCameraAltitude', () => {
+        test('matches the mercator transform at the same zoom and pitch', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setZoom(14);
+            globe.setCenter(new LngLat(10, 50));
+            globe.setPitch(45);
+
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setZoom(14);
+            mercator.setCenter(new LngLat(10, 50));
+            mercator.setPitch(45);
+
+            expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
+        });
+
+        test('matches the mercator transform while the globe is rendered as a sphere', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setZoom(2);
+            globe.setCenter(new LngLat(0, 0));
+
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setZoom(2);
+            mercator.setCenter(new LngLat(0, 0));
+
+            expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
+        });
+    });
+
     describe('render world copies', () => {
         test('change projection and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();

@@ -1319,7 +1319,10 @@ describe('marker', () => {
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
+        // On the globe the marker sits at a camera depth of ~0.9998, so a depth-buffer
+        // reading of 1 (far plane) means nothing in front of it, and 0.9 means terrain in front.
         map.terrain = createTerrain(); // Enable terrain
+        map.terrain.depthAtPoint = () => 1;
         await sleep(100); // Give time for the terrain to load
         map.fire('terrain'); // Trigger terrain event for marker
         marker.setLngLat([180, 0]);
@@ -1328,6 +1331,11 @@ describe('marker', () => {
         marker.setLngLat([0, 0]);
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.terrain.depthAtPoint = () => .9;
+        marker.setLngLat([0, 0]);
+        await sleep(100); // Give marker change time to load
+        expect(marker.getElement().style.opacity).toBe('0.3');
 
         map.remove();
     });
