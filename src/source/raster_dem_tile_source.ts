@@ -72,7 +72,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 // data: treat the tile as loaded without a DEM instead of building a degenerate
                 // one that would fail against its neighbors in backfillBorder (#1551).
                 if (!response.data) {
-                    tile.state = 'loaded';
+                    tile.state = this._options.emptyTileBehavior === 'missing' ? 'errored' : 'loaded';
                     return;
                 }
                 const img = response.data;
