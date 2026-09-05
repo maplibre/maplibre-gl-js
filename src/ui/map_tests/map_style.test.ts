@@ -419,6 +419,35 @@ describe('setStyle', () => {
     });
 });
 
+describe('getStyleUrl', () => {
+    test('returns the URL given to setStyle', () => {
+        const map = createMap();
+        map.setStyle('/styles/streets.json');
+
+        expect(map.getStyleUrl()).toBe('/styles/streets.json');
+    });
+
+    test('returns the URL given in the map options', () => {
+        const map = createMap({style: '/styles/streets.json'});
+
+        expect(map.getStyleUrl()).toBe('/styles/streets.json');
+    });
+
+    test('returns null when the style is given as an object', () => {
+        const map = createMap({style: '/styles/streets.json'});
+        map.setStyle(createStyle());
+
+        expect(map.getStyleUrl()).toBeNull();
+    });
+
+    test('returns null after the style is removed', () => {
+        const map = createMap({style: '/styles/streets.json'});
+        map.setStyle(null);
+
+        expect(map.getStyleUrl()).toBeNull();
+    });
+});
+
 describe('getStyle', () => {
     test('returns undefined if the style has not loaded yet', () => {
         const style = createStyle();
