@@ -559,11 +559,20 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        if (!this._globeViewProjMatrixF64) {
+            return this._helper.getCameraAltitude(); // _calcMatrices hasn't run yet
+        }
+        // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
+        return (vec3.length(this._cameraPosition) - 1) * earthRadius + this.elevation;
     }
 
     getCameraLngLat(): LngLat {
-        return this._helper.getCameraLngLat();
+        if (!this._globeViewProjMatrixF64) {
+            return this._helper.getCameraLngLat(); // _calcMatrices hasn't run yet
+        }
+        const surface = createVec3f64();
+        vec3.normalize(surface, this._cameraPosition);
+        return sphereSurfacePointToCoordinates(surface);
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {

@@ -9,6 +9,7 @@ import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {differenceOfAnglesDegrees, MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
@@ -655,7 +656,28 @@ describe('GlobeTransform', () => {
             mercator.setCenter(new LngLat(10, 50));
             mercator.setPitch(45);
 
-            expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
+            // the globe is a sphere here, mercator a plane: equal to within a tenth of a percent
+            expect(Math.abs(globe.getCameraAltitude() - mercator.getCameraAltitude()) / mercator.getCameraAltitude()).toBeLessThan(1e-3);
+        });
+
+        test('follows the vertical perspective transform at low zoom and high pitch', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setMaxPitch(180);
+            globe.setZoom(4);
+            globe.setCenter(new LngLat(10, 50));
+            globe.setPitch(100);
+
+            const vp = new VerticalPerspectiveTransform();
+            vp.resize(512, 512);
+            vp.setMaxPitch(180);
+            vp.setZoom(4);
+            vp.setCenter(new LngLat(10, 50));
+            vp.setPitch(100);
+
+            expect(globe.getCameraAltitude()).toBeGreaterThan(0);
+            expect(globe.getCameraAltitude()).toBeCloseTo(vp.getCameraAltitude(), 6);
+            expect(globe.getCameraLngLat().lat).toBeCloseTo(vp.getCameraLngLat().lat, 9);
         });
 
         test('matches the mercator transform while the globe is rendered as a sphere', () => {

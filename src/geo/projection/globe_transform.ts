@@ -375,11 +375,11 @@ export class GlobeTransform implements ITransform {
     }
 
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        return this.currentTransform.getCameraAltitude();
     }
 
     getCameraLngLat(): LngLat {
-        return this._helper.getCameraLngLat();
+        return this.currentTransform.getCameraLngLat();
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
