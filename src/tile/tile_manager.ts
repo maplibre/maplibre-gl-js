@@ -72,6 +72,7 @@ export class TileManager extends Evented<SourceEventType> {
      * source data has loaded (i.e geojson has been tiled on the worker and is ready)
      */
     _sourceLoaded: boolean;
+    _maxContentElevationSeen: number = 0;
 
     _sourceErrored: boolean;
     _inViewTiles: InViewTiles;
@@ -498,10 +499,13 @@ export class TileManager extends Evented<SourceEventType> {
     /**
      * The highest elevation this source's symbols may reach, in meters: `symbol-height-offset`
      * constants read from the visible symbol layers, data-driven maxima tracked by the loaded
-     * buckets at layout time. Tiles not yet loaded only contribute through the constants.
+     * buckets at layout time. The value is a high-water mark: a maximum seen once is kept even
+     * after its tile unloads, otherwise dropping the tile would also drop the reason to keep it,
+     * and the tile could not come back while its content is still visible. The mark resets with
+     * the tiles in `clearTiles`.
      */
     _getMaxContentElevation(): number {
-        let maxElevation = 0;
+        let maxElevation = this._maxContentElevationSeen;
         const layers = this.map?.style?._layers;
         if (!layers) return maxElevation;
         for (const layerId in layers) {
@@ -517,6 +521,7 @@ export class TileManager extends Evented<SourceEventType> {
                 }
             }
         }
+        this._maxContentElevationSeen = maxElevation;
         return maxElevation;
     }
 
@@ -857,6 +862,7 @@ export class TileManager extends Evented<SourceEventType> {
     clearTiles(): void {
         this._shouldReloadOnResume = false;
         this._paused = false;
+        this._maxContentElevationSeen = 0;
 
         for (const id of this._inViewTiles.getAllIds()) {
             this._removeTile(id);
