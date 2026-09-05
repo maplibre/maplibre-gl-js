@@ -2,6 +2,9 @@ import {describe, expect, test} from 'vitest';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
+import {GlobeTransform} from './globe_transform.ts';
+import {coveringTiles} from './covering_tiles.ts';
+import {LngLat} from '../lng_lat.ts';
 
 describe('bounding volume creation', () => {
     test('z=0', () => {
@@ -101,5 +104,19 @@ describe('bounding volume creation', () => {
         for (let i = 0; i < convex.planes.length; i++) {
             expectToBeCloseToArray([...convex.planes[i]], expectedPlanes[i], precision);
         }
+    });
+});
+
+describe('elevated content tile retention', () => {
+    test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
+        const transform = new GlobeTransform();
+        transform.resize(1400, 800);
+        transform.setCenter(new LngLat(2.35, 48.85));
+        transform.setZoom(4.3);
+        transform.setMaxPitch(179);
+        transform.setPitch(95);
+        const without = coveringTiles(transform, {tileSize: 512});
+        const withElevated = coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000});
+        expect(withElevated.length).toBeGreaterThan(without.length);
     });
 });
