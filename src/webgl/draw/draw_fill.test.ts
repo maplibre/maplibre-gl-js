@@ -4,7 +4,7 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {RenderOptions} from '../../render/render_options.ts';
+import {createRenderOptions} from '../../render/render_options.ts';
 import {Program} from '../program.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
 import type {Map} from '../../ui/map.ts';
@@ -107,7 +107,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.renderOptions = new RenderOptions(painterMock.transform, undefined, null);
+        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
         painterMock.renderOptions.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
