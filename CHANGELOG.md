@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
-- Add `trackZoom` option to `GeolocateControl` to preserve the user's zoom level while tracking position ([#7908](https://github.com/maplibre/maplibre-gl-js/issues/7908)) (by [@timsluis](https://github.com/timsluis))
+- Add `trackZoom` option to `GeolocateControl` to preserve the user's zoom level while tracking position ([#7908](https://github.com/maplibre/maplibre-gl-js/issues/7908), [#8324](https://github.com/maplibre/maplibre-gl-js/pull/8324), continues [#7909](https://github.com/maplibre/maplibre-gl-js/pull/7909)) (by [@timsluis](https://github.com/timsluis))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
