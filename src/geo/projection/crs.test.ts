@@ -59,6 +59,10 @@ describe('CrsWorldCoordinateHelper', () => {
             const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBe(180);
             expect(worldCoordinateHelper.metersPerWorldUnit(0.95, 0.05)).toBe(180);
+        });
+
+        test('scales altitude to world z by the zoom 0 extent wherever the location is', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
             expect(worldCoordinateHelper.worldZFromAltitude(360, new LngLat(80, 80))).toBe(2);
         });
 
@@ -109,12 +113,16 @@ describe('CrsWorldCoordinateHelper', () => {
         test('takes the zoom 0 extent as meters per world unit', () => {
             const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBe(300);
+        });
+
+        test('scales altitude to world z by the zoom 0 extent', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
             expect(worldCoordinateHelper.worldZFromAltitude(300, new LngLat(0, 0))).toBe(1);
         });
     });
 
     describe('mercator written as a CRS', () => {
-        test('matches the mercator helper in both directions and in meters per world unit', () => {
+        test('projects lng/lat to the same world coordinates as the mercator helper', () => {
             const worldCoordinateHelper = new CrsWorldCoordinateHelper(createMercatorAsCrs());
             for (const [lng, lat] of [...createSamplePoints(), [-180, -85], [180, 85]]) {
                 const expected = mercatorWorldCoordinateHelper.worldFromLngLat(lng, lat);
@@ -122,12 +130,20 @@ describe('CrsWorldCoordinateHelper', () => {
                 expect(Math.abs(actual.x - expected.x)).toBeLessThan(1e-12);
                 expect(Math.abs(actual.y - expected.y)).toBeLessThan(1e-12);
             }
+        });
+
+        test('unprojects world coordinates to the same lng/lat as the mercator helper', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createMercatorAsCrs());
             for (const [x, y] of [[0.5, 0.5], [0.1, 0.9], [0.999, 0.001], [0.25, 0.75]]) {
                 const expected = mercatorWorldCoordinateHelper.lngLatFromWorld(x, y);
                 const actual = worldCoordinateHelper.lngLatFromWorld(x, y);
                 expect(actual.lng).toBeCloseTo(expected.lng, 10);
                 expect(actual.lat).toBeCloseTo(expected.lat, 10);
             }
+        });
+
+        test('reports the same meters per world unit as the mercator helper at the equator', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createMercatorAsCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBeCloseTo(mercatorWorldCoordinateHelper.metersPerWorldUnit(0.5, 0.5), 6);
         });
     });

@@ -28,9 +28,11 @@ describe('mercator utils', () => {
 
     test('projectToWorldCoordinates does not clamp latitude for a non-wrapping helper', () => {
         const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
-        const projected = projectToWorldCoordinates(1024, new LngLat(0, 89), worldCoordinateHelper);
-        expect(projected.y).toBeCloseTo(1024 / 180, 10);
-        expect(unprojectFromWorldCoordinates(1024, projected, worldCoordinateHelper).lat).toBeCloseTo(89, 10);
+        const worldSize = 1024;
+        const pixelsPerDegree = worldSize / 180;
+        const projected = projectToWorldCoordinates(worldSize, new LngLat(0, 89), worldCoordinateHelper);
+        expect(projected.y).toBeCloseTo(pixelsPerDegree, 10);
+        expect(unprojectFromWorldCoordinates(worldSize, projected, worldCoordinateHelper).lat).toBeCloseTo(89, 10);
     });
 
     test('getMercatorHorizon', () => {

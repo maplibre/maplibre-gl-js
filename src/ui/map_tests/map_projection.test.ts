@@ -26,7 +26,7 @@ describe('Map with a registered planar CRS', () => {
         expect(map.getCenter().lat).toBeCloseTo(89, 6);
     });
 
-    test('setProjection switches to a CRS registered with addProjection and projects through it', async () => {
+    test('setProjection accepts a name registered with addProjection', async () => {
         addProjection({
             name: 'map-test-crs',
             project: (lng, lat) => [lng, lat],
@@ -39,6 +39,20 @@ describe('Map with a registered planar CRS', () => {
         map.setProjection({type: 'map-test-crs'});
 
         expect(map.getProjection()).toEqual({type: 'map-test-crs'});
+    });
+
+    test('projects lng/lat to the screen through the registered CRS', async () => {
+        addProjection({
+            name: 'map-test-crs',
+            project: (lng, lat) => [lng, lat],
+            unproject: (x, y) => [x, y],
+            tileMatrix: {origin: [-180, 180], extentAtZoom0: 360},
+        });
+        const map = createMap();
+        await map.once('style.load');
+
+        map.setProjection({type: 'map-test-crs'});
+
         const worldSizeAtZoom0 = 512;
         const worldOffsetInContainer = (worldSizeAtZoom0 - map.getContainer().clientWidth) / 2;
         const worldFractionOfLngLat90 = {x: 0.75, y: 0.25};
@@ -59,12 +73,15 @@ describe('Map with a registered planar CRS', () => {
         expect(map.getProjection()).toEqual({type: 'simple'});
     });
 
-    test('constrains the center to the CRS square', async () => {
+    test('stops the center where the viewport reaches the east edge of the CRS square', async () => {
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'simple'}}, zoom: 3});
         await map.once('style.load');
+        const worldSizeAtZoom3 = 4096;
+        const degreesPerPixel = 180 / worldSizeAtZoom3;
+        const halfContainer = map.getContainer().clientWidth / 2;
 
         map.setCenter([170, 0]);
 
-        expect(map.getCenter().lng).toBeLessThanOrEqual(90);
+        expect(map.getCenter().lng).toBeCloseTo(90 - halfContainer * degreesPerPixel, 6);
     });
 });
