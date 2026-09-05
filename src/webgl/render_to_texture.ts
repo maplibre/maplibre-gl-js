@@ -1,4 +1,5 @@
-import {type Painter, type RenderOptions} from '../render/painter.ts';
+import {type Painter} from '../render/painter.ts';
+import type {RenderOptions} from '../render/render_options.ts';
 import {type Tile} from '../tile/tile.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type OverscaledTileID} from '../tile/tile_id.ts';
