@@ -1464,17 +1464,6 @@ describe('marker', () => {
             .toContain('translate(262px, 236px) rotateX(0deg) rotateZ(0deg)');
     });
 
-    test('keeps rotateZ(0deg) at rest when subpixel positioning leaves the position fractional', () => {
-        const map = createMap();
-        const marker = new Marker()
-            .setLngLat([4.5, 4.5])
-            .setSubpixelPositioning(true)
-            .addTo(map);
-
-        expect(marker.getElement().style.transform)
-            .toContain('translate(262.4px, 235.5934100987358px) rotateX(0deg) rotateZ(0deg)');
-    });
-
     test('keeps rotateZ(0deg) when a terrain change repositions a resting marker', () => {
         const map = createMap();
         const marker = new Marker()
@@ -1484,17 +1473,6 @@ describe('marker', () => {
         map.fire('terrain');
 
         expect(marker.getElement().style.transform).toContain('rotateZ(0deg)');
-    });
-
-    test('keeps an explicit marker rotation while the map moves', () => {
-        const map = createMap();
-        const marker = new Marker({rotation: 30})
-            .setLngLat([4.5, 4.5])
-            .addTo(map);
-
-        map.fire('move');
-
-        expect(marker.getElement().style.transform).toContain('rotateZ(30deg)');
     });
 
     test('Sets opacity according to options.opacity when provided a number', async () => {

@@ -32,10 +32,8 @@ const KEYBOARD_DRAG_SMALL_STEP = 1;
 const KEYBOARD_DRAG_LARGE_STEP = 10;
 
 /**
- * Firefox snaps an element to whole device pixels when its CSS transform is axis-aligned, so a marker judders
- * while the camera animates (#7522). While the map moves, a marker with no rotation of its own is rotated by
- * this much instead: invisible (0.036 px at the corner of the default pin) but past that alignment tolerance,
- * which 0.01 degrees is not. At rest the transform is left exactly as it was.
+ * Rotation given to an unrotated marker while the map moves.
+ * Works around Firefox snapping axis-aligned transforms to whole pixels, which makes markers judder (#7522).
  */
 const MOVING_MARKER_ROTATION_DEGREES = 0.05;
 
