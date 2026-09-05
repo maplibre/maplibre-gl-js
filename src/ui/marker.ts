@@ -32,6 +32,13 @@ const KEYBOARD_DRAG_SMALL_STEP = 1;
 const KEYBOARD_DRAG_LARGE_STEP = 10;
 
 /**
+ * Firefox snaps an element to whole device pixels when its CSS transform is axis-aligned, so a marker at a
+ * fractional position judders while the camera animates (#7522). A rotation this small is invisible (0.036 px
+ * at the corner of the default pin) and is past that alignment tolerance, which 0.01 degrees is not.
+ */
+const SUBPIXEL_ROTATION_DEGREES = 0.05;
+
+/**
  * The {@link Marker} options object
  */
 export type MarkerOptions = {
@@ -765,11 +772,9 @@ export class Marker extends Evented<MarkerEventType> {
             this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
-        let rotation = '';
-        if (this._rotationAlignment === 'viewport' || this._rotationAlignment === 'auto') {
-            rotation = `rotateZ(${this._rotation}deg)`;
-        } else if (this._rotationAlignment === 'map') {
-            rotation = `rotateZ(${this._rotation - this._map.getBearing()}deg)`;
+        let rotationDegrees = this._rotation;
+        if (this._rotationAlignment === 'map') {
+            rotationDegrees = this._rotation - this._map.getBearing();
         }
 
         let pitch = '';
@@ -782,11 +787,14 @@ export class Marker extends Evented<MarkerEventType> {
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker.setLngLat is invoked).
-        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
+        const roundToWholePixels = !this._subpixelPositioning && (!e || e.type === 'moveend');
+        if (roundToWholePixels) {
             this._pos = this._pos.round();
+        } else if (rotationDegrees === 0) {
+            rotationDegrees = SUBPIXEL_ROTATION_DEGREES;
         }
 
-        this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
+        this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} rotateZ(${rotationDegrees}deg)`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
             this._updateOpacity(e?.type === 'moveend');

@@ -1439,6 +1439,53 @@ describe('marker', () => {
             .toContain('translate(262.4px, 235.5934100987358px)');
     });
 
+    test('rotates the marker by 0.05 degrees while the map moves and its position is fractional', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([4.5, 4.5])
+            .addTo(map);
+
+        map.fire('move');
+
+        expect(marker.getElement().style.transform)
+            .toContain('translate(262.4px, 235.5934100987358px) rotateX(0deg) rotateZ(0.05deg)');
+    });
+
+    test('returns to rotateZ(0deg) once the map stops moving and the position is rounded again', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([4.5, 4.5])
+            .addTo(map);
+
+        map.fire('move');
+        map.fire('moveend');
+
+        expect(marker.getElement().style.transform)
+            .toContain('translate(262px, 236px) rotateX(0deg) rotateZ(0deg)');
+    });
+
+    test('rotates the marker by 0.05 degrees at rest when subpixel positioning is enabled', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([4.5, 4.5])
+            .setSubpixelPositioning(true)
+            .addTo(map);
+
+        expect(marker.getElement().style.transform)
+            .toContain('translate(262.4px, 235.5934100987358px) rotateX(0deg) rotateZ(0.05deg)');
+    });
+
+    test('keeps an explicit marker rotation while the map moves', () => {
+        const map = createMap();
+        const marker = new Marker({rotation: 30})
+            .setLngLat([4.5, 4.5])
+            .addTo(map);
+
+        map.fire('move');
+
+        expect(marker.getElement().style.transform).toContain('rotateZ(30deg)');
+    });
+
     test('Sets opacity according to options.opacity when provided a number', async () => {
         const map = createMap();
         const marker = new Marker({opacity: 0.7})
