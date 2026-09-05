@@ -83,6 +83,21 @@ describe('Texture', () => {
         expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     });
 
+    test('bind updates min filter independently from mag filter', () => {
+        const gl = createNullGL();
+        const context = new Context(gl);
+        const image = new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4));
+        const texture = new Texture(context, image, gl.RGBA, {useMipmap: true});
+
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        vi.mocked(gl.texParameteri).mockClear();
+
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+
+        expect(gl.texParameteri).toHaveBeenCalledTimes(1);
+        expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    });
+
     test('premultiplyAlpha produces correct output', () => {
         // pixel: r=200, g=100, b=50, a=128 (half transparent)
         const data = new Uint8Array([200, 100, 50, 128]);
