@@ -441,6 +441,16 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
+    /**
+     * Given the camera position and the point it looks at, both as lng, lat and altitude above sea level in meters,
+     * calculate the center, elevation, zoom, pitch and bearing that place the camera there.
+     * @param from - lng, lat of the camera
+     * @param altitudeFrom - altitude of the camera above sea level, in meters
+     * @param to - lng, lat of the point the camera looks at, which becomes the center
+     * @param altitudeTo - altitude of that point above sea level, in meters
+     */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
+
     getRayDirectionFromPixel(p: Point): vec3;
 
     /**

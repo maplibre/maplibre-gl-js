@@ -587,6 +587,26 @@ export class TransformHelper implements ITransformGetters {
         this._callbacks.calcMatrices();
     }
 
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number} {
+        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
+        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
+        const dx = toMercator.x - fromMercator.x;
+        const dy = toMercator.y - fromMercator.y;
+        const dz = toMercator.z - fromMercator.z;
+
+        const distance3D = Math.hypot(dx, dy, dz);
+        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
+
+        const groundDistance = Math.hypot(dx, dy);
+
+        const zoom = scaleZoom(this.cameraToCenterDistance / distance3D / this.tileSize);
+        const bearing = radiansToDegrees(Math.atan2(dx, -dy));
+        let pitch = radiansToDegrees(Math.acos(groundDistance / distance3D));
+        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
+
+        return {center: toMercator.toLngLat(), elevation: altitudeTo, zoom, pitch, bearing};
+    }
+
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         const cameraBearing = bearing !== undefined ? bearing : this.bearing;
         const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;

@@ -2,6 +2,7 @@ import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../../data/extent.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
+import {differenceOfAnglesDegrees} from '../../util/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
@@ -159,5 +160,44 @@ describe('VerticalPerspectiveTransform camera position', () => {
         expect(east.lng).toBeLessThan(0);
         expect(east.lat).toBeLessThan(47);
         expect(east.lat).toBeGreaterThan(north.lat);
+    });
+});
+
+describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
+    function createTransform(zoom: number, pitch: number, bearing: number, center = new LngLat(8, 47)): VerticalPerspectiveTransform {
+        const t = new VerticalPerspectiveTransform();
+        t.resize(800, 600);
+        t.setMaxPitch(180);
+        t.setZoom(zoom);
+        t.setCenter(center);
+        t.setBearing(bearing);
+        t.setPitch(pitch);
+        return t;
+    }
+
+    test.each([[4, 100, 35], [6, 60, -120], [12, 45, 0], [2, 30, 170]])('round-trips the transform\'s own camera at zoom %s, pitch %s, bearing %s', (zoom, pitch, bearing) => {
+        const t = createTransform(zoom, pitch, bearing);
+        const result = t.calculateCameraOptionsFromTo(t.getCameraLngLat(), t.getCameraAltitude(), t.center, 0);
+        expect(result.zoom).toBeCloseTo(zoom, 6);
+        expect(result.pitch).toBeCloseTo(pitch, 6);
+        expect(differenceOfAnglesDegrees(result.bearing, bearing)).toBeCloseTo(0, 6);
+        expect(result.center.lng).toBeCloseTo(8, 9);
+        expect(result.center.lat).toBeCloseTo(47, 9);
+    });
+
+    test('lifting a camera that dipped into the sphere lands it on the surface, still looking past the horizon', () => {
+        // zooming in at pitch 100 takes the camera below sea level once the planet stops curving away under it
+        const t = createTransform(5, 100, 0, new LngLat(13.44, 52.5));
+        expect(t.getCameraAltitude()).toBeLessThan(0);
+
+        const lifted = t.calculateCameraOptionsFromTo(t.getCameraLngLat(), 0, t.center, 0);
+        // on a plane a camera at ground level looks exactly along the ground; on the sphere the center is below the horizon
+        expect(lifted.pitch).toBeGreaterThan(90);
+        expect(lifted.pitch).toBeLessThan(102);
+
+        t.setZoom(lifted.zoom);
+        t.setPitch(lifted.pitch);
+        t.setBearing(lifted.bearing);
+        expect(Math.abs(t.getCameraAltitude())).toBeLessThan(1);
     });
 });

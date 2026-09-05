@@ -1,10 +1,10 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
@@ -682,6 +682,34 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
+    }
+
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number} {
+        const center = LngLat.convert(to);
+        // both points in unit-globe coordinates, sea level at radius 1
+        const camera = angularCoordinatesToSurfaceVector(LngLat.convert(from));
+        vec3.scale(camera, camera, 1 + altitudeFrom / earthRadius);
+        const up = angularCoordinatesToSurfaceVector(center);
+        const target = vec3.scale(createVec3f64(), up, 1 + altitudeTo / earthRadius);
+        const toCamera = vec3.subtract(createVec3f64(), camera, target);
+        const distance = vec3.length(toCamera);
+        if (distance === 0) throw new Error('Can\'t calculate camera options with same From and To');
+        vec3.scale(toCamera, toCamera, 1 / distance);
+
+        // pitch and bearing are measured in the local frame of the center point
+        const lng = degreesToRadians(center.lng);
+        const lat = degreesToRadians(center.lat);
+        const north: vec3 = [-Math.sin(lat) * Math.sin(lng), Math.cos(lat), -Math.sin(lat) * Math.cos(lng)];
+        const east: vec3 = [Math.cos(lng), 0, -Math.sin(lng)];
+        const pitch = radiansToDegrees(Math.acos(clamp(vec3.dot(up, toCamera), -1, 1)));
+        // bearing is the compass direction the camera looks along, from the camera toward the center
+        const bearing = radiansToDegrees(Math.atan2(-vec3.dot(toCamera, east), -vec3.dot(toCamera, north)));
+
+        // cameraToCenterDistance is that distance in pixels at the center's scale
+        const distanceMeters = distance * earthRadius;
+        const zoom = scaleZoom(this.cameraToCenterDistance / (distanceMeters * mercatorZfromAltitude(1, center.lat)) / this.tileSize);
+
+        return {center, elevation: altitudeTo, zoom, pitch, bearing};
     }
 
     /**

@@ -678,6 +678,11 @@ describe('GlobeTransform', () => {
             expect(globe.getCameraAltitude()).toBeGreaterThan(0);
             expect(globe.getCameraAltitude()).toBeCloseTo(vp.getCameraAltitude(), 6);
             expect(globe.getCameraLngLat().lat).toBeCloseTo(vp.getCameraLngLat().lat, 9);
+
+            const lifted = globe.calculateCameraOptionsFromTo(globe.getCameraLngLat(), 0, globe.center, 0);
+            const liftedVp = vp.calculateCameraOptionsFromTo(vp.getCameraLngLat(), 0, vp.center, 0);
+            expect(lifted.pitch).toBeCloseTo(liftedVp.pitch, 9);
+            expect(lifted.zoom).toBeCloseTo(liftedVp.zoom, 9);
         });
 
         test('stays on the sphere geometry while the globe renders as mercator, the rendering mode lags a jump by a frame', () => {

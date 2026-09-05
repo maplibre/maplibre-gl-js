@@ -412,6 +412,11 @@ export class GlobeTransform implements ITransform {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
     }
 
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number} {
+        // same reasoning as for getCameraAltitude: the sphere geometry, whatever is currently rendered
+        return this._verticalPerspectiveTransform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+    }
+
     /**
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).

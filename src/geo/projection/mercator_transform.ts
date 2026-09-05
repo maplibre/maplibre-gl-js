@@ -652,6 +652,10 @@ export class MercatorTransform implements ITransform {
         return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);
     }
 
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number} {
+        return this._helper.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+    }
+
     _calculateNearFarZIfNeeded(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
         if (!this._helper.autoCalculateNearFarZ) {
             return;
