@@ -9,7 +9,7 @@ vi.mock(import('../../util/geolocation_support'), () => (
     }
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
-import type {LngLat} from '../../geo/lng_lat.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
@@ -784,7 +784,8 @@ describe('GeolocateControl with no options', () => {
         geolocation.change({latitude: 11, longitude: 21, accuracy: 500});
         await secondFix;
 
-        expect(fitBounds).toHaveBeenCalledWith(expect.anything(), expect.anything(), {geolocateSource: true});
+        const accuracyCircle = LngLatBounds.fromLngLat(new LngLat(21, 11), 500);
+        expect(fitBounds).toHaveBeenCalledWith(accuracyCircle, {bearing: 0, maxZoom: 15}, {geolocateSource: true});
     });
 
     test('switches to BACKGROUND state on map manipulation', async () => {
