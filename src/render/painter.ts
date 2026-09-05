@@ -47,7 +47,7 @@ import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
 import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
 import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
-import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
+import {isFillExtrusionStyleLayer, updateMinElevationFromExtrusions} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
 import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
 import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
@@ -571,6 +571,8 @@ export class Painter {
 
             this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
+
+        updateMinElevationFromExtrusions(this, layerIds, coordsAscending);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);

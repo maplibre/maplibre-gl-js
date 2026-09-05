@@ -1,0 +1,194 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512
+    }
+  },
+  "pitch": 68,
+  "bearing": 25,
+  "zoom": 18,
+  "sources": {
+    "levels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "level": 1,
+              "base": 10,
+              "top": 12,
+              "color": "#7f9fc4"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    -0.00022
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "level": 0,
+              "base": 0,
+              "top": 2,
+              "color": "#d0d6dd"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    -0.00022
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "level": -1,
+              "base": -10,
+              "top": -8,
+              "color": "#b98a63"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    -0.00022
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "level": -2,
+              "base": -20,
+              "top": -18,
+              "color": "#8a6a4f"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    0.00022
+                  ],
+                  [
+                    0.00022,
+                    -0.00022
+                  ],
+                  [
+                    -0.00022,
+                    -0.00022
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#e8ece6"
+      }
+    },
+    {
+      "id": "levels",
+      "type": "fill-extrusion",
+      "source": "levels",
+      "paint": {
+        "fill-extrusion-base": [
+          "get",
+          "base"
+        ],
+        "fill-extrusion-height": [
+          "get",
+          "top"
+        ],
+        "fill-extrusion-color": [
+          "get",
+          "color"
+        ],
+        "fill-extrusion-opacity": 1
+      }
+    }
+  ]
+}

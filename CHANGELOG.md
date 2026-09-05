@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Allow negative `fill-extrusion-base` and `fill-extrusion-height` to extrude below ground level, for example underground floor levels ([#8051](https://github.com/maplibre/maplibre-gl-js/issues/8051)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
