@@ -515,8 +515,8 @@ export class Marker extends Evented<MarkerEventType> {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
-        if (this._popup) this._popup.setLngLat(this._lngLat);
         this._update();
+        if (this._popup) this._popup.setLngLat(this._lngLat);
         return this;
     }
 
