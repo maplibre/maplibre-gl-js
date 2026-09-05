@@ -2489,6 +2489,7 @@ export class Map extends Evented<MapEventType> {
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
      * The geometryOrOptions can receive a {@link QueryRenderedFeaturesOptions} only to support a situation where the function receives only one parameter which is the options parameter.
+     * More than two points is not a valid geometry: an `error` event is fired and an empty array is returned.
      * @param options - (optional) Options object.
      *
      * @returns An array of MapGeoJSONFeature objects.

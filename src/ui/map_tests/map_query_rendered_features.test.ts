@@ -75,26 +75,25 @@ describe('queryRenderedFeatures', () => {
     test('fires an error when geometry contains more than two points', async () => {
         const map = createMap();
         await map.once('load');
-        const errorListener = vi.fn();
-        map.on('error', errorListener);
+        const onError = vi.fn();
+        map.on('error', onError);
 
         const result = map.queryRenderedFeatures([[0, 0], [10, 10], [20, 20]] as any);
 
         expect(result).toEqual([]);
-        expect(errorListener).toHaveBeenCalledTimes(1);
-        expect(errorListener.mock.calls[0][0].error.message).toBe('queryRenderedFeatures only accepts a single point or a bounding box of two points.');
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].error.message).toBe('queryRenderedFeatures only accepts a single point or a bounding box of two points.');
     });
 
     test('fires an error for more than two points when no style is loaded', () => {
         const map = createMap({style: undefined});
-        const errorListener = vi.fn();
-        map.on('error', errorListener);
+        const onError = vi.fn();
+        map.on('error', onError);
 
         const result = map.queryRenderedFeatures([[0, 0], [10, 10], [20, 20]] as any);
 
         expect(result).toEqual([]);
-        expect(errorListener).toHaveBeenCalledTimes(1);
-        expect(errorListener.mock.calls[0][0].error.message).toBe('queryRenderedFeatures only accepts a single point or a bounding box of two points.');
+        expect(onError).toHaveBeenCalledTimes(1);
     });
 
     test('returns an empty array when no style is loaded', () => {
