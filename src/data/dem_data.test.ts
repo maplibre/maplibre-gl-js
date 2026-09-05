@@ -4,9 +4,9 @@ import {RGBAImage} from '../util/image.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 
 function createMockImage(height, width) {
-    // RGBAImage passed to constructor has uniform 1px padding on all sides.
-    height += 2;
-    width += 2;
+    // RGBAImage passed to constructor has uniform 2px padding on all sides.
+    height += 4;
+    width += 4;
     const pixels = new Uint8Array(height * width * 4);
     for (let i = 0; i < pixels.length; i++) {
         pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
@@ -29,16 +29,16 @@ describe('DEMData', () => {
             const dem = new DEMData('0', imageData0, 'mapbox');
             expect(dem.uid).toBe('0');
             expect(dem.dim).toBe(4);
-            expect(dem.stride).toBe(6);
+            expect(dem.stride).toBe(8);
         });
 
         test('Uint8ClampedArray', () => {
-            const imageData0 = createMockClampImage(4, 4);
+            const imageData0 = createMockClampImage(6, 6);
             const dem = new DEMData('0', imageData0, 'mapbox');
             expect(dem).not.toBeNull();
             expect(dem['uid']).toBe('0');
             expect(dem['dim']).toBe(2);
-            expect(dem['stride']).toBe(4);
+            expect(dem['stride']).toBe(6);
         });
 
         test('otherEncoding', () => {
@@ -154,13 +154,15 @@ describe('DEMData.backfillBorder with encoding', () => {
 describe('DEMData.sampleBilinear', () => {
     test('interpolates four neighboring pixels', () => {
         const elevations = [
-            0, 0, 0, 0,
-            0, 10, 20, 0,
-            0, 30, 40, 0,
-            0, 0, 0, 0
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 10, 20, 0, 0,
+            0, 0, 30, 40, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0
         ];
         const pixels = new Uint8Array(elevations.flatMap(elevation => [elevation, 0, 0, 0]));
-        const dem = new DEMData('sample', new RGBAImage({height: 4, width: 4}, pixels), 'custom', 1.0, 0.0, 0.0, 0.0);
+        const dem = new DEMData('sample', new RGBAImage({height: 6, width: 6}, pixels), 'custom', 1.0, 0.0, 0.0, 0.0);
 
         expect(dem.sampleBilinear(0, 0)).toBe(10);
         expect(dem.sampleBilinear(0.5, 0.5)).toBe(25);
@@ -194,7 +196,7 @@ function expectSerialization(dem0: DEMData, redFactor: number, greenFactor: numb
             $name: 'DEMData',
             uid: '0',
             dim: 4,
-            stride: 6,
+            stride: 8,
             data: dem0.data,
             redFactor,
             greenFactor,

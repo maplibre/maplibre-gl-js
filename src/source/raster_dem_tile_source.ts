@@ -116,15 +116,15 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
         if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
-            const width = img.width + 2;
-            const height = img.height + 2;
+            const width = img.width + 4;
+            const height = img.height + 4;
             try {
-                return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
+                return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -2, -2, width, height));
             } catch {
                 // fall-back to browser canvas decoding
             }
         }
-        return browser.getImageData(img, 1);
+        return browser.getImageData(img, 2);
     }
 
     _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {

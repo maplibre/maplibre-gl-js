@@ -118,7 +118,7 @@ function prepareHillshade(
             continue;
         }
 
-        const tileSize = dem.dim;
+        const tileSize = dem.dim + 2;
         const textureStride = dem.stride;
 
         const pixelData = dem.getPixels();
