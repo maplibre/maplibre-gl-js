@@ -19,6 +19,14 @@ import type {DashEntry} from '../render/line_atlas.ts';
 export type TileEncoding = 'mlt' | 'mvt';
 
 /**
+ * How a tile source treats a tile response with an empty body, such as HTTP 204.
+ * `transparent` (the default) loads the tile with nothing to draw: a raster tile draws fully transparent, a raster-dem tile carries no elevation, a vector tile has no features.
+ * `missing` treats it like a 404 response: the tile is left without data, so a loaded tile from another zoom level shows through in its place.
+ * For vector sources `missing` covers 404 responses as well, which by default load as empty tiles.
+ */
+export type EmptyTileBehavior = 'transparent' | 'missing';
+
+/**
  * Parameters to identify a tile
  */
 export type TileParameters = {
@@ -84,6 +92,10 @@ export type WorkerTileWithData = ExpiryData & {
     rawTileData?: ArrayBuffer;
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
+    /**
+     * `true` when the tile response had an empty body (such as HTTP 204), so the buckets hold nothing because there was nothing to parse.
+     */
+    emptyBody?: boolean;
     // Only used for benchmarking:
     glyphMap?: Record<string, Record<string, StyleGlyph>> | null;
     iconMap?: {

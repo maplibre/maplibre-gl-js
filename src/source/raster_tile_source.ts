@@ -10,6 +10,7 @@ import {RGBAImage} from '../util/image.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
+import type {EmptyTileBehavior} from './worker_source.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -21,11 +22,9 @@ import type {
 
 export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
     /**
-     * How a tile response with an empty body, such as HTTP 204, is handled.
-     * `transparent` (the default) loads the tile without content: a raster tile draws fully transparent, a raster-dem tile has no elevation.
-     * `missing` treats it like a 404 response: the tile is left without data, so a loaded tile from another zoom level shows through in its place.
+     * How a tile response with an empty body is handled, see {@link EmptyTileBehavior}.
      */
-    emptyTileBehavior?: 'transparent' | 'missing';
+    emptyTileBehavior?: EmptyTileBehavior;
 };
 
 /**
