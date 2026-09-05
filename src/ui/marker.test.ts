@@ -1332,6 +1332,7 @@ describe('marker', () => {
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
+        await sleep(150); // The marker drops opacity updates within 100 ms of the previous one, let that window pass
         map.terrain.depthAtPoint = () => .9;
         marker.setLngLat([0, 0]);
         await sleep(100); // Give marker change time to load
