@@ -13,7 +13,8 @@ import {
 } from '../program/heatmap_program.ts';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
 import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
@@ -33,17 +34,17 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
             // to use complex tile masking here because the change between zoom levels is subtle,
             // so it's fine to simply render the parent until all its 4 children are loaded
             if (tileManager.hasRenderableParent(coord)) continue;
-            if (painter.renderPass === 'offscreen') {
+            if (renderOptions.currentPass === 'offscreen') {
                 prepareHeatmapTerrain(painter, tile, layer, coord, isRenderingGlobe);
-            } else if (painter.renderPass === 'translucent') {
+            } else if (renderOptions.currentPass === 'translucent') {
                 renderHeatmapTerrain(painter, layer, coord, isRenderingToTexture, isRenderingGlobe);
             }
         }
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else {
-        if (painter.renderPass === 'offscreen') {
+        if (renderOptions.currentPass === 'offscreen') {
             prepareHeatmapFlat(painter, tileManager, layer, tileIDs);
-        } else if (painter.renderPass === 'translucent') {
+        } else if (renderOptions.currentPass === 'translucent') {
             renderHeatmapFlat(painter, layer);
         }
 

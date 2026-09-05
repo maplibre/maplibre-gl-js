@@ -160,6 +160,34 @@ describe('RasterTileSource', () => {
         expect(transformSpy.mock.calls[0][1]).toBe('Tile');
     });
 
+    test('an empty tile response loads as a transparent tile, so the parent does not show through', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        const source = createSource({url: '/source.json'});
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        const update = vi.fn();
+        source.map.painter = {context: {}, getTileTexture: () => ({update})} as any;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData () {},
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect(tile.state).toBe('loaded');
+        expect(update).toHaveBeenCalledWith(
+            expect.objectContaining({width: 1, height: 1, data: new Uint8Array(4)}),
+            expect.anything());
+    });
+
     test('can asynchronously transform tile request', async () => {
         server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']

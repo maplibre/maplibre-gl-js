@@ -4,6 +4,7 @@
       "positionedGlyphs": [
         {
           "glyph": 104,
+          "grapheme": "h",
           "imageName": null,
           "x": -10,
           "y": -17,
@@ -27,6 +28,7 @@
         },
         {
           "glyph": 105,
+          "grapheme": "i",
           "imageName": null,
           "x": 4,
           "y": -17,

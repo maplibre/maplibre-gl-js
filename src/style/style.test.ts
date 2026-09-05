@@ -1527,6 +1527,72 @@ describe('Style.setGlyphs', () => {
     });
 });
 
+describe('Style.setFontFaces', () => {
+    const fontFaces = {
+        'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+    };
+
+    test('applies the font faces a loading style declares', async () => {
+        const style = new Style(getStubMap());
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('reports no font faces when the style declares none', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('hands the new font faces to the glyph manager', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+
+        style.setFontFaces(fontFaces);
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('allows font faces to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        style.setFontFaces(null);
+        expect(style.getFontFaces()).toBeNull();
+
+        style.setFontFaces(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+
+        style.setFontFaces(undefined);
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('round-trips through serialize, so setState can diff them', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(style.serialize()['font-faces']).toEqual(fontFaces);
+
+        const nextFontFaces = {'Noto Sans Regular': 'https://example.com/noto.ttf'};
+        expect(style.setState(createStyleJSON({'font-faces': nextFontFaces} as any))).toBe(true);
+        expect(style.getFontFaces()).toEqual(nextFontFaces);
+
+        expect(style.setState(createStyleJSON())).toBe(true);
+        expect(style.getFontFaces()).toBeNull();
+    });
+});
+
 describe('Style.addSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
@@ -3808,6 +3874,32 @@ describe('Style.serialize', () => {
             'fog-color': '#fff'
         });
         expect(style.serialize().sky).toBeDefined();
+    });
+
+    test('does not include state property when style has no state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.serialize().state).toBeUndefined();
+    });
+
+    test('include state property for style with state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {
+                showCircles: {
+                    default: true,
+                }
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().state).toEqual({
+            showCircles: {
+                default: true,
+            },
+        });
     });
 
     test('update sky properties after setting the sky on initial load', async () => {

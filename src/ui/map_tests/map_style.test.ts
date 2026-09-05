@@ -419,6 +419,35 @@ describe('setStyle', () => {
     });
 });
 
+describe('getStyleUrl', () => {
+    test('returns the URL given to setStyle', () => {
+        const map = createMap();
+        map.setStyle('/styles/streets.json');
+
+        expect(map.getStyleUrl()).toBe('/styles/streets.json');
+    });
+
+    test('returns the URL given in the map options', () => {
+        const map = createMap({style: '/styles/streets.json'});
+
+        expect(map.getStyleUrl()).toBe('/styles/streets.json');
+    });
+
+    test('returns null when the style is given as an object', () => {
+        const map = createMap({style: '/styles/streets.json'});
+        map.setStyle(createStyle());
+
+        expect(map.getStyleUrl()).toBeNull();
+    });
+
+    test('returns null after the style is removed', () => {
+        const map = createMap({style: '/styles/streets.json'});
+        map.setStyle(null);
+
+        expect(map.getStyleUrl()).toBeNull();
+    });
+});
+
 describe('getStyle', () => {
     test('returns undefined if the style has not loaded yet', () => {
         const style = createStyle();
@@ -609,6 +638,23 @@ describe('getStyle', () => {
             map.getLight();
 
             expect(spy).toHaveBeenCalled();
+        });
+    });
+
+    describe('setFontFaces', () => {
+        test('round-trips the font files the style draws text with', async () => {
+            const map = createMap();
+            await map.once('style.load');
+            expect(map.getFontFaces()).toBeNull();
+
+            const fontFaces = {
+                'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+            };
+            map.setFontFaces(fontFaces);
+            expect(map.getFontFaces()).toEqual(fontFaces);
+
+            map.setFontFaces(null);
+            expect(map.getFontFaces()).toBeNull();
         });
     });
 

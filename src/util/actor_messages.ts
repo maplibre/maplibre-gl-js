@@ -63,7 +63,8 @@ export type GetImagesParameters = {
  */
 export type GetGlyphsParameters = {
     type: string;
-    stacks: {[_: string]: number[]};
+    /** Keyed by fontstack; each entry is the grapheme clusters that stack needs glyphs for. */
+    stacks: Record<string, string[]>;
     source: string;
     tileID: OverscaledTileID;
 };
@@ -71,11 +72,7 @@ export type GetGlyphsParameters = {
 /**
  * A response object returned when requesting glyphs
  */
-export type GetGlyphsResponse = {
-    [stack: string]: {
-        [id: number]: StyleGlyph;
-    };
-};
+export type GetGlyphsResponse = Record<string, Record<string, StyleGlyph>>;
 
 /**
  * A response object returned when requesting images

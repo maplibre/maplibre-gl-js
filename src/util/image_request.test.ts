@@ -131,10 +131,28 @@ describe('ImageRequest', () => {
         expect(createImageBitmapSpy).toHaveBeenCalledWith(expect.any(Blob), options);
     });
 
-    test('getImage using createImageBitmap throws exception', async () => {
+    test('getImage resolves an empty response (e.g. HTTP 204) with null data and keeps the expiry headers', async () => {
         server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''); });
+
+        const createImageBitmapSpy = vi.fn();
+        stubAjaxGetImage(createImageBitmapSpy);
+        const promise = ImageRequest.getImage({url: ''}, new AbortController());
+        server.respond();
+
+        const response = await promise;
+
+        expect(response.data).toBeNull();
+        expect(response.cacheControl).toBe('cache');
+        expect(response.expires).toBe('expires');
+        expect(createImageBitmapSpy).not.toHaveBeenCalled();
+    });
+
+    test('getImage using createImageBitmap throws exception', async () => {
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, '0'); });
 
         stubAjaxGetImage(() => Promise.reject(new Error('error')));
 
@@ -149,7 +167,7 @@ describe('ImageRequest', () => {
         const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
         server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''); });
+            'Expires': 'expires'}, '0'); });
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
