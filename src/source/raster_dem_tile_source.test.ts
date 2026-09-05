@@ -353,7 +353,6 @@ describe('RasterDEMTileSource', () => {
                 releaseTransform = resolve;
             });
         });
-        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
 
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
