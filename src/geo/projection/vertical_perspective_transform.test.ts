@@ -6,6 +6,7 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
+import {MercatorTransform} from './mercator_transform.ts';
 
 describe('VerticalPerspectiveTransform.screenTerrainPointToMercatorCoordinate', () => {
     function createTransform(center: LngLat, zoom: number): VerticalPerspectiveTransform {
@@ -93,5 +94,21 @@ describe('VerticalPerspectiveTransform.screenTerrainPointToMercatorCoordinate', 
             expect(result).not.toBeNull();
             expect(terrain.getElevation(tileID, result.x * EXTENT, result.y * EXTENT, EXTENT)).toBeCloseTo(result.z, 3);
         }
+    });
+});
+
+describe('VerticalPerspectiveTransform.getCameraAltitude', () => {
+    test('is finite and matches a mercator transform at the same zoom', () => {
+        const transform = new VerticalPerspectiveTransform();
+        transform.resize(512, 512);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(10, 50));
+
+        const mercator = new MercatorTransform();
+        mercator.resize(512, 512);
+        mercator.setZoom(10);
+        mercator.setCenter(new LngLat(10, 50));
+
+        expect(transform.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
     });
 });
