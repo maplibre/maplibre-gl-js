@@ -1,7 +1,7 @@
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
-import type {RenderOptions} from './painter.ts';
+import type {RenderOptions} from './render_options.ts';
 
 /**
  * Interface for render-to-texture implementations.

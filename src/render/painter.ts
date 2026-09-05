@@ -33,10 +33,11 @@ import type {PatternAtlas} from './pattern_atlas.ts';
 import type {GlyphManager} from './glyph_manager.ts';
 import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
 import type {IndexBuffer} from '../webgl/index_buffer.ts';
-import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
+import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
+import {RenderOptions} from './render_options.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -53,8 +54,6 @@ import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
-export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
-
 type PainterOptions = {
     showOverdrawInspector: boolean;
     showTileBoundaries: boolean;
@@ -64,11 +63,6 @@ type PainterOptions = {
     moving: boolean;
     fadeDuration: number;
     anisotropicFilterPitch: number;
-};
-
-export type RenderOptions = {
-    isRenderingToTexture: boolean;
-    isRenderingGlobe: boolean;
 };
 
 /**
@@ -144,10 +138,7 @@ export class Painter {
     imageManager: ImageManager;
     patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
-    depthRangeFor3D: DepthRangeType;
-    opaquePassCutoff: number;
-    renderPass: RenderPass;
-    currentLayer: number;
+    renderOptions: RenderOptions;
     currentStencilSource: string;
     nextStencilID: number;
     id: string;
@@ -487,7 +478,7 @@ export class Painter {
             const a = 1 / numOverdrawSteps;
 
             return new ColorMode([gl.CONSTANT_COLOR, gl.ONE], new Color(a, a, a, 0), [true, true, true, true]);
-        } else if (this.renderPass === 'opaque') {
+        } else if (this.renderOptions.currentPass === 'opaque') {
             return ColorMode.unblended;
         } else {
             return ColorMode.alphaBlended;
@@ -496,12 +487,12 @@ export class Painter {
 
     getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
         if (!this.opaquePassEnabledForLayer()) return DepthMode.disabled;
-        const depth = 1 - ((1 + this.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
+        const depth = 1 - ((1 + this.renderOptions.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
         return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
     }
 
     getDepthModeFor3D(): Readonly<DepthMode> {
-        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
+        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.renderOptions.depthRangeFor3D);
     }
 
     /*
@@ -512,12 +503,13 @@ export class Painter {
      * opaque pass.
      */
     opaquePassEnabledForLayer(): boolean {
-        return this.currentLayer < this.opaquePassCutoff;
+        return this.renderOptions.currentLayer < this.renderOptions.opaquePassCutoff;
     }
 
     render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
+        const renderOptions = this.renderOptions = new RenderOptions(this.transform, style.projection, style.map.terrain ?? null);
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
@@ -535,7 +527,6 @@ export class Painter {
         const coordsAscending: {[_: string]: OverscaledTileID[]} = {};
         const coordsDescending: {[_: string]: OverscaledTileID[]} = {};
         const coordsDescendingSymbol: {[_: string]: OverscaledTileID[]} = {};
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in tileManagers) {
             const tileManager = tileManagers[id];
@@ -548,11 +539,11 @@ export class Painter {
             coordsDescendingSymbol[id] = tileManager.getVisibleCoordinates(true).reverse();
         }
 
-        this.opaquePassCutoff = Infinity;
+        renderOptions.opaquePassCutoff = Infinity;
         for (let i = 0; i < layerIds.length; i++) {
             const layerId = layerIds[i];
             if (this.style._layers[layerId].is3D()) {
-                this.opaquePassCutoff = i;
+                renderOptions.opaquePassCutoff = i;
                 break;
             }
         }
@@ -562,14 +553,14 @@ export class Painter {
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
-            this.opaquePassCutoff = 0;
+            renderOptions.opaquePassCutoff = 0;
         }
 
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate
         // framebuffer, and then save those for rendering back to the map
         // later: in doing this we avoid doing expensive framebuffer restores.
-        this.renderPass = 'offscreen';
+        renderOptions.currentPass = 'offscreen';
 
         for (const layerId of layerIds) {
             const layer = this.style._layers[layerId];
@@ -593,15 +584,15 @@ export class Painter {
         if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
-        this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
+        renderOptions.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
         if (!this.renderToTexture) {
-            this.renderPass = 'opaque';
+            renderOptions.currentPass = 'opaque';
 
-            for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
-                const layer = this.style._layers[layerIds[this.currentLayer]];
+            for (renderOptions.currentLayer = layerIds.length - 1; renderOptions.currentLayer >= 0; renderOptions.currentLayer--) {
+                const layer = this.style._layers[layerIds[renderOptions.currentLayer]];
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
@@ -612,12 +603,12 @@ export class Painter {
 
         // Translucent pass ===============================================
         // Draw all other layers bottom-to-top.
-        this.renderPass = 'translucent';
+        renderOptions.currentPass = 'translucent';
 
         let globeDepthRendered = false;
 
-        for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
-            const layer = this.style._layers[layerIds[this.currentLayer]];
+        for (renderOptions.currentLayer = 0; renderOptions.currentLayer < layerIds.length; renderOptions.currentLayer++) {
+            const layer = this.style._layers[layerIds[renderOptions.currentLayer]];
             const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
