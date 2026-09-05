@@ -4,7 +4,9 @@ import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {type Tile} from '../tile/tile.ts';
+import {Tile} from '../tile/tile.ts';
+import {DEMData} from '../data/dem_data.ts';
+import {RGBAImage} from '../util/image.ts';
 import {getMockDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -22,6 +24,37 @@ function createSource(options, transformCallback?) {
         throw e.error;
     });
 
+    return source;
+}
+
+function createDEMData(elevations: number[][]): DEMData {
+    // a DEM image carries one pixel of border on each side, filled here from the nearest inner pixel
+    const dim = elevations.length;
+    const stride = dim + 2;
+    const pixels = new Uint8Array(stride * stride * 4);
+    for (let y = 0; y < stride; y++) {
+        for (let x = 0; x < stride; x++) {
+            const row = elevations[Math.min(Math.max(y - 1, 0), dim - 1)];
+            pixels[(y * stride + x) * 4] = row[Math.min(Math.max(x - 1, 0), dim - 1)];
+            pixels[(y * stride + x) * 4 + 3] = 255;
+        }
+    }
+    return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'custom', 1, 0, 0, 0);
+}
+
+function createDEMTile(z: number, x: number, y: number, elevations: number[][]): Tile {
+    const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), 512);
+    tile.dem = createDEMData(elevations);
+    return tile;
+}
+
+function createSourceWithTiles(inViewTiles: Tile[], outOfViewTiles: Tile[] = []): RasterDEMTileSource {
+    const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png'], minzoom: 0, maxzoom: 2});
+    const find = (tiles: Tile[], key: string) => tiles.find((tile) => tile.tileID.key === key);
+    source.map.style = {tileManagers: {id: {
+        getTileByID: (key: string) => find(inViewTiles, key),
+        _outOfViewCache: {getByKey: (key: string) => find(outOfViewTiles, key)}
+    }}} as any;
     return source;
 }
 
@@ -432,5 +465,49 @@ describe('RasterDEMTileSource', () => {
         server.respond();
         await tilePromise;
         expect(tile.state).toBe('loaded');
+    });
+
+    describe('queryElevations', () => {
+        test('returns null before the source is on a map', () => {
+            const source = new RasterDEMTileSource('id', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']}, getMockDispatcher(), undefined);
+
+            expect(source.queryElevations([[0, 0]])).toEqual([null]);
+        });
+
+        test('returns null where no DEM tile is loaded', () => {
+            const source = createSourceWithTiles([]);
+
+            expect(source.queryElevations([[0, 0]])).toEqual([null]);
+        });
+
+        test('interpolates between the DEM pixels around the location', () => {
+            const source = createSourceWithTiles([createDEMTile(0, 0, 0, [
+                [0, 1, 2, 3],
+                [0, 1, 2, 3],
+                [0, 1, 2, 3],
+                [0, 1, 2, 3]
+            ])]);
+
+            // longitude 45 is 5/8 of the way across the world tile, which lands halfway between pixel columns 2 and 3
+            expect(source.queryElevations([[45, 0]])).toEqual([{elevation: 2.5, tileZoom: 0}]);
+        });
+
+        test('reads the highest loaded zoom at each location', () => {
+            const source = createSourceWithTiles([
+                createDEMTile(0, 0, 0, [[50]]),
+                createDEMTile(2, 0, 2, [[200]])
+            ]);
+
+            expect(source.queryElevations([[-135, 0], [45, 0]])).toEqual([
+                {elevation: 200, tileZoom: 2},
+                {elevation: 50, tileZoom: 0}
+            ]);
+        });
+
+        test('reads tiles that left the view but are still cached', () => {
+            const source = createSourceWithTiles([], [createDEMTile(1, 1, 0, [[120]])]);
+
+            expect(source.queryElevations([[45, 45]])).toEqual([{elevation: 120, tileZoom: 1}]);
+        });
     });
 });

@@ -10,7 +10,7 @@ import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data.ts';
-import type {DEMEncoding, DEMData} from '../data/dem_data.ts';
+import type {DEMEncoding} from '../data/dem_data.ts';
 
 import type {Source} from './source.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -21,37 +21,16 @@ import {RGBAImage} from '../util/image.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 /**
- * The result of an elevation query from a raster DEM source.
+ * One result of {@link RasterDEMTileSource.queryElevations}.
  *
  * @group Sources
  */
 export type ElevationQueryResult = {
-    /** Elevation in meters above sea level (raw, without terrain exaggeration). */
+    /** Elevation in meters, without terrain exaggeration */
     elevation: number;
-    /** Zoom level of the tile that provided the elevation data. */
+    /** Zoom of the tile the elevation was read from */
     tileZoom: number;
 };
-
-/**
- * Bilinear interpolation of a DEM tile at fractional tile coordinates.
- * @param dem - The DEM data to sample
- * @param fx - Fractional x position within the tile, in [0, 1)
- * @param fy - Fractional y position within the tile, in [0, 1)
- */
-function sampleDEMBilinear(dem: DEMData, fx: number, fy: number): number {
-    const px = fx * dem.dim;
-    const py = fy * dem.dim;
-    const x0 = Math.min(Math.floor(px), dem.dim - 1);
-    const y0 = Math.min(Math.floor(py), dem.dim - 1);
-    const tx = px - x0;
-    const ty = py - y0;
-    return (
-        dem.get(x0, y0) * (1 - tx) * (1 - ty) +
-        dem.get(x0 + 1, y0) * tx * (1 - ty) +
-        dem.get(x0, y0 + 1) * (1 - tx) * ty +
-        dem.get(x0 + 1, y0 + 1) * tx * ty
-    );
-}
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -193,62 +172,42 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     }
 
     /**
-     * Query elevation at one or more geographic coordinates using already-loaded DEM tiles.
-     *
-     * Returns raw elevation in meters above sea level, without terrain exaggeration.
-     * For each coordinate, the method searches loaded tiles from the highest available
-     * zoom level down to the lowest, returning the best-resolution elevation available.
-     *
-     * Returns `null` for coordinates where no DEM tile is currently loaded.
-     *
-     * @param lnglats - Array of geographic coordinates to query.
-     * @returns Array of elevation results (or `null` where no data is available),
-     *   in the same order as the input coordinates.
-     *
+     * Returns the elevation at each location from the DEM tiles this source has already loaded.
+     * The highest loaded zoom at a location wins and terrain exaggeration is not applied.
+     * A location with no loaded tile, or a source that is not on a map yet, gets `null`.
+     * @param lngLats - the locations to query
+     * @returns one result per location, in the same order
      * @example
      * ```ts
-     * const demSource = map.getSource('terrain-dem') as RasterDEMTileSource;
-     * const results = demSource.queryElevations([[7.0, 45.0], [7.1, 45.1]]);
-     * const missing = results.filter(r => r === null).length;
-     * if (missing > 0) console.log(`${missing} points have no loaded tile`);
-     * results.forEach((r, i) => {
-     *     if (r) console.log(`Point ${i}: ${r.elevation}m (zoom ${r.tileZoom})`);
-     * });
+     * const dem = map.getSource('dem') as RasterDEMTileSource;
+     * const [result] = dem.queryElevations([map.getCenter()]);
      * ```
      */
-    queryElevations(
-        lnglats: LngLatLike[]
-    ): (ElevationQueryResult | null)[] {
-        if (!this.map) {
-            throw new Error('Source is not added to a map');
-        }
-
-        const tileManager = this.map.style?.tileManagers[this.id];
+    queryElevations(lngLats: LngLatLike[]): Array<ElevationQueryResult | null> {
+        const tileManager = this.map?.style?.tileManagers[this.id];
         if (!tileManager) {
-            throw new Error(`No tile manager found for source "${this.id}"`);
+            return lngLats.map(() => null);
         }
 
-        return lnglats.map(ll => {
-            const lnglat = LngLat.convert(ll).wrap();
-            const mercator = MercatorCoordinate.fromLngLat(lnglat);
+        return lngLats.map((lngLatLike) => {
+            const mercator = MercatorCoordinate.fromLngLat(LngLat.convert(lngLatLike).wrap());
+            // keep the location strictly inside the world so it always falls in a tile, poles included
             const mx = Math.max(0, Math.min(1 - 1e-15, mercator.x));
             const my = Math.max(0, Math.min(1 - 1e-15, mercator.y));
 
             for (let z = this.maxzoom; z >= this.minzoom; z--) {
                 const tileCount = 1 << z;
-                const tileX = Math.min(Math.floor(mx * tileCount), tileCount - 1);
-                const tileY = Math.min(Math.floor(my * tileCount), tileCount - 1);
-
-                // For raster-dem sources, overscaledZ always equals canonical z
+                const tileX = Math.floor(mx * tileCount);
+                const tileY = Math.floor(my * tileCount);
+                // raster-dem tiles are never overscaled, so overscaledZ is the canonical z
                 const key = calculateTileKey(0, z, z, tileX, tileY);
                 const tile = tileManager.getTileByID(key) ?? tileManager._outOfViewCache.getByKey(key);
                 if (!tile?.dem) continue;
 
                 const fx = mx * tileCount - tileX;
                 const fy = my * tileCount - tileY;
-
                 return {
-                    elevation: sampleDEMBilinear(tile.dem, fx, fy),
+                    elevation: tile.dem.sampleBilinear(fx * tile.dem.dim, fy * tile.dem.dim),
                     tileZoom: z
                 };
             }

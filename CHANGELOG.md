@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `queryElevations` to `RasterDEMTileSource` to read elevations from the DEM tiles a source has already loaded ([#7201](https://github.com/maplibre/maplibre-gl-js/pull/7201)) (by [@eddy-geek](https://github.com/eddy-geek))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

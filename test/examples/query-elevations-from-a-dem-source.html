@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Get elevation values from raster DEM</title>
-    <meta property="og:description" content="Show mouse position and sampled elevation from loaded raster DEM tiles using queryElevations()." />
+    <title>Query elevations from a DEM source</title>
+    <meta property="og:description" content="Read the elevation under the pointer from the raster DEM tiles the source has already loaded, with queryElevations, and without turning terrain on." />
+    <meta property="og:category" content="Terrain & Hillshade" />
+    <meta property="og:created" content="2026-09-05" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css'>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -31,8 +32,9 @@
 </head>
 <body>
 <div id="map"></div>
-<pre id="info">Move the mouse over the map to query DEM elevation.</pre>
-<script>
+<pre id="info">Move the pointer over the map to read the elevation.</pre>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -77,14 +79,7 @@
 
     map.on('mousemove', (e) => {
         const demSource = map.getSource('dem');
-        if (!demSource) {
-            info.textContent = 'DEM source is not ready yet (style not loaded).';
-            return;
-        }
-        if (typeof demSource.queryElevations !== 'function') {
-            info.textContent = 'queryElevations() is unavailable in the currently loaded maplibre-gl-dev.js build.';
-            return;
-        }
+        if (!demSource) return;
 
         const [result] = demSource.queryElevations([e.lngLat]);
         const lngLat = e.lngLat.wrap();
