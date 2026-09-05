@@ -39,7 +39,9 @@ export type GeolocateControlOptions = {
      */
     showUserLocation?: boolean;
     /**
-     * If `true`, location updates while tracking adjust the zoom level to fit the GPS accuracy circle (via `fitBoundsOptions`). If `false`, only the map center follows the user and the current zoom level is preserved. Only applies when `trackUserLocation` is `true`.
+     * Whether a location update while tracking also changes the zoom to fit the accuracy circle, using `fitBoundsOptions`.
+     * Set it to `false` to keep the current zoom and only follow the position.
+     * Has no effect when `trackUserLocation` is `false`.
      * @defaultValue true
      */
     trackZoom?: boolean;
@@ -536,27 +538,31 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
     };
 
     /**
-     * Update the camera location to center on the current position
+     * Update the camera location to center on the current position.
+     * The camera change is tagged with `geolocateSource` so it does not switch the control to the background state.
      *
      * @param position - the Geolocation API Position
      */
     _updateCamera = (position: GeolocationPosition): void => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
         const bearing = this._map.getBearing();
+        const eventData = {geolocateSource: true};
 
-        if (this.options.trackZoom === false) {
-            this._map.flyTo({center, bearing, zoom: this._map.getZoom()}, {
-                geolocateSource: true
-            });
-        } else {
-            const radius = position.coords.accuracy;
-            const options = extend({bearing}, this.options.fitBoundsOptions);
-            const newBounds = LngLatBounds.fromLngLat(center, radius);
-
-            this._map.fitBounds(newBounds, options, {
-                geolocateSource: true
-            });
+        if (!this.options.trackZoom) {
+            const options = extend({}, this.options.fitBoundsOptions, {center, bearing, zoom: this._map.getZoom()});
+            if (options.linear) {
+                this._map.easeTo(options, eventData);
+            } else {
+                this._map.flyTo(options, eventData);
+            }
+            return;
         }
+
+        const radius = position.coords.accuracy;
+        const options = extend({bearing}, this.options.fitBoundsOptions);
+        const newBounds = LngLatBounds.fromLngLat(center, radius);
+
+        this._map.fitBounds(newBounds, options, eventData);
     };
 
     /**
