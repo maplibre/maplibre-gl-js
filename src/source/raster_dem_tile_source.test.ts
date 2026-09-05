@@ -133,6 +133,32 @@ describe('RasterDEMTileSource', () => {
         expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
     });
 
+    test('an empty tile response with emptyTileBehavior missing leaves the tile without data, so another zoom level supplies the elevation', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData () {},
+            setExpiryData() {},
+            actor: {sendAsync: vi.fn()}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect(tile.state).toBe('errored');
+        expect(tile.dem).toBeUndefined();
+        expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
+    });
+
     test('can asynchronously transform tile request', async () => {
         server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
