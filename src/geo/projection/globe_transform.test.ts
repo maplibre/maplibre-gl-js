@@ -9,6 +9,7 @@ import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {differenceOfAnglesDegrees, MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
@@ -638,6 +639,84 @@ describe('GlobeTransform', () => {
 
         test('barely hidden', () => {
             expect(transform.isLocationOccluded(new LngLat(84.50, 0))).toBe(true);
+        });
+    });
+
+    describe('getCameraAltitude', () => {
+        test('matches the mercator transform at the same zoom and pitch', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setZoom(14);
+            globe.setCenter(new LngLat(10, 50));
+            globe.setPitch(45);
+
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setZoom(14);
+            mercator.setCenter(new LngLat(10, 50));
+            mercator.setPitch(45);
+
+            // the globe is a sphere here, mercator a plane: equal to within a tenth of a percent
+            expect(Math.abs(globe.getCameraAltitude() - mercator.getCameraAltitude()) / mercator.getCameraAltitude()).toBeLessThan(1e-3);
+        });
+
+        test('follows the vertical perspective transform at low zoom and high pitch', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setMaxPitch(180);
+            globe.setZoom(4);
+            globe.setCenter(new LngLat(10, 50));
+            globe.setPitch(100);
+
+            const vp = new VerticalPerspectiveTransform();
+            vp.resize(512, 512);
+            vp.setMaxPitch(180);
+            vp.setZoom(4);
+            vp.setCenter(new LngLat(10, 50));
+            vp.setPitch(100);
+
+            expect(globe.getCameraAltitude()).toBeGreaterThan(0);
+            expect(globe.getCameraAltitude()).toBeCloseTo(vp.getCameraAltitude(), 6);
+            expect(globe.getCameraLngLat().lat).toBeCloseTo(vp.getCameraLngLat().lat, 9);
+
+            const lifted = globe.calculateCameraOptionsFromTo(globe.getCameraLngLat(), 0, globe.center, 0);
+            const liftedVp = vp.calculateCameraOptionsFromTo(vp.getCameraLngLat(), 0, vp.center, 0);
+            expect(lifted.pitch).toBeCloseTo(liftedVp.pitch, 9);
+            expect(lifted.zoom).toBeCloseTo(liftedVp.zoom, 9);
+        });
+
+        test('stays on the sphere geometry while the globe renders as mercator, the rendering mode lags a jump by a frame', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setMaxPitch(180);
+            globe.setTransitionState(0); // rendering as mercator, as after a stay at high zoom
+            globe.setZoom(4);
+            globe.setCenter(new LngLat(10, 50));
+            globe.setPitch(100);
+
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setMaxPitch(180);
+            mercator.setZoom(4);
+            mercator.setCenter(new LngLat(10, 50));
+            mercator.setPitch(100);
+
+            expect(mercator.getCameraAltitude()).toBeLessThan(0);
+            expect(globe.getCameraAltitude()).toBeGreaterThan(0);
+        });
+
+        test('matches the mercator transform while the globe is rendered as a sphere', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setZoom(2);
+            globe.setCenter(new LngLat(0, 0));
+
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setZoom(2);
+            mercator.setCenter(new LngLat(0, 0));
+
+            expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
         });
     });
 

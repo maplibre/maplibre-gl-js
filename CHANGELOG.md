@@ -3,11 +3,12 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251))
+- Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251)) (by [@patte](https://github.com/patte))
 - Fix a gap between the sky and the ground at high pitch while globe transitions to mercator ([#7382](https://github.com/maplibre/maplibre-gl-js/issues/7382)) (by [@birkskyum](https://github.com/birkskyum))
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix visible seams between hillshade tiles when using linear interpolation. ([#8302](https://github.com/maplibre/maplibre-gl-js/pull/8302)) (by [@Turbo87](https://github.com/Turbo87))
 - Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))
+- Fix `getCameraAltitude()` returning `NaN` and marker terrain occlusion never applying under `globe` and `vertical-perspective` projections; `getCameraAltitude()`, `getCameraLngLat()` and `calculateCameraOptionsFromTo()` now follow the globe geometry under these projections ([#6584](https://github.com/maplibre/maplibre-gl-js/issues/6584)) (by [@bigmistqke](https://github.com/bigmistqke) and [@patte](https://github.com/patte))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 

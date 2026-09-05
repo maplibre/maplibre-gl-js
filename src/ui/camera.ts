@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util.ts';
+import {extend, wrap, defaultEasing, pick, evaluateZoomSnap} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -7,7 +7,6 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
 
@@ -709,29 +708,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
-        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMercator.x - fromMercator.x;
-        const dy = toMercator.y - fromMercator.y;
-        const dz = toMercator.z - fromMercator.z;
-
-        const distance3D = Math.hypot(dx, dy, dz);
-        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
-
-        const groundDistance = Math.hypot(dx, dy);
-
-        const zoom = scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
-        const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
-        let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
-        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
-
-        return {
-            center: toMercator.toLngLat(),
-            elevation: altitudeTo,
-            zoom,
-            pitch,
-            bearing
-        };
+        return this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
