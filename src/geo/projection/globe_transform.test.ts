@@ -680,6 +680,26 @@ describe('GlobeTransform', () => {
             expect(globe.getCameraLngLat().lat).toBeCloseTo(vp.getCameraLngLat().lat, 9);
         });
 
+        test('stays on the sphere geometry while the globe renders as mercator, the rendering mode lags a jump by a frame', () => {
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setMaxPitch(180);
+            globe.setTransitionState(0); // rendering as mercator, as after a stay at high zoom
+            globe.setZoom(4);
+            globe.setCenter(new LngLat(10, 50));
+            globe.setPitch(100);
+
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setMaxPitch(180);
+            mercator.setZoom(4);
+            mercator.setCenter(new LngLat(10, 50));
+            mercator.setPitch(100);
+
+            expect(mercator.getCameraAltitude()).toBeLessThan(0);
+            expect(globe.getCameraAltitude()).toBeGreaterThan(0);
+        });
+
         test('matches the mercator transform while the globe is rendered as a sphere', () => {
             const globe = new GlobeTransform();
             globe.resize(512, 512);
