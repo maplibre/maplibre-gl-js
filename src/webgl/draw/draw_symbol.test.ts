@@ -6,7 +6,7 @@ import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import {Painter} from '../../render/painter.ts';
-import {RenderOptions} from '../../render/render_options.ts';
+import {createRenderOptions} from '../../render/render_options.ts';
 import {Program} from '../program.ts';
 import {drawSymbols} from './draw_symbol.ts';
 import * as symbolProjection from '../../symbol/projection.ts';
@@ -56,7 +56,7 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null, null);
-        const renderOptions = new RenderOptions(null, undefined, null);
+        const renderOptions = createRenderOptions(null, undefined, null);
         renderOptions.currentPass = 'opaque';
 
         drawSymbols(mockPainter, null, null, null, null, renderOptions);
@@ -73,7 +73,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.transform = createMockTransform();
-        painterMock.renderOptions = new RenderOptions(painterMock.transform, undefined, null);
+        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
         painterMock.renderOptions.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
@@ -136,7 +136,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.transform = createMockTransform();
-        painterMock.renderOptions = new RenderOptions(painterMock.transform, undefined, null);
+        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
         painterMock.renderOptions.currentPass = 'translucent';
         painterMock.options = {} as any;
 
@@ -204,7 +204,7 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.transform = createMockTransform();
-        painterMock.renderOptions = new RenderOptions(painterMock.transform, undefined, null);
+        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
         painterMock.renderOptions.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {

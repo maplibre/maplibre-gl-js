@@ -37,7 +37,7 @@ import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
-import {RenderOptions} from './render_options.ts';
+import {createRenderOptions, type RenderOptions} from './render_options.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -509,7 +509,7 @@ export class Painter {
     render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
-        const renderOptions = this.renderOptions = new RenderOptions(this.transform, style.projection, style.map.terrain ?? null);
+        const renderOptions = this.renderOptions = createRenderOptions(this.transform, style.projection, style.map.terrain ?? null);
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
