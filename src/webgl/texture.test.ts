@@ -83,7 +83,7 @@ describe('Texture', () => {
         expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     });
 
-    test('bind updates min filter independently from mag filter', () => {
+    test('bind writes the min filter on its own when only the min filter changes', () => {
         const gl = createNullGL();
         const context = new Context(gl);
         const image = new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4));
@@ -96,6 +96,26 @@ describe('Texture', () => {
 
         expect(gl.texParameteri).toHaveBeenCalledTimes(1);
         expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    });
+
+    test('generateMipmap rebuilds the chain of a mipmapped texture', () => {
+        const gl = createNullGL();
+        const texture = new Texture(new Context(gl), new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4)), gl.RGBA, {useMipmap: true});
+        vi.mocked(gl.generateMipmap).mockClear();
+
+        texture.generateMipmap();
+
+        expect(gl.generateMipmap).toHaveBeenCalledWith(gl.TEXTURE_2D);
+    });
+
+    test('generateMipmap does nothing for a texture created without mipmaps', () => {
+        const gl = createNullGL();
+        const texture = new Texture(new Context(gl), new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4)), gl.RGBA);
+        vi.mocked(gl.generateMipmap).mockClear();
+
+        texture.generateMipmap();
+
+        expect(gl.generateMipmap).not.toHaveBeenCalled();
     });
 
     test('premultiplyAlpha produces correct output', () => {

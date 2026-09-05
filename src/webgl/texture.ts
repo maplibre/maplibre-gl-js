@@ -177,6 +177,16 @@ export class Texture {
         }
     }
 
+    /**
+     * Rebuilds the mip chain after the texture was drawn into as a framebuffer attachment
+     */
+    generateMipmap(): void {
+        if (!this.useMipmap) return;
+        const {gl} = this.context;
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }
+
     destroy(): void {
         const {gl} = this.context;
         gl.deleteTexture(this.texture);

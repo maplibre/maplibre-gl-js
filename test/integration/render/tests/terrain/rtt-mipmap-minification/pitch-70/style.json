@@ -5,7 +5,7 @@
       "height": 256,
       "width": 256,
       "allowed": 0.001,
-      "description": "High-frequency raster content draped over pitched terrain. Without mipmaps and trilinear filtering on the terrain render-to-texture result, the distant terrain aliases into moire patterns instead of filtering smoothly."
+      "description": "A checkerboard draped over terrain at pitch 70 is sampled through the render-to-texture mip chain, so the far field filters to an even grey instead of aliasing into a moire pattern."
     }
   },
   "center": [11.52517, 47.34487],

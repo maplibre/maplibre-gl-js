@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
-- Improve terrain render-to-texture filtering by enabling mipmaps and trilinear sampling ([#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
+- Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
