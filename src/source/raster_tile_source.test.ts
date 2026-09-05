@@ -261,7 +261,7 @@ describe('RasterTileSource', () => {
         expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
     });
 
-    test('setTiles updates this.tiles used by loadTile', () => {
+    test('loadTile requests the new URLs right after setTiles, before the source reloads', () => {
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']});
         const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
 

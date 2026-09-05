@@ -480,7 +480,7 @@ describe('VectorTileSource', () => {
         });
     });
 
-    test('setTiles updates this.tiles used by loadTile', async () => {
+    test('loadTile requests the new URLs right after setTiles, before the source reloads', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
