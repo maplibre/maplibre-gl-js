@@ -1398,6 +1398,33 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Keeps its opacity while the map loads after a projection change, and reads it once the map is loaded', async () => {
+        const map = createMap({width: 1024});
+        await map.once('load');
+        map.terrain = createTerrain();
+        map.terrain.depthAtPoint = () => 1;
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(150);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        // while the terrain tiles reload the depth buffer says covered, but nothing must be read until they are back
+        let loaded = false;
+        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
+        map.terrain.depthAtPoint = () => .9;
+        map.setProjection({type: 'globe'});
+        await sleep(300);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        loaded = true;
+        map.triggerRepaint(); // the frame that follows the last tile
+        await sleep(300);
+        expect(marker.getElement().style.opacity).toBe('0.3');
+
+        map.remove();
+    });
+
     test('Removes an open popup when going behind 3d terrain', async () => {
         const map = createMap();
         const marker = new Marker()
