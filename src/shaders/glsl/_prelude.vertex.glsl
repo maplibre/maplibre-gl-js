@@ -151,7 +151,7 @@ float get_elevation(vec2 pos) {
                 return 0.0;
             }
         #endif
-        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
+        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 2.0;
         vec2 f = fract(coord);
         ivec2 c = ivec2(floor(coord)); // get the pixel center
         ivec2 hi = textureSize(u_terrain, 0) - 1;

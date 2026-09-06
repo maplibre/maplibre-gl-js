@@ -1,7 +1,7 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
-import {RenderOptions} from '../render/render_options.ts';
+import {createRenderOptions} from '../render/render_options.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
@@ -133,7 +133,7 @@ describe('render to texture', () => {
         const renderLayerSpy = vi.spyOn(painter, 'renderLayer');
         rtt.prepareForRender(style, 0);
 
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         for (const layerId of style._order) {
             const layer = style._layers[layerId];
             rtt.renderLayer(layer, renderOptions);
@@ -179,7 +179,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
         expect(rtt.renderLayer(fillLayer, renderOptions)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
@@ -190,7 +190,7 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, renderOptions)).toBeTruthy();
         expect(rtt.renderLayer(fillLayer, renderOptions)).toBeTruthy();
@@ -206,7 +206,7 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, renderOptions)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
@@ -239,7 +239,7 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
 
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 
@@ -258,7 +258,7 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
 
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 
@@ -271,7 +271,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const renderOptions = new RenderOptions(painter.transform, undefined, terrain);
+        const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 

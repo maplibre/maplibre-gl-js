@@ -1,11 +1,13 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
 
 ### 🐞 Bug fixes
+- Fix a marker's popup jumping to another world copy when the marker is moved across the antimeridian on a zoomed-out map ([#5655](https://github.com/maplibre/maplibre-gl-js/issues/5655), [#8326](https://github.com/maplibre/maplibre-gl-js/pull/8326), continues [#5956](https://github.com/maplibre/maplibre-gl-js/pull/5956)) (by [@yuiseki](https://github.com/yuiseki))
 - Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251))
 - Fix a gap between the sky and the ground at high pitch while globe transitions to mercator ([#7382](https://github.com/maplibre/maplibre-gl-js/issues/7382)) (by [@birkskyum](https://github.com/birkskyum))
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Fix visible seams between hillshade tiles when using linear interpolation. ([#8302](https://github.com/maplibre/maplibre-gl-js/pull/8302)) (by [@Turbo87](https://github.com/Turbo87))
 - Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Keep the tile under an elevated symbol from being culled near the horizon, so a symbol with a large `symbol-height-offset` stays visible until it is behind the planet ([#8316](https://github.com/maplibre/maplibre-gl-js/issues/8316)) (by [@clement-igonet](https://github.com/clement-igonet))

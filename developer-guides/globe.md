@@ -173,6 +173,10 @@ that were drawn in the first pass.
 This ensures that no pixel is drawn twice, and that the stretched borders
 are only drawn in regions between tiles. 
 
+## Data near the poles
+
+Web mercator sources carry no data beyond about 85.05 degrees of latitude, so a globe has nothing to draw between that edge and the pole. MapLibre fills the gap by extending the edge of each pole-adjacent tile to the pole: subdivision adds a fan of pole triangles to every tile in the first or last mercator row, and whatever crosses the mercator edge in that tile, a fill polygon or the last row of a raster texture, is stretched all the way to the pole. Both vector and raster sources show this, most visibly around Antarctica, where an ocean polygon that crosses the edge becomes a spike reaching the pole. There is no source data to draw there, so this is the expected result rather than a rendering bug ([#5433](https://github.com/maplibre/maplibre-gl-js/issues/5433)).
+
 ## Symbols
 
 Symbol rendering also had to be adapted for globe, as well as collision detection and placement.
