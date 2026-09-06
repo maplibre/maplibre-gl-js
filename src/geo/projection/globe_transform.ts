@@ -374,11 +374,13 @@ export class GlobeTransform implements ITransform {
         return this._helper.getCameraPoint();
     }
 
-    // The camera is always taken from the vertical perspective child: its position on the sphere is
-    // computed on every matrix pass whatever is rendered, and it agrees with mercator's flat camera to
-    // a hundredth of a percent at the zooms where the globe renders as mercator. The rendering mode
-    // itself lags the camera by a frame, so reading whichever child currently renders would give the
-    // flat, negative altitude when a jump from high zoom into pitch > 90 is checked against terrain.
+    /**
+     * The camera is always taken from the vertical perspective child, not from `currentTransform`:
+     * the mercator child's flat camera is only a valid approximation while the globe renders as mercator,
+     * where both agree to a hundredth of a percent. `currentTransform` follows the last rendered frame,
+     * so a jump from high zoom into low zoom with a pitch above 90 would still be checked against terrain
+     * with the flat formula, read a negative altitude and snap the pitch back to 90.
+     */
     getCameraAltitude(): number {
         return this._verticalPerspectiveTransform.getCameraAltitude();
     }
@@ -412,8 +414,8 @@ export class GlobeTransform implements ITransform {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
     }
 
+    /** Solved on the sphere whatever is rendered, see {@link getCameraAltitude}. */
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number} {
-        // same reasoning as for getCameraAltitude: the sphere geometry, whatever is currently rendered
         return this._verticalPerspectiveTransform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 

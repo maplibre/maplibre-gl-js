@@ -2703,6 +2703,14 @@ describe('jumpTo globe projection', () => {
             ({camera} = createCamera(null, true, {zoom: 1}));
         });
 
+        test('a jump from high zoom into a pitch above 90 keeps its pitch while the globe still renders as mercator', () => {
+            const {camera} = createCamera({maxPitch: 180}, true, {center: [10, 50], zoom: 15});
+            camera.transform.setTransitionState(0); // what the render loop sets at zoom 15, and the jump runs before the next frame
+            camera.jumpTo({zoom: 4, pitch: 100});
+            expect(camera.getPitch()).toBeCloseTo(100, 6);
+            expect(camera.getZoom()).toBeCloseTo(4, 6);
+        });
+
         test('changing center with no zoom specified should adjusts zoom', () => {
             camera.jumpTo({center: [0, 40]});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
