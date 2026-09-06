@@ -2731,6 +2731,37 @@ describe('jumpTo globe projection', () => {
             expect(camera.transform.getCameraLngLat().lat).toBeCloseTo(0, 6);
         });
 
+        test('calculateCameraOptionsFromTo returns the flat solution when that is what its result renders with', () => {
+            const {camera} = createCamera(null, true, {center: [0, 0], zoom: 2}); // rendering as a sphere
+            const options = camera.calculateCameraOptionsFromTo([0.01, 0], 1000, [0, 0], 0);
+            const flat = createCamera(null, false, {center: [0, 0], zoom: 2}).camera.calculateCameraOptionsFromTo([0.01, 0], 1000, [0, 0], 0);
+            expect(options.zoom).toBeGreaterThan(12);
+            expect(options.zoom).toBeCloseTo(flat.zoom, 9);
+            expect(options.pitch).toBeCloseTo(flat.pitch, 9);
+        });
+
+        test('calculateCameraOptionsFromTo keeps the current geometry when the result lands in the transition band', () => {
+            const {camera} = createCamera({maxPitch: 180}, true, {center: [0, 0], zoom: 15});
+            camera.transform.setTransitionState(0);
+            const request: [LngLatLike, number, LngLatLike, number] = [[0, 0], 0, [20, 0], 0];
+            const flat = createCamera({maxPitch: 180}, false).camera.calculateCameraOptionsFromTo(...request);
+            const sphereTransform = camera.transform.clone();
+            sphereTransform.setTransitionState(1);
+            const sphere = sphereTransform.calculateCameraOptionsFromTo(...request);
+            expect(sphere.zoom).toBeGreaterThan(flat.zoom);
+            // a band between the two candidate zooms: the flat solution renders as a sphere, the sphere solution as mercator
+            const top = (flat.zoom + sphere.zoom) / 2;
+            const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], top - 0.01, 'vertical-perspective', top, 'mercator']} as any, {});
+            camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
+            expect(projection.transitionStateAtZoom(flat.zoom)).toBeGreaterThan(0);
+            expect(projection.transitionStateAtZoom(sphere.zoom)).toBe(0);
+
+            const options = camera.calculateCameraOptionsFromTo(...request);
+            expect(options.zoom).toBeCloseTo(flat.zoom, 9); // the view renders as mercator now
+            camera.transform.setTransitionState(1);
+            expect(camera.calculateCameraOptionsFromTo(...request).zoom).toBeCloseTo(sphere.zoom, 9);
+        });
+
         test('a projection expression that renders mercator at low zoom lifts the camera with the flat geometry', () => {
             const {camera} = createCamera({maxPitch: 180}, true, {center: [8, 47], zoom: 1});
             const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], 1, 'vertical-perspective', 2, 'mercator']} as any, {});

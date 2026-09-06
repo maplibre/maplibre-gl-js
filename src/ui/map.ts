@@ -1528,7 +1528,7 @@ export class Map extends Evented<MapEventType> {
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
-     * @param altitudeTo - Optional altitude of the center to look at. If none given the ground height will be used.
+     * @param altitudeTo - Optional altitude of the center to look at. If none given the ground height will be used. Where the map renders as a globe it becomes the center elevation, which the globe keeps at sea level: the camera then looks at the sea-level center.
      * @returns the calculated camera options
      * @example
      * ```ts
