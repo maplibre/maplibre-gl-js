@@ -10,7 +10,7 @@ import {type ZoomHistory} from '../../style/zoom_history.ts';
 import {type BucketDependencyParameters, type BucketFeature, type BucketParameters} from '../bucket.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
-import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {StyleImage} from '../../style/style_image.ts';
 
 function createPolygon(numPoints) {
@@ -32,7 +32,7 @@ function createFillBucketWithLayers(layerSpecifications: LayerSpecification[], a
         return layer;
     });
 
-    return new FillBucket({layers} as BucketParameters<FillStyleLayer>);
+    return new FillBucket({layers, zoom: 0, overscaling: 0, index: 0} as BucketParameters<FillStyleLayer>);
 }
 
 function createDependencyParameters(imageMap: Record<string, StyleImage>): BucketDependencyParameters {
@@ -42,6 +42,21 @@ function createDependencyParameters(imageMap: Record<string, StyleImage>): Bucke
         imagePositions: {},
         dashPositions: {},
         imageMap
+    };
+}
+
+function createPatternFeature(a: string, b: string): VectorTileFeatureLike {
+    return {
+        type: 3,
+        properties: {a, b},
+        id: 0,
+        extent: 4096,
+        loadGeometry: () => [[
+            new Point(0, 0),
+            new Point(16, 0),
+            new Point(16, 16),
+            new Point(0, 16)
+        ]]
     };
 }
 
@@ -151,26 +166,13 @@ describe('FillBucket', () => {
     });
 
     test('warns for mixed data-driven SDF and non-SDF fill patterns in one layer', () => {
+        const availableImages = ['sdf-pattern', 'rgba-pattern'];
         const bucket = createFillBucket({
             id: 'mixed-data-driven-layer',
-            paint: {'fill-pattern': ['get', 'pattern']},
-            availableImages: ['sdf-pattern', 'rgba-pattern']
+            paint: {'fill-pattern': ['step', ['zoom'], ['get', 'a'], 0.5, ['get', 'b']]},
+            availableImages
         });
-        bucket.patternFeatures = [{
-            index: 0,
-            sourceLayerIndex: 0,
-            properties: {},
-            type: 3,
-            patterns: {
-                'mixed-data-driven-layer': {
-                    min: 'sdf-pattern',
-                    mid: 'rgba-pattern',
-                    max: 'sdf-pattern'
-                }
-            },
-            geometry: []
-        }];
-        vi.spyOn(bucket, 'addFeature').mockImplementation(() => {});
+        bucket.populate([{feature: createPatternFeature('sdf-pattern', 'rgba-pattern'), id: 0, index: 0, sourceLayerIndex: 0}], createPopulateOptions(availableImages), undefined);
         const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         bucket.addFeatures(createDependencyParameters({
@@ -184,13 +186,13 @@ describe('FillBucket', () => {
     });
 
     test('warns when a constant pattern crossfade mixes SDF and non-SDF images', () => {
+        const availableImages = ['sdf-pattern', 'rgba-pattern'];
         const bucket = createFillBucket({
             id: 'mixed-crossfade-layer',
-            paint: {'fill-pattern': 'sdf-pattern'},
-            availableImages: ['sdf-pattern', 'rgba-pattern']
+            paint: {'fill-pattern': ['step', ['zoom'], 'rgba-pattern', 1, 'sdf-pattern']},
+            availableImages
         });
-        const pattern = bucket.layers[0].paint.get('fill-pattern');
-        vi.spyOn(pattern, 'constantOr').mockReturnValue({from: 'sdf-pattern', to: 'rgba-pattern'} as any);
+        bucket.layers[0].recalculate({zoom: 0.5, zoomHistory: {} as ZoomHistory} as EvaluationParameters, availableImages);
         const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         bucket.addFeatures(createDependencyParameters({
