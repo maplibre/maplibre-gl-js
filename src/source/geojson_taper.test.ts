@@ -156,3 +156,48 @@ describe('geojson taper anchoring', () => {
         expect(expandTaperKnots(raw, [new Point(0, 0), new Point(5, 0), new Point(7, 0), new Point(10, 0)], knots)).toEqual([0.25, 0.5, 0.6, 0.75]);
     });
 });
+
+describe('geojson taper anchoring: self-overlapping (retraced) lines', () => {
+    // Outbound pass 10→20°E with THIN width, return pass 20→10°E with THICK width —
+    // the return pass lies EXACTLY on the outbound segments. A tile piece that only
+    // covers return-pass geometry must resolve its knots on the RETURN arc (thick),
+    // not on the earlier outbound strand: before the windowed monotone projection,
+    // the globally-nearest scan picked the earlier strand (residual exactly 0 beats
+    // the quantized own vertex) and the widths slid onto the wrong pass — visible as
+    // thick sections that wander through hand-drawn scribbles while they grow.
+    const widths = [4, 4, 4, 90, 90];
+    const data = {
+        type: 'FeatureCollection',
+        features: [{
+            type: 'Feature',
+            properties: {widths},
+            geometry: {type: 'LineString', coordinates: [[10, 5], [15, 5], [20, 5], [15, 5], [10, 5]]}
+        }]
+    };
+    const registry = buildTaperRegistry(data as any);
+    const index = new GeoJSONVT(data as any, {extent: EXTENT, buffer: 256, maxZoom: 12, tolerance: 0});
+
+    test('return-pass pieces resolve knots on the return arc, not on the overlapped earlier strand', () => {
+        const z = 12;
+        // A tile fully inside the retrace region (lng ≈ 15.9): both passes cross it,
+        // each entering/exiting separately → separate pieces per pass.
+        const x = Math.floor(((15.9 + 180) / 360) * (1 << z));
+        const tile = index.getTile(z, x, 1991);
+        expect(tile).toBeTruthy();
+        // geojson-vt liefert HIER ein Feature mit ZWEI Piece-Lines (Outbound- und
+        // Return-Pass kreuzen das Tile getrennt) — der alte Guard warf die
+        // Annotation komplett weg. Jetzt: beide Lines sind annotiert.
+        const knotSets: number[][] = [];
+        for (const feature of tile.features) {
+            annotateGeoJSONTileFeature(feature, {z, x, y: 1991} as unknown as CanonicalTileID, registry);
+            const annotation = (feature as {_taper?: GeoJSONTaperAnnotation})._taper;
+            if (!annotation) continue;
+            expect(annotation.pieceKnots.length).toBe(feature.geometry.length);
+            knotSets.push(...annotation.pieceKnots);
+        }
+        expect(knotSets.length).toBeGreaterThanOrEqual(2);
+        // Outbound-Pass: erste Ring-Hälfte (dünne Zone), Return: zweite (dicke).
+        expect(knotSets.some((k) => k.every((v) => v < 0.55))).toBe(true);
+        expect(knotSets.some((k) => k.every((v) => v > 0.45))).toBe(true);
+    });
+});
