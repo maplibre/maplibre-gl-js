@@ -36,8 +36,8 @@ export class DEMData {
     /**
      * Constructs a `DEMData` object
      * @param uid - the tile's unique id
-     * @param data - RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
-    // and dim is calculated as stride - 2.
+     * @param data - RGBAImage data has uniform 2px padding on all sides: square tile edge size defines stride
+    // and dim is calculated as stride - 4.
      * @param encoding - the encoding type of the data
      * @param redFactor - the red channel factor used to unpack the data, used for `custom` encoding only
      * @param greenFactor - the green channel factor used to unpack the data, used for `custom` encoding only
@@ -52,7 +52,7 @@ export class DEMData {
             return;
         }
         this.stride = data.height;
-        const dim = this.dim = data.height - 2;
+        const dim = this.dim = data.height - 4;
         this.data = new Uint32Array(data.data.buffer);
         DEMData.byteViewCache.set(this, new Uint8Array(this.data.buffer));
         switch (encoding) {
@@ -81,24 +81,15 @@ export class DEMData {
                 break;
         }
 
-        // in order to avoid flashing seams between tiles, here we are initially populating a 1px border of pixels around the image
+        // in order to avoid flashing seams between tiles, here we are initially populating a 2px border of pixels around the image
         // with the data of the nearest pixel from the image. this data is eventually replaced when the tile's neighboring
         // tiles are loaded and the accurate data can be backfilled using DEMData#backfillBorder
-        for (let x = 0; x < dim; x++) {
-            // left vertical border
-            this.data[this._idx(-1, x)] = this.data[this._idx(0, x)];
-            // right vertical border
-            this.data[this._idx(dim, x)] = this.data[this._idx(dim - 1, x)];
-            // left horizontal border
-            this.data[this._idx(x, -1)] = this.data[this._idx(x, 0)];
-            // right horizontal border
-            this.data[this._idx(x, dim)] = this.data[this._idx(x, dim - 1)];
+        for (let y = -2; y < dim + 2; y++) {
+            const offset = this._idx(0, Math.max(0, Math.min(dim - 1, y)));
+            if (y < 0 || y >= dim) this.data.copyWithin(this._idx(0, y), offset, offset + dim);
+            this.data.fill(this.data[offset], this._idx(-2, y), this._idx(0, y));
+            this.data.fill(this.data[offset + dim - 1], this._idx(dim, y), this._idx(dim + 1, y) + 1);
         }
-        // corners
-        this.data[this._idx(-1, -1)] = this.data[this._idx(0, 0)];
-        this.data[this._idx(dim, -1)] = this.data[this._idx(dim - 1, 0)];
-        this.data[this._idx(-1, dim)] = this.data[this._idx(0, dim - 1)];
-        this.data[this._idx(dim, dim)] = this.data[this._idx(dim - 1, dim - 1)];
 
         // calculate min/max values
         const pixels = this._getByteView();
@@ -126,7 +117,7 @@ export class DEMData {
         if (cx < -1 || cx >= this.dim || cy < -1 || cy >= this.dim) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
 
         const pixels = this._getByteView();
-        const index = ((cy + 1) * this.stride + cx + 1) * 4;
+        const index = ((cy + 2) * this.stride + cx + 2) * 4;
         const strideByteWidth = this.stride * 4;
         const tx = x - cx;
         const ty = y - cy;
@@ -148,8 +139,8 @@ export class DEMData {
     }
 
     _idx(x: number, y: number): number {
-        if (x < -1 || x >= this.dim + 1 ||  y < -1 || y >= this.dim + 1) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
-        return (y + 1) * this.stride + (x + 1);
+        if (x < -2 || x >= this.dim + 2 ||  y < -2 || y >= this.dim + 2) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
+        return (y + 2) * this.stride + (x + 2);
     }
 
     unpack(r: number, g: number, b: number): number {
@@ -174,19 +165,19 @@ export class DEMData {
 
         switch (dx) {
             case -1:
-                xMin = xMax - 1;
+                xMin = xMax - 2;
                 break;
             case 1:
-                xMax = xMin + 1;
+                xMax = xMin + 2;
                 break;
         }
 
         switch (dy) {
             case -1:
-                yMin = yMax - 1;
+                yMin = yMax - 2;
                 break;
             case 1:
-                yMax = yMin + 1;
+                yMax = yMin + 2;
                 break;
         }
 

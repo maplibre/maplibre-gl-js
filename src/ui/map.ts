@@ -633,6 +633,7 @@ export class Map extends Evented<MapEventType> {
     _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
+    _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
     _removed: boolean;
@@ -1504,7 +1505,7 @@ export class Map extends Evented<MapEventType> {
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
-    queryTerrainElevation(lngLatLike: LngLatLike): number | null { 
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {
             return null;
         }
@@ -2665,6 +2666,7 @@ export class Map extends Evented<MapEventType> {
                 localIdeographFontFamily: this._localIdeographFontFamily,
                 validate: this._validateStyle
             }, options);
+        this._styleUrl = typeof style === 'string' ? style : null;
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
             this._diffStyle(style, options);
@@ -2804,6 +2806,20 @@ export class Map extends Evented<MapEventType> {
         if (this.style) {
             return this.style.serialize();
         }
+    }
+
+    /**
+     * Returns the URL the map's style was loaded from.
+     *
+     * @returns The URL given to {@link Map.setStyle} or the `style` map option, or `null` when the style was given as an object or the map has no style.
+     *
+     * @example
+     * ```ts
+     * const styleUrl = map.getStyleUrl();
+     * ```
+     */
+    getStyleUrl(): string | null {
+        return this._styleUrl;
     }
 
     /**
@@ -4418,7 +4434,7 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.painter.renderToTexture?.needsFollowUpFrame;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

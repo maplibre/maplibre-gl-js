@@ -6,7 +6,6 @@ import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {collisionUniformValues, collisionCircleUniformValues} from '../program/collision_program.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
@@ -59,7 +58,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(painter.transform),
+            null,
             painter.style.map.terrain?.getTerrainData(coord),
             transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
@@ -105,7 +104,6 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
 
     // Render batches
     for (const batch of tileBatches) {
-        const uniforms = collisionCircleUniformValues(painter.transform);
 
         circleProgram.draw(
             context,
@@ -114,7 +112,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            uniforms,
+            null,
             painter.style.map.terrain?.getTerrainData(batch.coord),
             null,
             layer.id,

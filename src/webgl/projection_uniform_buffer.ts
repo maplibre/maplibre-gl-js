@@ -1,91 +1,33 @@
+import {UBO_BINDINGS, UniformBuffer, std140Layout} from './uniform_buffer.ts';
 import type {Context} from './context.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
-import {UBO_BINDINGS} from './uniform_buffer.ts';
 
-const PROJECTION_UBO_MEMBERS = [
-    {name: 'u_projection_matrix', type: 'mat4', offset: 0},
-    {name: 'u_projection_fallback_matrix', type: 'mat4', offset: 16},
-    {name: 'u_projection_tile_mercator_coords', type: 'vec4', offset: 32},
-    {name: 'u_projection_clipping_plane', type: 'vec4', offset: 36},
-    {name: 'u_projection_transition', type: 'float', offset: 40},
-    {name: 'u_projection_clip_antimeridian', type: 'int', offset: 41},
-] as const;
+const layout = std140Layout([
+    {name: 'u_projection_matrix', type: 'mat4'},
+    {name: 'u_projection_fallback_matrix', type: 'mat4'},
+    {name: 'u_projection_tile_mercator_coords', type: 'vec4'},
+    {name: 'u_projection_clipping_plane', type: 'vec4'},
+    {name: 'u_projection_transition', type: 'float'},
+    {name: 'u_projection_clip_antimeridian', type: 'int'},
+]);
 
-const UBO_CONTENT_WORDS = 42;
-const PROJECTION_UBO_SIZE_WORDS = Math.ceil(UBO_CONTENT_WORDS / 4) * 4;
-
-const [MATRIX, FALLBACK_MATRIX, TILE_MERCATOR_COORDS, CLIPPING_PLANE, TRANSITION, CLIP_ANTIMERIDIAN] =
-    PROJECTION_UBO_MEMBERS.map(m => m.offset);
+const offsets = layout.offsets;
 
 /**
  * @internal
  * The buffer behind the `ProjectionUBO` block in the shader preludes, written by `Program.draw` before each draw.
  */
-export class ProjectionUniformBuffer {
-    context: Context;
-    buffer: WebGLBuffer;
-    uploaded: Float32Array;
-    pending: Float32Array;
-    uploadedWords: Uint32Array;
-    pendingWords: Uint32Array;
-    hasData: boolean;
-    bindingDirty: boolean;
+export function createProjectionUniformBuffer(context: Context): UniformBuffer {
+    return new UniformBuffer(context, UBO_BINDINGS.ProjectionUBO, layout);
+}
 
-    constructor(context: Context) {
-        this.context = context;
-        const gl = context.gl;
-        this.buffer = gl.createBuffer();
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
-        gl.bufferData(gl.UNIFORM_BUFFER, PROJECTION_UBO_SIZE_WORDS * 4, gl.DYNAMIC_DRAW);
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, this.buffer);
-        this.uploaded = new Float32Array(PROJECTION_UBO_SIZE_WORDS);
-        this.pending = new Float32Array(PROJECTION_UBO_SIZE_WORDS);
-        this.uploadedWords = new Uint32Array(this.uploaded.buffer);
-        this.pendingWords = new Uint32Array(this.pending.buffer);
-        this.hasData = false;
-        this.bindingDirty = false;
-    }
-
-    update(projectionData: ProjectionData): void {
-        const gl = this.context.gl;
-        const f32 = this.pending;
-        const words = this.pendingWords;
-        f32.set(projectionData.mainMatrix, MATRIX);
-        f32.set(projectionData.fallbackMatrix, FALLBACK_MATRIX);
-        f32.set(projectionData.tileMercatorCoords, TILE_MERCATOR_COORDS);
-        f32.set(projectionData.clippingPlane, CLIPPING_PLANE);
-        f32[TRANSITION] = projectionData.projectionTransition;
-        words[CLIP_ANTIMERIDIAN] = projectionData.clipAntimeridian ? 1 : 0;
-
-        let changed = !this.hasData;
-        if (!changed) {
-            const uploadedWords = this.uploadedWords;
-            for (let i = 0; i < UBO_CONTENT_WORDS; i++) {
-                if (words[i] !== uploadedWords[i]) {
-                    changed = true;
-                    break;
-                }
-            }
-        }
-
-        if (this.bindingDirty) {
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, this.buffer);
-            this.bindingDirty = false;
-        }
-
-        if (!changed) return;
-
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, f32);
-        this.uploaded.set(f32);
-        this.hasData = true;
-    }
-
-    destroy(): void {
-        const gl = this.context.gl;
-        if (this.buffer) {
-            gl.deleteBuffer(this.buffer);
-            delete this.buffer;
-        }
-    }
+export function updateProjectionUniformBuffer(buffer: UniformBuffer, projectionData: ProjectionData): void {
+    const f32 = buffer.pending;
+    f32.set(projectionData.mainMatrix, offsets.u_projection_matrix);
+    f32.set(projectionData.fallbackMatrix, offsets.u_projection_fallback_matrix);
+    f32.set(projectionData.tileMercatorCoords, offsets.u_projection_tile_mercator_coords);
+    f32.set(projectionData.clippingPlane, offsets.u_projection_clipping_plane);
+    f32[offsets.u_projection_transition] = projectionData.projectionTransition;
+    buffer.pendingWords[offsets.u_projection_clip_antimeridian] = projectionData.clipAntimeridian ? 1 : 0;
+    buffer.upload();
 }

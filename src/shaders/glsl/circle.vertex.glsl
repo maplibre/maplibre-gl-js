@@ -2,8 +2,6 @@ uniform bool u_scale_with_map;
 uniform bool u_pitch_with_map;
 uniform vec2 u_extrude_scale;
 uniform highp float u_globe_extrude_scale;
-uniform lowp float u_device_pixel_ratio;
-uniform highp float u_camera_to_center_distance;
 uniform vec2 u_translate;
 
 layout(location = 0) in ivec2 a_pos;

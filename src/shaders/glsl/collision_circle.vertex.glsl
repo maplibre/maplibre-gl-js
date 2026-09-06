@@ -1,9 +1,6 @@
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in float a_radius;
 layout(location = 2) in vec2 a_flags;
-
-uniform vec2 u_viewport_size;
-
 flat out float v_radius;
 out vec2 v_extrude;
 flat out float v_collision;
