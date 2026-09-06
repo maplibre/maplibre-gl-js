@@ -5,7 +5,7 @@ import {LngLat} from '../lng_lat.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, versorSetLocationAtPoint} from './globe_utils.ts';
-import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
@@ -730,6 +730,32 @@ describe('GlobeTransform', () => {
             mercator.setCenter(new LngLat(0, 0));
 
             expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
+        });
+    });
+
+    describe('recalculateZoomAndCenter', () => {
+        test('applies the rendered child\'s result to the globe transform', () => {
+            const terrain = createTerrain();
+            terrain.getElevationForLngLat = () => 1000;
+            const globe = new GlobeTransform();
+            globe.resize(512, 512);
+            globe.setTransitionState(0);
+            globe.setZoom(13);
+            globe.setCenter(new LngLat(8, 47));
+            globe.setPitch(60);
+            const mercator = new MercatorTransform();
+            mercator.resize(512, 512);
+            mercator.setZoom(13);
+            mercator.setCenter(new LngLat(8, 47));
+            mercator.setPitch(60);
+
+            globe.recalculateZoomAndCenter(terrain);
+            mercator.recalculateZoomAndCenter(terrain);
+            expect(globe.elevation).toBe(1000);
+            expect(globe.zoom).not.toBe(13);
+            expect(globe.zoom).toBeCloseTo(mercator.zoom, 9);
+            expect(globe.center.lat).toBeCloseTo(mercator.center.lat, 9);
+            expect(globe.center.lng).toBeCloseTo(mercator.center.lng, 9);
         });
     });
 
