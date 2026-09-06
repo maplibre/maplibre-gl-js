@@ -29,7 +29,7 @@
       "level": 56
     },
     "id": 967,
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "hillshade",
     "state": {}
   }

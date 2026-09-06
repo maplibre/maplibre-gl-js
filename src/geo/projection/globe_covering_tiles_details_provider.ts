@@ -110,13 +110,13 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     }
 
     private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
-        let minElevation = 0;
-        let maxElevation = 0;
+        let minElevation = Math.min(0, elevation);
+        let maxElevation = Math.max(0, elevation);
         if (options?.terrain) {
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
-            minElevation = minMax.minElevation ?? Math.min(0, elevation);
-            maxElevation = minMax.maxElevation ?? Math.max(0, elevation);
+            minElevation = minMax.minElevation ?? minElevation;
+            maxElevation = minMax.maxElevation ?? maxElevation;
         }
         // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
         minElevation /= earthRadius;

@@ -131,7 +131,7 @@ export class DOM {
 	 * @param elem - The element
 	 */
     private static removeAttributes(elem: Element) {
-        for (const {name, value} of elem.attributes) {
+        for (const {name, value} of Array.from(elem.attributes)) {
             if (!DOM.isPossiblyDangerous(name, value)) continue;
             elem.removeAttribute(name);
         }

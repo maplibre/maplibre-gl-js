@@ -71,9 +71,9 @@ function bgPatternUniformValues(
         tileSize: number;
     }
 ): UniformValues<BackgroundPatternUniformsType> {
-    const imagePosA = painter.imageManager.getPattern(image.from.toString());
-    const imagePosB = painter.imageManager.getPattern(image.to.toString());
-    const {width, height} = painter.imageManager.getPixelSize();
+    const imagePosA = painter.patternAtlas.getPattern(image.from.toString());
+    const imagePosB = painter.patternAtlas.getPattern(image.to.toString());
+    const {width, height} = painter.patternAtlas.getPixelSize();
 
     const numTiles = Math.pow(2, tile.tileID.overscaledZ);
     const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, painter.transform.tileZoom) / numTiles;

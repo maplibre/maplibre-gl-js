@@ -1,6 +1,9 @@
 # Vite 8+ (Rolldown) example
 
-Minimal Vite 8+ (Rolldown) app exercising the ESM build. Identical to the Vite 7 (Rollup/esbuild) example: the same `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` pattern works regardless of whether dependency pre-bundling is done by esbuild or Rolldown.
+Minimal Vite 8+ (Rolldown) app exercising the ESM build:
+
+- `import {Map} from 'maplibre-gl'` and `import 'maplibre-gl/dist/maplibre-gl.css'` resolve via the package's `exports` field.
+- `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'` bundles the worker (including its shared chunk dependency) into a single file and returns the URL. `setWorkerUrl(workerUrl)` points MapLibre at it.
 
 ## Setup
 

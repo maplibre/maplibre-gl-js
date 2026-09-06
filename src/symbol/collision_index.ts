@@ -1,13 +1,16 @@
 import Point from '@mapbox/point-geometry';
 import {clipLine} from './clip_line.ts';
 import {PathInterpolator} from './path_interpolator.ts';
-
+import {getSymbolElevation} from './symbol_elevation.ts';
 import * as intersectionTests from '../util/intersection_tests.ts';
 import {GridIndex} from './grid_index.ts';
 import {mat4, vec4} from 'gl-matrix';
+import {clamp, getAABB} from '../util/util.ts';
+import {Bounds} from '../geo/bounds.ts';
+import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
 import ONE_EM from '../symbol/one_em.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -15,10 +18,7 @@ import type {
     SymbolLineVertexArray
 } from '../data/array_types.g.ts';
 import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
-import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id.ts';
-import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
-import {clamp, getAABB} from '../util/util.ts';
-import {Bounds} from '../geo/bounds.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -110,9 +110,11 @@ export class CollisionIndex {
         rotateWithMap: boolean,
         translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
-        getElevation?: (x: number, y: number) => number,
+        getElevation?: GetElevation,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
+        heightOffset: number = 0,
+        heightAnchorGround: boolean = true,
     ): PlacedBox {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
@@ -120,7 +122,7 @@ export class CollisionIndex {
             x,
             y,
             unwrappedTileID,
-            getElevation,
+            getSymbolElevation(getElevation, x, y, heightOffset, heightAnchorGround),
             simpleProjectionMatrix
         );
 
@@ -153,6 +155,8 @@ export class CollisionIndex {
                 getElevation,
                 shift,
                 simpleProjectionMatrix,
+                heightOffset,
+                heightAnchorGround,
             );
         }
 
@@ -197,12 +201,12 @@ export class CollisionIndex {
         circlePixelDiameter: number,
         textPixelPadding: number,
         translation: [number, number],
-        getElevation: (x: number, y: number) => number
+        getElevation: GetElevation | undefined
     ): PlacedCircles {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation);
+        const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation?.(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y));
 
         const labelPlaneFontSize = pitchWithMap ? (fontSize * this.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
@@ -437,7 +441,7 @@ export class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number, simpleProjectionMatrix?: mat4): {
+    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number, simpleProjectionMatrix?: mat4): {
         x: number;
         y: number;
         perspectiveRatio: number;
@@ -449,8 +453,8 @@ export class CollisionIndex {
             // The code here is a copy of MercatorTransform.projectTileCoordinates, slightly modified for extra performance.
             // This has a huge impact for some reason.
             let pos;
-            if (getElevation) { // slow because of handle z-index
-                pos = [x, y, getElevation(x, y), 1] as vec4;
+            if (elevation != null) { // slow because of handle z-index
+                pos = [x, y, elevation, 1] as vec4;
                 vec4.transformMat4(pos, pos, simpleProjectionMatrix);
             } else { // fast because of ignore z-index
                 pos = [x, y, 0, 1] as vec4;
@@ -465,7 +469,7 @@ export class CollisionIndex {
                 signedDistanceFromCamera: w
             };
         } else {
-            const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+            const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
             return {
                 x: (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
                 y: (((-projected.point.y + 1) / 2) * this.transform.height) + viewportPadding,
@@ -479,9 +483,9 @@ export class CollisionIndex {
         }
     }
 
-    getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
+    getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): number {
         // We don't care about the actual projected point, just its W component.
-        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
@@ -516,9 +520,11 @@ export class CollisionIndex {
         rotateWithMap: boolean,
         translation: [number, number],
         projectedPoint: {x: number; y: number; perspectiveRatio: number; signedDistanceFromCamera: number},
-        getElevation?: (x: number, y: number) => number,
+        getElevation?: GetElevation,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
+        heightOffset: number = 0,
+        heightAnchorGround: boolean = true,
     ): ProjectedBox {
         // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
         let vecEastX = 1;
@@ -535,7 +541,7 @@ export class CollisionIndex {
                 translatedAnchorX + 1,
                 translatedAnchorY,
                 unwrappedTileID,
-                getElevation,
+                getSymbolElevation(getElevation, translatedAnchorX + 1, translatedAnchorY, heightOffset, heightAnchorGround),
                 simpleProjectionMatrix,
             );
             const toEastX = projectedEast.x - projectedPoint.x;
@@ -625,7 +631,7 @@ export class CollisionIndex {
         let anyPointVisible = false;
 
         if (pitchWithMap) {
-            const projected = points.map(p => this.projectAndGetPerspectiveRatio(p.x, p.y, unwrappedTileID, getElevation, simpleProjectionMatrix));
+            const projected = points.map(p => this.projectAndGetPerspectiveRatio(p.x, p.y, unwrappedTileID, getSymbolElevation(getElevation, p.x, p.y, heightOffset, heightAnchorGround), simpleProjectionMatrix));
 
             // Is at least one of the projected points NOT behind the horizon?
             anyPointVisible = projected.some(p => !p.isOccluded);

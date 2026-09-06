@@ -1,7 +1,7 @@
-import {type Handler} from '../handler_manager.ts';
-import type {Map} from '../map.ts';
-import {TransformProvider} from './transform-provider.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
+import type {Handler} from '../handler_manager.ts';
+import type {Map} from '../map.ts';
+import type {TransformProvider} from './transform-provider.ts';
 
 const defaultOptions = {
     panStep: 100,
@@ -35,8 +35,8 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /** @internal */
-    constructor(map: Map) {
-        this._tr = new TransformProvider(map);
+    constructor(map: Map, transformProvider: TransformProvider) {
+        this._tr = transformProvider;
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;
         this._bearingStep = stepOptions.bearingStep;

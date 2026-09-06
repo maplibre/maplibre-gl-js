@@ -20,8 +20,7 @@ float getElevation(vec2 coord) {
 
 float getElevationStop(int stop) {
     // Convert encoded elevation value to meters
-    float x = (float(stop)+0.5)/float(u_color_ramp_size);
-    vec4 data = texture(u_elevation_stops, vec2(x, 0)) * 255.0;
+    vec4 data = texelFetch(u_elevation_stops, ivec2(stop, 0), 0) * 255.0;
     data.a = -1.0;
     return dot(data, u_unpack);
 }

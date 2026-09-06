@@ -1,0 +1,72 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "allowed": 0.001,
+      "description": "Corner arcs have to land on the integer tile grid, because triangulation, subdivision and the vertex buffers all snap and deduplicate vertices there. Arc points between grid positions get merged and rewire the triangulation, which slices a spike across this courtyard. Geometry is the building from https://github.com/maplibre/maplibre-gl-js/issues/8153, taken verbatim out of its z14 tile. The small `buffer` keeps it in that one tile, so the neighbouring tile's copy does not draw over the artifact."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "maxzoom": 14,
+      "tolerance": 0,
+      "buffer": 2,
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.99913728, 40.73069791],
+              [-73.99913192, 40.73070604],
+              [-73.99899244, 40.730641],
+              [-73.99939477, 40.73016538],
+              [-73.9999795, 40.730454],
+              [-73.99963081, 40.73086864],
+              [-73.99945378, 40.73086864],
+              [-73.99944305, 40.73086051],
+              [-73.99944842, 40.73085238],
+              [-73.99913728, 40.73069791]
+            ],
+            [
+              [-73.99933577, 40.73053531],
+              [-73.99919629, 40.73069384],
+              [-73.99943233, 40.73080767],
+              [-73.99956644, 40.73064913],
+              [-73.99933577, 40.73053531]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "pitch": 10,
+  "bearing": 45,
+  "zoom": 18.4,
+  "center": [-73.99938405, 40.73060848],
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "layout": {
+        "fill-extrusion-rounded-corner-distance": 3
+      },
+      "paint": {
+        "fill-extrusion-color": "blue",
+        "fill-extrusion-height": 30
+      }
+    }
+  ]
+}

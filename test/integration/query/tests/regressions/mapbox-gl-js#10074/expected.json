@@ -36,14 +36,14 @@
     "layer": {
       "id": "road",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "paint": {
         "circle-radius": 10
       },
       "layout": {}
     },
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "road",
     "state": {
       "stateA": 10
@@ -98,14 +98,14 @@
     "layer": {
       "id": "road",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "paint": {
         "circle-radius": 50
       },
       "layout": {}
     },
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "road",
     "state": {
       "stateA": 50

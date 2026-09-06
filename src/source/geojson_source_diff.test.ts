@@ -562,7 +562,7 @@ describe('mergeSourceDiffs', () => {
         } satisfies GeoJSONSourceDiff;
 
         const merged = mergeSourceDiffs(diff1, diff2);
-        expect(merged.update.length).toBe(1);
+        expect(merged.update).toHaveLength(1);
         expect(merged.update[0].removeAllProperties).toBe(true);
         expect(merged.update[0].removeProperties).toBeUndefined();
         expect(merged.update[0].addOrUpdateProperties).toEqual([{key: 'fresh', value: 2}]);
@@ -604,7 +604,7 @@ describe('mergeSourceDiffs', () => {
 
         const merged = mergeSourceDiffs(diff1, diff2, 'promoted');
         expect(merged.add).toBeDefined();
-        expect(merged.add.length).toBe(2);
+        expect(merged.add).toHaveLength(2);
     });
 
     test('merges two diffs update feature then remove', () => {

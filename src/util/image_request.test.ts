@@ -57,8 +57,9 @@ describe('ImageRequest', () => {
 
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+            const request = ImageRequest.getImage({url: ''}, abortController);
             abortController.abort();
+            await expect(request).rejects.toSatisfy(isAbortError);
             await sleep(0);
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
@@ -79,7 +80,7 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+        const queuedRequestPromise = ImageRequest.getImage({url: queuedURL}, abortController);
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);
@@ -95,11 +96,12 @@ describe('ImageRequest', () => {
         expect((queuedRequest as any).aborted).toBeUndefined();
         abortController.abort();
         expect((queuedRequest as any).aborted).toBe(true);
+        await expect(queuedRequestPromise).rejects.toSatisfy(isAbortError);
     });
 
     test('getImage sends accept/webp header', async () => {
         server.respondWith((request) => {
-            expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
+            expect(request.requestHeaders.accept).toContain('image/webp');
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
 
@@ -113,10 +115,12 @@ describe('ImageRequest', () => {
     test('getImage uses createImageBitmap when supported', async () => {
         server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''); });
+            'Expires': 'expires'}, '0'); });
 
-        stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
-        const promise = ImageRequest.getImage({url: ''}, new AbortController());
+        const createImageBitmapSpy = vi.fn().mockResolvedValue(new ImageBitmap());
+        stubAjaxGetImage(createImageBitmapSpy);
+        const options = {premultiplyAlpha: 'none'} as const;
+        const promise = ImageRequest.getImage({url: ''}, new AbortController(), true, options);
         server.respond();
 
         const response = await promise;
@@ -124,12 +128,31 @@ describe('ImageRequest', () => {
         expect(response.data).toBeInstanceOf(ImageBitmap);
         expect(response.cacheControl).toBe('cache');
         expect(response.expires).toBe('expires');
+        expect(createImageBitmapSpy).toHaveBeenCalledWith(expect.any(Blob), options);
+    });
+
+    test('getImage resolves an empty response (e.g. HTTP 204) with null data and keeps the expiry headers', async () => {
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, ''); });
+
+        const createImageBitmapSpy = vi.fn();
+        stubAjaxGetImage(createImageBitmapSpy);
+        const promise = ImageRequest.getImage({url: ''}, new AbortController());
+        server.respond();
+
+        const response = await promise;
+
+        expect(response.data).toBeNull();
+        expect(response.cacheControl).toBe('cache');
+        expect(response.expires).toBe('expires');
+        expect(createImageBitmapSpy).not.toHaveBeenCalled();
     });
 
     test('getImage using createImageBitmap throws exception', async () => {
         server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''); });
+            'Expires': 'expires'}, '0'); });
 
         stubAjaxGetImage(() => Promise.reject(new Error('error')));
 
@@ -137,14 +160,14 @@ describe('ImageRequest', () => {
 
         server.respond();
 
-        await expect(promise).rejects.toThrow();
+        await expect(promise).rejects.toThrow('error');
     });
 
     test('getImage uses HTMLImageElement when createImageBitmap is not supported', async () => {
         const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
         server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''); });
+            'Expires': 'expires'}, '0'); });
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
@@ -202,6 +225,17 @@ describe('ImageRequest', () => {
 
         expect(makeRequestSky).toHaveBeenCalledTimes(1);
         makeRequestSky.mockClear();
+    });
+
+    test('getImage uses makeRequest when imageBitmapOptions are set', async () => {
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, '0'));
+
+        const promise = ImageRequest.getImage({url: ''}, new AbortController(), false, {premultiplyAlpha: 'none'});
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(1);
+        server.respond();
+        await expect(promise).resolves.toBeDefined();
     });
 
     test('getImage request returned 404 response for fetch request', async () => {

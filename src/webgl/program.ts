@@ -14,7 +14,9 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
-import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program.ts';
+import {applyUBOBindings} from './uniform_buffer.ts';
+import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -30,17 +32,37 @@ function getTokenizedAttributesAndUniforms(array: string[]): string[] {
     return result;
 }
 
+function getIntegerAttributeNames(gl: WebGL2RenderingContext, program: WebGLProgram): Set<string> {
+    const integerTypes = new Set<number>([
+        gl.INT, gl.INT_VEC2, gl.INT_VEC3, gl.INT_VEC4,
+        gl.UNSIGNED_INT, gl.UNSIGNED_INT_VEC2, gl.UNSIGNED_INT_VEC3, gl.UNSIGNED_INT_VEC4
+    ]);
+    const names = new Set<string>();
+    const numActiveAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+    for (let i = 0; i < numActiveAttributes; i++) {
+        const attribute = gl.getActiveAttrib(program, i);
+        if (attribute && integerTypes.has(attribute.type)) {
+            names.add(attribute.name);
+        }
+    }
+    return names;
+}
+
+export type ProgramAttribute = {
+    location: number;
+    isInteger: boolean;
+};
+
 /**
  * @internal
  * A webgl program to execute in the GPU space
  */
 export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
-    attributes: {[_: string]: number};
+    attributes: {[_: string]: ProgramAttribute};
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
-    projectionUniforms: ProjectionPreludeUniformsType;
     binderUniforms: BinderUniform[];
     failedToCreate: boolean;
 
@@ -49,7 +71,7 @@ export class Program<Us extends UniformBindings> {
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        hasTerrain: boolean,
+        useTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
         extraDefines: string[] = []) {
@@ -62,11 +84,10 @@ export class Program<Us extends UniformBindings> {
         const allAttrInfo = staticAttrInfo.concat(dynamicAttrInfo);
 
         const preludeUniformsInfo = shaders.prelude.staticUniforms ? getTokenizedAttributesAndUniforms(shaders.prelude.staticUniforms) : [];
-        const projectionPreludeUniformsInfo = projectionPrelude.staticUniforms ? getTokenizedAttributesAndUniforms(projectionPrelude.staticUniforms) : [];
         const staticUniformsInfo = source.staticUniforms ? getTokenizedAttributesAndUniforms(source.staticUniforms) : [];
         const dynamicUniformsInfo = configuration ? configuration.getBinderUniforms() : [];
         // remove duplicate uniforms
-        const uniformList = preludeUniformsInfo.concat(projectionPreludeUniformsInfo).concat(staticUniformsInfo).concat(dynamicUniformsInfo);
+        const uniformList = preludeUniformsInfo.concat(staticUniformsInfo).concat(dynamicUniformsInfo);
         const allUniformsInfo = [];
         for (const uniform of uniformList) {
             if (!allUniformsInfo.includes(uniform)) allUniformsInfo.push(uniform);
@@ -77,7 +98,7 @@ export class Program<Us extends UniformBindings> {
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-        if (hasTerrain) {
+        if (useTerrain) {
             defines.push('#define TERRAIN3D;');
         }
         if (projectionDefine) {
@@ -97,11 +118,6 @@ export class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
-
-        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-            throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
-        }
-
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -111,11 +127,6 @@ export class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
-
-        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-            throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
-        }
-
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
@@ -123,23 +134,33 @@ export class Program<Us extends UniformBindings> {
 
         this.numAttributes = allAttrInfo.length;
 
-        for (let i = 0; i < this.numAttributes; i++) {
-            if (allAttrInfo[i]) {
-                this.attributes[allAttrInfo[i]] = i;
-            }
-        }
-
+        // Link before reading any status so the driver can overlap both compiles; the shaders are
+        // only asked how they compiled when the link failed, to name the one at fault.
         gl.linkProgram(this.program);
 
-        for (const name in this.attributes) {
-            const actual = gl.getAttribLocation(this.program, name);
-            if (actual >= 0) {
-                this.attributes[name] = actual;
+        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            if (gl.isContextLost()) {
+                this.failedToCreate = true;
+                return;
             }
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
+            }
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
+            }
+            throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
 
-        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-            throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
+        applyUBOBindings(gl, this.program);
+
+        const integerAttributeNames = getIntegerAttributeNames(gl, this.program);
+        for (const name of allAttrInfo) {
+            if (!name) continue;
+            const location = gl.getAttribLocation(this.program, name);
+            if (location >= 0) {
+                this.attributes[name] = {location, isInteger: integerAttributeNames.has(name)};
+            }
         }
 
         gl.deleteShader(vertexShader);
@@ -156,7 +177,6 @@ export class Program<Us extends UniformBindings> {
 
         this.fixedUniforms = fixedUniforms(context, uniformLocations);
         this.terrainUniforms = terrainPreludeUniforms(context, uniformLocations);
-        this.projectionUniforms = projectionUniforms(context, uniformLocations);
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
     }
 
@@ -199,13 +219,11 @@ export class Program<Us extends UniformBindings> {
             for (const name in this.terrainUniforms) {
                 this.terrainUniforms[name].set(terrain[name]);
             }
+            updateTerrainUniformBuffer(context.terrainUniformBuffer, terrain);
         }
 
         if (projectionData) {
-            for (const fieldName in projectionData) {
-                const uniformName = projectionObjectToUniformMap[fieldName];
-                this.projectionUniforms[uniformName].set(projectionData[fieldName]);
-            }
+            updateProjectionUniformBuffer(context.projectionUniformBuffer, projectionData);
         }
 
         if (uniformValues) {

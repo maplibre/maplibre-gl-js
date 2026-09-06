@@ -64,7 +64,7 @@
       "type": "line",
       "source": "line",
       "paint": {
-        "line-width": 8,
+        "line-width": 20,
         "line-color": "#ff0000",
         "line-opacity": 0.5
       }

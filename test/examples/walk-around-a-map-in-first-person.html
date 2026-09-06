@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Walk around a map in first person</title>
+<meta property="og:description" content="Drive an eye-height, level first-person camera over 3D buildings with the keyboard or on-screen buttons" />
+<meta property="og:category" content="Camera & Animation" />
+<meta property="og:created" content="2026-07-25" />
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+<style>
+    body { margin: 0; padding: 0; }
+    html, body, #map { height: 100%; }
+    #controls {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: grid;
+        grid-template-columns: repeat(3, 52px);
+        grid-auto-rows: 52px;
+        gap: 6px;
+        touch-action: none;
+    }
+    #controls button {
+        font: 600 18px system-ui, sans-serif;
+        color: #fff;
+        background: rgba(0, 0, 0, .5);
+        border: none;
+        border-radius: 8px;
+    }
+    #controls .up { grid-area: 1 / 2; }
+    #controls .left { grid-area: 2 / 1; }
+    #controls .down { grid-area: 2 / 2; }
+    #controls .right { grid-area: 2 / 3; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="controls">
+    <button type="button" class="up" data-key="KeyW">W</button>
+    <button type="button" class="left" data-key="KeyA">A</button>
+    <button type="button" class="down" data-key="KeyS">S</button>
+    <button type="button" class="right" data-key="KeyD">D</button>
+</div>
+
+<script type="module">
+import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+const EYE_HEIGHT = 1.6;
+const WALK_SPEED = 4;
+const TURN_SPEED = 2;
+const LOOK_AHEAD = 20;
+const ORIGIN = [-87.629252, 41.876706];
+
+const originMercator = maplibregl.MercatorCoordinate.fromLngLat(ORIGIN);
+const metresToMercatorUnits = originMercator.meterInMercatorCoordinateUnits();
+const player = {x: 0, y: 0, heading: Math.PI / 2};
+
+function toLngLat(x, y) {
+    return new maplibregl.MercatorCoordinate(
+        originMercator.x + x * metresToMercatorUnits,
+        originMercator.y - y * metresToMercatorUnits
+    ).toLngLat();
+}
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: ORIGIN,
+    zoom: 18,
+    pitch: 90,
+    maxPitch: 95,
+    centerClampedToGround: false,
+    interactive: false
+});
+
+function updateCamera() {
+    const eye = toLngLat(player.x, player.y);
+    const ahead = toLngLat(
+        player.x + Math.cos(player.heading) * LOOK_AHEAD,
+        player.y + Math.sin(player.heading) * LOOK_AHEAD
+    );
+    map.jumpTo(map.calculateCameraOptionsFromTo(eye, EYE_HEIGHT, ahead, EYE_HEIGHT));
+}
+
+// Keyboard on desktop, on-screen buttons on touch, both feed the same key set.
+const keysDown = new Set();
+addEventListener('keydown', (event) => keysDown.add(event.code));
+addEventListener('keyup', (event) => keysDown.delete(event.code));
+for (const button of document.querySelectorAll('#controls button')) {
+    const code = button.dataset.key;
+    button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        // Capture so the single lostpointercapture event below covers release,
+        // leaving the button, and touch cancellation.
+        button.setPointerCapture(event.pointerId);
+        keysDown.add(code);
+    });
+    button.addEventListener('lostpointercapture', () => keysDown.delete(code));
+}
+
+let lastFrameTime = performance.now();
+function loop(now) {
+    const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
+
+    if (keysDown.has('KeyA')) player.heading += TURN_SPEED * dt;
+    if (keysDown.has('KeyD')) player.heading -= TURN_SPEED * dt;
+    let step = 0;
+    if (keysDown.has('KeyW')) step += WALK_SPEED * dt;
+    if (keysDown.has('KeyS')) step -= WALK_SPEED * dt;
+    player.x += Math.cos(player.heading) * step;
+    player.y += Math.sin(player.heading) * step;
+
+    updateCamera();
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

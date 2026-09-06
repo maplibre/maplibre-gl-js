@@ -1,11 +1,9 @@
-import {getTileBBox} from '@mapbox/whoots-js';
 import {EXTENT} from '../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {register} from '../util/web_worker_transfer.ts';
-import {type mat4} from 'gl-matrix';
+import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
 
 /**
@@ -97,7 +95,7 @@ export class OverscaledTileID {
      * and should be used, otherwise this matrix will be null.
      * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
-    terrainRttPosMatrix32f: mat4 | null = null;
+    terrainRttPosMatrix32f: Mat4f32 | null = null;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
@@ -281,6 +279,35 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
     if (wrap < 0) wrap = wrap * -1 - 1;
     const dim = 1 << z;
     return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
+}
+
+/** WGS84 spherical radius used by EPSG:3857, distinct from the mean earth radius MercatorCoordinate is built on. */
+const EPSG3857_RADIUS = 6378137;
+const EPSG3857_HALF_CIRCUMFERENCE = Math.PI * EPSG3857_RADIUS;
+
+/**
+ * Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
+ * box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
+ *
+ * Inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
+ */
+function getTileBBox(x: number, y: number, z: number): string {
+    // for Google/OSM tile scheme we need to alter the y
+    y = Math.pow(2, z) - y - 1;
+
+    const min = getEpsg3857Coords(x * 256, y * 256, z);
+    const max = getEpsg3857Coords((x + 1) * 256, (y + 1) * 256, z);
+
+    return `${min[0]},${min[1]},${max[0]},${max[1]}`;
+}
+
+/** Projects tile pixel coordinates to EPSG:3857 meters. */
+function getEpsg3857Coords(x: number, y: number, z: number): [number, number] {
+    const resolution = (2 * EPSG3857_HALF_CIRCUMFERENCE / 256) / Math.pow(2, z);
+    const mercX = x * resolution - EPSG3857_HALF_CIRCUMFERENCE;
+    const mercY = y * resolution - EPSG3857_HALF_CIRCUMFERENCE;
+
+    return [mercX, mercY];
 }
 
 function getQuadkey(z:number, x:number, y:number): string {

@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map} from '../map.ts';
-import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep, waitForEvent} from '../../util/test/util.ts';
 import {Tile} from '../../tile/tile.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat} from '../../../test/unit/lib/fixed.ts';
@@ -47,14 +47,6 @@ describe('Map', () => {
         );
     });
 
-    test('bad map-specific token breaks map', () => {
-        const container = window.document.createElement('div');
-        Object.defineProperty(container, 'offsetWidth', {value: 512});
-        Object.defineProperty(container, 'offsetHeight', {value: 512});
-        createMap();
-        //t.error();
-    });
-
     describe('setTransformRequest', () => {
         test('returns self', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
@@ -69,6 +61,8 @@ describe('Map', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
+
+            expect(map._requestManager._transformRequestFn).toBe(transformRequest);
         });
 
         test('removes function when called with null', () => {
@@ -89,17 +83,12 @@ describe('Map', () => {
             const map = createMap({style});
 
             await map.once('load');
-            const promise = new Promise<void>((resolve) => {
-                map.on('data', (e) => {
-                    if (e.dataType === 'source' && e.sourceDataType === 'idle') {
-                        expect(map.isSourceLoaded('geojson')).toBe(true);
-                        resolve();
-                    }
-                });
-            });
+            const idlePromise = waitForEvent(map, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'idle');
             map.addSource('geojson', createStyleSource());
             expect(map.isSourceLoaded('geojson')).toBe(false);
-            await promise;
+
+            await idlePromise;
+            expect(map.isSourceLoaded('geojson')).toBe(true);
         });
 
         test('Map.isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
@@ -109,11 +98,10 @@ describe('Map', () => {
             await map.once('load');
             const promise = new Promise<void>((resolve) => {
                 map.on('data', (e: MapSourceDataEvent) => {
-                    if (e.dataType === 'source' && 'source' in e) {
-                        expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
-                        if (e.sourceDataType === 'idle') {
-                            resolve();
-                        }
+                    if (e.dataType !== 'source' || !('source' in e)) return;
+                    expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
+                    if (e.sourceDataType === 'idle') {
+                        resolve();
                     }
                 });
             });

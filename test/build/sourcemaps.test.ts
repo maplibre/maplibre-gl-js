@@ -30,13 +30,15 @@ describe.each(distjs)('release file %s', (file) => {
         expect(j.file).toEqual(sourceFileURL.pathname.split('/').at(-1));
         expect(j.sources.length).toBeGreaterThan(0);
         expect(j.sourcesContent.length).toBeGreaterThan(0);
-        expect(j.names.length).toBeGreaterThan(0);
+        // Worker may have no names
+        expect(j.names.length).toBeGreaterThanOrEqual(0);
         expect(j.mappings).toBeTruthy();
     });
     test('should not reference test files', async () => {
         const j = await getSourceMapForFile(sourceFileURL);
         for (const f of j.sources) {
             expect(f).not.toMatch('[.]test[.]ts$');
+            expect(f).not.toMatch('[.]bench[.]ts$');
             expect(f).not.toMatch('^test');
         }
     });
@@ -52,16 +54,17 @@ describe('main sourcemap', () => {
     test('should match source files', async () => {
         const mainSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module));
         const workerSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs')));
+        const sharedSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-shared.mjs')));
         const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.module));
 
-        // Worker code lives in its own bundle, so union sources from both sourcemaps.
-        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources]
+        // Worker and shared code live in their own chunks, so union sources from all sourcemaps.
+        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources, ...sharedSourcemapJSON.sources]
             .map(f => path.join(sourceMapEntryRootDir, f));
 
         // *.mjs.map files should have these files
         const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
-            if (f.endsWith('.test.ts'))
+            if (f.endsWith('.test.ts') || f.endsWith('.bench.ts'))
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;

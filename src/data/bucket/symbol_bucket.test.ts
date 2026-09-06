@@ -3,30 +3,30 @@ import {SymbolBucket} from './symbol_bucket.ts';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
-import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {Tile} from '../../tile/tile.ts';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index.ts';
 import {FeatureIndex} from '../../data/feature_index.ts';
 import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
 import {RGBAImage} from '../../util/image.ts';
 import {ImagePosition} from '../../render/image_atlas.ts';
-import {type IndexedFeature, type PopulateParameters} from '../bucket.ts';
-import {type StyleImage} from '../../style/style_image.ts';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
-import {type StyleGlyph} from '../../style/style_glyph.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
+import type {StyleImage} from '../../style/style_image.ts';
+import type {StyleGlyph} from '../../style/style_glyph.ts';
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
 
-const stacks = {'Test': glyphs} as any as {
-    [_: string]: {
-        [x: number]: StyleGlyph;
-    };
-};
+const glyphsByCluster = {
+    'Test': Object.fromEntries(
+        Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+    )
+} as unknown as Record<string, Record<string, StyleGlyph>>;
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
@@ -51,6 +51,25 @@ function createIndexedFeature(id: number, index: number, iconId: string): Indexe
     } as any as IndexedFeature;
 }
 
+function glyphsRequestedFor(text: string): string[] {
+    const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
+    const options = createPopulateOptions([]);
+    const feature = {
+        type: 1,
+        id: 1,
+        properties: {},
+        loadGeometry: () => [[{x: 0, y: 0}]],
+    };
+
+    bucket.populate(
+        [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
+        options,
+        new CanonicalTileID(0, 0, 0),
+    );
+
+    return Object.keys(options.glyphDependencies.Test ?? {});
+}
+
 describe('SymbolBucket', () => {
     let features: IndexedFeature[];
     beforeAll(() => {
@@ -71,7 +90,7 @@ describe('SymbolBucket', () => {
         performSymbolLayout(
             {
                 bucket: bucketA,
-                glyphMap: stacks,
+                glyphMap: glyphsByCluster,
                 glyphPositions: {},
                 subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
             } as any);
@@ -83,7 +102,7 @@ describe('SymbolBucket', () => {
         // add same feature from bucket B
         bucketB.populate(features, options, undefined);
         performSymbolLayout({
-            bucket: bucketB, glyphMap: stacks, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+            bucket: bucketB, glyphMap: glyphsByCluster, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
         const tileB = new Tile(tileID, 512);
         tileB.buckets = {test: bucketB};
@@ -110,7 +129,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket integer overflow', () => {
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         SymbolBucket.MAX_GLYPHS = 5;
 
         const bucket = bucketSetup();
@@ -120,17 +139,17 @@ describe('SymbolBucket', () => {
         const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
         performSymbolLayout({
             bucket,
-            glyphMap: stacks,
-            glyphPositions: {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any},
+            glyphMap: glyphsByCluster,
+            glyphPositions: {'Test': {a: fakeGlyph, b: fakeGlyph, c: fakeGlyph, d: fakeGlyph, e: fakeGlyph, f: fakeGlyph} as any},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0].includes('Too many glyphs being rendered in a tile.')).toBeTruthy();
+        expect(spy.mock.calls[0][0]).toContain('Too many glyphs being rendered in a tile.');
     });
 
     test('SymbolBucket image undefined sdf', () => {
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         spy.mockReset();
 
         const imageMap = {
@@ -158,7 +177,7 @@ describe('SymbolBucket', () => {
             options, undefined
         );
 
-        const icons = options.iconDependencies as any;
+        const icons = options.iconDependencies;
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
@@ -201,7 +220,7 @@ describe('SymbolBucket', () => {
             options, undefined
         );
 
-        const icons = options.iconDependencies as any;
+        const icons = options.iconDependencies;
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
@@ -240,5 +259,19 @@ describe('SymbolBucket', () => {
         mixedBucket.populate(features, options, undefined);
 
         expect(mixedBucket.hasRTLText).toBeTruthy();
+    });
+
+    test('SymbolBucket asks for one glyph per character of plain text and nothing besides', () => {
+        expect(glyphsRequestedFor('abc').sort()).toEqual(['a', 'b', 'c']);
+    });
+
+    test('SymbolBucket asks for a cluster as a whole, and for its codepoints to fall back to', () => {
+        const hebrew = glyphsRequestedFor('שְׁ');
+        expect(hebrew).toContain('שְׁ');
+        expect(hebrew).toEqual(expect.arrayContaining(['ש', 'ְ', 'ׁ']));
+
+        const devanagari = glyphsRequestedFor('दि');
+        expect(devanagari).toContain('दि');
+        expect(devanagari).toEqual(expect.arrayContaining(['द', 'ि']));
     });
 });

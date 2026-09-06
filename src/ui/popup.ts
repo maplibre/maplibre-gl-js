@@ -2,9 +2,9 @@ import {extend} from '../util/util.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
+import Point from '@mapbox/point-geometry';
 
 import type {MapLibreEvent, MapMouseEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
@@ -117,6 +117,36 @@ const focusQuerySelector = [
 ].join(', ');
 
 /**
+ * The event class for popup events (`open` and `close`).
+ *
+ * @group Event Related
+ */
+export class PopupEvent extends Event {
+    type: keyof PopupEventType;
+    /**
+     * The `Popup` object that fired the event.
+     */
+    target: Popup;
+}
+
+/**
+ * `PopupEventType` - a mapping between the popup event name and the event value.
+ * These events are used with the {@link Popup.on} method.
+ *
+ * @group Event Related
+ */
+export type PopupEventType = {
+    /**
+     * Fired when the popup is opened manually or programmatically.
+     */
+    open: PopupEvent;
+    /**
+     * Fired when the popup is closed manually or programmatically.
+     */
+    close: PopupEvent;
+};
+
+/**
  * A popup component.
  *
  * @group Markers and Controls
@@ -171,11 +201,11 @@ const focusQuerySelector = [
  *
  * ## Events
  *
- * **Event** `open` of type {@link Event} will be fired when the popup is opened manually or programmatically.
+ * **Event** `open` of type {@link PopupEvent} will be fired when the popup is opened manually or programmatically.
  *
- * **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
+ * **Event** `close` of type {@link PopupEvent} will be fired when the popup is closed manually or programmatically.
  */
-export class Popup extends Evented {
+export class Popup extends Evented<PopupEventType> {
     _map: Map;
     options: PopupOptions;
     _content: HTMLElement;
@@ -240,7 +270,7 @@ export class Popup extends Evented {
             this._map.on('move', this._update);
         }
 
-        this.fire(new Event('open'));
+        this.fire(new PopupEvent('open'));
 
         return this;
     }
@@ -252,7 +282,7 @@ export class Popup extends Evented {
         if (this.options.locationOccludedOpacity === undefined) {
             return;
         }
-        if (this._map.transform.isLocationOccluded(this.getLngLat())) {
+        if (this._map._camera.transform.isLocationOccluded(this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
             this._container.style.opacity = '';
@@ -297,7 +327,7 @@ export class Popup extends Evented {
             this._map.off('drag', this._update);
             this._map._canvasContainer.classList.remove('maplibregl-track-pointer');
             delete this._map;
-            this.fire(new Event('close'));
+            this.fire(new PopupEvent('close'));
         }
 
         return this;
@@ -633,7 +663,7 @@ export class Popup extends Evented {
             this._container.style.maxWidth = this.options.maxWidth;
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform, this._trackPointer);
 
         let cursor: Point;
         if (event && 'point' in event && event.point) {
@@ -644,7 +674,7 @@ export class Popup extends Evented {
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationToScreenPoint(this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map._camera.transform.locationToScreenPoint(this._lngLat);
         }
 
         let anchor = this.options.anchor;
@@ -658,7 +688,7 @@ export class Popup extends Evented {
 
             if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height - padding.bottom) {
+            } else if (pos.y > this._map._camera.transform.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
@@ -666,7 +696,7 @@ export class Popup extends Evented {
 
             if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2 - padding.right) {
+            } else if (pos.x > this._map._camera.transform.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 

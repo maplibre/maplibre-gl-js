@@ -4,6 +4,7 @@
       "positionedGlyphs": [
         {
           "glyph": 19977,
+          "grapheme": "三",
           "imageName": null,
           "x": -33,
           "y": -13.5,
@@ -27,6 +28,7 @@
         },
         {
           "glyph": 57344,
+          "grapheme": "",
           "imageName": "square",
           "x": -9,
           "y": -10.5,
@@ -50,6 +52,7 @@
         },
         {
           "glyph": 57345,
+          "grapheme": "",
           "imageName": "wide",
           "x": 12,
           "y": -10.5,
@@ -78,6 +81,7 @@
       "positionedGlyphs": [
         {
           "glyph": 57346,
+          "grapheme": "",
           "imageName": "tall",
           "x": -43.5,
           "y": -10.5,
@@ -101,6 +105,7 @@
         },
         {
           "glyph": 57347,
+          "grapheme": "",
           "imageName": "square",
           "x": 1.5,
           "y": 13.5,
@@ -124,6 +129,7 @@
         },
         {
           "glyph": 19977,
+          "grapheme": "三",
           "imageName": null,
           "x": 22.5,
           "y": 10.5,

@@ -69,7 +69,7 @@ describe('Map.isMoving', () => {
 
     test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
-        vi.spyOn(timeControl, 'now').mockImplementation(() => 0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);

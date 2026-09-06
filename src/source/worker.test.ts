@@ -97,7 +97,7 @@ describe('Worker generic testing', () => {
     test('worker source messages dispatched to the correct map instance', () => {
         const externalSourceName = 'test';
 
-        const sendAsyncSpy = vi.fn().mockReturnValue(Promise.resolve({} as any));
+        const sendAsyncSpy = vi.fn().mockResolvedValue({} as any);
         worker.actor.sendAsync = sendAsyncSpy;
 
         _self.registerWorkerSource(externalSourceName, WorkerSourceMock);

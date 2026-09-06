@@ -1,6 +1,6 @@
 import {AlphaImage} from '../util/image.ts';
 
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 const border = 3;
 
 import type {StyleGlyph} from './style_glyph.ts';
@@ -15,13 +15,13 @@ type RawGlyph = {
     advance: number;
 };
 
-function readFontstacks(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
+function readFontstacks(tag: number, glyphs: StyleGlyph[], pbf: PbfReader) {
     if (tag === 1) {
         pbf.readMessage(readFontstack, glyphs);
     }
 }
 
-function readFontstack(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
+function readFontstack(tag: number, glyphs: StyleGlyph[], pbf: PbfReader) {
     if (tag === 3) {
         const {id, bitmap, width, height, left, top, advance} = pbf.readMessage(readGlyph, {} as RawGlyph);
         glyphs.push({
@@ -35,7 +35,7 @@ function readFontstack(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     }
 }
 
-function readGlyph(tag: number, glyph: RawGlyph, pbf: Protobuf) {
+function readGlyph(tag: number, glyph: RawGlyph, pbf: PbfReader) {
     if (tag === 1) glyph.id = pbf.readVarint();
     else if (tag === 2) glyph.bitmap = pbf.readBytes();
     else if (tag === 3) glyph.width = pbf.readVarint();
@@ -46,7 +46,7 @@ function readGlyph(tag: number, glyph: RawGlyph, pbf: Protobuf) {
 }
 
 export function parseGlyphPbf(data: ArrayBuffer | Uint8Array): StyleGlyph[] {
-    return new Protobuf(data).readFields(readFontstacks, []);
+    return new PbfReader(data).readFields(readFontstacks, []);
 }
 
 export const GLYPH_PBF_BORDER: 3 = border;

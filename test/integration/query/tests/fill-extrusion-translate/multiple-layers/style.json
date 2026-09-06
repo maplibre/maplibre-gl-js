@@ -10,7 +10,7 @@
         }
     },
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "geojson",
             "data": {
                 "type": "FeatureCollection",
@@ -37,7 +37,7 @@
         {
             "id": "fill-extrusion",
             "type": "fill-extrusion",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "fill-extrusion-color": "orange",
                 "fill-extrusion-height": 20,
@@ -48,7 +48,7 @@
         {
             "id": "fill-extrusion2",
             "type": "fill-extrusion",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "fill-extrusion-color": "white",
                 "fill-extrusion-height": 20,

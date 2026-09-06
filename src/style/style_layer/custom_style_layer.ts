@@ -1,8 +1,9 @@
 import {StyleLayer} from '../style_layer.ts';
+import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 import type {Map} from '../../ui/map.ts';
-import {type mat4} from 'gl-matrix';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from '../../geo/projection/projection_data.ts';
+import type {mat4} from 'gl-matrix';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {CustomLayerProjectionData, RendererProjectionData} from '../../geo/projection/projection_data.ts';
 
 /**
  * Type for an object literal that specifies a map tile.
@@ -130,12 +131,12 @@ export type CustomRenderMethodInput = {
      * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
      *
      * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
-     * Use `map.transform.getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+     * Use `getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
      *
      * For projection 3D features, use `projectTileFor3D` in the shader.
      *
-     * If you just need a projection matrix, use `defaultProjectionData.projectionMatrix`.
-     * A projection matrix is sufficient for simple custom layers that also only support mercator projection.
+     * If you just need a projection matrix, use `defaultProjectionData.mainMatrix`.
+     * A projection matrix is sufficient for simple custom layers that only support mercator projection.
      *
      * Under mercator projection, when these uniforms are used, the shader's `projectTile` function projects spherical mercator
      * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
@@ -148,7 +149,7 @@ export type CustomRenderMethodInput = {
      * passed to `projectTileFor3D` in the shader is elevation in meters above "sea level",
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
-    defaultProjectionData: ProjectionData;
+    defaultProjectionData: CustomLayerProjectionData;
 
     /**
      * Generates a {@link ProjectionData} instance to be used while rendering a given tile.
@@ -157,7 +158,7 @@ export type CustomRenderMethodInput = {
      * @see [Add a custom layer with tiles to a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-layer-with-tiles-to-a-globe)
      * @param params - Parameters for the projection data generation.
      */
-    getProjectionData: (params: CustomLayerProjectionDataParams) => ProjectionData;
+    getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
 };
 
 /**
@@ -292,28 +293,22 @@ export interface CustomLayerInterface {
     onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface): Array<{message: string}> {
-    const errors: Array<{message: string}> = [];
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): ValidationError[] {
+    const errors: ValidationError[] = [];
     const id = layerObject.id;
 
     if (id === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required property "id"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required property "id"'));
     }
 
     if (layerObject.render === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required method "render"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required method "render"'));
     }
 
     if (layerObject.renderingMode &&
         layerObject.renderingMode !== '2d' &&
         layerObject.renderingMode !== '3d') {
-        errors.push({
-            message: `layers.${id}: property "renderingMode" must be either "2d" or "3d"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'property "renderingMode" must be either "2d" or "3d"'));
     }
 
     return errors;

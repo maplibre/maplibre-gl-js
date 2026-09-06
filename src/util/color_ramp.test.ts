@@ -33,7 +33,7 @@ describe('renderColorRamp', () => {
             0.5, 'rgba(0,255,255,0.5)',
             0.75, 'black',
             1, 'red'
-        ], spec).value as StylePropertyExpression;
+        ], 'line-gradient', spec).value as StylePropertyExpression;
 
         const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress'});
 
@@ -58,7 +58,7 @@ describe('renderColorRamp', () => {
             0.3, 'white',
             0.5, 'black',
             1, 'black'
-        ], spec).value as StylePropertyExpression;
+        ], 'line-gradient', spec).value as StylePropertyExpression;
 
         const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 
@@ -85,7 +85,7 @@ describe('renderColorRamp', () => {
             0.3, 'blue',
             0.5, 'white',
             1, 'white'
-        ], spec).value as StylePropertyExpression;
+        ], 'line-gradient', spec).value as StylePropertyExpression;
 
         const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', resolution: 512});
 

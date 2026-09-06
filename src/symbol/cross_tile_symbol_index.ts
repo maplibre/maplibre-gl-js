@@ -117,44 +117,74 @@ class TileLayerIndex {
             const scaledSymbolCoord = this.getScaledCoordinates(symbolInstance, newTileID);
 
             if (entry.index) {
-                // Return any symbol with the same keys whose coordinates are within 1
-                // grid unit. (with a 4px grid, this covers a 12px by 12px area)
-                const indexes = entry.index.range(
-                    scaledSymbolCoord.x - tolerance,
-                    scaledSymbolCoord.y - tolerance,
-                    scaledSymbolCoord.x + tolerance,
-                    scaledSymbolCoord.y + tolerance).sort();
-
-                for (const i of indexes) {
-                    const crossTileID = entry.crossTileIDs[i];
-
-                    if (!zoomCrossTileIDs[crossTileID]) {
-                        // Once we've marked ourselves duplicate against this parent symbol,
-                        // don't let any other symbols at the same zoom level duplicate against
-                        // the same parent (see issue #5993)
-                        zoomCrossTileIDs[crossTileID] = true;
-                        symbolInstance.crossTileID = crossTileID;
-                        break;
-                    }
-                }
+                this.findMatchesForIndexedEntry(entry, symbolInstance, scaledSymbolCoord, tolerance, zoomCrossTileIDs);
             } else if (entry.positions) {
-                for (let i = 0; i < entry.positions.length; i++) {
-                    const thisTileSymbol = entry.positions[i];
-                    const crossTileID = entry.crossTileIDs[i];
+                this.findMatchesForNonIndexedEntry(entry, symbolInstance, scaledSymbolCoord, tolerance, zoomCrossTileIDs);
+            }
+        }
+    }
 
-                    // Return any symbol with the same keys whose coordinates are within 1
-                    // grid unit. (with a 4px grid, this covers a 12px by 12px area)
-                    if (Math.abs(thisTileSymbol.x - scaledSymbolCoord.x) <= tolerance &&
-                        Math.abs(thisTileSymbol.y - scaledSymbolCoord.y) <= tolerance &&
-                        !zoomCrossTileIDs[crossTileID]) {
-                        // Once we've marked ourselves duplicate against this parent symbol,
-                        // don't let any other symbols at the same zoom level duplicate against
-                        // the same parent (see issue #5993)
-                        zoomCrossTileIDs[crossTileID] = true;
-                        symbolInstance.crossTileID = crossTileID;
-                        break;
-                    }
-                }
+    /**
+     * Matches a symbol instance against an entry backed by a KDBush spatial index
+     * (used for keys with more than {@link KDBUSH_THRESHHOLD} symbols).
+     *
+     * Matches any symbol with the same key whose coordinates are within one grid
+     * unit (with a 4px grid, this covers a 12px by 12px area). The lowest-index
+     * unclaimed candidate is claimed in a single pass rather than sorting the
+     * whole result set on every query: `range()` can return many candidates where
+     * symbols are coincident (e.g. stacked point markers), so a per-query sort
+     * would dominate placement cost on dense layers.
+     *
+     * Once a symbol is marked duplicate against a parent symbol, no other symbol
+     * at the same zoom level may duplicate against the same parent (see issue #5993).
+     */
+    private findMatchesForIndexedEntry(entry: SymbolsByKeyEntry, symbolInstance: SymbolInstance, scaledSymbolCoord: {x: number; y: number}, tolerance: number, zoomCrossTileIDs: {
+        [crossTileID: number]: boolean;
+    }): void {
+        const indexes = entry.index.range(
+            scaledSymbolCoord.x - tolerance,
+            scaledSymbolCoord.y - tolerance,
+            scaledSymbolCoord.x + tolerance,
+            scaledSymbolCoord.y + tolerance);
+
+        let bestIndex = Infinity;
+        for (const candidate of indexes) {
+            if (candidate < bestIndex && !zoomCrossTileIDs[entry.crossTileIDs[candidate]]) {
+                bestIndex = candidate;
+            }
+        }
+        if (bestIndex !== Infinity) {
+            const crossTileID = entry.crossTileIDs[bestIndex];
+            zoomCrossTileIDs[crossTileID] = true;
+            symbolInstance.crossTileID = crossTileID;
+        }
+    }
+
+    /**
+     * Matches a symbol instance against an entry that stores its positions as a
+     * plain array (used for keys with at most {@link KDBUSH_THRESHHOLD} symbols).
+     *
+     * Matches any symbol with the same key whose coordinates are within one grid
+     * unit (with a 4px grid, this covers a 12px by 12px area). Positions are
+     * stored in symbol-instance order, so the first unclaimed match is also the
+     * lowest-index one.
+     *
+     * Once a symbol is marked duplicate against a parent symbol, no other symbol
+     * at the same zoom level may duplicate against the same parent (see issue #5993).
+     */
+    private findMatchesForNonIndexedEntry(entry: SymbolsByKeyEntry, symbolInstance: SymbolInstance, scaledSymbolCoord: {x: number; y: number}, tolerance: number, zoomCrossTileIDs: {
+        [crossTileID: number]: boolean;
+    }): void {
+        for (let i = 0; i < entry.positions.length; i++) {
+            const thisTileSymbol = entry.positions[i];
+            const crossTileID = entry.crossTileIDs[i];
+
+            if (Math.abs(thisTileSymbol.x - scaledSymbolCoord.x) <= tolerance &&
+                Math.abs(thisTileSymbol.y - scaledSymbolCoord.y) <= tolerance &&
+                !zoomCrossTileIDs[crossTileID]) {
+                zoomCrossTileIDs[crossTileID] = true;
+                symbolInstance.crossTileID = crossTileID;
+                break;
             }
         }
     }

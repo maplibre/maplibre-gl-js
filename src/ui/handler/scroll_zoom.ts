@@ -1,15 +1,14 @@
 import {DOM} from '../../util/dom.ts';
-
 import {defaultEasing, bezier, zoomScale, scaleZoom, evaluateZoomSnap} from '../../util/util.ts';
 import {now} from '../../util/time_control.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat.ts';
-import {TransformProvider} from './transform-provider.ts';
 
+import type {TransformProvider} from './transform-provider.ts';
 import type {Map} from '../map.ts';
-import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
 import type {Handler} from '../handler_manager.ts';
+import type Point from '@mapbox/point-geometry';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;
@@ -67,9 +66,9 @@ export class ScrollZoomHandler implements Handler {
     _wheelZoomRate: number;
 
     /** @internal */
-    constructor(map: Map, triggerRenderFrame: () => void) {
+    constructor(map: Map, triggerRenderFrame: () => void, transformProvider: TransformProvider) {
         this._map = map;
-        this._tr = new TransformProvider(map);
+        this._tr = transformProvider;
         this._triggerRenderFrame = triggerRenderFrame;
 
         this._delta = 0;

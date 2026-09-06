@@ -1,0 +1,208 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 900
+    }
+  },
+  "zoom": 2,
+  "center": [
+    0,
+    57
+  ],
+  "sources": {
+    "maplibre": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰1-2号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -70,
+                  39
+                ],
+                [
+                  -70,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰3.5号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -50,
+                  39
+                ],
+                [
+                  -50,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰1〜2号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -30,
+                  39
+                ],
+                [
+                  -30,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰A16号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -10,
+                  39
+                ],
+                [
+                  -10,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰ABC号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  10,
+                  39
+                ],
+                [
+                  10,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰ABCD号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  30,
+                  39
+                ],
+                [
+                  30,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "身什戰what号"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  50,
+                  39
+                ],
+                [
+                  50,
+                  75
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "ヴィラ ISHIKAWA"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  70,
+                  39
+                ],
+                [
+                  70,
+                  75
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "lines-symbol",
+      "type": "symbol",
+      "source": "maplibre",
+      "layout": {
+        "text-field": "{name}",
+        "symbol-placement": "line",
+        "symbol-spacing": 400,
+        "text-allow-overlap": true,
+        "text-font": [
+          "NotoCJK"
+        ]
+      }
+    },
+    {
+      "id": "lines",
+      "type": "line",
+      "source": "maplibre",
+      "paint": {
+        "line-opacity": 0.25
+      }
+    }
+  ]
+}

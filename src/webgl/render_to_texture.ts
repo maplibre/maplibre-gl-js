@@ -1,4 +1,5 @@
-import {type Painter, type RenderOptions} from '../render/painter.ts';
+import {type Painter} from '../render/painter.ts';
+import type {RenderOptions} from '../render/render_options.ts';
 import {type Tile} from '../tile/tile.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type OverscaledTileID} from '../tile/tile_id.ts';
@@ -8,6 +9,7 @@ import {type Terrain} from '../render/terrain.ts';
 import {type Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
+import {RTTFingerprint} from './rtt_fingerprint.ts';
 
 /**
  * lookup table which layers should rendered to texture
@@ -39,11 +41,10 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: OverscaledTileID[]}};
     /**
-     * fingerprint string representing the unique state of source tiles and revision
-     * for a given render-to-texture tile. Used to detect changes and trigger re-rendering.
-     * Format: "sorted_tile_keys#revision"
+     * This frame's fingerprint for each render-to-texture tile, keyed by source id
+     * then tile key. A tile whose stored fingerprint differs has stale textures.
      */
-    _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: string}};
+    _rttFingerprints: Record<string, Record<string, RTTFingerprint>>;
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -67,6 +68,14 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: string[];
+    /**
+     * the zoom of the previous prepareForRender call
+     */
+    _lastPrepareZoom: number;
+    /**
+     * whether the render loop needs a follow-up frame to refresh cached textures retained while zooming.
+     */
+    needsFollowUpFrame: boolean = false;
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
@@ -78,47 +87,59 @@ export class RenderToTexture {
     }
 
     prepareForRender(style: Style, zoom: number): void {
+        const zoomChanged = zoom !== this._lastPrepareZoom;
+        this._lastPrepareZoom = zoom;
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
+        const rttSourceIds = new Set<string>();
+        for (const layerId of this._renderableLayerIds) {
+            const layer = style._layers[layerId];
+            const source = layer.source;
+            if (source && LAYERS_TO_TEXTURES[layer.type]) rttSourceIds.add(source);
+        }
+
         this._coordsAscending = {};
-        for (const id in style.tileManagers) {
-            this._coordsAscending[id] = {};
-            const tileIDs = style.tileManagers[id].getVisibleCoordinates();
-            const source = style.tileManagers[id].getSource();
+        this._rttFingerprints = {};
+        for (const sourceId of rttSourceIds) {
+            const tileManager = style.tileManagers[sourceId];
+            if (!tileManager) continue;
+
+            this._coordsAscending[sourceId] = {};
+            const coordsAscending = this._coordsAscending[sourceId];
+            const source = tileManager.getSource();
             const terrainTileRanges = source instanceof ImageSource ? source.terrainTileRanges : null;
-            for (const tileID of tileIDs) {
+            for (const tileID of tileManager.getVisibleCoordinates()) {
                 const keys = this.terrain.tileManager.getTerrainCoords(tileID, terrainTileRanges);
                 for (const key in keys) {
-                    this._coordsAscending[id][key] ||= [];
-                    this._coordsAscending[id][key].push(keys[key]);
+                    coordsAscending[key] ||= [];
+                    coordsAscending[key].push(keys[key]);
                 }
             }
 
-        }
-
-        this._rttFingerprints = {};
-        for (const id of style._order) {
-            const layer = style._layers[id];
-            const source = layer.source;
-            const shouldRenderToTexture = LAYERS_TO_TEXTURES[layer.type];
-
-            if (shouldRenderToTexture && !this._rttFingerprints[source]) {
-                this._rttFingerprints[source] = {};
-                const revision = style.tileManagers[source]?.getState().revision ?? 0;
-                for (const key in this._coordsAscending[source])
-                    this._rttFingerprints[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
-            }
+            this._rttFingerprints[sourceId] = {};
+            const fingerprints = this._rttFingerprints[sourceId];
+            const revision = tileManager.getState().revision;
+            for (const key in coordsAscending)
+                fingerprints[key] = new RTTFingerprint(coordsAscending[key], revision, zoom);
         }
 
         // check tiles to render
+        this.needsFollowUpFrame = false;
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
-                const fingerprint = this._rttFingerprints[source][tile.tileID.key];
-                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
+                const frameFingerprint = this._rttFingerprints[source][tile.tileID.key];
+                const tileFingerprint = tile.rttFingerprint[source];
+                if (!frameFingerprint || frameFingerprint.equals(tileFingerprint)) continue;
+                if (zoomChanged && frameFingerprint.equalsIgnoringZoom(tileFingerprint)) {
+                    // keep the texture while the zoom is still changing (see
+                    // equalsIgnoringZoom); the follow-up frame re-runs this
+                    // comparison and releases once the zoom has settled
+                    this.needsFollowUpFrame = true;
+                } else {
                     tile.releaseRTT(this.painter);
                 }
             }
@@ -171,10 +192,11 @@ export class RenderToTexture {
                     const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
-                    painter._renderTileClippingMasks(layer, coords, true);
+                    painter.renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
+                obj.texture.generateMipmap();
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];

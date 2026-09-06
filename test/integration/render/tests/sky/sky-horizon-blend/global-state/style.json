@@ -1,0 +1,39 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "timeout": 60000,
+      "height": 128,
+      "width": 256,
+      "maxPitch": 85
+    }
+  },
+  "center": [
+    35.38,
+    31.55
+  ],
+  "zoom": 15,
+  "pitch": 85,
+  "state": {
+    "skyHorizonBlend": {
+      "default": 0
+    }
+  },
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ccaa83"
+      }
+    }
+  ],
+  "sky": {
+    "sky-color": "#199EF3",
+    "sky-horizon-blend": [
+      "global-state",
+      "skyHorizonBlend"
+    ]
+  }
+}

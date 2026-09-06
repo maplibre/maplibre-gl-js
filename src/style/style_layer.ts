@@ -1,15 +1,10 @@
 import {filterObject} from '../util/util.ts';
-
-import {createVisibilityExpression, featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {
-    validateStyle,
-    validateLayoutProperty,
-    validatePaintProperty,
-    emitValidationErrors
-} from './validate_style.ts';
-import {Evented, ErrorEvent} from '../util/evented.ts';
+import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
+import {Evented, ErrorEvent, type ErrorEventType} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
+import type {mat4} from 'gl-matrix';
 import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
@@ -23,14 +18,12 @@ import type {
     AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {CrossfadeParameters} from './evaluation_parameters.ts';
-
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Map} from '../ui/map.ts';
 import type {StyleSetterOptions} from './style.ts';
-import {type mat4} from 'gl-matrix';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
@@ -79,7 +72,7 @@ export type QueryIntersectsFeatureParams = {
     /**
      * A function to get the elevation of a point in tile coordinates.
      */
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
 };
 
 const ERROR_PAINT_NOT_LAYOUT = ' is a PAINT property not a LAYOUT property. Use get/setPaintProperty instead?';
@@ -88,7 +81,7 @@ const ERROR_LAYOUT_NOT_PAINT = ' is a LAYOUT property not a PAINT property. Use 
 /**
  * A base class for style layers
  */
-export abstract class StyleLayer extends Evented {
+export abstract class StyleLayer extends Evented<ErrorEventType> {
     id: string;
     metadata: unknown;
     type: LayerSpecification['type'] | CustomLayerInterface['type'];
@@ -132,7 +125,7 @@ export abstract class StyleLayer extends Evented {
         this.type = layer.type;
         this._globalState = globalState;
         this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
-        this._visibilityExpression = createVisibilityExpression(this.visibility, globalState);
+        this._visibilityExpression = createVisibilityExpression(this.visibility, `layers[${this.id}].layout.visibility`, globalState);
 
         if (layer.type === 'custom') return;
 
@@ -144,15 +137,15 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
-            this._featureFilter = featureFilter(layer.filter, globalState);
+            this._featureFilter = featureFilter(layer.filter, `layers[${this.id}].filter`, globalState);
         }
 
         if (properties.layout) {
-            this._unevaluatedLayout = new Layout(properties.layout, globalState);
+            this._unevaluatedLayout = new Layout(properties.layout, `layers[${this.id}].layout`, globalState);
         }
 
         if (properties.paint) {
-            this._transitionablePaint = new Transitionable(properties.paint, globalState);
+            this._transitionablePaint = new Transitionable(properties.paint, `layers[${this.id}].paint`, globalState);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint], {validate: false});
@@ -162,14 +155,13 @@ export abstract class StyleLayer extends Evented {
             }
 
             this._transitioningPaint = this._transitionablePaint.untransitioned();
-            //$FlowFixMe
             this.paint = new PossiblyEvaluated(properties.paint);
         }
     }
 
     setFilter(filter: FilterSpecification | void): void {
         this.filter = filter;
-        this._featureFilter = featureFilter(filter, this._globalState);
+        this._featureFilter = featureFilter(filter, `layers[${this.id}].filter`, this._globalState);
     }
 
     getCrossfadeParameters(): CrossfadeParameters {
@@ -263,7 +255,7 @@ export abstract class StyleLayer extends Evented {
             return;
         }
 
-        if (value !== null && value !== undefined && this._validate(validateLayoutProperty, `layers.${this.id}.layout.${name}`, name, value, options))  return;
+        if (value !== null && value !== undefined && this._validate(validateStyle.layoutProperty, `layers.${this.id}.layout.${name}`, name, value, options))  return;
 
         this._unevaluatedLayout.setValue(name, value);
     }
@@ -291,7 +283,7 @@ export abstract class StyleLayer extends Evented {
             return false;
         }
 
-        if (value !== null && value !== undefined && this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
+        if (value !== null && value !== undefined && this._validate(validateStyle.paintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
 
         if (name.endsWith(TRANSITION_SUFFIX)) {
             this._transitionablePaint.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), (value as any) || undefined);
@@ -382,19 +374,13 @@ export abstract class StyleLayer extends Evented {
         });
     }
 
-    _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, {
+    _validate(validate: Validator, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
+        return validateAndEmit(this, validate, {
             key,
             layerType: this.type,
             objectKey: name,
-            value,
-            styleSpec,
-            // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
-            style: {glyphs: true, sprite: true}
-        }));
+            value
+        }, options);
     }
 
     is3D(): boolean {

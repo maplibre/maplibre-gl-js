@@ -129,10 +129,18 @@ export class AJAXError extends Error {
  * For files loaded from the local file system, `location.origin` will be set
  * to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
  * and we will set an empty referrer. Otherwise, we're using the document's URL.
+ * If we're on a blob URL and parent window is cross-origin, parent.location throws
+ * SecurityError DOMException, this means we are probably not in blob URL worker bundle.
  */
-export const getReferrer = (): string => isWorker(self) ?
-    self.worker?.referrer :
-    (window.location.protocol === 'blob:' ? window.parent : window).location.href;
+export function getReferrer(): string {
+    if (isWorker(self)) return self.worker?.referrer;
+    if (window.location.protocol === 'blob:') {
+        try {
+            return window.parent.location.href;
+        } catch {}
+    }
+    return window.location.href;
+}
 
 /**
  * Determines whether a URL is a file:// URL. This is obviously the case if it begins
@@ -285,16 +293,30 @@ export const getArrayBuffer = (requestParameters: RequestParameters, abortContro
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
 };
 
+/** 
+ * Determines whether a URL is same origin as the current location. Supports relative URLs too.
+ * 
+ * A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
+ * try-catch is expansive so just use a heuristic check to avoid it
+ * 
+ * - Relative URL and empty URL are always same origin.
+ * - data URL containing an image is always same origin.
+ * - blob URL is checked using `URL` constructor by its parent URL; opaque blob URL is never same origin.
+ * - Absolute URL is checked using `URL` constructor.
+ * 
+ * Checks blob URL before relative URL because opaque blob URL does not contain `://` too.
+ * 
+ * @param inComingUrl - The URL to check
+ * @returns `true` if the URL is same origin as current location, `false` otherwise
+ */
 export function sameOrigin(inComingUrl: string): boolean {
-    // A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
-    // try-catch is expansive so just use a heuristic check to avoid it
-    // also check data URL
-    if (!inComingUrl ||
-        inComingUrl.indexOf('://') <= 0 || // relative URL
-        inComingUrl.startsWith('data:image/') || // data image URL
-        inComingUrl.startsWith('blob:')) { // blob
-        return true;
+    if (!inComingUrl) return true; // empty URL
+    if (inComingUrl.startsWith('data:image/')) return true; // data image URL
+    if (inComingUrl.startsWith('blob:')) { // blob URL
+        inComingUrl = inComingUrl.slice(5);
+        if (inComingUrl.startsWith('null')) return false; // opaque blob URL
     }
+    if (inComingUrl.indexOf('://') <= 0) return true; // relative URL
     const urlObj = new URL(inComingUrl);
     const locationObj = window.location;
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;

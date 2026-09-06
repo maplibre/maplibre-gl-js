@@ -20,7 +20,7 @@ describe('ColorReliefStyleLayer', () => {
         const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
-        expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(1);
+        expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toBe(1);
         const colorRamp = colorReliefStyleLayer._createColorRamp(256);
         expect(colorRamp.elevationStops).toEqual([0,1]);
         expect(colorRamp.colorStops).toEqual([Color.transparent,Color.transparent]);

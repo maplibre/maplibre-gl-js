@@ -4,7 +4,7 @@ import {EdgeInsets} from '../geo/edge_insets.ts';
 describe('EdgeInsets', () => {
     describe('constructor', () => {
         test('creates an object with default values', () => {
-            expect(new EdgeInsets() instanceof EdgeInsets).toBeTruthy();
+            expect(new EdgeInsets()).toBeInstanceOf(EdgeInsets);
         });
 
         test('invalid initialization', () => {

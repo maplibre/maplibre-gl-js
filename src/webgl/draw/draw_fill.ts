@@ -1,60 +1,108 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type ColorMode} from '../color_mode.ts';
 import {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
 } from '../program/fill_program.ts';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
+import {translatePosition} from '../../util/util.ts';
+import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {ColorMode} from '../color_mode.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
-import {translatePosition} from '../../util/util.ts';
 
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
+    const layerOpacity = layer.paint.get('fill-layer-opacity');
+    if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    if (opacity.constantOr(1) === 0) {
+    if (layerOpacity < 1) {
+        if (renderOptions.currentPass !== 'translucent') return;
+        const useTerrain = !!painter.style.map.terrain;
+
+        const results = prepareDrawLayerOpacity(painter,layer, coords, useTerrain);
+        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
+        drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
     }
 
+    const pattern = layer.paint.get('fill-pattern');
+    const fillEligibleForOpaque = painter.opaquePassEnabledForLayer() &&
+        !pattern.constantOr(1 as any) &&
+        color.constantOr(Color.transparent).a === 1 &&
+        opacity.constantOr(0) === 1;
+
+    if (fillEligibleForOpaque && renderOptions.currentPass === 'opaque') {
+        // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
+        // its outline (always translucent) runs in the translucent pass below.
+        const {isRenderingToTexture} = renderOptions;
+        const colorMode = painter.colorModeForRenderPass();
+        const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadWrite);
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+        return;
+    }
+    if (fillEligibleForOpaque && renderOptions.currentPass === 'translucent') {
+        // Fill already drew in the opaque pass; just draw the outline here.
+        drawOutline(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
+    if (renderOptions.currentPass === 'translucent') {
+        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
+    }
+}
+
+/**
+ * Draw fill + outline in a single translucent pass with ReadOnly depth.
+ * Shared by the layer-opacity subpass (always) and the normal translucent path
+ * (when the fill is not opaque-pass-eligible).
+ */
+function drawFillAndOutline(
+    painter: Painter,
+    tileManager: TileManager,
+    layer: FillStyleLayer,
+    coords: OverscaledTileID[],
+    renderOptions: RenderOptions
+) {
     const {isRenderingToTexture} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
-    const pattern = layer.paint.get('fill-pattern');
-    const pass = painter.opaquePassEnabledForLayer() &&
-        (!pattern.constantOr(1 as any) &&
-            color.constantOr(Color.transparent).a === 1 &&
-            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
 
-    // Draw fill
-    if (painter.renderPass === pass) {
-        const depthMode = painter.getDepthModeForSublayer(
-            1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
-    }
+    const fillDepthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
+    drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, isRenderingToTexture);
 
-    // Draw stroke
-    if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
+    drawOutline(painter, tileManager, layer, coords, renderOptions);
+}
 
-        // If we defined a different color for the fill outline, we are
-        // going to ignore the bits in 0x07 and just care about the global
-        // clipping mask.
-        // Otherwise, we only want to drawFill the antialiased parts that are
-        // *outside* the current shape. This is important in case the fill
-        // or stroke color is translucent. If we wouldn't clip to outside
-        // the current shape, some pixels from the outline stroke overlapped
-        // the (non-antialiased) fill.
-        const depthMode = painter.getDepthModeForSublayer(
-            layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
-    }
+function drawOutline(
+    painter: Painter,
+    tileManager: TileManager,
+    layer: FillStyleLayer,
+    coords: OverscaledTileID[],
+    renderOptions: RenderOptions
+) {
+    if (!layer.paint.get('fill-antialias')) return;
+
+    // If we defined a different color for the fill outline, we are
+    // going to ignore the bits in 0x07 and just care about the global
+    // clipping mask.
+    // Otherwise, we only want to drawFill the antialiased parts that are
+    // *outside* the current shape. This is important in case the fill
+    // or stroke color is translucent. If we wouldn't clip to outside
+    // the current shape, some pixels from the outline stroke overlapped
+    // the (non-antialiased) fill.
+    const {isRenderingToTexture} = renderOptions;
+    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = painter.getDepthModeForSublayer(
+        layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
+    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
 }
 
 function drawFillTiles(
@@ -95,9 +143,10 @@ function drawFillTiles(
         const bucket: FillBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
+        const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -118,14 +167,13 @@ function drawFillTiles(
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) : fillUniformValues(translateForUniforms);
+            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
-            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
-                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) :
+                fillOutlineUniformValues(translateForUniforms);
         }
 
         const stencil = painter.stencilModeForClipping(coord);

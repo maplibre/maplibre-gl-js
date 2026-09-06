@@ -23,7 +23,7 @@ import type {ImageManager} from '../render/image_manager.ts';
 import type {Context} from '../webgl/context.ts';
 import type {OverscaledTileID} from './tile_id.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {LayerFeatureStates} from '../source/source_state.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
@@ -32,6 +32,7 @@ import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {Painter, RTTObject} from '../render/painter.ts';
+import type {RTTFingerprint} from '../webgl/rtt_fingerprint.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -104,6 +105,7 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
+    needsColorReliefPrepare: boolean;
     abortController: AbortController;
     texture: any;
     fbo: Framebuffer;
@@ -129,7 +131,7 @@ export class Tile {
      * changes.
      */
     rttObjects: Array<RTTObject | undefined>;
-    rttFingerprint: {[sourceId:string]: string};
+    rttFingerprint: Record<string, RTTFingerprint>;
 
     featureStateRevision: number;
 
@@ -396,7 +398,7 @@ export class Tile {
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4,
-        getElevation: undefined | ((x: number, y: number) => number)
+        getElevation: GetElevation | undefined
     ): QueryResults {
         if (!this.latestFeatureIndex?.rawTileData)
             return {};
@@ -425,7 +427,7 @@ export class Tile {
 
         if (!layer) return;
 
-        const filter = featureFilter(params?.filter, params?.globalState);
+        const filter = featureFilter(params?.filter, `querySourceFeatures[${sourceLayer}].filter`, params?.globalState);
         const {z, x, y} = this.tileID.canonical;
         const coord = {z, x, y};
 

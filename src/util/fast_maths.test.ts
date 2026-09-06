@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {mat4, vec3, quat} from 'gl-matrix';
 import {fastInvertTransformMat4, fastInvertProjMat4, fastInvertSkewMat4} from './fast_maths.ts';
 
-function compare_matrix(mat: mat4, matRef: mat4){
+function expectMatricesClose(mat: mat4, matRef: mat4){
     for (let i=0; i<16; ++i){
         expect(mat[i]).toBeCloseTo(matRef[i], 6);
     }
@@ -74,7 +74,7 @@ describe('fast_maths', () => {
             // compute ref:
             mat4.invert(mInvRef, m);
 
-            compare_matrix(mInv, mInvRef);
+            expectMatricesClose(mInv, mInvRef);
         };
     });
 
@@ -114,7 +114,7 @@ describe('fast_maths', () => {
             fastInvertProjMat4(mInv, m);
             // compute ref:
             mat4.invert(mInvRef, m);
-            compare_matrix(mInv, mInvRef);
+            expectMatricesClose(mInv, mInvRef);
         };
     });
 
@@ -171,7 +171,7 @@ describe('fast_maths', () => {
             // compute ref:
             mat4.invert(mInvRef, m);
 
-            compare_matrix(mInv, mInvRef);
+            expectMatricesClose(mInv, mInvRef);
         };
     });
 });

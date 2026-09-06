@@ -61,11 +61,14 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 
 ## Writing Examples
 
-Examples are written as regular HTML files in `test/examples`. Each example should have a title, og:description and og:created.
+Examples are written as regular HTML files in `test/examples`.
+Each example should have a title, og:description, og:category and og:created.
 
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
+* `category`: The topic the example is grouped under on the overview page. Must be one of the categories defined in `docs/example-categories.json`.
 * `created`: YYYY-MM-DD date format to when this example was created, this allow the docs to show what's new
+* `order` (optional): A number used to sort examples within their category on the overview page. Lower numbers come first, falling back to alphabetically after those that have one.
 
 When you create a new example, you **must** make an accompanying image.
 

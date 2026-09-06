@@ -16,7 +16,7 @@
     "type": "Feature",
     "properties": {},
     "id": 1,
-    "source": "mapbox",
+    "source": "maplibre",
     "state": {
       "big": true
     }

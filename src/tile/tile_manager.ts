@@ -1,12 +1,10 @@
 import {create as createSource} from '../source/source.ts';
-
 import {Tile} from './tile.ts';
-import {ErrorEvent, Event, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
 import {ensureError} from '../util/util.ts';
 import {TileCache} from './tile_cache.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
-import type Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {SourceFeatureState} from '../source/source_state.ts';
@@ -18,7 +16,9 @@ import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 
+import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
 import type {Source} from '../source/source.ts';
 import type {Map} from '../ui/map.ts';
@@ -27,7 +27,6 @@ import type {Dispatcher} from '../util/dispatcher.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
 import type {TileState} from './tile.ts';
 import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
@@ -56,7 +55,7 @@ type TileResult = {
  *  - unloading cached tiles not needed to render a given viewport
  *  - managing tile state and feature state
  */
-export class TileManager extends Evented {
+export class TileManager extends Evented<SourceEventType> {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -186,10 +185,10 @@ export class TileManager extends Evented {
         if (this.transform) this.update(this.transform, this.terrain);
     }
 
-    async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
+    async _loadTile(tile: Tile, id: string, state: TileState, hadData: boolean): Promise<void> {
         try {
             const result = await this._source.loadTile(tile) as LoadTileResult;
-            this._tileLoaded(tile, id, state, result);
+            this._tileLoaded(tile, id, state, hadData, result);
         } catch (err) {
             tile.state = 'errored';
 
@@ -211,7 +210,7 @@ export class TileManager extends Evented {
         if (this._source.abortTile)
             this._source.abortTile(tile);
 
-        this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
+        this._source.fire(new MapSourceDataEvent('dataabort', {tile, coord: tile.tileID}));
     }
 
     serialize(): any {
@@ -254,7 +253,7 @@ export class TileManager extends Evented {
 
     /**
      * Reload tiles based on the current state of the source.
-     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired' (errored tiles use 'loading' since they have nothing to show yet), otherwise reload only non-errored tiles using state of 'reloading'.
      * @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
      */
     reload(
@@ -273,7 +272,7 @@ export class TileManager extends Evented {
             if (shouldReloadTileOptions && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
-                this._reloadTile(id, 'expired');
+                this._reloadTile(id, tile.state === 'errored' ? 'loading' : 'expired');
             } else if (tile.state !== 'errored') {
                 this._reloadTile(id, 'reloading');
             }
@@ -288,6 +287,8 @@ export class TileManager extends Evented {
         // - hard to tell without repro steps
         if (!tile) return;
 
+        const hadData = tile.hasData();
+
         // The difference between "loading" tiles and "reloading" or "expired"
         // tiles is that "reloading"/"expired" tiles are "renderable".
         // Therefore, a "loading" tile cannot become a "reloading" tile without
@@ -295,14 +296,17 @@ export class TileManager extends Evented {
         if (tile.state !== 'loading') {
             tile.state = state;
         }
-        await this._loadTile(tile, id, state);
+        await this._loadTile(tile, id, state, hadData);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState, result: LoadTileResult): void {
-        tile.timeAdded = now();
-        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
-        if (tile.selfFading) {
-            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, hadData: boolean, result: LoadTileResult): void {
+        // If the tile was already showing do not restart its fade-in animation
+        if (!hadData) {
+            tile.timeAdded = now();
+            // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
+            if (tile.selfFading) {
+                tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+            }
         }
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
@@ -319,7 +323,7 @@ export class TileManager extends Evented {
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 
         if (!tile.aborted) {
-            this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID}));
+            this._source.fire(new MapSourceDataEvent('data', {tile, coord: tile.tileID}));
         }
     }
     /**
@@ -538,7 +542,7 @@ export class TileManager extends Evented {
         // if we won't have any tiles to fetch and content is already emitted
         // there will be no more data emissions, so we need to emit the event with isSourceLoaded = true
         if (noPendingDataEmissions) {
-            this.fire(new Event('data', {sourceDataType: 'idle', dataType: 'source', sourceId: this.id}));
+            this.fire(new MapSourceDataEvent('data', {sourceDataType: 'idle', sourceId: this.id}));
         }
 
         // Retain is a list of tiles that we shouldn't delete, even if they are not
@@ -709,13 +713,13 @@ export class TileManager extends Evented {
 
         if (!tile) {
             tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
-            this._loadTile(tile, tileID.key, tile.state);
+            this._loadTile(tile, tileID.key, tile.state, false);
         }
 
         tile.uses++;
         this._inViewTiles.setTile(tileID.key, tile);
         if (!cached) {
-            this._source.fire(new Event('dataloading', {tile, coord: tile.tileID, dataType: 'source'}));
+            this._source.fire(new MapSourceDataEvent('dataloading', {tile, coord: tile.tileID}));
         }
 
         return tile;

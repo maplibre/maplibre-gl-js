@@ -20,7 +20,7 @@ describe('Value classes', () => {
             const v = new Constructor(context);
             expect(v).toBeTruthy();
             const currentV = v.get();
-            expect(typeof currentV).not.toBe('undefined');
+            expect(currentV).not.toBeTypeOf('undefined');
         });
 
         test('set', () => {

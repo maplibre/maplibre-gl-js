@@ -23,6 +23,36 @@ export type FullscreenControlOptions = {
 };
 
 /**
+ * The event class for fullscreen control events (`fullscreenstart` and `fullscreenend`).
+ *
+ * @group Event Related
+ */
+export class FullscreenEvent extends Event {
+    type: 'fullscreenstart' | 'fullscreenend';
+    /**
+     * The `FullscreenControl` object that fired the event.
+     */
+    target: FullscreenControl;
+}
+
+/**
+ * `FullscreenControlEventType` - a mapping between the fullscreen control event name and the event value.
+ * These events are used with the {@link FullscreenControl.on} method.
+ *
+ * @group Event Related
+ */
+export type FullscreenControlEventType = {
+    /**
+     * Fired when fullscreen mode has started.
+     */
+    fullscreenstart: FullscreenEvent;
+    /**
+     * Fired when fullscreen mode has ended.
+     */
+    fullscreenend: FullscreenEvent;
+};
+
+/**
  * A `FullscreenControl` control contains a button for toggling the map in and out of fullscreen mode.
  * When [requestFullscreen](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) is not supported, fullscreen is handled via CSS properties.
  * The map's `cooperativeGestures` option is temporarily disabled while the map
@@ -39,11 +69,11 @@ export type FullscreenControlOptions = {
  *
  * ## Events
  *
- * **Event** `fullscreenstart` of type {@link Event} will be fired when fullscreen mode has started.
+ * **Event** `fullscreenstart` of type {@link FullscreenEvent} will be fired when fullscreen mode has started.
  *
- * **Event** `fullscreenend` of type {@link Event} will be fired when fullscreen mode has ended.
+ * **Event** `fullscreenend` of type {@link FullscreenEvent} will be fired when fullscreen mode has ended.
  */
-export class FullscreenControl extends Evented implements IControl {
+export class FullscreenControl extends Evented<FullscreenControlEventType> implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
@@ -141,11 +171,11 @@ export class FullscreenControl extends Evented implements IControl {
         this._updateTitle();
 
         if (this._fullscreen) {
-            this.fire(new Event('fullscreenstart'));
+            this.fire(new FullscreenEvent('fullscreenstart'));
             this._prevCooperativeGesturesEnabled = this._map.cooperativeGestures.isEnabled();
             this._map.cooperativeGestures.disable();
         } else {
-            this.fire(new Event('fullscreenend'));
+            this.fire(new FullscreenEvent('fullscreenend'));
             if (this._prevCooperativeGesturesEnabled) {
                 this._map.cooperativeGestures.enable();
             }

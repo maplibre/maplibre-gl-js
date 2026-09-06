@@ -45,3 +45,7 @@ See [`test/integration/README.md`](./integration/README.md).
 In the tests you can leverage the Vitest functions for mocking, as described [in the manual of Vitest](https://vitest.dev/guide/mocking.html).
 
 The test framework is set up such that spies, stubs, and mocks on global objects are restored at the end of each test.
+
+## Benchmarks
+
+Micro benchmarks (`src/**/*.bench.ts`) run with `npm run bench`. See [`test/bench/README.md`](./bench/README.md) for both benchmark lanes and the before/after comparison workflow.

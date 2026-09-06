@@ -1,0 +1,98 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests a valid projective image-source trapezoid whose inverse-homography denominator has no constant term.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "center": [
+    -45,
+    49
+  ],
+  "zoom": 2,
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          -67.5,
+          55.77657301866769
+        ],
+        [
+          -22.5,
+          55.77657301866769
+        ],
+        [
+          0,
+          40.97989806962013
+        ],
+        [
+          -90,
+          40.97989806962013
+        ]
+      ],
+      "url": "local://image/projective-grid.png"
+    },
+    "projective-outline": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -67.5,
+              55.77657301866769
+            ],
+            [
+              -22.5,
+              55.77657301866769
+            ],
+            [
+              0,
+              40.97989806962013
+            ],
+            [
+              -90,
+              40.97989806962013
+            ],
+            [
+              -67.5,
+              55.77657301866769
+            ]
+          ]
+        },
+        "properties": {}
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "projective-outline",
+      "type": "line",
+      "source": "projective-outline",
+      "paint": {
+        "line-color": "#111827",
+        "line-width": 3,
+        "line-opacity": 0.65
+      }
+    }
+  ]
+}

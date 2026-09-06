@@ -55,21 +55,27 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.transformAndGetImage(this.map._requestManager, url, ResourceType.Tile, tile.abortController, this.map._refreshExpiredTiles, {colorSpaceConversion: 'none'});
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response?.data) {
-                const img = response.data;
+            if (response) {
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
+                // An empty response (e.g. HTTP 204 for a missing DEM tile) carries no elevation
+                // data: treat the tile as loaded without a DEM instead of building a degenerate
+                // one that would fail against its neighbors in backfillBorder (#1551).
+                if (!response.data) {
+                    tile.state = 'loaded';
+                    return;
+                }
+                const img = response.data;
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : await this.readImageNow(img);
                 const params = {
@@ -94,6 +100,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.dem = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                 tile.needsHillshadePrepare = true;
                 tile.needsTerrainPrepare = true;
+                tile.needsColorReliefPrepare = true;
                 tile.state = 'loaded';
             }
         } catch (err) {
@@ -109,15 +116,15 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
         if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
-            const width = img.width + 2;
-            const height = img.height + 2;
+            const width = img.width + 4;
+            const height = img.height + 4;
             try {
-                return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
+                return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -2, -2, width, height));
             } catch {
                 // fall-back to browser canvas decoding
             }
         }
-        return browser.getImageData(img, 1);
+        return browser.getImageData(img, 2);
     }
 
     _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {

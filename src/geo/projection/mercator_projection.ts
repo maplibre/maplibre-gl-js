@@ -1,4 +1,4 @@
-import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection.ts';
+import type {Projection, TileMeshUsage} from './projection.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {type PreparedShader, shaders} from '../../shaders/shaders.ts';
@@ -52,15 +52,7 @@ export class MercatorProjection implements Projection {
         return 0;
     }
 
-    get latitudeErrorCorrectionRadians(): number {
-        return 0;
-    }
-
     public destroy(): void {
-        // Do nothing.
-    }
-
-    public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 
@@ -94,9 +86,5 @@ export class MercatorProjection implements Projection {
 
     public hasTransition(): boolean {
         return false;
-    }
-
-    setErrorQueryLatitudeDegrees(_value: number): void {
-        // Do nothing.
     }
 }

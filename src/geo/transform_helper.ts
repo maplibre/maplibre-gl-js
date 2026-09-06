@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
-import {cameraMercatorCoordinateFromCenterAndRotation, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
@@ -138,6 +138,10 @@ export class TransformHelper implements ITransformGetters {
     _minElevationForCurrentTile: number;
     _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
+    /**
+     * Whether the camera was never deliberately positioned, in which case a loading style may apply its own camera.
+     * Cleared by the setters that move the camera, but not by ones that only snap it into a valid range.
+     */
     _unmodified: boolean;
 
     _constraining: boolean;
@@ -254,28 +258,36 @@ export class TransformHelper implements ITransformGetters {
     setMinZoom(zoom: number): void {
         if (this._minZoom === zoom) return;
         this._minZoom = zoom;
+        const unmodified = this._unmodified;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
+        this._unmodified = unmodified;
     }
 
     get maxZoom(): number { return this._maxZoom; }
     setMaxZoom(zoom: number): void {
         if (this._maxZoom === zoom) return;
         this._maxZoom = zoom;
+        const unmodified = this._unmodified;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
+        this._unmodified = unmodified;
     }
 
     get minPitch(): number { return this._minPitch; }
     setMinPitch(pitch: number): void {
         if (this._minPitch === pitch) return;
         this._minPitch = pitch;
+        const unmodified = this._unmodified;
         this.setPitch(Math.max(this.pitch, pitch));
+        this._unmodified = unmodified;
     }
 
     get maxPitch(): number { return this._maxPitch; }
     setMaxPitch(pitch: number): void {
         if (this._maxPitch === pitch) return;
         this._maxPitch = pitch;
+        const unmodified = this._unmodified;
         this.setPitch(Math.min(this.pitch, pitch));
+        this._unmodified = unmodified;
     }
 
     get renderWorldCopies(): boolean { return this._renderWorldCopies; }
@@ -674,10 +686,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     getCameraLngLat(): LngLat {
-        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = this.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
-        return camMercator.toLngLat();
+        return cameraMercatorCoordinate(this).toLngLat();
     }
 
     getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {

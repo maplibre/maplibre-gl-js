@@ -1,4 +1,3 @@
-import type Point from '@mapbox/point-geometry';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {loadGeometry} from './load_geometry.ts';
 import {toEvaluationFeature} from './evaluation_feature.ts';
@@ -6,7 +5,7 @@ import {EXTENT} from './extent.ts';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import {mapObject, extend} from '../util/util.ts';
 import {register} from '../util/web_worker_transfer.ts';
@@ -18,13 +17,15 @@ import {MLTVectorTile} from '../source/vector_tile_mlt.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
+import type Point from '@mapbox/point-geometry';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
+import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
-import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
@@ -37,7 +38,7 @@ type QueryParameters = {
     queryGeometry: Point[];
     cameraQueryGeometry: Point[];
     queryPadding: number;
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
@@ -119,7 +120,7 @@ export class FeatureIndex {
                     break;
                 case 'mvt':
                 default:
-                    this.vtLayers = new VectorTile(new Protobuf(this.rawTileData)).layers;
+                    this.vtLayers = new VectorTile(new PbfReader(this.rawTileData)).layers;
             }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
@@ -137,7 +138,7 @@ export class FeatureIndex {
 
         const params = args.params;
         const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
-        const filter = featureFilter(params.filter, params.globalState);
+        const filter = featureFilter(params.filter, 'queryRenderedFeatures filter', params.globalState);
 
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
@@ -291,7 +292,7 @@ export class FeatureIndex {
         const result: QueryResults = {};
         this.loadVTLayers();
 
-        const filter = featureFilter(filterParams.filterSpec, filterParams.globalState);
+        const filter = featureFilter(filterParams.filterSpec, 'queryRenderedFeatures symbol filter', filterParams.globalState);
 
         for (const symbolFeatureIndex of symbolFeatureIndexes) {
             this.loadMatchingFeature(
@@ -342,13 +343,41 @@ register(
     {omit: ['rawTileData', 'sourceLayerCoder']}
 );
 
-function evaluateProperties(serializedProperties, styleLayerProperties, feature, featureState, availableImages) {
-    return mapObject(serializedProperties, (property, key) => {
-        const prop = styleLayerProperties instanceof PossiblyEvaluated ? styleLayerProperties.get(key) : null;
-        return prop?.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
+/**
+ * Whether a possibly-evaluated property still has to be evaluated against a feature, as a
+ * data-driven one does.
+ *
+ * A data-constant property is already the value it will be drawn with, and that value is often a
+ * primitive -- `'map'` for an alignment, a number for an opacity -- which the `in` operator throws
+ * on, so it is not reached for until the value is known to be an object.
+ */
+function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValue<unknown> {
+    return typeof value === 'object' && value !== null && 'evaluate' in value;
+}
+
+/**
+ * Evaluates a serialized layer's paint or layout properties against one feature, so that a queried
+ * feature reports the values it was actually drawn with.
+ *
+ * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
+ * value, is passed through as it is.
+ */
+
+function evaluateProperties<Props, PossiblyEvaluatedProps>(
+    serializedProperties: Record<string, unknown>,
+    styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
+    feature: Feature,
+    featureState: FeatureState,
+    availableImages: string[]
+): Record<string, unknown> {
+    return mapObject(serializedProperties, (_property, key) => {
+        const value = styleLayerProperties instanceof PossiblyEvaluated ?
+            styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
+            null;
+        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
     });
 }
 
-function topDownFeatureComparator(a, b) {
+function topDownFeatureComparator(a: number, b: number) {
     return b - a;
 }

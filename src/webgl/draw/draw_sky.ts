@@ -1,20 +1,21 @@
+import posAttributes from '../../data/pos_attributes.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
-import posAttributes from '../../data/pos_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import {skyUniformValues} from '../program/sky_program.ts';
 import {atmosphereUniformValues} from '../program/atmosphere_program.ts';
-import {type Sky} from '../../style/sky.ts';
-import {type Light} from '../../style/light.ts';
+import {getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {Mesh} from '../../render/mesh.ts';
-import {mat4, vec3, vec4} from 'gl-matrix';
-import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
+import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
+
+import type {Sky} from '../../style/sky.ts';
+import type {Light} from '../../style/light.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {Painter} from '../../render/painter.ts';
-import {type Context} from '../context.ts';
-import {getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
+import type {Context} from '../context.ts';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it
@@ -43,7 +44,7 @@ export function drawSky(painter: Painter, sky: Sky): void {
     const context = painter.context;
     const gl = context.gl;
 
-    const skyUniforms = skyUniformValues(sky, painter.style.map.transform, painter.pixelRatio);
+    const skyUniforms = skyUniformValues(sky, painter.transform, painter.pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
@@ -58,8 +59,8 @@ export function drawSky(painter: Painter, sky: Sky): void {
 }
 
 function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
-    const _lp = light.properties.get('position');
-    const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
+    const lightPos = light.getCartesianPosition();
+    vec3.negate(lightPos, lightPos);
 
     const lightMat = mat4.identity(new Float64Array(16));
 
@@ -94,22 +95,9 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     }
 
     const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
-    const invProjMatrix = transform.inverseProjectionMatrix;
-    const vec = new Float64Array(4) as any as vec4;
-    vec[3] = 1;
-    vec4.transformMat4(vec, vec, transform.modelViewProjectionMatrix);
-    vec[0] /= vec[3];
-    vec[1] /= vec[3];
-    vec[2] /= vec[3];
-    vec[3] = 1;
-    vec4.transformMat4(vec, vec, invProjMatrix);
-    vec[0] /= vec[3];
-    vec[1] /= vec[3];
-    vec[2] /= vec[3];
-    vec[3] = 1;
-    const globePosition = [vec[0], vec[1], vec[2]] as vec3;
+    const globePosition = getGlobeCenterInViewSpace(transform);
 
-    const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, invProjMatrix);
+    const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, transform.inverseProjectionMatrix);
 
     const mesh = getMesh(context, sky);
 

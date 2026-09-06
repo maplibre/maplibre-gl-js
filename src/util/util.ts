@@ -1,12 +1,21 @@
 import Point from '@mapbox/point-geometry';
-import UnitBezier from '@mapbox/unitbezier';
+import unitBezierFactory from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
 import type {Size} from './image.ts';
 import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
-import {type OverscaledTileID} from '../tile/tile_id.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Event} from './evented.ts';
+
+/**
+ * A 4x4 gl-matrix matrix backed by 32-bit floats.
+ */
+export type Mat4f32 = mat4 & Float32Array;
+/**
+ * A 4x4 gl-matrix matrix backed by 64-bit floats.
+ */
+export type Mat4f64 = mat4 & Float64Array;
 
 export const JSON_PREFIX = '__$json__:';
 
@@ -31,24 +40,24 @@ export function createVec3f64(): vec3 { return new Float64Array(3); }
 /**
  * Returns a new 64 bit float mat4 of zeroes.
  */
-export function createMat4f64(): mat4 { return new Float64Array(16); }
+export function createMat4f64(): Mat4f64 { return new Float64Array(16); }
 /**
  * Returns a new 32 bit float mat4 of zeroes.
  */
-export function createMat4f32(): mat4 { return new Float32Array(16); }
+export function createMat4f32(): Mat4f32 { return new Float32Array(16); }
 /**
  * Returns a new 64 bit float mat4 set to identity.
  */
-export function createIdentityMat4f64(): mat4 {
-    const m = new Float64Array(16) as any;
+export function createIdentityMat4f64(): Mat4f64 {
+    const m: Mat4f64 = new Float64Array(16);
     mat4.identity(m);
     return m;
 }
 /**
  * Returns a new 32 bit float mat4 set to identity.
  */
-export function createIdentityMat4f32(): mat4 {
-    const m = new Float32Array(16) as any;
+export function createIdentityMat4f32(): Mat4f32 {
+    const m: Mat4f32 = new Float32Array(16);
     mat4.identity(m);
     return m;
 }
@@ -365,10 +374,7 @@ export function easeCubicInOut(t: number): number {
  * @param p2y - control point 2 y coordinate
  */
 export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: number) => number {
-    const bezier = new UnitBezier(p1x, p1y, p2x, p2y);
-    return (t: number) => {
-        return bezier.solve(t);
-    };
+    return unitBezierFactory(p1x, p1y, p2x, p2y);
 }
 
 /**
@@ -529,8 +535,12 @@ export function evaluateZoomSnap(zoom: number, zoomSnap: number, delta?: number)
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  */
-export function mapObject(input: any, iterator: Function, context?: any): any {
-    const output = {};
+export function mapObject<Input extends object, Output>(
+    input: Input,
+    iterator: (value: Input[keyof Input], key: Extract<keyof Input, string>, input: Input) => Output,
+    context?: unknown
+): {[K in keyof Input]: Output} {
+    const output = {} as {[K in keyof Input]: Output};
     for (const key in input) {
         output[key] = iterator.call(context || this, input[key], key, input);
     }
@@ -661,12 +671,7 @@ export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point)
  * @param spherical - Spherical coordinates, in [radial, azimuthal, polar]
  * @returns cartesian coordinates in [x, y, z]
  */
-
-export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): {
-    x: number;
-    y: number;
-    z: number;
-} {
+export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): vec3 {
     // We abstract "north"/"up" (compass-wise) to be 0° when really this is 90° (π/2):
     // correct for that here
     azimuthal += 90;
@@ -675,11 +680,11 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
     azimuthal *= Math.PI / 180;
     polar *= Math.PI / 180;
 
-    return {
-        x: r * Math.cos(azimuthal) * Math.sin(polar),
-        y: r * Math.sin(azimuthal) * Math.sin(polar),
-        z: r * Math.cos(polar)
-    };
+    return [
+        r * Math.cos(azimuthal) * Math.sin(polar),
+        r * Math.sin(azimuthal) * Math.sin(polar),
+        r * Math.cos(polar)
+    ];
 }
 
 /**
@@ -742,17 +747,6 @@ export function isSafari(scope: any): boolean {
     return _isSafari;
 }
 
-export function storageAvailable(type: string): boolean {
-    try {
-        const storage = window[type];
-        storage.setItem('_mapbox_test_', 1);
-        storage.removeItem('_mapbox_test_');
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 // The following methods are from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem
 //Unicode compliant base64 encoder for strings
 export function b64EncodeUnicode(str: string): string {
@@ -786,13 +780,10 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * @param data - Data to convert
  * @returns - A  promise resolved when the conversion is finished
  */
-export const arrayBufferToImageBitmap = async (data: ArrayBuffer): Promise<ImageBitmap> => {
-    if (data.byteLength === 0) {
-        return createImageBitmap(new ImageData(1, 1));
-    }
+export const arrayBufferToImageBitmap = async (data: ArrayBuffer, options?: ImageBitmapOptions): Promise<ImageBitmap> => {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     try {
-        return createImageBitmap(blob);
+        return createImageBitmap(blob, options);
     } catch (e) {
         throw new Error(`Could not load image because of ${ensureError(e).message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
     }
@@ -824,7 +815,7 @@ export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement>
         };
         img.onerror = () => reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
         const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-        img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
+        img.src = URL.createObjectURL(blob);
     });
 };
 

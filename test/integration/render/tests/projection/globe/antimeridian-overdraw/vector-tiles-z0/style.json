@@ -1,0 +1,50 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Same as geojson-z0/geojson-crossing-z0, but with regular vector tiles instead of a GeoJSON source: tile generators also duplicate geometry near the antimeridian into the zoom 0 tile buffer (shifted by 360 degrees), so the clip must apply to all vector sources. Only the zoom 0 tile is kept, since that is the only one this framing reads. Tiles generated with `tippecanoe -z3 --no-tile-compression -e tiles repro.geojson` from two polygons (lon 130..180 and lon 150..230), then renamed to z-x-y.mvt.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    180,
+    18
+  ],
+  "zoom": 0.8,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "tippecanoe": {
+      "type": "vector",
+      "tiles": [
+        "local://tiles/antimeridian/{z}-{x}-{y}.mvt"
+      ],
+      "minzoom": 0,
+      "maxzoom": 3
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "rect-fill",
+      "type": "fill",
+      "source": "tippecanoe",
+      "source-layer": "repro",
+      "paint": {
+        "fill-color": "black",
+        "fill-opacity": 0.5
+      }
+    }
+  ]
+}

@@ -2,6 +2,10 @@ import {IndexBuffer} from './index_buffer.ts';
 
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
+import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
+import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
+import type {UniformBuffer} from './uniform_buffer.ts';
 import {type DepthMode} from './depth_mode.ts';
 import {type StencilMode} from './stencil_mode.ts';
 import {ColorMode} from './color_mode.ts';
@@ -63,6 +67,9 @@ export class Context {
     pixelStoreUnpack: PixelStoreUnpack;
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+    projectionUniformBuffer: UniformBuffer;
+    terrainUniformBuffer: UniformBuffer;
+    frameUniformBuffer: UniformBuffer;
 
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
@@ -111,6 +118,10 @@ export class Context {
 
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
+
+        this.projectionUniformBuffer = createProjectionUniformBuffer(this);
+        this.terrainUniformBuffer = createTerrainUniformBuffer(this);
+        this.frameUniformBuffer = createFrameUniformBuffer(this);
     }
 
     setDefault(): void {
@@ -175,6 +186,29 @@ export class Context {
         this.pixelStoreUnpack.dirty = true;
         this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
         this.pixelStoreUnpackFlipY.dirty = true;
+        this.projectionUniformBuffer.bindingDirty = true;
+        this.terrainUniformBuffer.bindingDirty = true;
+        this.frameUniformBuffer.bindingDirty = true;
+    }
+
+    /**
+     * Reset some GL state to default values before handing users the raw context, as we do for
+     * custom layers and WebGL style images, to avoid hard-to-debug bugs in their code.
+     *
+     * MapLibre restores all of its own state afterwards, so the only state worth resetting first
+     * is state users would be surprised to find dirty: `CULL_FACE`, `TEXTURE0` and the three
+     * `UNPACK_` settings, whose defaults are meaningful enough that most code assumes them.
+     * The vertex array is unbound rather than reset, so that MapLibre never has to track it and
+     * a user's `vertexAttribPointer` calls cannot land on one of ours.
+     */
+    setCustomLayerDefaults(): void {
+        this.unbindVAO();
+
+        this.cullFace.setDefault();
+        this.activeTexture.setDefault();
+        this.pixelStoreUnpack.setDefault();
+        this.pixelStoreUnpackPremultiplyAlpha.setDefault();
+        this.pixelStoreUnpackFlipY.setDefault();
     }
 
     createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean): IndexBuffer {

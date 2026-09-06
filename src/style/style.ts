@@ -1,10 +1,12 @@
+import {mat4} from 'gl-matrix';
 import {throwIfAborted} from '../util/abort_error.ts';
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
-import {type StyleLayer} from './style_layer.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventType} from '../ui/events.ts';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
-import {ImageManager} from '../render/image_manager.ts';
+import {ImageManager, type MissingImageRequestHandler} from '../render/image_manager.ts';
+import {PatternAtlas} from '../render/pattern_atlas.ts';
 import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
@@ -16,12 +18,10 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
-import {type Source} from '../source/source.ts';
+import {validateStyle, validateStyleAndEmit, validateAndEmit, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
-import {type GeoJSONSource} from '../source/geojson_source.ts';
-import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import {derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
@@ -29,17 +29,12 @@ import {PauseablePlacement} from './pauseable_placement.ts';
 import {ZoomHistory} from './zoom_history.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+
+import type {Source} from '../source/source.ts';
+import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
-
-// We're skipping validation errors with the `source.canvas` identifier in order
-// to continue to allow canvas sources to be added at runtime/updated in
-// smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424):
-const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
-    message: string;
-    identifier?: string;
-}> | null) =>
-    _emitValidationErrors(evented, errors?.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
@@ -50,6 +45,7 @@ import type {
     LayerSpecification,
     FilterSpecification,
     StyleSpecification,
+    FontFacesSpecification,
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
@@ -207,11 +203,12 @@ export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'sou
 /**
  * The Style base class
  */
-export class Style extends Evented {
+export class Style extends Evented<MapEventType> {
     map: Map;
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
     imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
@@ -232,13 +229,12 @@ export class Style extends Evented {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _imagesListDirty: boolean;
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
-    // image ids of images loaded from style's sprite
-    _spritesImagesIds: {[spriteId: string]: string[]};
-    // image ids of all images loaded (sprite + user)
-    _availableImages: string[];
+    _symbolPlacementTriggered: boolean;
+    _placedProjectionTransition: number;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -261,6 +257,8 @@ export class Style extends Evented {
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
+        this.imageManager.setMissingImageResolver(map._missingStyleImageResolver);
+        this.patternAtlas = new PatternAtlas(this.imageManager);
         const glyphLang = map._container?.lang || (typeof document !== 'undefined' && document.documentElement?.lang) || undefined;
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, glyphLang);
         this.lineAtlas = new LineAtlas(256, 512);
@@ -298,12 +296,11 @@ export class Style extends Evented {
     }
 
     private _setInitialValues() {
-        this._spritesImagesIds = {};
         this._layers = {};
         this._order = [];
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
-        this._availableImages = [];
+        this._imagesListDirty = false;
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -321,6 +318,8 @@ export class Style extends Evented {
         this._glyphsDidChange = false;
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
+        this._symbolPlacementTriggered = false;
+        this._placedProjectionTransition = undefined;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
         this.placement = undefined;
@@ -426,7 +425,7 @@ export class Style extends Evented {
     }
 
     async loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification): Promise<void> {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('dataloading'));
 
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
@@ -456,7 +455,7 @@ export class Style extends Evented {
     }
 
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification): void {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('dataloading'));
 
         this._frameRequest = new AbortController();
         browser.frameAsync(this._frameRequest, this.map._ownerWindow).then(() => {
@@ -467,13 +466,13 @@ export class Style extends Evented {
     }
 
     loadEmpty(): void {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('dataloading'));
         this._load(empty, {validate: false});
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): void {
         let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
-        if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
+        if (options.validate && validateStyleAndEmit(this, nextState)) {
             return;
         }
 
@@ -493,17 +492,19 @@ export class Style extends Evented {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
+        this.glyphManager.setFontFaces(nextState['font-faces']);
         this._createLayers();
 
-        this.light = new Light(this.stylesheet.light);
+        this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
-        this.sky = new Sky(this.stylesheet.sky);
+        this.sky = new Sky(this.stylesheet.sky, this._globalState);
 
-        this.map.setTerrain(this.stylesheet.terrain ?? null);
+        // The stylesheet's terrain was already validated as part of the style itself.
+        this.map.setTerrain(this.stylesheet.terrain ?? null, {validate: false});
 
-        this.fire(new Event('data', {dataType: 'style'}));
-        this.fire(new Event('style.load'));
+        this.fire(new MapStyleDataEvent('data'));
+        this.fire(new MapStyleLoadEvent());
     }
 
     private _createLayers() {
@@ -532,76 +533,49 @@ export class Style extends Evented {
         }
     }
 
-    _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined): void {
+    async _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined): Promise<void> {
         this.imageManager.setLoaded(false);
 
         const abortController = new AbortController();
         this._spriteRequest = abortController;
         let err: Error;
-        loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
-            this._spriteRequest = null;
-            if (images) {
-                for (const spriteId in images) {
-                    this._spritesImagesIds[spriteId] = [];
+        try {
+            const images = await loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), abortController);
+            if (!images) return;
 
-                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
-                    const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
-                    for (const id of imagesToRemove) {
-                        this.imageManager.removeImage(id);
-                        this._changedImages[id] = true;
-                    }
-
-                    for (const id in images[spriteId]) {
-                        // don't prefix images of the "default" sprite
-                        const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
-                        // save all the sprite's images' ids to be able to delete them in `removeSprite`
-                        this._spritesImagesIds[spriteId].push(imageId);
-                        if (imageId in this.imageManager.images) {
-                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
-                        } else {
-                            this.imageManager.addImage(imageId, images[spriteId][id]);
-                        }
-
-                        if (isUpdate) {
-                            this._changedImages[imageId] = true;
-                        }
-                    }
+            for (const spriteId in images) {
+                const {loaded, removed} = this.imageManager.setSpriteImages(spriteId, images[spriteId]);
+                this._markImagesChanged(removed);
+                if (isUpdate) {
+                    this._markImagesChanged(loaded);
                 }
             }
-        }).catch((error) => {
-            this._spriteRequest = null;
+        } catch (error) {
             err = error;
             if (!abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(err));
             }
-        }).finally(() => {
+        } finally {
+            this._spriteRequest = null;
             this.imageManager.setLoaded(true);
-            this._availableImages = this.imageManager.listImages();
 
             if (isUpdate) {
                 this._changed = true;
             }
 
-            this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-            this.fire(new Event('data', {dataType: 'style'}));
+            this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
+            this.fire(new MapStyleDataEvent('data'));
 
-            if (completion) {
-                completion(err);
-            }
-        });
+            completion?.(err);
+        }
     }
 
     _unloadSprite(): void {
-        for (const id of Object.values(this._spritesImagesIds).flat()) {
-            this.imageManager.removeImage(id);
-            this._changedImages[id] = true;
-        }
+        this._markImagesChanged(this.imageManager.removeAllSpriteImages());
 
-        this._spritesImagesIds = {};
-        this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('data'));
     }
 
     _validateLayer(layer: StyleLayer): void {
@@ -733,6 +707,11 @@ export class Style extends Evented {
 
         const changed = this._changed;
         if (changed) {
+            if (this._imagesListDirty) {
+                this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
+                this._imagesListDirty = false;
+            }
+
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -777,10 +756,11 @@ export class Style extends Evented {
 
         // loop all layers and find layers that are not hidden at parameters.zoom
         // and set used to true in tileManagers dictionary for the sources of these layers
+        const availableImages = this.imageManager.listImages();
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
 
-            layer.recalculate(parameters, this._availableImages);
+            layer.recalculate(parameters, availableImages);
             if (!layer.isHidden(parameters.zoom) && layer.source) {
                 this.tileManagers[layer.source].used = true;
             }
@@ -794,10 +774,9 @@ export class Style extends Evented {
             // (undefine !== false) will evaluate to true and fire an useless visibility event
             // need force "falsy" values to boolean to avoid the case above
             if (!!managersUsedBefore[id] !== !!tileManager.used) {
-                tileManager.fire(new Event('data',
+                tileManager.fire(new MapSourceDataEvent('data',
                     {
                         sourceDataType: 'visibility',
-                        dataType: 'source',
                         sourceId: id
                     }));
             }
@@ -809,7 +788,7 @@ export class Style extends Evented {
         this.z = parameters.zoom;
 
         if (changed) {
-            this.fire(new Event('data', {dataType: 'style'}));
+            this.fire(new MapStyleDataEvent('data'));
         }
     }
 
@@ -859,7 +838,7 @@ export class Style extends Evented {
      * Update this style's state to match the given style JSON, performing only
      * the necessary mutations.
      *
-     * May throw an Error ('Unimplemented: METHOD') if the mapbox-gl-style-spec
+     * May throw an Error ('Unimplemented: METHOD') if the maplibre-gl-style-spec
      * diff algorithm produces an operation that is not supported.
      *
      * @returns true if any changes were made; false otherwise
@@ -870,7 +849,7 @@ export class Style extends Evented {
         const serializedStyle =  this.serialize();
         nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
         const validate = options.validate ?? true;
-        if (validate && emitValidationErrors(this, validateStyle(nextState))) return false;
+        if (validate && validateStyleAndEmit(this, nextState)) return false;
 
         nextState = clone(nextState);
         nextState.layers = derefLayers(nextState.layers);
@@ -895,7 +874,7 @@ export class Style extends Evented {
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
 
-        this.fire(new Event('style.load', {style: this}));
+        this.fire(new MapStyleLoadEvent({style: this}));
 
         return true;
     }
@@ -944,6 +923,9 @@ export class Style extends Evented {
                 case 'setGlyphs':
                     operations.push(() => this.setGlyphs.apply(this, op.args));
                     break;
+                case 'setFontFaces':
+                    operations.push(() => this.setFontFaces.apply(this, op.args));
+                    break;
                 case 'setSprite':
                     operations.push(() => this.setSprite.apply(this, op.args));
                     break;
@@ -991,6 +973,10 @@ export class Style extends Evented {
         return this.imageManager.getImage(id);
     }
 
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void {
+        this.imageManager.setMissingImageResolver(resolver);
+    }
+
     removeImage(id: string): void {
         if (!this.getImage(id)) {
             this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
@@ -1000,12 +986,21 @@ export class Style extends Evented {
         this._afterImageUpdated(id);
     }
 
+    /**
+     * Queues the tiles that depend on these images to be reloaded on the next update, which is
+     * needed whenever an image appears, disappears or changes size.
+     */
+    _markImagesChanged(ids: string[]): void {
+        for (const id of ids) {
+            this._changedImages[id] = true;
+        }
+    }
+
     _afterImageUpdated(id: string): void {
-        this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('data'));
     }
 
     listImages(): string[] {
@@ -1025,8 +1020,7 @@ export class Style extends Evented {
             throw new Error(`The type property must be defined, but only the following properties were given: ${Object.keys(source).join(', ')}.`);
         }
 
-        const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
-        const shouldValidate = builtIns.includes(source.type);
+        const shouldValidate = SPEC_SOURCE_TYPES.has(source.type);
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map?._collectResourceTiming) (source as any).collectResourceTiming = true;
         const tileManager = this.tileManagers[id] = new TileManager(id, source, this.dispatcher);
@@ -1061,7 +1055,7 @@ export class Style extends Evented {
         const tileManager = this.tileManagers[id];
         delete this.tileManagers[id];
         delete this._updatedSources[id];
-        tileManager.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
+        tileManager.fire(new MapSourceDataEvent('data', {sourceDataType: 'metadata', sourceId: id}));
         tileManager.setEventedParent(null);
         tileManager.onRemove(this.map);
         this._changed = true;
@@ -1188,14 +1182,15 @@ export class Style extends Evented {
             return;
         }
 
+        if (before && !this._order.includes(before)) {
+            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
+            return;
+        }
+
         const index = this._order.indexOf(id);
         this._order.splice(index, 1);
 
         const newIndex = before ? this._order.indexOf(before) : this._order.length;
-        if (before && newIndex === -1) {
-            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
-            return;
-        }
         this._order.splice(newIndex, 0, id);
 
         this._layerOrderChanged = true;
@@ -1379,6 +1374,7 @@ export class Style extends Evented {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
+        if (layer.type === 'symbol') this.triggerSymbolPlacement();
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
@@ -1495,11 +1491,13 @@ export class Style extends Evented {
             pitch: myStyleSheet.pitch,
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
+            'font-faces': myStyleSheet['font-faces'],
             transition: myStyleSheet.transition,
             projection: myStyleSheet.projection,
+            state: myStyleSheet.state,
             sources,
             layers,
-            terrain
+            terrain,
         },
         (value) => value !== undefined);
     }
@@ -1612,7 +1610,7 @@ export class Style extends Evented {
 
         const sourceResults: QueryRenderedFeaturesResults[] = [];
 
-        params.availableImages = this._availableImages;
+        params.availableImages = this.imageManager.listImages();
 
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
         const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
@@ -1756,7 +1754,7 @@ export class Style extends Evented {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        const projectionObjects = createProjectionFromName(name, this.map.transformConstrain);
+        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {
@@ -1764,18 +1762,15 @@ export class Style extends Evented {
         }
     }
 
-    _validate(validate: Validator, key: string, value: any, props: any, options: {
-        validate?: boolean;
-    } = {}): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
+    _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
+        if (options.validate === false) return false;
+
+        return validateAndEmit(this, validate, {
             key,
             style: this.serialize(),
             value,
-            styleSpec
-        }, props)));
+            ...props
+        }, options);
     }
 
     _remove(mapRemoved: boolean = true): void {
@@ -1830,6 +1825,34 @@ export class Style extends Evented {
         }
     }
 
+    /**
+     * Re-places symbols on the next frame.
+     * Placement is skipped while its inputs look unchanged, so call this when something
+     * the map cannot see for itself has moved symbols.
+     */
+    triggerSymbolPlacement(): void {
+        this._symbolPlacementTriggered = true;
+    }
+
+    /**
+     * Whether re-running symbol placement could produce a different result than the last run.
+     * Every camera and viewport parameter placement can observe perturbs the model-view-projection
+     * matrix, so comparing the matrix covers them all. Inputs the matrix cannot see arrive as
+     * {@link triggerSymbolPlacement} calls.
+     *
+     * @internal
+     */
+    _placementInputsChanged(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
+        const lastPlacement = this.pauseablePlacement;
+        return !lastPlacement ||
+            this._symbolPlacementTriggered ||
+            this._placedProjectionTransition !== this.projection?.transitionState ||
+            lastPlacement._showCollisionBoxes !== showCollisionBoxes ||
+            lastPlacement.placement.collisionGroups.crossSourceCollisions !== crossSourceCollisions ||
+            lastPlacement.placement.transform.renderWorldCopies !== transform.renderWorldCopies ||
+            !mat4.exactEquals(lastPlacement.placement.transform.modelViewProjectionMatrix, transform.modelViewProjectionMatrix);
+    }
+
     _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
@@ -1860,7 +1883,13 @@ export class Style extends Evented {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom))) {
+        const placementInputsChanged = symbolBucketsChanged || this._placementInputsChanged(transform, showCollisionBoxes, crossSourceCollisions);
+
+        const placementSettled = this.pauseablePlacement?.isDone() && !this.placement.stillRecent(now(), transform.zoom);
+
+        if (forceFullPlacement || !this.pauseablePlacement || (placementSettled && (placementInputsChanged || this.placement.stale))) {
+            this._symbolPlacementTriggered = false;
+            this._placedProjectionTransition = this.projection?.transitionState;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
@@ -1870,7 +1899,8 @@ export class Style extends Evented {
             // started yet because of the `stillRecent` check immediately
             // above, so mark it stale to ensure that we request another
             // render frame
-            this.placement.setStale();
+            // if nothing changed, skip this so the map can go idle
+            if (placementInputsChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
 
@@ -1914,8 +1944,7 @@ export class Style extends Evented {
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
-        // - imageManager.getImages(...) triggers `onstyleimagemissing`
-        // - the user adds "my-image" within the callback
+        // - imageManager.getImages(...) resolves "my-image" with a missing-image resolver
         // - addImage adds "my-image" to this._changedImages
         // - the next frame triggers a reload of this tile even though it already has the latest version
         this._updateTilesForChangedImages();
@@ -1949,10 +1978,24 @@ export class Style extends Evented {
             return;
         }
 
+        this._changed = true;
         this._glyphsDidChange = true;
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
+    }
+
+    getFontFaces(): FontFacesSpecification | null {
+        return this.stylesheet['font-faces'] || null;
+    }
+
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): void {
+        this._checkLoaded();
+
+        this._changed = true;
+        this._glyphsDidChange = true;
+        this.stylesheet['font-faces'] = fontFaces;
+        this.glyphManager.setFontFaces(fontFaces);
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
@@ -2002,21 +2045,15 @@ export class Style extends Evented {
             return;
         }
 
-        if (this._spritesImagesIds[id]) {
-            for (const imageId of this._spritesImagesIds[id]) {
-                this.imageManager.removeImage(imageId);
-                this._changedImages[imageId] = true;
-            }
-        }
+        const changedImages = this.imageManager.removeSpriteImages(id);
+        this._markImagesChanged(changedImages);
 
         internalSpriteRepresentation.splice(internalSpriteRepresentation.findIndex(sprite => sprite.id === id), 1);
         this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : undefined;
 
-        delete this._spritesImagesIds[id];
-        this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('data'));
     }
 
     /**
@@ -2084,8 +2121,7 @@ export class Style extends Evented {
         if (this.imageManager) {
             this.imageManager.setEventedParent(null);
             this.imageManager.destroy();
-            this._availableImages = [];
-            this._spritesImagesIds = {};
+            this.patternAtlas.destroy();
         }
 
         // Destroy glyphManager

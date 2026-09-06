@@ -11,12 +11,33 @@ import type {Page, Browser, WebWorker} from 'puppeteer';
 import {ensureError} from '../../../src/util/util.ts';
 import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
-import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi, type TestContext} from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
+
+/**
+ * Fallback timeout for a single render test, used when the test does not set `metadata.test.timeout`.
+ * It is generous on purpose: the heavier tests (mostly terrain) take ~15-20 seconds on the CI Windows
+ * runners, where software rendering makes the run times vary by a factor of two or three.
+ */
+const DEFAULT_TEST_TIMEOUT = 60000;
+
+/**
+ * Timeout for the `beforeAll` and `afterAll` hooks, which launch and tear down the browser, the test
+ * servers and the coverage reporting. Vitest defaults to 10 seconds, which is not enough on the CI
+ * Windows runners: setup takes about a second on a warm machine, but a cold Windows runner has been
+ * seen to spend more than a minute on the browser launch and the first page load alone. The hooks
+ * run once per split, so a generous value costs nothing when everything is healthy.
+ */
+const HOOK_TIMEOUT = 180000;
+
+/** How many tests run at the same time, each in its own browser; 1 is serial / default. */
+const TEST_CONCURRENCY = Math.max(1, +process.env.RENDER_TEST_CONCURRENCY || 1);
+
+type RenderTestContext = TestContext & {page: Page};
 
 type TestData = {
     id: string;
@@ -31,6 +52,10 @@ type TestData = {
     threshold: number;
     ok: boolean;
     difference: number;
+    /**
+     * Timeout of a single test in milliseconds, only needed to deviate from the default
+     * @defaultValue 60000
+     */
     timeout: number;
     addFakeCanvas: {
         id: string;
@@ -540,7 +565,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         } else {
                             if (typeof operation[1] === 'string') {
                                 // Wait for the event to fire
-                                await map.once(operation[1]);
+                                await map.once(operation[1] as keyof MapEventType);
                             } else {
                                 await new Promise<void>((resolve) => {
                                     setTimeout(() => {
@@ -713,10 +738,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             fakeCanvas.parentNode.removeChild(fakeCanvas);
         }
 
-        return data;
+        return data.toBase64();
     }, styleForTest as any);
 
-    return new Uint8Array(Object.values(evaluatedArray as object) as number[]);
+    return new Uint8Array(Buffer.from(evaluatedArray, 'base64'));
 }
 
 function getReportItem(test: TestData) {
@@ -781,19 +806,28 @@ async function createServer() {
         cors: true,
         passthrough: true,
     });
+    /** Serves the `font-faces` tests their font files, pinned by package version so they do not drift. */
+    const fontMount = st({
+        path: 'node_modules/@fontsource',
+        url: '/fonts',
+        cors: true,
+        passthrough: true,
+    });
     const server = http.createServer((req, res) => {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
         res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
         distMount(req, res, () => {
-            mount(req, res, () => {
-                if (req.url.includes('/sparse204/1-')) {
-                    res.writeHead(204);
-                    res.end('');
-                } else {
-                    res.writeHead(404);
-                    res.end('');
-                }
+            fontMount(req, res, () => {
+                mount(req, res, () => {
+                    if (req.url.includes('/sparse204/1-')) {
+                        res.writeHead(204);
+                        res.end('');
+                    } else {
+                        res.writeHead(404);
+                        res.end('');
+                    }
+                });
             });
         });
     });
@@ -844,55 +878,66 @@ function printHTMLReport(testStyles: StyleWithTestData[]) {
 }
 
 describe('Render tests', () => {
-    let browser: Browser;
+    let browsers: Browser[] = [];
     let server: http.Server;
     let mvtServer: http.Server;
-    let page: Page;
-    let workers: WebWorker[];
+    let pages: Page[] = [];
+    const freePages: Page[] = [];
+    const workers: WebWorker[][] = [];
+    vi.setConfig({maxConcurrency: TEST_CONCURRENCY});
 
     const directory = path.join(__dirname);
     let testStyles = getTestStyles(directory);
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
-        const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
-        testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
+        const splitCount = +process.env.SPLIT_COUNT;
+        const currentSplitIndex = +process.env.CURRENT_SPLIT_INDEX;
+        testStyles = testStyles.filter((_, index) => index % splitCount === currentSplitIndex);
     }
 
     beforeAll(async () => {
-        browser = await launchPuppeteer(true);
+        const setupStart = Date.now();
+        browsers = await Promise.all(Array.from({length: TEST_CONCURRENCY}, () => launchPuppeteer(true)));
         ({server, mvtServer} = await createServer());
         const serverPort = (server.address() as any).port;
-        page = await browser.newPage();
-        workers = await startCoverage(page);
-        await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
-        await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
-    }, 30000);
+        pages = await Promise.all(browsers.map(async (browser) => {
+            const page = await browser.newPage();
+            workers.push(await startCoverage(page));
+            await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
+            await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
+            return page;
+        }));
+        freePages.push(...pages);
+        console.log(`Render test setup took ${Date.now() - setupStart}ms`);
+    }, HOOK_TIMEOUT);
 
-    afterAll(async () => {
-        await stopCoverageAndReport(page, workers, 'render');
-        printHTMLReport(testStyles);
-        server.close();
-        mvtServer.close();
-        await browser.close();
-    });
-
-    beforeEach((ctx) => {
-        const previousResult = ctx.task.result;
-        const wasFailedOrTimedOut = previousResult?.state === 'fail';
-        if (wasFailedOrTimedOut) {
+    beforeEach((ctx: RenderTestContext) => {
+        ctx.page = freePages.pop();
+        if (ctx.task.result?.retryCount > 0) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
-            addConsoleLogging(page);
+            addConsoleLogging(ctx.page);
         }
     });
 
-    afterEach(async () => {
-        page.removeAllListeners('console');
-        page.removeAllListeners('pageerror');
-        page.removeAllListeners('response');
-        page.removeAllListeners('requestfailed');
+    afterEach(async (ctx: RenderTestContext) => {
+        ctx.page.removeAllListeners('console');
+        ctx.page.removeAllListeners('pageerror');
+        ctx.page.removeAllListeners('response');
+        ctx.page.removeAllListeners('requestfailed');
+        freePages.push(ctx.page);
     });
 
+    afterAll(async () => {
+        if (pages.length > 0) {
+            await stopCoverageAndReport(pages, workers.flat(), 'render');
+        }
+        printHTMLReport(testStyles);
+        server?.close();
+        mvtServer?.close();
+        await Promise.all(browsers.map((browser) => browser.close()));
+    }, HOOK_TIMEOUT);
+
     for (const style of testStyles) {
-        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || 40000}, async () => {
+        test.concurrent(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || DEFAULT_TEST_TIMEOUT}, async ({page}: RenderTestContext) => {
             const serverPort = (server.address() as any).port;
             localizeURLs(style, serverPort, path.join(__dirname, '../'));
             const data = await getImageFromStyle(style, page);

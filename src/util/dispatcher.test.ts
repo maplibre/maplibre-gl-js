@@ -60,7 +60,7 @@ describe('Dispatcher', () => {
     test('remove destroys actors', async () => {
         const actorsRemoved = [];
         const mapId = 1;
-        Actor.prototype.remove = vi.fn().mockImplementation(() => {
+        vi.spyOn(Actor.prototype, 'remove').mockImplementation(() => {
             actorsRemoved.push(this);
         });
         WorkerPool.workerCount = 4;

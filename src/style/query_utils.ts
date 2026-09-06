@@ -1,11 +1,11 @@
 import Point from '@mapbox/point-geometry';
+import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
 
 import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
 import type {LineBucket} from '../data/bucket/line_bucket.ts';
-import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 
 export function getMaximumPaintValue(
@@ -102,7 +102,7 @@ type CircleIntersectionTestParams = {
     size: number;
     transform: IReadonlyTransform;
     unwrappedTileID: UnwrappedTileID;
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
     pitchAlignment?: 'map' | 'viewport';
     pitchScale?: 'map' | 'viewport';
 };
@@ -112,13 +112,13 @@ function intersectionTestMapMap({queryGeometry, size}: CircleIntersectionTestPar
 }
 
 function intersectionTestMapViewport({queryGeometry, size, transform, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
-    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
+    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (w / transform.cameraToCenterDistance);
     return polygonIntersectsBufferedPoint(queryGeometry, point, adjustedSize);
 }
 
 function intersectionTestViewportMap({queryGeometry, size, transform, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
-    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
+    const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (transform.cameraToCenterDistance / w);
     return polygonIntersectsBufferedPoint(queryGeometry, projectPoint(point, transform, unwrappedTileID, getElevation), adjustedSize);
 }
@@ -151,9 +151,9 @@ export function circleIntersection({
     return false;
 }
 
-function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point {
+function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point {
     // Convert `tilePoint` from tile coordinates to clip coordinates.
-    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
+    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation?.(tilePoint.x, tilePoint.y)).point;
     // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
     return new Point(
         (clipPoint.x * 0.5 + 0.5) * transform.width,
@@ -161,7 +161,7 @@ function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrapped
     );
 }
 
-export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point[] {
+export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point[] {
     return queryGeometry.map((p) => {
         return projectPoint(p, transform, unwrappedTileID, getElevation);
     });

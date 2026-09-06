@@ -55,6 +55,26 @@ test('handles "webglcontextrestored" when map is created without style', async (
     map.remove();
 });
 
+test('style methods do not throw after WebGL context loss', async () => {
+    const map = createMap();
+    const canvas = map.getCanvas();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    expect(() => {
+        map.getLayer('missing-layer');
+        map.getSource('missing-source');
+        map.getLayersOrder();
+        map.listImages();
+        map.setFilter('missing-layer', null);
+        map.setPaintProperty('missing-layer', 'background-color', '#000000');
+    }).not.toThrow();
+
+    map.remove();
+});
+
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
@@ -73,7 +93,37 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
-test('WebGL2 context creation error fires ErrorEvent with structured GPUInitializationError', () => {
+test('a WebGL style image is told to release its GPU resources on context loss, and survives it', async () => {
+    const map = createMap();
+    const canvas = map.getCanvas();
+    await map.once('load');
+
+    const userImage = {
+        width: 2, height: 2,
+        data: {renderWithWebGL: vi.fn()},
+        onRemove: vi.fn()
+    };
+    map.addImage('gpu-image', userImage);
+    const versionBeforeContextLoss = map.getImage('gpu-image').version;
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    expect(userImage.onRemove).toHaveBeenCalled();
+
+    const contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    expect(map.hasImage('gpu-image')).toBe(true);
+    expect(map.getImage('gpu-image').userImage).toBe(userImage);
+    expect(map.getImage('gpu-image').version).toBe(versionBeforeContextLoss + 1);
+
+    map.remove();
+});
+
+test('Map constructor throws a structured GPUInitializationError when WebGL2 context creation fails', () => {
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2') {
             const errorEvent = new Event('webglcontextcreationerror');
@@ -82,26 +132,56 @@ test('WebGL2 context creation error fires ErrorEvent with structured GPUInitiali
             return null;
         }
     };
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    createMap({canvasContextAttributes: {antialias: true}});
-    const err = consoleErrorSpy.mock.calls[0][0];
-    expect(err.constructor).toBe(GPUInitializationError);
+    const container = window.document.createElement('div');
+    let err: GPUInitializationError;
+    try {
+        createMap({container, canvasContextAttributes: {antialias: true}});
+    } catch (error) {
+        err = error;
+    }
+    expect(err).toBeInstanceOf(GPUInitializationError);
+    expect(container.children).toHaveLength(0);
+    expect(container.classList).not.toContain('maplibregl-map');
     expect(err.message).toBe('WebGL2 is required to display this map. We are sorry, but it seems that your browser does not support WebGL2, a technology for rendering 3D graphics on the web. Read more on https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL');
     expect(err.statusMessage).toBe('mocked webglcontextcreationerror message');
     expect(err.requestedAttributes.antialias).toBe(true);
-    consoleErrorSpy.mockRestore();
 });
 
 test('GPUInitializationError has null statusMessage when no webglcontextcreationerror is dispatched', () => {
     HTMLCanvasElement.prototype.getContext = function (_type: string) {
         return null;
     };
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    createMap();
-    const err = consoleErrorSpy.mock.calls[0][0];
-    expect(err.constructor).toBe(GPUInitializationError);
+    let err: GPUInitializationError;
+    try {
+        createMap();
+    } catch (error) {
+        err = error;
+    }
+    expect(err).toBeInstanceOf(GPUInitializationError);
     expect(err.statusMessage).toBeNull();
-    consoleErrorSpy.mockRestore();
+});
+
+test('context recreation failure after "webglcontextrestored" fires ErrorEvent with GPUInitializationError', async () => {
+    const map = createMap();
+    const canvas = map.getCanvas();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    HTMLCanvasElement.prototype.getContext = function (_type: string) {
+        return null;
+    };
+    const errorPromise = map.once('error');
+    const restoredSpy = vi.fn();
+    map.on('webglcontextrestored', restoredSpy);
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    const {error} = await errorPromise;
+    expect(error).toBeInstanceOf(GPUInitializationError);
+    expect(restoredSpy).not.toHaveBeenCalled();
+
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    map.remove();
 });
 
 test('Hit WebGL max drawing buffer limit', () => {

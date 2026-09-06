@@ -1,10 +1,12 @@
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util.ts';
 import {EXTENT} from '../data/extent.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff.ts';
 import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
+import {isAbortError} from '../util/abort_error.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
 
@@ -68,6 +70,24 @@ export type SetClusterOptions = {
 };
 
 /**
+ * The cluster options currently configured on a source, as returned by `getClusterOptions`
+ */
+export type GetClusterOptions = {
+    /**
+     * Whether or not the source is clustered
+     */
+    cluster: boolean;
+    /**
+     * The cluster's max zoom
+     */
+    clusterMaxZoom: number;
+    /**
+     * The cluster's radius, in pixels
+     */
+    clusterRadius: number;
+};
+
+/**
  * A source containing GeoJSON.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
@@ -121,7 +141,7 @@ export type SetClusterOptions = {
  * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/)
  * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
  */
-export class GeoJSONSource extends Evented implements Source {
+export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     type: 'geojson';
     id: string;
     minzoom: number;
@@ -142,6 +162,7 @@ export class GeoJSONSource extends Evented implements Source {
     map: Map;
     actorPromise: Promise<Actor>;
     _isUpdatingWorker: boolean;
+    _updatePromise: Promise<void>;
     _pendingWorkerUpdate: {
         data?: GeoJSON.GeoJSON | string;
         diff?: GeoJSONSourceDiff;
@@ -221,6 +242,10 @@ export class GeoJSONSource extends Evented implements Source {
 
     private _pixelsToTileUnits(pixelValue: number): number {
         return pixelValue * (EXTENT / this.tileSize);
+    }
+
+    private _tileUnitsToPixels(tileUnitValue: number): number {
+        return tileUnitValue / (EXTENT / this.tileSize);
     }
 
     private _getClusterMaxZoom(clusterMaxZoom: number): number {
@@ -319,6 +344,25 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
+     * Gets the cluster options currently configured on the source.
+     * The returned values mirror the options accepted by `setClusterOptions`.
+     *
+     * @returns the source's current cluster options
+     * @example
+     * ```ts
+     * const {cluster, clusterMaxZoom, clusterRadius} = map.getSource('some id').getClusterOptions();
+     * ```
+     */
+    getClusterOptions(): GetClusterOptions {
+        const {cluster, clusterOptions} = this.workerOptions.geojsonVtOptions;
+        return {
+            cluster,
+            clusterMaxZoom: clusterOptions.maxZoom,
+            clusterRadius: this._tileUnitsToPixels(clusterOptions.radius)
+        };
+    }
+
+    /**
      * For clustered sources, fetches the zoom at which the given cluster expands.
      *
      * @param clusterId - The value of the cluster's `cluster_id` property.
@@ -379,7 +423,7 @@ export class GeoJSONSource extends Evented implements Source {
      * using geojson-vt or supercluster as appropriate.
      */
     async _updateWorkerData(): Promise<void> {
-        if (this._isUpdatingWorker) return;
+        if (this._isUpdatingWorker) return this._updatePromise;
 
         if (!this._hasPendingWorkerUpdate()) {
             warnOnce(`No pending worker updates for GeoJSONSource ${this.id}.`);
@@ -398,14 +442,15 @@ export class GeoJSONSource extends Evented implements Source {
             this._pendingWorkerUpdate.updateCluster = undefined;
         }
 
-        await this._dispatchWorkerUpdate(params);
+        this._updatePromise = this._dispatchWorkerUpdate(params);
+        await this._updatePromise;
     }
 
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
     private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
-        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {
@@ -438,7 +483,7 @@ export class GeoJSONSource extends Evented implements Source {
      */
     private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
         this._isUpdatingWorker = true;
-        this.fire(new Event('dataloading', {dataType: 'source'}));
+        this.fire(new MapSourceDataEvent('dataloading'));
 
         try {
             const options = await optionsPromise;
@@ -446,7 +491,7 @@ export class GeoJSONSource extends Evented implements Source {
             this._isUpdatingWorker = false;
 
             if (this._removed || result.abandoned) {
-                this.fire(new Event('dataabort', {dataType: 'source'}));
+                this.fire(new MapSourceDataEvent('dataabort'));
                 return;
             }
 
@@ -458,17 +503,17 @@ export class GeoJSONSource extends Evented implements Source {
             const affectedGeometries = this._applyDiffToSource(options.dataDiff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
-            const eventData = {dataType: 'source'};
+            const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};
             this._applyResourceTiming(eventData, result);
 
             // Fire the metadata event to let the TileManager know it's ok to start requesting tiles.
-            this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
+            this.fire(new MapSourceDataEvent('data', {...eventData, sourceDataType: 'metadata'}));
+            this.fire(new MapSourceDataEvent('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
             this._isUpdatingWorker = false;
 
             if (this._removed) {
-                this.fire(new Event('dataabort', {dataType: 'source'}));
+                this.fire(new MapSourceDataEvent('dataabort'));
                 return;
             }
 
@@ -484,7 +529,7 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Apply resource timing data to the event object.
      */
-    private _applyResourceTiming(eventData: {dataType: string}, result: GeoJSONWorkerSourceLoadDataResult) {
+    private _applyResourceTiming(eventData: {resourceTiming?: PerformanceResourceTiming[]}, result: GeoJSONWorkerSourceLoadDataResult) {
         if (!this._collectResourceTiming) return;
 
         const timingData = result.resourceTiming?.[this.id];
@@ -591,12 +636,20 @@ export class GeoJSONSource extends Evented implements Source {
         };
 
         tile.abortController = new AbortController();
-        const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
-        delete tile.abortController;
-        tile.unloadVectorData();
+        try {
+            const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
+            delete tile.abortController;
+            tile.unloadVectorData();
 
-        if (!tile.aborted) {
-            tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
+            if (!tile.aborted) {
+                tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
+            }
+        } catch (err) {
+            delete tile.abortController;
+            if (tile.aborted || isAbortError(err)) {
+                return;
+            }
+            throw err;
         }
     }
 

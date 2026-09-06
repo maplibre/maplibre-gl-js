@@ -19,6 +19,7 @@ import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -151,11 +152,12 @@ export class LineBucket implements Bucket {
         const sortFeaturesByKey = !lineSortKey.isConstant();
         const bucketFeatures: BucketFeature[] = [];
 
+        const globalProperties = new EvaluationParameters(this.zoom);
+        const needGeometry = this.layers[0]._featureFilter.needGeometry;
         for (const {feature, id, index, sourceLayerIndex} of features) {
-            const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
                 lineSortKey.evaluate(evaluationFeature, {}, canonical) :
@@ -212,7 +214,7 @@ export class LineBucket implements Bucket {
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}): void {
+    addFeatures({options, canonical, imagePositions, dashPositions}: BucketDependencyParameters): void {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, dashPositions, options.subdivisionGranularity);
         }

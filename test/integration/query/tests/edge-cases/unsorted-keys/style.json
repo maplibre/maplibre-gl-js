@@ -16,7 +16,7 @@
   ],
   "zoom": 14,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -30,7 +30,7 @@
     {
       "id": "place-town",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "place_label",
       "layout": {
         "icon-image": "interstate_3",

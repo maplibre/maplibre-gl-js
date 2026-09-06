@@ -1,0 +1,104 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests rendering of a non-parallelogram image source on globe projection.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    -30,
+    15
+  ],
+  "zoom": 1.6,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          -120,
+          60
+        ],
+        [
+          60,
+          50
+        ],
+        [
+          75,
+          -35
+        ],
+        [
+          -135,
+          -20
+        ]
+      ],
+      "url": "local://image/projective-grid.png"
+    },
+    "projective-outline": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -120,
+              60
+            ],
+            [
+              60,
+              50
+            ],
+            [
+              75,
+              -35
+            ],
+            [
+              -135,
+              -20
+            ],
+            [
+              -120,
+              60
+            ]
+          ]
+        },
+        "properties": {}
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "projective-outline",
+      "type": "line",
+      "source": "projective-outline",
+      "paint": {
+        "line-color": "#111827",
+        "line-width": 2,
+        "line-opacity": 0.75
+      }
+    }
+  ]
+}

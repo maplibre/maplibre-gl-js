@@ -26,7 +26,7 @@ describe('production bundle', () => {
         for (const name in packageJson.scripts) {
             const cmd = packageJson.scripts[name];
             if (cmd.length < 10) continue; // skip trivially-short commands
-            expect(mainBundle.includes(cmd)).toBeFalsy();
+            expect(mainBundle).not.toContain(cmd);
         }
     });
 

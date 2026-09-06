@@ -1,6 +1,4 @@
-import {mat4} from 'gl-matrix';
-
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding.ts';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f} from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {extend, translatePosition} from '../../util/util.ts';
 
@@ -15,38 +13,27 @@ import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 export type LineUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
-    'u_opacity_override': Uniform1i;
 };
 
 export type LineGradientUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_image': Uniform1i;
     'u_image_height': Uniform1f;
-    'u_opacity_override': Uniform1i;
 };
 
 export type LinePatternUniformsType = {
     'u_translation': Uniform2f;
     'u_texsize': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_image': Uniform1i;
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
-    'u_opacity_override': Uniform1i;
 };
 
 export type LineSDFUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_tileratio': Uniform1f;
     'u_crossfade_from': Uniform1f;
     'u_crossfade_to': Uniform1f;
@@ -54,21 +41,11 @@ export type LineSDFUniformsType = {
     'u_mix': Uniform1f;
     'u_lineatlas_width': Uniform1f;
     'u_lineatlas_height': Uniform1f;
-    'u_opacity_override': Uniform1i;
-};
-
-export type LineTextureUniformsType = {
-    'u_matrix': UniformMatrix4f;
-    'u_world': Uniform2f;
-    'u_image': Uniform1i;
-    'u_opacity': Uniform1f;
 };
 
 export type LineGradientSDFUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
-    'u_device_pixel_ratio': Uniform1f;
-    'u_units_to_pixels': Uniform2f;
     'u_image': Uniform1i;
     'u_image_height': Uniform1f;
     'u_tileratio': Uniform1f;
@@ -78,66 +55,44 @@ export type LineGradientSDFUniformsType = {
     'u_mix': Uniform1f;
     'u_lineatlas_width': Uniform1f;
     'u_lineatlas_height': Uniform1f;
-    'u_opacity_override': Uniform1i;
 };
 
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_opacity_override': new Uniform1i(context, locations.u_opacity_override)
 });
 
 const lineGradientUniforms = (context: Context, locations: UniformLocations): LineGradientUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_image': new Uniform1i(context, locations.u_image),
-    'u_image_height': new Uniform1f(context, locations.u_image_height),
-    'u_opacity_override': new Uniform1i(context, locations.u_opacity_override)
+    'u_image_height': new Uniform1f(context, locations.u_image_height)
 });
 
 const linePatternUniforms = (context: Context, locations: UniformLocations): LinePatternUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_image': new Uniform1i(context, locations.u_image),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_scale': new Uniform3f(context, locations.u_scale),
-    'u_fade': new Uniform1f(context, locations.u_fade),
-    'u_opacity_override': new Uniform1i(context, locations.u_opacity_override)
+    'u_fade': new Uniform1f(context, locations.u_fade)
 });
 
 const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDFUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
     'u_crossfade_from': new Uniform1f(context, locations.u_crossfade_from),
     'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
     'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
-    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height),
-    'u_opacity_override': new Uniform1i(context, locations.u_opacity_override)
-});
-
-const lineTextureUniforms = (context: Context, locations: UniformLocations): LineTextureUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_world': new Uniform2f(context, locations.u_world),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_opacity': new Uniform1f(context, locations.u_opacity)
+    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
 });
 
 const lineGradientSDFUniforms = (context: Context, locations: UniformLocations): LineGradientSDFUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_image_height': new Uniform1f(context, locations.u_image_height),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
@@ -146,8 +101,7 @@ const lineGradientSDFUniforms = (context: Context, locations: UniformLocations):
     'u_image_dash': new Uniform1i(context, locations.u_image_dash),
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
-    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height),
-    'u_opacity_override': new Uniform1i(context, locations.u_opacity_override)
+    'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
 });
 
 const lineUniformValues = (
@@ -155,19 +109,12 @@ const lineUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     ratioScale: number,
-    opacityOverride: boolean = false,
 ): UniformValues<LineUniformsType> => {
     const transform = painter.transform;
 
     return {
         'u_translation': calculateTranslation(painter, tile, layer),
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),
-        'u_device_pixel_ratio': painter.pixelRatio,
-        'u_units_to_pixels': [
-            1 / transform.pixelsToGLUnits[0],
-            1 / transform.pixelsToGLUnits[1]
-        ],
-        'u_opacity_override': +opacityOverride
     };
 };
 
@@ -177,9 +124,8 @@ const lineGradientUniformValues = (
     layer: LineStyleLayer,
     ratioScale: number,
     imageHeight: number,
-    opacityOverride: boolean = false,
 ): UniformValues<LineGradientUniformsType> => {
-    return extend(lineUniformValues(painter, tile, layer, ratioScale, opacityOverride), {
+    return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_image': 0,
         'u_image_height': imageHeight,
     });
@@ -191,7 +137,6 @@ const linePatternUniformValues = (
     layer: LineStyleLayer,
     ratioScale: number,
     crossfade: CrossfadeParameters,
-    opacityOverride: boolean = false,
 ): UniformValues<LinePatternUniformsType> => {
     const transform = painter.transform;
     const tileZoomRatio = calculateTileRatio(tile, transform);
@@ -200,15 +145,9 @@ const linePatternUniformValues = (
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),
-        'u_device_pixel_ratio': painter.pixelRatio,
         'u_image': 0,
         'u_scale': [tileZoomRatio, crossfade.fromScale, crossfade.toScale],
         'u_fade': crossfade.t,
-        'u_units_to_pixels': [
-            1 / transform.pixelsToGLUnits[0],
-            1 / transform.pixelsToGLUnits[1]
-        ],
-        'u_opacity_override': +opacityOverride
     };
 };
 
@@ -218,12 +157,11 @@ const lineSDFUniformValues = (
     layer: LineStyleLayer,
     ratioScale: number,
     crossfade: CrossfadeParameters,
-    opacityOverride: boolean = false,
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
     const tileRatio = calculateTileRatio(tile, transform);
 
-    return extend(lineUniformValues(painter, tile, layer, ratioScale, opacityOverride), {
+    return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_tileratio': tileRatio,
         'u_crossfade_from': crossfade.fromScale,
         'u_crossfade_to': crossfade.toScale,
@@ -241,12 +179,11 @@ const lineGradientSDFUniformValues = (
     ratioScale: number,
     crossfade: CrossfadeParameters,
     imageHeight: number,
-    opacityOverride: boolean = false,
 ): UniformValues<LineGradientSDFUniformsType> => {
     const transform = painter.transform;
     const tileRatio = calculateTileRatio(tile, transform);
 
-    return extend(lineUniformValues(painter, tile, layer, ratioScale, opacityOverride), {
+    return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_image': 0,
         'u_image_height': imageHeight,
         'u_tileratio': tileRatio,
@@ -257,24 +194,6 @@ const lineGradientSDFUniformValues = (
         'u_lineatlas_width': painter.lineAtlas.width,
         'u_lineatlas_height': painter.lineAtlas.height,
     });
-};
-
-const lineTextureUniformValues = (
-    painter: Painter,
-    layer: LineStyleLayer,
-    textureUnit: number
-): UniformValues<LineTextureUniformsType> => {
-    const matrix = mat4.create();
-    mat4.ortho(matrix, 0, painter.width, painter.height, 0, 0, 1);
-
-    const gl = painter.context.gl;
-
-    return {
-        'u_matrix': matrix,
-        'u_world': [gl.drawingBufferWidth, gl.drawingBufferHeight],
-        'u_image': textureUnit,
-        'u_opacity': layer.paint.get('line-opacity').constantOr(1)
-    };
 };
 
 function calculateTileRatio(tile: Tile, transform: IReadonlyTransform) {
@@ -297,11 +216,9 @@ export {
     linePatternUniforms,
     lineSDFUniforms,
     lineGradientSDFUniforms,
-    lineTextureUniforms,
     lineUniformValues,
     lineGradientUniformValues,
     linePatternUniformValues,
     lineSDFUniformValues,
-    lineGradientSDFUniformValues,
-    lineTextureUniformValues
+    lineGradientSDFUniformValues
 };

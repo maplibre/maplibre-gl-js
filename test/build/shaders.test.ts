@@ -8,10 +8,10 @@ describe('Shaders', () => {
         const shaderFiles = globSync('../../src/shaders/glsl/*.glsl');
         for (const shaderFile of shaderFiles) {
             const shaderSource = fs.readFileSync(shaderFile, 'utf8');
-            expect(shaderSource.includes('attribute')).toBe(false);
-            expect(shaderSource.includes('varying')).toBe(false);
-            expect(shaderSource.includes('gl_FragColor')).toBe(false);
-            expect(shaderSource.includes('texture2D')).toBe(false);
+            expect(shaderSource).not.toContain('attribute');
+            expect(shaderSource).not.toContain('varying');
+            expect(shaderSource).not.toContain('gl_FragColor');
+            expect(shaderSource).not.toContain('texture2D');
         }
     });
 });

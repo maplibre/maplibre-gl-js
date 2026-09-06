@@ -1,0 +1,47 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Regression test for https://github.com/maplibre/maplibre-gl-js/issues/7704 (line-pattern variant). A line with a top-level zoom `step` whose branches each contain a feature-dependent `case`. The feature reference makes the expression composite (data-driven), routing through `CrossFadedPatternBinder` rather than the constant uniform path. At zoom 10.5 (past the step), the line should render with `generic_metro`. Before the fix, the data-driven path swapped the cross-fade `from` and `to` attributes relative to the constant path, so the pre-step `generic_icon` was rendered instead.",
+      "width": 64,
+      "height": 64
+    }
+  },
+  "zoom": 10.5,
+  "sprite": "local://sprites/emerald",
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"foo": 0},
+            "geometry": {
+              "coordinates": [[-1, 0], [1, 0]],
+              "type": "LineString"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-width": 16,
+        "line-pattern": [
+          "step",
+          ["zoom"],
+          ["case", ["==", ["get", "foo"], 0], "generic_icon", "generic_icon"],
+          10,
+          ["case", ["==", ["get", "foo"], 0], "generic_metro", "generic_metro"]
+        ]
+      }
+    }
+  ]
+}

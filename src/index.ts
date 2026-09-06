@@ -1,30 +1,30 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map.ts';
+import {Map, type MapOptions, type MissingStyleImageResolver, type StyleImageSource, type WebGLContextAttributesWithType} from './ui/map.ts';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control.ts';
-import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
+import {GeolocateControl, GeolocateEvent, GeolocatePositionEvent, GeolocateErrorEvent, type GeolocateControlEventType, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control.ts';
 import {LogoControl, type LogoControlOptions} from './ui/control/logo_control.ts';
 import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control.ts';
-import {FullscreenControl, type FullscreenControlOptions} from './ui/control/fullscreen_control.ts';
+import {FullscreenControl, FullscreenEvent, type FullscreenControlEventType, type FullscreenControlOptions} from './ui/control/fullscreen_control.ts';
 import {TerrainControl} from './ui/control/terrain_control.ts';
 import {GlobeControl} from './ui/control/globe_control.ts';
-import {type Offset, Popup, type PopupOptions} from './ui/popup.ts';
-import {type Alignment, Marker, type MarkerOptions} from './ui/marker.ts';
+import {type Offset, Popup, PopupEvent, type PopupEventType, type PopupOptions} from './ui/popup.ts';
+import {type Alignment, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
 import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style.ts';
 import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
-import {Evented, type ErrorEvent, Event, type Listener} from './util/evented.ts';
+import {Evented, ErrorEvent, Event, type ErrorEventType, type EventedParentData, type EventTypeMap, type Listener} from './util/evented.ts';
 import {type AddProtocolAction, config} from './util/config.ts';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
 import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
-import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source.ts';
+import {GeoJSONSource, type GetClusterOptions, type SetClusterOptions} from './source/geojson_source.ts';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
-import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
+import {type CanonicalTileRange, type Coordinates, type ImageSourceImage, ImageSource, type ImageSourceWarp, type UpdateImageOptions} from './source/image_source.ts';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source.ts';
 import {RasterTileSource} from './source/raster_tile_source.ts';
 import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source.ts';
@@ -33,7 +33,7 @@ import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
-import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events.ts';
+import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
@@ -54,10 +54,10 @@ import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, 
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
-import type {Complete, RequireAtLeastOne, Subscription} from './util/util.ts';
+import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
 import type {TransformConstrainFunction} from './geo/transform_interface.ts';
-import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image.ts';
+import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff.ts';
@@ -65,7 +65,7 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './so
 import type {RequestTransformFunction, ResourceType} from './util/request_manager.ts';
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
-import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
@@ -208,15 +208,22 @@ export {
     Map as MapLibreMap,
     NavigationControl,
     GeolocateControl,
+    GeolocateEvent,
+    GeolocatePositionEvent,
+    GeolocateErrorEvent,
     AttributionControl,
     LogoControl,
     ScaleControl,
     FullscreenControl,
+    FullscreenEvent,
     TerrainControl,
     GlobeControl,
     Hash,
     Popup,
+    PopupEvent,
     Marker,
+    MarkerDragEvent,
+    MarkerClickEvent,
     Style,
     LngLat,
     LngLatBounds,
@@ -250,6 +257,17 @@ export {
     MapWheelEvent,
     MapTouchEvent,
     MapMouseEvent,
+    MapProjectionEvent,
+    MapTerrainEvent,
+    MapStyleImageMissingEvent,
+    MapStyleDataEvent,
+    MapStyleLoadEvent,
+    MapSourceDataEvent,
+    MapBoxZoomEvent,
+    MapLibreEvent,
+    MapMovementEvent,
+    MapContextEvent,
+    ErrorEvent,
     type Handler,
     type RequireAtLeastOne,
     type CameraUpdateTransformFunction,
@@ -279,15 +297,23 @@ export {
     type CanonicalTileRange,
     type Tile,
     type Listener,
+    type EventTypeMap,
+    type ErrorEventType,
+    type EventedParentData,
     type Coordinates,
+    type ImageSourceWarp,
+    type ImageSourceImage,
     type UpdateImageOptions,
     type DragPanOptions,
     type FullscreenControlOptions,
+    type GetClusterOptions,
     type SetClusterOptions,
     type GeoJSONSourceDiff,
     type GeolocateControlOptions,
     type LogoControlOptions,
     type StyleImageInterface,
+    type StyleImageWebGLData,
+    type StyleImageWebGLTarget,
     type AddLayerObject,
     type StyleSetterOptions,
     type CameraForBoundsOptions,
@@ -318,6 +344,11 @@ export {
     type PositionAnchor,
     type ProjectionData,
     type ProjectionDataParams,
+    type CustomLayerProjectionData,
+    type Mat4f32,
+    type Mat4f64,
+    type ProjectionMatrix,
+    type RendererProjectionData,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,
@@ -342,6 +373,8 @@ export {
     type MessageType,
     type StyleGlyph,
     type MapOptions,
+    type MissingStyleImageResolver,
+    type StyleImageSource,
     type GestureOptions,
     type WebGLContextAttributesWithType,
     type IControl,
@@ -354,20 +387,15 @@ export {
     type PointLike,
     type LngLatBoundsLike,
     type Source,
-    type MapProjectionEvent,
-    type MapTerrainEvent,
-    type MapStyleImageMissingEvent,
-    type MapStyleDataEvent,
-    type MapSourceDataEvent,
-    type MapLibreZoomEvent,
-    type MapLibreEvent,
     type MapLayerTouchEvent,
     type MapLayerMouseEvent,
     type MapLayerEventType,
     type MapEventType,
-    type MapDataEvent,
-    type MapContextEvent,
-    type ErrorEvent,
+    type SourceEventType,
+    type GeolocateControlEventType,
+    type FullscreenControlEventType,
+    type PopupEventType,
+    type MarkerEventType,
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,

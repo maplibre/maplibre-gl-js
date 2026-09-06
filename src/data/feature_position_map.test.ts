@@ -29,6 +29,6 @@ describe('FeaturePositionMap', () => {
 
         expect(() => {
             featureMap.getPositions(0);
-        }).toThrow();
+        }).toThrow('Trying to get index, but feature positions are not indexed');
     });
 });

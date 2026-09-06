@@ -191,7 +191,7 @@ describe('dbclick_zoom', () => {
         expect(zoom).not.toHaveBeenCalled();
     });
 
-    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap on a non-interactive map', () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
         const spy = vi.spyOn(map, 'easeTo');
 
@@ -203,7 +203,7 @@ describe('dbclick_zoom', () => {
         map.remove();
     });
 
-    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap on a non-interactive map', async () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
         const spy = vi.spyOn(map, 'easeTo');
 

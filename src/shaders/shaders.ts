@@ -49,8 +49,8 @@ import lineSDFFrag from './glsl/line_sdf.fragment.glsl.g.ts';
 import lineSDFVert from './glsl/line_sdf.vertex.glsl.g.ts';
 import lineGradientSDFFrag from './glsl/line_gradient_sdf.fragment.glsl.g.ts';
 import lineGradientSDFVert from './glsl/line_gradient_sdf.vertex.glsl.g.ts';
-import lineTextureFrag from './glsl/line_texture.fragment.glsl.g.ts';
-import lineTextureVert from './glsl/line_texture.vertex.glsl.g.ts';
+import layerOpacityFrag from './glsl/layer_opacity.fragment.glsl.g.ts';
+import layerOpacityVert from './glsl/layer_opacity.vertex.glsl.g.ts';
 import rasterFrag from './glsl/raster.fragment.glsl.g.ts';
 import rasterVert from './glsl/raster.vertex.glsl.g.ts';
 import symbolIconFrag from './glsl/symbol_icon.fragment.glsl.g.ts';
@@ -60,15 +60,13 @@ import symbolSDFVert from './glsl/symbol_sdf.vertex.glsl.g.ts';
 import symbolTextAndIconFrag from './glsl/symbol_text_and_icon.fragment.glsl.g.ts';
 import symbolTextAndIconVert from './glsl/symbol_text_and_icon.vertex.glsl.g.ts';
 import terrainDepthFrag from './glsl/terrain_depth.fragment.glsl.g.ts';
-import terrainCoordsFrag from './glsl/terrain_coords.fragment.glsl.g.ts';
 import terrainFrag from './glsl/terrain.fragment.glsl.g.ts';
 import terrainVert from './glsl/terrain.vertex.glsl.g.ts';
 import terrainVertDepth from './glsl/terrain_depth.vertex.glsl.g.ts';
-import terrainVertCoords from './glsl/terrain_coords.vertex.glsl.g.ts';
-import projectionErrorMeasurementVert from './glsl/projection_error_measurement.vertex.glsl.g.ts';
-import projectionErrorMeasurementFrag from './glsl/projection_error_measurement.fragment.glsl.g.ts';
 import projectionMercatorVert from './glsl/_projection_mercator.vertex.glsl.g.ts';
+import projectionMercatorFrag from './glsl/_projection_mercator.fragment.glsl.g.ts';
 import projectionGlobeVert from './glsl/_projection_globe.vertex.glsl.g.ts';
+import projectionGlobeFrag from './glsl/_projection_globe.fragment.glsl.g.ts';
 import atmosphereFrag from './glsl/atmosphere.fragment.glsl.g.ts';
 import atmosphereVert from './glsl/atmosphere.vertex.glsl.g.ts';
 import skyFrag from './glsl/sky.fragment.glsl.g.ts';
@@ -109,21 +107,19 @@ export const shaders: {
     linePattern: PreparedShader;
     lineSDF: PreparedShader;
     lineGradientSDF: PreparedShader;
-    lineTexture: PreparedShader;
+    layerOpacity: PreparedShader;
     raster: PreparedShader;
     symbolIcon: PreparedShader;
     symbolSDF: PreparedShader;
     symbolTextAndIcon: PreparedShader;
     terrain: PreparedShader;
     terrainDepth: PreparedShader;
-    terrainCoords: PreparedShader;
-    projectionErrorMeasurement: PreparedShader;
     atmosphere: PreparedShader;
     sky: PreparedShader;
 } = {
     prelude: prepare(preludeFrag, preludeVert),
-    projectionMercator: prepare('', projectionMercatorVert),
-    projectionGlobe: prepare('', projectionGlobeVert),
+    projectionMercator: prepare(projectionMercatorFrag, projectionMercatorVert),
+    projectionGlobe: prepare(projectionGlobeFrag, projectionGlobeVert),
     background: prepare(backgroundFrag, backgroundVert),
     backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
     circle: prepare(circleFrag, circleVert),
@@ -148,22 +144,20 @@ export const shaders: {
     linePattern: prepare(linePatternFrag, linePatternVert),
     lineSDF: prepare(lineSDFFrag, lineSDFVert),
     lineGradientSDF: prepare(lineGradientSDFFrag, lineGradientSDFVert),
-    lineTexture: prepare(lineTextureFrag, lineTextureVert),
+    layerOpacity: prepare(layerOpacityFrag, layerOpacityVert),
     raster: prepare(rasterFrag, rasterVert),
     symbolIcon: prepare(symbolIconFrag, symbolIconVert),
     symbolSDF: prepare(symbolSDFFrag, symbolSDFVert),
     symbolTextAndIcon: prepare(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: prepare(terrainFrag, terrainVert),
     terrainDepth: prepare(terrainDepthFrag, terrainVertDepth),
-    terrainCoords: prepare(terrainCoordsFrag, terrainVertCoords),
-    projectionErrorMeasurement: prepare(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
     atmosphere: prepare(atmosphereFrag, atmosphereVert),
     sky: prepare(skyFrag, skyVert),
 };
 
 /** Expand #pragmas to #ifdefs, extract attributes and uniforms */
 function prepare(fragmentSource: string, vertexSource: string): PreparedShader {
-    const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
+    const re = /#pragma maplibre: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
     const vertexAttributes = vertexSource.match(/in ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);

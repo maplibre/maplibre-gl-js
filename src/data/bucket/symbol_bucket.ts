@@ -23,6 +23,8 @@ import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray, LineIndexArray} from '../array_types.g.ts';
 import {transformText} from '../../symbol/transform_text.ts';
 import {mergeLines} from '../../symbol/merge_lines.ts';
+import {isCluster} from '../../util/graphemes.ts';
+import {TaggedString} from '../../symbol/tagged_string.ts';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
 import {WritingMode} from '../../symbol/shaping.ts';
 import {loadGeometry} from '../load_geometry.ts';
@@ -41,6 +43,7 @@ import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -119,7 +122,8 @@ function addVertex(
     pixelOffsetX: number,
     pixelOffsetY: number,
     minFontScaleX: number,
-    minFontScaleY: number
+    minFontScaleY: number,
+    elevation: number
 ) {
     const aSizeX = sizeVertex ? Math.min(MAX_PACKED_SIZE, Math.round(sizeVertex[0])) : 0;
     const aSizeY = sizeVertex ? Math.min(MAX_PACKED_SIZE, Math.round(sizeVertex[1])) : 0;
@@ -138,7 +142,8 @@ function addVertex(
         pixelOffsetX * 16,
         pixelOffsetY * 16,
         minFontScaleX * 256,
-        minFontScaleY * 256
+        minFontScaleY * 256,
+        elevation
     );
 }
 
@@ -411,20 +416,44 @@ export class SymbolBucket implements Bucket {
         this.textAnchorOffsets = new TextAnchorOffsetArray();
     }
 
+    /**
+     * Collects the glyphs a label needs into `stacks`, so that the tile can ask for them.
+     *
+     * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
+     * shape it is written as. Its codepoints are asked for as well: not every cluster can be drawn
+     * -- it takes a font file the style pinned with `font-faces` -- and where one cannot, layout
+     * falls back to drawing it a codepoint at a time, exactly as it did before. See `shapeLines`.
+     *
+     * A cluster can span two sections, a letter in one and the accent written on it in the next, so
+     * the label is taken as a whole and each cluster attributed to the section its first character
+     * came from -- the same way layout attributes it. Collecting each section's text on its own
+     * would ask for glyphs no cluster is ever looked up by.
+     */
     private calculateGlyphDependencies(
-        text: string,
-        stack: {[_: number]: boolean},
+        text: Formatted,
+        stacks: Record<string, Record<string, boolean>>,
+        fontStack: string,
         textAlongLine: boolean,
-        allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean): void {
 
-        for (const char of text) {
-            stack[char.codePointAt(0)] = true;
-            if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
+        const needsVerticalForms = (textAlongLine || this.allowVerticalPlacement) && doesAllowVerticalWritingMode;
+        const tagged = TaggedString.fromFeature(text, fontStack);
+        const graphemes = tagged.graphemes();
+
+        for (let i = 0; i < graphemes.length; i++) {
+            const section = tagged.getSection(i);
+            if ('imageName' in section) continue;
+
+            const stack = stacks[section.fontStack] ||= {};
+            const grapheme = graphemes[i];
+            if (isCluster(grapheme)) stack[grapheme] = true;
+
+            for (const char of grapheme) {
+                stack[char] = true;
+                if (!needsVerticalForms) continue;
+
                 const verticalChar = verticalizedCharacterMap[char];
-                if (verticalChar) {
-                    stack[verticalChar.codePointAt(0)] = true;
-                }
+                if (verticalChar) stack[verticalChar] = true;
             }
         }
     }
@@ -529,16 +558,11 @@ export class SymbolBucket implements Bucket {
                 const fontStack = textFont.evaluate(evaluationFeature, {}, canonical).join(',');
                 const textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point';
                 this.allowVerticalPlacement = this.writingModes?.includes(WritingMode.vertical);
+                const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
+                this.calculateGlyphDependencies(text, stacks, fontStack, textAlongLine, doesAllowVerticalWritingMode);
+
                 for (const section of text.sections) {
-                    if (!section.image) {
-                        const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
-                        const sectionFont = section.fontStack || fontStack;
-                        stacks[sectionFont] ||= {};
-                        this.calculateGlyphDependencies(section.text, stacks[sectionFont], textAlongLine, this.allowVerticalPlacement, doesAllowVerticalWritingMode);
-                    } else {
-                        // Add section image to the list of dependencies.
-                        icons[section.image.name] = true;
-                    }
+                    if (section.image) icons[section.image.name] = true;
                 }
             }
         }
@@ -566,6 +590,8 @@ export class SymbolBucket implements Bucket {
             imagePositions
         });
     }
+
+    addFeatures(_parameters: BucketDependencyParameters): void {}
 
     isEmpty(): boolean {
         // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
@@ -642,7 +668,8 @@ export class SymbolBucket implements Bucket {
         lineStartIndex: number,
         lineLength: number,
         associatedIconIndex: number,
-        canonical: CanonicalTileID): void {
+        canonical: CanonicalTileID,
+        elevation: number): void {
         const indexArray = arrays.indexArray;
         const layoutVertexArray = arrays.layoutVertexArray;
 
@@ -659,10 +686,10 @@ export class SymbolBucket implements Bucket {
             const index = segment.vertexLength;
 
             const y = glyphOffset[1];
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tl.x, y + tl.y, tex.x, tex.y, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY);
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tr.x, y + tr.y, tex.x + tex.w, tex.y, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY);
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, bl.x, y + bl.y, tex.x, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY);
-            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, br.x, y + br.y, tex.x + tex.w, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tl.x, y + tl.y, tex.x, tex.y, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY, elevation);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, tr.x, y + tr.y, tex.x + tex.w, tex.y, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetTL.y, minFontScaleX, minFontScaleY, elevation);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, bl.x, y + bl.y, tex.x, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetTL.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY, elevation);
+            addVertex(layoutVertexArray, labelAnchor.x, labelAnchor.y, br.x, y + br.y, tex.x + tex.w, tex.y + tex.h, sizeVertex, isSDF, pixelOffsetBR.x, pixelOffsetBR.y, minFontScaleX, minFontScaleY, elevation);
 
             addDynamicAttributes(arrays.dynamicLayoutVertexArray, labelAnchor, angle);
 
@@ -696,7 +723,8 @@ export class SymbolBucket implements Bucket {
             false as unknown as number,
             // The crossTileID is only filled/used on the foreground for dynamic text anchors
             0,
-            associatedIconIndex
+            associatedIconIndex,
+            elevation
         );
     }
 

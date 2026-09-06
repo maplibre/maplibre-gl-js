@@ -6,7 +6,7 @@ import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import {selectDebugSource} from './draw_debug.ts';
 
-vi.mock('../../style/style');
+vi.mock(import('../../style/style'));
 
 const zoom = 14;
 

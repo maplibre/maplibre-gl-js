@@ -178,7 +178,7 @@ describe('drag_pan', () => {
 
     test('DragPanHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
-        const requestFrame = vi.spyOn(map.handlers, '_requestFrame');
+        const requestFrame = vi.spyOn(map._handlers, '_requestFrame');
 
         simulate.mousedown(map.getCanvas());
         simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});

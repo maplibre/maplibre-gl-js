@@ -8,6 +8,7 @@ import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
+import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
@@ -101,10 +102,11 @@ describe('GeoJSONSource.setData', () => {
         const source = createSource();
         const loadPromise = source.once('data');
         source.load();
-        await loadPromise;
+        await expect(loadPromise).resolves.toBeDefined();
+
         const setDataPromise = source.once('data');
         source.setData({} as GeoJSON.GeoJSON);
-        await setDataPromise;
+        await expect(setDataPromise).resolves.toBeDefined();
     });
 
     test('fires "dataloading" event', async () => {
@@ -186,6 +188,25 @@ describe('GeoJSONSource.setData', () => {
         expect(source.loaded()).toBeTruthy();
     });
 
+    test('resolves the returned promise only after the queued update completes', async () => {
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', {data: {}} as any, wrapDispatcher({
+            sendAsync(message) {
+                return new Promise((resolve) => {
+                    setTimeout(() => { spy(message); resolve({}); }, 0);
+                });
+            }
+        }), undefined);
+
+        const firstPromise = source.setData({} as GeoJSON.GeoJSON);
+        const secondPromise = source.setData({} as GeoJSON.GeoJSON);
+
+        await secondPromise;
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(source.loaded()).toBeTruthy();
+        await firstPromise;
+    });
+
     test('marks source as not loaded before firing "dataloading" event', async () => {
         const source = createSource();
         const setDataPromise = source.once('dataloading');
@@ -214,6 +235,69 @@ describe('GeoJSONSource.setData', () => {
         source.setData({} as GeoJSON.GeoJSON);
         await promise;
         expect(source.loaded()).toBeTruthy();
+    });
+});
+
+describe('GeoJSONSource.loadTile', () => {
+    const mapStub = {
+        getPixelRatio() { return 1; },
+        showCollisionBoxes: false,
+        style: {
+            projection: {
+                get subdivisionGranularity() {
+                    return SubdivisionGranularitySetting.noSubdivision;
+                }
+            }
+        }
+    } as any;
+
+    test('swallows an AbortError from the worker request', async () => {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return Promise.reject(new AbortError());
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        await expect(source.loadTile(tile)).resolves.toBeUndefined();
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+        expect(tile.abortController).toBeUndefined();
+    });
+
+    test('swallows a worker error when the tile was aborted', async () => {
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512);
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                tile.aborted = true;
+                return Promise.reject(new Error('worker error'));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        await expect(source.loadTile(tile)).resolves.toBeUndefined();
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+        expect(tile.abortController).toBeUndefined();
+    });
+
+    test('rethrows a non-abort error from the worker request', async () => {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return Promise.reject(new Error('worker error'));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        await expect(source.loadTile(tile)).rejects.toThrow('worker error');
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+        expect(tile.abortController).toBeUndefined();
     });
 });
 
@@ -393,9 +477,7 @@ describe('GeoJSONSource.update', () => {
         // Immediately modify data again, and update cluster options
         const sourceData2 = {id: 'test-2', type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
         source.setData(sourceData2);
-        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
-
-        await sleep(0);
+        await source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
         expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -464,8 +546,8 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(false);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(diff);
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
-        expect(spy.mock.calls[1][0].data.data).not.toBeDefined();
-        expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
+        expect(spy.mock.calls[1][0].data.data).toBeUndefined();
+        expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {
@@ -667,6 +749,27 @@ describe('GeoJSONSource.getData', () => {
         source.load();
         const data = await source.getData();
         expect(data).toStrictEqual(hawkHill);
+    });
+
+    test('returns added features from getData when updateData is called immediately after initialization', async () => {
+        const source = new GeoJSONSource('id', {data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+
+        const diff: GeoJSONSourceDiff = {
+            add: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+                {type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}},
+            ]
+        };
+        await source.updateData(diff);
+        const data = await source.getData();
+        expect(data).toStrictEqual({
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+                {type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}},
+            ]
+        });
     });
 
     test('waits for data to load when source is updateable after update data', async () => {
@@ -1208,5 +1311,32 @@ describe('GeoJSONSource.getClusterLeaves', () => {
         expect(spy.mock.calls[0][0].type).toBe(MessageType.getClusterLeaves);
         expect((spy.mock.calls[0][0].data as ClusterIDAndSource).clusterId).toBe(1);
         vi.resetAllMocks();
+    });
+});
+
+describe('GeoJSONSource.getClusterOptions', () => {
+    test('returns the cluster options configured on the source', () => {
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: true,
+            clusterMaxZoom: 12,
+            clusterRadius: 80
+        }, mockDispatcher, undefined);
+
+        expect(source.getClusterOptions()).toEqual({cluster: true, clusterMaxZoom: 12, clusterRadius: 80});
+    });
+
+    test('reflects options updated via setClusterOptions', async () => {
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: false
+        }, mockDispatcher, undefined);
+
+        const options = {cluster: true, clusterMaxZoom: 9, clusterRadius: 40};
+        await source.setClusterOptions(options);
+
+        expect(source.getClusterOptions()).toEqual(options);
     });
 });

@@ -1,18 +1,16 @@
 {
     "version": 8,
     "name": "Basic",
-    "metadata": {
-        "mapbox:autocomposite": true,
-        "mapbox:type": "template"
-    },
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "vector",
-            "tiles": [ "http://localhost:2901/sanfrancisco/{z}-{x}-{y}.mvt" ]
+            "tiles": [
+                "http://localhost:2901/sanfrancisco/{z}-{x}-{y}.mvt"
+            ]
         }
     },
-    "sprite": "mapbox://sprites/mapbox/basic-v9",
-    "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/basic-v9",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
     "layers": [
         {
             "id": "background",
@@ -25,7 +23,7 @@
         {
             "id": "landuse_overlay_national_park",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "landuse_overlay",
             "filter": [
                 "==",
@@ -41,7 +39,7 @@
         {
             "id": "landuse_park",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "landuse",
             "filter": [
                 "==",
@@ -56,7 +54,7 @@
         {
             "id": "waterway",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "waterway",
             "filter": [
                 "all",
@@ -93,7 +91,7 @@
         {
             "id": "water",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "water",
             "paint": {
                 "fill-color": "#a0cfdf"
@@ -103,7 +101,7 @@
         {
             "id": "building",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "building",
             "paint": {
                 "fill-color": "#d6d6d6"
@@ -145,7 +143,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "tunnel_minor",
             "paint": {
                 "line-color": "#efefef",
@@ -201,7 +199,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "tunnel_major",
             "paint": {
                 "line-color": "#fff",
@@ -261,7 +259,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "road_minor",
             "paint": {
                 "line-color": "#efefef",
@@ -314,7 +312,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "road_major",
             "paint": {
                 "line-color": "#fff",
@@ -369,7 +367,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "bridge_minor case",
             "paint": {
                 "line-color": "#dedede",
@@ -434,7 +432,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "bridge_major case",
             "paint": {
                 "line-color": "#dedede",
@@ -502,7 +500,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "bridge_minor",
             "paint": {
                 "line-color": "#efefef",
@@ -554,7 +552,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "bridge_major",
             "paint": {
                 "line-color": "#fff",
@@ -602,7 +600,7 @@
                 ]
             ],
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "admin_country",
             "paint": {
                 "line-color": "#8b8a8a",
@@ -663,7 +661,7 @@
                 ]
             ],
             "type": "symbol",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "poi_label",
             "paint": {
                 "text-color": "#666",
@@ -716,7 +714,7 @@
                 ]
             ],
             "type": "symbol",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "road_major_label",
             "paint": {
                 "text-color": "#666",
@@ -767,7 +765,7 @@
                 ]
             ],
             "type": "symbol",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "place_label_other",
             "paint": {
                 "text-color": "#666",
@@ -814,7 +812,7 @@
                 ]
             ],
             "type": "symbol",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "place_label_city",
             "paint": {
                 "text-color": "#666",
@@ -853,7 +851,7 @@
                 "Point"
             ],
             "type": "symbol",
-            "source": "mapbox",
+            "source": "maplibre",
             "id": "country_label",
             "paint": {
                 "text-color": "#666",
@@ -866,7 +864,7 @@
         {
             "id": "contour-line",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "contour",
             "minzoom": 11,
             "filter": [
@@ -923,7 +921,7 @@
         {
             "id": "contour-line-index",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "source-layer": "contour",
             "minzoom": 11,
             "filter": [

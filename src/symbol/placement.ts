@@ -1,27 +1,27 @@
 import {CollisionIndex, viewportPadding} from './collision_index.ts';
-import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
 import * as symbolSize from './symbol_size.ts';
 import * as projection from './projection.ts';
 import {getAnchorJustification} from './symbol_layout.ts';
 import {getAnchorAlignment, WritingMode} from './shaping.ts';
-import {type mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
 import Point from '@mapbox/point-geometry';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
-import type {StyleLayer} from '../style/style_layer.ts';
-import {type PossiblyEvaluated} from '../style/properties.ts';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
+import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
+import {translatePosition, warnOnce} from '../util/util.ts';
 
+import type {mat4} from 'gl-matrix';
+import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
+import type {IReadonlyTransform, ITransform, GetElevation} from '../geo/transform_interface.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {PossiblyEvaluated} from '../style/properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket.ts';
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g.ts';
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
-import {type Terrain} from '../render/terrain.ts';
-import {translatePosition, warnOnce} from '../util/util.ts';
-import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 class OpacityState {
     opacity: number;
@@ -236,9 +236,9 @@ export class Placement {
         this.placedOrientations = {};
     }
 
-    private _getTerrainElevationFunc(tileID: OverscaledTileID) {
+    private _getTerrainElevationFunc(tileID: OverscaledTileID): GetElevation | undefined {
         const terrain = this.terrain;
-        if (!terrain) return null;
+        if (!terrain) return undefined;
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
@@ -333,8 +333,10 @@ export class Placement {
         translationText: [number, number],
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
-        getElevation?: (x: number, y: number) => number,
+        getElevation?: GetElevation,
         simpleProjectionMatrix?: mat4,
+        heightOffset?: number,
+        heightAnchorGround?: boolean,
     ): {
         shift: Point;
         placedGlyphBoxes: PlacedBox;
@@ -357,6 +359,8 @@ export class Placement {
             getElevation,
             shift,
             simpleProjectionMatrix,
+            heightOffset,
+            heightAnchorGround,
         );
 
         if (iconBox) {
@@ -373,6 +377,8 @@ export class Placement {
                 getElevation,
                 shift,
                 simpleProjectionMatrix,
+                heightOffset,
+                heightAnchorGround,
             );
             if (!placedIconBoxes.placeable) return;
         }
@@ -433,6 +439,7 @@ export class Placement {
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
         const zOrderByViewportY = layout.get('symbol-z-order') === 'viewport-y';
+        const heightAnchorGround = layout.get('symbol-height-anchor') === 'ground';
 
         // This logic is similar to the "defaultOpacityState" logic below in updateBucketOpacities
         // If we know a symbol is always supposed to show, force it to be marked visible even if
@@ -467,6 +474,8 @@ export class Placement {
                 this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
                 return;
             }
+
+            const symbolHeightOffset = symbolInstance.heightOffset;
 
             let placeText = false;
             let placeIcon = false;
@@ -543,6 +552,8 @@ export class Placement {
                             getElevation,
                             undefined,
                             simpleProjectionMatrix,
+                            symbolHeightOffset,
+                            heightAnchorGround,
                         );
                         if (placedFeature?.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
@@ -595,7 +606,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, simpleProjectionMatrix, symbolHeightOffset, heightAnchorGround);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -630,6 +641,8 @@ export class Placement {
                                 getElevation,
                                 undefined,
                                 simpleProjectionMatrix,
+                                symbolHeightOffset,
+                                heightAnchorGround,
                             );
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
@@ -736,6 +749,8 @@ export class Placement {
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
                         simpleProjectionMatrix,
+                        symbolHeightOffset,
+                        heightAnchorGround,
                     );
                 };
 

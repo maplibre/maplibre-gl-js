@@ -6,7 +6,8 @@ import {
     backgroundPatternUniformValues
 } from '../program/background_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
 import {type OverscaledTileID} from '../../tile/tile_id.ts';
@@ -29,7 +30,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     if (painter.isPatternMissing(image)) return;
 
     const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
-    if (painter.renderPass !== pass) return;
+    if (renderOptions.currentPass !== pass) return;
 
     const stencilMode = StencilMode.disabled;
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
@@ -39,7 +40,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
-        painter.imageManager.bind(painter.context);
+        painter.patternAtlas.bind(painter.context);
     }
 
     const crossfade = layer.getCrossfadeParameters();
@@ -54,7 +55,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
-        const terrainData = painter.style.map.terrain?.getTerrainData(tileID);
+        const terrainData = painter.getTerrainDataForTile(tileID, isRenderingToTexture);
 
         // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
         // This works assuming the tileIDs list contains only tiles of the same zoom level.

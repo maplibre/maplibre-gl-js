@@ -7,7 +7,7 @@
         [
             "setFeatureState", 
             { 
-                "source": "mapbox",
+                "source": "maplibre",
                 "sourceLayer": "road",
                 "id": "4612696"
             },
@@ -17,7 +17,7 @@
         ], [
             "setFeatureState", 
             { 
-                "source": "mapbox",
+                "source": "maplibre",
                 "sourceLayer": "road",
                 "id": 4612696
             },
@@ -27,7 +27,7 @@
         ], [
             "setFeatureState", 
             { 
-                "source": "mapbox",
+                "source": "maplibre",
                 "sourceLayer": "road",
                 "id": "4612752"
             },
@@ -48,7 +48,7 @@
   ],
   "zoom": 14,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -60,7 +60,7 @@
     {
       "id": "road",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "paint": {
         "circle-radius": 10

@@ -1,4 +1,3 @@
-uniform vec2 u_world;
 uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
@@ -13,18 +12,26 @@ out vec2 v_pos;
 out float v_depth;
 #endif
 
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
-#pragma mapbox: define lowp float pixel_ratio_from
-#pragma mapbox: define lowp float pixel_ratio_to
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define highp vec4 color
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float pixel_ratio_from
+#pragma maplibre: define lowp float pixel_ratio_to
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
-    #pragma mapbox: initialize lowp float pixel_ratio_from
-    #pragma mapbox: initialize lowp float pixel_ratio_to
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize highp vec4 color
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float pixel_ratio_from
+    #pragma maplibre: initialize lowp float pixel_ratio_to
+
+    // Move vertex outside clip space to discard triangle when opacity is negligible
+    if (opacity < 0.01) {
+        gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
+        return;
+    }
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
@@ -43,7 +50,7 @@ void main() {
     v_pos_a = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, fromScale * display_size_a, tileRatio, a_pos);
     v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileRatio, a_pos);
 
-    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;
+    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world_size;
     #ifdef GLOBE
     v_depth = gl_Position.z / gl_Position.w;
     #endif

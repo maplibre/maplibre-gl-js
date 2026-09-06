@@ -1,0 +1,56 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [13.418056, 52.499167],
+  "zoom": 14,
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#333333" }
+    },
+    {
+      "id": "road-case",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "road",
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#232323",
+        "line-width": [
+          "interpolate", ["exponential", 1.2], ["zoom"],
+          8, ["match", ["get", "class"], "main", 1.5, "street", 1.5, 0.75],
+          18, ["match", ["get", "class"], "main", 20, "street", 16, 8]
+        ]
+      }
+    },
+    {
+      "id": "road-fill",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "road",
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#474747",
+        "line-width": [
+          "interpolate", ["exponential", 1.2], ["zoom"],
+          8, ["match", ["get", "class"], "main", 2, "street", 2, 1],
+          18, ["match", ["get", "class"], "main", 12, "street", 8, 6]
+        ],
+        "line-opacity": ["case", ["==", ["get", "oneway"], 1], 0.5, 1]
+      }
+    }
+  ]
+}

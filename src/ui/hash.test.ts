@@ -522,6 +522,7 @@ describe('hash', () => {
 
         map.remove();
 
+        expect(map._removed).toBe(true);
     });
 
     test('hash with URL in other parameter does not change except normalization', () => {

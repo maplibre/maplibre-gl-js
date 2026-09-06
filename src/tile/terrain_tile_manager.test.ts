@@ -1,4 +1,4 @@
-import {describe, beforeAll, afterAll, test, expect, vi, type Mock} from 'vitest';
+import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
 import {TerrainTileManager} from './terrain_tile_manager.ts';
 import {Style} from '../style/style.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -9,6 +9,7 @@ import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
 import {type DEMData} from '../data/dem_data.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap} from '../util/test/util.ts';
 import {type Painter, type RTTObject} from '../render/painter.ts';
 
@@ -55,7 +56,7 @@ describe('TerrainTileManager', () => {
         await loadPromise;
         const source = createSource({url: '/source.json'});
         server.respond();
-        style.addSource('terrain', source as any);
+        style.addSource('terrain', source.serialize());
         tsc = new TerrainTileManager(style.tileManagers.terrain);
     });
 
@@ -89,6 +90,28 @@ describe('TerrainTileManager', () => {
         tsc.tileManager._outOfViewCache.add(underzoomTileID, tile);
         expect(tsc.tileManager._inViewTiles.getTileById(underzoomTileID.key)).toBeUndefined();
         expect(tsc.getSourceTile(tileID, true).tileID.key).toBe(underzoomTileID.key);
+    });
+
+    describe('update', () => {
+        test('reports whether the renderable tiles changed', () => {
+            const manager = new TerrainTileManager(style.tileManagers.terrain);
+            const transform = new MercatorTransform();
+            transform.resize(512, 512);
+            transform.setCenter(new LngLat(-46, -6));
+            transform.setZoom(8);
+            const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
+
+            expect(manager.update(transform, null)).toBe(true);
+            const keys = renderableKeys();
+            expect(keys.length).toBeGreaterThan(0);
+
+            expect(manager.update(transform, null)).toBe(false);
+            expect(renderableKeys()).toEqual(keys);
+
+            transform.setZoom(9);
+            expect(manager.update(transform, null)).toBe(true);
+            expect(renderableKeys()).not.toEqual(keys);
+        });
     });
 
     describe('getTerrainCoords', () => {
@@ -248,7 +271,7 @@ describe('TerrainTileManager', () => {
 
             tsc.releaseAllRTT();
 
-            expect((painter.releaseRTT as Mock<typeof painter.releaseRTT>).mock.calls.length).toBe(Object.keys(tiles).length);
+            expect((vi.mocked(painter.releaseRTT))).toHaveBeenCalledTimes(Object.keys(tiles).length);
             for (const key in rttObjects) {
                 expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[key]);
                 expect(tiles[key].getRTT(0)).toBeUndefined();

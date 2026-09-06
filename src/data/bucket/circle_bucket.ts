@@ -15,6 +15,7 @@ import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -102,11 +103,12 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
 
         const granularity = subdivide ? options.subdivisionGranularity.circle : 1;
 
+        const globalProperties = new EvaluationParameters(this.zoom);
+        const needGeometry = this.layers[0]._featureFilter.needGeometry;
         for (const {feature, id, index, sourceLayerIndex} of features) {
-            const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
                 circleSortKey.evaluate(evaluationFeature, {}, canonical) :
@@ -146,6 +148,8 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             imagePositions
         });
     }
+
+    addFeatures(_parameters: BucketDependencyParameters): void {}
 
     isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;

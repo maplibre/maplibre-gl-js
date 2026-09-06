@@ -70,6 +70,16 @@ export class NullWebGL2RenderingContext {
     INT: number = 0x1404;
     UNSIGNED_INT: number = 0x1405;
     FLOAT: number = 0x1406;
+    FLOAT_VEC2: number = 0x8B50;
+    FLOAT_VEC3: number = 0x8B51;
+    FLOAT_VEC4: number = 0x8B52;
+    INT_VEC2: number = 0x8B53;
+    INT_VEC3: number = 0x8B54;
+    INT_VEC4: number = 0x8B55;
+    UNSIGNED_INT_VEC2: number = 0x8DC6;
+    UNSIGNED_INT_VEC3: number = 0x8DC7;
+    UNSIGNED_INT_VEC4: number = 0x8DC8;
+    ACTIVE_ATTRIBUTES: number = 0x8B89;
     ALPHA: number = 0x1906;
     RGB: number = 0x1907;
     RGBA: number = 0x1908;
@@ -87,6 +97,7 @@ export class NullWebGL2RenderingContext {
     NEAREST: number = 0x2600;
     LINEAR_MIPMAP_NEAREST: number = 0x2701;
     NEAREST_MIPMAP_LINEAR: number = 0x2702;
+    LINEAR_MIPMAP_LINEAR: number = 0x2703;
     REPEAT: number = 0x2901;
     CLAMP_TO_EDGE: number = 0x812F;
     TEXTURE0: number = 0x84C0;
@@ -98,6 +109,8 @@ export class NullWebGL2RenderingContext {
     ELEMENT_ARRAY_BUFFER: number = 0x8893;
     STATIC_DRAW: number = 0x88E4;
     DYNAMIC_DRAW: number = 0x88E8;
+    UNIFORM_BUFFER: number = 0x8A11;
+    INVALID_INDEX: number = 0xFFFFFFFF;
     VERTEX_SHADER: number = 0x8B31;
     FRAGMENT_SHADER: number = 0x8B30;
     COMPILE_STATUS: number = 0x8B81;
@@ -188,6 +201,8 @@ export class NullWebGL2RenderingContext {
     getBufferSubData: Mock<GL['getBufferSubData']> = vi.fn();
     bindBufferBase: Mock<GL['bindBufferBase']> = vi.fn();
     bindBufferRange: Mock<GL['bindBufferRange']> = vi.fn();
+    getUniformBlockIndex: Mock<GL['getUniformBlockIndex']> = vi.fn((): number => 0xFFFFFFFF);
+    uniformBlockBinding: Mock<GL['uniformBlockBinding']> = vi.fn();
     beginQuery: Mock<GL['beginQuery']> = vi.fn();
     endQuery: Mock<GL['endQuery']> = vi.fn();
     getQuery: Mock<GL['getQuery']> = vi.fn();

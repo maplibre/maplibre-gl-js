@@ -28,13 +28,13 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
      * @param tileID - Tile x, y and z for zoom.
      */
     getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): Aabb {
-        let minElevation = 0;
-        let maxElevation = 0;
+        let minElevation = Math.min(0, elevation);
+        let maxElevation = Math.max(0, elevation);
         if (options?.terrain) {
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
-            minElevation = minMax.minElevation ?? Math.min(0, elevation);
-            maxElevation = minMax.maxElevation ?? Math.max(0, elevation);
+            minElevation = minMax.minElevation ?? minElevation;
+            maxElevation = minMax.maxElevation ?? maxElevation;
         }
         const numTiles = 1 << tileID.z;
         return new Aabb([wrap + tileID.x / numTiles, tileID.y / numTiles, minElevation],

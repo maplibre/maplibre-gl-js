@@ -1,26 +1,11 @@
-import {defineConfig, type ModuleFormat, type RolldownOptions, type InputOption} from 'rolldown';
+import {defineConfig, type RolldownOptions} from 'rolldown';
 import {dts} from 'rolldown-plugin-dts';
-import {plugins} from './build/rolldown_plugins';
 import banner from './build/banner';
 import packageJSON from './package.json' with {type: 'json'};
 
 const production = process.env.BUILD === 'production';
 const typesOnly = process.env.BUILD === 'types';
 const outputPostfix = production ? '' : '-dev';
-
-const bundle = (input: InputOption, file: string, format: ModuleFormat): RolldownOptions => ({
-    input,
-    platform: 'browser',
-    treeshake: production,
-    output: {
-        file,
-        format,
-        sourcemap: true,
-        banner,
-        minify: production ? true : 'dce-only',
-    },
-    plugins: plugins(production),
-});
 
 const dtsBundle: RolldownOptions = {
     input: {'maplibre-gl': 'src/index.ts'},
@@ -29,12 +14,27 @@ const dtsBundle: RolldownOptions = {
         format: 'es',
     },
     external: Object.keys(packageJSON.dependencies),
-    plugins: [dts({emitDtsOnly: true, oxc: true})],
+    plugins: [dts({emitDtsOnly: true, generator: 'oxc'})],
 };
 
 const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
-    bundle('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
-    bundle('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
+    {
+        input: {
+            'maplibre-gl': 'src/index.ts',
+            'maplibre-gl-worker': 'src/source/worker.ts',
+        },
+        platform: 'browser',
+        treeshake: production,
+        output: {
+            dir: 'dist',
+            format: 'es',
+            sourcemap: true,
+            banner,
+            minify: production ? true : 'dce-only',
+            entryFileNames: `[name]${outputPostfix}.mjs`,
+            chunkFileNames: `maplibre-gl-shared${outputPostfix}.mjs`,
+        },
+    },
     ...(production ? [dtsBundle] : []),
 ]);
 
