@@ -27,6 +27,14 @@ beforeEach(() => {
 });
 
 describe('marker', () => {
+    test('colors the pin of the default marker and nothing else', () => {
+        const svg = new Marker({color: '#123456'}).getElement().firstElementChild;
+        const colored = svg.querySelectorAll('[fill="#123456"]');
+        expect(colored).toHaveLength(1);
+        expect(colored[0].firstElementChild.tagName).toBe('path');
+        expect(svg.querySelector('[fill="#3FB1CE"]')).toBeNull();
+    });
+
     test('Marker uses a default marker element with an appropriate offset', () => {
         const marker = new Marker();
         expect(marker.getElement()).toBeTruthy();
@@ -474,6 +482,20 @@ describe('marker', () => {
         marker.togglePopup();
 
         expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
+    });
+
+    test('Popup follows its marker onto the same world copy when the marker crosses the antimeridian', () => {
+        const map = createMap({width: 1024});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup();
+
+        marker.setLngLat([-179, 0]);
+
+        expect(marker.getPopup().getLngLat().lng).toBe(marker.getLngLat().lng);
         map.remove();
     });
 

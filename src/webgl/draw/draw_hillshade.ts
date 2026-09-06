@@ -118,7 +118,7 @@ function prepareHillshade(
             continue;
         }
 
-        const tileSize = dem.dim + 2;
+        const hillshadeTextureSize = dem.dim + 2;
         const textureStride = dem.stride;
 
         const pixelData = dem.getPixels();
@@ -140,15 +140,15 @@ function prepareHillshade(
         let fbo = tile.fbo;
 
         if (!fbo) {
-            const renderTexture = new Texture(context, {width: tileSize, height: tileSize, data: null}, gl.RGBA);
+            const renderTexture = new Texture(context, {width: hillshadeTextureSize, height: hillshadeTextureSize, data: null}, gl.RGBA);
             renderTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 
-            fbo = tile.fbo = context.createFramebuffer(tileSize, tileSize, true, false);
+            fbo = tile.fbo = context.createFramebuffer(hillshadeTextureSize, hillshadeTextureSize, true, false);
             fbo.colorAttachment.set(renderTexture.texture);
         }
 
         context.bindFramebuffer.set(fbo.framebuffer);
-        context.viewport.set([0, 0, tileSize, tileSize]);
+        context.viewport.set([0, 0, hillshadeTextureSize, hillshadeTextureSize]);
 
         painter.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
