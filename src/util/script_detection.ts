@@ -2,6 +2,8 @@ import {
     codePointAllowsIdeographicBreaking,
     codePointHasUprightVerticalOrientation,
     codePointHasNeutralVerticalOrientation,
+    codePointIsInCursiveScript,
+    codePointIsInRTLScript,
     codePointRequiresComplexTextShaping
 } from '../util/unicode_properties.g.ts';
 
@@ -31,38 +33,12 @@ export function allowsLetterSpacing(chars: string): boolean {
 }
 
 /**
- * Returns a regular expression matching the given script codes, excluding any
- * code that the execution environment lacks support for in regular expressions.
- */
-function sanitizedRegExpFromScriptCodes(scriptCodes: string[]): RegExp {
-    const supportedPropertyEscapes = scriptCodes.map(code => {
-        try {
-            return new RegExp(`\\p{sc=${code}}`, 'u').source;
-        } catch {
-            return null;
-        }
-    }).filter(pe => pe);
-    return new RegExp(supportedPropertyEscapes.join('|'), 'u');
-}
-
-/**
- * ISO 15924 script codes of scripts that disallow letter spacing as of Unicode
- * 16.0.0.
+ * Whether the letters around this character can be spaced apart from it.
  *
- * In general, cursive scripts are incompatible with letter spacing.
+ * A cursive script joins its letters up, so spacing them apart takes the word apart.
  */
-const cursiveScriptCodes = [
-    'Arab', // Arabic
-    'Dupl', // Duployan
-    'Mong', // Mongolian
-    'Ougr', // Old Uyghur
-    'Syrc', // Syriac
-];
-
-const cursiveScriptRegExp = sanitizedRegExpFromScriptCodes(cursiveScriptCodes);
-
 export function charAllowsLetterSpacing(char: number): boolean {
-    return !cursiveScriptRegExp.test(String.fromCodePoint(char));
+    return !codePointIsInCursiveScript(char);
 }
 
 /**
@@ -83,53 +59,9 @@ export function charInComplexShapingScript(char: number): boolean {
     return /\p{sc=Arab}/u.test(String.fromCodePoint(char));
 }
 
-/**
- * ISO 15924 script codes of scripts that are primarily written horizontally
- * right-to-left according to Unicode 16.0.0.
- */
-const rtlScriptCodes = [
-    'Adlm', // Adlam
-    'Arab', // Arabic
-    'Armi', // Imperial Aramaic
-    'Avst', // Avestan
-    'Chrs', // Chorasmian
-    'Cprt', // Cypriot
-    'Egyp', // Egyptian Hieroglyphs
-    'Elym', // Elymaic
-    'Gara', // Garay
-    'Hatr', // Hatran
-    'Hebr', // Hebrew
-    'Hung', // Old Hungarian
-    'Khar', // Kharoshthi
-    'Lydi', // Lydian
-    'Mand', // Mandaic
-    'Mani', // Manichaean
-    'Mend', // Mende Kikakui
-    'Merc', // Meroitic Cursive
-    'Mero', // Meroitic Hieroglyphs
-    'Narb', // Old North Arabian
-    'Nbat', // Nabataean
-    'Nkoo', // NKo
-    'Orkh', // Old Turkic
-    'Palm', // Palmyrene
-    'Phli', // Inscriptional Pahlavi
-    'Phlp', // Psalter Pahlavi
-    'Phnx', // Phoenician
-    'Prti', // Inscriptional Parthian
-    'Rohg', // Hanifi Rohingya
-    'Samr', // Samaritan
-    'Sarb', // Old South Arabian
-    'Sogo', // Old Sogdian
-    'Syrc', // Syriac
-    'Thaa', // Thaana
-    'Todr', // Todhri
-    'Yezi', // Yezidi
-];
-
-const rtlScriptRegExp = sanitizedRegExpFromScriptCodes(rtlScriptCodes);
-
+/** Whether this character belongs to a script that is written horizontally from right to left. */
 export function charInRTLScript(char: number): boolean {
-    return rtlScriptRegExp.test(String.fromCodePoint(char));
+    return codePointIsInRTLScript(char);
 }
 
 /**

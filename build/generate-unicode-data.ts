@@ -27,6 +27,74 @@ async function createSet(blocks: string[], scripts: string[]): Promise<regenerat
     return set;
 }
 
+/**
+ * Returns a character class matching the scripts that are written cursively, and so cannot have
+ * their letters spaced apart without coming apart.
+ *
+ * The ISO 15924 code of each script is given because that is how the Unicode Standard names them,
+ * and how this list read before it was generated.
+ */
+async function isInCursiveScript(): Promise<string> {
+    const set = await createSet([], [
+        'Arabic', // Arab
+        'Duployan', // Dupl
+        'Mongolian', // Mong
+        'Old Uyghur', // Ougr
+        'Syriac', // Syrc
+    ]);
+
+    return set.toString();
+}
+
+/**
+ * Returns a character class matching the scripts that are written horizontally from right to left.
+ *
+ * The ISO 15924 code of each script is given because that is how the Unicode Standard names them,
+ * and how this list read before it was generated.
+ */
+async function isInRTLScript(): Promise<string> {
+    const set = await createSet([], [
+        'Adlam', // Adlm
+        'Arabic', // Arab
+        'Imperial Aramaic', // Armi
+        'Avestan', // Avst
+        'Chorasmian', // Chrs
+        'Cypriot', // Cprt
+        'Egyptian Hieroglyphs', // Egyp
+        'Elymaic', // Elym
+        'Garay', // Gara
+        'Hatran', // Hatr
+        'Hebrew', // Hebr
+        'Old Hungarian', // Hung
+        'Kharoshthi', // Khar
+        'Lydian', // Lydi
+        'Mandaic', // Mand
+        'Manichaean', // Mani
+        'Mende Kikakui', // Mend
+        'Meroitic Cursive', // Merc
+        'Meroitic Hieroglyphs', // Mero
+        'Old North Arabian', // Narb
+        'Nabataean', // Nbat
+        'Nko', // Nkoo
+        'Old Turkic', // Orkh
+        'Palmyrene', // Palm
+        'Inscriptional Pahlavi', // Phli
+        'Psalter Pahlavi', // Phlp
+        'Phoenician', // Phnx
+        'Inscriptional Parthian', // Prti
+        'Hanifi Rohingya', // Rohg
+        'Samaritan', // Samr
+        'Old South Arabian', // Sarb
+        'Old Sogdian', // Sogo
+        'Syriac', // Syrc
+        'Thaana', // Thaa
+        'Todhri', // Todr
+        'Yezidi', // Yezi
+    ]);
+
+    return set.toString();
+}
+
 async function usesLocalIdeographFontFamily(): Promise<string> {
     // Local rendering is preferred for Unicode code blocks that represent
     // writing systems for which TinySDF produces optimal results and greatly
@@ -577,6 +645,22 @@ async function encodedLigatures(): Promise<string> {
 
 fs.writeFileSync('src/util/unicode_properties.g.ts',
     `// This file is generated. Edit build/generate-unicode-data.ts, then run \`npm run generate-unicode-data\`.
+
+/**
+ * Returns whether the given codepoint belongs to a script that is written cursively, whose letters
+ * therefore cannot be spaced apart.
+ */
+export function codePointIsInCursiveScript(codePoint: number): boolean {
+    return /${await isInCursiveScript()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether the given codepoint belongs to a script that is written horizontally from right
+ * to left.
+ */
+export function codePointIsInRTLScript(codePoint: number): boolean {
+    return /${await isInRTLScript()}/gim.test(String.fromCodePoint(codePoint));
+}
 
 /**
  * Returns whether the fallback fonts specified by the
