@@ -322,6 +322,7 @@ export class Popup extends Evented<PopupEventType> {
             this._map.off('remove', this.remove);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
+            this._map.off('render', this._update);
             this._map.off('mousemove', this._update);
             this._map.off('mouseup', this._update);
             this._map.off('drag', this._update);
@@ -634,12 +635,15 @@ export class Popup extends Evented<PopupEventType> {
         }
     }
 
+    /**
+     * @internal
+     * Positions the popup. A projection change takes effect in the next frame, so after that event the popup positions itself again after the render.
+     */
     _update = (event?: MapLibreEvent | MapMouseEvent): void => {
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }
 
-        // A projection change takes effect in the next frame: re-position after it.
         if (event?.type === 'projectiontransition') {
             this._map.once('render', this._update);
         }

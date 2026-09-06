@@ -1417,6 +1417,7 @@ export class Map extends Evented<MapEventType> {
     jumpTo(options: JumpToOptions, eventData?: any): this { this._camera.jumpTo(options, eventData); return this; }
     /**
      * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
+     * Computed with mercator geometry under every projection: under `globe` and `vertical-perspective` the result is an approximation that worsens as the zoom decreases.
      * @param cameraLngLat - The lng, lat of the camera to look from
      * @param cameraAlt - The altitude of the camera to look from, in meters above sea level
      * @param bearing - Bearing of the camera, in degrees
@@ -1523,6 +1524,7 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
+     * Under the `globe` and `vertical-perspective` projections the result follows the sphere wherever the map renders as a globe.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at

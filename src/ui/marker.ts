@@ -435,6 +435,7 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
+            this._map.off('render', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -726,11 +727,15 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.classList.toggle('maplibregl-marker-covered', centerIsInvisible);
     }
 
+    /**
+     * @internal
+     * Positions the marker and re-reads its terrain occlusion after the frame. A terrain or projection change takes effect
+     * in the next frame, so after those events the marker follows every render until the map is fully loaded, keeping its
+     * opacity meanwhile (the occlusion is only reliable once the terrain tiles have loaded) and then reading once, past the throttle.
+     */
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'render' }): void => {
         if (!this._map) return;
 
-        // A terrain or projection change takes effect in the next frame: re-read the marker after it,
-        // and keep doing so until the map is fully loaded.
         const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
         const readAfterNextFrame = e?.type === 'terrain' || e?.type === 'projectiontransition' || (e?.type === 'render' && !isFullyLoaded);
         if (readAfterNextFrame) {
@@ -769,8 +774,6 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            // Terrain occlusion is only reliable once the terrain tiles have loaded: while a follow-up read is scheduled,
-            // keep the previous opacity. The read once the map is fully loaded must not be dropped by the throttle.
             if (readAfterNextFrame) return;
             this._updateOpacity(e?.type === 'moveend' || e?.type === 'render');
         }).catch(() => {});

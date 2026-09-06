@@ -256,6 +256,11 @@ interface ITransformMutators {
  * Note that an instance of {@link IReadonlyTransform} may still be mutated
  * by code that has a reference to in under the {@link ITransform} type.
  */
+/**
+ * The camera placement {@link IReadonlyTransform.calculateCameraOptionsFromTo} solves for.
+ */
+export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
+
 export interface IReadonlyTransform extends ITransformGetters {
     /**
      * Distance from camera origin to view plane, in pixels.
@@ -449,7 +454,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param to - lng, lat of the point the camera looks at, which becomes the center
      * @param altitudeTo - altitude of that point above sea level, in meters
      */
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
 
     getRayDirectionFromPixel(p: Point): vec3;
 
