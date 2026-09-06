@@ -1182,14 +1182,15 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
+        if (before && !this._order.includes(before)) {
+            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
+            return;
+        }
+
         const index = this._order.indexOf(id);
         this._order.splice(index, 1);
 
         const newIndex = before ? this._order.indexOf(before) : this._order.length;
-        if (before && newIndex === -1) {
-            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
-            return;
-        }
         this._order.splice(newIndex, 0, id);
 
         this._layerOrderChanged = true;

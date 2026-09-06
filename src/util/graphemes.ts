@@ -3,22 +3,23 @@ import {canCombineGraphemes, textCanContainGraphemeClusters} from './unicode_pro
 const hasSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl;
 
 /**
- * Decides where the grapheme clusters are. Built once, being reached for by every label of every
- * tile, and corrected by {@link canCombineGraphemes} where CLDR's cursor rules split a unit of
- * writing.
+ * Decides where the grapheme clusters are, corrected by {@link canCombineGraphemes} where CLDR's
+ * cursor rules split a unit of writing. Built on first use: constructing the first `Intl.Segmenter`
+ * initializes ICU, which costs several milliseconds that the main thread, which never shapes text,
+ * should not pay at import.
  */
-const graphemeSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'grapheme'}) : null;
+let graphemeSegmenter: Intl.Segmenter | undefined;
 
 /**
- * Decides where the words are, drawing on the browser's own dictionaries.
+ * Decides where the words are, drawing on the browser's own dictionaries. Built on first use.
  */
-const wordSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'word'}) : null;
+let wordSegmenter: Intl.Segmenter | undefined;
 
 /**
  * Whether this environment can find grapheme clusters. Without it everything falls back to
  * codepoints, as MapLibre always did.
  */
-export const supportsGraphemeSegmentation: boolean = graphemeSegmenter !== null;
+export const supportsGraphemeSegmentation: boolean = hasSegmenter;
 
 /**
  * Splits text into grapheme clusters, or into codepoints where the environment cannot do better.
@@ -30,8 +31,9 @@ export const supportsGraphemeSegmentation: boolean = graphemeSegmenter !== null;
  * far more than the test that rules it out.
  */
 export function toGraphemes(text: string): string[] {
-    if (!graphemeSegmenter || !textCanContainGraphemeClusters(text)) return [...text];
+    if (!hasSegmenter || !textCanContainGraphemeClusters(text)) return [...text];
 
+    graphemeSegmenter ??= new Intl.Segmenter(undefined, {granularity: 'grapheme'});
     const graphemes: string[] = [];
     for (const {segment} of graphemeSegmenter.segment(text)) {
         const last = graphemes.length - 1;
@@ -53,7 +55,8 @@ export function toGraphemes(text: string): string[] {
 export function wordBoundaries(text: string): Set<number> {
     const boundaries = new Set<number>();
 
-    if (wordSegmenter) {
+    if (hasSegmenter) {
+        wordSegmenter ??= new Intl.Segmenter(undefined, {granularity: 'word'});
         for (const {index} of wordSegmenter.segment(text)) {
             boundaries.add(index);
         }
