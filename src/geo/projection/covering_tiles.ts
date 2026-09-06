@@ -62,9 +62,9 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
     calculateTileZoom?: CalculateTileZoomFunction;
     /**
      * The highest elevation, in meters, that this source's content may reach above the ground,
-     * e.g. the largest `symbol-height-offset` in use. It may far exceed the assumed feature
-     * height used for culling: it raises the culling allowance near the horizon, so tiles
-     * under highly elevated content are not dropped while that content is still visible.
+     * e.g. the largest `symbol-height-offset` in use. `maxContentElevation` can raise the
+     * culling height above `ASSUMED_MAX_FEATURE_HEIGHT_METERS`, so tiles under highly elevated
+     * content are not dropped while that content is still visible.
      */
     maxContentElevation?: number;
 };

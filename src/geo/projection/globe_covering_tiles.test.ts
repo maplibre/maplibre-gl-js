@@ -120,6 +120,21 @@ describe('elevated content above terrain', () => {
 });
 
 describe('elevated content tile retention', () => {
+    test('far corner translation keeps ground tiles retained at moderate pitch', () => {
+        const transform = new GlobeTransform();
+        transform.resize(1400, 800);
+        transform.setCenter(new LngLat(2.3522, 52.0566));
+        transform.setZoom(4.3);
+        transform.setBearing(315);
+        transform.setMaxPitch(179);
+        transform.setPitch(75);
+        const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
+        const without = coveringTiles(transform, {tileSize: 512}).map(key);
+        const withElevated = coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key);
+        expect(without).toContain('4/9/4');
+        expect(withElevated).toContain('4/9/4');
+    });
+
     test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
         const transform = new GlobeTransform();
         transform.resize(1400, 800);

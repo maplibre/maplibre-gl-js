@@ -2697,11 +2697,23 @@ describe('TileManager / etag', () => {
 });
 
 describe('TileManager#_updateMaxContentElevation', () => {
-    test('the seen maximum survives tile unloads and resets with clearTiles', () => {
+    test('the maximum from a loaded tile survives its unload, and resets on request', () => {
         const tileManager = createTileManager();
-        expect(tileManager._updateMaxContentElevation()).toBe(0);
-        tileManager._maxContentElevationSeen = 500000;
+        tileManager.transform = {zoom: 4} as any;
+        tileManager.map = {style: {_layers: {elevated: {
+            type: 'symbol', source: 'id', isHidden: () => false,
+            layout: {get: () => ({constantOr: () => 0})}
+        }}}} as any;
+        const elevatedTile = {getBucket: () => ({maxHeightOffset: 500000})} as any;
+        tileManager._inViewTiles.setTile('t', elevatedTile);
         expect(tileManager._updateMaxContentElevation()).toBe(500000);
+        tileManager._inViewTiles.deleteTileById('t');
+        expect(tileManager._updateMaxContentElevation()).toBe(500000);
+        tileManager.resetMaxContentElevation();
+        expect(tileManager._updateMaxContentElevation()).toBe(0);
+        tileManager._inViewTiles.setTile('t', elevatedTile);
+        tileManager._updateMaxContentElevation();
+        tileManager._inViewTiles.deleteTileById('t');
         tileManager.clearTiles();
         expect(tileManager._updateMaxContentElevation()).toBe(0);
     });
