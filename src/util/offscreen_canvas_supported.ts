@@ -1,9 +1,9 @@
 let supportsOffscreenCanvas: boolean;
 
 export function offscreenCanvasSupported(): boolean {
-    supportsOffscreenCanvas ??= typeof OffscreenCanvas !== 'undefined' &&
+    supportsOffscreenCanvas ??= !!(typeof OffscreenCanvas !== 'undefined' &&
             new OffscreenCanvas(1, 1).getContext('2d') &&
-            typeof createImageBitmap === 'function';
+            typeof createImageBitmap === 'function');
 
     return supportsOffscreenCanvas;
 }

@@ -1,6 +1,11 @@
 import {describe, test, expect, beforeEach, vi, afterEach} from 'vitest';
 import {beforeMapTest, createMap as globalCreateMap} from './test/util.ts';
 import {browser} from './browser.ts';
+import {offscreenCanvasSupported} from './offscreen_canvas_supported.ts';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
+
+vi.mock(import('./offscreen_canvas_supported.ts'), () => ({offscreenCanvasSupported: vi.fn()}));
+vi.mock(import('./offscreen_canvas_distorted.ts'), () => ({isOffscreenCanvasDistorted: vi.fn()}));
 import {AbortError} from './abort_error.ts';
 
 describe('browser', () => {
@@ -176,5 +181,49 @@ describe('browser', () => {
 
     test('hardwareConcurrency', () => {
         expect(browser.hardwareConcurrency).toBeTypeOf('number');
+    });
+});
+
+describe('getImageCanvasContext', () => {
+    const image = {width: 4, height: 3} as ImageBitmap;
+    const context = {drawImage: vi.fn()};
+    const OffscreenCanvasMock = vi.fn(function (this: any) {
+        this.getContext = vi.fn(() => context);
+    });
+
+    const documentCanvas = {getContext: vi.fn(() => context)};
+
+    beforeEach(() => {
+        vi.stubGlobal('OffscreenCanvas', OffscreenCanvasMock);
+        vi.spyOn(window.document, 'createElement').mockReturnValue(documentCanvas as unknown as HTMLElement);
+        OffscreenCanvasMock.mockClear();
+        context.drawImage.mockClear();
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+    });
+
+    test('draws into an OffscreenCanvas when the browser has one that reads back faithfully', () => {
+        vi.mocked(offscreenCanvasSupported).mockReturnValue(true);
+        vi.mocked(isOffscreenCanvasDistorted).mockReturnValue(false);
+
+        expect(browser.getImageCanvasContext(image)).toBe(context);
+        expect(OffscreenCanvasMock).toHaveBeenCalledWith(4, 3);
+        expect(window.document.createElement).not.toHaveBeenCalledWith('canvas');
+        expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+    });
+
+    test.each([
+        ['is not supported', false, false],
+        ['distorts pixels', true, true],
+    ])('falls back to a document canvas when OffscreenCanvas %s', (_, supported, distorted) => {
+        vi.mocked(offscreenCanvasSupported).mockReturnValue(supported);
+        vi.mocked(isOffscreenCanvasDistorted).mockReturnValue(distorted);
+
+        browser.getImageCanvasContext(image);
+        expect(OffscreenCanvasMock).not.toHaveBeenCalled();
+        expect(window.document.createElement).toHaveBeenCalledWith('canvas');
     });
 });

@@ -1,4 +1,6 @@
 import {AbortError} from './abort_error.ts';
+import {offscreenCanvasSupported} from './offscreen_canvas_supported.ts';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
 import {subscribe} from './util.ts';
 
 let linkEl;
@@ -49,14 +51,25 @@ export const browser = {
         return context.getImageData(-padding, -padding, img.width + 2 * padding, img.height + 2 * padding);
     },
 
-    getImageCanvasContext(img: HTMLImageElement | ImageBitmap): CanvasRenderingContext2D {
-        const canvas = window.document.createElement('canvas');
+    /**
+     * Draws an image into a 2D canvas whose pixels can be read back cheaply. An `OffscreenCanvas`
+     * is used where the browser has one that reads back faithfully: drawing a GPU-backed
+     * `ImageBitmap` into a document canvas opened with `willReadFrequently` stalls the main thread
+     * for tens of milliseconds on GPU-accelerated browsers, an `OffscreenCanvas` does not.
+     */
+    getImageCanvasContext(img: HTMLImageElement | ImageBitmap): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+        let canvas: HTMLCanvasElement | OffscreenCanvas;
+        if (offscreenCanvasSupported() && !isOffscreenCanvasDistorted()) {
+            canvas = new OffscreenCanvas(img.width, img.height);
+        } else {
+            canvas = window.document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+        }
         const context = canvas.getContext('2d', {willReadFrequently: true});
         if (!context) {
             throw new Error('failed to create canvas 2d context');
         }
-        canvas.width = img.width;
-        canvas.height = img.height;
         context.drawImage(img, 0, 0, img.width, img.height);
         return context;
     },
