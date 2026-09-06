@@ -302,12 +302,12 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
 }
 
 export function createDEM(heightFn: (x: number, y: number) => number, dim: number = 8): DEMData {
-    const stride = dim + 2;
+    const stride = dim + 4;
     const pixels = new Uint8Array(stride * stride * 4);
     for (let y = 0; y < dim; y++) {
         for (let x = 0; x < dim; x++) {
             const value = heightFn(x, y) + 32768;
-            const index = ((y + 1) * stride + x + 1) * 4;
+            const index = ((y + 2) * stride + x + 2) * 4;
             pixels[index] = Math.floor(value / 256);
             pixels[index + 1] = Math.floor(value) % 256;
             pixels[index + 2] = Math.round((value - Math.floor(value)) * 256);

@@ -37,7 +37,7 @@ import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
-import {RenderOptions} from './render_options.ts';
+import {createRenderOptions, type RenderOptions} from './render_options.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -509,7 +509,7 @@ export class Painter {
     render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
-        const renderOptions = this.renderOptions = new RenderOptions(this.transform, style.projection, style.map.terrain ?? null);
+        const renderOptions = this.renderOptions = createRenderOptions(this.transform, style.projection, style.map.terrain ?? null);
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
@@ -733,15 +733,17 @@ export class Painter {
         const obj = this._rttObjectRecyclePool.pop();
         if (obj) {
             if (obj.size !== size) {
-                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-                obj.texture.size = [size, size];
+                obj.texture.update({width: size, height: size, data: null}, {premultiply: false, useMipmap: true});
+                obj.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+                if (this.context.extTextureFilterAnisotropic) {
+                    gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+                }
                 obj.size = size;
             }
             return obj;
         }
-        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
-        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA, {premultiply: false, useMipmap: true});
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
         if (this.context.extTextureFilterAnisotropic) {
             gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
         }

@@ -3,9 +3,6 @@ import {performSymbolLayout} from '../symbol/symbol_layout.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
-import {LineBucket} from '../data/bucket/line_bucket.ts';
-import {FillBucket} from '../data/bucket/fill_bucket.ts';
-import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket.ts';
 import {warnOnce, mapObject} from '../util/util.ts';
 import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
@@ -187,9 +184,15 @@ export class WorkerTile {
                     canonical: this.tileID.canonical,
                     subdivisionGranularity: options.subdivisionGranularity
                 });
-            } else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
+            } else if (bucket.hasDependencies) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
+                bucket.addFeatures({
+                    options,
+                    canonical: this.tileID.canonical,
+                    imagePositions: imageAtlas.patternPositions,
+                    dashPositions,
+                    imageMap: patternMap
+                });
             }
         }
 

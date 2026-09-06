@@ -11,6 +11,7 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -39,6 +40,14 @@ export type PopulateParameters = {
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
+};
+
+export type BucketDependencyParameters = {
+    options: PopulateParameters;
+    canonical: CanonicalTileID;
+    imagePositions: Record<string, ImagePosition>;
+    dashPositions: Record<string, DashEntry>;
+    imageMap: GetImagesResponse;
 };
 
 export type IndexedFeature = {
@@ -95,6 +104,7 @@ export interface Bucket {
     readonly stateDependentLayers: any[];
     readonly stateDependentLayerIds: string[];
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    addFeatures(parameters: BucketDependencyParameters): void;
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;
