@@ -200,7 +200,7 @@ function drawLineTiles(
     // factor of the zoom-composited `line-width`.
     const defines = variableWidthFactor ? ['#define TAPER;', '#define VARIABLE_WIDTH_FACTOR;']
         : variableWidth ? ['#define TAPER;', '#define VARIABLE_WIDTH;']
-        : taper ? ['#define TAPER;'] : [];
+            : taper ? ['#define TAPER;'] : [];
 
     let programId: string;
     if (image) programId = 'linePattern';

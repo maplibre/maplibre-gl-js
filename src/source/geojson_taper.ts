@@ -36,7 +36,7 @@ import type Point from '@mapbox/point-geometry';
  * arrays, cluster paths) keep the previous piece-local behavior.
  */
 
-export interface TaperProfile {
+export type TaperProfile = {
     /** The original property array (one width/factor per original vertex, or any length). */
     values: number[];
     /**
@@ -45,9 +45,9 @@ export interface TaperProfile {
      * `values` (mismatched arrays are spread evenly over the ring).
      */
     knotsPerRing: number[][];
-}
+};
 
-export interface GeoJSONTaperAnnotation {
+export type GeoJSONTaperAnnotation = {
     /**
      * For every ring of the clipped piece: the normalized arc position (0..1
      * along the ORIGINAL ring) of every piece vertex. Index-aligned with the
@@ -55,12 +55,12 @@ export interface GeoJSONTaperAnnotation {
      */
     pieceKnots: number[][];
     profiles: {[propertyName: string]: TaperProfile};
-}
+};
 
 /** A feature carrying a worker-computed taper annotation. */
 export type GeoJSONTaperFeature = {_taper?: GeoJSONTaperAnnotation};
 
-interface TaperRingInfo {
+type TaperRingInfo = {
     /** Mercator x of every original ring vertex. */
     xs: number[];
     /** Mercator y of every original ring vertex. */
@@ -69,12 +69,12 @@ interface TaperRingInfo {
     cum: number[];
     /** Total arc length of the ring. */
     length: number;
-}
+};
 
-export interface TaperFeatureInfo {
+export type TaperFeatureInfo = {
     rings: TaperRingInfo[];
     profiles: {[propertyName: string]: TaperProfile};
-}
+};
 
 /**
  * Maps a feature's properties object (which geojson-vt shares by reference with
@@ -114,7 +114,7 @@ function collectTaperFeatureInfo(feature: GeoJSON.Feature, registry: TaperRegist
     const properties = feature.properties ?? {};
     const arrayProperties: {[name: string]: number[]} = {};
     for (const name of Object.keys(properties)) {
-        const value = (properties as {[key: string]: unknown})[name];
+        const value = (properties)[name];
         if (Array.isArray(value) && value.length > 0 && value.every((v) => Number.isFinite(Number(v)))) {
             arrayProperties[name] = value.map(Number);
         }
@@ -243,15 +243,6 @@ function extractPieceLines(feature: GeoJSONVTInternalTileFeature): number[][][] 
     return lines;
 }
 
-function flatToPairs(flat: ArrayLike<number>): number[][] | null {
-    if (!flat || flat.length < 4 || flat.length % 2 !== 0) return null;
-    const line: number[][] = [];
-    for (let i = 0; i < flat.length; i += 2) {
-        line.push([flat[i], flat[i + 1]]);
-    }
-    return line;
-}
-
 function pieceVertexToWorld(v: number[], canonical: CanonicalTileID): [number, number] {
     const scale = 1 / (EXTENT * (1 << canonical.z));
     return [(canonical.x * EXTENT + v[0]) * scale, (canonical.y * EXTENT + v[1]) * scale];
@@ -349,11 +340,9 @@ function projectPieceLineOntoRing(line: number[][], ring: TaperRingInfo, canonic
         const chord = Math.hypot(wx - prevX, wy - prevY);
         const expected = prevArc + chord;
         let hit = projectOntoRingWindowed(wx, wy, ring, searchFrom, expected, quant * 8);
-        if (!hit) {
-            // Vereinfachte/ungewöhnliche Pieces (Arc-Überschuss > Fenster):
-            // altes Verhalten als sicherer Fallback.
-            hit = projectOntoRing(wx, wy, ring, searchFrom);
-        }
+        // Vereinfachte/ungewöhnliche Pieces (Arc-Überschuss > Fenster):
+        // altes Verhalten als sicherer Fallback.
+        hit ||= projectOntoRing(wx, wy, ring, searchFrom);
         searchFrom = hit.segment;
         prevArc = hit.arc;
         prevX = wx;
@@ -373,12 +362,12 @@ function projectPieceLineOntoRing(line: number[][], ring: TaperRingInfo, canonic
  * bei selbstüberlappenden Linien, wo der Residual allein die Stränge nicht
  * unterscheiden kann.
  */
-function projectOntoRingCandidates(x: number, y: number, ring: TaperRingInfo, searchFrom: number, thresh: number): {arc: number; residual: number; segment: number}[] {
+function projectOntoRingCandidates(x: number, y: number, ring: TaperRingInfo, searchFrom: number, thresh: number): Array<{arc: number; residual: number; segment: number}> {
     const xs = ring.xs;
     const ys = ring.ys;
     const cum = ring.cum;
     let best = Infinity;
-    const cands: {arc: number; residual: number; segment: number}[] = [];
+    const cands: Array<{arc: number; residual: number; segment: number}> = [];
     for (let j = Math.max(0, searchFrom); j < xs.length - 1; j++) {
         const ax = xs[j];
         const ay = ys[j];

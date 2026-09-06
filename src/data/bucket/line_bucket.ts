@@ -493,20 +493,20 @@ export class LineBucket implements Bucket {
             // this feature, re-base the per-vertex knots onto the ORIGINAL line so
             // that both tiles sharing a boundary evaluate the same profile at the
             // same position (see src/source/geojson_taper.ts).
-            const pieceKnots = this.taperAnnotation ? this.taperAnnotation.pieceKnots[ringIndex] : null;
-            const expandedKnots = (pieceKnots && pieceKnots.length === rawVertices.length) ?
+            const pieceKnots = this.taperAnnotation?.pieceKnots[ringIndex] ?? null;
+            const expandedKnots = (pieceKnots?.length === rawVertices.length) ?
                 expandTaperKnots(rawVertices, vertices, pieceKnots) : null;
             this.taperVertexKnots = expandedKnots;
             if (expandedKnots) {
                 if (this.widthsMode && this.taperWidthsValues) {
                     const knots = this.taperWidthsValues.knotsPerRing[ringIndex];
-                    if (knots && knots.length === this.taperWidthsValues.values.length) {
+                    if (knots?.length === this.taperWidthsValues.values.length) {
                         this.taperWidthProfile = {values: this.taperWidthsValues.values, knots};
                     }
                 }
                 if (this.factorsMode && this.taperFactorsValues) {
                     const knots = this.taperFactorsValues.knotsPerRing[ringIndex];
-                    if (knots && knots.length === this.taperFactorsValues.values.length) {
+                    if (knots?.length === this.taperFactorsValues.values.length) {
                         this.taperFactorProfile = {values: this.taperFactorsValues.values, knots};
                     }
                 }
@@ -815,7 +815,7 @@ export class LineBucket implements Bucket {
             }
             this.layoutTaperArray.emplaceBack(value);
         }
-            this.layoutVertexArray.emplaceBack(
+        this.layoutVertexArray.emplaceBack(
             // a_pos_normal
             // Encode round/up the least significant bits
             (x << 1) + (round ? 1 : 0),

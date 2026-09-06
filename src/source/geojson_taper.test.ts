@@ -73,10 +73,10 @@ describe('geojson taper anchoring', () => {
     test('records profiles for features with numeric-array properties', () => {
         const info = registry.get(data.features[0].properties);
         expect(info).toBeDefined();
-        expect(info!.rings).toHaveLength(1);
-        expect(info!.profiles.widths.values).toEqual(widths);
+        expect(info.rings).toHaveLength(1);
+        expect(info.profiles.widths.values).toEqual(widths);
         // One value per original vertex, anchored exactly at the vertices.
-        const profileKnots = info!.profiles.widths.knotsPerRing[0];
+        const profileKnots = info.profiles.widths.knotsPerRing[0];
         expect(profileKnots[0]).toBe(0);
         expect(profileKnots[1]).toBeCloseTo(0.5, 12);
         expect(profileKnots[2]).toBe(1);
@@ -192,7 +192,7 @@ describe('geojson taper anchoring: self-overlapping (retraced) lines', () => {
             annotateGeoJSONTileFeature(feature, {z, x, y: 1991} as unknown as CanonicalTileID, registry);
             const annotation = (feature as {_taper?: GeoJSONTaperAnnotation})._taper;
             if (!annotation) continue;
-            expect(annotation.pieceKnots.length).toBe(feature.geometry.length);
+            expect(annotation.pieceKnots).toHaveLength(feature.geometry.length);
             knotSets.push(...annotation.pieceKnots);
         }
         expect(knotSets.length).toBeGreaterThanOrEqual(2);
