@@ -59,9 +59,11 @@ const cursiveScriptCodes = [
     'Syrc', // Syriac
 ];
 
-const cursiveScriptRegExp = sanitizedRegExpFromScriptCodes(cursiveScriptCodes);
+/** Built on first use: compiling `\\p{sc=…}` escapes is not free, and most pages never shape text on the main thread. */
+let cursiveScriptRegExp: RegExp | undefined;
 
 export function charAllowsLetterSpacing(char: number): boolean {
+    cursiveScriptRegExp ??= sanitizedRegExpFromScriptCodes(cursiveScriptCodes);
     return !cursiveScriptRegExp.test(String.fromCodePoint(char));
 }
 
@@ -126,9 +128,11 @@ const rtlScriptCodes = [
     'Yezi', // Yezidi
 ];
 
-const rtlScriptRegExp = sanitizedRegExpFromScriptCodes(rtlScriptCodes);
+/** Built on first use, see {@link cursiveScriptRegExp}. */
+let rtlScriptRegExp: RegExp | undefined;
 
 export function charInRTLScript(char: number): boolean {
+    rtlScriptRegExp ??= sanitizedRegExpFromScriptCodes(rtlScriptCodes);
     return rtlScriptRegExp.test(String.fromCodePoint(char));
 }
 
