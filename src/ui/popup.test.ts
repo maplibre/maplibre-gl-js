@@ -60,6 +60,20 @@ describe('popup', () => {
         map.remove();
     });
 
+    test('Popup after a move that ends while the map still loads must listen to the render event', () => {
+        const map = createMap();
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .addTo(map);
+        vi.spyOn(map, 'loaded').mockReturnValue(false);
+
+        expect(map._oneTimeListeners.render).toBeUndefined();
+        map.fire('moveend');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+        map.remove();
+    });
+
     test('Popup closes on map click events by default', () => {
         const map = createMap();
         const popup = new Popup()

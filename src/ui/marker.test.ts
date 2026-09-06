@@ -1425,6 +1425,31 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Follows the terrain that finishes loading after a move', async () => {
+        const map = createMap({width: 1024});
+        await map.once('load');
+        map.terrain = createTerrain();
+        let elevation = 0;
+        map.terrain.getElevationForLngLat = () => elevation;
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(150);
+
+        let loaded = false;
+        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
+        map.jumpTo({center: [0.1, 0.1], zoom: 13, pitch: 60});
+        const positionAtMoveEnd = marker._pos.y;
+        elevation = 1000; // the terrain tiles for the new view arrive
+        loaded = true;
+        map.triggerRepaint();
+        await sleep(200);
+        expect(marker._pos.y).not.toBe(positionAtMoveEnd);
+        expect(marker._pos.y).toBeCloseTo(map.project(marker.getLngLat()).y - 14, 0);
+
+        map.remove();
+    });
+
     test('Removes an open popup when going behind 3d terrain', async () => {
         const map = createMap();
         const marker = new Marker()

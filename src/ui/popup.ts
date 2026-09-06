@@ -268,6 +268,7 @@ export class Popup extends Evented<PopupEventType> {
             this._map._canvasContainer.classList.add('maplibregl-track-pointer');
         } else {
             this._map.on('move', this._update);
+            this._map.on('moveend', this._update);
         }
 
         this.fire(new PopupEvent('open'));
@@ -317,6 +318,7 @@ export class Popup extends Evented<PopupEventType> {
 
         if (this._map) {
             this._map.off('move', this._update);
+            this._map.off('moveend', this._update);
             this._map.off('move', this._onClose);
             this._map.off('click', this._onClose);
             this._map.off('remove', this.remove);
@@ -363,6 +365,7 @@ export class Popup extends Evented<PopupEventType> {
 
         if (this._map) {
             this._map.on('move', this._update);
+            this._map.on('moveend', this._update);
             this._map.off('mousemove', this._update);
             if (this._container) {
                 this._container.classList.remove('maplibregl-popup-track-pointer');
@@ -391,6 +394,7 @@ export class Popup extends Evented<PopupEventType> {
         this._update();
         if (this._map) {
             this._map.off('move', this._update);
+            this._map.off('moveend', this._update);
             this._map.on('mousemove', this._update);
             this._map.on('drag', this._update);
             if (this._container) {
@@ -637,14 +641,16 @@ export class Popup extends Evented<PopupEventType> {
 
     /**
      * @internal
-     * Positions the popup. A projection change takes effect in the next frame, so after that event the popup positions itself again after the render.
+     * Positions the popup. A projection change takes effect in the next frame, and terrain keeps loading after a move,
+     * so after those events the popup positions itself again after every render until the map is fully loaded.
      */
     _update = (event?: MapLibreEvent | MapMouseEvent): void => {
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }
 
-        if (event?.type === 'projectiontransition') {
+        const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
+        if (event?.type === 'projectiontransition' || ((event?.type === 'moveend' || event?.type === 'render') && !isFullyLoaded)) {
             this._map.once('render', this._update);
         }
 

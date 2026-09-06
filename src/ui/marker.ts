@@ -730,14 +730,15 @@ export class Marker extends Evented<MarkerEventType> {
     /**
      * @internal
      * Positions the marker and re-reads its terrain occlusion after the frame. A terrain or projection change takes effect
-     * in the next frame, so after those events the marker follows every render until the map is fully loaded, keeping its
-     * opacity meanwhile (the occlusion is only reliable once the terrain tiles have loaded) and then reading once, past the throttle.
+     * in the next frame, and terrain keeps loading after a move, so after those events the marker follows every render
+     * until the map is fully loaded, keeping its opacity meanwhile (the occlusion is only reliable once the terrain tiles
+     * have loaded) and then reading once, past the throttle. A move end reads right away as well.
      */
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'render' }): void => {
         if (!this._map) return;
 
         const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
-        const readAfterNextFrame = e?.type === 'terrain' || e?.type === 'projectiontransition' || (e?.type === 'render' && !isFullyLoaded);
+        const readAfterNextFrame = e?.type === 'terrain' || e?.type === 'projectiontransition' || ((e?.type === 'moveend' || e?.type === 'render') && !isFullyLoaded);
         if (readAfterNextFrame) {
             this._map.once('render', this._update);
         }
@@ -774,7 +775,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            if (readAfterNextFrame) return;
+            if (readAfterNextFrame && e?.type !== 'moveend') return;
             this._updateOpacity(e?.type === 'moveend' || e?.type === 'render');
         }).catch(() => {});
     };
