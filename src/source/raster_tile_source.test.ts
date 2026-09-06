@@ -261,6 +261,20 @@ describe('RasterTileSource', () => {
         expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
     });
 
+    test('loadTile requests the new URLs right after setTiles, before the source reloads', () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
+
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.png']);
+
+        source.loadTile({
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading'
+        } as any as Tile);
+
+        expect(transformSpy.mock.calls[0][0]).toBe('http://example2.com/10/5/5.png');
+    });
+
     test('cancels TileJSON request if removed', async () => {
         const source = createSource({url: '/source.json'});
         await sleep(0);

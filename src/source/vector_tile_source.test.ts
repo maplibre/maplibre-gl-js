@@ -480,6 +480,31 @@ describe('VectorTileSource', () => {
         });
     });
 
+    test('loadTile requests the new URLs right after setTiles, before the source reloads', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        let receivedMessage: ActorMessage<MessageType> = null;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                receivedMessage = message;
+                return Promise.resolve({});
+            }
+        });
+
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.png']);
+
+        await source.loadTile({
+            loadVectorData() {},
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5)
+        } as any as Tile);
+
+        expect((receivedMessage.data as WorkerTileParameters).request.url)
+            .toBe('http://example2.com/10/5/5.png');
+    });
+
     test('setTiles updates tiles without clearing the cache', async () => {
         const clearTiles = vi.fn();
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
