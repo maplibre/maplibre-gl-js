@@ -17,7 +17,7 @@ describe('charAllowsLetterSpacing', () => {
         expect(charAllowsLetterSpacing('A'.codePointAt(0))).toBe(true);
     });
 
-    test('disallows ideographic breaking of Arabic text', () => {
+    test('disallows letter spacing of Arabic text', () => {
         // Arabic
         expect(charAllowsLetterSpacing('۳'.codePointAt(0))).toBe(false);
         // Arabic Supplement
@@ -30,6 +30,13 @@ describe('charAllowsLetterSpacing', () => {
         expect(charAllowsLetterSpacing('ﰤ'.codePointAt(0))).toBe(false);
         // Arabic Presentation Forms-B
         expect(charAllowsLetterSpacing('ﺽ'.codePointAt(0))).toBe(false);
+    });
+
+    test('disallows letter spacing of cursive scripts written outside the basic plane', () => {
+        // Duployan
+        expect(charAllowsLetterSpacing(0x1bc00)).toBe(false);
+        // Old Uyghur
+        expect(charAllowsLetterSpacing(0x10f70)).toBe(false);
     });
 });
 
@@ -82,5 +89,17 @@ describe('charInRTLScript', () => {
     test('identifies Thaana text as right-to-left', () => {
         // Thaana
         expect(charInRTLScript('ޘ'.codePointAt(0))).toBe(true);
+    });
+
+    test('identifies the scripts an engine may not know how to match by name', () => {
+        // Garay
+        expect(charInRTLScript(0x10d40)).toBe(true);
+        // Todhri
+        expect(charInRTLScript(0x105c0)).toBe(true);
+    });
+
+    test('leaves left-to-right text alone', () => {
+        expect(charInRTLScript('A'.codePointAt(0))).toBe(false);
+        expect(charInRTLScript('あ'.codePointAt(0))).toBe(false);
     });
 });
