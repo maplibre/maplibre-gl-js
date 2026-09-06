@@ -43,6 +43,13 @@ export type PopulateParameters = {
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
+/**
+ * The asynchronously loaded tile content a bucket may need to finalize its
+ * features. Every image, glyph, and dash entry referenced by the bucket's
+ * layers arrives here after the worker has fetched it; pattern maps belong to
+ * fill, fill-extrusion, and line buckets, icon maps and glyph maps to symbol
+ * buckets.
+ */
 export type BucketDependencyParameters = {
     options: PopulateParameters;
     canonical: CanonicalTileID;

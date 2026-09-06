@@ -12,7 +12,7 @@ import {
 } from '../util/script_detection.ts';
 import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility.ts';
 import {EXTENT} from '../data/extent.ts';
-import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size.ts';
 import ONE_EM from './one_em.ts';
@@ -695,7 +695,7 @@ function addSymbol(bucket: SymbolBucket,
     if (useRuntimeCollisionCircles)
         collisionCircleDiameter *= layoutTextSize / ONE_EM;
 
-    if (bucket.glyphOffsetArray.length >= SymbolBucket.MAX_GLYPHS) warnOnce(
+    if (bucket.glyphOffsetArray.length >= bucket.maxGlyphs) warnOnce(
         'Too many glyphs being rendered in a tile. See https://github.com/mapbox/mapbox-gl-js/issues/2907'
     );
 

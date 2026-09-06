@@ -32,7 +32,7 @@ import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {type Anchor} from '../../symbol/anchor.ts';
-import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
+import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 
 import {register} from '../../util/web_worker_transfer.ts';
@@ -311,7 +311,6 @@ register('CollisionBuffers', CollisionBuffers);
  *    using a dynamic "OpacityVertexArray".
  */
 export class SymbolBucket implements Bucket {
-    static MAX_GLYPHS: number;
     static addDynamicAttributes: typeof addDynamicAttributes;
 
     collisionBoxArray: CollisionBoxArray;
@@ -334,6 +333,11 @@ export class SymbolBucket implements Bucket {
     iconSizeData: SizeData;
 
     glyphOffsetArray: GlyphOffsetArray;
+    /**
+     * The glyph cap for this bucket, normally {@link MAX_GLYPHS}. Tests lower it to
+     * exercise the overflow warning without filling a bucket with 65,535 glyphs.
+     */
+    maxGlyphs: number;
     lineVertexArray: SymbolLineVertexArray;
     features: SymbolFeature[];
     symbolInstances: SymbolInstanceArray;
@@ -378,6 +382,7 @@ export class SymbolBucket implements Bucket {
         this.sortKeyRanges = [];
 
         this.collisionCircleArray = [];
+        this.maxGlyphs = MAX_GLYPHS;
 
         const layer = this.layers[0];
         const unevaluatedLayoutValues = layer._unevaluatedLayout._values;
@@ -1001,14 +1006,6 @@ export class SymbolBucket implements Bucket {
 register('SymbolBucket', SymbolBucket, {
     omit: ['layers', 'collisionBoxArray', 'features', 'compareText']
 });
-
-// this constant is based on the size of StructArray indexes used in a symbol
-// bucket--namely, glyphOffsetArrayStart
-// eg the max valid UInt16 is 65,535
-// See https://github.com/mapbox/mapbox-gl-js/issues/2907 for motivation
-// lineStartIndex and textBoxStartIndex could potentially be concerns
-// but we expect there to be many fewer boxes/lines than glyphs
-SymbolBucket.MAX_GLYPHS = 65535;
 
 SymbolBucket.addDynamicAttributes = addDynamicAttributes;
 

@@ -130,9 +130,9 @@ describe('SymbolBucket', () => {
 
     test('SymbolBucket integer overflow', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        SymbolBucket.MAX_GLYPHS = 5;
-
         const bucket = bucketSetup();
+        bucket.maxGlyphs = 5;
+
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(features, options, undefined);
