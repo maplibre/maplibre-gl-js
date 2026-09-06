@@ -116,7 +116,9 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
             minElevation = minMax.minElevation ?? minElevation;
-            maxElevation = minMax.maxElevation ?? maxElevation;
+            // Keep the content elevation allowance (e.g. elevated symbols) even when
+            // terrain supplies its own maximum for the tile.
+            maxElevation = Math.max(minMax.maxElevation ?? maxElevation, maxElevation);
         }
         // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
         minElevation /= earthRadius;

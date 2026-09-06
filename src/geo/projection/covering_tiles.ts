@@ -1,5 +1,5 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
-import {vec2, vec3, type vec4} from 'gl-matrix';
+import {vec2, type vec3, type vec4} from 'gl-matrix';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
@@ -217,15 +217,22 @@ function getElevationForTileCulling(transform: IReadonlyTransform, maxContentEle
  * the camera by `distance`. The globe frustum's far plane is fitted to the surface horizon, so
  * elevated content beyond it would be culled while still visible.
  */
-function pushFrustumFarPlane(frustum: Frustum, distance: number): Frustum {
+function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3): Frustum {
     const far = frustum.planes[1];
-    const offset = vec3.scale(createVec3(), [far[0], far[1], far[2]], -distance);
     const points = frustum.points.map((p) => {
         const distanceToFar = far[0] * p[0] + far[1] * p[1] + far[2] * p[2] + far[3];
         if (Math.abs(distanceToFar) > 1e-6) {
             return p;
         }
-        return [p[0] + offset[0], p[1] + offset[1], p[2] + offset[2], p[3]] as vec4;
+        // Extend the corner along its own camera ray, so the pushed frustum
+        // stays a pyramid and the corners stay consistent with the side planes.
+        const ray = [p[0] - cameraPos[0], p[1] - cameraPos[1], p[2] - cameraPos[2]];
+        const rayDotNormal = far[0] * ray[0] + far[1] * ray[1] + far[2] * ray[2];
+        if (rayDotNormal >= -1e-9) {
+            return p;
+        }
+        const scale = distance / -rayDotNormal;
+        return [p[0] + ray[0] * scale, p[1] + ray[1] * scale, p[2] + ray[2] * scale, p[3]] as vec4;
     });
     const planes = frustum.planes.map((p, i) => i === 1 ? [p[0], p[1], p[2], p[3] + distance] as vec4 : p);
     const min: vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
@@ -237,10 +244,6 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number): Frustum {
         }
     }
     return new Frustum(points, planes, new Aabb(min, max));
-}
-
-function createVec3(): vec3 {
-    return [0, 0, 0];
 }
 
 /**
@@ -270,7 +273,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
             const horizonCos = clamp(-plane[3] / len, -1, 1);
             const shellCos = Math.cos(Math.acos(horizonCos) + Math.acos(1.0 / shellRadius));
             plane = [plane[0], plane[1], plane[2], -shellCos * len] as vec4;
-            frustum = pushFrustumFarPlane(frustum, Math.sqrt(shellRadius * shellRadius - 1.0));
+            frustum = pushFrustumFarPlane(frustum, Math.sqrt(shellRadius * shellRadius - 1.0), transform.cameraPosition);
         }
     }
     const cameraCoord = cameraMercatorCoordinate(transform);

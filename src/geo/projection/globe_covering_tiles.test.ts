@@ -107,6 +107,18 @@ describe('bounding volume creation', () => {
     });
 });
 
+describe('elevated content above terrain', () => {
+    test('terrain elevations do not shrink the content elevation allowance', () => {
+        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+        const terrain = {getMinMaxElevation: () => ({minElevation: 0, maxElevation: 100})};
+        const contentElevation = 500000;
+        const volume = detailsProvider.getTileBoundingVolume({x: 8, y: 5, z: 4}, 0, contentElevation, {tileSize: 512, terrain} as any);
+        const shellRadius = 1 + contentElevation / 6371008.8;
+        const reach = Math.max(...volume.points.map((p) => Math.hypot(p[0], p[1], p[2])));
+        expect(reach).toBeGreaterThanOrEqual(shellRadius * 0.999);
+    });
+});
+
 describe('elevated content tile retention', () => {
     test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
         const transform = new GlobeTransform();
