@@ -29,6 +29,7 @@ export type FillPatternUniformsType = {
     'u_pixel_coord_lower': Uniform2f;
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
+    'u_sdf_pattern': Uniform1i;
     'u_fill_translate': Uniform2f;
 };
 
@@ -40,6 +41,7 @@ export type FillOutlinePatternUniformsType = {
     'u_pixel_coord_lower': Uniform2f;
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
+    'u_sdf_pattern': Uniform1i;
     'u_fill_translate': Uniform2f;
 };
 
@@ -54,6 +56,7 @@ const fillPatternUniforms = (context: Context, locations: UniformLocations): Fil
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
+    'u_sdf_pattern': new Uniform1i(context, locations.u_sdf_pattern),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
 });
 
@@ -68,6 +71,7 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
+    'u_sdf_pattern': new Uniform1i(context, locations.u_sdf_pattern),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
 });
 
@@ -75,11 +79,13 @@ const fillPatternUniformValues = (
     painter: Painter,
     crossfade: CrossfadeParameters,
     tile: Tile,
-    translate: [number, number]
+    translate: [number, number],
+    isSdfPattern: boolean
 ): UniformValues<FillPatternUniformsType> => extend(
     patternUniformValues(crossfade, painter, tile),
     {
         'u_fill_translate': translate,
+        'u_sdf_pattern': isSdfPattern ? 1 : 0,
     }
 );
 
@@ -95,8 +101,9 @@ const fillOutlinePatternUniformValues = (
     painter: Painter,
     crossfade: CrossfadeParameters,
     tile: Tile,
-    translate: [number, number]
-): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(painter, crossfade, tile, translate);
+    translate: [number, number],
+    isSdfPattern: boolean
+): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(painter, crossfade, tile, translate, isSdfPattern);
 
 export {
     fillUniforms,

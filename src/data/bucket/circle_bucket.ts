@@ -15,6 +15,7 @@ import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -147,6 +148,8 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             imagePositions
         });
     }
+
+    addFeatures(_parameters: BucketDependencyParameters): void {}
 
     isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;
