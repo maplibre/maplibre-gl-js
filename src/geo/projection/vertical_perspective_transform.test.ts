@@ -185,6 +185,30 @@ describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
         expect(result.center.lat).toBeCloseTo(47, 9);
     });
 
+    test('round-trips a camera over an elevated center, the target altitude becoming the elevation', () => {
+        const t = createTransform(13, 55, 20);
+        t.setElevation(3000);
+        const result = t.calculateCameraOptionsFromTo(t.getCameraLngLat(), t.getCameraAltitude(), t.center, 3000);
+        expect(result.elevation).toBe(3000);
+        expect(result.zoom).toBeCloseTo(13, 6);
+        expect(result.pitch).toBeCloseTo(55, 6);
+        expect(differenceOfAnglesDegrees(result.bearing, 20)).toBeCloseTo(0, 6);
+    });
+
+    test('a camera straight above the center keeps the transform\'s bearing instead of one read from numerical noise', () => {
+        const t = createTransform(10, 30, 35);
+        for (const altitude of [100, 1000, 10000]) {
+            const result = t.calculateCameraOptionsFromTo(t.center, altitude, t.center, 0);
+            expect(result.pitch).toBeCloseTo(0, 6);
+            expect(result.bearing).toBe(35);
+        }
+    });
+
+    test('treats the two spellings of a point on the antimeridian as the same point', () => {
+        const t = createTransform(4, 0, 0);
+        expect(() => t.calculateCameraOptionsFromTo([180, 0], 0, [-180, 0], 0)).toThrow('same From and To');
+    });
+
     test('lifting a camera that dipped into the sphere lands it on the surface, still looking past the horizon', () => {
         // zooming in at pitch 100 takes the camera below sea level once the planet stops curving away under it
         const t = createTransform(5, 100, 0, new LngLat(13.44, 52.5));

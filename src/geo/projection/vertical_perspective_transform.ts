@@ -13,7 +13,7 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -23,6 +23,10 @@ const GLOBE_SAMPLES = 256;
 const GLOBE_BISECT_EPSILON_T = 1e-12;
 /** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
 const MAX_MERCATOR_Y = 1 - 1e-9;
+/** Two points on the unit globe closer than this, a micrometre, are the same point. */
+const SAME_POINT_DISTANCE = 1e-12;
+/** A camera whose horizontal offset is this small relative to its distance is straight above the center. */
+const STRAIGHT_ABOVE_RATIO = 1e-9;
 
 /**
  * @internal
@@ -558,6 +562,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.getCameraPoint();
     }
 
+    /**
+     * The camera altitude above sea level. The sphere keeps the center point at sea level whatever its elevation
+     * (`_calcMatrices` does not apply it), so altitudes on the rendered sphere are relative to the center elevation and the
+     * elevation is added back here, as the mercator transform does; {@link calculateCameraOptionsFromTo} is the inverse.
+     */
     getCameraAltitude(): number {
         // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
         return (vec3.length(this._cameraPosition) - 1) * earthRadius + this.elevation;
@@ -675,23 +684,28 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
     }
 
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number} {
-        // The inverse of the camera placement in `_calcMatrices`, in the same unit-globe coordinates.
+    /**
+     * Solves the camera placement of `_calcMatrices` backwards, in the same unit-globe coordinates. The sphere keeps the
+     * center point at sea level whatever its elevation, so the target altitude becomes the center elevation and the camera
+     * sits at radius `1 + (altitudeFrom - altitudeTo) / earthRadius`, the inverse of {@link getCameraAltitude}. Pitch and
+     * bearing are read in the center's local frame after undoing the center rotations, where +z is up, +y north and +x east.
+     * A camera straight above the center keeps the transform's bearing.
+     */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
         const center = LngLat.convert(to);
         const camera = angularCoordinatesToSurfaceVector(LngLat.convert(from));
-        vec3.scale(camera, camera, 1 + altitudeFrom / earthRadius);
+        vec3.scale(camera, camera, 1 + (altitudeFrom - altitudeTo) / earthRadius);
         const target = angularCoordinatesToSurfaceVector(center);
-        vec3.scale(target, target, 1 + altitudeTo / earthRadius);
         const toCamera = vec3.subtract(createVec3f64(), camera, target);
         const distance = vec3.length(toCamera);
-        if (distance === 0) throw new Error('Can\'t calculate camera options with same From and To');
+        if (distance < SAME_POINT_DISTANCE) throw new Error('Can\'t calculate camera options with same From and To');
 
-        // Undo the center rotations: in the center's local frame +z is up, +y north and +x east.
         const zero = createVec3f64();
         vec3.rotateY(toCamera, toCamera, zero, -degreesToRadians(center.lng));
         vec3.rotateX(toCamera, toCamera, zero, degreesToRadians(center.lat));
         const pitch = radiansToDegrees(Math.acos(clamp(toCamera[2] / distance, -1, 1)));
-        const bearing = radiansToDegrees(Math.atan2(-toCamera[0], -toCamera[1]));
+        const straightAbove = Math.hypot(toCamera[0], toCamera[1]) < distance * STRAIGHT_ABOVE_RATIO;
+        const bearing = straightAbove ? this.bearing : radiansToDegrees(Math.atan2(-toCamera[0], -toCamera[1]));
 
         // The camera sits cameraToCenterDistance / getGlobeRadiusPixels(worldSize, lat) from the center, and the radius doubles per zoom level.
         const zoom = scaleZoom(this.cameraToCenterDistance / distance / getGlobeRadiusPixels(this.tileSize, center.lat));
