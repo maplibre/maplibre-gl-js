@@ -39,8 +39,7 @@ export type GeolocateControlOptions = {
      */
     showUserLocation?: boolean;
     /**
-     * Whether a location update while tracking also changes the zoom to fit the accuracy circle, using `fitBoundsOptions`.
-     * Set it to `false` to keep the current zoom and only follow the position.
+     * If `true` then map updates from the user's location may also change the map zoom level based on the location update accuracy. If `false` then the map zoom level will not change.
      * Has no effect when `trackUserLocation` is `false`.
      * @defaultValue true
      */
