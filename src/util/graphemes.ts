@@ -3,22 +3,42 @@ import {canCombineGraphemes, textCanContainGraphemeClusters} from './unicode_pro
 const hasSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl;
 
 /**
- * Decides where the grapheme clusters are. Built once, being reached for by every label of every
- * tile, and corrected by {@link canCombineGraphemes} where CLDR's cursor rules split a unit of
+ * Decides where the grapheme clusters are. Built on first use, being reached for by every label of
+ * every tile, and corrected by {@link canCombineGraphemes} where CLDR's cursor rules split a unit of
  * writing.
+ *
+ * Constructing the first `Intl.Segmenter` makes the engine load and initialize its ICU break rules,
+ * which takes several milliseconds on the main thread. Only text shaping needs a segmenter, and that
+ * runs in the workers, so building it while the module is evaluated would charge every page that
+ * imports MapLibre for work it may never do. It is built lazily instead.
  */
-const graphemeSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'grapheme'}) : null;
+let graphemeSegmenter: Intl.Segmenter | null | undefined;
 
 /**
- * Decides where the words are, drawing on the browser's own dictionaries.
+ * Decides where the words are, drawing on the browser's own dictionaries. Built on first use, see
+ * {@link graphemeSegmenter}.
  */
-const wordSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'word'}) : null;
+let wordSegmenter: Intl.Segmenter | null | undefined;
+
+function getGraphemeSegmenter(): Intl.Segmenter | null {
+    if (graphemeSegmenter === undefined) {
+        graphemeSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'grapheme'}) : null;
+    }
+    return graphemeSegmenter;
+}
+
+function getWordSegmenter(): Intl.Segmenter | null {
+    if (wordSegmenter === undefined) {
+        wordSegmenter = hasSegmenter ? new Intl.Segmenter(undefined, {granularity: 'word'}) : null;
+    }
+    return wordSegmenter;
+}
 
 /**
  * Whether this environment can find grapheme clusters. Without it everything falls back to
  * codepoints, as MapLibre always did.
  */
-export const supportsGraphemeSegmentation: boolean = graphemeSegmenter !== null;
+export const supportsGraphemeSegmentation: boolean = hasSegmenter;
 
 /**
  * Splits text into grapheme clusters, or into codepoints where the environment cannot do better.
@@ -30,10 +50,10 @@ export const supportsGraphemeSegmentation: boolean = graphemeSegmenter !== null;
  * far more than the test that rules it out.
  */
 export function toGraphemes(text: string): string[] {
-    if (!graphemeSegmenter || !textCanContainGraphemeClusters(text)) return [...text];
+    if (!hasSegmenter || !textCanContainGraphemeClusters(text)) return [...text];
 
     const graphemes: string[] = [];
-    for (const {segment} of graphemeSegmenter.segment(text)) {
+    for (const {segment} of getGraphemeSegmenter().segment(text)) {
         const last = graphemes.length - 1;
         if (last >= 0 && canCombineGraphemes(graphemes[last], segment)) {
             graphemes[last] += segment;
@@ -53,6 +73,7 @@ export function toGraphemes(text: string): string[] {
 export function wordBoundaries(text: string): Set<number> {
     const boundaries = new Set<number>();
 
+    const wordSegmenter = getWordSegmenter();
     if (wordSegmenter) {
         for (const {index} of wordSegmenter.segment(text)) {
             boundaries.add(index);
