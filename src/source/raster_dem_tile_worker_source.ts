@@ -17,10 +17,10 @@ export class RasterDEMTileWorkerSource {
 
     async loadTile(params: WorkerDEMTileParameters): Promise<DEMData | null> {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
-        const width = rawImageData.width + 2;
-        const height = rawImageData.height + 2;
+        const width = rawImageData.width + 4;
+        const height = rawImageData.height + 4;
         const imagePixels: RGBAImage | ImageData = isImageBitmap(rawImageData) ?
-            new RGBAImage({width, height}, await getImageData(rawImageData, -1, -1, width, height)) :
+            new RGBAImage({width, height}, await getImageData(rawImageData, -2, -2, width, height)) :
             rawImageData;
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
         this.loaded ||= {};

@@ -7,13 +7,14 @@ import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'translucent') return;
+    if (renderOptions.currentPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
     const {isRenderingToTexture} = renderOptions;
