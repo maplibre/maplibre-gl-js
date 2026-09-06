@@ -24,6 +24,14 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
 };
 
 /**
+ * How many tiles whose cached textures went stale are re-rendered per frame. The rest keep drawing their
+ * previous textures and are refreshed on the following frames, nearest to the camera first. Re-rendering a
+ * tile means drawing every layer of the style into it again, so a burst of stale tiles (a settled zoom,
+ * source tiles arriving during a pan) would otherwise cost several frames of work in one frame.
+ */
+const MAX_STALE_TILES_RENDERED_PER_FRAME = 1;
+
+/**
  * @internal
  * Renders RTT-eligible layers into per-tile cached textures, then drapes
  * them onto the terrain mesh. Slots live on each Tile so their lifetime
@@ -73,7 +81,8 @@ export class RenderToTexture {
      */
     _lastPrepareZoom: number;
     /**
-     * whether the render loop needs a follow-up frame to refresh cached textures retained while zooming.
+     * whether the render loop needs a follow-up frame to refresh cached textures that were kept this frame:
+     * textures rendered at another zoom, and stale textures beyond the per-frame budget.
      */
     needsFollowUpFrame: boolean = false;
     constructor(painter: Painter, terrain: Terrain) {
@@ -129,21 +138,43 @@ export class RenderToTexture {
 
         // check tiles to render
         this.needsFollowUpFrame = false;
+        // A texture rendered at another zoom is kept while the zoom is still changing, and while the camera moves at all:
+        // a drag over terrain drifts the zoom by a hundredth of a level and pauses often, and each pause would otherwise
+        // re-render every tile.
+        const keepZoomStaleTextures = zoomChanged || this.painter.options.moving;
+        let staleTilesToRender = MAX_STALE_TILES_RENDERED_PER_FRAME;
+        // renderable tiles are ordered nearest to the camera first, so the budget goes to the tiles that matter most
         for (const tile of this._renderableTiles) {
-            for (const source in this._rttFingerprints) {
-                const frameFingerprint = this._rttFingerprints[source][tile.tileID.key];
-                const tileFingerprint = tile.rttFingerprint[source];
-                if (!frameFingerprint || frameFingerprint.equals(tileFingerprint)) continue;
-                if (zoomChanged && frameFingerprint.equalsIgnoringZoom(tileFingerprint)) {
-                    // keep the texture while the zoom is still changing (see
-                    // equalsIgnoringZoom); the follow-up frame re-runs this
-                    // comparison and releases once the zoom has settled
-                    this.needsFollowUpFrame = true;
-                } else {
-                    tile.releaseRTT(this.painter);
-                }
+            if (!this._hasStaleTextures(tile, keepZoomStaleTextures)) continue;
+            if (staleTilesToRender === 0) {
+                // keep drawing the stale textures; a follow-up frame renders them when their turn comes
+                this.needsFollowUpFrame = true;
+                continue;
+            }
+            staleTilesToRender--;
+            tile.releaseRTT(this.painter);
+        }
+    }
+
+    /**
+     * Whether the tile's cached textures no longer match the source tiles, data revision and zoom they
+     * would be rendered from this frame. With `keepZoomStaleTextures`, textures that differ only by zoom
+     * are not stale yet: a follow-up frame is requested instead, which re-runs this comparison
+     * (see {@link RTTFingerprint.equalsIgnoringZoom}).
+     */
+    _hasStaleTextures(tile: Tile, keepZoomStaleTextures: boolean): boolean {
+        let stale = false;
+        for (const source in this._rttFingerprints) {
+            const frameFingerprint = this._rttFingerprints[source][tile.tileID.key];
+            const tileFingerprint = tile.rttFingerprint[source];
+            if (!frameFingerprint || frameFingerprint.equals(tileFingerprint)) continue;
+            if (keepZoomStaleTextures && frameFingerprint.equalsIgnoringZoom(tileFingerprint)) {
+                this.needsFollowUpFrame = true;
+            } else {
+                stale = true;
             }
         }
+        return stale;
     }
 
     /**
