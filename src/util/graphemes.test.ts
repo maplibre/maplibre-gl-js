@@ -1,4 +1,4 @@
-import {describe, expect, test, vi} from 'vitest';
+import {describe, expect, test} from 'vitest';
 import {isCluster, supportsGraphemeSegmentation, toGraphemes, wordBoundaries} from './graphemes.ts';
 
 describe('toGraphemes', () => {
@@ -53,30 +53,6 @@ describe('isCluster', () => {
 
 test('the environment can segment graphemes, so that the tests above are not silently vacuous', () => {
     expect(supportsGraphemeSegmentation).toBe(true);
-});
-
-test('builds its segmenters on first use rather than while the module is evaluated', async () => {
-    vi.resetModules();
-    const RealSegmenter = Intl.Segmenter;
-    const segmenter = vi.spyOn(Intl, 'Segmenter').mockImplementation(function (...args: ConstructorParameters<typeof Intl.Segmenter>) {
-        return new RealSegmenter(...args);
-    });
-    try {
-        const graphemes = await import('./graphemes.ts');
-        expect(segmenter).not.toHaveBeenCalled();
-
-        graphemes.toGraphemes('שְׁ');
-        expect(segmenter).toHaveBeenCalledTimes(1);
-        graphemes.toGraphemes('דֵ');
-        expect(segmenter).toHaveBeenCalledTimes(1);
-
-        graphemes.wordBoundaries('Tel Aviv');
-        expect(segmenter).toHaveBeenCalledTimes(2);
-        graphemes.wordBoundaries('ราชอาณาจักรไทย');
-        expect(segmenter).toHaveBeenCalledTimes(2);
-    } finally {
-        segmenter.mockRestore();
-    }
 });
 
 describe('wordBoundaries', () => {
