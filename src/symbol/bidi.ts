@@ -1,4 +1,5 @@
 import bidiFactory from 'bidi-js';
+import {toGraphemes} from '../util/graphemes.ts';
 
 const bidi = bidiFactory();
 
@@ -21,30 +22,29 @@ const NEUTRAL_AT_END_OF_LINE = new Set(['WS', 'FSI', 'LRI', 'RLI', 'PDI']);
 /** The character types rule L1 resets wherever they appear, along with the whitespace before them. */
 const ALWAYS_RESET = new Set(['S', 'B']);
 
-/** One code point of the text, with everything the reordering rules need to place it. */
-type Character = {
-    /** Where the code point starts, in UTF-16 code units. */
+/** One grapheme cluster of the text, with everything the reordering rules need to place it. */
+type Cluster = {
+    /** Where the cluster starts, in UTF-16 code units. */
     index: number;
-    /** How many code units it takes up, which is two for anything outside the basic plane. */
-    length: number;
     text: string;
     level: number;
 };
 
 /**
- * Splits a line into code points, tagging each with the embedding level the bidi algorithm gave it.
+ * Splits a line into grapheme clusters, tagging each with the embedding level of its first character.
  *
- * Surrogate pairs are kept whole: both halves of an astral character share one level and move
- * together when a run is reversed.
+ * Reordering whole clusters is what rule L3 asks for by another route: a letter and the marks
+ * written on it move as one, so reversing a right-to-left run cannot leave the marks stranded before
+ * their letter, and layout gets back the same units of writing it asked for glyphs for.
  */
-function toCharacters(text: string, levels: Uint8Array, start: number, end: number): Character[] {
-    const characters: Character[] = [];
-    for (let index = start; index < end;) {
-        const character = String.fromCodePoint(text.codePointAt(index));
-        characters.push({index, length: character.length, text: character, level: levels[index]});
-        index += character.length;
+function toClusters(text: string, levels: Uint8Array, start: number, end: number): Cluster[] {
+    const clusters: Cluster[] = [];
+    let index = start;
+    for (const cluster of toGraphemes(text.slice(start, end))) {
+        clusters.push({index, text: cluster, level: levels[index]});
+        index += cluster.length;
     }
-    return characters;
+    return clusters;
 }
 
 /**
@@ -53,15 +53,15 @@ function toCharacters(text: string, levels: Uint8Array, start: number, end: numb
  * Without it a line of right-to-left text that ends in a space would be drawn with that space on
  * its left, where the reader does not expect it.
  */
-function resetTrailingNeutrals(characters: Character[], paragraphLevel: number): void {
+function resetTrailingNeutrals(clusters: Cluster[], paragraphLevel: number): void {
     let trailing = true;
-    for (let i = characters.length - 1; i >= 0; i--) {
-        const type = bidi.getBidiCharTypeName(characters[i].text);
+    for (let i = clusters.length - 1; i >= 0; i--) {
+        const type = bidi.getBidiCharTypeName(clusters[i].text[0]);
         if (ALWAYS_RESET.has(type)) {
-            characters[i].level = paragraphLevel;
+            clusters[i].level = paragraphLevel;
             trailing = true;
         } else if (trailing && NEUTRAL_AT_END_OF_LINE.has(type)) {
-            characters[i].level = paragraphLevel;
+            clusters[i].level = paragraphLevel;
         } else {
             trailing = false;
         }
@@ -75,15 +75,15 @@ function resetTrailingNeutrals(characters: Character[], paragraphLevel: number):
  * that level or deeper, so nesting a quotation in one direction inside a sentence in the other comes
  * out right however far the nesting goes.
  */
-function reorder(characters: Character[], paragraphLevel: number): Character[] {
+function reorder(clusters: Cluster[], paragraphLevel: number): Cluster[] {
     let highest = paragraphLevel;
     let lowestOdd = Infinity;
-    for (const {level} of characters) {
+    for (const {level} of clusters) {
         if (level > highest) highest = level;
         if ((level | 1) < lowestOdd) lowestOdd = level | 1;
     }
 
-    const ordered = characters.slice();
+    const ordered = clusters.slice();
     for (let level = highest; level >= lowestOdd; level--) {
         for (let start = 0; start < ordered.length; start++) {
             if (ordered[start].level < level) continue;
@@ -104,9 +104,9 @@ function reorder(characters: Character[], paragraphLevel: number): Character[] {
  * An opening parenthesis in Hebrew text is drawn as the shape that opens in that direction, which is
  * the one Unicode calls a closing parenthesis.
  */
-function mirror(character: Character): string {
-    if (character.level % 2 === 0) return character.text;
-    return bidi.getMirroredCharacter(character.text) ?? character.text;
+function mirror(cluster: Cluster): string {
+    if (cluster.level % 2 === 0) return cluster.text;
+    return bidi.getMirroredCharacter(cluster.text) ?? cluster.text;
 }
 
 /** The paragraph a line falls in, which is what its direction is taken from. */
@@ -124,9 +124,8 @@ type ReorderedLine = {
 /**
  * Puts one line into visual order.
  *
- * Reordering happens a code point at a time, as ICU does it, which leaves the combining marks of a
- * right-to-left run sitting before the letter they are written on. MapLibre puts them back itself
- * once it has the line, so they are deliberately left alone here.
+ * Reordering happens a grapheme cluster at a time, so a letter and the marks written on it stay
+ * together however the line is rearranged.
  */
 function reorderLine(
     text: string,
@@ -135,16 +134,16 @@ function reorderLine(
     start: number,
     end: number
 ): ReorderedLine {
-    const characters = toCharacters(text, levels, start, end);
-    resetTrailingNeutrals(characters, paragraphLevel);
+    const clusters = toClusters(text, levels, start, end);
+    resetTrailingNeutrals(clusters, paragraphLevel);
 
     let reorderedText = '';
     const sourceIndices: number[] = [];
-    for (const character of reorder(characters, paragraphLevel)) {
-        if (BIDI_CONTROLS.test(character.text)) continue;
-        const mirrored = mirror(character);
+    for (const cluster of reorder(clusters, paragraphLevel)) {
+        if (BIDI_CONTROLS.test(cluster.text)) continue;
+        const mirrored = mirror(cluster);
         reorderedText += mirrored;
-        sourceIndices.push(...Array(mirrored.length).fill(character.index));
+        sourceIndices.push(...Array(mirrored.length).fill(cluster.index));
     }
     return {text: reorderedText, sourceIndices};
 }
