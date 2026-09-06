@@ -311,8 +311,6 @@ register('CollisionBuffers', CollisionBuffers);
  *    using a dynamic "OpacityVertexArray".
  */
 export class SymbolBucket implements Bucket {
-    static addDynamicAttributes: typeof addDynamicAttributes;
-
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
     overscaling: number;
@@ -1006,7 +1004,5 @@ export class SymbolBucket implements Bucket {
 register('SymbolBucket', SymbolBucket, {
     omit: ['layers', 'collisionBoxArray', 'features', 'compareText']
 });
-
-SymbolBucket.addDynamicAttributes = addDynamicAttributes;
 
 export {addDynamicAttributes};
