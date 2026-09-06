@@ -43,6 +43,7 @@ import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -589,6 +590,8 @@ export class SymbolBucket implements Bucket {
             imagePositions
         });
     }
+
+    addFeatures(_parameters: BucketDependencyParameters): void {}
 
     isEmpty(): boolean {
         // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
