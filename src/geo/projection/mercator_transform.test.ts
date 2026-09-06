@@ -888,8 +888,8 @@ function createSimpleTransform(width: number, height: number): MercatorTransform
         minPitch: 0,
         maxPitch: 85,
         renderWorldCopies: true,
-        worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs),
     });
+    transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
     transform.resize(width, height);
     return transform;
 }

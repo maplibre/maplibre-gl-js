@@ -90,11 +90,6 @@ export type TransformOptions = {
      * An override of the transform's default constraining function for respecting its longitude and latitude bounds.
      */
     constrainOverride?: TransformConstrainFunction | null;
-    /**
-     * The lng/lat to world coordinate mapping the transform positions the camera in. Defaults to mercator;
-     * the projection factory passes a registered CRS's mapping here.
-     */
-    worldCoordinateHelper?: WorldCoordinateHelper;
 };
 
 function getTileZoom(zoom: number): number {
@@ -173,7 +168,7 @@ export class TransformHelper implements ITransformGetters {
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
-        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
+        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -520,6 +515,16 @@ export class TransformHelper implements ITransformGetters {
      * Sets or clears the map's geographical constraints.
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
+    /**
+     * Replaces the lng/lat to world coordinate mapping, mercator by default. The projection factory calls this on a
+     * transform it just built for a registered CRS, and `clone` calls it to keep the mapping. Without max bounds the
+     * latitude range is derived again, since it depends on whether the world wraps.
+     */
+    setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
+        this._worldCoordinateHelper = worldCoordinateHelper;
+        if (!this._lngRange) this.setMaxBounds();
+    }
+
     setMaxBounds(bounds?: LngLatBounds | null): void {
         if (bounds) {
             this._lngRange = [bounds.getWest(), bounds.getEast()];

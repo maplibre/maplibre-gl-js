@@ -82,7 +82,8 @@ describe('TransformHelper', () => {
         });
 
         test('leaves the target alone in a world that does not wrap', () => {
-            const transform = new MercatorTransform({renderWorldCopies: true, worldCoordinateHelper: new CrsWorldCoordinateHelper(createRotatedCrs())});
+            const transform = new MercatorTransform({renderWorldCopies: true});
+            transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(createRotatedCrs()));
             transform.resize(200, 200);
             transform.setZoom(4);
             transform.setCenter(new LngLat(140, 0));

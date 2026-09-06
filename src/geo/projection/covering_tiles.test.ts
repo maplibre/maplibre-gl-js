@@ -660,7 +660,8 @@ describe('coveringTiles', () => {
         });
 
         test('only includes tiles for a single world over a non-wrapping CRS, even where a pitched view sees past its edge', () => {
-            const simpleTransform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)});
+            const simpleTransform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+            simpleTransform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
             simpleTransform.resize(512, 512);
             simpleTransform.setZoom(1);
             simpleTransform.setPitch(60);
