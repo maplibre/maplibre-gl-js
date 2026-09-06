@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Add support for right-to-left scripts</title>
-    <meta property="og:description" content="Use the mapbox-gl-rtl-text plugin to support right-to-left languages such as Arabic and Hebrew." />
+    <meta property="og:description" content="Right-to-left languages such as Arabic and Hebrew are drawn correctly with nothing to set up: MapLibre shapes Arabic and reorders bidirectional text itself." />
     <meta property="og:category" content="Internationalization" />
     <meta property="og:order" content="2" />
     <meta property="og:created" content="2025-06-25" />
@@ -20,11 +20,6 @@
 
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
-
-    maplibregl.setRTLTextPlugin(
-        'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
-        true // Lazy load the plugin
-    );
 
     const map = new maplibregl.Map({
         container: 'map',

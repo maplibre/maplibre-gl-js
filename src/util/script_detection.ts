@@ -132,19 +132,15 @@ export function charInRTLScript(char: number): boolean {
     return rtlScriptRegExp.test(String.fromCodePoint(char));
 }
 
-export function charInSupportedScript(char: number, canRenderRTL: boolean): boolean {
-    // This is a rough heuristic: whether we "can render" a script
-    // actually depends on the properties of the font being used
-    // and whether differences from the ideal rendering are considered
-    // semantically significant.
-
-    // Even in Latin script, we "can't render" combinations such as the fi
-    // ligature, but we don't consider that semantically significant.
-    if (!canRenderRTL && charInRTLScript(char)) {
-        return false;
-    }
+/**
+ * Whether MapLibre can draw this character well enough to say it supports it.
+ *
+ * A rough heuristic: what can really be drawn depends on the font in use, and on whether a
+ * difference from the ideal is worth calling a failure. Even in Latin there are combinations such as
+ * the fi ligature that are not drawn as a typesetter would, and that nobody counts against it.
+ */
+export function charInSupportedScript(char: number): boolean {
     return !codePointRequiresComplexTextShaping(char);
-
 }
 
 export function stringContainsRTLText(chars: string): boolean {
@@ -156,9 +152,9 @@ export function stringContainsRTLText(chars: string): boolean {
     return false;
 }
 
-export function isStringInSupportedScript(chars: string, canRenderRTL: boolean): boolean {
+export function isStringInSupportedScript(chars: string): boolean {
     for (const char of chars) {
-        if (!charInSupportedScript(char.codePointAt(0), canRenderRTL)) {
+        if (!charInSupportedScript(char.codePointAt(0))) {
             return false;
         }
     }

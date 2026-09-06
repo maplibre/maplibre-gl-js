@@ -242,15 +242,8 @@ describe('SymbolBucket', () => {
         expect(ltrBucket.hasRTLText).toBeFalsy();
     });
 
-    // Test to prevent symbol bucket with rtl from text being culled by worker serialization.
-    test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
-        const rtlBucket = bucketSetup('مرحبا');
-        const options = createPopulateOptions([]);
-        rtlBucket.createArrays();
-        rtlBucket.populate(features, options, undefined);
-
-        expect(rtlBucket.isEmpty()).toBeFalsy();
-        expect(rtlBucket.symbolInstances).toHaveLength(0);
+    test('SymbolBucket shapes rtl text without a plugin having to be loaded', () => {
+        expect(glyphsRequestedFor('مرحبا')).toEqual(['ﻣ', 'ﺮ', 'ﺣ', 'ﺒ', 'ﺎ']);
     });
 
     test('SymbolBucket detects rtl text mixed with ltr text', () => {

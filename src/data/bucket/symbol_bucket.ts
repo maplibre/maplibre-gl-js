@@ -37,7 +37,6 @@ import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker.ts';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -505,15 +504,8 @@ export class SymbolBucket implements Bucket {
                 const resolvedTokens = layer.getValueAndResolveTokens('text-field', evaluationFeature, canonical, availableImages);
                 const formattedText = Formatted.factory(resolvedTokens);
 
-                // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
                 this.hasRTLText ||= containsRTLText(formattedText);
-                if (
-                    !this.hasRTLText || // non-rtl text so can proceed safely
-                    rtlWorkerPlugin.getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
-                    this.hasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
-                ) {
-                    text = transformText(formattedText, layer, evaluationFeature);
-                }
+                text = transformText(formattedText, layer, evaluationFeature);
             }
 
             let icon: ResolvedImage;
@@ -591,9 +583,7 @@ export class SymbolBucket implements Bucket {
     }
 
     isEmpty(): boolean {
-        // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
-        // In order for the bucket to be serialized, and not discarded as an empty bucket both checks are necessary.
-        return this.symbolInstances.length === 0 && !this.hasRTLText;
+        return this.symbolInstances.length === 0;
     }
 
     uploadPending(): boolean {

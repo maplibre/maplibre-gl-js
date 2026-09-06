@@ -1,6 +1,5 @@
 import {ZoomHistory} from './zoom_history.ts';
 import {isStringInSupportedScript} from '../util/script_detection.ts';
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 
 import type {GlobalProperties, TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -64,5 +63,5 @@ export class EvaluationParameters implements GlobalProperties {
 }
 
 function isSupportedScript(str: string): boolean {
-    return isStringInSupportedScript(str, rtlWorkerPlugin.getRTLTextPluginStatus() === 'loaded');
+    return isStringInSupportedScript(str);
 }
