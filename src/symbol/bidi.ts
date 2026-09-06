@@ -1,4 +1,4 @@
-import bidiFactory from 'bidi-js';
+import bidiFactory, {type BidiCharTypeName} from 'bidi-js';
 import {toGraphemes} from '../util/graphemes.ts';
 
 const bidi = bidiFactory();
@@ -17,10 +17,10 @@ const BIDI_CONTROLS = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/;
  * Trailing spaces belong to the paragraph rather than to the run they follow, so a line of Hebrew
  * ending in a space does not put that space on the wrong end of the line.
  */
-const NEUTRAL_AT_END_OF_LINE = new Set(['WS', 'FSI', 'LRI', 'RLI', 'PDI']);
+const NEUTRAL_AT_END_OF_LINE = new Set<BidiCharTypeName>(['WS', 'FSI', 'LRI', 'RLI', 'PDI']);
 
 /** The character types rule L1 resets wherever they appear, along with the whitespace before them. */
-const ALWAYS_RESET = new Set(['S', 'B']);
+const ALWAYS_RESET = new Set<BidiCharTypeName>(['S', 'B']);
 
 /** One grapheme cluster of the text, with everything the reordering rules need to place it. */
 type Cluster = {

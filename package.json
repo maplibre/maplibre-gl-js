@@ -38,7 +38,7 @@
     "@maplibre/mlt": "^1.2.0",
     "@maplibre/vt-pbf": "^4.3.2",
     "@types/geojson": "^7946.0.16",
-    "bidi-js": "^1.0.3",
+    "bidi-js": "^1.1.0",
     "earcut": "^3.2.3",
     "gl-matrix": "^3.4.4",
     "kdbush": "^4.1.0",
