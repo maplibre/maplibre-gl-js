@@ -31,6 +31,72 @@ const ARROW_KEY_DELTAS: Partial<Record<KeyboardEvent['key'], [number, number]>> 
 const KEYBOARD_DRAG_SMALL_STEP = 1;
 const KEYBOARD_DRAG_LARGE_STEP = 10;
 
+/** Fill color of the default marker when {@link MarkerOptions.color} is not given. */
+const DEFAULT_MARKER_COLOR = '#3FB1CE';
+/** Height in CSS pixels of the default marker SVG at scale 1. */
+const DEFAULT_MARKER_HEIGHT = 41;
+/** Width in CSS pixels of the default marker SVG at scale 1. */
+const DEFAULT_MARKER_WIDTH = 27;
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Creates an SVG element with the given attributes, set in the order given, and children. */
+function svgElement(tag: string, attributes: Record<string, string>, children: Element[] = []): Element {
+    const element = DOM.createNS(SVG_NS, tag);
+    for (const name in attributes) element.setAttributeNS(null, name, attributes[name]);
+    for (const child of children) element.appendChild(child);
+    return element;
+}
+
+/** The default marker SVG at scale 1 in the default color, built on first use and cloned per marker. */
+let defaultMarkerTemplate: Element;
+
+/**
+ * Returns the shared default marker SVG, building it the first time it is asked for. Assembling
+ * the pin takes about fifty DOM calls, so each default {@link Marker} deep-clones this template
+ * and overrides only its size and its fill, see {@link defaultMarkerFillGroup}.
+ */
+function getDefaultMarkerTemplate(): Element {
+    if (defaultMarkerTemplate) return defaultMarkerTemplate;
+
+    const shadowRadii = [
+        ['10.5', '5.25002273'],
+        ['10.5', '5.25002273'],
+        ['9.5', '4.77275007'],
+        ['8.5', '4.29549936'],
+        ['7.5', '3.81822308'],
+        ['6.5', '3.34094679'],
+        ['5.5', '2.86367051'],
+        ['4.5', '2.38636864']
+    ];
+    const shadow = svgElement('g', {transform: 'translate(3.0, 29.0)', fill: '#000000'},
+        shadowRadii.map(([rx, ry]) => svgElement('ellipse', {opacity: '0.04', cx: '10.5', cy: '5.80029008', rx, ry})));
+    const background = svgElement('g', {fill: DEFAULT_MARKER_COLOR}, [
+        svgElement('path', {d: 'M27,13.5 C27,19.074644 20.250001,27.000002 14.75,34.500002 C14.016665,35.500004 12.983335,35.500004 12.25,34.500002 C6.7499993,27.000002 0,19.222562 0,13.5 C0,6.0441559 6.0441559,0 13.5,0 C20.955844,0 27,6.0441559 27,13.5 Z'})
+    ]);
+    const border = svgElement('g', {opacity: '0.25', fill: '#000000'}, [
+        svgElement('path', {d: 'M13.5,0 C6.0441559,0 0,6.0441559 0,13.5 C0,19.222562 6.7499993,27 12.25,34.5 C13,35.522727 14.016664,35.500004 14.75,34.5 C20.250001,27 27,19.074644 27,13.5 C27,6.0441559 20.955844,0 13.5,0 Z M13.5,1 C20.415404,1 26,6.584596 26,13.5 C26,15.898657 24.495584,19.181431 22.220703,22.738281 C19.945823,26.295132 16.705119,30.142167 13.943359,33.908203 C13.743445,34.180814 13.612715,34.322738 13.5,34.441406 C13.387285,34.322738 13.256555,34.180814 13.056641,33.908203 C10.284481,30.127985 7.4148684,26.314159 5.015625,22.773438 C2.6163816,19.232715 1,15.953538 1,13.5 C1,6.584596 6.584596,1 13.5,1 Z'})
+    ]);
+    const maki = svgElement('g', {transform: 'translate(6.0, 7.0)', fill: '#FFFFFF'});
+    const circles = svgElement('g', {transform: 'translate(8.0, 8.0)'}, [
+        svgElement('circle', {fill: '#000000', opacity: '0.25', cx: '5.5', cy: '5.5', r: '5.4999962'}),
+        svgElement('circle', {fill: '#FFFFFF', cx: '5.5', cy: '5.5', r: '5.4999962'})
+    ]);
+
+    defaultMarkerTemplate = svgElement('svg', {
+        display: 'block',
+        height: `${DEFAULT_MARKER_HEIGHT}px`,
+        width: `${DEFAULT_MARKER_WIDTH}px`,
+        viewBox: `0 0 ${DEFAULT_MARKER_WIDTH} ${DEFAULT_MARKER_HEIGHT}`
+    }, [svgElement('g', {'fill-rule': 'nonzero'}, [shadow, background, border, maki, circles])]);
+    return defaultMarkerTemplate;
+}
+
+/** The group of a default marker SVG that carries the pin's fill color: the second child of its single top-level group. */
+function defaultMarkerFillGroup(svg: Element): Element {
+    return svg.firstElementChild.children[1];
+}
+
 /**
  * The {@link Marker} options object
  */
@@ -254,7 +320,7 @@ export class Marker extends Evented<MarkerEventType> {
         super();
 
         this._anchor = options?.anchor || 'center';
-        this._color = options?.color || '#3FB1CE';
+        this._color = options?.color || DEFAULT_MARKER_COLOR;
         this._scale = options?.scale || 1;
         this._draggable = options?.draggable || false;
         this._clickTolerance = options?.clickTolerance || 0;
@@ -273,99 +339,10 @@ export class Marker extends Evented<MarkerEventType> {
             this._defaultMarker = true;
             this._element = DOM.create('div');
 
-            // create default map marker SVG
-            const svg = DOM.createNS('http://www.w3.org/2000/svg', 'svg');
-            const defaultHeight = 41;
-            const defaultWidth = 27;
-            svg.setAttributeNS(null, 'display', 'block');
-            svg.setAttributeNS(null, 'height', `${defaultHeight}px`);
-            svg.setAttributeNS(null, 'width', `${defaultWidth}px`);
-            svg.setAttributeNS(null, 'viewBox', `0 0 ${defaultWidth} ${defaultHeight}`);
-
-            const markerLarge = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            markerLarge.setAttributeNS(null, 'stroke', 'none');
-            markerLarge.setAttributeNS(null, 'stroke-width', '1');
-            markerLarge.setAttributeNS(null, 'fill', 'none');
-            markerLarge.setAttributeNS(null, 'fill-rule', 'evenodd');
-
-            const page1 = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            page1.setAttributeNS(null, 'fill-rule', 'nonzero');
-
-            const shadow = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            shadow.setAttributeNS(null, 'transform', 'translate(3.0, 29.0)');
-            shadow.setAttributeNS(null, 'fill', '#000000');
-
-            const ellipses = [
-                {'rx': '10.5', 'ry': '5.25002273'},
-                {'rx': '10.5', 'ry': '5.25002273'},
-                {'rx': '9.5', 'ry': '4.77275007'},
-                {'rx': '8.5', 'ry': '4.29549936'},
-                {'rx': '7.5', 'ry': '3.81822308'},
-                {'rx': '6.5', 'ry': '3.34094679'},
-                {'rx': '5.5', 'ry': '2.86367051'},
-                {'rx': '4.5', 'ry': '2.38636864'}
-            ];
-
-            for (const data of ellipses) {
-                const ellipse = DOM.createNS('http://www.w3.org/2000/svg', 'ellipse');
-                ellipse.setAttributeNS(null, 'opacity', '0.04');
-                ellipse.setAttributeNS(null, 'cx', '10.5');
-                ellipse.setAttributeNS(null, 'cy', '5.80029008');
-                ellipse.setAttributeNS(null, 'rx', data['rx']);
-                ellipse.setAttributeNS(null, 'ry', data['ry']);
-                shadow.appendChild(ellipse);
-            }
-
-            const background = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            background.setAttributeNS(null, 'fill', this._color);
-
-            const bgPath = DOM.createNS('http://www.w3.org/2000/svg', 'path');
-            bgPath.setAttributeNS(null, 'd', 'M27,13.5 C27,19.074644 20.250001,27.000002 14.75,34.500002 C14.016665,35.500004 12.983335,35.500004 12.25,34.500002 C6.7499993,27.000002 0,19.222562 0,13.5 C0,6.0441559 6.0441559,0 13.5,0 C20.955844,0 27,6.0441559 27,13.5 Z');
-
-            background.appendChild(bgPath);
-
-            const border = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            border.setAttributeNS(null, 'opacity', '0.25');
-            border.setAttributeNS(null, 'fill', '#000000');
-
-            const borderPath = DOM.createNS('http://www.w3.org/2000/svg', 'path');
-            borderPath.setAttributeNS(null, 'd', 'M13.5,0 C6.0441559,0 0,6.0441559 0,13.5 C0,19.222562 6.7499993,27 12.25,34.5 C13,35.522727 14.016664,35.500004 14.75,34.5 C20.250001,27 27,19.074644 27,13.5 C27,6.0441559 20.955844,0 13.5,0 Z M13.5,1 C20.415404,1 26,6.584596 26,13.5 C26,15.898657 24.495584,19.181431 22.220703,22.738281 C19.945823,26.295132 16.705119,30.142167 13.943359,33.908203 C13.743445,34.180814 13.612715,34.322738 13.5,34.441406 C13.387285,34.322738 13.256555,34.180814 13.056641,33.908203 C10.284481,30.127985 7.4148684,26.314159 5.015625,22.773438 C2.6163816,19.232715 1,15.953538 1,13.5 C1,6.584596 6.584596,1 13.5,1 Z');
-
-            border.appendChild(borderPath);
-
-            const maki = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            maki.setAttributeNS(null, 'transform', 'translate(6.0, 7.0)');
-            maki.setAttributeNS(null, 'fill', '#FFFFFF');
-
-            const circleContainer = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            circleContainer.setAttributeNS(null, 'transform', 'translate(8.0, 8.0)');
-
-            const circle1 = DOM.createNS('http://www.w3.org/2000/svg', 'circle');
-            circle1.setAttributeNS(null, 'fill', '#000000');
-            circle1.setAttributeNS(null, 'opacity', '0.25');
-            circle1.setAttributeNS(null, 'cx', '5.5');
-            circle1.setAttributeNS(null, 'cy', '5.5');
-            circle1.setAttributeNS(null, 'r', '5.4999962');
-
-            const circle2 = DOM.createNS('http://www.w3.org/2000/svg', 'circle');
-            circle2.setAttributeNS(null, 'fill', '#FFFFFF');
-            circle2.setAttributeNS(null, 'cx', '5.5');
-            circle2.setAttributeNS(null, 'cy', '5.5');
-            circle2.setAttributeNS(null, 'r', '5.4999962');
-
-            circleContainer.appendChild(circle1);
-            circleContainer.appendChild(circle2);
-
-            page1.appendChild(shadow);
-            page1.appendChild(background);
-            page1.appendChild(border);
-            page1.appendChild(maki);
-            page1.appendChild(circleContainer);
-
-            svg.appendChild(page1);
-
-            svg.setAttributeNS(null, 'height', `${defaultHeight * this._scale}px`);
-            svg.setAttributeNS(null, 'width', `${defaultWidth * this._scale}px`);
+            const svg = getDefaultMarkerTemplate().cloneNode(true) as Element;
+            svg.setAttributeNS(null, 'height', `${DEFAULT_MARKER_HEIGHT * this._scale}px`);
+            svg.setAttributeNS(null, 'width', `${DEFAULT_MARKER_WIDTH * this._scale}px`);
+            defaultMarkerFillGroup(svg).setAttributeNS(null, 'fill', this._color);
 
             this._element.appendChild(svg);
 
