@@ -715,28 +715,33 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
-        const current = this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
         if (!this._projection) {
-            return current;
+            return this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
         }
         // The result must render with the geometry it was solved with, and on the globe that geometry follows the
-        // projection state at the result's zoom. Solve with both geometries and return the candidate that renders with
-        // its own. When neither does, the request lands in the transition band, where both are off by their
-        // approximation error, and the one solved with the current view's geometry is kept; the same when both do.
-        const solveWith = (transitionState: number) => {
+        // projection state at the result's zoom. Solve with both geometries and return the candidate whose zoom renders
+        // closest to its own geometry: a mismatch of 0 renders with it, 1 renders with the other one, and anything
+        // between lands in the transition band, where the map renders a blend and the result is approximate either way.
+        const solveWith = (transitionState: number): CameraOptions | null => {
             const transform = this.transform.clone();
             transform.setTransitionState(transitionState);
-            return transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+            try {
+                return transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+            } catch {
+                return null; // the sphere keeps the target at sea level, so it may see coincident endpoints where the flat geometry does not
+            }
         };
-        const rendersAsSphere = (zoom: number) => this._projection.transitionStateAtZoom(zoom) > 0;
         const flat = solveWith(0);
         const sphere = solveWith(1);
-        const flatRendersFlat = !rendersAsSphere(flat.zoom);
-        const sphereRendersSphere = rendersAsSphere(sphere.zoom);
-        if (flatRendersFlat !== sphereRendersSphere) {
-            return flatRendersFlat ? flat : sphere;
+        if (!flat || !sphere) {
+            if (!flat && !sphere) {
+                throw new Error('Can\'t calculate camera options with same From and To');
+            }
+            return flat ?? sphere;
         }
-        return current;
+        const flatMismatch = this._projection.transitionStateAtZoom(flat.zoom);
+        const sphereMismatch = 1 - this._projection.transitionStateAtZoom(sphere.zoom);
+        return flatMismatch <= sphereMismatch ? flat : sphere;
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {

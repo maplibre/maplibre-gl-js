@@ -2740,26 +2740,36 @@ describe('jumpTo globe projection', () => {
             expect(options.pitch).toBeCloseTo(flat.pitch, 9);
         });
 
-        test('calculateCameraOptionsFromTo keeps the current geometry when the result lands in the transition band', () => {
+        test('calculateCameraOptionsFromTo returns the candidate rendering closest to its geometry when the result lands in the transition band', () => {
             const {camera} = createCamera({maxPitch: 180}, true, {center: [0, 0], zoom: 15});
-            camera.transform.setTransitionState(0);
             const request: [LngLatLike, number, LngLatLike, number] = [[0, 0], 0, [20, 0], 0];
             const flat = createCamera({maxPitch: 180}, false).camera.calculateCameraOptionsFromTo(...request);
             const sphereTransform = camera.transform.clone();
             sphereTransform.setTransitionState(1);
             const sphere = sphereTransform.calculateCameraOptionsFromTo(...request);
             expect(sphere.zoom).toBeGreaterThan(flat.zoom);
-            // a band between the two candidate zooms: the flat solution renders as a sphere, the sphere solution as mercator
+            // a band ending between the two candidate zooms: the flat solution renders as a mostly flat blend, the sphere solution fully as mercator
             const top = (flat.zoom + sphere.zoom) / 2;
             const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], top - 0.01, 'vertical-perspective', top, 'mercator']} as any, {});
             camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
             expect(projection.transitionStateAtZoom(flat.zoom)).toBeGreaterThan(0);
+            expect(projection.transitionStateAtZoom(flat.zoom)).toBeLessThan(0.5);
             expect(projection.transitionStateAtZoom(sphere.zoom)).toBe(0);
 
-            const options = camera.calculateCameraOptionsFromTo(...request);
-            expect(options.zoom).toBeCloseTo(flat.zoom, 9); // the view renders as mercator now
-            camera.transform.setTransitionState(1);
-            expect(camera.calculateCameraOptionsFromTo(...request).zoom).toBeCloseTo(sphere.zoom, 9);
+            for (const currentState of [0, 1]) {
+                camera.transform.setTransitionState(currentState);
+                expect(camera.calculateCameraOptionsFromTo(...request).zoom).toBeCloseTo(flat.zoom, 9);
+            }
+        });
+
+        test('calculateCameraOptionsFromTo falls back to the flat solution when the sphere sees coincident endpoints', () => {
+            const {camera} = createCamera({maxPitch: 180}, true, {center: [0, 0], zoom: 15});
+            camera.transform.setTransitionState(0);
+            // the sphere keeps the target at sea level, so a target straight above the camera is the camera itself there
+            const options = camera.calculateCameraOptionsFromTo([0, 0], 0, [0, 0], 1000);
+            expect(options.pitch).toBeCloseTo(180, 6);
+            expect(options.zoom).toBeGreaterThan(12);
+            expect(() => camera.calculateCameraOptionsFromTo([0, 0], 0, [0, 0], 0)).toThrow('same From and To');
         });
 
         test('a projection expression that renders mercator at low zoom lifts the camera with the flat geometry', () => {
