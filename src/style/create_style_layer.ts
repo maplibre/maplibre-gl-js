@@ -12,6 +12,14 @@ import {CustomStyleLayer, type CustomLayerInterface} from './style_layer/custom_
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+// F-65: Die Taper-Paint-Properties (line-width-start/-end, line-widths,
+// line-width-factors) sind in der veröffentlichten maplibre-style-spec noch nicht
+// enthalten und werden hier zur Laufzeit patched. Der Aufruf muss in einem Modul
+// stehen, das garantiert im Bundle bleibt — der frühere Aufruf in validate_style
+// wurde vom Prod-Tree-Shaking (treeshake: true) entfernt.
+import {extendStyleSpecWithLineTaper} from './line_taper_spec.ts';
+extendStyleSpecWithLineTaper();
+
 export type AnyStyleLayer =
     | HeatmapStyleLayer
     | CircleStyleLayer

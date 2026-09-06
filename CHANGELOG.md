@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add tapered line rendering with three new line-layer paint properties: `line-width-start`/`line-width-end` for a linear taper along the line, `line-widths` for one absolute width per feature vertex, and `line-width-factors` for one multiplier of the zoom-composited `line-width` per vertex (by [@pcace](https://github.com/pcace))
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
 - Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#8328](https://github.com/maplibre/maplibre-gl-js/pull/8328), continues [#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
 - Build the `Intl.Segmenter` instances used for text shaping on first use instead of at import, shaving several milliseconds off loading MapLibre on the main thread ([#8337](https://github.com/maplibre/maplibre-gl-js/pull/8337)) (by [@cherenkov](https://github.com/cherenkov))

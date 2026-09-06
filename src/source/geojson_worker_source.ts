@@ -1,8 +1,9 @@
 import {getJSON} from '../util/ajax.ts';
 import {RequestPerformance} from '../util/request_performance.ts';
-import {fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent.ts';
 import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
+import {annotateGeoJSONTileFeature, buildTaperRegistry, type GeoJSONTaperAnnotation, type GeoJSONTaperFeature, type TaperRegistry} from './geojson_taper.ts';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
@@ -61,6 +62,20 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
  * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
+/**
+ * A {@link GeoJSONWrapper} that forwards worker-computed taper annotations
+ * (see geojson_taper.ts) from the geojson-vt tile features to the per-call
+ * feature wrappers the buckets consume.
+ */
+class TaperGeoJSONWrapper extends GeoJSONWrapper {
+    feature(i: number): VectorTileFeatureLike {
+        const feature = super.feature(i) as VectorTileFeatureLike & GeoJSONTaperFeature;
+        const annotation = (this.features[i] as unknown as {_taper?: GeoJSONTaperAnnotation})._taper;
+        if (annotation) feature._taper = annotation;
+        return feature;
+    }
+}
+
 export class GeoJSONWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
@@ -70,6 +85,9 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
+    // Original-geometry anchoring for per-vertex taper properties (`line-widths`,
+    // `line-width-factors`), built when the source data is loaded. See geojson_taper.ts.
+    _taperRegistry: TaperRegistry | null = null;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
@@ -89,7 +107,15 @@ export class GeoJSONWorkerSource implements WorkerSource {
         const geoJSONTile = this._geoJSONIndex.getTile(z, x, y);
         if (!geoJSONTile) return null;
 
-        const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
+        if (this._taperRegistry) {
+            // Re-anchor per-vertex taper properties to the original feature geometry
+            // so widths stay continuous across tile boundaries (see geojson_taper.ts).
+            for (const tileFeature of geoJSONTile.features) {
+                annotateGeoJSONTileFeature(tileFeature, params.tileID.canonical, this._taperRegistry);
+            }
+        }
+
+        const geojsonWrapper = new TaperGeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
         return {
             vectorTile: geojsonWrapper,
             rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer
@@ -249,6 +275,9 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
         if (params.data) {
             params.data = this._filterGeoJSON(params.data, params.filter, params.source);
+            // Record original-geometry anchoring for per-vertex taper properties
+            // before the data is tiled (see geojson_taper.ts).
+            this._taperRegistry = buildTaperRegistry(params.data);
             this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
             return;
         }

@@ -12,6 +12,7 @@ import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {GetImagesResponse} from '../util/actor_messages.ts';
+import type {GeoJSONTaperAnnotation} from '../source/geojson_taper.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -73,6 +74,12 @@ export type BucketFeature = {
     };
     readonly dashes?: NonNullable<StyleFeature['dashes']>;
     sortKey?: number;
+    /**
+     * Worker-computed cross-tile anchoring for the per-vertex taper properties
+     * (`line-widths`, `line-width-factors`), attached by the GeoJSON worker source.
+     * See `src/source/geojson_taper.ts`.
+     */
+    _taper?: GeoJSONTaperAnnotation;
 };
 
 /**
