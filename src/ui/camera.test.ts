@@ -2720,6 +2720,17 @@ describe('jumpTo globe projection', () => {
             expect(camera.getPitch()).toBeCloseTo(90, 6);
         });
 
+        test('calculateCameraOptionsFromTo solves with the geometry its result renders with, not the current one', () => {
+            const {camera} = createCamera({maxPitch: 180}, true, {center: [0, 0], zoom: 15});
+            camera.transform.setTransitionState(0); // rendering as mercator at zoom 15
+            const options = camera.calculateCameraOptionsFromTo([0, 0], 100000, [20, 0], 0); // lands past the horizon of the target, at zoom 2.6 the globe renders as a sphere
+            camera.jumpTo(options);
+            camera.transform.setTransitionState(1); // what the render loop sets at the resulting zoom
+            expect(camera.transform.getCameraAltitude()).toBeCloseTo(100000, 3);
+            expect(camera.transform.getCameraLngLat().lng).toBeCloseTo(0, 6);
+            expect(camera.transform.getCameraLngLat().lat).toBeCloseTo(0, 6);
+        });
+
         test('a projection expression that renders mercator at low zoom lifts the camera with the flat geometry', () => {
             const {camera} = createCamera({maxPitch: 180}, true, {center: [8, 47], zoom: 1});
             const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], 1, 'vertical-perspective', 2, 'mercator']} as any, {});

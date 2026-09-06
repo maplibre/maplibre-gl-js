@@ -715,7 +715,15 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
-        return this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        const options = this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        if (!this._projection) {
+            return options;
+        }
+        // The result must render with the geometry it was solved with, and the globe transform's geometry follows the
+        // projection state at the result's zoom, not at the current one.
+        const transform = this.transform.clone();
+        transform.setTransitionState(this._projection.transitionStateAtZoom(options.zoom));
+        return transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
