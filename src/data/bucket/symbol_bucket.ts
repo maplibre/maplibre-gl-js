@@ -33,6 +33,7 @@ import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {type Anchor} from '../../symbol/anchor.ts';
 import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
+import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
@@ -292,11 +293,10 @@ register('CollisionBuffers', CollisionBuffers);
  *    stores the feature data for use in subsequent step (this.features).
  *
  * 2. WorkerTile asynchronously requests from the main thread all of the glyphs
- *    and icons needed (by this bucket and any others). When glyphs and icons
- *    have been received, the WorkerTile creates a CollisionIndex and invokes:
+ *    and icons needed (by this bucket and any others).
  *
- * 3. performSymbolLayout(bucket, stacks, icons) perform texts shaping and
- *    layout on a Symbol Bucket. This step populates:
+ * 3. WorkerTile calls SymbolBucket.addFeatures(), which delegates text shaping
+ *    and layout to performSymbolLayout(). This step populates:
  *      `this.symbolInstances`: metadata on generated symbols
  *      `this.collisionBoxArray`: collision data for use by foreground
  *      `this.text`: SymbolBuffers for text symbols
@@ -373,7 +373,7 @@ export class SymbolBucket implements Bucket {
         this.index = options.index;
         this.pixelRatio = options.pixelRatio;
         this.sourceLayerIndex = options.sourceLayerIndex;
-        this.hasDependencies = false;
+        this.hasDependencies = true;
         this.hasRTLText = false;
         this.sortKeyRanges = [];
 
@@ -591,7 +591,18 @@ export class SymbolBucket implements Bucket {
         });
     }
 
-    addFeatures(_parameters: BucketDependencyParameters): void {}
+    addFeatures({options, canonical, glyphMap, glyphPositions, iconMap, iconPositions, showCollisionBoxes}: BucketDependencyParameters): void {
+        performSymbolLayout({
+            bucket: this,
+            glyphMap,
+            glyphPositions,
+            imageMap: iconMap,
+            imagePositions: iconPositions,
+            showCollisionBoxes,
+            canonical,
+            subdivisionGranularity: options.subdivisionGranularity
+        });
+    }
 
     isEmpty(): boolean {
         // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
