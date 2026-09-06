@@ -436,6 +436,7 @@ async function joinsToTheFollowingGrapheme(): Promise<string> {
     return set.toString();
 }
 
+const downloads = new Map<string, Promise<string>>();
 /**
  * Downloads one file of the Unicode Character Database, keeping it for the rest of the run.
  *
@@ -444,7 +445,6 @@ async function joinsToTheFollowingGrapheme(): Promise<string> {
  * unpacks to more than 250 MB. They are fetched here instead, in the same way the packages
  * themselves are fetched by `npm install`.
  */
-const downloads = new Map<string, Promise<string>>();
 function fetchUnicodeData(file: string): Promise<string> {
     if (!downloads.has(file)) {
         downloads.set(file, (async () => {
