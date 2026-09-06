@@ -558,18 +558,22 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.getCameraPoint();
     }
 
+    /**
+     * The altitude of the rendered camera above sea level. The sphere keeps the center point at sea level whatever its
+     * elevation (`_calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
+     */
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
+        return (vec3.length(this._cameraPosition) - 1) * earthRadius;
     }
 
     getCameraLngLat(): LngLat {
-        return this._helper.getCameraLngLat();
+        const surface = createVec3f64();
+        vec3.normalize(surface, this._cameraPosition);
+        return sphereSurfacePointToCoordinates(surface);
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        if (!this._globeViewProjMatrixF64) {
-            return 1.0; // _calcMatrices hasn't run yet
-        }
         const vec = angularCoordinatesToSurfaceVector(lngLat);
         vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
         const result = createVec4f64();

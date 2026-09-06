@@ -810,7 +810,7 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        return Math.cos(this.pitchInRadians) * this.cameraToCenterDistance / this.pixelsPerMeter + this.elevation;
     }
 
     getCameraLngLat(): LngLat {

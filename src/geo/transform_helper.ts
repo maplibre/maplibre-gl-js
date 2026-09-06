@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
-import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
@@ -679,15 +679,6 @@ export class TransformHelper implements ITransformGetters {
         const pitch = this.pitchInRadians;
         const offset = Math.tan(pitch) * (this.cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
-    }
-
-    getCameraAltitude(): number {
-        const altitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._pixelPerMeter;
-        return altitude + this.elevation;
-    }
-
-    getCameraLngLat(): LngLat {
-        return cameraMercatorCoordinate(this).toLngLat();
     }
 
     getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
