@@ -2748,11 +2748,11 @@ describe('jumpTo globe projection', () => {
             sphereTransform.setTransitionState(1);
             const sphere = sphereTransform.calculateCameraOptionsFromTo(...request);
             expect(sphere.zoom).toBeGreaterThan(flat.zoom);
-            const withBand = (bottom: number, top: number) => {
+            function withBand(bottom: number, top: number): GlobeProjection {
                 const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], bottom, 'vertical-perspective', top, 'mercator']} as any, {});
                 camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
                 return projection;
-            };
+            }
 
             // a band ending between the two candidate zooms: the flat solution renders as a mostly flat blend, the sphere solution fully as mercator
             const top = (flat.zoom + sphere.zoom) / 2;
