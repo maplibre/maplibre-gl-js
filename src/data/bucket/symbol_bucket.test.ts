@@ -1,5 +1,4 @@
 import {describe, test, expect, vi, beforeAll} from 'vitest';
-import {SymbolBucket} from './symbol_bucket.ts';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
