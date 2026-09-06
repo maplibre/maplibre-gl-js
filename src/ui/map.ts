@@ -4192,7 +4192,7 @@ export class Map extends Evented<MapEventType> {
      * When the style's projection is changed (or first set), this function should be called.
      */
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
-        this._camera.migrateProjection(newTransform, newCameraHelper);
+        this._camera.migrateProjection(newTransform, newCameraHelper, this.style.projection);
         this.painter.transform = newTransform;
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,

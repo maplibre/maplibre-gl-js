@@ -9,6 +9,7 @@ import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
+import type {Projection} from '../geo/projection/projection.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
@@ -291,6 +292,11 @@ export class Camera extends Evented<MapEventType> {
     cameraHelper: ICameraHelper;
     /**
      * @internal
+     * The style's projection, owned by the style. The camera asks it which transition state a requested zoom renders with.
+     */
+    _projection: Projection | null = null;
+    /**
+     * @internal
      * Stops any in-progress user gestures. Injected by the owner so the camera does not need
      * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
      */
@@ -403,10 +409,11 @@ export class Camera extends Evented<MapEventType> {
         });
     }
 
-    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
+    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper, projection: Projection | null = null): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
+        this._projection = projection;
     }
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
@@ -892,8 +899,7 @@ export class Camera extends Evented<MapEventType> {
         const cameraAltitude = tr.getCameraAltitude();
         const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
-            const newCamera = this.calculateCameraOptionsFromTo(
-                cameraLngLat, minAltitude, tr.center, tr.elevation);
+            const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
             return {
                 pitch: newCamera.pitch,
                 zoom: newCamera.zoom,
@@ -919,6 +925,12 @@ export class Camera extends Evented<MapEventType> {
             return;
         }
         const finalTransform = tr.clone();
+        // The globe transform reads its camera from whichever child the projection's transition state selects, and the
+        // live state is only re-evaluated for the requested zoom when the next frame renders. Evaluate it for the request
+        // first, so the terrain check sees the camera that will render, whatever the last frame showed.
+        if (this._projection) {
+            finalTransform.setTransitionState(this._projection.transitionStateAtZoom(finalTransform.zoom));
+        }
         for (const modifier of modifiers) {
             const nextTransform = finalTransform.clone();
             const {

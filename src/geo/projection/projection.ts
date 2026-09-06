@@ -92,6 +92,12 @@ export interface Projection {
 
     /**
      * @internal
+     * The transition state the projection evaluates to at the given zoom: what {@link transitionState} reports once a frame has rendered there.
+     */
+    transitionStateAtZoom(zoom: number): number;
+
+    /**
+     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;

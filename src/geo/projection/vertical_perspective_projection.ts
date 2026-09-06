@@ -36,6 +36,10 @@ export class VerticalPerspectiveProjection implements Projection {
         return 1;
     }
 
+    transitionStateAtZoom(_zoom: number): number {
+        return 1;
+    }
+
     get useSubdivision(): boolean {
         return true;
     }

@@ -3,6 +3,7 @@ import {type PossiblyEvaluated, Transitionable, type Transitioning, type Transit
 import {getProperties, type ProjectionProps, type ProjectionPropsPossiblyEvaluated} from '../../style/projection_properties.g.ts';
 import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {now} from '../../util/time_control.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 import {type Projection, type TileMeshUsage} from './projection.ts';
@@ -31,7 +32,15 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     public get transitionState(): number {
-        const currentProjectionSpecValue = this.properties.get('type');
+        return this._transitionStateOf(this.properties);
+    }
+
+    public transitionStateAtZoom(zoom: number): number {
+        return this._transitionStateOf(this._transitioning.possiblyEvaluate(new EvaluationParameters(zoom, {now: now()})));
+    }
+
+    private _transitionStateOf(properties: PossiblyEvaluated<ProjectionProps, ProjectionPropsPossiblyEvaluated>): number {
+        const currentProjectionSpecValue = properties.get('type');
         if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
             return 0;
         }

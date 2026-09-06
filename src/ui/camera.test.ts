@@ -11,6 +11,7 @@ import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Terrain} from '../render/terrain.ts';
@@ -43,7 +44,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
 
     if (globe) {
         const projectionObjects = createProjectionFromName('globe', options.transformConstrain, {});
-        camera.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+        camera.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper, projectionObjects.projection);
     }
 
     if (jumpToOptions) {
@@ -2709,6 +2710,22 @@ describe('jumpTo globe projection', () => {
             camera.jumpTo({zoom: 4, pitch: 100});
             expect(camera.getPitch()).toBeCloseTo(100, 6);
             expect(camera.getZoom()).toBeCloseTo(4, 6);
+        });
+
+        test('a settled view near the horizon at the mercator threshold is checked against the flat camera the globe renders with', () => {
+            const {camera} = createCamera({maxPitch: 180}, true, {center: [8, 47], zoom: 12, bearing: 35});
+            camera.transform.setTransitionState(0);
+            // the sphere puts this camera a few meters above sea level, the flat camera that renders puts it below
+            camera.jumpTo({pitch: 90.03});
+            expect(camera.getPitch()).toBeCloseTo(90, 6);
+        });
+
+        test('a projection expression that renders mercator at low zoom lifts the camera with the flat geometry', () => {
+            const {camera} = createCamera({maxPitch: 180}, true, {center: [8, 47], zoom: 1});
+            const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], 1, 'vertical-perspective', 2, 'mercator']} as any, {});
+            camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
+            camera.jumpTo({zoom: 4, pitch: 100});
+            expect(camera.getPitch()).toBeCloseTo(90, 6);
         });
 
         test('changing center with no zoom specified should adjusts zoom', () => {

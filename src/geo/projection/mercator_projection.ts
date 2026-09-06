@@ -52,6 +52,10 @@ export class MercatorProjection implements Projection {
         return 0;
     }
 
+    transitionStateAtZoom(_zoom: number): number {
+        return 0;
+    }
+
     public destroy(): void {
         // Do nothing.
     }
