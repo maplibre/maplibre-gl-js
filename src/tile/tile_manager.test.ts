@@ -2695,3 +2695,14 @@ describe('TileManager / etag', () => {
         expect(tile.etag).toBe(tileEtag);
     });
 });
+
+describe('TileManager#_updateMaxContentElevation', () => {
+    test('the seen maximum survives tile unloads and resets with clearTiles', () => {
+        const tileManager = createTileManager();
+        expect(tileManager._updateMaxContentElevation()).toBe(0);
+        tileManager._maxContentElevationSeen = 500000;
+        expect(tileManager._updateMaxContentElevation()).toBe(500000);
+        tileManager.clearTiles();
+        expect(tileManager._updateMaxContentElevation()).toBe(0);
+    });
+});

@@ -62,9 +62,9 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
     calculateTileZoom?: CalculateTileZoomFunction;
     /**
      * The highest elevation, in meters, that this source's content may reach above the ground,
-     * e.g. the largest `symbol-height-offset` in use. Raises the culling allowance near the
-     * horizon above the assumed feature height, so tiles under highly elevated content are not
-     * dropped while that content is still visible.
+     * e.g. the largest `symbol-height-offset` in use. It may far exceed the assumed feature
+     * height used for culling: it raises the culling allowance near the horizon, so tiles
+     * under highly elevated content are not dropped while that content is still visible.
      */
     maxContentElevation?: number;
 };
@@ -213,9 +213,11 @@ function getElevationForTileCulling(transform: IReadonlyTransform, maxContentEle
 }
 
 /**
- * Returns a copy of the frustum with its far plane, and the far corner points, moved away from
- * the camera by `distance`. The globe frustum's far plane is fitted to the surface horizon, so
- * elevated content beyond it would be culled while still visible.
+ * Returns a copy of the frustum with its far plane moved away from the camera by `distance`.
+ * Each far corner travels along its own camera ray until it reaches the pushed plane, so the
+ * result stays a pyramid and the corners stay consistent with the side planes. The globe
+ * frustum's far plane is fitted to the surface horizon, so elevated content beyond it would
+ * otherwise be culled while still visible.
  */
 function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3): Frustum {
     const far = frustum.planes[1];
@@ -224,8 +226,6 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3
         if (Math.abs(distanceToFar) > 1e-6) {
             return p;
         }
-        // Extend the corner along its own camera ray, so the pushed frustum
-        // stays a pyramid and the corners stay consistent with the side planes.
         const ray = [p[0] - cameraPos[0], p[1] - cameraPos[1], p[2] - cameraPos[2]];
         const rayDotNormal = far[0] * ray[0] + far[1] * ray[1] + far[2] * ray[2];
         if (rayDotNormal >= -1e-9) {
@@ -249,6 +249,12 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3
 /**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
+ *
+ * The horizon culling plane and the frustum's far plane both assume content sits on the
+ * surface. When `options.maxContentElevation` is set, a point elevated to radius r (in planet
+ * radii) stays visible up to acos(1/r) beyond the surface horizon and up to sqrt(r^2-1)
+ * farther away, so both are pushed back accordingly; without this, tiles under highly
+ * elevated symbols would be dropped while the symbols are still in view.
  * @param transform - The transform instance.
  * @param frustum - The covering frustum.
  * @param plane - The clipping plane used by globe transform, or null.
@@ -262,11 +268,6 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     let frustum = transform.getCameraFrustum();
     let plane = transform.getClippingPlane();
     if (plane && options.maxContentElevation > 0) {
-        // Both the horizon culling plane and the frustum's far plane assume content sits on the
-        // surface. A point elevated to radius r (in planet radii) stays visible up to acos(1/r)
-        // beyond the surface horizon and up to sqrt(r^2-1) farther away, so both are pushed back
-        // accordingly. Without this, tiles under highly elevated symbols are dropped while the
-        // symbols are still in view.
         const len = Math.hypot(plane[0], plane[1], plane[2]);
         if (len > 0) {
             const shellRadius = 1.0 + options.maxContentElevation / earthRadius;

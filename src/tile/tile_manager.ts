@@ -504,17 +504,18 @@ export class TileManager extends Evented<SourceEventType> {
      * and the tile could not come back while its content is still visible. The mark resets with
      * the tiles in `clearTiles`.
      */
-    _getMaxContentElevation(): number {
+    _updateMaxContentElevation(): number {
         let maxElevation = this._maxContentElevationSeen;
         const layers = this.map?.style?._layers;
         if (!layers) return maxElevation;
+        const tiles = this._inViewTiles.getAllTiles();
         for (const layerId in layers) {
             const layer = layers[layerId];
             if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(this.transform.zoom)) continue;
             const symbolLayer = layer as SymbolStyleLayer;
             if (!symbolLayer.layout) continue;
             maxElevation = Math.max(maxElevation, symbolLayer.layout.get('symbol-height-offset').constantOr(0));
-            for (const tile of this._inViewTiles.getAllTiles()) {
+            for (const tile of tiles) {
                 const bucket = tile.getBucket(layer) as SymbolBucket;
                 if (bucket && bucket.maxHeightOffset > maxElevation) {
                     maxElevation = bucket.maxHeightOffset;
@@ -557,7 +558,7 @@ export class TileManager extends Evented<SourceEventType> {
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
                 calculateTileZoom: this._source.calculateTileZoom,
-                maxContentElevation: this._getMaxContentElevation(),
+                maxContentElevation: this._updateMaxContentElevation(),
             });
 
             if (this._source.hasTile) { // tile should be in bounds

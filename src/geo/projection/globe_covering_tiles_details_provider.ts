@@ -109,6 +109,11 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
+    /**
+     * Computes the bounding volume of a tile for culling. The volume reaches up to `elevation`,
+     * which carries the content elevation allowance (e.g. elevated symbols); terrain elevations
+     * widen the volume but never shrink that allowance.
+     */
     private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
         let minElevation = Math.min(0, elevation);
         let maxElevation = Math.max(0, elevation);
@@ -116,8 +121,6 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
             minElevation = minMax.minElevation ?? minElevation;
-            // Keep the content elevation allowance (e.g. elevated symbols) even when
-            // terrain supplies its own maximum for the tile.
             maxElevation = Math.max(minMax.maxElevation ?? maxElevation, maxElevation);
         }
         // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
