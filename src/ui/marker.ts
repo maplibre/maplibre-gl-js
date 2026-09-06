@@ -732,7 +732,8 @@ export class Marker extends Evented<MarkerEventType> {
         // A terrain or projection change takes effect in the next frame: re-read the marker after it,
         // and keep doing so until the map is fully loaded.
         const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
-        if (e?.type === 'terrain' || e?.type === 'projectiontransition' || (e?.type === 'render' && !isFullyLoaded)) {
+        const readAfterNextFrame = e?.type === 'terrain' || e?.type === 'projectiontransition' || (e?.type === 'render' && !isFullyLoaded);
+        if (readAfterNextFrame) {
             this._map.once('render', this._update);
         }
 
@@ -768,8 +769,10 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            // The read once the map is fully loaded must not be dropped by the throttle.
-            this._updateOpacity(e?.type === 'moveend' || (e?.type === 'render' && isFullyLoaded));
+            // Terrain occlusion is only reliable once the terrain tiles have loaded: while a follow-up read is scheduled,
+            // keep the previous opacity. The read once the map is fully loaded must not be dropped by the throttle.
+            if (readAfterNextFrame) return;
+            this._updateOpacity(e?.type === 'moveend' || e?.type === 'render');
         }).catch(() => {});
     };
 
