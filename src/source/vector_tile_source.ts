@@ -237,18 +237,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             });
         }
         tile.abortController = new AbortController();
+        let data: WorkerTileResult | null;
         try {
-            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
-            delete tile.abortController;
-
-            if (tile.aborted) {
-                return;
-            }
-            this._afterTileLoadWorkerResponse(tile, data);
-
-            const result: LoadTileResult = {};
-            if (data?.etagUnmodified) result.unmodified = true;
-            return result;
+            data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
         } catch (err) {
             delete tile.abortController;
 
@@ -258,8 +249,26 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             if (err && err.status !== 404) {
                 throw err;
             }
-            this._afterTileLoadWorkerResponse(tile, null);
+            data = null;
         }
+        delete tile.abortController;
+
+        if (tile.aborted) {
+            return;
+        }
+        // A 404 (no data) and an empty body such as a 204 (`emptyBody`) both mean there is nothing to draw.
+        // Under `emptyTileBehavior: 'missing'` the tile is left without data, expiry or etag, like a raster 404.
+        const noContent = !data || (data.etagUnmodified !== true && data.emptyBody);
+        if (noContent && this._options.emptyTileBehavior === 'missing') {
+            tile.state = 'errored';
+        } else {
+            this._afterTileLoadWorkerResponse(tile, data);
+        }
+        this._reloadIfRequestedWhileLoading(tile);
+
+        const result: LoadTileResult = {};
+        if (data?.etagUnmodified) result.unmodified = true;
+        return result;
     }
 
     /**
@@ -282,7 +291,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         };
     }
 
-    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
+    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult | null) {
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
@@ -291,14 +300,10 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             tile.setExpiryData(data);
         }
         tile.etag = data?.etag;
+        tile.loadVectorData(data, this.map.painter);
+    }
 
-        const noContent = !data || (data.etagUnmodified !== true && data.emptyBody);
-        if (noContent && this._options.emptyTileBehavior === 'missing') {
-            tile.state = 'errored';
-        } else {
-            tile.loadVectorData(data, this.map.painter);
-        }
-
+    private _reloadIfRequestedWhileLoading(tile: Tile) {
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;
             tile.reloadPromise = null;

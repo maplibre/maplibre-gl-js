@@ -371,6 +371,31 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).not.toHaveBeenCalled();
     });
 
+    test('a missing tile records neither expiry nor etag, so it is requested again in full when it is needed again', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                return Promise.resolve({emptyBody: true, cacheControl: 'max-age=300', etag: 'still-empty'} as any);
+            }
+        });
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData: vi.fn()
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect(tile.setExpiryData).not.toHaveBeenCalled();
+        expect(tile.etag).toBeUndefined();
+    });
+
     test('reloads a loading tile properly', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']

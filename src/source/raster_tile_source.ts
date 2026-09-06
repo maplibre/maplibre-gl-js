@@ -232,12 +232,14 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
-                if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
-                    tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
-                }
+                // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'missing'` is left without data
+                // or expiry, like a 404, so a loaded tile from another zoom level shows in its place.
                 if (!response.data && this._options.emptyTileBehavior === 'missing') {
                     tile.state = 'errored';
                     return;
+                }
+                if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
+                    tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const context = this.map.painter.context;
                 const gl = context.gl;

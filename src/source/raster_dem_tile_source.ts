@@ -65,14 +65,20 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 return;
             }
             if (response) {
+                // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'missing'` is left without data
+                // or expiry, like a 404, so another zoom level supplies the elevation.
+                if (!response.data && this._options.emptyTileBehavior === 'missing') {
+                    tile.state = 'errored';
+                    return;
+                }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
-                // An empty response (e.g. HTTP 204 for a missing DEM tile) carries no elevation
-                // data: treat the tile as loaded without a DEM instead of building a degenerate
-                // one that would fail against its neighbors in backfillBorder (#1551).
+                // Otherwise an empty response carries no elevation data: treat the tile as loaded without
+                // a DEM instead of building a degenerate one that would fail against its neighbors in
+                // backfillBorder (#1551).
                 if (!response.data) {
-                    tile.state = this._options.emptyTileBehavior === 'missing' ? 'errored' : 'loaded';
+                    tile.state = 'loaded';
                     return;
                 }
                 const img = response.data;

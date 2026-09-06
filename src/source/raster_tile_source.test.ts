@@ -216,6 +216,29 @@ describe('RasterTileSource', () => {
         expect(errorListener).not.toHaveBeenCalled();
     });
 
+    test('a missing tile does not record the expiry of its empty response, so it is requested again in full when it is needed again', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null, cacheControl: 'max-age=300'});
+        source.map.painter = {context: {}, getTileTexture: vi.fn()} as any;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData: vi.fn()
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect(tile.setExpiryData).not.toHaveBeenCalled();
+    });
+
     test('can asynchronously transform tile request', async () => {
         server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
