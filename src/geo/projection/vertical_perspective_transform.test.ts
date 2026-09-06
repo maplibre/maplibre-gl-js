@@ -1,7 +1,9 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../../data/extent.ts';
+import {vec3} from 'gl-matrix';
 import {LngLat, earthRadius} from '../lng_lat.ts';
+import {differenceOfAnglesDegrees} from '../../util/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
@@ -162,3 +164,85 @@ describe('VerticalPerspectiveTransform camera position', () => {
     });
 });
 
+describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
+    function createTransform(zoom: number, pitch: number, bearing: number, center = new LngLat(8, 47)): VerticalPerspectiveTransform {
+        const t = new VerticalPerspectiveTransform();
+        t.resize(800, 600);
+        t.setMaxPitch(180);
+        t.setZoom(zoom);
+        t.setCenter(center);
+        t.setBearing(bearing);
+        t.setPitch(pitch);
+        return t;
+    }
+
+    test.each([[4, 100, 35], [6, 60, -120], [12, 45, 0], [2, 30, 170]])('round-trips the transform\'s own camera at zoom %s, pitch %s, bearing %s', (zoom, pitch, bearing) => {
+        const t = createTransform(zoom, pitch, bearing);
+        const result = t.calculateCameraOptionsFromTo(t.getCameraLngLat(), t.getCameraAltitude(), t.center, 0);
+        expect(result.zoom).toBeCloseTo(zoom, 6);
+        expect(result.pitch).toBeCloseTo(pitch, 6);
+        expect(differenceOfAnglesDegrees(result.bearing, bearing)).toBeCloseTo(0, 6);
+        expect(result.center.lng).toBeCloseTo(8, 9);
+        expect(result.center.lat).toBeCloseTo(47, 9);
+    });
+
+    test('round-trips a camera over an elevated center, the target altitude becoming the elevation', () => {
+        const t = createTransform(13, 55, 20);
+        t.setElevation(3000);
+        const result = t.calculateCameraOptionsFromTo(t.getCameraLngLat(), t.getCameraAltitude(), t.center, 3000);
+        expect(result.elevation).toBe(3000);
+        expect(result.zoom).toBeCloseTo(13, 6);
+        expect(result.pitch).toBeCloseTo(55, 6);
+        expect(differenceOfAnglesDegrees(result.bearing, 20)).toBeCloseTo(0, 6);
+    });
+
+    test('places the rendered camera at the requested altitude, the center elevation does not lift it on the sphere', () => {
+        const t = createTransform(15, 60, 0);
+        const options = t.calculateCameraOptionsFromTo(new LngLat(8.01, 47.01), 4000, new LngLat(8, 47), 3000);
+        t.setCenter(options.center);
+        t.setElevation(options.elevation);
+        t.setZoom(options.zoom);
+        t.setPitch(options.pitch);
+        t.setBearing(options.bearing);
+        expect((vec3.length(t.cameraPosition) - 1) * earthRadius).toBeCloseTo(4000, 3);
+        expect(t.getCameraAltitude()).toBeCloseTo(4000, 3);
+        expect(t.getCameraLngLat().lng).toBeCloseTo(8.01, 6);
+        expect(t.getCameraLngLat().lat).toBeCloseTo(47.01, 6);
+    });
+
+    test('a camera straight above the center keeps the transform\'s bearing instead of one read from numerical noise', () => {
+        const t = createTransform(10, 30, 35);
+        for (const altitude of [100, 1000, 10000]) {
+            const result = t.calculateCameraOptionsFromTo(t.center, altitude, t.center, 0);
+            expect(result.pitch).toBeCloseTo(0, 6);
+            expect(result.bearing).toBe(35);
+        }
+    });
+
+    test('treats the two spellings of a point on the antimeridian as the same point', () => {
+        const t = createTransform(4, 0, 0);
+        expect(() => t.calculateCameraOptionsFromTo([180, 0], 0, [-180, 0], 0)).toThrow('same From and To');
+    });
+
+    test('treats endpoints at the same place and altitude as the same point, although the target is placed at sea level', () => {
+        const t = createTransform(10, 30, 0);
+        expect(() => t.calculateCameraOptionsFromTo([0, 0], 1000, [0, 0], 1000)).toThrow('same From and To');
+        expect(() => t.calculateCameraOptionsFromTo([0, 0], 2000, [0, 0], 1000)).not.toThrow();
+    });
+
+    test('lifting a camera that dipped into the sphere lands it on the surface, still looking past the horizon', () => {
+        // zooming in at pitch 100 takes the camera below sea level once the planet stops curving away under it
+        const t = createTransform(5, 100, 0, new LngLat(13.44, 52.5));
+        expect(t.getCameraAltitude()).toBeLessThan(0);
+
+        const lifted = t.calculateCameraOptionsFromTo(t.getCameraLngLat(), 0, t.center, 0);
+        // on a plane a camera at ground level looks exactly along the ground; on the sphere the center is below the horizon
+        expect(lifted.pitch).toBeGreaterThan(90);
+        expect(lifted.pitch).toBeLessThan(102);
+
+        t.setZoom(lifted.zoom);
+        t.setPitch(lifted.pitch);
+        t.setBearing(lifted.bearing);
+        expect(Math.abs(t.getCameraAltitude())).toBeLessThan(1);
+    });
+});

@@ -678,6 +678,11 @@ describe('GlobeTransform', () => {
             expect(globe.getCameraAltitude()).toBeGreaterThan(0);
             expect(globe.getCameraAltitude()).toBeCloseTo(vp.getCameraAltitude(), 6);
             expect(globe.getCameraLngLat().lat).toBeCloseTo(vp.getCameraLngLat().lat, 9);
+
+            const lifted = globe.calculateCameraOptionsFromTo(globe.getCameraLngLat(), 0, globe.center, 0);
+            const liftedVp = vp.calculateCameraOptionsFromTo(vp.getCameraLngLat(), 0, vp.center, 0);
+            expect(lifted.pitch).toBeCloseTo(liftedVp.pitch, 9);
+            expect(lifted.zoom).toBeCloseTo(liftedVp.zoom, 9);
         });
 
         test('reads the camera from the child the transition state selects', () => {
@@ -705,10 +710,12 @@ describe('GlobeTransform', () => {
             globe.setTransitionState(0);
             expect(globe.getCameraAltitude()).toBeLessThan(0);
             expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 6);
+            expect(globe.calculateCameraOptionsFromTo(globe.getCameraLngLat(), 0, globe.center, 0).pitch).toBeCloseTo(90, 9);
 
             globe.setTransitionState(1);
             expect(globe.getCameraAltitude()).toBeGreaterThan(0);
             expect(globe.getCameraAltitude()).toBeCloseTo(vp.getCameraAltitude(), 6);
+            expect(globe.calculateCameraOptionsFromTo(globe.getCameraLngLat(), 0, globe.center, 0).pitch).toBeGreaterThan(90);
         });
 
         test('matches the mercator transform while the globe is rendered as a sphere', () => {
