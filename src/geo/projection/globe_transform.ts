@@ -377,7 +377,8 @@ export class GlobeTransform implements ITransform {
     /**
      * The camera is always taken from the vertical perspective child, not from `currentTransform`:
      * the mercator child's flat camera is only a valid approximation while the globe renders as mercator,
-     * where both agree to a hundredth of a percent. `currentTransform` follows the last rendered frame,
+     * where both agree to within a percent (zoom 12, pitch 85) and closer at higher zoom or lower pitch.
+     * `currentTransform` follows the last rendered frame,
      * so a jump from high zoom into low zoom with a pitch above 90 would still be checked against terrain
      * with the flat formula, read a negative altitude and snap the pitch back to 90.
      */
