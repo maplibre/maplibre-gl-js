@@ -2748,21 +2748,29 @@ describe('jumpTo globe projection', () => {
             sphereTransform.setTransitionState(1);
             const sphere = sphereTransform.calculateCameraOptionsFromTo(...request);
             expect(sphere.zoom).toBeGreaterThan(flat.zoom);
+            const withBand = (bottom: number, top: number) => {
+                const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], bottom, 'vertical-perspective', top, 'mercator']} as any, {});
+                camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
+                return projection;
+            };
+
             // a band ending between the two candidate zooms: the flat solution renders as a mostly flat blend, the sphere solution fully as mercator
             const top = (flat.zoom + sphere.zoom) / 2;
-            const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], top - 0.01, 'vertical-perspective', top, 'mercator']} as any, {});
-            camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
+            const projection = withBand(top - 0.01, top);
             expect(projection.transitionStateAtZoom(flat.zoom)).toBeGreaterThan(0);
             expect(projection.transitionStateAtZoom(flat.zoom)).toBeLessThan(0.5);
             expect(projection.transitionStateAtZoom(sphere.zoom)).toBe(0);
-
             for (const currentState of [0, 1]) {
                 camera.transform.setTransitionState(currentState);
                 expect(camera.calculateCameraOptionsFromTo(...request).zoom).toBeCloseTo(flat.zoom, 9);
             }
+
+            // a band strictly between the two candidate zooms: each solution renders entirely with the other geometry
+            withBand(flat.zoom + 0.001, sphere.zoom - 0.001);
+            expect(() => camera.calculateCameraOptionsFromTo(...request)).toThrow('no solution renders with the projection at its zoom');
         });
 
-        test('calculateCameraOptionsFromTo falls back to the flat solution when the sphere sees coincident endpoints', () => {
+        test('calculateCameraOptionsFromTo falls back to the flat solution when the sphere sees coincident endpoints, or reports that none renders', () => {
             const {camera} = createCamera({maxPitch: 180}, true, {center: [0, 0], zoom: 15});
             camera.transform.setTransitionState(0);
             // the sphere keeps the target at sea level, so a target straight above the camera is the camera itself there
@@ -2770,6 +2778,11 @@ describe('jumpTo globe projection', () => {
             expect(options.pitch).toBeCloseTo(180, 6);
             expect(options.zoom).toBeGreaterThan(12);
             expect(() => camera.calculateCameraOptionsFromTo([0, 0], 0, [0, 0], 0)).toThrow('same From and To');
+
+            // the flat solution's zoom renders as a sphere here, so nothing usable is left
+            const projection = new GlobeProjection({type: ['interpolate', ['linear'], ['zoom'], 20, 'vertical-perspective', 21, 'mercator']} as any, {});
+            camera.migrateProjection(camera.transform, camera.cameraHelper, projection);
+            expect(() => camera.calculateCameraOptionsFromTo([0, 0], 0, [0, 0], 1000)).toThrow('no solution renders with the projection at its zoom');
         });
 
         test('a projection expression that renders mercator at low zoom lifts the camera with the flat geometry', () => {

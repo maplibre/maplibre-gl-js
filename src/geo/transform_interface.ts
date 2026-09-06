@@ -453,8 +453,9 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param altitudeFrom - altitude of the camera above sea level, in meters
      * @param to - lng, lat of the point the camera looks at, which becomes the center
      * @param altitudeTo - altitude of that point above sea level, in meters
+     * @returns the camera options, or null when the camera and the point coincide
      */
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo | null;
 
     getRayDirectionFromPixel(p: Point): vec3;
 

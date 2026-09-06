@@ -13,7 +13,7 @@ import type {Projection} from '../geo/projection/projection.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
+import type {CameraOptionsFromTo, ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
@@ -715,33 +715,33 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
+        const sameFromAndTo = 'Can\'t calculate camera options with same From and To';
         if (!this._projection) {
-            return this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+            const options = this.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+            if (!options) throw new Error(sameFromAndTo);
+            return options;
         }
         // The result must render with the geometry it was solved with, and on the globe that geometry follows the
-        // projection state at the result's zoom. Solve with both geometries and return the candidate whose zoom renders
-        // closest to its own geometry: a mismatch of 0 renders with it, 1 renders with the other one, and anything
-        // between lands in the transition band, where the map renders a blend and the result is approximate either way.
-        const solveWith = (transitionState: number): CameraOptions | null => {
+        // projection state at the result's zoom. Solve with both geometries and score each candidate by how far the
+        // state at its zoom is from its own geometry: 0 renders with it, 1 renders entirely with the other one and is
+        // unusable, anything between lands in the transition band, where the map renders a blend and the result is
+        // approximate either way. The sphere keeps the target at sea level, so it may find the endpoints coincident
+        // where the flat geometry does not.
+        const solveWith = (transitionState: number) => {
             const transform = this.transform.clone();
             transform.setTransitionState(transitionState);
-            try {
-                return transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
-            } catch {
-                return null; // the sphere keeps the target at sea level, so it may see coincident endpoints where the flat geometry does not
-            }
+            return transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
         };
+        const stateAt = (zoom: number) => this._projection.transitionStateAtZoom(zoom);
+        const candidates: Array<{options: CameraOptionsFromTo; mismatch: number}> = [];
         const flat = solveWith(0);
+        if (flat) candidates.push({options: flat, mismatch: stateAt(flat.zoom)});
         const sphere = solveWith(1);
-        if (!flat || !sphere) {
-            if (!flat && !sphere) {
-                throw new Error('Can\'t calculate camera options with same From and To');
-            }
-            return flat ?? sphere;
-        }
-        const flatMismatch = this._projection.transitionStateAtZoom(flat.zoom);
-        const sphereMismatch = 1 - this._projection.transitionStateAtZoom(sphere.zoom);
-        return flatMismatch <= sphereMismatch ? flat : sphere;
+        if (sphere) candidates.push({options: sphere, mismatch: 1 - stateAt(sphere.zoom)});
+        if (!candidates.length) throw new Error(sameFromAndTo);
+        const usable = candidates.filter((candidate) => candidate.mismatch < 1).sort((a, b) => a.mismatch - b.mismatch);
+        if (!usable.length) throw new Error('Can\'t calculate camera options: no solution renders with the projection at its zoom');
+        return usable[0].options;
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
@@ -926,6 +926,7 @@ export class Camera extends Evented<MapEventType> {
         const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
+            if (!newCamera) return {};
             return {
                 pitch: newCamera.pitch,
                 zoom: newCamera.zoom,

@@ -221,7 +221,7 @@ describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
 
     test('treats the two spellings of a point on the antimeridian as the same point', () => {
         const t = createTransform(4, 0, 0);
-        expect(() => t.calculateCameraOptionsFromTo([180, 0], 0, [-180, 0], 0)).toThrow('same From and To');
+        expect(t.calculateCameraOptionsFromTo([180, 0], 0, [-180, 0], 0)).toBeNull();
     });
 
     test('lifting a camera that dipped into the sphere lands it on the surface, still looking past the horizon', () => {

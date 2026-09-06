@@ -414,7 +414,7 @@ export class GlobeTransform implements ITransform {
     }
 
     /** Solved by the child that renders, see {@link getCameraAltitude}. */
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo | null {
         return this.currentTransform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 

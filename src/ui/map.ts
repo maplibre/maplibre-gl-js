@@ -1526,6 +1526,7 @@ export class Map extends Evented<MapEventType> {
      * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
      * Under the `globe` and `vertical-perspective` projections the result follows the sphere wherever the map renders as a globe.
      * A result whose zoom falls inside the globe's transition to mercator is approximate: the map renders a blend of both geometries there, and the solution rendering closest to its own geometry is returned.
+     * Throws when the camera and the point coincide, and when no solution renders with the projection at its zoom, such as a point straight above the camera where the map renders as a globe, since the globe keeps the point at sea level.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at

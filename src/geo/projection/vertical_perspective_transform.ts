@@ -691,14 +691,14 @@ export class VerticalPerspectiveTransform implements ITransform {
      * center's local frame after undoing the center rotations, where +z is up, +y north and +x east. A camera straight
      * above the center keeps the transform's bearing.
      */
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo | null {
         const center = LngLat.convert(to);
         const camera = angularCoordinatesToSurfaceVector(LngLat.convert(from));
         vec3.scale(camera, camera, 1 + altitudeFrom / earthRadius);
         const target = angularCoordinatesToSurfaceVector(center);
         const toCamera = vec3.subtract(createVec3f64(), camera, target);
         const distance = vec3.length(toCamera);
-        if (distance < SAME_POINT_DISTANCE) throw new Error('Can\'t calculate camera options with same From and To');
+        if (distance < SAME_POINT_DISTANCE) return null;
 
         const zero = createVec3f64();
         vec3.rotateY(toCamera, toCamera, zero, -degreesToRadians(center.lng));

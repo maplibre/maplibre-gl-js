@@ -652,7 +652,7 @@ export class MercatorTransform implements ITransform {
         return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);
     }
 
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo | null {
         const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
         const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
         const dx = toMercator.x - fromMercator.x;
@@ -660,7 +660,7 @@ export class MercatorTransform implements ITransform {
         const dz = toMercator.z - fromMercator.z;
 
         const distance3D = Math.hypot(dx, dy, dz);
-        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
+        if (distance3D === 0) return null;
 
         const groundDistance = Math.hypot(dx, dy);
 
