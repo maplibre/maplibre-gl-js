@@ -749,25 +749,32 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
-    test('keeps the current zoom on a location update when trackZoom is false', async () => {
-        const geolocate = new GeolocateControl({trackUserLocation: true, trackZoom: false});
+    test('keeps a zoom above fitBoundsOptions.maxZoom on a location update when trackZoom is false', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            trackZoom: false,
+            fitBoundsOptions: {
+                duration: 0,
+                maxZoom: 15
+            }
+        });
         map.addControl(geolocate);
         await sleep(0);
         const firstFix = geolocate.once('geolocate');
         geolocate._geolocateButton.dispatchEvent(new window.Event('click'));
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
         await firstFix;
-        const userZoom = 12;
+        const userZoom = 20;
         const zoomend = map.once('zoomend');
         map.zoomTo(userZoom, {duration: 0});
         await zoomend;
-        const flyTo = vi.spyOn(map, 'flyTo');
 
-        const secondFix = geolocate.once('geolocate');
+        const moveend = map.once('moveend');
         geolocation.change({latitude: 11, longitude: 21, accuracy: 500});
-        await secondFix;
+        await moveend;
 
-        expect(flyTo).toHaveBeenCalledWith(expect.objectContaining({zoom: userZoom}), {geolocateSource: true});
+        expect(map.getZoom()).toBe(userZoom);
+        expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '11.0000', lng: '21.0000'});
     });
 
     test('fits the accuracy circle on a location update by default', async () => {
