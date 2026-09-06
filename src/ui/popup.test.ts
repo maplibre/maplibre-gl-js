@@ -46,6 +46,20 @@ describe('popup', () => {
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(1);
     });
 
+    test('Popup after the projectiontransition event must listen to the render event', () => {
+        const map = createMap();
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(map._oneTimeListeners.render).toBeUndefined();
+
+        map.fire('projectiontransition');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+        map.remove();
+    });
+
     test('Popup closes on map click events by default', () => {
         const map = createMap();
         const popup = new Popup()

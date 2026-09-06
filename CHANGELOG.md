@@ -9,6 +9,7 @@
 - Fix visible seams between hillshade tiles when using linear interpolation. ([#8302](https://github.com/maplibre/maplibre-gl-js/pull/8302)) (by [@Turbo87](https://github.com/Turbo87))
 - Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))
 - Fix `getCameraAltitude()` returning `NaN` and marker terrain occlusion never applying under `globe` and `vertical-perspective` projections; `getCameraAltitude()`, `getCameraLngLat()` and `calculateCameraOptionsFromTo()` now follow the globe geometry under these projections ([#6584](https://github.com/maplibre/maplibre-gl-js/issues/6584)) (by [@bigmistqke](https://github.com/bigmistqke) and [@patte](https://github.com/patte))
+- Re-read marker terrain occlusion and marker and popup positions after a projection change has rendered, instead of once before its first frame; markers no longer stay dimmed after switching to `globe` until the next camera move ([#6584](https://github.com/maplibre/maplibre-gl-js/issues/6584)) (by [@patte](https://github.com/patte))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 

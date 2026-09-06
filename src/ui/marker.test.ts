@@ -1143,6 +1143,20 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker after the projectiontransition event must listen to the render event', () => {
+        const map = createMap();
+
+        new Marker()
+            .setLngLat([1, 1])
+            .addTo(map);
+
+        expect(map._oneTimeListeners.render).toBeUndefined();
+
+        map.fire('projectiontransition');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+        map.remove();
+    });
+
     test('Marker after the terrain event must listen to the render event till is fully loaded', async () => {
         const map = createMap();
 
@@ -1336,6 +1350,27 @@ describe('marker', () => {
         map.terrain.depthAtPoint = () => .9;
         marker.setLngLat([0, 0]);
         await sleep(100); // Give marker change time to load
+        expect(marker.getElement().style.opacity).toBe('0.3');
+
+        map.remove();
+    });
+
+    test('Reads terrain occlusion after a projection change has rendered, even within the throttle window of a previous read', async () => {
+        const map = createMap({width: 1024});
+        await map.once('load');
+        map.terrain = createTerrain();
+        map.terrain.depthAtPoint = () => 1;
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(150);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        marker.setLngLat([0, 0]);
+        await sleep(30); // that read opened the 100 ms throttle window
+        map.terrain.depthAtPoint = () => .9; // the projection change renders a different depth
+        map.setProjection({type: 'globe'});
+        await sleep(400);
         expect(marker.getElement().style.opacity).toBe('0.3');
 
         map.remove();

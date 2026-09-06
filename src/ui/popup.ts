@@ -635,10 +635,14 @@ export class Popup extends Evented<PopupEventType> {
     }
 
     _update = (event?: MapLibreEvent | MapMouseEvent): void => {
-        
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }
+
+        // A projection change takes effect in the next frame: re-position after it.
+        if (event?.type === 'projectiontransition') {
+            this._map.once('render', this._update);
+        }
 
         if (!this._container) {
             this._container = DOM.create('div', 'maplibregl-popup', this._map.getContainer());
