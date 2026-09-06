@@ -83,6 +83,52 @@ describe('Texture', () => {
         expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     });
 
+    test('bind writes the min filter on its own when only the min filter changes', () => {
+        const gl = createNullGL();
+        const context = new Context(gl);
+        const image = new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4));
+        const texture = new Texture(context, image, gl.RGBA, {useMipmap: true});
+
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        vi.mocked(gl.texParameteri).mockClear();
+
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+
+        expect(gl.texParameteri).toHaveBeenCalledTimes(1);
+        expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    });
+
+    test('generateMipmap rebuilds the chain of a mipmapped texture', () => {
+        const gl = createNullGL();
+        const texture = new Texture(new Context(gl), new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4)), gl.RGBA, {useMipmap: true});
+        vi.mocked(gl.generateMipmap).mockClear();
+
+        texture.generateMipmap();
+
+        expect(gl.generateMipmap).toHaveBeenCalledWith(gl.TEXTURE_2D);
+    });
+
+    test('an allocation without pixels leaves the mip chain to generateMipmap', () => {
+        const gl = createNullGL();
+        const texture = new Texture(new Context(gl), {width: 2, height: 2, data: null}, gl.RGBA, {useMipmap: true});
+
+        expect(gl.generateMipmap).not.toHaveBeenCalled();
+
+        texture.generateMipmap();
+
+        expect(gl.generateMipmap).toHaveBeenCalledTimes(1);
+    });
+
+    test('generateMipmap does nothing for a texture created without mipmaps', () => {
+        const gl = createNullGL();
+        const texture = new Texture(new Context(gl), new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4)), gl.RGBA);
+        vi.mocked(gl.generateMipmap).mockClear();
+
+        texture.generateMipmap();
+
+        expect(gl.generateMipmap).not.toHaveBeenCalled();
+    });
+
     test('premultiplyAlpha produces correct output', () => {
         // pixel: r=200, g=100, b=50, a=128 (half transparent)
         const data = new Uint8Array([200, 100, 50, 128]);

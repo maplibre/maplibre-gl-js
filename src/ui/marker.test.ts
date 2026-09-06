@@ -27,6 +27,14 @@ beforeEach(() => {
 });
 
 describe('marker', () => {
+    test('colors the pin of the default marker and nothing else', () => {
+        const svg = new Marker({color: '#123456'}).getElement().firstElementChild;
+        const colored = svg.querySelectorAll('[fill="#123456"]');
+        expect(colored).toHaveLength(1);
+        expect(colored[0].firstElementChild.tagName).toBe('path');
+        expect(svg.querySelector('[fill="#3FB1CE"]')).toBeNull();
+    });
+
     test('Marker uses a default marker element with an appropriate offset', () => {
         const marker = new Marker();
         expect(marker.getElement()).toBeTruthy();
