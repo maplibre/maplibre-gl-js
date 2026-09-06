@@ -1,5 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
+import {vec3} from 'gl-matrix';
 import {EXTENT} from '../../data/extent.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 import {differenceOfAnglesDegrees} from '../../util/util.ts';
@@ -193,6 +194,20 @@ describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
         expect(result.zoom).toBeCloseTo(13, 6);
         expect(result.pitch).toBeCloseTo(55, 6);
         expect(differenceOfAnglesDegrees(result.bearing, 20)).toBeCloseTo(0, 6);
+    });
+
+    test('places the rendered camera at the requested altitude, the center elevation does not lift it on the sphere', () => {
+        const t = createTransform(15, 60, 0);
+        const options = t.calculateCameraOptionsFromTo(new LngLat(8.01, 47.01), 4000, new LngLat(8, 47), 3000);
+        t.setCenter(options.center);
+        t.setElevation(options.elevation);
+        t.setZoom(options.zoom);
+        t.setPitch(options.pitch);
+        t.setBearing(options.bearing);
+        expect((vec3.length(t.cameraPosition) - 1) * earthRadius).toBeCloseTo(4000, 3);
+        expect(t.getCameraAltitude()).toBeCloseTo(4000, 3);
+        expect(t.getCameraLngLat().lng).toBeCloseTo(8.01, 6);
+        expect(t.getCameraLngLat().lat).toBeCloseTo(47.01, 6);
     });
 
     test('a camera straight above the center keeps the transform\'s bearing instead of one read from numerical noise', () => {

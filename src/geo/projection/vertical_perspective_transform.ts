@@ -563,13 +563,13 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * The camera altitude above sea level. The sphere keeps the center point at sea level whatever its elevation
-     * (`_calcMatrices` does not apply it), so altitudes on the rendered sphere are relative to the center elevation and the
-     * elevation is added back here, as the mercator transform does; {@link calculateCameraOptionsFromTo} is the inverse.
+     * The altitude of the rendered camera above sea level. The sphere keeps the center point at sea level whatever its
+     * elevation (`_calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
+     * {@link calculateCameraOptionsFromTo} is the inverse.
      */
     getCameraAltitude(): number {
         // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
-        return (vec3.length(this._cameraPosition) - 1) * earthRadius + this.elevation;
+        return (vec3.length(this._cameraPosition) - 1) * earthRadius;
     }
 
     getCameraLngLat(): LngLat {
@@ -685,16 +685,16 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * Solves the camera placement of `_calcMatrices` backwards, in the same unit-globe coordinates. The sphere keeps the
-     * center point at sea level whatever its elevation, so the target altitude becomes the center elevation and the camera
-     * sits at radius `1 + (altitudeFrom - altitudeTo) / earthRadius`, the inverse of {@link getCameraAltitude}. Pitch and
-     * bearing are read in the center's local frame after undoing the center rotations, where +z is up, +y north and +x east.
-     * A camera straight above the center keeps the transform's bearing.
+     * Solves the camera placement of `_calcMatrices` backwards, in the same unit-globe coordinates: the camera sits at
+     * radius `1 + altitudeFrom / earthRadius` and looks at the center point on the sea-level sphere, the target altitude
+     * only becoming the center elevation, the inverse of {@link getCameraAltitude}. Pitch and bearing are read in the
+     * center's local frame after undoing the center rotations, where +z is up, +y north and +x east. A camera straight
+     * above the center keeps the transform's bearing.
      */
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
         const center = LngLat.convert(to);
         const camera = angularCoordinatesToSurfaceVector(LngLat.convert(from));
-        vec3.scale(camera, camera, 1 + (altitudeFrom - altitudeTo) / earthRadius);
+        vec3.scale(camera, camera, 1 + altitudeFrom / earthRadius);
         const target = angularCoordinatesToSurfaceVector(center);
         const toCamera = vec3.subtract(createVec3f64(), camera, target);
         const distance = vec3.length(toCamera);
