@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Re-render at most one stale terrain drape per frame and keep drapes rendered at another zoom while the map moves, so lifting a finger over terrain no longer re-renders every tile in one frame ([#8368](https://github.com/maplibre/maplibre-gl-js/pull/8368))
+- Re-render at most one stale terrain drape per frame and keep drapes that differ only by zoom while the map moves, so a finger lift over terrain no longer re-renders every tile at once ([#8368](https://github.com/maplibre/maplibre-gl-js/pull/8368))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
