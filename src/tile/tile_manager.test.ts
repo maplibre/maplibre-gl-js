@@ -484,27 +484,31 @@ describe('TileManager / Source lifecycle', () => {
         transform.resize(511, 511);
         transform.setZoom(1);
         const tileManager = createTileManager();
-        const idealZoom = 1;
         const requestedZooms: number[] = [];
         tileManager._source.loadTile = async (tile) => {
             requestedZooms.push(tile.tileID.canonical.z);
-            tile.state = tile.tileID.canonical.z === idealZoom ? 'errored' : 'loaded';
+            await sleep(0);
+            // the four z1 tiles come back without data, as a source with emptyTileBehavior missing
+            // leaves them on an empty response; the single z0 parent loads
+            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };
-        const updateAsTheMapDoesOnItsNextFrame = () => tileManager.update(transform);
-        const parentRequested = new Promise<void>((resolve) => {
-            tileManager.on('data', (e) => {
-                if (e.dataType === 'source' && e.sourceDataType === 'metadata') updateAsTheMapDoesOnItsNextFrame();
-                if (e.dataType === 'source' && e.tile) {
-                    updateAsTheMapDoesOnItsNextFrame();
-                    if (requestedZooms.includes(idealZoom - 1)) resolve();
-                }
-            });
-        });
-
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
-        await parentRequested;
+        await metadataPromise;
 
-        expect(requestedZooms).toContain(idealZoom - 1);
+        const idealTileLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 1);
+        tileManager.update(transform);
+        await idealTileLoaded;
+        expect(requestedZooms).toEqual([1, 1, 1, 1]);
+
+        // the map marks its sources dirty on that event and updates on its next frame
+        const parentLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 0);
+        tileManager.update(transform);
+        await parentLoaded;
+
+        expect(requestedZooms).toEqual([1, 1, 1, 1, 0]);
+        const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
+        expect(renderableZooms).toEqual([0]);
     });
 
     test('loaded() true after tile error', async () => {
