@@ -6,6 +6,7 @@
 - Link shader programs before reading their compile status, so the driver can overlap the compiles and the main thread waits less on shader compilation ([#8338](https://github.com/maplibre/maplibre-gl-js/pull/8338)) (by [@cherenkov](https://github.com/cherenkov))
 - Build the default `Marker` pin once and clone it per marker, so creating many default markers takes roughly half the constructor time ([#8340](https://github.com/maplibre/maplibre-gl-js/pull/8340)) (by [@cherenkov](https://github.com/cherenkov))
 - Add SDF rendering support for fill patterns, using `fill-color` as the foreground color ([#7747](https://github.com/maplibre/maplibre-gl-js/pull/7747)) (by [@bradymadden97](https://github.com/bradymadden97) and [@deniial00](https://github.com/deniial00))
+- Warn once when the canvas is clamped to `maxCanvasSize`, which previously lowered the rendered resolution silently ([#8200](https://github.com/maplibre/maplibre-gl-js/issues/8200))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
