@@ -199,9 +199,10 @@ const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
 
 /**
  * Returns the elevation to use when computing tile bounding volumes for culling:
- * `transform.elevation`, growing by up to `ASSUMED_MAX_FEATURE_HEIGHT_METERS` as
- * the frustum's bottom edge approaches the horizon, where a ground-level bounding
- * box would cull tiles whose extruded features are still visible.
+ * `transform.elevation`, growing by up to the greater of
+ * `ASSUMED_MAX_FEATURE_HEIGHT_METERS` and `maxContentElevation` (when provided)
+ * as the frustum's bottom edge approaches the horizon, where a ground-level
+ * bounding box would cull tiles whose extruded features are still visible.
  */
 function getElevationForTileCulling(transform: IReadonlyTransform, maxContentElevation?: number): number {
     const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;

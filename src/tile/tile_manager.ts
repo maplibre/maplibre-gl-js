@@ -858,9 +858,6 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     /**
-     * Remove all tiles from this pyramid
-     */
-    /**
      * Forgets the recorded maximum content elevation, so the next update recomputes it from the
      * current layers and loaded tiles. Called when a symbol layer is removed, since the removed
      * layer's heights would otherwise keep expanding tile coverage.
@@ -869,6 +866,9 @@ export class TileManager extends Evented<SourceEventType> {
         this._maxContentElevationSeen = 0;
     }
 
+    /**
+     * Remove all tiles from this pyramid
+     */
     clearTiles(): void {
         this._shouldReloadOnResume = false;
         this._paused = false;
