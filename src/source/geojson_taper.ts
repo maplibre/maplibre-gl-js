@@ -119,8 +119,10 @@ function collectTaperFeatureInfo(feature: GeoJSON.Feature, registry: TaperRegist
             arrayProperties[name] = value.map(Number);
         }
     }
-    if (Object.keys(arrayProperties).length === 0) return;
-
+    // Features ohne numerische Array-Property (z. B. nur line-width-start/-end) werden
+    // ebenfalls registriert: im start/end-Modus ist der original-verankerte Faktor die
+    // einzige Stellschraube, und ohne Annotation bleibt er piece-lokal (Sägezahn an
+    // Tile-Grenzen).
     const rings: TaperRingInfo[] = [];
     for (const line of lines) {
         if (!line || line.length < 2) return; // invalid/degenerate — skip the whole feature

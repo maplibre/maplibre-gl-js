@@ -393,4 +393,39 @@ describe('LineBucket', () => {
         expect(uniqueValues(bucketA)).toEqual([90, 4, 22]);
         expect(uniqueValues(bucketB)).toEqual([22, 40]);
     });
+
+    test('start/end taper is continuous across tile boundaries (worker annotation)', () => {
+        // line-width-start/-end has NO numeric-array property — the registry must
+        // still anchor the feature, otherwise each piece restarts the taper at
+        // factor 0 (the sawtooth). One original line cut at knot 0.75: both
+        // pieces must evaluate the factor at the shared cut identically.
+        const bucketA = createLineBucket({id: 'test', paint: {'line-width-start': 3, 'line-width-end': 40}});
+        const bucketB = createLineBucket({id: 'test', paint: {'line-width-start': 3, 'line-width-end': 40}});
+
+        const annotationA: GeoJSONTaperAnnotation = {pieceKnots: [[0, 0.5, 0.75]], profiles: {}};
+        const annotationB: GeoJSONTaperAnnotation = {pieceKnots: [[0.75, 1]], profiles: {}};
+
+        bucketA.addFeature(
+            {type: 2, properties: {}, _taper: annotationA} as BucketFeature,
+            [[new Point(0, 0), new Point(4096, 0), new Point(6144, 0)]],
+            undefined, undefined, undefined, undefined, noSubdivision);
+        bucketB.addFeature(
+            {type: 2, properties: {}, _taper: annotationB} as BucketFeature,
+            [[new Point(6144, 0), new Point(8192, 0)]],
+            undefined, undefined, undefined, undefined, noSubdivision);
+
+        const uniqueValues = (bucket: LineBucket) => {
+            const values = bucket.layoutTaperArray.float32.subarray(0, bucket.layoutTaperArray.length);
+            const out: number[] = [];
+            for (const v of values) {
+                if (out.length === 0 || out[out.length - 1] !== v) out.push(v);
+            }
+            return out;
+        };
+
+        // start/end mode stores the factor itself; before the fix the second
+        // piece restarted at factor 0 (which the shader would render as start-width).
+        expect(uniqueValues(bucketA)).toEqual([0, 0.5, 0.75]);
+        expect(uniqueValues(bucketB)).toEqual([0.75, 1]);
+    });
 });

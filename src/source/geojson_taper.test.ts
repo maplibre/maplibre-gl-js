@@ -200,4 +200,33 @@ describe('geojson taper anchoring: self-overlapping (retraced) lines', () => {
         expect(knotSets.some((k) => k.every((v) => v < 0.55))).toBe(true);
         expect(knotSets.some((k) => k.every((v) => v > 0.45))).toBe(true);
     });
+
+    test('features without numeric-array properties (start/end mode) are anchored too', () => {
+        // line-width-start/-end needs no per-vertex array — but without the
+        // annotation the taper factor stays piece-local and restarts at 0 on
+        // every tile (the sawtooth). So the registry must cover plain features.
+        const plain = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                properties: {name: 'taper-only'},
+                geometry: {type: 'LineString', coordinates: [[10, 0], [15, 0], [20, 0]]}
+            }]
+        };
+        const plainRegistry = buildTaperRegistry(plain as any);
+        const info = plainRegistry.get(plain.features[0].properties);
+        expect(info).toBeDefined();
+        expect(info!.rings).toHaveLength(1);
+        expect(Object.keys(info!.profiles)).toHaveLength(0);
+
+        const plainIndex = new GeoJSONVT(plain as any, {extent: EXTENT, buffer: 256, maxZoom: 12, tolerance: 0});
+        const z = 12;
+        const tile = plainIndex.getTile(z, 2219, 2048);
+        const feature = tile.features[0];
+        annotateGeoJSONTileFeature(feature, {z, x: 2219, y: 2048} as unknown as CanonicalTileID, plainRegistry);
+        const annotation = (feature as {_taper?: GeoJSONTaperAnnotation})._taper;
+        expect(annotation).toBeDefined();
+        // the degenerate middle piece lies entirely inside segment B->C (knots > 0.5)
+        expect(annotation!.pieceKnots[0].every((k) => k > 0.5 && k < 1)).toBe(true);
+    });
 });
