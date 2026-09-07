@@ -1,5 +1,34 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- fix: compute pixelsPerMeter in the transform helper so getCameraAltitude() works on globe and vertical-perspective ([#8331](https://github.com/maplibre/maplibre-gl-js/pull/8331)) (by [@patte](https://github.com/patte))
+- refactor: unify bucket dependency finalization through addFeatures ([#8347](https://github.com/maplibre/maplibre-gl-js/pull/8347)) (by [@deniial00](https://github.com/deniial00))
+- Keep tiles under elevated symbols from being culled near the horizon ([#8319](https://github.com/maplibre/maplibre-gl-js/pull/8319)) (by [@clement-igonet](https://github.com/clement-igonet))
+- chore: add a bench and render tests for tesselation ([#7894](https://github.com/maplibre/maplibre-gl-js/pull/7894)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Add SDF rendering support for fill patterns ([#8239](https://github.com/maplibre/maplibre-gl-js/pull/8239)) (by [@deniial00](https://github.com/deniial00))
+- fix: set source.tiles synchronously in setTiles so a same-frame loadTile uses the new URLs ([#8323](https://github.com/maplibre/maplibre-gl-js/pull/8323)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Rename `tileSize` to `hillshadeTextureSize` ([#8334](https://github.com/maplibre/maplibre-gl-js/pull/8334)) (by [@Turbo87](https://github.com/Turbo87))
+- docs: explain the missing data past the mercator edge on globe ([#8333](https://github.com/maplibre/maplibre-gl-js/pull/8333)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- feat: add map.getStyleUrl() returning the URL the style was loaded from ([#8327](https://github.com/maplibre/maplibre-gl-js/pull/8327)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Use a type for RenderOptions ([#8332](https://github.com/maplibre/maplibre-gl-js/pull/8332)) (by [@birkskyum](https://github.com/birkskyum))
+- Add Meteosat to the spell check dictionary ([#8329](https://github.com/maplibre/maplibre-gl-js/pull/8329)) (by [@vria-consulting](https://github.com/vria-consulting))
+- GM2.5 Extract shared render state into RenderOptions ([#8318](https://github.com/maplibre/maplibre-gl-js/pull/8318)) (by [@birkskyum](https://github.com/birkskyum))
+- fix: re-bake terrain drape textures when the camera settles at a different zoom ([#8250](https://github.com/maplibre/maplibre-gl-js/pull/8250)) (by [@patte](https://github.com/patte))
+- fix: release running task after error so more tasks can run ([#7031](https://github.com/maplibre/maplibre-gl-js/pull/7031)) (by [@UberMouse](https://github.com/UberMouse))
+- Occlude elevated globe symbols by line of sight, not by their ground anchor ([#8300](https://github.com/maplibre/maplibre-gl-js/pull/8300)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Use `npm ci` and lockfiles for bundler integration tests ([#8314](https://github.com/maplibre/maplibre-gl-js/pull/8314)) (by [@birkskyum](https://github.com/birkskyum))
+- GM2.4 Move the per-frame uniforms into a UBO ([#8313](https://github.com/maplibre/maplibre-gl-js/pull/8313)) (by [@birkskyum](https://github.com/birkskyum))
+- GM2.2 Refactor out shared UniformBuffer class ([#8304](https://github.com/maplibre/maplibre-gl-js/pull/8304)) (by [@birkskyum](https://github.com/birkskyum))
+- GM2.1 Replace the projection uniforms with a UBO ([#8290](https://github.com/maplibre/maplibre-gl-js/pull/8290)) (by [@birkskyum](https://github.com/birkskyum))
+- Curve the sky to the globe horizon during the globe to mercator transition ([#8299](https://github.com/maplibre/maplibre-gl-js/pull/8299)) (by [@birkskyum](https://github.com/birkskyum))
+- Treat an empty raster or raster-DEM tile response as no data (#1551) ([#8207](https://github.com/maplibre/maplibre-gl-js/pull/8207)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Render test concurrency ([#8294](https://github.com/maplibre/maplibre-gl-js/pull/8294)) (by [@birkskyum](https://github.com/birkskyum))
+## 6.8.0
+### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
 - Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#8328](https://github.com/maplibre/maplibre-gl-js/pull/8328), continues [#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
 - Build the `Intl.Segmenter` instances used for text shaping on first use instead of at import, shaving several milliseconds off loading MapLibre on the main thread ([#8337](https://github.com/maplibre/maplibre-gl-js/pull/8337)) (by [@cherenkov](https://github.com/cherenkov))
@@ -7,7 +36,6 @@
 - Build the default `Marker` pin once and clone it per marker, so creating many default markers takes roughly half the constructor time ([#8340](https://github.com/maplibre/maplibre-gl-js/pull/8340)) (by [@cherenkov](https://github.com/cherenkov))
 - Add SDF rendering support for fill patterns, using `fill-color` as the foreground color ([#7747](https://github.com/maplibre/maplibre-gl-js/pull/7747)) (by [@bradymadden97](https://github.com/bradymadden97) and [@deniial00](https://github.com/deniial00))
 - Warn once when the canvas is clamped to `maxCanvasSize`, which previously lowered the rendered resolution silently ([#8200](https://github.com/maplibre/maplibre-gl-js/issues/8200))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix a marker's popup jumping to another world copy when the marker is moved across the antimeridian on a zoomed-out map ([#5655](https://github.com/maplibre/maplibre-gl-js/issues/5655), [#8326](https://github.com/maplibre/maplibre-gl-js/pull/8326), continues [#5956](https://github.com/maplibre/maplibre-gl-js/pull/5956)) (by [@yuiseki](https://github.com/yuiseki))
@@ -21,7 +49,6 @@
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#7910](https://github.com/maplibre/maplibre-gl-js/pull/7910)) (by [@nostrorom](https://github.com/nostrorom))
 - Keep the tile under an elevated symbol from being culled near the horizon, so a symbol with a large `symbol-height-offset` stays visible until it is behind the planet ([#8316](https://github.com/maplibre/maplibre-gl-js/issues/8316)) (by [@clement-igonet](https://github.com/clement-igonet))
-- _...Add new stuff here..._
 
 ## 6.7.0
 
