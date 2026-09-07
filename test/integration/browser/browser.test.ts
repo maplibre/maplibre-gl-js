@@ -258,40 +258,14 @@ describe('Browser tests', () => {
             map.setStyle({
                 version: 8,
                 sources: {
-                    osm: {
-                        type: 'raster',
-                        tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`],
-                        tileSize: 256,
-                        maxzoom: 19
-                    },
-                    // Use a different source for terrain and hillshade layers, to improve render quality
                     terrainSource: {
-                        type: 'raster-dem',
-                        tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
-                        maxzoom: 10,
-                        tileSize: 256
-                    },
-                    hillshadeSource: {
                         type: 'raster-dem',
                         tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
                         maxzoom: 10,
                         tileSize: 256
                     }
                 },
-                layers: [
-                    {
-                        id: 'osm',
-                        type: 'raster',
-                        source: 'osm'
-                    },
-                    {
-                        id: 'hills',
-                        type: 'hillshade',
-                        source: 'hillshadeSource',
-                        layout: {visibility: 'visible'},
-                        paint: {'hillshade-shadow-color': '#473B24'}
-                    }
-                ],
+                layers: [],
                 terrain: {
                     source: 'terrainSource',
                     exaggeration: 1
