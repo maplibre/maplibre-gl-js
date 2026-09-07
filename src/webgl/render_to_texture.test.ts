@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
+import {beforeEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {createRenderOptions} from '../render/render_options.ts';
@@ -134,9 +134,6 @@ describe('render to texture', () => {
     beforeEach(() => {
         tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
-    });
-
-    afterEach(() => {
         vi.spyOn(terrain.tileManager, 'getRenderableTiles').mockReturnValue([tile]);
         vi.spyOn(terrain.tileManager, 'getTerrainCoords').mockReturnValue({[tile.tileID.key]: tile.tileID});
         painter.options.moving = false;

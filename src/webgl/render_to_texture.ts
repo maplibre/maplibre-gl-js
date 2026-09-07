@@ -24,14 +24,6 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
 };
 
 /**
- * How many tiles whose cached textures went stale are re-rendered per frame. The rest keep drawing their
- * previous textures and are refreshed on the following frames, nearest to the camera first. Re-rendering a
- * tile means drawing every layer of the style into it again, so a burst of stale tiles (a settled zoom,
- * source tiles arriving during a pan) would otherwise cost several frames of work in one frame.
- */
-const MAX_STALE_TILES_RENDERED_PER_FRAME = 1;
-
-/**
  * @internal
  * Renders RTT-eligible layers into per-tile cached textures, then drapes
  * them onto the terrain mesh. Slots live on each Tile so their lifetime
@@ -95,6 +87,13 @@ export class RenderToTexture {
         return tile.getRTT(this._stacks.length - 1).texture;
     }
 
+    /**
+     * Collects the frame's tiles, layers and source fingerprints, and releases the textures of at most one
+     * stale tile per frame, nearest to the camera first; the other stale tiles keep drawing their previous
+     * texture and `needsFollowUpFrame` brings them in on the following frames. Textures that differ only by
+     * zoom are kept while the zoom is changing or the map is moving, because a drag over terrain drifts the
+     * zoom by a hundredth of a level and pauses often.
+     */
     prepareForRender(style: Style, zoom: number): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
         this._lastPrepareZoom = zoom;
@@ -138,20 +137,15 @@ export class RenderToTexture {
 
         // check tiles to render
         this.needsFollowUpFrame = false;
-        // A texture rendered at another zoom is kept while the zoom is still changing, and while the camera moves at all:
-        // a drag over terrain drifts the zoom by a hundredth of a level and pauses often, and each pause would otherwise
-        // re-render every tile.
         const keepZoomStaleTextures = zoomChanged || this.painter.options.moving;
-        let staleTilesToRender = MAX_STALE_TILES_RENDERED_PER_FRAME;
-        // renderable tiles are ordered nearest to the camera first, so the budget goes to the tiles that matter most
+        let staleTileReleased = false;
         for (const tile of this._renderableTiles) {
             if (!this._hasStaleTextures(tile, keepZoomStaleTextures)) continue;
-            if (staleTilesToRender === 0) {
-                // keep drawing the stale textures; a follow-up frame renders them when their turn comes
+            if (staleTileReleased) {
                 this.needsFollowUpFrame = true;
                 continue;
             }
-            staleTilesToRender--;
+            staleTileReleased = true;
             tile.releaseRTT(this.painter);
         }
     }
