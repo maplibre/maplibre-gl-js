@@ -65,23 +65,6 @@ export class VertexArrayObject {
             this.freshBind(program, layoutVertexBuffer, paintVertexBuffers, indexBuffer, vertexOffset, dynamicVertexBuffer, dynamicVertexBuffer2, dynamicVertexBuffer3);
         } else {
             context.bindVertexArray.set(this.vao);
-
-            if (dynamicVertexBuffer) {
-                // The buffer may have been updated. Rebind to upload data.
-                dynamicVertexBuffer.bind();
-            }
-
-            if (indexBuffer?.dynamicDraw) {
-                indexBuffer.bind();
-            }
-
-            if (dynamicVertexBuffer2) {
-                dynamicVertexBuffer2.bind();
-            }
-
-            if (dynamicVertexBuffer3) {
-                dynamicVertexBuffer3.bind();
-            }
         }
     }
 

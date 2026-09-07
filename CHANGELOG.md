@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
+- Skip layers that are hidden at the current zoom before rendering their tile clipping masks, and stop re-binding dynamic vertex buffers on every cached vertex array bind; on a terrain style with layers outside their zoom range this removes about a fifth of the WebGL calls per frame
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
