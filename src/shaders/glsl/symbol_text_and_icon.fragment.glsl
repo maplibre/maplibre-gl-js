@@ -10,7 +10,7 @@ uniform sampler2D u_texture_icon;
 uniform highp float u_gamma_scale;
 in vec4 v_data0;
 in vec3 v_data1;
-flat in float v_is_sdf;
+in float v_is_sdf;
 
 #pragma maplibre: define highp vec4 fill_color
 #pragma maplibre: define highp vec4 halo_color

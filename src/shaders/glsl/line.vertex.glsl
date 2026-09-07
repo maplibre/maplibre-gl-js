@@ -12,7 +12,7 @@ layout(location = 1) in uvec4 a_data;
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
 out vec2 v_normal;
-flat out vec2 v_width2;
+out vec2 v_width2;
 out float v_gamma_scale;
 out highp float v_linesofar;
 #ifdef GLOBE
