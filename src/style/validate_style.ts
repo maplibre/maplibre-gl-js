@@ -1,10 +1,15 @@
 import {latest as styleSpec, validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
+import {extendStyleSpecWithLineTaper} from './line_taper_spec.ts';
 import {ErrorEvent} from '../util/evented.ts';
 import {warnOnce} from '../util/util.ts';
 
 import type {StyleSpecification, ValidationError} from '@maplibre/maplibre-gl-style-spec';
 import type {Evented} from '../util/evented.ts';
 import type {StyleSetterOptions} from './style.ts';
+
+// Makes the validators (which read the published style-spec `latest`) accept
+// the extra line taper properties. Must run before any style is validated.
+extendStyleSpecWithLineTaper();
 
 /**
  * Validates a single part of a style, e.g. a source, a filter or a paint property.

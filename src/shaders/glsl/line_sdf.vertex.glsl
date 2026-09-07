@@ -12,6 +12,14 @@
 
 layout(location = 0) in ivec2 a_pos_normal;
 layout(location = 1) in uvec4 a_data;
+#ifdef TAPER
+// The per-vertex value bound from the line bucket's taper buffer (see
+// `line_taper_attributes.ts`): either the normalized line position (0 = start,
+// 1 = end) for `line-width-start`/`line-width-end`, or the absolute width at the
+// vertex for `line-widths`. No explicit layout location is assigned: it is
+// linked after the data-driven paint attributes.
+in float a_taper;
+#endif
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
@@ -21,7 +29,11 @@ uniform float u_crossfade_to;
 uniform float u_lineatlas_height;
 
 out vec2 v_normal;
+#ifdef TAPER
+out vec2 v_width2;
+#else
 flat out vec2 v_width2;
+#endif
 out vec2 v_tex_a;
 out vec2 v_tex_b;
 out float v_gamma_scale;
@@ -35,6 +47,10 @@ out float v_depth;
 #pragma maplibre: define mediump float gapwidth
 #pragma maplibre: define lowp float offset
 #pragma maplibre: define mediump float width
+#ifdef TAPER
+#pragma maplibre: define mediump float width_start
+#pragma maplibre: define mediump float width_end
+#endif
 #pragma maplibre: define lowp float floorwidth
 #pragma maplibre: define mediump vec4 dasharray_from
 #pragma maplibre: define mediump vec4 dasharray_to
@@ -72,6 +88,36 @@ void main() {
     mediump vec2 normal = vec2(a_pos_normal & 1);
     normal.y = normal.y * 2.0 - 1.0;
     v_normal = normal;
+
+#ifdef TAPER
+#ifdef VARIABLE_WIDTH
+    // The per-vertex buffer already holds the absolute width at this vertex
+    // (`line-widths`), so it is used directly.
+    width = a_taper;
+#endif
+#ifdef VARIABLE_WIDTH_FACTOR
+    // The per-vertex buffer holds a multiplier of the zoom-composited `line-width`
+    // (`line-width-factors`), so the base width keeps its regular paint semantics
+    // (including zoom interpolation) and just gets scaled per vertex. Plain nested
+    // #ifdef/#ifndef are used instead of `#elif defined(...)`: the shader
+    // generator's minifier strips newlines after closing parens in preprocessor
+    // directives.
+    width = width * a_taper;
+#endif
+#ifndef VARIABLE_WIDTH
+#ifndef VARIABLE_WIDTH_FACTOR
+
+    // The start/end widths are per-feature values (uniform or attribute, supplied by
+    // the `#pragma` mechanism below). An unset property (default -1) falls back to
+    // the regular `line-width`, so setting only one side tapers from/towards it.
+    #pragma maplibre: initialize mediump float width_start
+    #pragma maplibre: initialize mediump float width_end
+    float wStart = width_start >= 0.0 ? width_start : width;
+    float wEnd = width_end >= 0.0 ? width_end : width;
+    width = mix(wStart, wEnd, a_taper);
+#endif
+#endif
+#endif
 
     // these transformations used to be applied in the JS and native code bases.
     // moved them into the shader for clarity and simplicity.

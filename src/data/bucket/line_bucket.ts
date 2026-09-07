@@ -1,7 +1,10 @@
-import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g.ts';
+import {LineLayoutArray, LineExtLayoutArray, LineTaperLayoutArray} from '../array_types.g.ts';
 import {GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
 import {members as layoutAttributes} from './line_attributes.ts';
 import {members as layoutAttributesExt} from './line_attributes_ext.ts';
+import {members as taperAttributes} from './line_taper_attributes.ts';
+import {interpolateWidthProfile} from '../../util/interpolate_widths.ts';
+import {matchTaperProfile, expandTaperKnots, type GeoJSONTaperAnnotation, type GeoJSONTaperFeature, type TaperProfile} from '../../source/geojson_taper.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../array_types.g.ts';
@@ -114,6 +117,57 @@ export class LineBucket implements Bucket {
     layoutVertexArray2: LineExtLayoutArray;
     layoutVertexBuffer2: VertexBuffer;
 
+    // Per-vertex taper factors (0 = line start, 1 = line end), only populated when a
+    // layer sets `line-width-start` and/or `line-width-end`. Lives in its own buffer so
+    // non-tapered lines pay no extra memory or upload cost.
+    layoutTaperArray: LineTaperLayoutArray;
+    layoutTaperBuffer: VertexBuffer;
+    taperEnabled: boolean;
+    // Cumulative distance along the current line, reset per `addLine` (never reset by the
+    // `linesofar` wrap-around, so the taper factor stays monotonic on long lines).
+    taperDistance: number;
+    // Total length of the current line, used to normalize `taperDistance` into a 0..1 factor.
+    lineLength: number;
+
+    // Per-vertex widths (`line-widths`). When active, the per-vertex buffer holds the
+    // absolute width at each vertex (instead of a normalized taper factor), taking
+    // precedence over `line-width-start`/`line-width-end`.
+    widthsMode: boolean;
+    // The resolved widths array for the feature currently being added (may be empty).
+    lineWidths: number[] | null;
+    // Per-vertex width FACTORS (`line-width-factors`). When active, the per-vertex
+    // buffer holds a multiplier of the zoom-composited `line-width` at each vertex,
+    // taking precedence over `line-widths`. A feature without a factor value renders
+    // with the neutral factor 1 (i.e. exactly `line-width`).
+    factorsMode: boolean;
+    // The resolved factors array for the feature currently being added (may be null).
+    lineFactors: number[] | null;
+    // The evaluated `line-width` of the current feature, used as fallback when the
+    // widths array is empty.
+    currentLineWidth: number;
+    // Normalized cumulative distance of each vertex of the current line (0..1), aligned
+    // with `lineWidths` and used to linearly interpolate widths along the geometry.
+    lineKnots: number[] | null;
+    // Worker-computed taper annotation for the current feature (see
+    // src/source/geojson_taper.ts). When present, per-vertex knots are anchored to
+    // the ORIGINAL line so widths are continuous across tile boundaries.
+    taperAnnotation: GeoJSONTaperAnnotation | null;
+    // Profiles from the annotation matched against the evaluated arrays of the
+    // current feature (may be null).
+    taperWidthsValues: TaperProfile | null;
+    taperFactorsValues: TaperProfile | null;
+    // Resolved per-ring profile (values + original-ring knots) for annotation mode.
+    taperWidthProfile: {values: number[]; knots: number[]} | null;
+    taperFactorProfile: {values: number[]; knots: number[]} | null;
+    // Normalized position (0..1) of every emitted vertex along the ORIGINAL line,
+    // aligned with the (subdivided) vertex array. Only set in annotation mode.
+    taperVertexKnots: number[] | null;
+    // The knot of the vertex currently being emitted (annotation mode).
+    currentTaperFactor: number;
+    // The widest width ever written into the per-vertex buffer, used as a conservative
+    // query pre-filter (data-driven arrays cannot be handled by the paint binder).
+    maxVertexWidth: number;
+
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
@@ -138,12 +192,60 @@ export class LineBucket implements Bucket {
 
         this.layoutVertexArray = new LineLayoutArray();
         this.layoutVertexArray2 = new LineExtLayoutArray();
+        this.layoutTaperArray = new LineTaperLayoutArray();
+        this.taperEnabled = false;
+        this.widthsMode = false;
+        this.lineWidths = null;
+        this.factorsMode = false;
+        this.lineFactors = null;
+        this.currentLineWidth = 0;
+        this.lineKnots = null;
+        this.taperAnnotation = null;
+        this.taperWidthsValues = null;
+        this.taperFactorsValues = null;
+        this.taperWidthProfile = null;
+        this.taperFactorProfile = null;
+        this.taperVertexKnots = null;
+        this.currentTaperFactor = 0;
+        this.maxVertexWidth = 0;
+        this.taperDistance = 0;
+        this.lineLength = 0;
         this.indexArray = new TriangleIndexArray();
-        this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
+        // Arrays cannot be packed into vertex attributes, so `line-widths` and
+        // `line-width-factors` are evaluated per feature right here in the bucket and
+        // excluded from the paint binder.
+        this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom,
+            (property) => property !== 'line-widths' && property !== 'line-width-factors');
         this.segments = new SegmentVector();
         this.maxLineLength = 0;
 
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
+
+        // Per-vertex widths take precedence over the two-sided taper, and per-vertex
+        // width factors take precedence over the absolute per-vertex widths. A
+        // property is active when it is data-driven (cannot be known to be empty/-1
+        // for every feature) or when its constant value differs from the default.
+        // When active, each vertex stores its position along the line (0..1) in the
+        // taper buffer and the shader interpolates the width between
+        // `line-width-start`/`line-width-end`, reads the absolute per-vertex width
+        // directly, or multiplies the zoom-composited `line-width` by the per-vertex
+        // factor.
+        this.factorsMode = this.layers.some((layer) => {
+            const factors = layer.paint.get('line-width-factors');
+            const constant = factors.constantOr(null);
+            return !factors.isConstant() || (Array.isArray(constant) && constant.length > 0);
+        });
+        this.widthsMode = !this.factorsMode && this.layers.some((layer) => {
+            const widths = layer.paint.get('line-widths');
+            const constant = widths.constantOr(null);
+            return !widths.isConstant() || (Array.isArray(constant) && constant.length > 0);
+        });
+        this.taperEnabled = this.factorsMode || this.widthsMode || this.layers.some((layer) => {
+            const widthStart = layer.paint.get('line-width-start');
+            const widthEnd = layer.paint.get('line-width-end');
+            return widthStart.constantOr(-1) >= 0 || widthEnd.constantOr(-1) >= 0 ||
+                !widthStart.isConstant() || !widthEnd.isConstant();
+        });
     }
 
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void {
@@ -172,7 +274,9 @@ export class LineBucket implements Bucket {
                 geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
                 patterns: {},
                 dashes: {},
-                sortKey
+                sortKey,
+                // Worker-computed cross-tile taper anchoring (see src/source/geojson_taper.ts)
+                _taper: (feature as GeoJSONTaperFeature)._taper
             };
 
             bucketFeatures.push(bucketFeature);
@@ -233,6 +337,9 @@ export class LineBucket implements Bucket {
             if (this.layoutVertexArray2.length !== 0) {
                 this.layoutVertexBuffer2 = context.createVertexBuffer(this.layoutVertexArray2, layoutAttributesExt);
             }
+            if (this.layoutTaperArray.length !== 0) {
+                this.layoutTaperBuffer = context.createVertexBuffer(this.layoutTaperArray, taperAttributes);
+            }
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
         }
@@ -246,6 +353,9 @@ export class LineBucket implements Bucket {
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
+        if (this.layoutTaperBuffer) {
+            this.layoutTaperBuffer.destroy();
+        }
     }
 
     lineFeatureClips(feature: BucketFeature): LineClips | undefined {
@@ -258,26 +368,73 @@ export class LineBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting): void {
         const layout = this.layers[0].layout;
+        // Worker-computed cross-tile taper anchoring (see src/source/geojson_taper.ts).
+        this.taperAnnotation = feature._taper ?? null;
+        this.taperWidthsValues = null;
+        this.taperFactorsValues = null;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap').evaluate(feature, {});
         const miterLimit = layout.get('line-miter-limit').evaluate(feature, {});
         const roundLimit = layout.get('line-round-limit').evaluate(feature, {});
         this.lineClips = this.lineFeatureClips(feature);
 
-        for (const line of geometry) {
-            this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
+        // Per-vertex widths: evaluate the data-driven array for this feature. An empty
+        // or missing array falls back to `line-width`. In factor mode the base
+        // `line-width` also needs to be evaluated for the conservative query
+        // pre-filter (`line-width` · max factor).
+        if (this.factorsMode) {
+            const factors = this.layers[0].paint.get('line-width-factors').evaluate(feature, {});
+            this.lineFactors = Array.isArray(factors) && factors.length > 0 ? factors.map(Number) : null;
+            this.taperFactorsValues = (this.taperAnnotation && Array.isArray(factors)) ?
+                matchTaperProfile(this.taperAnnotation, factors) : null;
+            this.currentLineWidth = this.layers[0].paint.get('line-width').evaluate(feature, {});
+            if (this.lineFactors) {
+                let maxFactor = 0;
+                for (const f of this.lineFactors) {
+                    if (f > maxFactor) maxFactor = f;
+                }
+                if (this.currentLineWidth * maxFactor > this.maxVertexWidth) {
+                    this.maxVertexWidth = this.currentLineWidth * maxFactor;
+                }
+            } else if (this.currentLineWidth > this.maxVertexWidth) {
+                this.maxVertexWidth = this.currentLineWidth;
+            }
+        } else if (this.widthsMode) {
+            const widths = this.layers[0].paint.get('line-widths').evaluate(feature, {});
+            this.lineWidths = Array.isArray(widths) && widths.length > 0 ? widths.map(Number) : null;
+            this.taperWidthsValues = (this.taperAnnotation && Array.isArray(widths)) ?
+                matchTaperProfile(this.taperAnnotation, widths) : null;
+            this.currentLineWidth = this.layers[0].paint.get('line-width').evaluate(feature, {});
+            if (this.lineWidths) {
+                for (const w of this.lineWidths) {
+                    if (w > this.maxVertexWidth) this.maxVertexWidth = w;
+                }
+            } else if (this.currentLineWidth > this.maxVertexWidth) {
+                this.maxVertexWidth = this.currentLineWidth;
+            }
+        }
+
+        for (let ringIndex = 0; ringIndex < geometry.length; ringIndex++) {
+            this.addLine(geometry[ringIndex], feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity, ringIndex);
         }
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
     }
 
-    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting): void {
+    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting, ringIndex: number = 0): void {
         this.distance = 0;
         this.scaledDistance = 0;
         this.totalDistance = 0;
+        this.taperDistance = 0;
+        this.lineLength = 0;
+        this.lineKnots = null;
+        this.taperVertexKnots = null;
+        this.taperWidthProfile = null;
+        this.taperFactorProfile = null;
 
         // First, subdivide the line if needed (mostly for globe rendering)
         const granularity = canonical ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
+        const rawVertices = vertices;
         vertices = subdivideVertexLine(vertices, granularity);
 
         if (this.lineClips) {
@@ -304,6 +461,57 @@ export class LineBucket implements Bucket {
 
         // Ignore invalid geometry.
         if (len - first < (isPolygon ? 3 : 2)) return;
+
+        // Total length of the polyline about to be emitted. Used to normalize each
+        // vertex's position along the line into a 0..1 taper factor. Only computed when
+        // a layer actually uses tapered lines.
+        if (this.taperEnabled) {
+            let length = 0;
+            for (let i = first; i < len - 1; i++) {
+                length += vertices[i].dist(vertices[i + 1]);
+            }
+            this.lineLength = length;
+
+            // Per-vertex widths/factors: record the normalized cumulative distance of
+            // every vertex so a value given at a vertex is reproduced exactly there,
+            // and anything in between (e.g. globe subdivision) interpolates along the
+            // actual geometry. Falls back to evenly spaced stops if the array length
+            // does not match the vertex count.
+            if (this.factorsMode || this.widthsMode) {
+                this.lineKnots = new Array(len - first);
+                this.lineKnots[0] = 0;
+                let cum = 0;
+                for (let i = first, k = 1; i < len - 1; i++, k++) {
+                    cum += vertices[i].dist(vertices[i + 1]);
+                    this.lineKnots[k] = length > 0 ? cum / length : 0;
+                }
+            } else {
+                this.lineKnots = null;
+            }
+
+            // Cross-tile anchoring: when the worker attached a taper annotation for
+            // this feature, re-base the per-vertex knots onto the ORIGINAL line so
+            // that both tiles sharing a boundary evaluate the same profile at the
+            // same position (see src/source/geojson_taper.ts).
+            const pieceKnots = this.taperAnnotation?.pieceKnots[ringIndex] ?? null;
+            const expandedKnots = (pieceKnots?.length === rawVertices.length) ?
+                expandTaperKnots(rawVertices, vertices, pieceKnots) : null;
+            this.taperVertexKnots = expandedKnots;
+            if (expandedKnots) {
+                if (this.widthsMode && this.taperWidthsValues) {
+                    const knots = this.taperWidthsValues.knotsPerRing[ringIndex];
+                    if (knots?.length === this.taperWidthsValues.values.length) {
+                        this.taperWidthProfile = {values: this.taperWidthsValues.values, knots};
+                    }
+                }
+                if (this.factorsMode && this.taperFactorsValues) {
+                    const knots = this.taperFactorsValues.knotsPerRing[ringIndex];
+                    if (knots?.length === this.taperFactorsValues.values.length) {
+                        this.taperFactorProfile = {values: this.taperFactorsValues.values, knots};
+                    }
+                }
+            }
+        }
 
         if (join === 'bevel') miterLimit = 1.05;
 
@@ -336,6 +544,7 @@ export class LineBucket implements Bucket {
 
             // if two consecutive vertices exist, skip the current one
             if (nextVertex && vertices[i].equals(nextVertex)) continue;
+            if (this.taperVertexKnots) this.currentTaperFactor = this.taperVertexKnots[i];
 
             if (nextNormal) prevNormal = nextNormal;
             if (currentVertex) prevVertex = currentVertex;
@@ -390,7 +599,16 @@ export class LineBucket implements Bucket {
                 if (prevSegmentLength > 2 * sharpCornerOffset) {
                     const newPrevVertex = currentVertex.sub(currentVertex.sub(prevVertex)._mult(sharpCornerOffset / prevSegmentLength)._round());
                     this.updateDistance(prevVertex, newPrevVertex);
+                    if (this.taperVertexKnots) {
+                        // The inserted vertex sits between the previous and the current
+                        // vertex: blend the anchor knot accordingly.
+                        const k0 = this.taperVertexKnots[i - 1];
+                        const k1 = this.taperVertexKnots[i];
+                        const f = prevSegmentLength > 0 ? (prevSegmentLength - sharpCornerOffset) / prevSegmentLength : 1;
+                        this.currentTaperFactor = k0 + (k1 - k0) * f;
+                    }
                     this.addCurrentVertex(newPrevVertex, prevNormal, 0, 0, segment);
+                    if (this.taperVertexKnots) this.currentTaperFactor = this.taperVertexKnots[i];
                     prevVertex = newPrevVertex;
                 }
             }
@@ -511,6 +729,14 @@ export class LineBucket implements Bucket {
                 if (nextSegmentLength > 2 * sharpCornerOffset) {
                     const newCurrentVertex = currentVertex.add(nextVertex.sub(currentVertex)._mult(sharpCornerOffset / nextSegmentLength)._round());
                     this.updateDistance(currentVertex, newCurrentVertex);
+                    if (this.taperVertexKnots) {
+                        // The inserted vertex sits between the current and the next
+                        // vertex: blend the anchor knot accordingly.
+                        const k0 = this.taperVertexKnots[i];
+                        const k1 = this.taperVertexKnots[i + 1];
+                        const f = nextSegmentLength > 0 ? sharpCornerOffset / nextSegmentLength : 0;
+                        this.currentTaperFactor = k0 + (k1 - k0) * f;
+                    }
                     this.addCurrentVertex(newCurrentVertex, nextNormal, 0, 0, segment);
                     currentVertex = newCurrentVertex;
                 }
@@ -554,6 +780,41 @@ export class LineBucket implements Bucket {
         // scale down so that we can store longer distances while sacrificing precision.
         const linesofarScaled = totalDistance * LINE_DISTANCE_SCALE;
 
+        // Per-vertex widths or taper factor: when a layer uses `line-widths`,
+        // this vertex stores the absolute width at its position (interpolated along
+        // the geometry between the given per-vertex widths). Otherwise it stores the
+        // normalized position along the line so the shader can interpolate the width
+        // between `line-width-start`/`line-width-end`. `taperDistance` is intentionally
+        // used (not `distance`, which may wrap around for very long un-clipped lines)
+        // so the factor stays monotonic 0..1.
+        if (this.taperEnabled) {
+            // With a worker taper annotation the knot is the vertex's normalized
+            // position along the ORIGINAL line (identical in every tile sharing the
+            // line); without one it is the piece-local position (legacy behavior).
+            const factor = this.taperVertexKnots ? this.currentTaperFactor :
+                (this.lineLength > 0 ? Math.min(this.taperDistance / this.lineLength, 1) : 0);
+            let value;
+            if (this.factorsMode) {
+                const profile = this.taperFactorProfile;
+                const factors = profile ? profile.values : this.lineFactors;
+                const knots = profile ? profile.knots : this.lineKnots;
+                // Neutral factor 1 for features without a factor value → exactly
+                // `line-width` (e.g. plain tracks sharing the tapered line layer).
+                value = (factors && factors.length > 0 && knots) ?
+                    interpolateWidthProfile(factors, knots, factor) :
+                    1;
+            } else if (this.widthsMode) {
+                const profile = this.taperWidthProfile;
+                const widths = profile ? profile.values : this.lineWidths;
+                const knots = profile ? profile.knots : this.lineKnots;
+                value = (widths && widths.length > 0 && knots) ?
+                    interpolateWidthProfile(widths, knots, factor) :
+                    this.currentLineWidth;
+            } else {
+                value = factor;
+            }
+            this.layoutTaperArray.emplaceBack(value);
+        }
         this.layoutVertexArray.emplaceBack(
             // a_pos_normal
             // Encode round/up the least significant bits
@@ -602,6 +863,7 @@ export class LineBucket implements Bucket {
 
     updateDistance(prev: Point, next: Point): void {
         this.distance += prev.dist(next);
+        this.taperDistance += prev.dist(next);
         this.updateScaledDistance();
     }
 

@@ -3,6 +3,7 @@
 import * as fs from 'fs';
 
 import {latest, type StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {lineTaperPaintSpecs} from '../src/style/line_taper_spec.ts';
 
 /**
  * Which kind of value a property holds, and so which `Property` class implements it.
@@ -51,6 +52,23 @@ type SpecProperty = SpecValue & {
     layerType?: string;
     /** the style root owning this property, e.g. `sky` */
     root?: string;
+    /** the spec is emitted inline instead of being read from the style-spec package */
+    customSpec?: StylePropertySpecification;
+};
+
+/**
+ * Extra paint properties implemented by MapLibre GL JS itself, which are not part of the
+ * published maplibre-style-spec package (yet). They are injected into the generated
+ * properties file with their spec written inline, so nothing needs to change in the
+ * style-spec dependency.
+ *
+ * `line-width-start` and `line-width-end` implement tapered lines: the line width is
+ * interpolated between the two values along the length of each line. The default of `-1`
+ * means "not set" — the line vertex shader then falls back to `line-width`, and the line
+ * bucket skips the per-vertex taper buffer entirely.
+ */
+const customPaintSpecs: {[layerType: string]: {[name: string]: StylePropertySpecification}} = {
+    line: lineTaperPaintSpecs
 };
 
 /** A layer's properties, as {@link emitLayerProperties} takes them. */
@@ -224,7 +242,9 @@ function specPath(property: SpecProperty, type: string): string {
 
 /** How the generated code constructs the property, e.g. `new DataConstantProperty(...)`. */
 function propertyValue(property: SpecProperty, type: string): string {
-    const propertyAsSpec = `${specPath(property, type)} as any as StylePropertySpecification`;
+    const propertyAsSpec = property.customSpec ?
+        JSON.stringify(property.customSpec, null, 4) :
+        `${specPath(property, type)} as any as StylePropertySpecification`;
     const name = JSON.stringify(property.name);
 
     switch (property['property-type']) {
@@ -258,7 +278,20 @@ function propertyValue(property: SpecProperty, type: string): string {
  */
 function specProperties(specKey: string, tag: Pick<SpecProperty, 'layerType'> | Pick<SpecProperty, 'root'>): SpecProperty[] {
     const spec = latest[specKey as keyof typeof latest] as unknown as Record<string, SpecProperty>;
-    return Object.keys(spec).map((name) => ({...spec[name], ...tag, name}));
+    const result: SpecProperty[] = Object.keys(spec).map((name) => ({...spec[name], ...tag, name}));
+
+    // Append the custom MapLibre GL JS properties (see `customPaintSpecs`) to the
+    // paint group of their layer.
+    if (tag.layerType && specKey === `paint_${tag.layerType}`) {
+        const customSpecs = customPaintSpecs[tag.layerType];
+        if (customSpecs) {
+            for (const name of Object.keys(customSpecs)) {
+                result.push({...customSpecs[name], ...tag, name, customSpec: customSpecs[name]});
+            }
+        }
+    }
+
+    return result;
 }
 
 /** The imports every generated file opens with. */

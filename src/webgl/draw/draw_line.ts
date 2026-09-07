@@ -181,6 +181,27 @@ function drawLineTiles(
     const gradient = layer.paint.get('line-gradient');
     const crossfade = layer.getCrossfadeParameters();
 
+    // Tapered lines: active when `line-width-start` and/or `line-width-end` are set
+    // (the property default is -1 = "not set"), or when per-vertex `line-widths` are
+    // used (which take precedence). The shader is compiled with a defines macro and
+    // reads the per-vertex `a_taper` factor from the bucket's taper buffer. With
+    // `line-widths` that buffer already holds the absolute width per vertex.
+    const lineWidthStart = layer.paint.get('line-width-start');
+    const lineWidthEnd = layer.paint.get('line-width-end');
+    const lineWidths = layer.paint.get('line-widths');
+    const lineWidthFactors = layer.paint.get('line-width-factors');
+    const taper = lineWidthStart.constantOr(-1) >= 0 || lineWidthEnd.constantOr(-1) >= 0 ||
+        !lineWidthStart.isConstant() || !lineWidthEnd.isConstant();
+    const variableWidth = !lineWidths.isConstant() || ((lineWidths.constantOr(null))?.length ?? 0) > 0;
+    const variableWidthFactor = !lineWidthFactors.isConstant() || ((lineWidthFactors.constantOr(null))?.length ?? 0) > 0;
+    // `TAPER` enables the per-vertex width machinery in the shader;
+    // `VARIABLE_WIDTH`/`VARIABLE_WIDTH_FACTOR` (only meaningful together with TAPER)
+    // switch it from the start/end mix to a direct per-vertex width or to a per-vertex
+    // factor of the zoom-composited `line-width`.
+    const defines = variableWidthFactor ? ['#define TAPER;', '#define VARIABLE_WIDTH_FACTOR;']
+        : variableWidth ? ['#define TAPER;', '#define VARIABLE_WIDTH;']
+            : taper ? ['#define TAPER;'] : [];
+
     let programId: string;
     if (image) programId = 'linePattern';
     else if (dasharray && gradient) programId = 'lineGradientSDF';
@@ -204,7 +225,7 @@ function drawLineTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const prevProgram = painter.context.program.get();
-        const program = painter.useProgram(programId, programConfiguration);
+        const program = painter.useProgram(programId, programConfiguration, false, defines);
         const programChanged = firstTile || program.program !== prevProgram;
         const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, isRenderingToTexture) : null;
 
@@ -253,7 +274,8 @@ function drawLineTiles(
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
-            layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+            layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2,
+            undefined, defines.length > 0 ? bucket.layoutTaperBuffer : undefined);
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic

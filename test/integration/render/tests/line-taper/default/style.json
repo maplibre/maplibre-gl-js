@@ -1,0 +1,88 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 128
+    }
+  },
+  "center": [0, 0],
+  "zoom": 2,
+  "sources": {
+    "lines": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"kind": "taper"},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [-10, 3],
+                [10, 3]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "plain"},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [-10, -3],
+                [10, -3]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "plain",
+      "type": "line",
+      "source": "lines",
+      "layout": {
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#00f",
+        "line-width": 6
+      },
+      "filter": [
+        "==",
+        ["get", "kind"],
+        "plain"
+      ]
+    },
+    {
+      "id": "taper",
+      "type": "line",
+      "source": "lines",
+      "layout": {
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#e11",
+        "line-width": 2,
+        "line-width-start": 20,
+        "line-width-end": 4
+      },
+      "filter": [
+        "==",
+        ["get", "kind"],
+        "taper"
+      ]
+    }
+  ]
+}
