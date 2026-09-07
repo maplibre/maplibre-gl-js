@@ -16,7 +16,7 @@ uniform mediump float u_ratio;
 uniform float u_image_height;
 
 out vec2 v_normal;
-flat out vec2 v_width2;
+out vec2 v_width2;
 out float v_gamma_scale;
 out highp vec2 v_uv;
 #ifdef GLOBE

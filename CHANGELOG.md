@@ -9,6 +9,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Remove the `flat` interpolation qualifier from shader varyings: ANGLE's Metal backend emulates GL's provoking-vertex rule for flat shading by rewriting the index buffer and syncing GPU→CPU on every draw, which on iPadOS 16 Safari hangs the GPU process outright and turns the map blank with an unresponsive page ([#8002](https://github.com/maplibre/maplibre-gl-js/issues/8002), reverts [#7661](https://github.com/maplibre/maplibre-gl-js/pull/7661))
 - Fix a marker's popup jumping to another world copy when the marker is moved across the antimeridian on a zoomed-out map ([#5655](https://github.com/maplibre/maplibre-gl-js/issues/5655), [#8326](https://github.com/maplibre/maplibre-gl-js/pull/8326), continues [#5956](https://github.com/maplibre/maplibre-gl-js/pull/5956)) (by [@yuiseki](https://github.com/yuiseki))
 - Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251))
 - Fix a gap between the sky and the ground at high pitch while globe transitions to mercator ([#7382](https://github.com/maplibre/maplibre-gl-js/issues/7382)) (by [@birkskyum](https://github.com/birkskyum))
