@@ -1,5 +1,4 @@
 import {DOM} from '../util/dom.ts';
-import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
@@ -435,6 +434,7 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
+            this._map.off('render', this._updateAfterRender);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -680,7 +680,14 @@ export class Marker extends Evented<MarkerEventType> {
         return this;
     }
 
-    _updateOpacity(force: boolean = false): void {
+    /**
+     * Updates marker opacity and the covered class according to globe and terrain occlusion.
+     *
+     * @param force - Bypass the terrain-depth read throttle to apply the latest occlusion result immediately.
+     * @param readTerrainDepth - Whether to check terrain occlusion. When false, only globe occlusion is checked,
+     * preserving the previous opacity when terrain is present and the globe does not hide the marker.
+     */
+    _updateOpacity(force: boolean = false, readTerrainDepth: boolean = true): void {
         const terrain = this._map?.terrain;
         const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
@@ -691,6 +698,7 @@ export class Marker extends Evented<MarkerEventType> {
             }
             return;
         }
+        if (!readTerrainDepth) return;
         if (force) {
             this._opacityTimeout = null;
         } else {
@@ -726,14 +734,51 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.classList.toggle('maplibregl-marker-covered', centerIsInvisible);
     }
 
-    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }): void => {
+    /**
+     * @internal
+     * Positions the marker immediately. For map events or updates during camera movement, schedules the opacity check
+     * after rendering so it uses the updated terrain depth buffer. A setter on a stationary map checks opacity
+     * synchronously using the existing depth buffer, since an idle map may not render again.
+     */
+    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' }): void => {
         if (!this._map) return;
-
-        const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
-        if (e?.type === 'terrain' || (e?.type === 'render' && !isFullyLoaded)) {
-            this._map.once('render', this._update);
+        this._updatePosition(e);
+        if (e || this._map.isMoving()) {
+            this._map.once('render', this._updateAfterRender);
+        } else {
+            this._updateOpacity();
         }
+    };
 
+    /**
+     * Checks opacity after rendering. During camera movement, terrain-depth reads remain throttled and subsequent
+     * `move` events schedule further checks.
+     *
+     * Once movement stops, updates the position after each render to follow arriving terrain tiles. While the map is
+     * loading, checks only globe occlusion to avoid reading terrain depth while sources reload. When loading finishes,
+     * checks terrain occlusion without the throttle and stops scheduling updates.
+     */
+    _updateAfterRender = (): void => {
+        if (!this._map) return;
+        if (this._map.isMoving()) {
+            this._updateOpacity();
+            return;
+        }
+        this._updatePosition();
+        if (!this._map.loaded()) {
+            this._map.once('render', this._updateAfterRender);
+            this._updateOpacity(false, false);
+            return;
+        }
+        this._updateOpacity(true);
+    };
+
+    /**
+     * Projects the marker's location and applies its offset, rotation and pitch. Keeps a separate position without
+     * terrain elevation for world wrapping. Unless subpixel positioning is enabled, rounds on `moveend` and calls
+     * without an event; rounding during `move` events would make zooming stutter.
+     */
+    _updatePosition(e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' }): void {
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
@@ -756,19 +801,12 @@ export class Marker extends Evented<MarkerEventType> {
             pitch = `rotateX(${this._map.getPitch()}deg)`;
         }
 
-        // because rounding the coordinates at every `move` event causes stuttered zooming
-        // we only round them when _update is called with `moveend` or when its called with
-        // no arguments (when the Marker is initialized or Marker.setLngLat is invoked).
         if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
             this._pos = this._pos.round();
         }
 
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
-
-        browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            this._updateOpacity(e?.type === 'moveend');
-        }).catch(() => {});
-    };
+    }
 
     /**
      * Get the marker's offset.

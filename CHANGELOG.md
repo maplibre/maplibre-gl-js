@@ -21,6 +21,7 @@
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#7910](https://github.com/maplibre/maplibre-gl-js/pull/7910)) (by [@nostrorom](https://github.com/nostrorom))
 - Keep the tile under an elevated symbol from being culled near the horizon, so a symbol with a large `symbol-height-offset` stays visible until it is behind the planet ([#8316](https://github.com/maplibre/maplibre-gl-js/issues/8316)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Fix misplaced markers and popups after terrain loads or the globe is dragged, and markers remaining dimmed after projection changes. ([#8344](https://github.com/maplibre/maplibre-gl-js/pull/8344)) (by [@patte](https://github.com/patte))
 - _...Add new stuff here..._
 
 ## 6.7.0
