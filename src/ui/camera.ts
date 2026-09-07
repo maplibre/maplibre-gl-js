@@ -408,6 +408,7 @@ export class Camera extends Evented<MapEventType> {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
+        delete this._requestedCameraState;
     }
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
