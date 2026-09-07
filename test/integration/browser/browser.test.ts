@@ -365,8 +365,7 @@ describe('Browser tests', () => {
                     },
                     terrainSource: {
                         type: 'raster-dem',
-                        tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
-                        maxzoom: 10,
+                        tiles: [`${location.origin}/test/integration/assets/tiles/zero-elevation-terrain-tile.png`],
                         tileSize: 256
                     }
                 },
