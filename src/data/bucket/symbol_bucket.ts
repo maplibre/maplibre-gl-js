@@ -349,6 +349,7 @@ export class SymbolBucket implements Bucket {
     canOverlap: boolean;
     sortedAngle: number;
     featureSortOrder: number[];
+    maxHeightOffset: number;
 
     collisionCircleArray: number[];
 
@@ -375,6 +376,7 @@ export class SymbolBucket implements Bucket {
         this.sourceLayerIndex = options.sourceLayerIndex;
         this.hasDependencies = false;
         this.hasRTLText = false;
+        this.maxHeightOffset = 0;
         this.sortKeyRanges = [];
 
         this.collisionCircleArray = [];

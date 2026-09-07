@@ -535,6 +535,9 @@ function addSymbol(bucket: SymbolBucket,
 
     const lineArray = bucket.addToLineVertexArray(anchor, line);
     const elevation = layer.layout.get('symbol-height-offset').evaluate(feature, {}, canonical);
+    if (elevation > bucket.maxHeightOffset) {
+        bucket.maxHeightOffset = elevation;
+    }
 
     let textCollisionFeature, iconCollisionFeature, verticalTextCollisionFeature, verticalIconCollisionFeature;
 
