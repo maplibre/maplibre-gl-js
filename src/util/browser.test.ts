@@ -1,11 +1,7 @@
 import {describe, test, expect, beforeEach, vi, afterEach} from 'vitest';
+import {Canvas} from 'canvas';
 import {beforeMapTest, createMap as globalCreateMap} from './test/util.ts';
 import {browser} from './browser.ts';
-import {offscreenCanvasSupported} from './offscreen_canvas_supported.ts';
-import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
-
-vi.mock(import('./offscreen_canvas_supported.ts'), () => ({offscreenCanvasSupported: vi.fn()}));
-vi.mock(import('./offscreen_canvas_distorted.ts'), () => ({isOffscreenCanvasDistorted: vi.fn()}));
 import {AbortError} from './abort_error.ts';
 
 describe('browser', () => {
@@ -182,48 +178,131 @@ describe('browser', () => {
     test('hardwareConcurrency', () => {
         expect(browser.hardwareConcurrency).toBeTypeOf('number');
     });
-});
 
-describe('getImageCanvasContext', () => {
-    const image = {width: 4, height: 3} as ImageBitmap;
-    const context = {drawImage: vi.fn()};
-    const OffscreenCanvasMock = vi.fn(function (this: any) {
-        this.getContext = vi.fn(() => context);
-    });
+    describe('getImageCanvasContext', () => {
+        const originalCreateElement = window.document.createElement;
 
-    const documentCanvas = {getContext: vi.fn(() => context)};
+        /** An `OffscreenCanvas` that rasterises and reads back for real, standing in for a browser that behaves. */
+        const WorkingOffscreenCanvas = vi.fn(function (width: number, height: number) {
+            return new Canvas(width, height);
+        });
 
-    beforeEach(() => {
-        vi.stubGlobal('OffscreenCanvas', OffscreenCanvasMock);
-        vi.spyOn(window.document, 'createElement').mockReturnValue(documentCanvas as unknown as HTMLElement);
-        OffscreenCanvasMock.mockClear();
-        context.drawImage.mockClear();
-    });
+        /** An `OffscreenCanvas` that hands back pixels other than the ones written, the way fingerprinting defences do (see #3185). */
+        const DistortingOffscreenCanvas = vi.fn(function (width: number, height: number) {
+            return {
+                getContext: () => ({
+                    fillRect: () => {},
+                    getImageData: () => ({data: new Uint8ClampedArray(width * height * 4)})
+                })
+            };
+        });
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
-        vi.restoreAllMocks();
-    });
+        /**
+         * A 4x3 image with a different colour in every pixel, so a read-back that loses or shifts
+         * pixels cannot pass. `drawImage` takes it the way it takes an `ImageBitmap`, so it is
+         * typed as both and callers hand it straight to `getImageCanvasContext`.
+         */
+        function createSourceImage(): Canvas & ImageBitmap {
+            const canvas = new Canvas(4, 3);
+            const context = canvas.getContext('2d');
+            for (let i = 0; i < 4 * 3; i++) {
+                context.fillStyle = `rgb(${i * 20},${255 - i * 20},${i * 5})`;
+                context.fillRect(i % 4, Math.floor(i / 4), 1, 1);
+            }
+            return canvas as unknown as Canvas & ImageBitmap;
+        }
 
-    test('draws into an OffscreenCanvas when the browser has one that reads back faithfully', () => {
-        vi.mocked(offscreenCanvasSupported).mockReturnValue(true);
-        vi.mocked(isOffscreenCanvasDistorted).mockReturnValue(false);
+        /** Reads a whole 4x3 image out of a 2d context, as a plain array so mismatches print readably. */
+        function readPixels(context: {getImageData: (x: number, y: number, width: number, height: number) => {data: Uint8ClampedArray}}): number[] {
+            return Array.from(context.getImageData(0, 0, 4, 3).data);
+        }
 
-        expect(browser.getImageCanvasContext(image)).toBe(context);
-        expect(OffscreenCanvasMock).toHaveBeenCalledWith(4, 3);
-        expect(window.document.createElement).not.toHaveBeenCalledWith('canvas');
-        expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
-    });
+        /**
+         * Re-imports `browser.ts` so the two `OffscreenCanvas` probes behind `getImageCanvasContext`,
+         * which cache their answer in module scope, run again against the globals the test installed.
+         */
+        async function importBrowserWithFreshProbes() {
+            vi.resetModules();
+            return (await import('./browser.ts')).browser;
+        }
 
-    test.each([
-        ['is not supported', false, false],
-        ['distorts pixels', true, true],
-    ])('falls back to a document canvas when OffscreenCanvas %s', (_, supported, distorted) => {
-        vi.mocked(offscreenCanvasSupported).mockReturnValue(supported);
-        vi.mocked(isOffscreenCanvasDistorted).mockReturnValue(distorted);
+        beforeEach(() => {
+            WorkingOffscreenCanvas.mockClear();
+            DistortingOffscreenCanvas.mockClear();
+            // The probes only check that this is a function; nothing awaits what it returns.
+            vi.stubGlobal('createImageBitmap', vi.fn());
+            // jsdom's canvas cannot rasterise, so give the document canvas path a real one too.
+            vi.spyOn(window.document, 'createElement').mockImplementation((tagName) => (tagName === 'canvas' ?
+                new Canvas(0, 0) as unknown as HTMLElement :
+                originalCreateElement.call(window.document, tagName)));
+        });
 
-        browser.getImageCanvasContext(image);
-        expect(OffscreenCanvasMock).not.toHaveBeenCalled();
-        expect(window.document.createElement).toHaveBeenCalledWith('canvas');
+        afterEach(() => {
+            vi.unstubAllGlobals();
+            vi.restoreAllMocks();
+            // Leave the registry clean, so a later test spying on the `browser` imported at the top
+            // of this file is not silently watching a different copy of the module.
+            vi.resetModules();
+        });
+
+        test('draws into an OffscreenCanvas when the browser has one that reads back faithfully', async () => {
+            vi.stubGlobal('OffscreenCanvas', WorkingOffscreenCanvas);
+
+            const browserUnderTest = await importBrowserWithFreshProbes();
+            browserUnderTest.getImageCanvasContext(createSourceImage());
+
+            expect(WorkingOffscreenCanvas).toHaveBeenCalledWith(4, 3);
+            expect(window.document.createElement).not.toHaveBeenCalledWith('canvas');
+        });
+
+        test('reads the pixels back out of the OffscreenCanvas unchanged', async () => {
+            vi.stubGlobal('OffscreenCanvas', WorkingOffscreenCanvas);
+            const image = createSourceImage();
+
+            const browserUnderTest = await importBrowserWithFreshProbes();
+            const context = browserUnderTest.getImageCanvasContext(image);
+
+            expect(readPixels(context)).toEqual(readPixels(image.getContext('2d')));
+        });
+
+        test('falls back to a document canvas when the browser has no OffscreenCanvas', async () => {
+            vi.stubGlobal('OffscreenCanvas', undefined);
+
+            const browserUnderTest = await importBrowserWithFreshProbes();
+            browserUnderTest.getImageCanvasContext(createSourceImage());
+
+            expect(window.document.createElement).toHaveBeenCalledWith('canvas');
+        });
+
+        test('falls back to a document canvas when the OffscreenCanvas distorts pixels', async () => {
+            vi.stubGlobal('OffscreenCanvas', DistortingOffscreenCanvas);
+
+            const browserUnderTest = await importBrowserWithFreshProbes();
+            browserUnderTest.getImageCanvasContext(createSourceImage());
+
+            expect(window.document.createElement).toHaveBeenCalledWith('canvas');
+            // The probes construct their own small canvases; the image itself must not go through one.
+            expect(DistortingOffscreenCanvas).not.toHaveBeenCalledWith(4, 3);
+        });
+
+        test('sizes the document canvas fallback to the image', async () => {
+            vi.stubGlobal('OffscreenCanvas', undefined);
+
+            const browserUnderTest = await importBrowserWithFreshProbes();
+            const context = browserUnderTest.getImageCanvasContext(createSourceImage());
+
+            expect(context.canvas.width).toBe(4);
+            expect(context.canvas.height).toBe(3);
+        });
+
+        test('reads the pixels back out of the document canvas fallback unchanged', async () => {
+            vi.stubGlobal('OffscreenCanvas', undefined);
+            const image = createSourceImage();
+
+            const browserUnderTest = await importBrowserWithFreshProbes();
+            const context = browserUnderTest.getImageCanvasContext(image);
+
+            expect(readPixels(context)).toEqual(readPixels(image.getContext('2d')));
+        });
     });
 });

@@ -58,15 +58,15 @@ export const browser = {
      * for tens of milliseconds on GPU-accelerated browsers, an `OffscreenCanvas` does not.
      */
     getImageCanvasContext(img: HTMLImageElement | ImageBitmap): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
-        let canvas: HTMLCanvasElement | OffscreenCanvas;
+        let context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
         if (offscreenCanvasSupported() && !isOffscreenCanvasDistorted()) {
-            canvas = new OffscreenCanvas(img.width, img.height);
+            context = new OffscreenCanvas(img.width, img.height).getContext('2d', {willReadFrequently: true});
         } else {
-            canvas = window.document.createElement('canvas');
+            const canvas = window.document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
+            context = canvas.getContext('2d', {willReadFrequently: true});
         }
-        const context = canvas.getContext('2d', {willReadFrequently: true});
         if (!context) {
             throw new Error('failed to create canvas 2d context');
         }
