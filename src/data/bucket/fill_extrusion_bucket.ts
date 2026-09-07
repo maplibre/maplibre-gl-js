@@ -19,6 +19,7 @@ import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -136,10 +137,10 @@ export class FillExtrusionBucket implements Bucket {
         }
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}): void {
+    addFeatures({options, canonical, patternPositions}: BucketDependencyParameters): void {
         for (const feature of this.features) {
             const {geometry} = feature;
-            this.addFeature(feature, geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, geometry, feature.index, canonical, patternPositions, options.subdivisionGranularity);
         }
     }
 

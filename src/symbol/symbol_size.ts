@@ -8,6 +8,14 @@ import type {InterpolationType, StylePropertyExpression} from '@maplibre/maplibr
 const MAX_GLYPH_ICON_SIZE = 255;
 const SIZE_PACK_FACTOR = 128;
 const MAX_PACKED_SIZE: number = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
+/**
+ * The maximum number of glyphs per symbol bucket. UInt16 `glyphOffsetArrayStart`
+ * is the first index that can overflow at 65,535; see
+ * https://github.com/mapbox/mapbox-gl-js/issues/2907 for the motivation.
+ * Line and text-box starts could in theory overflow too, but there are far
+ * fewer boxes and lines than glyphs.
+ */
+export const MAX_GLYPHS = 65535;
 
 export {getSizeData, evaluateSizeForFeature, evaluateSizeForZoom, SIZE_PACK_FACTOR, MAX_GLYPH_ICON_SIZE, MAX_PACKED_SIZE};
 

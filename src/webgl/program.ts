@@ -118,11 +118,6 @@ export class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
-
-        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-            throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
-        }
-
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -132,11 +127,6 @@ export class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
-
-        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-            throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
-        }
-
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
@@ -144,9 +134,21 @@ export class Program<Us extends UniformBindings> {
 
         this.numAttributes = allAttrInfo.length;
 
+        // Link before reading any status so the driver can overlap both compiles; the shaders are
+        // only asked how they compiled when the link failed, to name the one at fault.
         gl.linkProgram(this.program);
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            if (gl.isContextLost()) {
+                this.failedToCreate = true;
+                return;
+            }
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
+            }
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
+            }
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
 
