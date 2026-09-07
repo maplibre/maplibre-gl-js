@@ -8,6 +8,17 @@ import {ENCODED_JOINING_TYPES, LIGATURES, PRESENTATION_FORMS} from '../util/unic
  */
 type JoiningType = 'R' | 'L' | 'D' | 'C' | 'U' | 'T';
 
+/** Lam, which is the only letter that has to be written as a ligature with the letter after it. */
+const LAM = 0x0644;
+
+/**
+ * The blocks the Arabic script is written from, which is what makes shaping worth doing at all.
+ *
+ * Arabic proper, then its supplement and two extensions, then the two blocks of shapes this file
+ * rewrites letters into, so that text already shaped is recognised as needing to be looked at again.
+ */
+const ARABIC = /[\u0600-\u06ff\u0750-\u077f\u0870-\u089f\u08a0-\u08ff\ufb50-\ufdff\ufe70-\ufeff]/;
+
 /** The shape a letter takes, as an index into its entry in {@link PRESENTATION_FORMS}. */
 const enum Form {
     Isolated = 0,
@@ -15,6 +26,13 @@ const enum Form {
     Initial = 2,
     Medial = 3,
 }
+
+/** One character of the text, with the shape the joining rules gave it. */
+type ShapedCharacter = {
+    codePoint: number;
+    type: JoiningType;
+    form: Form | null;
+};
 
 /**
  * Unpacks the `start,length` ranges of one joining type into the code points they stand for.
@@ -73,13 +91,6 @@ function formFor(type: JoiningType, joinedBefore: boolean, joinedAfter: boolean)
     return null;
 }
 
-/** One character of the text, with the shape the joining rules gave it. */
-type ShapedCharacter = {
-    codePoint: number;
-    type: JoiningType;
-    form: Form | null;
-};
-
 /** Splits text into characters, noting the joining type of each. */
 function toCharacters(text: string): ShapedCharacter[] {
     return [...text].map(character => {
@@ -122,9 +133,6 @@ function assignMarkForms(characters: ShapedCharacter[]): void {
         }
     }
 }
-
-/** Lam, which is the only letter that has to be written as a ligature with the letter after it. */
-const LAM = 0x0644;
 
 /**
  * Replaces each lam followed by an alef with the single character the pair is written as.
@@ -175,14 +183,6 @@ function toPresentationForm(character: ShapedCharacter): number {
     if (!forms) return character.codePoint;
     return forms[character.form] || forms[Form.Isolated] || character.codePoint;
 }
-
-/**
- * The blocks the Arabic script is written from, which is what makes shaping worth doing at all.
- *
- * Arabic proper, then its supplement and two extensions, then the two blocks of shapes this file
- * rewrites letters into, so that text already shaped is recognised as needing to be looked at again.
- */
-const ARABIC = /[\u0600-\u06ff\u0750-\u077f\u0870-\u089f\u08a0-\u08ff\ufb50-\ufdff\ufe70-\ufeff]/;
 
 /**
  * Rewrites Arabic letters as the shape they take in the word they sit in.
