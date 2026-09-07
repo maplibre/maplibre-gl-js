@@ -245,33 +245,28 @@ describe('browser', () => {
             vi.resetModules();
         });
 
-        test('draws into an OffscreenCanvas when the browser has one that reads back faithfully', async () => {
-            vi.stubGlobal('OffscreenCanvas', WorkingOffscreenCanvas);
-
-            const browserUnderTest = await importBrowserWithFreshProbes();
-            browserUnderTest.getImageCanvasContext(createSourceImage());
-
-            expect(WorkingOffscreenCanvas).toHaveBeenCalledWith(4, 3);
-            expect(window.document.createElement).not.toHaveBeenCalledWith('canvas');
-        });
-
-        test('reads the pixels back out of the OffscreenCanvas unchanged', async () => {
+        test('draws into an OffscreenCanvas, and reads its pixels back unchanged, when the browser has one that behaves', async () => {
             vi.stubGlobal('OffscreenCanvas', WorkingOffscreenCanvas);
             const image = createSourceImage();
 
             const browserUnderTest = await importBrowserWithFreshProbes();
             const context = browserUnderTest.getImageCanvasContext(image);
 
+            expect(WorkingOffscreenCanvas).toHaveBeenCalledWith(4, 3);
+            expect(window.document.createElement).not.toHaveBeenCalledWith('canvas');
             expect(readPixels(context)).toEqual(readPixels(image.getContext('2d')));
         });
 
-        test('falls back to a document canvas when the browser has no OffscreenCanvas', async () => {
+        test('falls back to a document canvas sized to the image when the browser has no OffscreenCanvas', async () => {
             vi.stubGlobal('OffscreenCanvas', undefined);
+            const image = createSourceImage();
 
             const browserUnderTest = await importBrowserWithFreshProbes();
-            browserUnderTest.getImageCanvasContext(createSourceImage());
+            const context = browserUnderTest.getImageCanvasContext(image);
 
             expect(window.document.createElement).toHaveBeenCalledWith('canvas');
+            expect([context.canvas.width, context.canvas.height]).toEqual([4, 3]);
+            expect(readPixels(context)).toEqual(readPixels(image.getContext('2d')));
         });
 
         test('falls back to a document canvas when the OffscreenCanvas distorts pixels', async () => {
@@ -283,26 +278,6 @@ describe('browser', () => {
             expect(window.document.createElement).toHaveBeenCalledWith('canvas');
             // The probes construct their own small canvases; the image itself must not go through one.
             expect(DistortingOffscreenCanvas).not.toHaveBeenCalledWith(4, 3);
-        });
-
-        test('sizes the document canvas fallback to the image', async () => {
-            vi.stubGlobal('OffscreenCanvas', undefined);
-
-            const browserUnderTest = await importBrowserWithFreshProbes();
-            const context = browserUnderTest.getImageCanvasContext(createSourceImage());
-
-            expect(context.canvas.width).toBe(4);
-            expect(context.canvas.height).toBe(3);
-        });
-
-        test('reads the pixels back out of the document canvas fallback unchanged', async () => {
-            vi.stubGlobal('OffscreenCanvas', undefined);
-            const image = createSourceImage();
-
-            const browserUnderTest = await importBrowserWithFreshProbes();
-            const context = browserUnderTest.getImageCanvasContext(image);
-
-            expect(readPixels(context)).toEqual(readPixels(image.getContext('2d')));
         });
     });
 });
