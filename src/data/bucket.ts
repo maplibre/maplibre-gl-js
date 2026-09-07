@@ -11,7 +11,8 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
-import type {GetImagesResponse} from '../util/actor_messages.ts';
+import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -42,12 +43,24 @@ export type PopulateParameters = {
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
+/**
+ * The asynchronously loaded tile content a bucket may need to finalize its
+ * features. Every image, glyph, and dash entry referenced by the bucket's
+ * layers arrives here after the worker has fetched it; pattern maps belong to
+ * fill, fill-extrusion, and line buckets, icon maps and glyph maps to symbol
+ * buckets.
+ */
 export type BucketDependencyParameters = {
     options: PopulateParameters;
     canonical: CanonicalTileID;
-    imagePositions: Record<string, ImagePosition>;
+    glyphMap: GetGlyphsResponse;
+    glyphPositions: GlyphPositions;
+    iconMap: GetImagesResponse;
+    iconPositions: Record<string, ImagePosition>;
+    patternMap: GetImagesResponse;
+    patternPositions: Record<string, ImagePosition>;
     dashPositions: Record<string, DashEntry>;
-    imageMap: GetImagesResponse;
+    showCollisionBoxes: boolean;
 };
 
 export type IndexedFeature = {
