@@ -12,6 +12,7 @@
 - Fix a `Not implemented.` error that broke panning and zooming when the projection was changed while the camera was moving, on maps with terrain enabled or a `transformCameraUpdate` callback ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
 - Fix a map created inside a hidden container staying at the `400x300` fallback size when the container is shown before the resize observer's first notification is delivered ([#8277](https://github.com/maplibre/maplibre-gl-js/issues/8277)) (by [@spliffone](https://github.com/spliffone))
 - Fix `MercatorTransform` throwing when it is resized to a zero width, and skip the matrix calculation of every projection while the transform has a zero width or height ([#8374](https://github.com/maplibre/maplibre-gl-js/pull/8374)) (by [@avosa](https://github.com/avosa))
+- Fix every style update opening a redundant sky and light transition, which kept `idle` from firing for the transition duration after the map was otherwise done, and could ease the sky and the light on a different curve from the layers ([#8348](https://github.com/maplibre/maplibre-gl-js/issues/8348)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ## 6.8.0

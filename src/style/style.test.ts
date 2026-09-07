@@ -13,7 +13,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from '../util/image_request.ts';
 
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
@@ -3744,6 +3744,55 @@ describe('Style.hasTransitions', () => {
         style.setPaintProperty('background', 'background-color', 'blue');
         style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
         expect(style.hasTransitions()).toBe(false);
+    });
+
+    test('does not transition a sky or a light that has not changed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sky: {'sky-color': 'red'},
+            light: {color: '#ff0000'},
+            layers: [{id: 'background', type: 'background'}]
+        }));
+
+        await style.once('style.load');
+        style.setPaintProperty('background', 'background-color', 'blue');
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+
+        expect(style.sky.hasTransition()).toBe(false);
+        expect(style.light.hasTransition()).toBe(false);
+    });
+
+    test('transitions the sky and the light when they are set', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky({'sky-color': 'magenta'});
+        style.setLight({color: '#ff0000'});
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+
+        expect(style.sky.hasTransition()).toBe(true);
+        expect(style.light.hasTransition()).toBe(true);
+    });
+
+    // A `global-state` expression reads the live global state object, so both ends of a transition
+    // evaluate to the same new value and there is nothing to interpolate. Opening one would only
+    // hold `idle` off. The new value still reaches the sky, through the recalculation that the
+    // global state change triggers anyway.
+    test('does not transition the sky when a global state property it reads changes, but still applies the value', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {c: {default: '#ff0000'}},
+            sky: {'sky-color': ['global-state', 'c']}
+        }));
+
+        await style.once('style.load');
+        style.setGlobalStateProperty('c', '#0000ff');
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+        style.sky.recalculate(new EvaluationParameters(0));
+
+        expect(style.sky.hasTransition()).toBe(false);
+        expect(style.sky.properties.get('sky-color')).toEqual(Color.parse('#0000ff'));
     });
 });
 
