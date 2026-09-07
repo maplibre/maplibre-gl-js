@@ -656,8 +656,8 @@ describe('GlobeTransform', () => {
             mercator.setCenter(new LngLat(10, 50));
             mercator.setPitch(45);
 
-            // the globe is a sphere here, mercator a plane: equal to within a tenth of a percent
-            expect(Math.abs(globe.getCameraAltitude() - mercator.getCameraAltitude()) / mercator.getCameraAltitude()).toBeLessThan(1e-3);
+            // the globe is a sphere here, mercator a plane: the altitudes agree to within half a metre
+            expect(globe.getCameraAltitude()).toBeCloseTo(mercator.getCameraAltitude(), 0);
         });
 
         test('follows the vertical perspective transform at low zoom and high pitch', () => {
