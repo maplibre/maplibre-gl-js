@@ -134,13 +134,18 @@ describe('render to texture', () => {
     beforeEach(() => {
         tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
+        style._order = ['maine-fill', 'maine-symbol'];
         vi.spyOn(terrain.tileManager, 'getRenderableTiles').mockReturnValue([tile]);
         vi.spyOn(terrain.tileManager, 'getTerrainCoords').mockReturnValue({[tile.tileID.key]: tile.tileID});
         painter.options.moving = false;
     });
 
-    function markRendered(renderedTile: Tile, obj: RTTObject, revision: number) {
-        renderedTile.rttFingerprint = {maine: new RTTFingerprint([renderedTile.tileID], revision, 0)};
+    function visibleLayerIds() {
+        return style._order.join();
+    }
+
+    function markRendered(renderedTile: Tile, obj: RTTObject, fingerprint: RTTFingerprint) {
+        renderedTile.rttFingerprint = {maine: fingerprint};
         renderedTile.rttObjects[0] = obj;
     }
 
@@ -167,7 +172,7 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0);
 
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
@@ -182,7 +187,7 @@ describe('render to texture', () => {
 
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
 
         rtt.prepareForRender(style, 0);
@@ -237,7 +242,7 @@ describe('render to texture', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue(state as any);
 
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
 
         rtt.prepareForRender(style, 0);
         expect(tile.getRTT(0)).toBeTruthy();
@@ -312,13 +317,13 @@ describe('render to texture', () => {
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 
-        expect(new RTTFingerprint([tile.tileID], 0, 0).equals(tile.rttFingerprint['maine'])).toBe(true);
+        expect(new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds()).difference(tile.rttFingerprint['maine'])).toBe('none');
     });
 
     test('re-renders a texture rendered at another zoom once the zoom settles', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
         rtt.prepareForRender(style, 11);
@@ -335,7 +340,7 @@ describe('render to texture', () => {
     test('keeps a texture rendered at the current zoom', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
         rtt.prepareForRender(style, 10);
@@ -348,7 +353,7 @@ describe('render to texture', () => {
     test('keeps a texture rendered at another zoom while the map is moving, and re-renders it once the map has stopped', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
         tile.rttObjects[0] = obj;
         painter.options.moving = true;
 
@@ -362,22 +367,21 @@ describe('render to texture', () => {
         expect(tile.getRTT(0)).toBeUndefined();
     });
 
-    test('re-renders at most one stale tile per frame, nearest to the camera first, and keeps the others until their turn', () => {
-        const state = {revision: 0};
-        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue(state as any);
+    test('re-renders at most one tile with new source tiles per frame, nearest to the camera first, and keeps the others until their turn', () => {
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const farTile = new Tile(new OverscaledTileID(3, 0, 2, 2, 2), 512);
         const farthestTile = new Tile(new OverscaledTileID(3, 0, 2, 3, 2), 512);
         const tiles = [tile, farTile, farthestTile];
         vi.spyOn(terrain.tileManager, 'getRenderableTiles').mockReturnValue(tiles);
         (vi.mocked(terrain.tileManager.getTerrainCoords)).mockReturnValue(Object.fromEntries(tiles.map(t => [t.tileID.key, t.tileID])));
+        const renderedBeforeSourceTilesArrived = new RTTFingerprint([], 0, 0, visibleLayerIds());
         const objects = tiles.map(t => {
             const obj = {texture: {}, size: 512} as unknown as RTTObject;
-            markRendered(t, obj, 0);
+            markRendered(t, obj, renderedBeforeSourceTilesArrived);
             return obj;
         });
         (vi.mocked(painter.releaseRTT)).mockClear();
 
-        state.revision = 1;
         rtt.prepareForRender(style, 0);
         expect(tile.getRTT(0)).toBeUndefined();
         expect(farTile.getRTT(0)).toBe(objects[1]);
@@ -385,14 +389,14 @@ describe('render to texture', () => {
         expect(painter.releaseRTT).toHaveBeenCalledTimes(1);
         expect(rtt.needsFollowUpFrame).toBe(true);
 
-        markRendered(tile, objects[0], 1);
+        markRendered(tile, objects[0], new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds()));
         rtt.prepareForRender(style, 0);
         expect(tile.getRTT(0)).toBe(objects[0]);
         expect(farTile.getRTT(0)).toBeUndefined();
         expect(farthestTile.getRTT(0)).toBe(objects[2]);
         expect(rtt.needsFollowUpFrame).toBe(true);
 
-        markRendered(farTile, objects[1], 1);
+        markRendered(farTile, objects[1], new RTTFingerprint([farTile.tileID], 0, 0, visibleLayerIds()));
         rtt.prepareForRender(style, 0);
         expect(farthestTile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
@@ -400,16 +404,13 @@ describe('render to texture', () => {
     });
 
     test('a tile without a texture is rendered regardless of how many stale tiles were re-rendered this frame', () => {
-        const state = {revision: 0};
-        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue(state as any);
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         const newTile = new Tile(new OverscaledTileID(3, 0, 2, 2, 2), 512);
         vi.spyOn(terrain.tileManager, 'getRenderableTiles').mockReturnValue([tile, newTile]);
         (vi.mocked(terrain.tileManager.getTerrainCoords)).mockReturnValue({[tile.tileID.key]: tile.tileID, [newTile.tileID.key]: newTile.tileID});
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([], 0, 0, visibleLayerIds())};
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
-        style._order = ['maine-fill', 'maine-symbol'];
 
-        state.revision = 1;
         rtt.prepareForRender(style, 0);
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
@@ -423,10 +424,37 @@ describe('render to texture', () => {
 
     });
 
+    test('a layer leaving its zoom range re-renders every tile in the same frame once the zoom has settled, even while the map is moving', () => {
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
+        const trackLayer = {...lineLayer, id: 'maine-track', isHidden: (zoom: number) => zoom < 12} as any as LineStyleLayer;
+        style._layers['maine-track'] = trackLayer;
+        style._order = ['maine-fill', 'maine-track', 'maine-symbol'];
+        const farTile = new Tile(new OverscaledTileID(3, 0, 2, 2, 2), 512);
+        vi.spyOn(terrain.tileManager, 'getRenderableTiles').mockReturnValue([tile, farTile]);
+        (vi.mocked(terrain.tileManager.getTerrainCoords)).mockReturnValue({[tile.tileID.key]: tile.tileID, [farTile.tileID.key]: farTile.tileID});
+        const objects = [tile, farTile].map(t => {
+            const obj = {texture: {}, size: 512} as unknown as RTTObject;
+            markRendered(t, obj, new RTTFingerprint([t.tileID], 0, 12, visibleLayerIds()));
+            return obj;
+        });
+        painter.options.moving = true;
+
+        rtt.prepareForRender(style, 11.98);
+        expect(tile.getRTT(0)).toBe(objects[0]);
+        expect(farTile.getRTT(0)).toBe(objects[1]);
+        expect(rtt.needsFollowUpFrame).toBe(true);
+
+        rtt.prepareForRender(style, 11.98);
+        expect(tile.getRTT(0)).toBeUndefined();
+        expect(farTile.getRTT(0)).toBeUndefined();
+        expect(rtt.needsFollowUpFrame).toBe(false);
+        delete style._layers['maine-track'];
+    });
+
     test('a source data change releases immediately even while the zoom is changing', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 1} as any);
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
-        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 4)};
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 4, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
         rtt.prepareForRender(style, 5);

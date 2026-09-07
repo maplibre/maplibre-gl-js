@@ -9,7 +9,7 @@ import {type Terrain} from '../render/terrain.ts';
 import {type Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
-import {RTTFingerprint} from './rtt_fingerprint.ts';
+import {RTT_DIFFERENCES, RTTFingerprint, type RTTDifference} from './rtt_fingerprint.ts';
 
 /**
  * lookup table which layers should rendered to texture
@@ -88,11 +88,13 @@ export class RenderToTexture {
     }
 
     /**
-     * Collects the frame's tiles, layers and source fingerprints, and releases the textures of at most one
-     * stale tile per frame, nearest to the camera first; the other stale tiles keep drawing their previous
-     * texture and `needsFollowUpFrame` brings them in on the following frames. Textures that differ only by
-     * zoom are kept while the zoom is changing or the map is moving: lifting a finger over terrain recalculates
-     * the zoom by about a hundredth of a level, and the drapes are refreshed once the inertia has ended.
+     * Collects the frame's tiles, layers and source fingerprints and releases the textures that need
+     * re-rendering. Textures that differ only by zoom are kept while the zoom is changing or the map is moving
+     * and re-rendered one tile per frame once it has stopped, nearest to the camera first; textures with other
+     * source tiles under them are re-rendered one per frame too, `needsFollowUpFrame` bringing in the rest.
+     * Textures whose visible layer set changed (a layer entered or left its zoom range) are kept while the zoom
+     * is changing and then all re-rendered in the same frame, since a tile-by-tile change would show; a source
+     * data change re-renders immediately.
      */
     prepareForRender(style: Style, zoom: number): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
@@ -102,6 +104,7 @@ export class RenderToTexture {
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
+        const visibleLayerIds = this._renderableLayerIds.join();
 
         const rttSourceIds = new Set<string>();
         for (const layerId of this._renderableLayerIds) {
@@ -132,43 +135,44 @@ export class RenderToTexture {
             const fingerprints = this._rttFingerprints[sourceId];
             const revision = tileManager.getState().revision;
             for (const key in coordsAscending)
-                fingerprints[key] = new RTTFingerprint(coordsAscending[key], revision, zoom);
+                fingerprints[key] = new RTTFingerprint(coordsAscending[key], revision, zoom, visibleLayerIds);
         }
 
         // check tiles to render
         this.needsFollowUpFrame = false;
-        const keepZoomStaleTextures = zoomChanged || this.painter.options.moving;
+        const moving = zoomChanged || this.painter.options.moving;
         let staleTileReleased = false;
         for (const tile of this._renderableTiles) {
-            if (!this._hasStaleTextures(tile, keepZoomStaleTextures)) continue;
-            if (staleTileReleased) {
+            const difference = this._textureDifference(tile);
+            if (difference === 'none') continue;
+            if ((difference === 'zoom' && moving) || (difference === 'visibleLayers' && zoomChanged)) {
                 this.needsFollowUpFrame = true;
                 continue;
             }
-            staleTileReleased = true;
+            if (difference === 'zoom' || difference === 'sourceTiles') {
+                if (staleTileReleased) {
+                    this.needsFollowUpFrame = true;
+                    continue;
+                }
+                staleTileReleased = true;
+            }
             tile.releaseRTT(this.painter);
         }
     }
 
     /**
-     * Whether the tile's cached textures no longer match the source tiles, data revision and zoom they
-     * would be rendered from this frame. With `keepZoomStaleTextures`, textures that differ only by zoom
-     * are not stale yet: a follow-up frame is requested instead, which re-runs this comparison
-     * (see {@link RTTFingerprint.equalsIgnoringZoom}).
+     * The most severe difference, over the sources rendered to texture, between the tile's cached textures
+     * and what this frame would render into them.
      */
-    _hasStaleTextures(tile: Tile, keepZoomStaleTextures: boolean): boolean {
-        let stale = false;
+    _textureDifference(tile: Tile): RTTDifference {
+        let worst: RTTDifference = 'none';
         for (const source in this._rttFingerprints) {
             const frameFingerprint = this._rttFingerprints[source][tile.tileID.key];
-            const tileFingerprint = tile.rttFingerprint[source];
-            if (!frameFingerprint || frameFingerprint.equals(tileFingerprint)) continue;
-            if (keepZoomStaleTextures && frameFingerprint.equalsIgnoringZoom(tileFingerprint)) {
-                this.needsFollowUpFrame = true;
-            } else {
-                stale = true;
-            }
+            if (!frameFingerprint) continue;
+            const difference = frameFingerprint.difference(tile.rttFingerprint[source]);
+            if (RTT_DIFFERENCES.indexOf(difference) > RTT_DIFFERENCES.indexOf(worst)) worst = difference;
         }
-        return stale;
+        return worst;
     }
 
     /**
