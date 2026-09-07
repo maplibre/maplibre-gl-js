@@ -3,8 +3,7 @@ import {
     codePointHasUprightVerticalOrientation,
     codePointHasNeutralVerticalOrientation,
     codePointIsInCursiveScript,
-    codePointIsInRTLScript,
-    codePointRequiresComplexTextShaping
+    codePointIsInRTLScript
 } from '../util/unicode_properties.g.ts';
 
 export function charIsWhitespace(char: number): boolean {
@@ -64,17 +63,6 @@ export function charInRTLScript(char: number): boolean {
     return codePointIsInRTLScript(char);
 }
 
-/**
- * Whether MapLibre can draw this character well enough to say it supports it.
- *
- * A rough heuristic: what can really be drawn depends on the font in use, and on whether a
- * difference from the ideal is worth calling a failure. Even in Latin there are combinations such as
- * the fi ligature that are not drawn as a typesetter would, and that nobody counts against it.
- */
-export function charInSupportedScript(char: number): boolean {
-    return !codePointRequiresComplexTextShaping(char);
-}
-
 export function stringContainsRTLText(chars: string): boolean {
     for (const char of chars) {
         if (charInRTLScript(char.codePointAt(0))) {
@@ -82,13 +70,4 @@ export function stringContainsRTLText(chars: string): boolean {
         }
     }
     return false;
-}
-
-export function isStringInSupportedScript(chars: string): boolean {
-    for (const char of chars) {
-        if (!charInSupportedScript(char.codePointAt(0))) {
-            return false;
-        }
-    }
-    return true;
 }

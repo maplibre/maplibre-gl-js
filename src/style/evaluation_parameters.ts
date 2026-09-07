@@ -1,5 +1,4 @@
 import {ZoomHistory} from './zoom_history.ts';
-import {isStringInSupportedScript} from '../util/script_detection.ts';
 
 import type {GlobalProperties, TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -20,12 +19,6 @@ export class EvaluationParameters implements GlobalProperties {
     fadeDuration: number;
     zoomHistory: ZoomHistory;
     transition: TransitionSpecification;
-    // has to be an own property of an object to be used in expressions
-    // if defined as class method, it'll hidden from operations
-    // that iterate over own enumerable properties
-    // (i..e spread operator (...), Object.keys(), for...in statement, etc.)
-    isSupportedScript: (_: string) => boolean = isSupportedScript;
-
     // "options" may also be another EvaluationParameters to copy, see CrossFadedProperty.possiblyEvaluate
     constructor(zoom: number, options?: any) {
         this.zoom = zoom;
@@ -60,8 +53,4 @@ export class EvaluationParameters implements GlobalProperties {
             {fromScale: 2, toScale: 1, t: fraction + (1 - fraction) * t} :
             {fromScale: 0.5, toScale: 1, t: 1 - (1 - t) * fraction};
     }
-}
-
-function isSupportedScript(str: string): boolean {
-    return isStringInSupportedScript(str);
 }

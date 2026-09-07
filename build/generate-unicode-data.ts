@@ -352,35 +352,6 @@ async function hasNeutralVerticalOrientation(): Promise<string> {
     return set.toString();
 }
 
-async function requiresComplexTextShaping(): Promise<string> {
-    // This is a rough heuristic: whether we "can render" a script
-    // actually depends on the properties of the font being used
-    // and whether differences from the ideal rendering are considered
-    // semantically significant.
-
-    // These blocks cover common scripts that require
-    // complex text shaping, based on unicode script metadata:
-    // https://www.unicode.org/repos/cldr/trunk/common/properties/scriptMetadata.txt
-    // where "Web Rank <= 32" "Shaping Required = YES"
-    const set = await createSet([
-        'Bengali',
-        'Devanagari',
-        'Gujarati',
-        'Gurmukhi',
-        'Kannada',
-        'Khmer',
-        'Malayalam',
-        'Myanmar',
-        'Oriya',
-        'Tamil',
-        'Telugu',
-        'Tibetan',
-        'Sinhala',
-    ], []);
-
-    return set.toString();
-}
-
 /**
  * Returns a character class matching every character that can take part in a grapheme cluster of
  * more than one codepoint.
@@ -705,13 +676,6 @@ export function codePointHasUprightVerticalOrientation(codePoint: number): boole
  */
 export function codePointHasNeutralVerticalOrientation(codePoint: number): boolean {
     return /${await hasNeutralVerticalOrientation()}/gim.test(String.fromCodePoint(codePoint));
-}
-
-/**
- * Returns whether the give codepoint is likely to require complex text shaping.
- */
-export function codePointRequiresComplexTextShaping(codePoint: number): boolean {
-    return /${await requiresComplexTextShaping()}/gim.test(String.fromCodePoint(codePoint));
 }
 
 /**

@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
-- Draw Arabic and Hebrew labels correctly without loading a right-to-left text plugin, which deprecates `setRTLTextPlugin` and `getRTLTextPluginStatus` ([#8343](https://github.com/maplibre/maplibre-gl-js/pull/8343))  (by [@HarelM](https://github.com/HarelM))
+- Improved support for drawing the letters of Devanagari, Khmer, Burmese and the other complex scripts and also draws Arabic and Hebrew labels correctly without loading a right-to-left text plugin, which deprecates `setRTLTextPlugin` and `getRTLTextPluginStatus` ([#8343](https://github.com/maplibre/maplibre-gl-js/pull/8343)) (by [@HarelM](https://github.com/HarelM))
 - Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#8328](https://github.com/maplibre/maplibre-gl-js/pull/8328), continues [#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
 - Build the `Intl.Segmenter` instances used for text shaping on first use instead of at import, shaving several milliseconds off loading MapLibre on the main thread ([#8337](https://github.com/maplibre/maplibre-gl-js/pull/8337)) (by [@cherenkov](https://github.com/cherenkov))
 - Build the default `Marker` pin once and clone it per marker, so creating many default markers takes roughly half the constructor time ([#8340](https://github.com/maplibre/maplibre-gl-js/pull/8340)) (by [@cherenkov](https://github.com/cherenkov))
