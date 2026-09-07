@@ -25,7 +25,7 @@
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Validate the `before` layer in `map.moveLayer` before reordering, so passing the id of a layer that does not exist leaves the layer order untouched instead of dropping the moved layer out of it ([#8301](https://github.com/maplibre/maplibre-gl-js/issues/8301)) (by [@lazerg](https://github.com/lazerg))
 - Fix visible seams between hillshade tiles when using linear interpolation. ([#8302](https://github.com/maplibre/maplibre-gl-js/pull/8302)) (by [@Turbo87](https://github.com/Turbo87))
-- Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))  (by [@UberMouse](https://github.com/UberMouse))
+- Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093)) (by [@UberMouse](https://github.com/UberMouse))
 - Fix `getCameraAltitude()` returning `NaN` under `globe` and `vertical-perspective`, which disabled marker terrain occlusion and the camera terrain check; the altitude now follows the sphere ([#6584](https://github.com/maplibre/maplibre-gl-js/issues/6584)) (by [@bigmistqke](https://github.com/bigmistqke) and [@patte](https://github.com/patte))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#8323](https://github.com/maplibre/maplibre-gl-js/pull/8323)) (by [@johncarmack1984](https://github.com/johncarmack1984) and [@nostrorom](https://github.com/nostrorom))
@@ -35,7 +35,7 @@
 
 ### ✨ Features and improvements
 
-- Support the style specification's `font-faces` property, with `map.setFontFaces` and `map.getFontFaces` and improve complex script languages such as Devanagari, Khmer, Burmese and Hebrew ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237))  (by [@HarelM](https://github.com/HarelM))
+- Support the style specification's `font-faces` property, with `map.setFontFaces` and `map.getFontFaces` and improve complex script languages such as Devanagari, Khmer, Burmese and Hebrew ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237)) (by [@HarelM](https://github.com/HarelM))
 - Wrap Thai, Khmer, Burmese, Lao, Tibetan, Javanese and Balinese labels at word boundaries instead of running them on in one line, which applies to every style whether or not it declares `font-faces` ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237)) (by [@HarelM](https://github.com/HarelM))
 - Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Allow adding an image source without a `url`. The source starts empty and makes no network request; call `updateImage({image})` or `updateImage({url})` later to show an image ([#8167](https://github.com/maplibre/maplibre-gl-js/pull/8167)) (by [@mondsichtung](https://github.com/mondsichtung))
@@ -46,7 +46,7 @@
 ### 🐞 Bug fixes
 
 - Disable the navigation control's zoom-out button when viewport constraints prevent zooming out further ([#5316](https://github.com/maplibre/maplibre-gl-js/issues/5316)) (by [@miakh](https://github.com/miakh))
-- Keep a vector tile's etag when the tile is reloaded after a style change, so the next expiry refresh can still skip unchanged tiles ([#3309](https://github.com/maplibre/maplibre-gl-js/issues/3309))  (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Keep a vector tile's etag when the tile is reloaded after a style change, so the next expiry refresh can still skip unchanged tiles ([#3309](https://github.com/maplibre/maplibre-gl-js/issues/3309)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982)) (by [@johncarmack1984](https://github.com/johncarmack1984))
@@ -536,8 +536,7 @@ Check-out our [migration guide from v5 to v6](./docs/guides/v5-to-v6-migration-g
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
 - Remove legacy browser compatibility code targeting IE11 and pre-2016 browsers ([#7294](https://github.com/maplibre/maplibre-gl-js/pull/7294)) (by [@johanrd](https://github.com/johanrd))
 - Remove legacy `DOM.remove()` and `DOM.mouseButton()` wrappers; use native APIs directly (baseline 2015) ([#7295](https://github.com/maplibre/maplibre-gl-js/pull/7295)) (by [@johanrd](https://github.com/johanrd))
-- Make `setTransformRequest` accept an async function in addition to a sync function. ([#7184](https://github.com/maplibre/maplibre-gl-js/issues/7184)) (by [@kikuomax
-  ](https://github.com/kikuomax))
+- Make `setTransformRequest` accept an async function in addition to a sync function. ([#7184](https://github.com/maplibre/maplibre-gl-js/issues/7184)) (by [@kikuomax](https://github.com/kikuomax))
 
 ### 🐞 Bug fixes
 
