@@ -91,8 +91,8 @@ export class RenderToTexture {
      * Collects the frame's tiles, layers and source fingerprints, and releases the textures of at most one
      * stale tile per frame, nearest to the camera first; the other stale tiles keep drawing their previous
      * texture and `needsFollowUpFrame` brings them in on the following frames. Textures that differ only by
-     * zoom are kept while the zoom is changing or the map is moving, because a drag over terrain drifts the
-     * zoom by a hundredth of a level and pauses often.
+     * zoom are kept while the zoom is changing or the map is moving: lifting a finger over terrain recalculates
+     * the zoom by about a hundredth of a level, and the drapes are refreshed once the inertia has ended.
      */
     prepareForRender(style: Style, zoom: number): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
