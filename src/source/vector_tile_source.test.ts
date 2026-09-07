@@ -52,7 +52,7 @@ function createSourceWithWorker(options) {
     const workerSource = new VectorTileWorkerSource({sendAsync: () => Promise.resolve({})} as IActor, new StyleLayerIndex([]), []);
     source.dispatcher = getWrapDispatcher()({
         sendAsync(message) {
-            return workerSource.loadTile(message.data);
+            return workerSource.loadTile(message.data as WorkerTileParameters);
         }
     });
     return source;
