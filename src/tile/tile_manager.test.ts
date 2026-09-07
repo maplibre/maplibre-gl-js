@@ -1,5 +1,5 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, onTestFinished, test, vi} from 'vitest';
 import {TileManager} from './tile_manager.ts';
 import {addSourceType, type Source} from '../source/source.ts';
 import {FadingDirections, FadingRoles, Tile} from './tile.ts';
@@ -18,6 +18,7 @@ import {type TileCache} from './tile_cache.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -2722,4 +2723,72 @@ describe('TileManager / etag', () => {
         expect(dataEventSpy).not.toHaveBeenCalled();
         expect(tile.etag).toBe(tileEtag);
     });
+});
+
+describe('TileManager content elevation', () => {
+    test.each(['resetMaxContentElevation', 'clearTiles'] as const)(
+        'preserves expanded tile coverage after unloading until %s', async (reset) => {
+            const map = globalCreateMap({
+                maxTileCacheSize: 0,
+                fadeDuration: 0,
+                style: {
+                    version: 8,
+                    sources: {id: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                    layers: [{
+                        id: 'elevated', type: 'symbol', source: 'id',
+                        layout: {'symbol-height-offset': ['get', 'height']}
+                    }]
+                }
+            });
+            onTestFinished(() => map.remove());
+            await map.once('load');
+
+            const elevatedTileID = new OverscaledTileID(4, 0, 4, 0, 10);
+            const horizonTileID = new OverscaledTileID(4, 0, 4, 7, 3);
+            const tileManager = createTileManager({
+                minzoom: 4,
+                maxzoom: 4,
+                async loadTile(tile: Tile) {
+                    if (tile.tileID.key === elevatedTileID.key) {
+                        tile.buckets.elevated = {maxHeightOffset: 500000, destroy() {}} as SymbolBucket;
+                        tile.hasSymbolBuckets = true;
+                    }
+                    tile.state = 'loaded';
+                },
+                async unloadTile(tile: Tile) {
+                    tile.unloadVectorData();
+                }
+            });
+            tileManager.onAdd(map);
+            onTestFinished(() => tileManager.onRemove(map));
+
+            const transform = new GlobeTransform();
+            transform.resize(1400, 800);
+            transform.setZoom(4.3);
+            transform.setMaxPitch(85);
+            transform.setCenter(new LngLat(-170, -45));
+            await updateTiles();
+            const elevatedTile = tileManager.getLoadedTile(elevatedTileID);
+            expect(elevatedTile).toBeInstanceOf(Tile);
+
+            transform.setCenter(new LngLat(2.3522, 52.0566));
+            transform.setPitch(75);
+            transform.setBearing(180);
+            await updateTiles();
+            setNow(now() + 1);
+            await updateTiles();
+            expect(elevatedTile.state).toBe('unloaded');
+
+            await updateTiles();
+            expect(tileManager.getIds()).toContain(horizonTileID.key);
+
+            tileManager[reset]();
+            await updateTiles();
+            expect(tileManager.getIds()).not.toContain(horizonTileID.key);
+
+            async function updateTiles() {
+                tileManager.update(transform);
+                await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
+            }
+        });
 });

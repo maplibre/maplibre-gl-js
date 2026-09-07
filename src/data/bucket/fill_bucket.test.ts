@@ -35,13 +35,18 @@ function createFillBucketWithLayers(layerSpecifications: LayerSpecification[], a
     return new FillBucket({layers, zoom: 0, overscaling: 0, index: 0} as BucketParameters<FillStyleLayer>);
 }
 
-function createDependencyParameters(imageMap: Record<string, StyleImage>): BucketDependencyParameters {
+function createDependencyParameters(patternMap: Record<string, StyleImage>): BucketDependencyParameters {
     return {
-        options: createPopulateOptions(Object.keys(imageMap)),
+        options: createPopulateOptions(Object.keys(patternMap)),
         canonical: new CanonicalTileID(0, 0, 0),
-        imagePositions: {},
+        glyphMap: {},
+        glyphPositions: {},
+        iconMap: {},
+        iconPositions: {},
+        patternMap,
+        patternPositions: {},
         dashPositions: {},
-        imageMap
+        showCollisionBoxes: false
     };
 }
 

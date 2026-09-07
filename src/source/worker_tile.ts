@@ -1,8 +1,6 @@
 import {FeatureIndex} from '../data/feature_index.ts';
-import {performSymbolLayout} from '../symbol/symbol_layout.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
-import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import {warnOnce, mapObject} from '../util/util.ts';
 import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
@@ -176,28 +174,21 @@ export class WorkerTile {
 
         for (const key in buckets) {
             const bucket = buckets[key];
-            if (bucket instanceof SymbolBucket) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
-                performSymbolLayout({
-                    bucket,
-                    glyphMap,
-                    glyphPositions: glyphAtlas.positions,
-                    imageMap: iconMap,
-                    imagePositions: imageAtlas.iconPositions,
-                    showCollisionBoxes: this.showCollisionBoxes,
-                    canonical: this.tileID.canonical,
-                    subdivisionGranularity: options.subdivisionGranularity
-                });
-            } else if (bucket.hasDependencies) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures({
-                    options,
-                    canonical: this.tileID.canonical,
-                    imagePositions: imageAtlas.patternPositions,
-                    dashPositions,
-                    imageMap: patternMap
-                });
-            }
+            if (!bucket.hasDependencies) continue;
+
+            recalculateLayers(bucket.layers, this.zoom, availableImages);
+            bucket.addFeatures({
+                options,
+                canonical: this.tileID.canonical,
+                glyphMap,
+                glyphPositions: glyphAtlas.positions,
+                iconMap,
+                iconPositions: imageAtlas.iconPositions,
+                patternMap,
+                patternPositions: imageAtlas.patternPositions,
+                dashPositions,
+                showCollisionBoxes: this.showCollisionBoxes
+            });
         }
 
         return {

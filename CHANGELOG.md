@@ -6,6 +6,7 @@
 - Link shader programs before reading their compile status, so the driver can overlap the compiles and the main thread waits less on shader compilation ([#8338](https://github.com/maplibre/maplibre-gl-js/pull/8338)) (by [@cherenkov](https://github.com/cherenkov))
 - Build the default `Marker` pin once and clone it per marker, so creating many default markers takes roughly half the constructor time ([#8340](https://github.com/maplibre/maplibre-gl-js/pull/8340)) (by [@cherenkov](https://github.com/cherenkov))
 - Add SDF rendering support for fill patterns, using `fill-color` as the foreground color ([#7747](https://github.com/maplibre/maplibre-gl-js/pull/7747)) (by [@bradymadden97](https://github.com/bradymadden97) and [@deniial00](https://github.com/deniial00))
+- Warn once when the canvas is clamped to `maxCanvasSize`, which previously lowered the rendered resolution silently ([#8200](https://github.com/maplibre/maplibre-gl-js/issues/8200))
 - Add the `emptyTileBehavior` option to vector, raster and raster-dem sources: `missing` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990))
 - _...Add new stuff here..._
 
@@ -19,6 +20,7 @@
 - Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#7910](https://github.com/maplibre/maplibre-gl-js/pull/7910)) (by [@nostrorom](https://github.com/nostrorom))
+- Keep the tile under an elevated symbol from being culled near the horizon, so a symbol with a large `symbol-height-offset` stays visible until it is behind the planet ([#8316](https://github.com/maplibre/maplibre-gl-js/issues/8316)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ## 6.7.0

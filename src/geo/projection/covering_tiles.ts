@@ -1,12 +1,14 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
-import {vec2, type vec4} from 'gl-matrix';
+import {vec2, type vec3, type vec4} from 'gl-matrix';
+import {Frustum} from '../../util/primitives/frustum.ts';
+import {Aabb} from '../../util/primitives/aabb.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 
 import type {IReadonlyTransform} from '../transform_interface.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {Frustum} from '../../util/primitives/frustum.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
+import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
 
 type CoveringTilesResult = {
@@ -58,6 +60,13 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
      * Optional function to redefine how tiles are loaded at high pitch angles.
      */
     calculateTileZoom?: CalculateTileZoomFunction;
+    /**
+     * The highest elevation, in meters, that this source's content may reach above the ground,
+     * e.g. the largest `symbol-height-offset` in use. `maxContentElevation` can raise the
+     * culling height above `ASSUMED_MAX_FEATURE_HEIGHT_METERS`, so tiles under highly elevated
+     * content are not dropped while that content is still visible.
+     */
+    maxContentElevation?: number;
 };
 
 /**
@@ -190,21 +199,63 @@ const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
 
 /**
  * Returns the elevation to use when computing tile bounding volumes for culling:
- * `transform.elevation`, growing by up to `ASSUMED_MAX_FEATURE_HEIGHT_METERS` as
- * the frustum's bottom edge approaches the horizon, where a ground-level bounding
- * box would cull tiles whose extruded features are still visible.
+ * `transform.elevation`, growing by up to the greater of
+ * `ASSUMED_MAX_FEATURE_HEIGHT_METERS` and `maxContentElevation` (when provided)
+ * as the frustum's bottom edge approaches the horizon, where a ground-level
+ * bounding box would cull tiles whose extruded features are still visible.
  */
-function getElevationForTileCulling(transform: IReadonlyTransform): number {
+function getElevationForTileCulling(transform: IReadonlyTransform, maxContentElevation?: number): number {
     const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;
     const proximityToHorizon = clamp(
         (TILE_CULLING_HORIZON_ONSET_DEGREES - bottomEdgeDegreesAboveHorizontal) / TILE_CULLING_HORIZON_ONSET_DEGREES,
         0, 1);
-    return transform.elevation + proximityToHorizon * ASSUMED_MAX_FEATURE_HEIGHT_METERS;
+    const maxFeatureHeight = Math.max(ASSUMED_MAX_FEATURE_HEIGHT_METERS, maxContentElevation ?? 0);
+    return transform.elevation + proximityToHorizon * maxFeatureHeight;
+}
+
+/**
+ * Returns a copy of the frustum with its far plane moved away from the camera by `distance`.
+ * Each far corner travels along its own camera ray until it reaches the pushed plane, so the
+ * result stays a pyramid and the corners stay consistent with the side planes. The globe
+ * frustum's far plane is fitted to the surface horizon, so elevated content beyond it would
+ * otherwise be culled while still visible.
+ */
+function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3): Frustum {
+    const far = frustum.planes[1];
+    const points = frustum.points.map((p) => {
+        const distanceToFar = far[0] * p[0] + far[1] * p[1] + far[2] * p[2] + far[3];
+        if (Math.abs(distanceToFar) > 1e-6) {
+            return p;
+        }
+        const ray = [p[0] - cameraPos[0], p[1] - cameraPos[1], p[2] - cameraPos[2]];
+        const rayDotNormal = far[0] * ray[0] + far[1] * ray[1] + far[2] * ray[2];
+        if (rayDotNormal >= -1e-9) {
+            return p;
+        }
+        const scale = distance / -rayDotNormal;
+        return [p[0] + ray[0] * scale, p[1] + ray[1] * scale, p[2] + ray[2] * scale, p[3]] as vec4;
+    });
+    const planes = frustum.planes.map((p, i) => i === 1 ? [p[0], p[1], p[2], p[3] + distance] as vec4 : p);
+    const min: vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+    const max: vec3 = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+    for (const p of points) {
+        for (let i = 0; i < 3; i++) {
+            min[i] = Math.min(min[i], p[i]);
+            max[i] = Math.max(max[i], p[i]);
+        }
+    }
+    return new Frustum(points, planes, new Aabb(min, max));
 }
 
 /**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
+ *
+ * The horizon culling plane and the frustum's far plane both assume content sits on the
+ * surface. When `options.maxContentElevation` is set, a point elevated to radius r (in planet
+ * radii) stays visible up to acos(1/r) beyond the surface horizon and up to sqrt(r^2-1)
+ * farther away, so both are pushed back accordingly; without this, tiles under highly
+ * elevated symbols would be dropped while the symbols are still in view.
  * @param transform - The transform instance.
  * @param frustum - The covering frustum.
  * @param plane - The clipping plane used by globe transform, or null.
@@ -215,11 +266,21 @@ function getElevationForTileCulling(transform: IReadonlyTransform): number {
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
-    const frustum = transform.getCameraFrustum();
-    const plane = transform.getClippingPlane();
+    let frustum = transform.getCameraFrustum();
+    let plane = transform.getClippingPlane();
+    if (plane && options.maxContentElevation > 0) {
+        const len = Math.hypot(plane[0], plane[1], plane[2]);
+        if (len > 0) {
+            const shellRadius = 1.0 + options.maxContentElevation / earthRadius;
+            const horizonCos = clamp(-plane[3] / len, -1, 1);
+            const shellCos = Math.cos(Math.acos(horizonCos) + Math.acos(1.0 / shellRadius));
+            plane = [plane[0], plane[1], plane[2], -shellCos * len] as vec4;
+            frustum = pushFrustumFarPlane(frustum, Math.sqrt(shellRadius * shellRadius - 1.0), transform.cameraPosition);
+        }
+    }
     const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
-    const elevationForTileCulling = getElevationForTileCulling(transform);
+    const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
     
