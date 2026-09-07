@@ -32,7 +32,8 @@ import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {type Anchor} from '../../symbol/anchor.ts';
-import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
+import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
+import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
@@ -292,11 +293,10 @@ register('CollisionBuffers', CollisionBuffers);
  *    stores the feature data for use in subsequent step (this.features).
  *
  * 2. WorkerTile asynchronously requests from the main thread all of the glyphs
- *    and icons needed (by this bucket and any others). When glyphs and icons
- *    have been received, the WorkerTile creates a CollisionIndex and invokes:
+ *    and icons needed (by this bucket and any others).
  *
- * 3. performSymbolLayout(bucket, stacks, icons) perform texts shaping and
- *    layout on a Symbol Bucket. This step populates:
+ * 3. WorkerTile calls SymbolBucket.addFeatures(), which delegates text shaping
+ *    and layout to performSymbolLayout(). This step populates:
  *      `this.symbolInstances`: metadata on generated symbols
  *      `this.collisionBoxArray`: collision data for use by foreground
  *      `this.text`: SymbolBuffers for text symbols
@@ -311,9 +311,6 @@ register('CollisionBuffers', CollisionBuffers);
  *    using a dynamic "OpacityVertexArray".
  */
 export class SymbolBucket implements Bucket {
-    static MAX_GLYPHS: number;
-    static addDynamicAttributes: typeof addDynamicAttributes;
-
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
     overscaling: number;
@@ -334,6 +331,11 @@ export class SymbolBucket implements Bucket {
     iconSizeData: SizeData;
 
     glyphOffsetArray: GlyphOffsetArray;
+    /**
+     * The glyph cap for this bucket, normally {@link MAX_GLYPHS}. Tests lower it to
+     * exercise the overflow warning without filling a bucket with 65,535 glyphs.
+     */
+    maxGlyphs: number;
     lineVertexArray: SymbolLineVertexArray;
     features: SymbolFeature[];
     symbolInstances: SymbolInstanceArray;
@@ -374,12 +376,13 @@ export class SymbolBucket implements Bucket {
         this.index = options.index;
         this.pixelRatio = options.pixelRatio;
         this.sourceLayerIndex = options.sourceLayerIndex;
-        this.hasDependencies = false;
+        this.hasDependencies = true;
         this.hasRTLText = false;
         this.maxHeightOffset = 0;
         this.sortKeyRanges = [];
 
         this.collisionCircleArray = [];
+        this.maxGlyphs = MAX_GLYPHS;
 
         const layer = this.layers[0];
         const unevaluatedLayoutValues = layer._unevaluatedLayout._values;
@@ -593,7 +596,18 @@ export class SymbolBucket implements Bucket {
         });
     }
 
-    addFeatures(_parameters: BucketDependencyParameters): void {}
+    addFeatures({options, canonical, glyphMap, glyphPositions, iconMap, iconPositions, showCollisionBoxes}: BucketDependencyParameters): void {
+        performSymbolLayout({
+            bucket: this,
+            glyphMap,
+            glyphPositions,
+            imageMap: iconMap,
+            imagePositions: iconPositions,
+            showCollisionBoxes,
+            canonical,
+            subdivisionGranularity: options.subdivisionGranularity
+        });
+    }
 
     isEmpty(): boolean {
         // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
@@ -992,15 +1006,5 @@ export class SymbolBucket implements Bucket {
 register('SymbolBucket', SymbolBucket, {
     omit: ['layers', 'collisionBoxArray', 'features', 'compareText']
 });
-
-// this constant is based on the size of StructArray indexes used in a symbol
-// bucket--namely, glyphOffsetArrayStart
-// eg the max valid UInt16 is 65,535
-// See https://github.com/mapbox/mapbox-gl-js/issues/2907 for motivation
-// lineStartIndex and textBoxStartIndex could potentially be concerns
-// but we expect there to be many fewer boxes/lines than glyphs
-SymbolBucket.MAX_GLYPHS = 65535;
-
-SymbolBucket.addDynamicAttributes = addDynamicAttributes;
 
 export {addDynamicAttributes};

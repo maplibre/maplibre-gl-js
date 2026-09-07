@@ -1,21 +1,23 @@
+import murmur3 from 'murmurhash-js';
+import ONE_EM from './one_em.ts';
 import {Anchor} from './anchor.ts';
-
 import {getAnchors, getCenterAnchor} from './get_anchors.ts';
 import {clipLine} from './clip_line.ts';
 import {shapeText, shapeIcon, WritingMode, fitIconToText} from './shaping.ts';
 import {getGlyphQuads, getIconQuads} from './quads.ts';
 import {CollisionFeature} from './collision_feature.ts';
 import {warnOnce} from '../util/util.ts';
-import {
-    allowsVerticalWritingMode,
-    allowsLetterSpacing
-} from '../util/script_detection.ts';
+import {allowsVerticalWritingMode, allowsLetterSpacing} from '../util/script_detection.ts';
 import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility.ts';
 import {EXTENT} from '../data/extent.ts';
-import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size.ts';
-import ONE_EM from './one_em.ts';
+import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
+import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
+import {type VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
+import {subdivideVertexLine} from '../render/subdivision.ts';
+import type Point from '@mapbox/point-geometry';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {CanonicalTileID} from '../tile/tile_id.ts';
 import type {Shaping, PositionedIcon, TextJustify} from './shaping.ts';
 import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types.g.ts';
@@ -26,13 +28,6 @@ import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts'
 import type {ImagePosition} from '../render/image_atlas.ts';
 import type {GlyphPosition} from '../render/glyph_atlas.ts';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
-
-import type Point from '@mapbox/point-geometry';
-import murmur3 from 'murmurhash-js';
-import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
-import {type VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
-import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
-import {subdivideVertexLine} from '../render/subdivision.ts';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
@@ -698,7 +693,7 @@ function addSymbol(bucket: SymbolBucket,
     if (useRuntimeCollisionCircles)
         collisionCircleDiameter *= layoutTextSize / ONE_EM;
 
-    if (bucket.glyphOffsetArray.length >= SymbolBucket.MAX_GLYPHS) warnOnce(
+    if (bucket.glyphOffsetArray.length >= bucket.maxGlyphs) warnOnce(
         'Too many glyphs being rendered in a tile. See https://github.com/mapbox/mapbox-gl-js/issues/2907'
     );
 
