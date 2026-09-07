@@ -474,11 +474,11 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
     });
 
-    test('VectorTileWorkerSource.loadTile reports an empty response body on the load and on a reload', async () => {
+    test('VectorTileWorkerSource.loadTile reports the empty body of a 204 on the load and on a reload', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
         server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
+            request.respond(204, {}, '');
         });
 
         const params = {
