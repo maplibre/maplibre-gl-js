@@ -1,7 +1,7 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
@@ -13,7 +13,7 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -23,6 +23,10 @@ const GLOBE_SAMPLES = 256;
 const GLOBE_BISECT_EPSILON_T = 1e-12;
 /** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
 const MAX_MERCATOR_Y = 1 - 1e-9;
+/** Two points on the unit globe closer than this, a micrometre, are the same point. */
+const SAME_POINT_DISTANCE = 1e-12;
+/** A camera whose horizontal offset is this small relative to its distance is straight above the center. */
+const STRAIGHT_ABOVE_RATIO = 1e-9;
 
 /**
  * @internal
@@ -558,18 +562,23 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.getCameraPoint();
     }
 
+    /**
+     * The altitude of the rendered camera above sea level. The sphere keeps the center point at sea level whatever its
+     * elevation (`_calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
+     * {@link calculateCameraOptionsFromTo} is the inverse.
+     */
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
+        return (vec3.length(this._cameraPosition) - 1) * earthRadius;
     }
 
     getCameraLngLat(): LngLat {
-        return this._helper.getCameraLngLat();
+        const surface = createVec3f64();
+        vec3.normalize(surface, this._cameraPosition);
+        return sphereSurfacePointToCoordinates(surface);
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        if (!this._globeViewProjMatrixF64) {
-            return 1.0; // _calcMatrices hasn't run yet
-        }
         const vec = angularCoordinatesToSurfaceVector(lngLat);
         vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
         const result = createVec4f64();
@@ -673,6 +682,37 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
+    }
+
+    /**
+     * Inverts the camera placement of `_calcMatrices` in unit-globe coordinates: the camera sits at radius
+     * `1 + altitudeFrom / earthRadius` and looks at the center on the sea-level sphere, the target altitude only becoming
+     * the center elevation (the inverse of {@link getCameraAltitude}). Pitch and bearing are read in the center's local
+     * frame, +z up, +y north, +x east. A camera straight above the center keeps the transform's bearing.
+     */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+        const center = LngLat.convert(to);
+        const camera = angularCoordinatesToSurfaceVector(LngLat.convert(from));
+        vec3.scale(camera, camera, 1 + altitudeFrom / earthRadius);
+        const target = angularCoordinatesToSurfaceVector(center);
+        const targetAtAltitude = vec3.scale(createVec3f64(), target, 1 + altitudeTo / earthRadius);
+        const toCamera = vec3.subtract(createVec3f64(), camera, target);
+        const distance = vec3.length(toCamera);
+        if (distance < SAME_POINT_DISTANCE || vec3.distance(camera, targetAtAltitude) < SAME_POINT_DISTANCE) {
+            throw new Error('Can\'t calculate camera options with same From and To');
+        }
+
+        const zero = createVec3f64();
+        vec3.rotateY(toCamera, toCamera, zero, -degreesToRadians(center.lng));
+        vec3.rotateX(toCamera, toCamera, zero, degreesToRadians(center.lat));
+        const pitch = radiansToDegrees(Math.acos(clamp(toCamera[2] / distance, -1, 1)));
+        const straightAbove = Math.hypot(toCamera[0], toCamera[1]) < distance * STRAIGHT_ABOVE_RATIO;
+        const bearing = straightAbove ? this.bearing : radiansToDegrees(Math.atan2(-toCamera[0], -toCamera[1]));
+
+        // The camera sits cameraToCenterDistance / getGlobeRadiusPixels(worldSize, lat) from the center, and the radius doubles per zoom level.
+        const zoom = scaleZoom(this.cameraToCenterDistance / distance / getGlobeRadiusPixels(this.tileSize, center.lat));
+
+        return {center, elevation: altitudeTo, zoom, pitch, bearing};
     }
 
     /**
