@@ -101,7 +101,7 @@ describe('Browser tests', () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map',
-                style: `${location.origin}/test/integration/browser/fixtures/style.json`,
+                style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background', paint: {'background-color': '#72d0f2'}}]},
                 center: [10, 10],
                 zoom: 10
             });
