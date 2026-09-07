@@ -101,7 +101,7 @@ describe('Browser tests', () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map',
-                style: 'https://demotiles.maplibre.org/style.json',
+                style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background', paint: {'background-color': '#72d0f2'}}]},
                 center: [10, 10],
                 zoom: 10
             });
@@ -258,39 +258,14 @@ describe('Browser tests', () => {
             map.setStyle({
                 version: 8,
                 sources: {
-                    osm: {
-                        type: 'raster',
-                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                        tileSize: 256,
-                        attribution: '&copy; OpenStreetMap Contributors',
-                        maxzoom: 19
-                    },
-                    // Use a different source for terrain and hillshade layers, to improve render quality
                     terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
-                        tileSize: 256
-                    },
-                    hillshadeSource: {
-                        type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
+                        maxzoom: 10,
                         tileSize: 256
                     }
                 },
-                layers: [
-                    {
-                        id: 'osm',
-                        type: 'raster',
-                        source: 'osm'
-                    },
-                    {
-                        id: 'hills',
-                        type: 'hillshade',
-                        source: 'hillshadeSource',
-                        layout: {visibility: 'visible'},
-                        paint: {'hillshade-shadow-color': '#473B24'}
-                    }
-                ],
+                layers: [],
                 terrain: {
                     source: 'terrainSource',
                     exaggeration: 1
@@ -312,7 +287,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
-        expect(markerScreenPosition.y).toBeCloseTo(378.1);
+        expect(markerScreenPosition.y).toBeCloseTo(377.425);
     });
 
     test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {
@@ -343,10 +318,9 @@ describe('Browser tests', () => {
                             version: 8,
                             sources: {
                                 osm: {
-                                    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
                                     type: 'raster',
                                     tileSize: 256,
-                                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
+                                    tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`]
                                 }
                             },
                             layers: [{
@@ -385,14 +359,13 @@ describe('Browser tests', () => {
                 sources: {
                     osm: {
                         type: 'raster',
-                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`],
                         tileSize: 256,
-                        attribution: '&copy; OpenStreetMap Contributors',
                         maxzoom: 19
                     },
                     terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tiles: [`${location.origin}/test/integration/assets/tiles/zero-elevation-terrain-tile.png`],
                         tileSize: 256
                     }
                 },
@@ -448,7 +421,8 @@ describe('Browser tests', () => {
                     sources: {
                         terrainSource: {
                             type: 'raster-dem',
-                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
+                            maxzoom: 10,
                             tileSize: 256
                         },
                     },
