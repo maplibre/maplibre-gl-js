@@ -241,7 +241,7 @@ describe('SymbolBucket', () => {
         expect(ltrBucket.hasRTLText).toBeFalsy();
     });
 
-    test('SymbolBucket shapes rtl text without a plugin having to be loaded', () => {
+    test('SymbolBucket shapes rtl text', () => {
         expect(glyphsRequestedFor('مرحبا')).toEqual(['ﻣ', 'ﺮ', 'ﺣ', 'ﺒ', 'ﺎ']);
     });
 
