@@ -1,33 +1,42 @@
 ## main
 ### ✨ Features and improvements
-- Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
+- Add the `emptyTileBehavior` option to vector, raster and raster-dem sources: `missing` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990))
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.8.0
+
+### ✨ Features and improvements
+
+- Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109)) (by [@bradymadden97](https://github.com/bradymadden97) and [@giswqs](https://github.com/giswqs))
 - Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#8328](https://github.com/maplibre/maplibre-gl-js/pull/8328), continues [#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
 - Build the `Intl.Segmenter` instances used for text shaping on first use instead of at import, shaving several milliseconds off loading MapLibre on the main thread ([#8337](https://github.com/maplibre/maplibre-gl-js/pull/8337)) (by [@cherenkov](https://github.com/cherenkov))
 - Link shader programs before reading their compile status, so the driver can overlap the compiles and the main thread waits less on shader compilation ([#8338](https://github.com/maplibre/maplibre-gl-js/pull/8338)) (by [@cherenkov](https://github.com/cherenkov))
 - Build the default `Marker` pin once and clone it per marker, so creating many default markers takes roughly half the constructor time ([#8340](https://github.com/maplibre/maplibre-gl-js/pull/8340)) (by [@cherenkov](https://github.com/cherenkov))
 - Add SDF rendering support for fill patterns, using `fill-color` as the foreground color ([#7747](https://github.com/maplibre/maplibre-gl-js/pull/7747)) (by [@bradymadden97](https://github.com/bradymadden97) and [@deniial00](https://github.com/deniial00))
-- Warn once when the canvas is clamped to `maxCanvasSize`, which previously lowered the rendered resolution silently ([#8200](https://github.com/maplibre/maplibre-gl-js/issues/8200))
-- Add the `emptyTileBehavior` option to vector, raster and raster-dem sources: `missing` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990))
-- _...Add new stuff here..._
+- Warn once when the canvas is clamped to `maxCanvasSize`, which previously lowered the rendered resolution silently ([#8200](https://github.com/maplibre/maplibre-gl-js/issues/8200)) (by [@str0kes](https://github.com/str0kes))
 
 ### 🐞 Bug fixes
+
 - Fix a marker's popup jumping to another world copy when the marker is moved across the antimeridian on a zoomed-out map ([#5655](https://github.com/maplibre/maplibre-gl-js/issues/5655), [#8326](https://github.com/maplibre/maplibre-gl-js/pull/8326), continues [#5956](https://github.com/maplibre/maplibre-gl-js/pull/5956)) (by [@yuiseki](https://github.com/yuiseki))
-- Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251))
+- Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251)) (by [@patte](https://github.com/patte))
 - Fix a gap between the sky and the ground at high pitch while globe transitions to mercator ([#7382](https://github.com/maplibre/maplibre-gl-js/issues/7382)) (by [@birkskyum](https://github.com/birkskyum))
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Validate the `before` layer in `map.moveLayer` before reordering, so passing the id of a layer that does not exist leaves the layer order untouched instead of dropping the moved layer out of it ([#8301](https://github.com/maplibre/maplibre-gl-js/issues/8301)) (by [@lazerg](https://github.com/lazerg))
 - Fix visible seams between hillshade tiles when using linear interpolation. ([#8302](https://github.com/maplibre/maplibre-gl-js/pull/8302)) (by [@Turbo87](https://github.com/Turbo87))
-- Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093))
+- Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093)) (by [@UberMouse](https://github.com/UberMouse))
+- Fix `getCameraAltitude()` returning `NaN` under `globe` and `vertical-perspective`, which disabled marker terrain occlusion and the camera terrain check; the altitude now follows the sphere ([#6584](https://github.com/maplibre/maplibre-gl-js/issues/6584)) (by [@bigmistqke](https://github.com/bigmistqke) and [@patte](https://github.com/patte))
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
-- Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#7910](https://github.com/maplibre/maplibre-gl-js/pull/7910)) (by [@nostrorom](https://github.com/nostrorom))
+- Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#8323](https://github.com/maplibre/maplibre-gl-js/pull/8323)) (by [@johncarmack1984](https://github.com/johncarmack1984) and [@nostrorom](https://github.com/nostrorom))
 - Keep the tile under an elevated symbol from being culled near the horizon, so a symbol with a large `symbol-height-offset` stays visible until it is behind the planet ([#8316](https://github.com/maplibre/maplibre-gl-js/issues/8316)) (by [@clement-igonet](https://github.com/clement-igonet))
-- _...Add new stuff here..._
 
 ## 6.7.0
 
 ### ✨ Features and improvements
 
-- Support the style specification's `font-faces` property, with `map.setFontFaces` and `map.getFontFaces` and improve complex script languages such as Devanagari, Khmer, Burmese and Hebrew ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237))  (by [@HarelM](https://github.com/HarelM))
+- Support the style specification's `font-faces` property, with `map.setFontFaces` and `map.getFontFaces` and improve complex script languages such as Devanagari, Khmer, Burmese and Hebrew ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237)) (by [@HarelM](https://github.com/HarelM))
 - Wrap Thai, Khmer, Burmese, Lao, Tibetan, Javanese and Balinese labels at word boundaries instead of running them on in one line, which applies to every style whether or not it declares `font-faces` ([#8237](https://github.com/maplibre/maplibre-gl-js/pull/8237)) (by [@HarelM](https://github.com/HarelM))
 - Throw `GPUInitializationError` from the `Map` constructor when the WebGL2 context cannot be created, instead of firing an `error` event no listener can catch and returning a partially constructed map ([#8066](https://github.com/maplibre/maplibre-gl-js/issues/8066)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Allow adding an image source without a `url`. The source starts empty and makes no network request; call `updateImage({image})` or `updateImage({url})` later to show an image ([#8167](https://github.com/maplibre/maplibre-gl-js/pull/8167)) (by [@mondsichtung](https://github.com/mondsichtung))
@@ -38,7 +47,7 @@
 ### 🐞 Bug fixes
 
 - Disable the navigation control's zoom-out button when viewport constraints prevent zooming out further ([#5316](https://github.com/maplibre/maplibre-gl-js/issues/5316)) (by [@miakh](https://github.com/miakh))
-- Keep a vector tile's etag when the tile is reloaded after a style change, so the next expiry refresh can still skip unchanged tiles ([#3309](https://github.com/maplibre/maplibre-gl-js/issues/3309))  (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Keep a vector tile's etag when the tile is reloaded after a style change, so the next expiry refresh can still skip unchanged tiles ([#3309](https://github.com/maplibre/maplibre-gl-js/issues/3309)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `project()` and `queryTerrainElevation` disagreeing with the rendered terrain surface when the elevation lookup sampled a different DEM zoom than the drawn mesh ([#8212](https://github.com/maplibre/maplibre-gl-js/issues/8212)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Draw numbers (e.g. “21” in “반포대로21길”) and short uppercase codes (e.g. “A1”) upright in vertical line labels instead of rotating them along the line ([#5404](https://github.com/maplibre/maplibre-gl-js/issues/5404)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the camera jumping at the end of a pan or zoom gesture on terrain by sampling the center elevation from the rendered terrain surface ([#7989](https://github.com/maplibre/maplibre-gl-js/issues/7989), [#3982](https://github.com/maplibre/maplibre-gl-js/issues/3982)) (by [@johncarmack1984](https://github.com/johncarmack1984))
@@ -528,8 +537,7 @@ Check-out our [migration guide from v5 to v6](./docs/guides/v5-to-v6-migration-g
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
 - Remove legacy browser compatibility code targeting IE11 and pre-2016 browsers ([#7294](https://github.com/maplibre/maplibre-gl-js/pull/7294)) (by [@johanrd](https://github.com/johanrd))
 - Remove legacy `DOM.remove()` and `DOM.mouseButton()` wrappers; use native APIs directly (baseline 2015) ([#7295](https://github.com/maplibre/maplibre-gl-js/pull/7295)) (by [@johanrd](https://github.com/johanrd))
-- Make `setTransformRequest` accept an async function in addition to a sync function. ([#7184](https://github.com/maplibre/maplibre-gl-js/issues/7184)) (by [@kikuomax
-  ](https://github.com/kikuomax))
+- Make `setTransformRequest` accept an async function in addition to a sync function. ([#7184](https://github.com/maplibre/maplibre-gl-js/issues/7184)) (by [@kikuomax](https://github.com/kikuomax))
 
 ### 🐞 Bug fixes
 
