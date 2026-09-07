@@ -20,7 +20,7 @@
 - Draw an elevated symbol on globe when the symbol itself is in view but the ground under it is behind the horizon; occlusion now follows the line of sight to the elevated point ([#8253](https://github.com/maplibre/maplibre-gl-js/issues/8253)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix `setTiles` producing stale tile URLs when `loadTile` runs in the same frame ([#7910](https://github.com/maplibre/maplibre-gl-js/pull/7910)) (by [@nostrorom](https://github.com/nostrorom))
 - Keep the tile under an elevated symbol from being culled near the horizon, so a symbol with a large `symbol-height-offset` stays visible until it is behind the planet ([#8316](https://github.com/maplibre/maplibre-gl-js/issues/8316)) (by [@clement-igonet](https://github.com/clement-igonet))
-- Drop the cached requested camera state when the projection changes, so switching projection mid-movement with terrain enabled no longer throws `Not implemented.` on the next gesture and loses it ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
+- Fix a `Not implemented.` error that broke panning and zooming when the projection was changed while the camera was moving, on maps with terrain enabled or a `transformCameraUpdate` callback ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
 - _...Add new stuff here..._
 
 ## 6.7.0

@@ -408,7 +408,14 @@ export class Camera extends Evented<MapEventType> {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
-        delete this._requestedCameraState;
+        if (this._requestedCameraState) {
+            // The requested camera state is a transform of the old projection, so it has to be
+            // moved onto the new one as well, otherwise the camera keeps reading a transform
+            // that the new camera helper cannot use.
+            const requestedCameraState = newTransform.clone();
+            requestedCameraState.apply(this._requestedCameraState, true);
+            this._requestedCameraState = requestedCameraState;
+        }
     }
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
