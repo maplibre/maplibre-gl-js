@@ -8,6 +8,22 @@ beforeEach(() => {
 });
 
 describe('Max Canvas Size option', () => {
+    test('warns once when clamped, and not again on a second resize (must run before other clamping tests, as warnOnce keeps a module-level history)', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const container = window.document.createElement('div');
+        Object.defineProperty(container, 'clientWidth', {value: 2048});
+        Object.defineProperty(container, 'clientHeight', {value: 2048});
+        const map = createMap({container, maxCanvasSize: [512, 512], pixelRatio: 4});
+        vi.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(512);
+        vi.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(512);
+        map.resize();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('maxCanvasSize'));
+        expect(warn).toHaveBeenCalledTimes(1);
+        map.resize();
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+    });
+
     test('maxCanvasSize width = height', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 2048});
