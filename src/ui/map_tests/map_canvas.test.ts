@@ -8,10 +8,7 @@ beforeEach(() => {
 });
 
 describe('Max Canvas Size option', () => {
-    // First in the file on purpose. `warnOnce` keeps a module-level history keyed by message and
-    // exports no way to clear it, so a later test in this file cannot observe a warning that an
-    // earlier clamping test has already consumed.
-    test('warns once when the canvas is clamped to maxCanvasSize', () => {
+    test('warns once when clamped, and not again on a second resize (must run before other clamping tests, as warnOnce keeps a module-level history)', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 2048});
@@ -22,8 +19,6 @@ describe('Max Canvas Size option', () => {
         map.resize();
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('maxCanvasSize'));
         expect(warn).toHaveBeenCalledTimes(1);
-
-        // Resized again, to show that a window drag does not fill the console.
         map.resize();
         expect(warn).toHaveBeenCalledTimes(1);
         warn.mockRestore();

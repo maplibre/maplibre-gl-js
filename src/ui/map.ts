@@ -389,13 +389,7 @@ export type MapOptions = {
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
-     *
-     * A canvas larger than this is not refused: the map lowers its pixel ratio to fit and draws at
-     * that lower resolution instead, so the canvas has the dimensions that were asked for and
-     * fewer pixels behind them. {@link Map#getPixelRatio} keeps reporting the ratio that was
-     * requested rather than the one applied, and a warning is logged once. This matters most when
-     * exporting at print resolution, where the result is a correctly sized image holding a
-     * fraction of the detail.
+     * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
      * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
@@ -1638,6 +1632,8 @@ export class Map extends Evented<MapEventType> {
      * @internal
      * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
+     * Warns once when the ratio is scaled down. The message carries no sizes: this runs on every
+     * resize and `warnOnce` de-duplicates by message, so sizes would warn on every drag frame.
      */
     _getClampedPixelRatio(width: number, height: number): number {
         const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
@@ -1651,16 +1647,8 @@ export class Map extends Evented<MapEventType> {
 
         const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
 
-        // The message deliberately carries no numbers. `_resize` runs on every resize event and
-        // `warnOnce` de-duplicates by message text, so naming the requested size would make a
-        // fresh key -- and a fresh warning -- for every pixel of a window drag.
         if (scaleFactor < 1) {
-            warnOnce(
-                'The map canvas is larger than maxCanvasSize, so it has been drawn at a lower ' +
-                'pixel ratio to fit. The canvas is the size that was requested and holds fewer ' +
-                'pixels than that implies. Raise the maxCanvasSize map option if you need the ' +
-                'full resolution, keeping it within the WebGL MAX_TEXTURE_SIZE.'
-            );
+            warnOnce('The canvas is larger than maxCanvasSize and is rendered at a lower pixel ratio to fit. Increase maxCanvasSize, within MAX_TEXTURE_SIZE, to render at full resolution.');
         }
 
         return scaleFactor * pixelRatio;
