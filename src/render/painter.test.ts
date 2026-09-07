@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
-import {Painter} from './painter.ts';
+import {Painter, type RTTObject} from './painter.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
@@ -50,6 +50,28 @@ describe('render', () => {
         painter.render(style, renderOptions);
 
         expect(painter.renderOptions.currentPass).toBe('translucent');
+    });
+
+    test('render allows RTT reuse before destroying excess textures at the end of the frame', () => {
+        const oversizedRTT = painter.acquireRTT(8192);
+        painter.releaseRTT(oversizedRTT);
+
+        let rttUsedDuringRender: RTTObject;
+        style.loadEmpty();
+        style.addLayer({
+            id: 'reuses-rtt',
+            type: 'custom',
+            render() {
+                rttUsedDuringRender = painter.acquireRTT(8192);
+                painter.releaseRTT(rttUsedDuringRender);
+            }
+        });
+
+        painter.render(style, renderOptions);
+
+        expect(rttUsedDuringRender).toBe(oversizedRTT);
+        expect(oversizedRTT.texture.texture).toBeNull();
+        painter.destroy();
     });
 
     test('calls terrainDepth', () => {
@@ -172,6 +194,7 @@ describe('RTT pool', () => {
     let painter: Painter;
 
     beforeEach(() => {
+        vi.useFakeTimers();
         const gl = createNullGL();
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         painter = new Painter(gl, transform);
@@ -179,6 +202,7 @@ describe('RTT pool', () => {
 
     afterEach(() => {
         painter.destroy();
+        vi.useRealTimers();
     });
 
     test('acquireRTT creates on miss, recycles on hit', () => {
@@ -202,6 +226,64 @@ describe('RTT pool', () => {
         expect(b.texture.size).toEqual([512, 512]);
     });
 
+    test('destroys a resized RTT that exceeds the memory budget', () => {
+        const rtt = painter.acquireRTT(2048);
+        painter.releaseRTT(rtt);
+
+        const resizedRTT = painter.acquireRTT(8192);
+        painter.releaseRTT(resizedRTT);
+        vi.runOnlyPendingTimers();
+
+        expect(resizedRTT.texture.texture).toBeNull();
+    });
+
+    test('trims to twelve 2048px mipmapped textures when no render follows', () => {
+        const retainedRTTs = Array.from({length: 12}, () => painter.acquireRTT(2048));
+        const excessRTT = painter.acquireRTT(2048);
+
+        for (const rtt of retainedRTTs) painter.releaseRTT(rtt);
+        painter.releaseRTT(excessRTT);
+        expect(excessRTT.texture.texture).not.toBeNull();
+
+        vi.advanceTimersByTime(100);
+
+        for (const rtt of retainedRTTs) expect(rtt.texture.texture).not.toBeNull();
+        expect(excessRTT.texture.texture).toBeNull();
+    });
+
+    test('keeps a reused RTT alive until it is released again', () => {
+        const oversizedRTT = painter.acquireRTT(8192);
+        painter.releaseRTT(oversizedRTT);
+
+        const reusedRTT = painter.acquireRTT(8192);
+        expect(reusedRTT).toBe(oversizedRTT);
+
+        vi.runOnlyPendingTimers();
+
+        expect(reusedRTT.texture.texture).not.toBeNull();
+
+        painter.releaseRTT(reusedRTT);
+        vi.runOnlyPendingTimers();
+
+        expect(reusedRTT.texture.texture).toBeNull();
+    });
+
+    test('trimming detaches an oversized texture without changing the bound framebuffer', () => {
+        const gl = painter.context.gl;
+        const oversizedRTT = painter.acquireRTT(8192);
+        painter.bindRTT(oversizedRTT);
+        const otherFramebuffer = painter.context.createFramebuffer(16, 16, false, false);
+        painter.context.bindFramebuffer.set(otherFramebuffer.framebuffer);
+
+        painter.releaseRTT(oversizedRTT);
+        vi.runOnlyPendingTimers();
+
+        expect(oversizedRTT.texture.texture).toBeNull();
+        expect(gl.framebufferTexture2D).toHaveBeenLastCalledWith(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
+        expect(painter.context.bindFramebuffer.get()).toBe(otherFramebuffer.framebuffer);
+        otherFramebuffer.destroy();
+    });
+
     test('bindRTT lazily creates shared FBO and binds texture', () => {
         expect(painter._rttSharedFbo).toBeNull();
         const obj = painter.acquireRTT(256);
@@ -218,6 +300,16 @@ describe('RTT pool', () => {
         const b = painter.acquireRTT(512);
         painter.bindRTT(b);
         expect(painter._rttSharedFbo.size).toBe(512);
+    });
+
+    test('painter.destroy cancels a pending RTT cleanup', () => {
+        const rtt = painter.acquireRTT(8192);
+        painter.releaseRTT(rtt);
+        expect(vi.getTimerCount()).toBe(1);
+
+        painter.destroy();
+
+        expect(vi.getTimerCount()).toBe(0);
     });
 
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {

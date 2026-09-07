@@ -93,6 +93,10 @@ export class Painter {
      * A pool of recyclable {@link RTTObject}s (textures only; the FBO is shared).
      */
     _rttObjectRecyclePool: RTTObject[];
+    /** Estimated RGBA8 storage retained by the pool, including all mip levels. */
+    _rttObjectRecyclePoolBytes: number;
+    /** Fallback cleanup when released textures are not followed by another render. */
+    private _rttRecyclePoolTimer: ReturnType<typeof setTimeout>;
     /**
      * Shared FBO used by all RTT render passes. The color attachment is
      * swapped to the target RTTObject's texture via {@link bindRTT}.
@@ -160,6 +164,7 @@ export class Painter {
         this.layerOpacityFbo = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
+        this._rttObjectRecyclePoolBytes = 0;
         this._rttSharedFbo = null;
         this.terrainFacilitator = {depthDirty: true, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
@@ -650,6 +655,7 @@ export class Painter {
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.
         this.context.setDefault();
+        this._trimRTTRecyclePool();
     }
 
     /**
@@ -709,6 +715,8 @@ export class Painter {
     }
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
+    /** Retain up to twelve 2048px RGBA8 mip chains after rendering; active textures are not capped. */
+    static readonly MAX_RTT_RECYCLE_POOL_BYTES: number = 256 * 1024 * 1024;
 
     saveTileTexture(texture: Texture): void {
         const textures = this._tileTextures[texture.size[0]];
@@ -730,6 +738,7 @@ export class Painter {
         const gl = this.context.gl;
         const obj = this._rttObjectRecyclePool.pop();
         if (obj) {
+            this._rttObjectRecyclePoolBytes -= this._rttTextureByteSize(obj.size);
             if (obj.size !== size) {
                 obj.texture.update({width: size, height: size, data: null}, {premultiply: false, useMipmap: true});
                 obj.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
@@ -780,8 +789,45 @@ export class Painter {
         this.context.bindFramebuffer.set(this._rttSharedFbo.fbo.framebuffer);
     }
 
+    /**
+     * Returns a texture for reuse before trimming the reserve at the end of rendering.
+     * A 100 ms fallback trims the reserve if no render follows.
+     */
     releaseRTT(obj: RTTObject): void {
         this._rttObjectRecyclePool.push(obj);
+        this._rttObjectRecyclePoolBytes += this._rttTextureByteSize(obj.size);
+        if (this._rttObjectRecyclePoolBytes <= Painter.MAX_RTT_RECYCLE_POOL_BYTES || this._rttRecyclePoolTimer !== undefined) return;
+
+        this._rttRecyclePoolTimer = setTimeout(() => this._trimRTTRecyclePool(), 100);
+    }
+
+    /**
+     * Frees unused textures above the reserve budget and cancels the fallback cleanup.
+     * Detaches the color target before deletion because even an unbound framebuffer can
+     * keep the texture's storage alive, preserving the caller's framebuffer binding.
+     */
+    private _trimRTTRecyclePool(): void {
+        clearTimeout(this._rttRecyclePoolTimer);
+        this._rttRecyclePoolTimer = undefined;
+        while (this._rttObjectRecyclePoolBytes > Painter.MAX_RTT_RECYCLE_POOL_BYTES) {
+            const obj = this._rttObjectRecyclePool.pop();
+            this._rttObjectRecyclePoolBytes -= this._rttTextureByteSize(obj.size);
+            if (this._rttSharedFbo?.fbo.colorAttachment.get() === obj.texture.texture) {
+                const framebuffer = this.context.bindFramebuffer.get();
+                this._rttSharedFbo.fbo.colorAttachment.set(null);
+                this.context.bindFramebuffer.set(framebuffer);
+            }
+            obj.texture.destroy();
+        }
+    }
+
+    /** Estimates square RGBA8 texture storage, including every mip level down to 1 × 1. */
+    private _rttTextureByteSize(size: number): number {
+        let bytes = 0;
+        for (let levelSize = size; levelSize >= 1; levelSize = Math.floor(levelSize / 2)) {
+            bytes += levelSize * levelSize * 4;
+        }
+        return bytes;
     }
 
     /**
@@ -866,6 +912,8 @@ export class Painter {
     }
 
     destroy(): void {
+        clearTimeout(this._rttRecyclePoolTimer);
+        this._rttRecyclePoolTimer = undefined;
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
                 const textures = this._tileTextures[size];
@@ -882,6 +930,7 @@ export class Painter {
             obj.texture.destroy();
         }
         this._rttObjectRecyclePool = [];
+        this._rttObjectRecyclePoolBytes = 0;
 
         if (this._rttSharedFbo) {
             // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer

@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Reduce memory retained by unused terrain render-to-texture targets while preserving reuse during rendering ([#8370](https://github.com/maplibre/maplibre-gl-js/pull/8370)) (by [@DoFabien](https://github.com/DoFabien))
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
 - Sample terrain render-to-texture output through mipmaps with trilinear filtering, so draped layers stop shimmering and aliasing at high pitch ([#8328](https://github.com/maplibre/maplibre-gl-js/pull/8328), continues [#7673](https://github.com/maplibre/maplibre-gl-js/pull/7673)) (by [@AveryanAlex](https://github.com/AveryanAlex))
 - Build the `Intl.Segmenter` instances used for text shaping on first use instead of at import, shaving several milliseconds off loading MapLibre on the main thread ([#8337](https://github.com/maplibre/maplibre-gl-js/pull/8337)) (by [@cherenkov](https://github.com/cherenkov))
