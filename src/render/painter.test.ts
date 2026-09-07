@@ -1,7 +1,9 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
+import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 import {StubMap} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
@@ -47,7 +49,7 @@ describe('render', () => {
     test('must not fail with incompletely loaded style', () => {
         painter.render(style, renderOptions);
 
-        expect(painter.renderPass).toBe('translucent');
+        expect(painter.renderOptions.currentPass).toBe('translucent');
     });
 
     test('calls terrainDepth', () => {
@@ -80,6 +82,38 @@ describe('render', () => {
         expect(painter.getTerrainDataForTile(tileID, true)).toBe(terrainData);
         expect(getTerrainData).toHaveBeenCalledWith(tileID);
     });
+
+    test('builds render options from the transform, globe projection and terrain', () => {
+        const terrain = {tileManager: {anyTilesAfterTime: () => false}};
+        map.terrain = terrain;
+        style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
+        vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+        vi.spyOn(painter.drawFunctions, 'atmosphere').mockImplementation(() => {});
+
+        painter.render(style, renderOptions);
+
+        expect(painter.renderOptions.transform).toBe(painter.transform);
+        expect(painter.renderOptions.terrain).toBe(terrain);
+        expect(painter.renderOptions.projectionTransition).toBe(1);
+        expect(painter.renderOptions.isRenderingGlobe).toBe(true);
+    });
+
+    test('uses render options for depth and blending when drawing a custom layer', () => {
+        painter.render(style, renderOptions);
+        const options = painter.renderOptions;
+        options.depthRangeFor3D = [0.1, 0.8];
+        const render = vi.fn((gl: WebGL2RenderingContext) => {
+            expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
+            expect(painter.context.blend.get()).toBe(true);
+            expect(painter.context.blendFunc.get()).toEqual([gl.ONE, gl.ONE_MINUS_SRC_ALPHA]);
+        });
+        const layer = new CustomStyleLayer({id: 'custom', type: 'custom', renderingMode: '3d', render}, {});
+
+        painter.renderLayer(painter, null, layer, [], options);
+
+        expect(render).toHaveBeenCalledTimes(1);
+    });
+
     describe('terrain render time', () => {
         beforeEach(() => {
             vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});

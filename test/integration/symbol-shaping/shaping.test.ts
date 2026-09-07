@@ -6,6 +6,7 @@ import {ResolvedImage, Formatted, FormattedSection, type VerticalAlign} from '@m
 import {ImagePosition} from '../../../src/render/image_atlas.ts';
 import type {StyleImage} from '../../../src/style/style_image.ts';
 import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
+import type {GlyphPosition} from '../../../src/render/glyph_atlas.ts';
 
 import glyphsJson from '../assets/glyphs/fontstack-glyphs.json' with {type: 'json'};
 import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json'};
@@ -22,6 +23,14 @@ if (typeof process !== 'undefined' && process.env !== undefined) {
     UPDATE = !!process.env.UPDATE;
 }
 
+type FixtureGlyph = GlyphPosition & {id: number};
+
+function byGraphemeCluster(fixture: Record<string, FixtureGlyph>): Record<string, FixtureGlyph> {
+    return Object.fromEntries(
+        Object.entries(fixture).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+    );
+}
+
 function sectionForImage(name: string, verticalAlign?: VerticalAlign) {
     return new FormattedSection('', ResolvedImage.fromString(name), null, null, null, verticalAlign);
 }
@@ -35,10 +44,8 @@ describe('shaping', () => {
     const layoutTextSize = 16;
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
-    const glyphs = {
-        'Test': glyphsJson as any as StyleGlyph
-    };
-    const glyphPositions = glyphs;
+    const glyphPositions = {'Test': byGraphemeCluster(glyphsJson)};
+    const glyphs = glyphPositions as unknown as Record<string, Record<string, StyleGlyph>>;
 
     const images = {
         'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),

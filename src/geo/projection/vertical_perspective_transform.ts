@@ -420,20 +420,42 @@ export class VerticalPerspectiveTransform implements ITransform {
         const canonical = unwrappedTileID.canonical;
         const spherePos = projectTileCoordinatesToSphere(x, y, canonical.x, canonical.y, canonical.z);
         const vectorMultiplier = 1.0 + (elevation ?? 0.0) / earthRadius;
-        const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
+        const elevatedX = spherePos[0] * vectorMultiplier;
+        const elevatedY = spherePos[1] * vectorMultiplier;
+        const elevatedZ = spherePos[2] * vectorMultiplier;
+        const pos: vec4 = [elevatedX, elevatedY, elevatedZ, 1];
         vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64);
 
-        // Also check whether the point projects to the backfacing side of the sphere.
-        const plane = this._cachedClippingPlane;
-        // dot(position on sphere, occlusion plane equation)
-        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
-        const isOccluded = dotResult < 0.0;
+        let isOccluded: boolean;
+        if (vectorMultiplier <= 1.0) {
+            const plane = this._cachedClippingPlane;
+            isOccluded = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3] < 0.0;
+        } else {
+            isOccluded = this._isLineOfSightBlocked(elevatedX, elevatedY, elevatedZ);
+        }
 
         return {
             point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
             signedDistanceFromCamera: pos[3],
             isOccluded
         };
+    }
+
+    /**
+     * True when the segment from the camera to the given point, both in unit-globe coordinates, passes through the planet.
+     */
+    private _isLineOfSightBlocked(x: number, y: number, z: number): boolean {
+        const cam = this._cameraPosition;
+        const dx = x - cam[0];
+        const dy = y - cam[1];
+        const dz = z - cam[2];
+        const lengthSq = dx * dx + dy * dy + dz * dz;
+        if (lengthSq === 0) return false;
+        const t = clamp(-(cam[0] * dx + cam[1] * dy + cam[2] * dz) / lengthSq, 0, 1);
+        const cx = cam[0] + t * dx;
+        const cy = cam[1] + t * dy;
+        const cz = cam[2] + t * dz;
+        return cx * cx + cy * cy + cz * cz < 1.0;
     }
 
     private _calcMatrices(): void {

@@ -11,6 +11,7 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -25,12 +26,28 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
 
 export type PopulateParameters = {
     featureIndex: FeatureIndex;
-    iconDependencies: {};
-    patternDependencies: {};
-    glyphDependencies: {};
+    iconDependencies: Record<string, boolean>;
+    patternDependencies: Record<string, boolean>;
+    /**
+     * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
+     * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     * @example
+     * ```json
+     * {"SomeFontName": {"a": true, " ": true, "\u05e9\u05b0\u05c1": true}}
+     * ```
+     */
+    glyphDependencies: Record<string, Record<string, boolean>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
+};
+
+export type BucketDependencyParameters = {
+    options: PopulateParameters;
+    canonical: CanonicalTileID;
+    imagePositions: Record<string, ImagePosition>;
+    dashPositions: Record<string, DashEntry>;
+    imageMap: GetImagesResponse;
 };
 
 export type IndexedFeature = {
@@ -87,6 +104,7 @@ export interface Bucket {
     readonly stateDependentLayers: any[];
     readonly stateDependentLayerIds: string[];
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    addFeatures(parameters: BucketDependencyParameters): void;
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;

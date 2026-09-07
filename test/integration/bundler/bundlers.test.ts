@@ -50,7 +50,7 @@ describe('Bundler examples', () => {
 
     for (const dir of examples) {
         test(`${dir} builds and runs in a browser`, {timeout: TEST_TIMEOUT_MS}, async () => {
-            execSync('npm install', {cwd: dir, stdio: 'inherit'});
+            execSync('npm ci', {cwd: dir, stdio: 'inherit'});
             execSync('npm run build', {cwd: dir, stdio: 'inherit'});
 
             // Serve the example's own build output as the site root, so that
@@ -97,7 +97,7 @@ describe('Bundler examples', () => {
                 });
 
                 const url = `http://localhost:${port}/index.html`;
-                await page.goto(url, {timeout: 15000});
+                await page.goto(url, {timeout: 30000});
                 await new Promise((r) => setTimeout(r, POST_LOAD_WAIT_MS));
 
                 const diagnostics = () => [

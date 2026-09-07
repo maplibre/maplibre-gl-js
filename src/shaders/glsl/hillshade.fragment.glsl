@@ -151,7 +151,9 @@ void combined_hillshade(vec2 deriv)
 }
 
 void main() {
-    vec4 pixel = texture(u_image, v_pos);
+    vec2 size = vec2(textureSize(u_image, 0));
+    vec2 texturePos = (v_pos * (size - 2.0) + 1.0) / size;
+    vec4 pixel = texture(u_image, texturePos);
 
     // We divide the slope by a scale factor based on the cosin of the pixel's approximate latitude
     // to account for mercator projection distortion. see #4807 for details

@@ -14,7 +14,7 @@ const dtsBundle: RolldownOptions = {
         format: 'es',
     },
     external: Object.keys(packageJSON.dependencies),
-    plugins: [dts({emitDtsOnly: true, oxc: true})],
+    plugins: [dts({emitDtsOnly: true, generator: 'oxc'})],
 };
 
 const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [

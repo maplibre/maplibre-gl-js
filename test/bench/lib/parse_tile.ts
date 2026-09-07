@@ -9,6 +9,7 @@ import {LineAtlas} from '../../../src/render/line_atlas.ts';
 import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
 import {MessageType} from '../../../src/util/actor_messages.ts';
+import {isCluster} from '../../../src/util/graphemes.ts';
 
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
@@ -36,6 +37,12 @@ function loadGlyphs(stack: string): {[id: number]: StyleGlyph} {
 const glyphCache: {[stack: string]: {[id: number]: StyleGlyph}} = {};
 const lineAtlas = new LineAtlas(256, 512);
 
+/**
+ * Stands in for the main thread, answering a worker tile's requests from the fixtures on disk.
+ *
+ * The glyph PBFs are keyed by codepoint, as a glyphs URL serves them, so a cluster of several
+ * codepoints has no glyph of its own here -- exactly as it would have none on a server.
+ */
 const actor = {
     sendAsync(rawMessage) {
         const message = rawMessage as AnyActorMessage;
@@ -46,7 +53,7 @@ const actor = {
                 glyphCache[stack] ||= loadGlyphs(stack);
                 response[stack] = {};
                 for (const id of stacks[stack]) {
-                    response[stack][id] = glyphCache[stack][id];
+                    response[stack][id] = isCluster(id) ? null : glyphCache[stack][id.codePointAt(0)];
                 }
             }
             return Promise.resolve(response);

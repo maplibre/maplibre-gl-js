@@ -1,9 +1,11 @@
-import {describe, test, expect} from 'vitest';
+import {afterEach, describe, test, expect} from 'vitest';
+import {toGraphemes} from '../util/graphemes.ts';
 import {type PositionedIcon, type Box, type Shaping, applyTextFit, shapeIcon, fitIconToText, shapeText, WritingMode} from './shaping.ts';
 import {ImagePosition} from '../render/image_atlas.ts';
 import {type StyleImage, TextFit} from '../style/style_image.ts';
 import {Formatted} from '@maplibre/maplibre-gl-style-spec';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 import type {StyleGlyph} from '../style/style_glyph.ts';
 
 describe('applyTextFit', () => {
@@ -380,30 +382,28 @@ describe('shapeText vertical glyph orientation', () => {
         };
     }
 
-    function createStubGlyphMap(text: string): {[_: number]: StyleGlyph} {
-        const glyphs: {[_: number]: StyleGlyph} = {};
+    /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
+    function createStubGlyphMap(text: string): Record<string, StyleGlyph> {
+        const glyphs: Record<string, StyleGlyph> = {};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);
 
-        for (const char of [...text, ...verticalizedChars]) {
-            const codePoint = char.codePointAt(0);
-            glyphs[codePoint] = createStubGlyph(codePoint);
+        for (const grapheme of [...toGraphemes(text), ...verticalizedChars]) {
+            glyphs[grapheme] = createStubGlyph(grapheme.codePointAt(0));
         }
         return glyphs;
     }
 
-    /** Shapes a line label, providing a stub glyph for every character of `text` and its verticalized form. */
     function shapeLineLabel(text: string, {writingMode = WritingMode.vertical, allowVerticalPlacement = false}: ShapeLineLabelOptions = {}): Shaping | false {
         const glyphs = createStubGlyphMap(text);
         return shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {}, fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], writingMode, allowVerticalPlacement, 24, 24);
     }
 
-    /** Returns each positioned glyph of the shaping as a [character, orientation] pair. */
     function getGlyphOrientations(shaping: Shaping | false): Array<[string, string]> {
         expect(shaping).toBeTruthy();
         return (shaping as Shaping).positionedLines.flatMap(line => line.positionedGlyphs.map(
-            (glyph): [string, string] => [String.fromCodePoint(glyph.glyph), glyph.vertical ? 'upright' : 'along-line']));
+            (glyph): [string, string] => [glyph.grapheme, glyph.vertical ? 'upright' : 'along-line']));
     }
 
     test('draws digits between CJK characters upright', () => {
@@ -475,17 +475,14 @@ describe('shapeText vertical glyph orientation', () => {
         ]);
     });
 
-    test('rotates a decomposed Latin letter so its combining mark stays attached', () => {
-        // é as “e” followed by U+0301 combining acute accent: upright glyphs
-        // each advance a full em, which would detach the mark from its base.
+    test('draws a decomposed Latin letter and its combining mark as one glyph, so the mark cannot drift off its base', () => {
         const shapedLineLabel = shapeLineLabel('国道e\u0301号');
         const orientations = getGlyphOrientations(shapedLineLabel);
 
         expect(orientations).toEqual([
             ['国', 'upright'],
             ['道', 'upright'],
-            ['e', 'along-line'],
-            ['\u0301', 'along-line'],
+            ['e\u0301', 'along-line'],
             ['号', 'upright'],
         ]);
     });
@@ -710,5 +707,90 @@ describe('shapeText vertical glyph orientation', () => {
             ['什', 'upright'],
             ['戰', 'upright'],
         ]);
+    });
+});
+
+describe('shapeText with a right-to-left text plugin', () => {
+    const metrics = {width: 10, height: 10, left: 0, top: -8, advance: 10};
+
+    function stubReversingPlugin() {
+        rtlWorkerPlugin.processBidirectionalText = (text: string, lineBreaks: number[]) => {
+            const lines: string[] = [];
+            let start = 0;
+            for (const at of [...lineBreaks, text.length]) {
+                if (at > start) lines.push([...text.slice(start, at)].reverse().join(''));
+                start = at;
+            }
+            return lines;
+        };
+        rtlWorkerPlugin.processStyledBidirectionalText = null;
+    }
+
+    afterEach(() => {
+        rtlWorkerPlugin.processBidirectionalText = null;
+        rtlWorkerPlugin.processStyledBidirectionalText = null;
+    });
+
+    /** A glyph for every grapheme cluster of `text`, and for every codepoint, as a tile asks for. */
+    function glyphsFor(text: string): Record<string, Record<string, StyleGlyph>> {
+        const glyphs: Record<string, StyleGlyph> = {};
+        for (const grapheme of toGraphemes(text)) {
+            glyphs[grapheme] = {id: grapheme.codePointAt(0), metrics} as StyleGlyph;
+            for (const char of grapheme) {
+                glyphs[char] = {id: char.codePointAt(0), metrics} as StyleGlyph;
+            }
+        }
+        return {Test: glyphs};
+    }
+
+    function shape(text: string, glyphs = glyphsFor(text)): Shaping | false {
+        return shapeText(
+            Formatted.fromString(text), glyphs, {}, {}, 'Test',
+            Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 24, 24,
+        );
+    }
+
+    /** The grapheme cluster each positioned glyph draws, in the order they are drawn. */
+    function drawn(shaping: Shaping | false): string[] {
+        expect(shaping).toBeTruthy();
+        return (shaping as Shaping).positionedLines.flatMap(
+            line => line.positionedGlyphs.map(glyph => glyph.grapheme));
+    }
+
+    const SHIN_SHEVA_DOT = 'שְׁ';
+    const DALET_TSERE = 'דֵ';
+    const RESH = 'ר';
+    const VAV_HOLAM = 'וֹ';
+    const TAV = 'ת';
+    const text = SHIN_SHEVA_DOT + DALET_TSERE + RESH + VAV_HOLAM + TAV;
+
+    test('reverses the letters but keeps each one with the marks written on it, in writing order', () => {
+        stubReversingPlugin();
+
+        expect(drawn(shape(text))).toEqual([TAV, VAV_HOLAM, RESH, DALET_TSERE, SHIN_SHEVA_DOT]);
+    });
+
+    test('draws only clusters the tile asked for a glyph for', () => {
+        stubReversingPlugin();
+
+        const requested = new Set(Object.keys(glyphsFor(text).Test));
+        for (const grapheme of drawn(shape(text))) {
+            expect(requested).toContain(grapheme);
+        }
+    });
+
+    test('falls back to the same codepoints in the same order when no glyph covers the cluster', () => {
+        stubReversingPlugin();
+
+        const codepointsOnly: Record<string, StyleGlyph> = {};
+        for (const char of text) {
+            codepointsOnly[char] = {id: char.codePointAt(0), metrics} as StyleGlyph;
+        }
+
+        const asClusters = drawn(shape(text)).join('');
+        const asCodepoints = drawn(shape(text, {Test: codepointsOnly}));
+
+        expect(asCodepoints.join('')).toBe(asClusters);
+        expect(asCodepoints).toHaveLength([...text].length);
     });
 });

@@ -19,6 +19,7 @@ import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -213,7 +214,7 @@ export class LineBucket implements Bucket {
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}): void {
+    addFeatures({options, canonical, imagePositions, dashPositions}: BucketDependencyParameters): void {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, dashPositions, options.subdivisionGranularity);
         }

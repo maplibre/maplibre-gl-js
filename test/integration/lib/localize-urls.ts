@@ -73,4 +73,15 @@ function localizeStyleURLs(style: StyleSpecification, port: number) {
     }
 
     style.glyphs &&= localizeURL(style.glyphs, port);
+
+    for (const fontName in (style as any)['font-faces']) {
+        const declarations = (style as any)['font-faces'][fontName];
+        for (const face of Array.isArray(declarations) ? declarations : [declarations]) {
+            if (typeof face === 'string') {
+                (style as any)['font-faces'][fontName] = localizeURL(face, port);
+            } else if (face?.url) {
+                face.url = localizeURL(face.url, port);
+            }
+        }
+    }
 }

@@ -4,6 +4,7 @@
       "positionedGlyphs": [
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": -56,
           "y": -29,
@@ -27,6 +28,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": -42,
           "y": -29,
@@ -50,6 +52,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": -28,
           "y": -29,
@@ -73,6 +76,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": -14,
           "y": -29,
@@ -96,6 +100,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": 0,
           "y": -29,
@@ -119,6 +124,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": 14,
           "y": -29,
@@ -142,6 +148,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": 28,
           "y": -29,
@@ -165,6 +172,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": 42,
           "y": -29,
@@ -193,6 +201,7 @@
       "positionedGlyphs": [
         {
           "glyph": 40,
+          "grapheme": "(",
           "imageName": null,
           "x": -65.5,
           "y": -5,
@@ -216,6 +225,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": -58.5,
           "y": -5,
@@ -239,6 +249,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": -45.5,
           "y": -5,
@@ -262,6 +273,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": -32.5,
           "y": -5,
@@ -285,6 +297,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": -19.5,
           "y": -5,
@@ -308,6 +321,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": -6.5,
           "y": -5,
@@ -331,6 +345,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": 6.5,
           "y": -5,
@@ -354,6 +369,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": 19.5,
           "y": -5,
@@ -377,6 +393,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": 32.5,
           "y": -5,
@@ -400,6 +417,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": 45.5,
           "y": -5,
@@ -423,6 +441,7 @@
         },
         {
           "glyph": 41,
+          "grapheme": ")",
           "imageName": null,
           "x": 58.5,
           "y": -5,
