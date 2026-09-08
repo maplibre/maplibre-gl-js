@@ -94,8 +94,7 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         expect(cameraOptions.roll).toBeUndefined();
     });
 
-    test('the result can be jumped to when no roll was given', () => {
-        // Its own camera: the jump below moves it, and the other tests here read the shared one from its start.
+    test('a fresh camera can be jumped to the result when no roll was given', () => {
         const {camera: own} = createCamera({maxPitch: 180}, false, {zoom: 1});
         const cameraOptions: CameraOptions = own.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 1000, 30, 60);
         expect(() => own.jumpTo(cameraOptions)).not.toThrow();
