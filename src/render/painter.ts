@@ -593,6 +593,7 @@ export class Painter {
 
             for (renderOptions.currentLayer = layerIds.length - 1; renderOptions.currentLayer >= 0; renderOptions.currentLayer--) {
                 const layer = this.style._layers[layerIds[renderOptions.currentLayer]];
+                if (layer.isHidden(this.transform.zoom)) continue;
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
@@ -609,6 +610,7 @@ export class Painter {
 
         for (renderOptions.currentLayer = 0; renderOptions.currentLayer < layerIds.length; renderOptions.currentLayer++) {
             const layer = this.style._layers[layerIds[renderOptions.currentLayer]];
+            if (layer.isHidden(this.transform.zoom)) continue;
             const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
