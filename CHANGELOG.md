@@ -1,14 +1,18 @@
 ## main
 ### ✨ Features and improvements
 - Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
+- Skip clipping masks for layers hidden at the current zoom and stop re-binding dynamic buffers on cached vertex array binds, removing redundant WebGL calls every frame ([#8369](https://github.com/maplibre/maplibre-gl-js/pull/8369))
+- Re-render at most one stale terrain drape per frame and keep drapes that differ only by zoom while the map moves, so a finger lift over terrain no longer re-renders every tile at once ([#8368](https://github.com/maplibre/maplibre-gl-js/pull/8368)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Add a `trackZoom` option to `GeolocateControlOptions` to allow control over map zoom adjustments in line with the Geolocation Position update accuracy, while `trackUserLocation` is `true` ([#7908](https://github.com/maplibre/maplibre-gl-js/issues/7908), [#8324](https://github.com/maplibre/maplibre-gl-js/pull/8324), continues [#7909](https://github.com/maplibre/maplibre-gl-js/pull/7909)) (by [@timsluis](https://github.com/timsluis))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `setStyle()` throwing while terrain is still loading because an intermediate render tried to compile a terrain shader before the replacement style initialized its projection ([#6824](https://github.com/maplibre/maplibre-gl-js/issues/6824)) (by [@miakh](https://github.com/miakh))
 - Fix queued GeoJSON `updateData` property removals throwing after geometry-only updates or retaining previously updated values ([#8372](https://github.com/maplibre/maplibre-gl-js/pull/8372)) (by [@jokrasno](https://github.com/jokrasno))
 - Treat camera options passed as `undefined` as not given in `jumpTo`, `easeTo` and `flyTo`; they were coerced to NaN ([#8373](https://github.com/maplibre/maplibre-gl-js/pull/8373)) (by [@vlumi](https://github.com/vlumi))
 - Fix a `Not implemented.` error that broke panning and zooming when the projection was changed while the camera was moving, on maps with terrain enabled or a `transformCameraUpdate` callback ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
 - Fix a map created inside a hidden container staying at the `400x300` fallback size when the container is shown before the resize observer's first notification is delivered ([#8277](https://github.com/maplibre/maplibre-gl-js/issues/8277)) (by [@spliffone](https://github.com/spliffone))
+- Fix `MercatorTransform` throwing when it is resized to a zero width, and skip the matrix calculation of every projection while the transform has a zero width or height ([#8374](https://github.com/maplibre/maplibre-gl-js/pull/8374)) (by [@avosa](https://github.com/avosa))
 - _...Add new stuff here..._
 
 ## 6.8.0

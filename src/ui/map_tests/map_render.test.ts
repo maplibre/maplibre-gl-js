@@ -248,3 +248,27 @@ describe('render-to-texture follow-up frame', () => {
         map.remove();
     });
 });
+
+describe('hidden layers', () => {
+    test('a layer hidden at the current zoom does not render tile clipping masks for its source', async () => {
+        const square: GeoJSON.Feature = {type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]}, properties: {}};
+        const map = createMap({style: {
+            version: 8,
+            sources: {shared: {type: 'geojson', data: square}, other: {type: 'geojson', data: square}},
+            layers: [
+                {id: 'shared-fill', type: 'fill', source: 'shared'},
+                {id: 'other-fill', type: 'fill', source: 'other'},
+                {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
+            ]
+        }});
+        const lastSourceToRenderClippingMasks = () => map.painter.currentStencilSource;
+
+        await map.once('idle');
+        expect(lastSourceToRenderClippingMasks()).toBe('other');
+
+        map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
+        await map.once('idle');
+        expect(lastSourceToRenderClippingMasks()).toBe('shared');
+        map.remove();
+    });
+});
