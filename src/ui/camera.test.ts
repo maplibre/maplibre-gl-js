@@ -2634,6 +2634,24 @@ test('create camera with globe returns make globe controls true', () => {
     expect(camera.cameraHelper.useGlobeControls).toBeTruthy();
 });
 
+describe('migrateProjection', () => {
+    test('moves the requested camera state to the new projection', () => {
+        const {camera} = createCamera({transformCameraUpdate: ({center, zoom}) => ({center, zoom})});
+        const stateBeforeMigration = camera.getTransformForUpdate();
+        stateBeforeMigration.setZoom(5);
+        stateBeforeMigration.setCenter(new LngLat(10, 20));
+
+        const projectionObjects = createProjectionFromName('globe', undefined, {});
+        camera.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+
+        const requestedState = camera.getTransformForUpdate();
+        expect(requestedState.center.lng).toBeCloseTo(10);
+        expect(requestedState.center.lat).toBeCloseTo(20);
+        expect(requestedState.zoom).toBeCloseTo(5);
+        expect(() => requestedState.getRayDirectionFromPixel(new Point(256, 256))).not.toThrow();
+    });
+});
+
 describe('jumpTo globe projection', () => {
     describe('globe specific behavior', () => {
         let camera: Camera;
