@@ -478,24 +478,40 @@ function projectOntoRing(x: number, y: number, ring: TaperRingInfo, searchFrom: 
  * Returns `null` when the alignment cannot be recovered (the caller then falls
  * back to the piece-local knots).
  */
+/**
+ * Maps per-vertex taper knots from the tile piece (index-aligned with
+ * `rawVertices`) onto the possibly subdivided vertex list the bucket emits.
+ *
+ * Subdivision (`subdivideVertexLine`) inserts extra vertices ON the existing
+ * segments, but rounds inserted vertices, deduplicates them and skips
+ * zero-length segments — original vertices may therefore appear slightly
+ * displaced, collapsed or missing. Instead of index-matching, every emitted
+ * vertex is projected onto the raw polyline (a monotone forward walk over the
+ * raw segments), and its knot is linearly interpolated between the knots of
+ * the bracketing raw vertices. That matches exactly what the shader does
+ * between two emitted vertices, so subdivision never changes the rendered
+ * width.
+ */
 export function expandTaperKnots(rawVertices: Point[], vertices: Point[], knots: number[]): number[] | null {
     if (vertices.length === rawVertices.length) return knots.slice();
+    const rawCount = rawVertices.length;
     const expanded = new Array<number>(vertices.length);
-    let rawIndex = 0;
+    let seg = 0; // current raw segment (monotone forward walk)
     for (let i = 0; i < vertices.length; i++) {
         const v = vertices[i];
-        if (rawIndex < rawVertices.length && v.equals(rawVertices[rawIndex])) {
-            expanded[i] = knots[rawIndex];
-            rawIndex++;
-        } else if (rawIndex > 0 && rawIndex < rawVertices.length) {
-            const a = rawVertices[rawIndex - 1];
-            const b = rawVertices[rawIndex];
-            const total = a.dist(b);
-            const f = total > 0 ? a.dist(v) / total : 0;
-            expanded[i] = knots[rawIndex - 1] + (knots[rawIndex] - knots[rawIndex - 1]) * Math.min(Math.max(f, 0), 1);
-        } else {
-            return null; // unexpected alignment (e.g. ring closing) — fall back
+        let bestSeg = seg, bestT = 0, bestResidual = Infinity;
+        for (let j = seg; j < rawCount - 1; j++) {
+            const ax = rawVertices[j].x, ay = rawVertices[j].y;
+            const bx = rawVertices[j + 1].x, by = rawVertices[j + 1].y;
+            const dx = bx - ax, dy = by - ay;
+            const l2 = dx * dx + dy * dy;
+            const t = l2 > 0 ? Math.max(0, Math.min(1, ((v.x - ax) * dx + (v.y - ay) * dy) / l2)) : 0;
+            const px = ax + dx * t, py = ay + dy * t;
+            const residual = (v.x - px) * (v.x - px) + (v.y - py) * (v.y - py);
+            if (residual < bestResidual) { bestResidual = residual; bestSeg = j; bestT = t; }
         }
+        seg = bestSeg;
+        expanded[i] = knots[bestSeg] + (knots[bestSeg + 1] - knots[bestSeg]) * bestT;
     }
-    return rawIndex === rawVertices.length ? expanded : null;
+    return expanded;
 }

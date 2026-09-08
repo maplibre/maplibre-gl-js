@@ -4,7 +4,7 @@ import {members as layoutAttributes} from './line_attributes.ts';
 import {members as layoutAttributesExt} from './line_attributes_ext.ts';
 import {members as taperAttributes} from './line_taper_attributes.ts';
 import {interpolateWidthProfile} from '../../util/interpolate_widths.ts';
-import {matchTaperProfile, expandTaperKnots, type GeoJSONTaperAnnotation, type GeoJSONTaperFeature, type TaperProfile} from '../../source/geojson_taper.ts';
+    import {matchTaperProfile, expandTaperKnots, type GeoJSONTaperAnnotation, type GeoJSONTaperFeature, type TaperProfile} from '../../source/geojson_taper.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../array_types.g.ts';
