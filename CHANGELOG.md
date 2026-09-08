@@ -1,8 +1,7 @@
 ## main
 ### ✨ Features and improvements
-- Warn once when the canvas is clamped to `maxCanvasSize`, which previously lowered the rendered resolution silently ([#8200](https://github.com/maplibre/maplibre-gl-js/issues/8200)) (by [@str0kes](https://github.com/str0kes))
+- Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
 - Add a `trackZoom` option to `GeolocateControlOptions` to allow control over map zoom adjustments in line with the Geolocation Position update accuracy, while `trackUserLocation` is `true` ([#7908](https://github.com/maplibre/maplibre-gl-js/issues/7908), [#8324](https://github.com/maplibre/maplibre-gl-js/pull/8324), continues [#7909](https://github.com/maplibre/maplibre-gl-js/pull/7909)) (by [@timsluis](https://github.com/timsluis))
-- _...Add new stuff here..._
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
