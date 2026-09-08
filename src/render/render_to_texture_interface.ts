@@ -9,7 +9,8 @@ import type {RenderOptions} from './render_options.ts';
  */
 export interface IRenderToTexture {
     /**
-     * Whether the render loop needs a follow-up frame to refresh cached textures retained while zooming.
+     * Whether the render loop needs a follow-up frame to refresh cached textures that were kept this frame:
+     * textures rendered at another zoom, and stale textures beyond the per-frame budget.
      */
     needsFollowUpFrame: boolean;
     prepareForRender(style: Style, zoom: number): void;
