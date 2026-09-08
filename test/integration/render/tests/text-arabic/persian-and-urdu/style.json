@@ -3,7 +3,7 @@
   "metadata": {
     "test": {
       "width": 360,
-      "height": 440
+      "height": 360
     }
   },
   "center": [ 0, 0 ],
@@ -17,23 +17,18 @@
         "features": [
           {
             "type": "Feature",
-            "properties": { "name": "شارع الملك فهد بن عبد العزيز في مدينة الرياض" },
-            "geometry": { "type": "Point", "coordinates": [ 0, 26 ] }
+            "properties": { "name": "خیابان ولیعصر در شهر تهران" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 22 ] }
           },
           {
             "type": "Feature",
-            "properties": { "name": "المكتب الرئيسي Main Office شارع النيل" },
-            "geometry": { "type": "Point", "coordinates": [ 0, 9 ] }
+            "properties": { "name": "شاہراہِ فیصل کراچی پاکستان" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 0 ] }
           },
           {
             "type": "Feature",
-            "properties": { "name": "شارع الملك 123 فهد" },
-            "geometry": { "type": "Point", "coordinates": [ 0, -9 ] }
-          },
-          {
-            "type": "Feature",
-            "properties": { "name": "شارع (الملك 123) فهد" },
-            "geometry": { "type": "Point", "coordinates": [ 0, -26 ] }
+            "properties": { "name": "پلاک 123 گچپژ" },
+            "geometry": { "type": "Point", "coordinates": [ 0, -22 ] }
           }
         ]
       }
