@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
+- Re-render at most one stale terrain drape per frame and keep drapes that differ only by zoom while the map moves, so a finger lift over terrain no longer re-renders every tile at once ([#8368](https://github.com/maplibre/maplibre-gl-js/pull/8368)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
