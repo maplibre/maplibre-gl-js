@@ -11,7 +11,7 @@ import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, 
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 
-import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -574,14 +574,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(surface);
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        const vec = angularCoordinatesToSurfaceVector(lngLat);
-        vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
-        const result = createVec4f64();
-        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixF64);
-        return result[2] / result[3];
-    }
-
     populateCache(_coords: OverscaledTileID[]): void {
         // Do nothing
     }
@@ -896,6 +888,34 @@ export class VerticalPerspectiveTransform implements ITransform {
         const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         return !!intersection;
+    }
+
+    /** {@inheritDoc ITransform.isLocationBehindTerrain} */
+    isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        const index = terrain.getCoverageIndex();
+        if (!index) return false;
+
+        const origin = this.cameraPosition;
+        const direction = this.getRayDirectionFromPixel(p);
+        const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
+        if (!outer) return false;
+        const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
+
+        const location = angularCoordinatesToSurfaceVector(lngLat);
+        vec3.scale(location, location, 1 + elevation / earthRadius);
+        vec3.subtract(location, location, origin);
+        const tLocation = vec3.dot(location, direction);
+        if (tLocation <= 0) return true;
+
+        const tStart = Math.max(outer.tMin, 0);
+        const tEnd = Math.min(tLocation * (1 - TERRAIN_OCCLUSION_MARGIN), inner ? inner.tMin : outer.tMax);
+        if (tEnd <= tStart) return false;
+
+        const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
+        for (let i = 0; i <= GLOBE_SAMPLES; i++) {
+            if (globeIsBelowTerrain(ray, tStart + (tEnd - tStart) * i / GLOBE_SAMPLES)) return true;
+        }
+        return false;
     }
 
     /**

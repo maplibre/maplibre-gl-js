@@ -700,26 +700,21 @@ export class Marker extends Evented<MarkerEventType> {
             }, 100);
         }
 
-        const map = this._map;
+        const transform = this._map._camera.transform;
 
-        // Read depth framebuffer, getting position of terrain in line of sight to marker
-        const terrainDistance = map.terrain.depthAtPoint(this._pos);
-        // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map._camera.transform);
-        const markerDistance = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation);
-        const forgiveness = .006;
-        if (markerDistance - terrainDistance < forgiveness) {
+        // Walk the camera ray to the marker's base over the DEM: a CPU test, no depth-buffer readback
+        const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
+        if (!transform.isLocationBehindTerrain(this._pos, this._lngLat, elevation, terrain)) {
             this._element.style.opacity = this._opacity;
             this._element.classList.remove('maplibregl-marker-covered');
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map._camera.transform.pixelsPerMeter;
-        const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
-        const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
-        const markerDistanceCenter = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        const metersToCenter = -this._offset.y / transform.pixelsPerMeter;
+        const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
+        const centerPoint = new Point(this._pos.x, this._pos.y - this._offset.y);
         // Display at full opacity if center is visible.
-        const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
+        const centerIsInvisible = transform.isLocationBehindTerrain(centerPoint, this._lngLat, elevation + elevationToCenter, terrain);
 
         if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
@@ -765,7 +760,7 @@ export class Marker extends Evented<MarkerEventType> {
 
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
-        browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
+        browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render
             this._updateOpacity(e?.type === 'moveend');
         }).catch(() => {});
     };

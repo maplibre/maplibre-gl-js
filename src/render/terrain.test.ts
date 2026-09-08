@@ -92,16 +92,6 @@ describe('Terrain', () => {
         expect(coordinate.z).toBeCloseTo(expected.z, 12);
     });
 
-    test('depthAtPoint decodes the depth framebuffer readback', () => {
-        const terrain = createFlatTerrain(0);
-        vi.spyOn(terrain, 'getFramebuffer').mockReturnValue({framebuffer: null} as any);
-        vi.spyOn(terrain.painter.context.gl, 'readPixels').mockImplementation((_x, _y, _w, _h, _f, _t, rgba) => {
-            (rgba as Uint8Array).set([0, 0, 0, 128]);
-        });
-
-        expect(terrain.depthAtPoint(new Point(10, 20))).toBeCloseTo(0.5, 10);
-    });
-
     test('getCoverageIndex sees newly renderable tiles after resetElevationCache', () => {
         const terrain = createFlatTerrain(0);
         const renderableTiles = terrain.tileManager.getRenderableTiles;

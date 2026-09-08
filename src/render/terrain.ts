@@ -14,7 +14,6 @@ import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
-import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
@@ -42,6 +41,12 @@ export type TerrainElevationSampler = (x: number, y: number, extent: number) => 
 
 const MAX_BISECTIONS = 40;
 const HIT_EPSILON_M = 1e-6;
+/**
+ * @internal
+ * The fraction of the camera-to-location distance, next to the location, that {@link ITransform.isLocationBehindTerrain}
+ * leaves out of its walk, so that the terrain the location itself sits on never counts as hiding it.
+ */
+export const TERRAIN_OCCLUSION_MARGIN = 0.01;
 /** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
 const BRACKET_PADDING_M = 10;
 /** `DEMData.sampleBilinear` throws on the far tile edge, so samples stop just short of it. */
@@ -419,21 +424,6 @@ export class Terrain {
         }
         this._fbo.colorAttachment.set(this._fboDepthTexture.texture);
         return this._fbo;
-    }
-
-    /**
-     * Reads the depth value from the depth-framebuffer at a given screen pixel
-     * @param p - Screen coordinate
-     * @returns depth value in clip space (between 0 and 1)
-     */
-    depthAtPoint(p: Point): number {
-        const rgba = new Uint8Array(4);
-        const context = this.painter.context, gl = context.gl;
-        context.bindFramebuffer.set(this.getFramebuffer().framebuffer);
-        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
-        context.bindFramebuffer.set(null);
-        // decode the depth value packed by terrain_depth.fragment.glsl
-        return (rgba[0] / (256 * 256 * 256) + rgba[1] / (256 * 256) + rgba[2] / 256 + rgba[3]) / 256;
     }
 
     /**

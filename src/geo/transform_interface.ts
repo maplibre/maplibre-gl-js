@@ -380,6 +380,21 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Whether terrain hides a location from the camera. The ray through the location's screen point is walked over
+     * the loaded DEM tiles, from where it enters the terrain's elevation band to {@link TERRAIN_OCCLUSION_MARGIN} short of
+     * the location, and the location is behind terrain when the ray dips below the surface on the way. A CPU test with
+     * no depth-buffer readback, which is what makes it cheap enough for markers.
+     * @param p - the location's screen point
+     * @param lngLat - the location
+     * @param elevation - the location's elevation in meters
+     * @param terrain - the terrain
+     * @returns true when terrain lies between the camera and the location, or when the location is behind the camera or beyond the far plane;
+     * false when the location is in view or the terrain has no renderable tiles
+     */
+    isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean;
+
+    /**
+     * @internal
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
@@ -470,16 +485,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      *
      */
     getCameraQueryGeometry(queryGeometry: Point[]): Point[];
-
-    /**
-     * Return the distance to the camera in clip space from a LngLat.
-     * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
-     * to determine whether a point is occluded.
-     * @param lngLat - the point
-     * @param elevation - the point's elevation
-     * @returns depth value in clip space (between 0 and 1)
-     */
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
     /**
      * @internal
