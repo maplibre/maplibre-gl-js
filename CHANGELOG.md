@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix queued GeoJSON `updateData` property removals throwing after geometry-only updates or retaining previously updated values.
 - _...Add new stuff here..._
 
 ## 6.8.0
