@@ -7,7 +7,6 @@ uniform float u_sky_horizon_blend;
 uniform float u_sky_blend;
 uniform vec3 u_globe_position;
 uniform float u_globe_radius;
-uniform float u_camera_to_center_distance;
 
 in vec3 v_view_direction;
 
@@ -20,7 +19,7 @@ void main() {
         float globe_distance = length(u_globe_position);
         float angle_to_globe_center = acos(clamp(dot(ray, u_globe_position) / globe_distance, -1.0, 1.0));
         float horizon_angle = asin(min(u_globe_radius / globe_distance, 1.0));
-        blend = mix(blend, (angle_to_globe_center - horizon_angle) * u_camera_to_center_distance, u_sky_blend);
+        blend = mix(blend, (angle_to_globe_center - horizon_angle) * u_camera_to_center_distance * u_device_pixel_ratio, u_sky_blend);
     }
     if (blend > 0.0) {
         if (blend < u_sky_horizon_blend) {

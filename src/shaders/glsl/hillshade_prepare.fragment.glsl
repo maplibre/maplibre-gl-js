@@ -19,7 +19,7 @@ float getElevation(ivec2 texel) {
 
 void main() {
     ivec2 pos = ivec2(gl_FragCoord.xy) + ivec2(1);
-    float tileSize = u_dimension.x - 2.0;
+    float tileSize = u_dimension.x - 4.0;
 
     // queried pixels:
     // +-----------+

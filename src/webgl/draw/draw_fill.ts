@@ -12,7 +12,8 @@ import {translatePosition} from '../../util/util.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
 
 import type {ColorMode} from '../color_mode.ts';
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
@@ -25,7 +26,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
     if (layerOpacity < 1) {
-        if (painter.renderPass !== 'translucent') return;
+        if (renderOptions.currentPass !== 'translucent') return;
         const useTerrain = !!painter.style.map.terrain;
 
         const results = prepareDrawLayerOpacity(painter,layer, coords, useTerrain);
@@ -40,7 +41,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1;
 
-    if (fillEligibleForOpaque && painter.renderPass === 'opaque') {
+    if (fillEligibleForOpaque && renderOptions.currentPass === 'opaque') {
         // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
         // its outline (always translucent) runs in the translucent pass below.
         const {isRenderingToTexture} = renderOptions;
@@ -49,12 +50,12 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
         return;
     }
-    if (fillEligibleForOpaque && painter.renderPass === 'translucent') {
+    if (fillEligibleForOpaque && renderOptions.currentPass === 'translucent') {
         // Fill already drew in the opaque pass; just draw the outline here.
         drawOutline(painter, tileManager, layer, coords, renderOptions);
         return;
     }
-    if (painter.renderPass === 'translucent') {
+    if (renderOptions.currentPass === 'translucent') {
         drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
     }
 }
@@ -142,6 +143,7 @@ function drawFillTiles(
         const bucket: FillBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
+        const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
         const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
@@ -165,14 +167,13 @@ function drawFillTiles(
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) : fillUniformValues(translateForUniforms);
+            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
-            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
-                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) :
+                fillOutlineUniformValues(translateForUniforms);
         }
 
         const stencil = painter.stencilModeForClipping(coord);

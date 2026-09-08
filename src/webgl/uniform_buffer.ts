@@ -3,6 +3,7 @@ import type {Context} from './context.ts';
 export const UBO_BINDINGS = {
     ProjectionUBO: 0,
     TerrainUBO: 1,
+    FrameUBO: 2,
 };
 
 export function applyUBOBindings(gl: WebGL2RenderingContext, program: WebGLProgram): void {
