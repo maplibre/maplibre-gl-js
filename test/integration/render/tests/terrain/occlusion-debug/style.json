@@ -4,7 +4,7 @@
     "test": {
       "height": 512,
       "width": 512,
-      "description": "TEMP local repro: symbol occlusion behind terrain (not committed)"
+      "description": "Symbols behind terrain are hidden by the depth pass. A 5x5 grid of labels (A-Y) is laid over the terrain at pitch 60 with exaggeration 3, so ridges stand between the camera and most of them; text-allow-overlap and text-ignore-placement are set so collision cannot hide any, leaving occlusion as the only thing that can."
     }
   },
   "center": [
@@ -407,6 +407,6 @@
   ],
   "terrain": {
     "source": "terrain",
-    "exaggeration": 0.45
+    "exaggeration": 3
   }
 }
