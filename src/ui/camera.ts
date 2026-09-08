@@ -636,7 +636,7 @@ export class Camera extends Evented<MapEventType> {
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
 
-        if ('zoom' in options && this._zoomSnap) {
+        if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
 
@@ -653,21 +653,21 @@ export class Camera extends Evented<MapEventType> {
 
         const zoomChanged = tr.zoom !== oldZoom;
 
-        if ('elevation' in options && tr.elevation !== +options.elevation) {
+        if (options.elevation !== undefined && tr.elevation !== +options.elevation) {
             tr.setElevation(+options.elevation);
         }
 
-        if ('bearing' in options && tr.bearing !== +options.bearing) {
+        if (options.bearing !== undefined && tr.bearing !== +options.bearing) {
             bearingChanged = true;
             tr.setBearing(+options.bearing);
         }
 
-        if ('pitch' in options && tr.pitch !== +options.pitch) {
+        if (options.pitch !== undefined && tr.pitch !== +options.pitch) {
             pitchChanged = true;
             tr.setPitch(+options.pitch);
         }
 
-        if ('roll' in options && tr.roll !== +options.roll) {
+        if (options.roll !== undefined && tr.roll !== +options.roll) {
             rollChanged = true;
             tr.setRoll(+options.roll);
         }
@@ -728,7 +728,7 @@ export class Camera extends Evented<MapEventType> {
             easing: defaultEasing
         }, options);
 
-        if ('zoom' in options && this._zoomSnap) {
+        if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
 
@@ -740,10 +740,10 @@ export class Camera extends Evented<MapEventType> {
         const startBearing = this.getBearing(),
             startPitch = tr.pitch,
             startRoll = tr.roll,
-            bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
-            pitch = 'pitch' in options ? +options.pitch : startPitch,
-            roll = 'roll' in options ? this._normalizeBearing(options.roll, startRoll) : startRoll,
-            padding = ('padding' in options ? options.padding : tr.padding) as PaddingOptions;
+            bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
+            pitch = options.pitch !== undefined ? +options.pitch : startPitch,
+            roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll,
+            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
         const offsetAsPoint = Point.convert(options.offset);
 
         let around, aroundPoint;
@@ -1009,7 +1009,7 @@ export class Camera extends Evented<MapEventType> {
             easing: defaultEasing
         }, options);
 
-        if ('zoom' in options && this._zoomSnap) {
+        if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
 
@@ -1019,10 +1019,10 @@ export class Camera extends Evented<MapEventType> {
             startRoll = tr.roll,
             startPadding = tr.padding;
 
-        const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
-        const pitch = 'pitch' in options ? +options.pitch : startPitch;
-        const roll = 'roll' in options ? this._normalizeBearing(options.roll, startRoll) : startRoll;
-        const padding = ('padding' in options ? options.padding : tr.padding) as PaddingOptions;
+        const bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
+        const pitch = options.pitch !== undefined ? +options.pitch : startPitch;
+        const roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll;
+        const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
 
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
@@ -1104,10 +1104,10 @@ export class Camera extends Evented<MapEventType> {
             w = (s) => Math.exp(k * rho * s);
         }
 
-        if ('duration' in options) {
+        if (options.duration !== undefined) {
             options.duration = +options.duration;
         } else {
-            const V = 'screenSpeed' in options ? +options.screenSpeed / rho : +options.speed;
+            const V = options.screenSpeed !== undefined ? +options.screenSpeed / rho : +options.speed;
             options.duration = 1000 * S / V;
         }
 

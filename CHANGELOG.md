@@ -1,9 +1,13 @@
 ## main
 ### ✨ Features and improvements
 - Improved support for drawing the letters of Devanagari, Khmer, Burmese and the other complex scripts and also draws Arabic and Hebrew labels correctly without loading a right-to-left text plugin, which deprecates `setRTLTextPlugin` and `getRTLTextPluginStatus` ([#8343](https://github.com/maplibre/maplibre-gl-js/pull/8343)) (by [@HarelM](https://github.com/HarelM))
+- Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix queued GeoJSON `updateData` property removals throwing after geometry-only updates or retaining previously updated values ([#8372](https://github.com/maplibre/maplibre-gl-js/pull/8372)) (by [@jokrasno](https://github.com/jokrasno))
+- Treat camera options passed as `undefined` as not given in `jumpTo`, `easeTo` and `flyTo`; they were coerced to NaN ([#8373](https://github.com/maplibre/maplibre-gl-js/pull/8373)) (by [@vlumi](https://github.com/vlumi))
+- Fix a map created inside a hidden container staying at the `400x300` fallback size when the container is shown before the resize observer's first notification is delivered ([#8277](https://github.com/maplibre/maplibre-gl-js/issues/8277)) (by [@spliffone](https://github.com/spliffone))
 - _...Add new stuff here..._
 
 ## 6.8.0
