@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Treat camera options given as `undefined` (`{bearing: undefined}` and the like, as optional fields often produce) as not given in `jumpTo`, `easeTo` and `flyTo`, instead of coercing them to NaN and breaking the transform; `calculateCameraOptionsFromCameraLngLatAltRotation` without a roll produced such an object ([#8373](https://github.com/maplibre/maplibre-gl-js/pull/8373)) (by [@vlumi](https://github.com/vlumi))
 - _...Add new stuff here..._
 
 ## 6.8.0
