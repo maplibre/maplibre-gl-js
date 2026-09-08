@@ -293,11 +293,9 @@ function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): 
         delete next.removeProperties;
     }
     // Removing properties that were added or updated in previous
-    if (next.removeProperties) {
-        for (const key of next.removeProperties) {
-            const index = prev.addOrUpdateProperties.findIndex(prop => prop.key === key);
-            if (index > -1) prev.addOrUpdateProperties.splice(index, 1);
-        }
+    if (next.removeProperties && prev.addOrUpdateProperties) {
+        const removedProperties = new Set(next.removeProperties);
+        prev.addOrUpdateProperties = prev.addOrUpdateProperties.filter(prop => !removedProperties.has(prop.key));
     }
 
     // Merge the two diffs
