@@ -141,21 +141,20 @@ export class RenderToTexture {
         // check tiles to render
         this.needsFollowUpFrame = false;
         const moving = zoomChanged || this.painter.options.moving;
-        const staleTiles: Tile[] = [];
+        let staleTileReleased = false;
         for (const tile of this._renderableTiles) {
             const difference = this._textureDifference(tile);
             if (difference === 'none') continue;
             if ((difference === 'zoom' && moving) || (difference === 'visibleLayers' && zoomChanged)) {
                 this.needsFollowUpFrame = true;
             } else if (difference === 'zoom' || difference === 'sourceTiles') {
-                staleTiles.push(tile);
+                if (staleTileReleased) this.needsFollowUpFrame = true;
+                else tile.releaseRTT(this.painter);
+                staleTileReleased = true;
             } else {
                 tile.releaseRTT(this.painter);
             }
         }
-        const [nearestStaleTile, ...laterStaleTiles] = staleTiles;
-        nearestStaleTile?.releaseRTT(this.painter);
-        if (laterStaleTiles.length > 0) this.needsFollowUpFrame = true;
     }
 
     /**
