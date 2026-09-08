@@ -20,6 +20,7 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
     tileSize?: number;
     /**
      * How a tile response with an empty body, or a 404, is handled, see {@link EmptyTileBehavior}.
+     * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
      */
     emptyTileBehavior?: EmptyTileBehavior;
 };
@@ -75,6 +76,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
+    emptyTileBehavior: EmptyTileBehavior;
     promoteId: PromoteIdSpecification;
 
     _options: VectorTileSourceOptions;
@@ -99,6 +101,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
+        this.emptyTileBehavior = 'transparent';
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -261,7 +264,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         // A 404 (no data) and an empty body such as a 204 (`emptyBody`) both mean there is nothing to draw.
         // Under `emptyTileBehavior: 'missing'` the tile is left without data, expiry or etag, like a raster 404.
         const noContent = !data || (data.etagUnmodified !== true && data.emptyBody);
-        if (noContent && this._options.emptyTileBehavior === 'missing') {
+        if (noContent && this.emptyTileBehavior === 'missing') {
             tile.state = 'errored';
         } else {
             this._afterTileLoadWorkerResponse(tile, data);

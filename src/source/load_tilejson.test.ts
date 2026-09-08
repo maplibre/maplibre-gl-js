@@ -6,6 +6,7 @@ import {ABORT_ERROR} from '../util/abort_error.ts';
 import {sleep} from '../util/test/util.ts';
 
 import type {RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {RasterTileSourceOptions} from './raster_tile_source.ts';
 
 describe('loadTileJson', () => {
     let server: FakeServer;
@@ -113,6 +114,49 @@ describe('loadTileJson', () => {
             minzoom: options.minzoom,
             tiles: options.tiles,
         });
+    });
+
+    test('reads emptyTileBehavior from the TileJSON', async () => {
+        const options = {
+            type: 'raster',
+            url: 'http://example.com/test.json',
+        } satisfies RasterTileSourceOptions;
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
+                tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+                emptyTileBehavior: 'missing',
+            }));
+        });
+
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
+
+        expect(result.emptyTileBehavior).toBe('missing');
+    });
+
+    test('the emptyTileBehavior option wins over the TileJSON', async () => {
+        const options = {
+            type: 'raster',
+            url: 'http://example.com/test.json',
+            emptyTileBehavior: 'transparent',
+        } satisfies RasterTileSourceOptions;
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
+                tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+                emptyTileBehavior: 'missing',
+            }));
+        });
+
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
+
+        expect(result.emptyTileBehavior).toBe('transparent');
     });
 
     test('excludes non-TileJSON data', async () => {

@@ -336,6 +336,29 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
+    test('emptyTileBehavior missing in the TileJSON applies to a source that does not set it', async () => {
+        server.respondWith('/source.json', JSON.stringify({...fixturesSource, emptyTileBehavior: 'missing'}));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.loadVectorData).not.toHaveBeenCalled();
+    });
+
     test('a 404 with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [404, {}, '']);

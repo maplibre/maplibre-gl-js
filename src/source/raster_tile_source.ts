@@ -23,6 +23,7 @@ import type {
 export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
     /**
      * How a tile response with an empty body is handled, see {@link EmptyTileBehavior}.
+     * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
      */
     emptyTileBehavior?: EmptyTileBehavior;
 };
@@ -66,6 +67,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     url: string;
     scheme: string;
     tileSize: number;
+    emptyTileBehavior: EmptyTileBehavior;
 
     bounds: [number, number, number, number];
     tileBounds: TileBounds;
@@ -91,6 +93,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         this.roundZoom = true;
         this.scheme = 'xyz';
         this.tileSize = 512;
+        this.emptyTileBehavior = 'transparent';
         this._loaded = false;
         this._premultiplyAlpha = true;
 
@@ -232,7 +235,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
             if (response) {
                 // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'missing'` is left without data
                 // or expiry, like a 404, so a loaded tile from another zoom level shows in its place.
-                if (!response.data && this._options.emptyTileBehavior === 'missing') {
+                if (!response.data && this.emptyTileBehavior === 'missing') {
                     tile.state = 'errored';
                     return;
                 }

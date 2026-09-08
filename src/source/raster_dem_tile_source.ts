@@ -67,7 +67,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             if (response) {
                 // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'missing'` is left without data
                 // or expiry, like a 404, so another zoom level supplies the elevation.
-                if (!response.data && this._options.emptyTileBehavior === 'missing') {
+                if (!response.data && this.emptyTileBehavior === 'missing') {
                     tile.state = 'errored';
                     return;
                 }
