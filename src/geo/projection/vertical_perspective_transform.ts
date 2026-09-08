@@ -13,7 +13,7 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -576,6 +576,10 @@ export class VerticalPerspectiveTransform implements ITransform {
         const surface = createVec3f64();
         vec3.normalize(surface, this._cameraPosition);
         return sphereSurfacePointToCoordinates(surface);
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._helper.worldCoordinateHelper;
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
