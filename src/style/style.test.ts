@@ -3775,11 +3775,7 @@ describe('Style.hasTransitions', () => {
         expect(style.light.hasTransition()).toBe(true);
     });
 
-    // A `global-state` expression reads the live global state object, so both ends of a transition
-    // evaluate to the same new value and there is nothing to interpolate. Opening one would only
-    // hold `idle` off. The new value still reaches the sky, through the recalculation that the
-    // global state change triggers anyway.
-    test('does not transition the sky when a global state property it reads changes, but still applies the value', async () => {
+    test('applies a global state change to the sky without opening a transition', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             state: {c: {default: '#ff0000'}},
