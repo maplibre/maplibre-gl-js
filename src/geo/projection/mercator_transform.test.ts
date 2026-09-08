@@ -68,6 +68,44 @@ describe('transform', () => {
         }).not.toThrow();
     });
 
+    test('does not throw on a zero size', () => {
+        for (const [width, height] of [[0, 500], [500, 0], [0, 0]]) {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+            expect(() => transform.resize(width, height)).not.toThrow();
+            expect(transform.width).toBe(width);
+            expect(transform.height).toBe(height);
+        }
+    });
+
+    test('does not throw when a sized transform is resized to a zero width', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        expect(() => transform.resize(0, 500)).not.toThrow();
+        expect(() => transform.setZoom(3)).not.toThrow();
+    });
+
+    test('calculates matrices again once a zero width becomes a real size', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(0, 500);
+        transform.setZoom(5);
+        transform.setPitch(30);
+        transform.setBearing(45);
+        transform.setCenter(new LngLat(10, 20));
+        transform.resize(500, 500);
+
+        const expected = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        expected.resize(500, 500);
+        expected.setZoom(5);
+        expected.setPitch(30);
+        expected.setBearing(45);
+        expected.setCenter(new LngLat(10, 20));
+
+        expect([...transform.modelViewProjectionMatrix]).toEqual([...expected.modelViewProjectionMatrix]);
+        expect([...transform.cameraPosition]).toEqual([...expected.cameraPosition]);
+        expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 10, lat: 20});
+        expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual(fixedCoord(expected.screenPointToMercatorCoordinate(new Point(250, 250))));
+    });
+
     test('setLocationAt', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
