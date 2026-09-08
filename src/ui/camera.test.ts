@@ -5,7 +5,6 @@ import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
 import {setMatchMedia} from '../util/test/util.ts';
-import {mercatorZfromAltitude} from '../geo/mercator_coordinate.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
@@ -60,75 +59,6 @@ async function simulateAllAnimationFrames(stub: ReturnType<typeof vi.spyOn>, cam
         queue.run();
     }
 }
-
-describe('calculateCameraOptionsFromTo', () => {
-    // Choose initial zoom to avoid center being constrained by mercator latitude limits.
-    const {camera} = createCamera(null, false, {zoom: 1});
-
-    test('look at north', () => {
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 1, lat: 1});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.center).toBeDefined();
-        expect(cameraOptions.bearing).toBeCloseTo(0);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('look at west', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.bearing).toBeCloseTo(-90);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 45', () => {
-        // altitude same as grounddistance => 45°
-        // distance between lng x and lng x+1 is 111.2km at same lat
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(45);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 90', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(90);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 153.435', () => {
-
-        // distance between lng x and lng x+1 is 111.2km at same lat
-        // (elevation difference of cam and center) / 2 = grounddistance =>
-        // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 (looking up) = 153.435
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(153.435);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('zoom distance 1000', () => {
-        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / camera.transform.tileSize);
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
-
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
-        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(Math.hypot(111200, 111200), 0) / camera.transform.tileSize);
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
-
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('same To as From error', () => {
-        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow('Can\'t calculate camera options with same From and To');
-    });
-});
 
 describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.

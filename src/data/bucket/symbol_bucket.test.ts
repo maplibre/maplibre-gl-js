@@ -1,5 +1,4 @@
 import {describe, test, expect, vi, beforeAll} from 'vitest';
-import {SymbolBucket} from './symbol_bucket.ts';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
@@ -130,9 +129,9 @@ describe('SymbolBucket', () => {
 
     test('SymbolBucket integer overflow', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        SymbolBucket.MAX_GLYPHS = 5;
-
         const bucket = bucketSetup();
+        bucket.maxGlyphs = 5;
+
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(features, options, undefined);
