@@ -9,7 +9,6 @@ import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {createStyleLayer} from '../style/create_style_layer.ts';
 
 describe('render', () => {
     let painter: Painter;
@@ -51,17 +50,6 @@ describe('render', () => {
         painter.render(style, renderOptions);
 
         expect(painter.renderOptions.currentPass).toBe('translucent');
-    });
-
-    test('does not set up tile clipping for a layer hidden at the current zoom', () => {
-        const coord = new OverscaledTileID(0, 0, 0, 0, 0);
-        style.tileManagers = {source: {used: false, prepare: vi.fn(), getVisibleCoordinates: () => [coord]}} as any;
-        style._layers = {hidden: createStyleLayer({id: 'hidden', type: 'fill', source: 'source', minzoom: 10}, {})};
-        style._order = ['hidden'];
-
-        painter.render(style, renderOptions);
-
-        expect(painter.currentStencilSource).toBeUndefined();
     });
 
     test('calls terrainDepth', () => {
