@@ -715,8 +715,6 @@ export class MercatorTransform implements ITransform {
     }
 
     _calcMatrices(): void {
-        if (!this._helper._height) return;
-
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;

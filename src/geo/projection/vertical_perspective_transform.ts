@@ -463,10 +463,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     private _calcMatrices(): void {
-        if (!this._helper._width || !this._helper._height) {
-            return;
-        }
-
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
