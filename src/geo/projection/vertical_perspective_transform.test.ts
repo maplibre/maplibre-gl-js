@@ -258,7 +258,7 @@ describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
 });
 
 describe('VerticalPerspectiveTransform.isLocationBehindTerrain', () => {
-    // The z12 tile just north of the equator at the prime meridian; its 8 DEM cells per side are about 1.2 km wide.
+    // A z12 tile just north of the equator at the prime meridian, with 8 DEM cells of about 1.2 km per side.
     const tileID = new OverscaledTileID(12, 0, 12, 2048, 2047);
     const tileSpan = 360 / (1 << 12);
     // A ridge across the third and fourth DEM rows from the north, flat ground everywhere else.

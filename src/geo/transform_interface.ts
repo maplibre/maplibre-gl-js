@@ -380,16 +380,15 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Whether terrain hides a location from the camera. The ray through the location's screen point is walked over
-     * the loaded DEM tiles, from where it enters the terrain's elevation band to {@link TERRAIN_OCCLUSION_MARGIN} short of
-     * the location, and the location is behind terrain when the ray dips below the surface on the way. A CPU test with
-     * no depth-buffer readback, which is what makes it cheap enough for markers.
+     * Whether terrain hides a location from the camera.
+     * The ray through the location's screen point is walked over the loaded DEM tiles, and the location is hidden
+     * when the ray dips below the surface before reaching it.
      * @param p - the location's screen point
      * @param lngLat - the location
      * @param elevation - the location's elevation in meters
      * @param terrain - the terrain
-     * @returns true when terrain lies between the camera and the location, or when the location is behind the camera or beyond the far plane;
-     * false when the location is in view or the terrain has no renderable tiles
+     * @returns true when terrain lies between the camera and the location, and also when the location is behind the camera
+     * or beyond the far plane. False when the location is in view or the terrain has no renderable tiles.
      */
     isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean;
 

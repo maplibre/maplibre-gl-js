@@ -702,7 +702,7 @@ export class Marker extends Evented<MarkerEventType> {
 
         const transform = this._map._camera.transform;
 
-        // Walk the camera ray to the marker's base over the DEM: a CPU test, no depth-buffer readback
+        // Is terrain between the camera and the marker's base?
         const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
         if (!transform.isLocationBehindTerrain(this._pos, this._lngLat, elevation, terrain)) {
             this._element.style.opacity = this._opacity;
