@@ -3960,3 +3960,45 @@ describe('zoomSnap', () => {
         expect(camera.getZoom()).toBe(10.0);
     });
 });
+
+describe('camera options given as undefined are treated as absent', () => {
+    const state = (camera: Camera) => ({
+        zoom: camera.getZoom(),
+        bearing: camera.getBearing(),
+        pitch: camera.getPitch(),
+        roll: camera.getRoll(),
+        elevation: camera.transform.elevation
+    });
+    const start = {zoom: 3, bearing: 30, pitch: 40, roll: 5, elevation: 100};
+    function cameraAtStart() {
+        const {camera} = createCamera({maxPitch: 60});
+        camera.jumpTo({center: [10, 20], ...start});
+        return camera;
+    }
+    const undefinedOptions = {zoom: undefined, bearing: undefined, pitch: undefined, roll: undefined, elevation: undefined, padding: undefined};
+
+    test('jumpTo', () => {
+        const camera = cameraAtStart();
+        camera.jumpTo(undefinedOptions);
+        expect(state(camera)).toEqual(start);
+    });
+
+    test('jumpTo with zoom snapping', () => {
+        const {camera} = createCamera({zoomSnap: 1});
+        camera.jumpTo({zoom: 3});
+        camera.jumpTo({zoom: undefined});
+        expect(camera.getZoom()).toBe(3);
+    });
+
+    test('easeTo', () => {
+        const camera = cameraAtStart();
+        camera.easeTo({...undefinedOptions, duration: 0});
+        expect(state(camera)).toEqual(start);
+    });
+
+    test('flyTo', () => {
+        const camera = cameraAtStart();
+        camera.flyTo({...undefinedOptions, center: [10, 20], animate: false});
+        expect(state(camera)).toEqual(start);
+    });
+});
