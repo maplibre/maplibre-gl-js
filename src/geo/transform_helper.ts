@@ -565,25 +565,27 @@ export class TransformHelper implements ITransformGetters {
      * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
      * This function should update the transform's internal data, such as matrices.
      * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
+     * While either dimension is zero there is no view to build, so the derived function is not called at all.
      */
     private _calcMatrices(): void {
-        if (this._width && this._height) {
-            this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-
-            let m = mat4.identity(new Float64Array(16));
-            mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
-            mat4.translate(m, m, [1, -1, 0]);
-            this._clipSpaceToPixelsMatrix = m;
-
-            m = mat4.identity(new Float64Array(16));
-            mat4.scale(m, m, [1, -1, 1]);
-            mat4.translate(m, m, [-1, -1, 0]);
-            mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-            this._pixelsToClipSpaceMatrix = m;
-            const halfFov = this.fovInRadians / 2;
-            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
-        }
         this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        if (!this._width || !this._height) {
+            return;
+        }
+        this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
+
+        let m = mat4.identity(new Float64Array(16));
+        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
+        mat4.translate(m, m, [1, -1, 0]);
+        this._clipSpaceToPixelsMatrix = m;
+
+        m = mat4.identity(new Float64Array(16));
+        mat4.scale(m, m, [1, -1, 1]);
+        mat4.translate(m, m, [-1, -1, 0]);
+        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
+        this._pixelsToClipSpaceMatrix = m;
+        const halfFov = this.fovInRadians / 2;
+        this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._callbacks.calcMatrices();
     }
 

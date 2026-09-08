@@ -36,6 +36,34 @@ function createGlobeTransform() {
 }
 
 describe('GlobeTransform', () => {
+    describe('zero size', () => {
+        test('does not throw when cloned at a zero size', () => {
+            for (const [width, height] of [[0, 480], [640, 0]]) {
+                const globeTransform = new GlobeTransform();
+                globeTransform.resize(width, height);
+                expect(() => globeTransform.clone()).not.toThrow();
+            }
+        });
+
+        test('calculates matrices again once a zero width becomes a real size', () => {
+            const globeTransform = new GlobeTransform();
+            globeTransform.resize(0, 480);
+            globeTransform.setZoom(3);
+            globeTransform.setCenter(new LngLat(10, 20));
+            const resized = globeTransform.clone();
+            resized.resize(640, 480, true);
+
+            const expected = new GlobeTransform();
+            expected.resize(640, 480);
+            expected.setZoom(3);
+            expected.setCenter(new LngLat(10, 20));
+
+            expect([...resized.modelViewProjectionMatrix]).toEqual([...expected.modelViewProjectionMatrix]);
+            expect(resized.screenPointToLocation(new Point(320, 240)).lng).toBeCloseTo(10, 6);
+            expect(resized.screenPointToLocation(new Point(320, 240)).lat).toBeCloseTo(20, 6);
+        });
+    });
+
     describe('getProjectionData', () => {
         const globeTransform = createGlobeTransform();
         test('mercator tile extents are set', () => {

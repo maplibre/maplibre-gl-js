@@ -1,10 +1,20 @@
 import {type OverscaledTileID} from '../tile/tile_id.ts';
 
 /**
- * Immutable value describing the state a render-to-texture tile's textures
- * were rendered from: the source tiles drawn into them, the source data
- * revision, and the map zoom at render time (zoom-dependent style properties
- * are evaluated then).
+ * What a render-to-texture tile's textures differ in from the state this frame would render them from,
+ * least to most severe: `zoom` (the same layers and source tiles, evaluated at another zoom), `sourceTiles`
+ * (other source tiles under the terrain tile), `visibleLayers` (a layer entered or left its zoom range) and
+ * `revision` (the source data changed, or the textures were rendered without this source).
+ *
+ * @internal
+ */
+export const RTT_DIFFERENCES = ['none', 'zoom', 'sourceTiles', 'visibleLayers', 'revision'] as const;
+export type RTTDifference = typeof RTT_DIFFERENCES[number];
+
+/**
+ * Immutable value describing the state a render-to-texture tile's textures were rendered from: the source
+ * tiles drawn into them, the source data revision, the map zoom (zoom-dependent style properties are
+ * evaluated then) and the ids of the layers visible at that zoom.
  *
  * @internal
  */
@@ -12,24 +22,23 @@ export class RTTFingerprint {
     private readonly _tileKeys: string;
     private readonly _revision: number;
     private readonly _zoom: number;
+    private readonly _visibleLayerIds: string;
 
-    constructor(coords: OverscaledTileID[], revision: number, zoom: number) {
+    constructor(coords: OverscaledTileID[], revision: number, zoom: number, visibleLayerIds: string) {
         this._tileKeys = coords.map(c => c.key).sort().join();
         this._revision = revision;
         this._zoom = zoom;
-    }
-
-    equals(other: RTTFingerprint | undefined): boolean {
-        return this.equalsIgnoringZoom(other) && this._zoom === other._zoom;
+        this._visibleLayerIds = visibleLayerIds;
     }
 
     /**
-     * Returns whether the source tiles and revision match, without comparing zoom.
-     * Used to keep a texture on screen while the zoom is still changing and only
-     * re-render it once the zoom has settled.
+     * The most severe difference between this fingerprint and the one the textures were rendered from,
+     * `none` when they match. A missing fingerprint counts as a revision difference.
      */
-    equalsIgnoringZoom(other: RTTFingerprint | undefined): boolean {
-        if (other === undefined) return false;
-        return this._tileKeys === other._tileKeys && this._revision === other._revision;
+    difference(other: RTTFingerprint | undefined): RTTDifference {
+        if (this._revision !== other?._revision) return 'revision';
+        if (this._visibleLayerIds !== other._visibleLayerIds) return 'visibleLayers';
+        if (this._tileKeys !== other._tileKeys) return 'sourceTiles';
+        return this._zoom === other._zoom ? 'none' : 'zoom';
     }
 }
