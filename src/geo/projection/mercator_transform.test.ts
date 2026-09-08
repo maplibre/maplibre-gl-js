@@ -458,16 +458,57 @@ describe('transform', () => {
         expect(inFrontOfCamera.y).toBeCloseTo(244.4, 1);
     });
 
-    test('locationToScreenPoint returns Number.MAX_VALUE for a location behind the camera', () => {
+    test('locationToScreenPoint puts a location behind the camera below the viewport', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(512, 512);
         transform.setZoom(10);
         transform.setCenter(new LngLat(0, 0));
         transform.setPitch(80);
 
+        // The camera looks north, so a location south of it left the screen through the bottom edge.
         const behindCamera = transform.locationToScreenPoint(new LngLat(0, -2));
-        expect(behindCamera.x).toBe(Number.MAX_VALUE);
-        expect(behindCamera.y).toBe(Number.MAX_VALUE);
+        expect(behindCamera.x).toBeCloseTo(256, 6);
+        expect(behindCamera.y).toBeCloseTo(1024, 6);
+    });
+
+    test('locationToScreenPoint puts a location behind and beside the camera outside the nearest side edge', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setPitch(80);
+
+        // West of a north-facing camera is the left side of the screen.
+        const behindLeft = transform.locationToScreenPoint(new LngLat(-2, -2));
+        expect(behindLeft.x).toBeCloseTo(-512, 6);
+        expect(behindLeft.y).toBeGreaterThan(256);
+        expect(behindLeft.y).toBeLessThan(1024);
+
+        const behindRight = transform.locationToScreenPoint(new LngLat(2, -2));
+        expect(behindRight.x).toBeCloseTo(1024, 6);
+        expect(behindRight.y).toBeCloseTo(behindLeft.y, 6);
+
+        // A location only slightly west still leaves through the bottom edge, left of centre.
+        const behindSlightlyLeft = transform.locationToScreenPoint(new LngLat(-0.2, -2));
+        expect(behindSlightlyLeft.y).toBeCloseTo(1024, 6);
+        expect(behindSlightlyLeft.x).toBeLessThan(256);
+        expect(behindSlightlyLeft.x).toBeGreaterThan(-512);
+    });
+
+    test('coordinatePoint puts a coordinate exactly behind the camera straight below the viewport', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+
+        // A pixel matrix that maps every coordinate onto the screen centre with w = -1.
+        const pixelMatrix = mat4.fromValues(
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            -256, -256, 0, -1);
+
+        const exactlyBehind = transform.coordinatePoint(new MercatorCoordinate(0.5, 0.5), 0, pixelMatrix);
+        expect(exactlyBehind.x).toBe(256);
+        expect(exactlyBehind.y).toBe(1024);
     });
 
     test('getCameraLngLat', () => {

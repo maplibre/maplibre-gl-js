@@ -14,6 +14,9 @@ type MapOptions = {
     renderWorldCopies?: boolean;
 };
 
+// The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
+const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
+
 function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
@@ -1112,8 +1115,10 @@ describe('marker', () => {
             .setLngLat([0, -2])
             .addTo(map);
 
-        expect(marker._pos.x).toBeGreaterThan(map.getContainer().clientWidth);
-        expect(marker._pos.y).toBeGreaterThan(map.getContainer().clientHeight);
+        const [, x, y] = marker.getElement().style.transform.match(translateRegex);
+        expect(parseFloat(x)).toBeGreaterThanOrEqual(0);
+        expect(parseFloat(x)).toBeLessThanOrEqual(map.getContainer().clientWidth);
+        expect(parseFloat(y)).toBeGreaterThan(map.getContainer().clientHeight);
 
         map.remove();
     });

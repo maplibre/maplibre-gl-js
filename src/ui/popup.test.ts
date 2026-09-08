@@ -8,6 +8,8 @@ import {type PositionAnchor} from './anchor.ts';
 
 const containerWidth = 512;
 const containerHeight = 512;
+// The pixel translate of a popup element: `translate(-50%,-100%) translate(10px,20px)`
+const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
 
 function createMap(options?) {
     options ||= {};
@@ -382,8 +384,10 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup._pos.x).toBeGreaterThan(containerWidth);
-        expect(popup._pos.y).toBeGreaterThan(containerHeight);
+        const [, x, y] = popup.getElement().style.transform.match(translateRegex);
+        expect(parseFloat(x)).toBeGreaterThanOrEqual(0);
+        expect(parseFloat(x)).toBeLessThanOrEqual(containerWidth);
+        expect(parseFloat(y)).toBeGreaterThan(containerHeight);
 
         map.remove();
     });

@@ -479,18 +479,35 @@ export class MercatorTransform implements ITransform {
      * @param coord - the coordinates
      * @param elevation - the elevation
      * @param pixelMatrix - the pixel matrix
-     * @returns screen point, or a point holding `Number.MAX_VALUE` in both components
-     * when the coordinate is behind camera
+     * @returns screen point. Point will be outside the viewport if the coordinate is behind the camera.
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         const w = p[3];
-        if (w <= 0) {
-            // Behind the camera plane, so no pixel corresponds to this coordinate.
-            return new Point(Number.MAX_VALUE, Number.MAX_VALUE);
+        if (w > 0) {
+            return new Point(p[0] / w, p[1] / w);
         }
-        return new Point(p[0] / w, p[1] / w);
+        return this._offScreenPointBehindCamera(p[0], p[1], w);
+    }
+
+    private _offScreenPointBehindCamera(x: number, y: number, w: number): Point {
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const dx = x - cx * w;
+        let dy = y - cy * w;
+        if (dx === 0 && dy === 0) {
+            // Exactly behind the camera: no direction to leave through, so use straight down.
+            dy = 1;
+        }
+        // Scale the direction so the point lands on the boundary of the viewport enlarged by one
+        // viewport size on each side, on whichever edge the ray from the centre reaches first.
+        const halfExtentX = cx + this.width;
+        const halfExtentY = cy + this.height;
+        const scale = Math.min(
+            dx !== 0 ? halfExtentX / Math.abs(dx) : Infinity,
+            dy !== 0 ? halfExtentY / Math.abs(dy) : Infinity);
+        return new Point(cx + dx * scale, cy + dy * scale);
     }
 
     getBounds(): LngLatBounds {
