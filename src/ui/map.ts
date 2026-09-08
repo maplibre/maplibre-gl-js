@@ -389,6 +389,7 @@ export type MapOptions = {
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
+     * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
      * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
@@ -1523,6 +1524,7 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
+     * Under `globe` and `vertical-perspective` the calculation follows the sphere while the map renders as a globe, keeping the point looked at on the sea-level sphere; `altitudeTo` only becomes the center elevation.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
@@ -1544,7 +1546,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform);
         }
-        return this._camera.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        return this._camera.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1631,6 +1633,8 @@ export class Map extends Evented<MapEventType> {
      * @internal
      * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
+     * Warns once when the ratio is scaled down. The message carries no sizes: this runs on every
+     * resize and `warnOnce` de-duplicates by message, so sizes would warn on every drag frame.
      */
     _getClampedPixelRatio(width: number, height: number): number {
         const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
@@ -1642,7 +1646,13 @@ export class Map extends Evented<MapEventType> {
         const widthScaleFactor = canvasWidth > maxCanvasWidth ? (maxCanvasWidth / canvasWidth) : 1;
         const heightScaleFactor = canvasHeight > maxCanvasHeight ? (maxCanvasHeight / canvasHeight) : 1;
 
-        return Math.min(widthScaleFactor, heightScaleFactor) * pixelRatio;
+        const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
+
+        if (scaleFactor < 1) {
+            warnOnce('The canvas is larger than maxCanvasSize and is rendered at a lower pixel ratio to fit. Increase maxCanvasSize, within MAX_TEXTURE_SIZE, to render at full resolution.');
+        }
+
+        return scaleFactor * pixelRatio;
     }
 
     /**

@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util.ts';
+import {extend, wrap, defaultEasing, pick, evaluateZoomSnap} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -7,7 +7,6 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
 
@@ -637,7 +636,7 @@ export class Camera extends Evented<MapEventType> {
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
 
-        if ('zoom' in options && this._zoomSnap) {
+        if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
 
@@ -654,21 +653,21 @@ export class Camera extends Evented<MapEventType> {
 
         const zoomChanged = tr.zoom !== oldZoom;
 
-        if ('elevation' in options && tr.elevation !== +options.elevation) {
+        if (options.elevation !== undefined && tr.elevation !== +options.elevation) {
             tr.setElevation(+options.elevation);
         }
 
-        if ('bearing' in options && tr.bearing !== +options.bearing) {
+        if (options.bearing !== undefined && tr.bearing !== +options.bearing) {
             bearingChanged = true;
             tr.setBearing(+options.bearing);
         }
 
-        if ('pitch' in options && tr.pitch !== +options.pitch) {
+        if (options.pitch !== undefined && tr.pitch !== +options.pitch) {
             pitchChanged = true;
             tr.setPitch(+options.pitch);
         }
 
-        if ('roll' in options && tr.roll !== +options.roll) {
+        if (options.roll !== undefined && tr.roll !== +options.roll) {
             rollChanged = true;
             tr.setRoll(+options.roll);
         }
@@ -708,32 +707,6 @@ export class Camera extends Evented<MapEventType> {
         return this.fire(new MapMovementEvent('moveend', eventData));
     }
 
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
-        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMercator.x - fromMercator.x;
-        const dy = toMercator.y - fromMercator.y;
-        const dz = toMercator.z - fromMercator.z;
-
-        const distance3D = Math.hypot(dx, dy, dz);
-        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
-
-        const groundDistance = Math.hypot(dx, dy);
-
-        const zoom = scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
-        const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
-        let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
-        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
-
-        return {
-            center: toMercator.toLngLat(),
-            elevation: altitudeTo,
-            zoom,
-            pitch,
-            bearing
-        };
-    }
-
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
         const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
         return {
@@ -755,7 +728,7 @@ export class Camera extends Evented<MapEventType> {
             easing: defaultEasing
         }, options);
 
-        if ('zoom' in options && this._zoomSnap) {
+        if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
 
@@ -767,10 +740,10 @@ export class Camera extends Evented<MapEventType> {
         const startBearing = this.getBearing(),
             startPitch = tr.pitch,
             startRoll = tr.roll,
-            bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
-            pitch = 'pitch' in options ? +options.pitch : startPitch,
-            roll = 'roll' in options ? this._normalizeBearing(options.roll, startRoll) : startRoll,
-            padding = ('padding' in options ? options.padding : tr.padding) as PaddingOptions;
+            bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
+            pitch = options.pitch !== undefined ? +options.pitch : startPitch,
+            roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll,
+            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
         const offsetAsPoint = Point.convert(options.offset);
 
         let around, aroundPoint;
@@ -915,8 +888,7 @@ export class Camera extends Evented<MapEventType> {
         const cameraAltitude = tr.getCameraAltitude();
         const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
-            const newCamera = this.calculateCameraOptionsFromTo(
-                cameraLngLat, minAltitude, tr.center, tr.elevation);
+            const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
             return {
                 pitch: newCamera.pitch,
                 zoom: newCamera.zoom,
@@ -1037,7 +1009,7 @@ export class Camera extends Evented<MapEventType> {
             easing: defaultEasing
         }, options);
 
-        if ('zoom' in options && this._zoomSnap) {
+        if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
 
@@ -1047,10 +1019,10 @@ export class Camera extends Evented<MapEventType> {
             startRoll = tr.roll,
             startPadding = tr.padding;
 
-        const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
-        const pitch = 'pitch' in options ? +options.pitch : startPitch;
-        const roll = 'roll' in options ? this._normalizeBearing(options.roll, startRoll) : startRoll;
-        const padding = ('padding' in options ? options.padding : tr.padding) as PaddingOptions;
+        const bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
+        const pitch = options.pitch !== undefined ? +options.pitch : startPitch;
+        const roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll;
+        const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
 
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
@@ -1132,10 +1104,10 @@ export class Camera extends Evented<MapEventType> {
             w = (s) => Math.exp(k * rho * s);
         }
 
-        if ('duration' in options) {
+        if (options.duration !== undefined) {
             options.duration = +options.duration;
         } else {
-            const V = 'screenSpeed' in options ? +options.screenSpeed / rho : +options.speed;
+            const V = options.screenSpeed !== undefined ? +options.screenSpeed / rho : +options.speed;
             options.duration = 1000 * S / V;
         }
 
