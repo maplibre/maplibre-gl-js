@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `map.setSky()` silently keeping the old sky and firing no `error` event when the value included a `-transition` key ([#8375](https://github.com/maplibre/maplibre-gl-js/issues/8375)) (by [@Yasser-Ameur](https://github.com/Yasser-Ameur))
 - Fix queued GeoJSON `updateData` property removals throwing after geometry-only updates or retaining previously updated values ([#8372](https://github.com/maplibre/maplibre-gl-js/pull/8372)) (by [@jokrasno](https://github.com/jokrasno))
 - Treat camera options passed as `undefined` as not given in `jumpTo`, `easeTo` and `flyTo`; they were coerced to NaN ([#8373](https://github.com/maplibre/maplibre-gl-js/pull/8373)) (by [@vlumi](https://github.com/vlumi))
 - Fix a `Not implemented.` error that broke panning and zooming when the projection was changed while the camera was moving, on maps with terrain enabled or a `transformCameraUpdate` callback ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
