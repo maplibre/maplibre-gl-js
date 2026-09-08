@@ -258,12 +258,17 @@ describe('hidden layers', () => {
             layers: [
                 {id: 'shared-fill', type: 'fill', source: 'shared'},
                 {id: 'other-fill', type: 'fill', source: 'other'},
-                {id: 'shared-hidden-fill', type: 'fill', source: 'shared', minzoom: 10}
+                {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
             ]
         }});
-        await map.once('idle');
+        const lastSourceToRenderClippingMasks = () => map.painter.currentStencilSource;
 
-        expect(map.painter.currentStencilSource).toBe('other');
+        await map.once('idle');
+        expect(lastSourceToRenderClippingMasks()).toBe('other');
+
+        map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
+        await map.once('idle');
+        expect(lastSourceToRenderClippingMasks()).toBe('shared');
         map.remove();
     });
 });
