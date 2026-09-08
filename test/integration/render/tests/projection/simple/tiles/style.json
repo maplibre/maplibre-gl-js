@@ -1,0 +1,48 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Vector tiles in the built-in simple projection, whose tile 1/1/0 spans lng 0..90 and lat 0..90. Centered on 45,45 at zoom 1, a 512px canvas is exactly that tile: the north-east quarter of the world tile fills the canvas edge to edge, with the equator along the bottom edge and the prime meridian along the left edge. In mercator the same style puts the equator 400px down and the top edge at 80N.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "center": [45, 45],
+  "zoom": 1,
+  "projection": {"type": "simple"},
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 0,
+      "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "maplibre",
+      "source-layer": "water",
+      "paint": {"fill-color": "#4488cc"}
+    },
+    {
+      "id": "landcover",
+      "type": "fill",
+      "source": "maplibre",
+      "source-layer": "landcover",
+      "paint": {"fill-color": "#88cc88"}
+    },
+    {
+      "id": "admin",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "admin",
+      "paint": {"line-color": "#333333", "line-width": 1}
+    }
+  ]
+}

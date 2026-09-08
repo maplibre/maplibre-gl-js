@@ -8,15 +8,26 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import posAttributes from '../../data/pos_attributes.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
+/**
+ * The flat projection. Mercator by default; the factory also builds one under the name of a CRS registered
+ * with `addProjection`, since such tiles already sit in their own quad grid and render exactly like mercator
+ * tiles do, with only the transform's lng/lat mapping differing. Every planar projection shares one shader variant.
+ */
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
+    private readonly _name: string;
 
-    get name(): 'mercator' {
-        return 'mercator';
+    constructor(name: string = 'mercator') {
+        this._name = name;
+    }
+
+    get name(): ProjectionSpecification['type'] {
+        return this._name;
     }
 
     get useSubdivision(): boolean {
