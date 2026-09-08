@@ -1726,6 +1726,8 @@ export class Style extends Evented<MapEventType> {
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}): void {
         this._checkLoaded();
+        if (this._validate(validateStyle.sky, 'sky', skyOptions, null, options)) return;
+
         const sky = this.getSky();
 
         let update = false;
@@ -1744,8 +1746,6 @@ export class Style extends Evented<MapEventType> {
             }
         }
         if (!update) return;
-
-        if (this._validate(validateStyle.sky, 'sky', skyOptions, null, options)) return;
 
         const parameters = {
             now: now(),
