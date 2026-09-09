@@ -164,32 +164,32 @@ describe('calculateCameraOptions', () => {
         expect(result.roll).toBeCloseTo(appliedCamera.getRoll());
     });
 
-    test('keeps an around location at its current point with pitch and bearing', () => {
+    test('keeps an anchor location at its current point with pitch and bearing', () => {
         const {camera} = createCamera(null, false, {center: [0, 0], zoom: 3, pitch: 50, bearing: 35});
-        const around = new LngLat(5, 3);
-        const point = camera.transform.locationToScreenPoint(around);
-        const result = camera.calculateCameraOptions({around, zoom: 6});
+        const anchorLocation = new LngLat(5, 3);
+        const point = camera.transform.locationToScreenPoint(anchorLocation);
+        const result = camera.calculateCameraOptions({anchorLocation, zoom: 6});
         camera.jumpTo(result);
-        const projected = camera.transform.locationToScreenPoint(around);
+        const projected = camera.transform.locationToScreenPoint(anchorLocation);
 
         expect(projected.x).toBeCloseTo(point.x);
         expect(projected.y).toBeCloseTo(point.y);
     });
 
-    test('supports an explicit aroundPoint and validates a missing around', () => {
+    test('supports an explicit anchor screen point and validates a missing anchor location', () => {
         const {camera} = createCamera(null, false, {center: [0, 0], zoom: 3, pitch: 35, bearing: 25});
-        const around = new LngLat(2, 1);
-        const aroundPoint: [number, number] = [100, 150];
-        const projected = camera.transform.locationToScreenPoint(around);
-        expect(Math.hypot(projected.x - aroundPoint[0], projected.y - aroundPoint[1])).toBeGreaterThan(1);
+        const anchorLocation = new LngLat(2, 1);
+        const anchorScreenPoint: [number, number] = [100, 150];
+        const projected = camera.transform.locationToScreenPoint(anchorLocation);
+        expect(Math.hypot(projected.x - anchorScreenPoint[0], projected.y - anchorScreenPoint[1])).toBeGreaterThan(1);
 
-        const result = camera.calculateCameraOptions({around, aroundPoint, zoom: 5});
+        const result = camera.calculateCameraOptions({anchorLocation, anchorScreenPoint, zoom: 5});
         camera.jumpTo(result);
-        const anchored = camera.transform.locationToScreenPoint(around);
+        const anchored = camera.transform.locationToScreenPoint(anchorLocation);
 
-        expect(anchored.x).toBeCloseTo(aroundPoint[0]);
-        expect(anchored.y).toBeCloseTo(aroundPoint[1]);
-        expect(() => camera.calculateCameraOptions({aroundPoint})).toThrow('`aroundPoint` requires `around`');
+        expect(anchored.x).toBeCloseTo(anchorScreenPoint[0]);
+        expect(anchored.y).toBeCloseTo(anchorScreenPoint[1]);
+        expect(() => camera.calculateCameraOptions({anchorScreenPoint})).toThrow('`anchorScreenPoint` requires `anchorLocation`');
     });
 
     test('repeated calculations are independent and preserve world-copy behavior', () => {

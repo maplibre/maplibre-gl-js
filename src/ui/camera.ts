@@ -102,19 +102,20 @@ export type JumpToOptions = CameraOptions & {
 };
 
 /**
-   * Options for {@link Map.calculateCameraOptions}.
-   *
-   * Use `around` to keep a geographic location at its current screen position while zooming or rotating.
-   * Supply `aroundPoint` to keep the `around` location at a specific screen position (e.g. the mouse cursor).
-   */
+ * Options for {@link Map.calculateCameraOptions}.
+ *
+ * Use `anchorLocation` to keep a geographic location at its current screen position while
+ * changing the camera. Supply `anchorScreenPoint` as well to keep that location at a specific
+ * screen position, such as the mouse cursor.
+ */
 export type CameraCalculationOptions = JumpToOptions & {
-    /** The geographic location to keep fixed on screen. */
-    around?: LngLatLike;
+    /** The geographic location to keep fixed on screen while the camera changes. */
+    anchorLocation?: LngLatLike;
     /**
-     * The screen point at which `around` should remain. If omitted, the current
-     * projected screen position of `around` is used. Must not be supplied without `around`.
+     * The screen point at which `anchorLocation` should remain. If omitted, the current projected
+     * screen position of `anchorLocation` is used. Must not be supplied without `anchorLocation`.
      */
-    aroundPoint?: PointLike;
+    anchorScreenPoint?: PointLike;
 };
 
 /** A complete public camera state returned by {@link Map.calculateCameraOptions}. */
@@ -746,8 +747,8 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptions(options: CameraCalculationOptions): CameraState {
-        if (options.aroundPoint !== undefined && options.around === undefined) {
-            throw new Error('`aroundPoint` requires `around` to be specified');
+        if (options.anchorScreenPoint !== undefined && options.anchorLocation === undefined) {
+            throw new Error('`anchorScreenPoint` requires `anchorLocation` to be specified');
         }
 
         this._cameraOptionsTransform ||= this.transform.clone();
@@ -757,9 +758,9 @@ export class Camera extends Evented<MapEventType> {
         const pitch = 'pitch' in options ? +options.pitch : tr.pitch;
         const roll = 'roll' in options ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
         const padding = options.padding ?? tr.padding;
-        const around = options.around === undefined ? undefined : LngLat.convert(options.around);
-        const aroundPoint = around === undefined ? undefined :
-            (options.aroundPoint === undefined ? tr.locationToScreenPoint(around) : Point.convert(options.aroundPoint));
+        const anchorLocation = options.anchorLocation === undefined ? undefined : LngLat.convert(options.anchorLocation);
+        const anchorScreenPoint = anchorLocation === undefined ? undefined :
+            (options.anchorScreenPoint === undefined ? tr.locationToScreenPoint(anchorLocation) : Point.convert(options.anchorScreenPoint));
         let zoom = options.zoom;
         if (zoom !== undefined && this._zoomSnap) zoom = evaluateZoomSnap(+zoom, this._zoomSnap);
 
@@ -773,8 +774,8 @@ export class Camera extends Evented<MapEventType> {
             pitch,
             roll,
             padding,
-            around,
-            aroundPoint,
+            around: anchorLocation,
+            aroundPoint: anchorScreenPoint,
             offsetAsPoint: new Point(0, 0),
             offset: [0, 0],
             zoom,

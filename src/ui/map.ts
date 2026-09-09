@@ -1420,8 +1420,8 @@ export class Map extends Evented<MapEventType> {
      * Calculates the constrained camera state produced by the supplied options without
      * changing the map. Omitted camera properties inherit the current map camera state.
      *
-     * If `around` is supplied without `aroundPoint`, its current projected position is
-     * used. Supplying `aroundPoint` without `around` throws an error.
+     * If `anchorLocation` is supplied without `anchorScreenPoint`, its current projected position
+     * is used. Supplying `anchorScreenPoint` without `anchorLocation` throws an error.
      *
      * @param options - Camera properties and optional geographic/screen anchor.
      * @returns A complete public camera state that can be passed to {@link Map.jumpTo}.
