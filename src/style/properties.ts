@@ -124,7 +124,9 @@ class TransitionablePropertyValue<T, R> {
         this.value = new PropertyValue(property, undefined, rootKey, globalState);
     }
 
+    /** The same `PropertyValue` means `setValue` was never called, so there is nothing to transition to. */
     transitioned(parameters: TransitionParameters, prior: TransitioningPropertyValue<T, R>): TransitioningPropertyValue<T, R> {
+        if (prior.value === this.value) return prior;
         return new TransitioningPropertyValue(this.property, this.value, prior,
             extend({}, parameters.transition, this.transition), parameters.now);
     }
