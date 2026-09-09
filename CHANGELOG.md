@@ -1,10 +1,19 @@
 ## main
 ### ✨ Features and improvements
-- Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
-- Skip clipping masks for layers hidden at the current zoom and stop re-binding dynamic buffers on cached vertex array binds, removing redundant WebGL calls every frame ([#8369](https://github.com/maplibre/maplibre-gl-js/pull/8369))
-- Re-render at most one stale terrain drape per frame and keep drapes that differ only by zoom while the map moves, so a finger lift over terrain no longer re-renders every tile at once ([#8368](https://github.com/maplibre/maplibre-gl-js/pull/8368)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- Add the `emptyTileBehavior` option to vector, raster and raster-dem sources: `missing` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990))
+- Add the `emptyTileBehavior` option to vector, raster and raster-dem sources: `missing` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.9.0
+
+### ✨ Features and improvements
+
+- Improved support for drawing the letters of Devanagari, Khmer, Burmese and the other complex scripts and also draws Arabic and Hebrew labels correctly without loading a right-to-left text plugin, which deprecates `setRTLTextPlugin` and `getRTLTextPluginStatus` ([#8343](https://github.com/maplibre/maplibre-gl-js/pull/8343)) (by [@HarelM](https://github.com/HarelM))
+- Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
+- Skip clipping masks for layers hidden at the current zoom and stop re-binding dynamic buffers on cached vertex array binds, removing redundant WebGL calls every frame ([#8369](https://github.com/maplibre/maplibre-gl-js/pull/8369)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Re-render at most one stale terrain drape per frame and keep drapes that differ only by zoom while the map moves, so a finger lift over terrain no longer re-renders every tile at once ([#8368](https://github.com/maplibre/maplibre-gl-js/pull/8368)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ### 🐞 Bug fixes
 - Fix `setStyle()` throwing while terrain is still loading because an intermediate render tried to compile a terrain shader before the replacement style initialized its projection ([#6824](https://github.com/maplibre/maplibre-gl-js/issues/6824)) (by [@miakh](https://github.com/miakh))
@@ -13,7 +22,8 @@
 - Fix a `Not implemented.` error that broke panning and zooming when the projection was changed while the camera was moving, on maps with terrain enabled or a `transformCameraUpdate` callback ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
 - Fix a map created inside a hidden container staying at the `400x300` fallback size when the container is shown before the resize observer's first notification is delivered ([#8277](https://github.com/maplibre/maplibre-gl-js/issues/8277)) (by [@spliffone](https://github.com/spliffone))
 - Fix `MercatorTransform` throwing when it is resized to a zero width, and skip the matrix calculation of every projection while the transform has a zero width or height ([#8374](https://github.com/maplibre/maplibre-gl-js/pull/8374)) (by [@avosa](https://github.com/avosa))
-- _...Add new stuff here..._
+- Fix every style update opening a redundant sky and light transition, which kept `idle` from firing for the transition duration after the map was otherwise done, and could ease the sky and the light on a different curve from the layers ([#8348](https://github.com/maplibre/maplibre-gl-js/issues/8348)) (by [@cherenkov](https://github.com/cherenkov))
+- Fix DOM sanitization for iframe and srcdoc ([#8396](https://github.com/maplibre/maplibre-gl-js/pull/8396)) (by [@HarelM](https://github.com/HarelM))
 
 ## 6.8.0
 
