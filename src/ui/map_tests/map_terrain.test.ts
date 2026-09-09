@@ -7,6 +7,7 @@ import {type Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {type Map} from '../map.ts';
+import {ImageRequest} from '../../util/image_request.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -68,6 +69,42 @@ describe('setTerrain', () => {
 
         expect(errorSpy).not.toHaveBeenCalled();
         expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
+    });
+
+    test('removing terrain frees the pooled drape textures and the shared framebuffer', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        map.setTerrain({source: 'dem'});
+        const drape = map.painter.acquireRTT(512);
+        vi.spyOn(drape.texture, 'destroy');
+        map.painter.bindRTT(drape);
+        map.painter.releaseRTT(drape);
+
+        map.setTerrain(null);
+
+        expect(drape.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(map.painter._rttSharedFbo).toBeNull();
+    });
+
+    test('frees the drapes a zoom out leaves unused once the map is at rest', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {
+                dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256},
+                land: {type: 'geojson', data: {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]]]}}}
+            },
+            layers: [{id: 'land', type: 'fill', source: 'land'}],
+            terrain: {source: 'dem'}
+        }});
+        await map.once('idle');
+        const terrainTilesAtZoom14 = map.terrain.tileManager.getRenderableTiles().length;
+
+        map.jumpTo({zoom: 0});
+        await map.once('idle');
+
+        expect(map.terrain.tileManager.getRenderableTiles().length).toBeLessThan(terrainTilesAtZoom14);
+        expect(map.painter._rttObjectRecyclePool).toHaveLength(0);
     });
 
     test('drops the previous source attribution when switching terrain to a new source', async () => {
