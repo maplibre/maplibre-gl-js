@@ -128,6 +128,113 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
     });
 });
 
+describe('calculateCameraOptions', () => {
+    test('returns a complete state without changing the camera or firing movement events', () => {
+        const {camera} = createCamera(null, false, {center: [12, 34], zoom: 4, bearing: 20, pitch: 30, roll: 5});
+        const before = camera.calculateCameraOptions({});
+        const move = vi.fn();
+        camera.on('move', move);
+
+        const result = camera.calculateCameraOptions({
+            center: [40, 20], zoom: 7, bearing: 80, pitch: 45, roll: 10,
+            elevation: 123, padding: {top: 1, right: 2, bottom: 3, left: 4}
+        });
+
+        expect(result).toMatchObject({zoom: 7, bearing: 80, pitch: 45, roll: 10, elevation: 123});
+        expect(result.center.lng).toBeCloseTo(40);
+        expect(result.center.lat).toBeCloseTo(20);
+        expect(result.padding).toEqual({top: 1, right: 2, bottom: 3, left: 4});
+        expect(camera.calculateCameraOptions({})).toEqual(before);
+        expect(move).not.toHaveBeenCalled();
+    });
+
+    test('matches the endpoint of easeTo, including constraints and normalization', () => {
+        const options = {center: [190, 89] as [number, number], zoom: 100, bearing: 370, pitch: 100, roll: -350};
+        const initial = {center: [170, 10] as [number, number], zoom: 3, bearing: 5, pitch: 20};
+        const {camera: calculatedCamera} = createCamera(null, false, initial);
+        const {camera: appliedCamera} = createCamera(null, false, initial);
+        const result = calculatedCamera.calculateCameraOptions(options);
+        appliedCamera.easeTo({...options, duration: 0});
+
+        expect(result.center.lng).toBeCloseTo(appliedCamera.getCenter().lng);
+        expect(result.center.lat).toBeCloseTo(appliedCamera.getCenter().lat);
+        expect(result.zoom).toBeCloseTo(appliedCamera.getZoom());
+        expect(result.bearing).toBeCloseTo(appliedCamera.getBearing());
+        expect(result.pitch).toBeCloseTo(appliedCamera.getPitch());
+        expect(result.roll).toBeCloseTo(appliedCamera.getRoll());
+    });
+
+    test('keeps an around location at its current point with pitch and bearing', () => {
+        const {camera} = createCamera(null, false, {center: [0, 0], zoom: 3, pitch: 50, bearing: 35});
+        const around = new LngLat(5, 3);
+        const point = camera.transform.locationToScreenPoint(around);
+        const result = camera.calculateCameraOptions({around, zoom: 6});
+        camera.jumpTo(result);
+        const projected = camera.transform.locationToScreenPoint(around);
+
+        expect(projected.x).toBeCloseTo(point.x);
+        expect(projected.y).toBeCloseTo(point.y);
+    });
+
+    test('supports an explicit aroundPoint and validates a missing around', () => {
+        const {camera} = createCamera(null, false, {center: [0, 0], zoom: 3, pitch: 35, bearing: 25});
+        const around = new LngLat(2, 1);
+        const aroundPoint: [number, number] = [100, 150];
+        const projected = camera.transform.locationToScreenPoint(around);
+        expect(Math.hypot(projected.x - aroundPoint[0], projected.y - aroundPoint[1])).toBeGreaterThan(1);
+
+        const result = camera.calculateCameraOptions({around, aroundPoint, zoom: 5});
+        camera.jumpTo(result);
+        const anchored = camera.transform.locationToScreenPoint(around);
+
+        expect(anchored.x).toBeCloseTo(aroundPoint[0]);
+        expect(anchored.y).toBeCloseTo(aroundPoint[1]);
+        expect(() => camera.calculateCameraOptions({aroundPoint})).toThrow('`aroundPoint` requires `around`');
+    });
+
+    test('repeated calculations are independent and preserve world-copy behavior', () => {
+        const initial = {center: [350, 0] as [number, number], zoom: 3};
+        const {camera} = createCamera({renderWorldCopies: true}, false, initial);
+        const clone = vi.spyOn(camera.transform, 'clone');
+        const options = {center: [-350, 5] as [number, number], zoom: 4};
+        const first = camera.calculateCameraOptions(options);
+        const second = camera.calculateCameraOptions(options);
+        expect(second).toEqual(first);
+        expect(clone).toHaveBeenCalledTimes(1);
+
+        const {camera: appliedCamera} = createCamera({renderWorldCopies: true}, false, initial);
+        appliedCamera.easeTo({...options, duration: 0});
+        expect(first.center.lng).toBeCloseTo(appliedCamera.getCenter().lng);
+    });
+
+    test('matches easeTo under globe projection', () => {
+        const initial = {center: [10, 20] as [number, number], zoom: 2};
+        const {camera: calculatedCamera} = createCamera(null, true, initial);
+        const {camera: appliedCamera} = createCamera(null, true, initial);
+        const options = {center: [70, 35] as [number, number], zoom: 4, bearing: 25};
+        const result = calculatedCamera.calculateCameraOptions(options);
+        appliedCamera.easeTo({...options, duration: 0});
+
+        expect(result.center.lng).toBeCloseTo(appliedCamera.getCenter().lng);
+        expect(result.center.lat).toBeCloseTo(appliedCamera.getCenter().lat);
+        expect(result.zoom).toBeCloseTo(appliedCamera.getZoom());
+    });
+
+    test('uses terrain elevation without mutating the live elevation', () => {
+        const terrain = {
+            getElevationForLngLat: vi.fn(() => 50),
+            getElevationForLngLatZoom: vi.fn(() => -1000)
+        } as unknown as Terrain;
+        const {camera} = createCamera({terrain}, false, {center: [0, 0], zoom: 10});
+        const before = camera.getCenterElevation();
+
+        const result = camera.calculateCameraOptions({center: [1, 1]});
+
+        expect(result.elevation).toBe(50);
+        expect(camera.getCenterElevation()).toBe(before);
+    });
+});
+
 describe('jumpTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const {camera} = createCamera(null, false, {zoom: 1});
