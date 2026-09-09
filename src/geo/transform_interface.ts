@@ -380,9 +380,9 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Whether terrain hides a location from the camera.
-     * The ray through the location's screen point is walked over the loaded DEM tiles, and the location is hidden
-     * when the ray dips below the surface before reaching it.
+     * Whether terrain hides a location from the camera: the ray through the location's screen point hits the rendered
+     * terrain surface (see {@link screenTerrainPointToMercatorCoordinate}) before it reaches the location.
+     * {@link isLocationOccluded} is the planet itself hiding a location; this is the terrain on it.
      * @param p - the location's screen point
      * @param lngLat - the location
      * @param elevation - the location's elevation in meters
@@ -390,7 +390,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @returns true when terrain lies between the camera and the location, and also when the location is behind the camera
      * or beyond the far plane. False when the location is in view or the terrain has no renderable tiles.
      */
-    isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean;
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean;
 
     /**
      * @internal

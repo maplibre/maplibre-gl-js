@@ -438,9 +438,9 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
     }
 
-    /** {@inheritDoc ITransform.isLocationBehindTerrain} */
-    isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
-        return this.currentTransform.isLocationBehindTerrain(p, lngLat, elevation, terrain);
+    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        return this.currentTransform.isLocationOccludedByTerrain(p, lngLat, elevation, terrain);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {

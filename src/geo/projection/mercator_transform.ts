@@ -437,42 +437,17 @@ export class MercatorTransform implements ITransform {
         return null;
     }
 
-    /** {@inheritDoc ITransform.isLocationBehindTerrain} */
-    isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
-        const index = terrain.getCoverageIndex();
-        if (!index) return false;
+    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        if (!terrain.getCoverageIndex()) return false;
 
-        const {near, far} = this.getRaySegmentFromPixel(p);
-        const worldSize = this.worldSize;
-        const dx = far[0] - near[0];
-        const dy = far[1] - near[1];
-        const dz = far[2] - near[2];
+        const segment = this.getRaySegmentFromPixel(p);
         const location = MercatorCoordinate.fromLngLat(lngLat);
-        const lx = location.x * worldSize - near[0];
-        const ly = location.y * worldSize - near[1];
-        const lz = elevation - near[2];
-        const tLocation = (lx * dx + ly * dy + lz * dz) / (dx * dx + dy * dy + dz * dz);
+        const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
         if (tLocation <= 0 || tLocation > 1) return true;
 
-        let tStart = 0;
-        let tEnd = tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
-        if (dz === 0) {
-            if (near[2] > index.maxElevation) return false;
-        } else {
-            const tHigh = (index.maxElevation - near[2]) / dz;
-            const tLow = (index.minElevation - near[2]) / dz;
-            tStart = Math.max(tStart, Math.min(tHigh, tLow));
-            tEnd = Math.min(tEnd, Math.max(tHigh, tLow));
-        }
-        if (tStart >= tEnd) return false;
-
-        const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize};
-        const horizontalLength = Math.hypot(dx, dy);
-        const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_WORLD_STEP_PX), 1, MAX_SAMPLES);
-        for (let i = 0; i <= samples; i++) {
-            if (mercatorIsBelowTerrain(ray, tStart + (tEnd - tStart) * i / samples)) return true;
-        }
-        return false;
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return hit != null && raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     /**
@@ -986,4 +961,15 @@ function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
 
 function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
     return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
+}
+
+/**
+ * Where the point of `segment` closest to the given world pixel position and elevation lies along it,
+ * as the fraction from `near` (0) to `far` (1).
+ */
+function raySegmentParameter({near, far}: RaySegment, worldX: number, worldY: number, elevation: number): number {
+    const dx = far[0] - near[0];
+    const dy = far[1] - near[1];
+    const dz = far[2] - near[2];
+    return ((worldX - near[0]) * dx + (worldY - near[1]) * dy + (elevation - near[2]) * dz) / (dx * dx + dy * dy + dz * dz);
 }

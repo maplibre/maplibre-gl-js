@@ -890,32 +890,17 @@ export class VerticalPerspectiveTransform implements ITransform {
         return !!intersection;
     }
 
-    /** {@inheritDoc ITransform.isLocationBehindTerrain} */
-    isLocationBehindTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
-        const index = terrain.getCoverageIndex();
-        if (!index) return false;
+    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        if (!terrain.getCoverageIndex()) return false;
 
         const origin = this.cameraPosition;
         const direction = this.getRayDirectionFromPixel(p);
-        const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
-        if (!outer) return false;
-        const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
-
-        const location = angularCoordinatesToSurfaceVector(lngLat);
-        vec3.scale(location, location, 1 + elevation / earthRadius);
-        vec3.subtract(location, location, origin);
-        const tLocation = vec3.dot(location, direction);
+        const tLocation = globeRayParameter(origin, direction, lngLat, elevation);
         if (tLocation <= 0) return true;
 
-        const tStart = Math.max(outer.tMin, 0);
-        const tEnd = Math.min(tLocation * (1 - TERRAIN_OCCLUSION_MARGIN), inner ? inner.tMin : outer.tMax);
-        if (tEnd <= tStart) return false;
-
-        const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
-        for (let i = 0; i <= GLOBE_SAMPLES; i++) {
-            if (globeIsBelowTerrain(ray, tStart + (tEnd - tStart) * i / GLOBE_SAMPLES)) return true;
-        }
-        return false;
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return hit != null && globeRayParameter(origin, direction, hit.toLngLat(), hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     /**
@@ -1068,4 +1053,14 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
 function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
     const {sample, radius} = globeSampleAt(ray, t);
     return isBelowTerrainSample(sample, (radius - 1) * earthRadius);
+}
+
+/**
+ * Where the point of the ray closest to the location lies along it, in units of `direction` from `origin`.
+ */
+function globeRayParameter(origin: vec3, direction: vec3, lngLat: LngLat, elevation: number): number {
+    const location = angularCoordinatesToSurfaceVector(lngLat);
+    vec3.scale(location, location, 1 + elevation / earthRadius);
+    vec3.subtract(location, location, origin);
+    return vec3.dot(location, direction);
 }
