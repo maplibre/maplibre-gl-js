@@ -337,7 +337,10 @@ const fakeImages = {
  */
 const fakeGlyphs = {
     'StandardFont-Bold': {
-        e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+        normal: {
+            e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+        },
+        vertical: {}
     }
 };
 

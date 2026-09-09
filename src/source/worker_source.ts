@@ -7,7 +7,7 @@ import type {Bucket} from '../data/bucket.ts';
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {CollisionBoxArray} from '../data/array_types.g.ts';
 import type {DEMEncoding} from '../data/dem_data.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {StyleImage} from '../style/style_image.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {RemoveSourceParams} from '../util/actor_messages.ts';
@@ -85,7 +85,7 @@ export type WorkerTileWithData = ExpiryData & {
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
-    glyphMap?: Record<string, Record<string, StyleGlyph>> | null;
+    glyphMap?: GlyphMap | null;
     iconMap?: {
         [_: string]: StyleImage;
     } | null;

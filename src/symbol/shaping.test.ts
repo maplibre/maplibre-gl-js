@@ -3,10 +3,10 @@ import {toGraphemes} from '../util/graphemes.ts';
 import {type PositionedIcon, type Box, type Shaping, applyTextFit, shapeIcon, fitIconToText, shapeText, WritingMode} from './shaping.ts';
 import {ImagePosition} from '../render/image_atlas.ts';
 import {type StyleImage, TextFit} from '../style/style_image.ts';
-import {Formatted} from '@maplibre/maplibre-gl-style-spec';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap, GlyphVariants, StyleGlyph} from '../style/style_glyph.ts';
 
 describe('applyTextFit', () => {
 
@@ -383,14 +383,14 @@ describe('shapeText vertical glyph orientation', () => {
     }
 
     /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
-    function createStubGlyphMap(text: string): Record<string, StyleGlyph> {
-        const glyphs: Record<string, StyleGlyph> = {};
+    function createStubGlyphMap(text: string): GlyphVariants<Record<string, StyleGlyph>> {
+        const glyphs: GlyphVariants<Record<string, StyleGlyph>> = {normal: {}, vertical: {}};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);
 
         for (const grapheme of [...toGraphemes(text), ...verticalizedChars]) {
-            glyphs[grapheme] = createStubGlyph(grapheme.codePointAt(0));
+            glyphs.normal[grapheme] = createStubGlyph(grapheme.codePointAt(0));
         }
         return glyphs;
     }
@@ -405,6 +405,190 @@ describe('shapeText vertical glyph orientation', () => {
         return (shaping as Shaping).positionedLines.flatMap(line => line.positionedGlyphs.map(
             (glyph): [string, string] => [glyph.grapheme, glyph.vertical ? 'upright' : 'along-line']));
     }
+
+    test.each([false, true])('selects vertical atlas entries only in vertical text (point placement: %s)', (allowVerticalPlacement) => {
+        const text = '（東京タワーぁ）';
+        const glyphs = createStubGlyphMap(text);
+        const positions = {normal: {}, vertical: {}};
+        for (const char of ['（', 'ー', 'ぁ', '）']) {
+            glyphs.vertical[char] = {...createStubGlyph(char.codePointAt(0)), metrics: {...glyphs.normal[char].metrics, width: 3, height: 22}};
+            positions.vertical[char] = {rect: {x: 100, y: 0, w: 10, h: 30}, metrics: glyphs.vertical[char].metrics};
+            positions.normal[char] = {rect: {x: 0, y: 0, w: 20, h: 20}, metrics: glyphs.normal[char].metrics};
+        }
+
+        for (const writingMode of [WritingMode.horizontal, WritingMode.vertical, WritingMode.horizontal] as const) {
+            const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {[fontStack]: positions}, {},
+                fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], writingMode, allowVerticalPlacement, 24, 24) as Shaping;
+            const placed = shaping.positionedLines[0].positionedGlyphs;
+            expect(placed.map(glyph => glyph.grapheme).join('')).toBe(text);
+            for (const char of ['（', 'ー', 'ぁ', '）']) {
+                const glyph = placed.find(glyph => glyph.grapheme === char);
+                const vertical = writingMode === WritingMode.vertical;
+                const variant = vertical ? 'vertical' : 'normal';
+                expect(glyph.vertical).toBe(vertical);
+                expect(glyph.metrics).toEqual(glyphs[variant][char].metrics);
+                expect(glyph.rect).toEqual(positions[variant][char].rect);
+            }
+        }
+    });
+
+    test.each([false, true])('selects Latin and Arabic symbol alternates according to placement (point placement: %s)', (allowVerticalPlacement) => {
+        const text = '小aα小٪小A小';
+        const glyphs = createStubGlyphMap(text);
+        const alternates = ['a', 'α', '٪', 'A'];
+        for (const char of alternates) {
+            glyphs.vertical[char] = {...glyphs.normal[char], metrics: {...glyphs.normal[char].metrics, left: 5}};
+        }
+
+        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, allowVerticalPlacement, 24, 24) as Shaping;
+
+        const selected = shaping.positionedLines[0].positionedGlyphs.filter(glyph => alternates.includes(glyph.grapheme));
+        expect(selected.map(glyph => [glyph.grapheme, glyph.vertical, glyph.metrics.left])).toEqual([
+            ['a', allowVerticalPlacement, allowVerticalPlacement ? 5 : 1],
+            ['α', allowVerticalPlacement, allowVerticalPlacement ? 5 : 1],
+            ['٪', !allowVerticalPlacement, allowVerticalPlacement ? 1 : 5],
+            ['A', true, 5]
+        ]);
+    });
+
+    test('retains punctuation substitution and rotation when vertical forms are unavailable', () => {
+        const glyphs = createStubGlyphMap('（東京タワー）');
+        for (const char of ['（', 'ー', '）']) glyphs.vertical[char] = null;
+
+        const shaping = shapeText(Formatted.fromString('（東京タワー）'), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24);
+
+        expect(getGlyphOrientations(shaping)).toEqual([
+            ['︵', 'upright'], ['東', 'upright'], ['京', 'upright'], ['タ', 'upright'],
+            ['ワ', 'upright'], ['ー', 'along-line'], ['︶', 'upright']
+        ]);
+    });
+
+    test('selects vertical forms from each formatted section without splitting a grapheme', () => {
+        const text = new Formatted([
+            new FormattedSection('𠮷か\u3099（', null, 1, fontStack, null, null),
+            new FormattedSection('𠮷か\u3099（', null, 1, 'Other', null, null)
+        ]);
+        const glyphs = createStubGlyphMap('𠮷か\u3099（');
+        const otherGlyphs = createStubGlyphMap('𠮷か\u3099（');
+        for (const char of ['𠮷', 'か\u3099', '（']) {
+            glyphs.vertical[char] = {...glyphs.normal[char], metrics: {...glyphs.normal[char].metrics, left: 5}};
+        }
+
+        const shaping = shapeText(text, {[fontStack]: glyphs, Other: otherGlyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+
+        expect(shaping.positionedLines[0].positionedGlyphs.map(glyph => [glyph.grapheme, glyph.fontStack, glyph.metrics.left])).toEqual([
+            ['𠮷', fontStack, 5], ['か\u3099', fontStack, 5], ['（', fontStack, 5],
+            ['𠮷', 'Other', 1], ['か\u3099', 'Other', 1], ['︵', 'Other', 1]
+        ]);
+    });
+
+    test('keeps consecutive ellipses upright with and without vertical alternates', () => {
+        const glyphs = createStubGlyphMap('東京……');
+        for (const alternate of [false, true]) {
+            if (alternate) glyphs.vertical['…'] = {...glyphs.normal['…'], metrics: {...glyphs.normal['…'].metrics, left: 5}};
+            const shaping = shapeText(Formatted.fromString('東京……'), {[fontStack]: glyphs}, {}, {},
+                fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+
+            expect(getGlyphOrientations(shaping)).toEqual([
+                ['東', 'upright'], ['京', 'upright'],
+                [alternate ? '…' : '︙', 'upright'], [alternate ? '…' : '︙', 'upright']
+            ]);
+            expect(shaping.positionedLines[0].positionedGlyphs[2].metrics.left).toBe(alternate ? 5 : 1);
+        }
+    });
+
+    test('keeps Latin runs sideways and retains their trailing compatibility punctuation', () => {
+        const text = '東京AB（CD）abc(1)……';
+        const glyphs = createStubGlyphMap(text);
+        for (const char of text) glyphs.vertical[char] = glyphs.normal[char];
+        for (const char of ['（', '）', '(', ')', '…']) {
+            glyphs.vertical[char] = {...glyphs.normal[char], metrics: {...glyphs.normal[char].metrics, left: 5}};
+        }
+
+        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+
+        const run = shaping.positionedLines[0].positionedGlyphs.slice(2);
+        expect(run.map(glyph => [glyph.grapheme, glyph.vertical, glyph.metrics.left])).toEqual([
+            ...[...'AB（CD）abc(1)'].map(char => [char, false, 1]),
+            ['︙', true, 1], ['︙', true, 1]
+        ]);
+    });
+
+    test('retains compatibility punctuation when its alternate belongs to a sideways run', () => {
+        const text = new Formatted([
+            new FormattedSection('東京（', null, 1, fontStack, null, null),
+            new FormattedSection('№A）', null, 1, 'Other', null, null)
+        ]);
+        const glyphs = createStubGlyphMap(text.toString());
+        glyphs.vertical['（'] = {...glyphs.normal['（'], metrics: {...glyphs.normal['（'].metrics, left: 5}};
+
+        const shaping = shapeText(text, {[fontStack]: glyphs, Other: createStubGlyphMap(text.toString())}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+
+        expect(getGlyphOrientations(shaping)).toEqual([
+            ['東', 'upright'], ['京', 'upright'], ['︵', 'upright'],
+            ['№', 'along-line'], ['A', 'along-line'], ['）', 'along-line']
+        ]);
+        expect(shaping.positionedLines[0].positionedGlyphs.map(glyph => [glyph.sectionIndex, glyph.metrics.left])).toEqual([
+            [0, 1], [0, 1], [0, 1], [1, 1], [1, 1], [1, 1]
+        ]);
+    });
+
+    test('reclassifies number runs when unused vertical punctuation falls back to an upright character', () => {
+        const text = '東京12（…）ABC';
+        const glyphs = createStubGlyphMap(text);
+        glyphs.vertical['…'] = {...glyphs.normal['…'], metrics: {...glyphs.normal['…'].metrics, left: 5}};
+
+        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24);
+
+        expect(getGlyphOrientations(shaping)).toEqual([
+            ['東', 'upright'], ['京', 'upright'], ['1', 'upright'], ['2', 'upright'],
+            ['︵', 'upright'], ['︙', 'upright'], ['）', 'along-line'],
+            ['A', 'along-line'], ['B', 'along-line'], ['C', 'along-line']
+        ]);
+    });
+
+    test.each([
+        {text: '東京 Tokyo … Station', marks: '…', upright: false},
+        {text: '東京 Tokyo （） Station', marks: '（）', upright: false},
+        {text: '東京 AB … CD', marks: '…', upright: true},
+        {text: '東京 12 … 34', marks: '…', upright: true},
+        {text: '東京 …… 小', marks: '…', upright: true}
+    ])('resolves punctuation across spaces in $text', ({text, marks, upright}) => {
+        const glyphs = createStubGlyphMap(text);
+        for (const char of marks) {
+            glyphs.vertical[char] = {...glyphs.normal[char], metrics: {...glyphs.normal[char].metrics, left: 5}};
+        }
+
+        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+
+        const punctuation = shaping.positionedLines[0].positionedGlyphs.filter(glyph => marks.includes(glyph.grapheme));
+        expect(punctuation).toHaveLength([...text].filter(char => marks.includes(char)).length);
+        for (const glyph of punctuation) {
+            expect(glyph.vertical).toBe(upright);
+            expect(glyph.metrics.left).toBe(upright ? 5 : 1);
+        }
+    });
+
+    test('keeps a prolonged sound mark in a Latin run on the rotation fallback', () => {
+        const glyphs = createStubGlyphMap('コーヒーBAR');
+        glyphs.vertical['ー'] = {...glyphs.normal['ー'], metrics: {...glyphs.normal['ー'].metrics, left: 5}};
+
+        const shaping = shapeText(Formatted.fromString('コーヒーBAR'), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+
+        const marks = shaping.positionedLines[0].positionedGlyphs.filter(glyph => glyph.grapheme === 'ー');
+        expect(marks.map(glyph => [glyph.vertical, glyph.metrics.left])).toEqual([[true, 5], [false, 1]]);
+        expect(getGlyphOrientations(shaping).slice(-3)).toEqual([
+            ['B', 'along-line'], ['A', 'along-line'], ['R', 'along-line']
+        ]);
+    });
 
     test('draws digits between CJK characters upright', () => {
         // The label reported in https://github.com/maplibre/maplibre-gl-js/issues/5404
@@ -732,7 +916,7 @@ describe('shapeText with a right-to-left text plugin', () => {
     });
 
     /** A glyph for every grapheme cluster of `text`, and for every codepoint, as a tile asks for. */
-    function glyphsFor(text: string): Record<string, Record<string, StyleGlyph>> {
+    function glyphsFor(text: string): GlyphMap {
         const glyphs: Record<string, StyleGlyph> = {};
         for (const grapheme of toGraphemes(text)) {
             glyphs[grapheme] = {id: grapheme.codePointAt(0), metrics} as StyleGlyph;
@@ -740,7 +924,7 @@ describe('shapeText with a right-to-left text plugin', () => {
                 glyphs[char] = {id: char.codePointAt(0), metrics} as StyleGlyph;
             }
         }
-        return {Test: glyphs};
+        return {Test: {normal: glyphs, vertical: {}}};
     }
 
     function shape(text: string, glyphs = glyphsFor(text)): Shaping | false {
@@ -773,7 +957,7 @@ describe('shapeText with a right-to-left text plugin', () => {
     test('draws only clusters the tile asked for a glyph for', () => {
         stubReversingPlugin();
 
-        const requested = new Set(Object.keys(glyphsFor(text).Test));
+        const requested = new Set(Object.keys(glyphsFor(text).Test.normal));
         for (const grapheme of drawn(shape(text))) {
             expect(requested).toContain(grapheme);
         }
@@ -788,7 +972,7 @@ describe('shapeText with a right-to-left text plugin', () => {
         }
 
         const asClusters = drawn(shape(text)).join('');
-        const asCodepoints = drawn(shape(text, {Test: codepointsOnly}));
+        const asCodepoints = drawn(shape(text, {Test: {normal: codepointsOnly, vertical: {}}}));
 
         expect(asCodepoints.join('')).toBe(asClusters);
         expect(asCodepoints).toHaveLength([...text].length);

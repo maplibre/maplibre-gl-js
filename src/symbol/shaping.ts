@@ -3,6 +3,8 @@ import {
 } from '../util/unicode_properties.g.ts';
 import {
     charIsWhitespace,
+    charIsSymbolOrPunctuation,
+    charHasRotatedVerticalOrientation,
     charInComplexShapingScript,
     charInRTLScript,
     stringContainsRTLText
@@ -14,12 +16,13 @@ import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
 
 import {TaggedString, type SectionOptions, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
-import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
+import type {StyleGlyph, GlyphMetrics, GlyphMap} from '../style/style_glyph.ts';
+import {hasVerticalForm} from '../style/style_glyph.ts';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
 import {TextFit} from '../style/style_image.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
 import {IMAGE_PADDING} from '../render/image_atlas.ts';
-import type {Rect, GlyphPosition} from '../render/glyph_atlas.ts';
+import type {Rect, GlyphPosition, GlyphPositions} from '../render/glyph_atlas.ts';
 import type {Formatted, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
@@ -30,7 +33,7 @@ enum WritingMode {
 }
 
 const SHAPING_DEFAULT_OFFSET = -17;
-export {shapeText, shapeIcon, applyTextFit, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
+export {shapeText, shapeIcon, applyTextFit, fitIconToText, getAnchorAlignment, mayUseVerticalGlyph, WritingMode, SHAPING_DEFAULT_OFFSET};
 
 // The position of a glyph relative to the text's anchor point.
 export type PositionedGlyph = {
@@ -258,8 +261,8 @@ function taggedLineFromPlugin(
 
 function shapeText(
     text: Formatted,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
     imagePositions: Record<string, ImagePosition>,
     defaultFontStack: string,
     maxWidth: number,
@@ -276,7 +279,7 @@ function shapeText(
     const logicalInput = TaggedString.fromFeature(text, defaultFontStack);
 
     if (writingMode === WritingMode.vertical) {
-        logicalInput.verticalizePunctuation();
+        logicalInput.verticalizePunctuation(glyphMap);
     }
 
     const lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
@@ -364,16 +367,12 @@ function getVerticalAlignFactor(
 
 function getRectAndMetrics(
     glyphPosition: GlyphPosition,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    section: TextSectionOptions,
-    key: string
+    glyph: StyleGlyph
 ): GlyphPosition | null {
     if (glyphPosition?.rect) {
         return glyphPosition;
     }
 
-    const glyphs = glyphMap[section.fontStack];
-    const glyph = glyphs?.[key];
     if (!glyph) return null;
 
     const metrics = glyph.metrics;
@@ -401,11 +400,6 @@ function charIsDecimalDigit(codePoint: number): boolean {
 /** Returns whether the codepoint is an uppercase letter of any script (`\p{Lu}`). */
 function charIsUppercaseLetter(codePoint: number): boolean {
     return /\p{Lu}/u.test(String.fromCodePoint(codePoint));
-}
-
-/** Returns whether the codepoint is a punctuation or symbol character (`\p{P}` or `\p{S}`). */
-function charIsSymbolOrPunctuation(codePoint: number): boolean {
-    return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
 }
 
 /**
@@ -439,26 +433,51 @@ function charIsUprightInRun(codePoint: number): boolean {
 }
 
 /**
+ * Whether this placement may use a vertical glyph, based on the cluster's first codepoint.
+ * Line labels resolve the actual orientation from the surrounding run after glyphs are loaded.
+ */
+function mayUseVerticalGlyph(codePoint: number, allowVerticalPlacement: boolean): boolean {
+    if (allowVerticalPlacement) return isLineVertical(WritingMode.vertical, true, codePoint);
+    return !charHasRotatedVerticalOrientation(codePoint) ||
+        charIsUprightInRun(codePoint) || charIsSymbolOrPunctuation(codePoint);
+}
+
+/**
  * Replaces punctuation surrounded by upright characters with its vertical
  * presentation form (“-” in “1-2” becomes “︲”) and marks it upright.
+ * A font's OpenType alternate takes precedence over the compatibility character.
  * `verticalizePunctuation` cannot do this earlier: it doesn't know which
  * characters {@link determineLineVerticals} draws upright.
  *
  * Returns whether anything in `chars` was replaced.
  */
-function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[]): boolean {
+function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[], verticalForms: boolean[]): boolean {
     let replaced = false;
     for (let i = 0; i < chars.length; i++) {
         if (verticals[i]) continue;
         const verticalizedChar = verticalizedCharacterMap[chars[i]];
         if (!verticalizedChar) continue;
         if ((i === 0 || verticals[i - 1]) && (i === chars.length - 1 || verticals[i + 1])) {
-            chars[i] = verticalizedChar;
             verticals[i] = true;
+            if (verticalForms[i]) continue;
+
+            chars[i] = verticalizedChar;
             replaced = true;
         }
     }
     return replaced;
+}
+
+/** Checks the adjacent run across whitespace for sideways text, excluding upright numbers and codes. */
+function hasSidewaysTextBeside(codePoints: number[], index: number, step: -1 | 1): boolean {
+    while (index >= 0 && index < codePoints.length && charIsWhitespace(codePoints[index])) index += step;
+    const run: number[] = [];
+    while (index >= 0 && index < codePoints.length &&
+        !codePointHasUprightVerticalOrientation(codePoints[index]) && !charIsWhitespace(codePoints[index])) {
+        run.push(codePoints[index]);
+        index += step;
+    }
+    return !runIsUpright(run) && !run.every(charIsSymbolOrPunctuation) && run.some(charHasRotatedVerticalOrientation);
 }
 
 /**
@@ -470,11 +489,17 @@ function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[])
  * characters that are neither whitespace nor inline images.
  *
  * Counted in clusters, to line up with `getSection` and the layout loop. A cluster's orientation is
- * that of the character it starts with.
+ * that of the character it starts with. Runs are classified before applying vertical alternates,
+ * which can make neutral-only or punctuation-only runs upright without splitting Latin runs.
+ * Runs are reclassified after unused alternates fall back to compatibility punctuation.
  */
-function determineLineVerticals(line: TaggedString): boolean[] {
+function determineLineVerticals(line: TaggedString, glyphMap: GlyphMap): boolean[] {
     const chars = line.graphemes().slice();
     const codePoints = chars.map(char => char.codePointAt(0));
+    const verticalForms = chars.map((char, index) => {
+        const section = line.getSection(index);
+        return 'fontStack' in section && hasVerticalForm(glyphMap, section.fontStack, char);
+    });
     const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
 
     const isRunCharacter = (i: number): boolean =>
@@ -485,17 +510,29 @@ function determineLineVerticals(line: TaggedString): boolean[] {
         let end = start;
         while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
 
-        if (runIsUpright(codePoints.slice(start, end + 1))) {
-            for (let i = start; i <= end; i++) {
-                verticals[i] = charIsUprightInRun(codePoints[i]);
-            }
+        const run = codePoints.slice(start, end + 1);
+        const upright = runIsUpright(run);
+        const punctuationOnly = run.every(charIsSymbolOrPunctuation);
+        const besideSidewaysText = punctuationOnly &&
+            (hasSidewaysTextBeside(codePoints, start - 1, -1) || hasSidewaysTextBeside(codePoints, end + 1, 1));
+        const sideways = !upright && run.some(charHasRotatedVerticalOrientation);
+        for (let i = start; i <= end; i++) {
+            verticals[i] = (upright && charIsUprightInRun(codePoints[i])) ||
+                (verticalForms[i] && !besideSidewaysText &&
+                    (punctuationOnly || (!sideways && !charHasRotatedVerticalOrientation(codePoints[i]))));
         }
         start = end;
     }
 
-    if (verticalizeSurroundedPunctuation(chars, verticals)) {
+    if (verticalForms.some((form, index) => form && !verticals[index])) {
+        const previousText = line.text;
+        line.verticalizePunctuation(glyphMap, verticals);
+        if (line.text !== previousText) return determineLineVerticals(line, glyphMap);
+    }
+
+    if (verticalizeSurroundedPunctuation(chars, verticals, verticalForms)) {
         line.text = chars.join('');
-        line._graphemes = null;
+        line._graphemes = chars;
     }
 
     return verticals;
@@ -508,8 +545,8 @@ function determineLineVerticals(line: TaggedString): boolean[] {
  * does -- which is what a style declaring no `font-faces` keeps doing.
  */
 function shapeLines(shaping: Shaping,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
     imagePositions: Record<string, ImagePosition>,
     lines: TaggedString[],
     lineHeight: number,
@@ -549,7 +586,7 @@ function shapeLines(shaping: Shaping,
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
         const lineVerticals = writingMode === WritingMode.vertical && !allowVerticalPlacement ?
-            determineLineVerticals(line) : null;
+            determineLineVerticals(line, glyphMap) : null;
 
         const graphemes = line.graphemes();
         for (let i = 0; i < graphemes.length; i++) {
@@ -558,7 +595,7 @@ function shapeLines(shaping: Shaping,
             const codePoint = grapheme.codePointAt(0);
             const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
-            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.[grapheme] ?
+            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.normal[grapheme] ?
                 [...grapheme] :
                 [grapheme];
 
@@ -645,13 +682,13 @@ function shapeTextSection(
     key: string,
     vertical: boolean,
     lineShapingSize: LineShapingSize,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
 ): ShapingSectionAttributes | null {
-    const positions = glyphPositions[section.fontStack];
-    const glyphPosition = positions?.[key];
-
-    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, key);
+    const variant = vertical && hasVerticalForm(glyphMap, section.fontStack, key) ? 'vertical' : 'normal';
+    const glyphPosition = glyphPositions[section.fontStack]?.[variant][key];
+    const glyph = glyphMap[section.fontStack]?.[variant][key];
+    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyph);
 
     if (rectAndMetrics === null) return null;
 

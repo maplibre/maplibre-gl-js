@@ -2,7 +2,8 @@ import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibr
 
 import ONE_EM from './one_em.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
+import {hasVerticalForm} from '../style/style_glyph.ts';
 import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
 import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
@@ -77,13 +78,13 @@ const breakableBefore: Record<number, boolean> = {
 function getGlyphAdvance(
     grapheme: string,
     section: SectionOptions,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphMap: GlyphMap,
     imagePositions: Record<string, ImagePosition>,
     spacing: number,
     layoutTextSize: number
 ): number {
     if ('fontStack' in section) {
-        const positions = glyphMap[section.fontStack];
+        const positions = glyphMap[section.fontStack]?.normal;
         const glyph = positions?.[grapheme];
         if (glyph) return glyph.metrics.advance * section.scale + spacing;
 
@@ -245,9 +246,22 @@ export class TaggedString {
         return this.sectionIndex[index];
     }
 
-    verticalizePunctuation(): void {
-        this.text = verticalizePunctuation(this.text);
-        this._graphemes = null;
+    /**
+     * Uses compatibility punctuation where a font's vertical form is unavailable or unused, preserving
+     * UTF-16 length, keeping whole-text context, cluster boundaries and section indices intact.
+     * @param verticals - resolved orientations, if available; only upright glyphs use font alternates
+     */
+    verticalizePunctuation(glyphMap: GlyphMap = {}, verticals?: boolean[]): void {
+        const replacements = verticalizePunctuation(this.text);
+        let offset = 0;
+        this._graphemes = this.graphemes().map((grapheme, index) => {
+            const replacement = replacements.slice(offset, offset + grapheme.length);
+            offset += grapheme.length;
+            const section = this.getSection(index);
+            return verticals?.[index] !== false && 'fontStack' in section && hasVerticalForm(glyphMap, section.fontStack, grapheme) ?
+                grapheme : replacement;
+        });
+        this.text = this._graphemes.join('');
     }
 
     /**
@@ -391,7 +405,7 @@ export class TaggedString {
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
@@ -452,7 +466,7 @@ export class TaggedString {
     determineAverageLineWidth(
         spacing: number,
         maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number): number {
         let totalWidth = 0;

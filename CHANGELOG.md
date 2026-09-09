@@ -1,5 +1,7 @@
 ## main
 ### ✨ Features and improvements
+- Use OpenType vertical forms from `font-faces` for vertically placed labels, including Japanese long vowel marks ([#5259](https://github.com/maplibre/maplibre-gl-js/issues/5259)).
+- ⚠️ Glyph requests, responses and the public `GlyphPositions` type now group each font stack's data under `normal` and `vertical`.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
