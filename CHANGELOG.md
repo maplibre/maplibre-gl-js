@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add a `showButton` option to `GeolocateControl` to hide the default geolocate button and allow using a custom button with `trigger()` ([#3103](https://github.com/maplibre/maplibre-gl-js/issues/3103))
 - Improved support for drawing the letters of Devanagari, Khmer, Burmese and the other complex scripts and also draws Arabic and Hebrew labels correctly without loading a right-to-left text plugin, which deprecates `setRTLTextPlugin` and `getRTLTextPluginStatus` ([#8343](https://github.com/maplibre/maplibre-gl-js/pull/8343)) (by [@HarelM](https://github.com/HarelM))
 - Read sprite and image pixels back through an `OffscreenCanvas` where available, removing a main-thread stall of tens of milliseconds on GPU-accelerated browsers when a sprite loads ([#8339](https://github.com/maplibre/maplibre-gl-js/pull/8339)) (by [@cherenkov](https://github.com/cherenkov))
 - Skip clipping masks for layers hidden at the current zoom and stop re-binding dynamic buffers on cached vertex array binds, removing redundant WebGL calls every frame ([#8369](https://github.com/maplibre/maplibre-gl-js/pull/8369))

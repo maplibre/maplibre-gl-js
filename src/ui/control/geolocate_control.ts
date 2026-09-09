@@ -38,6 +38,11 @@ export type GeolocateControlOptions = {
      * @defaultValue true
      */
     showUserLocation?: boolean;
+    /**
+     * If `false` the default geolocate button is not rendered on the map, allowing the use of a custom button that calls {@link GeolocateControl.trigger}.
+     * @defaultValue true
+     */
+    showButton?: boolean;
 };
 
 const defaultOptions: GeolocateControlOptions = {
@@ -51,7 +56,8 @@ const defaultOptions: GeolocateControlOptions = {
     },
     trackUserLocation: false,
     showAccuracyCircle: true,
-    showUserLocation: true
+    showUserLocation: true,
+    showButton: true
 };
 
 let numberOfWatches = 0;
@@ -651,6 +657,12 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';
         this._geolocateButton.disabled = true;
+
+        // The button is kept anyway as an internal node so the state machine toggling its classes
+        // keeps working unchanged; it is simply not attached to the container when it is hidden.
+        if (!this.options.showButton) {
+            this._geolocateButton.remove();
+        }
     };
 
     _finishSetupUI = (supported: boolean): void => {
