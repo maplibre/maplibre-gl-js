@@ -754,9 +754,9 @@ export class Camera extends Evented<MapEventType> {
         this._cameraOptionsTransform ||= this.transform.clone();
         this._cameraOptionsTransform.apply(this.transform, false);
         const tr = this._cameraOptionsTransform;
-        const bearing = 'bearing' in options ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
-        const pitch = 'pitch' in options ? +options.pitch : tr.pitch;
-        const roll = 'roll' in options ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
+        const bearing = options.bearing !== undefined ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
+        const pitch = options.pitch !== undefined ? +options.pitch : tr.pitch;
+        const roll = options.roll !== undefined ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
         const padding = options.padding ?? tr.padding;
         const anchorLocation = options.anchorLocation === undefined ? undefined : LngLat.convert(options.anchorLocation);
         const anchorScreenPoint = anchorLocation === undefined ? undefined :
@@ -801,32 +801,6 @@ export class Camera extends Evented<MapEventType> {
             roll: tr.roll,
             elevation: tr.elevation,
             padding: tr.padding
-        };
-    }
-
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number = 0): CameraOptions {
-        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMercator.x - fromMercator.x;
-        const dy = toMercator.y - fromMercator.y;
-        const dz = toMercator.z - fromMercator.z;
-
-        const distance3D = Math.hypot(dx, dy, dz);
-        if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
-
-        const groundDistance = Math.hypot(dx, dy);
-
-        const zoom = scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
-        const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
-        let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
-        pitch = dz < 0 ? 90 - pitch : 90 + pitch;
-
-        return {
-            center: toMercator.toLngLat(),
-            elevation: altitudeTo,
-            zoom,
-            pitch,
-            bearing
         };
     }
 

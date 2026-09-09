@@ -148,6 +148,16 @@ describe('calculateCameraOptions', () => {
         expect(move).not.toHaveBeenCalled();
     });
 
+    test('inherits rotation properties when they are explicitly undefined', () => {
+        const {camera} = createCamera(null, false, {bearing: 20, pitch: 30, roll: 5});
+
+        const result = camera.calculateCameraOptions({bearing: undefined, pitch: undefined, roll: undefined});
+
+        expect(result.bearing).toBe(20);
+        expect(result.pitch).toBe(30);
+        expect(result.roll).toBe(5);
+    });
+
     test('matches the endpoint of easeTo, including constraints and normalization', () => {
         const options = {center: [190, 89] as [number, number], zoom: 100, bearing: 370, pitch: 100, roll: -350};
         const initial = {center: [170, 10] as [number, number], zoom: 3, bearing: 5, pitch: 20};
