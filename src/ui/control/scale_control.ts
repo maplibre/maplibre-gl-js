@@ -101,13 +101,14 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
     // found between the two coordinates.
     // Minimum maxWidth is calculated for the scale box.
     const optWidth = options?.maxWidth || 100;
-    const y = map._container.clientHeight / 2;
-    const x = map._container.clientWidth / 2;
+    const {width: containerWidth, height: containerHeight} = map._camera.transform;
+    const y = containerHeight / 2;
+    const x = containerWidth / 2;
     const left = map.unproject([x - optWidth / 2, y]);
     const right = map.unproject([x + optWidth / 2, y]);
 
     const globeWidth = Math.round(map.project(right).x - map.project(left).x);
-    const maxWidth = Math.min(optWidth, globeWidth, map._container.clientWidth);
+    const maxWidth = Math.min(optWidth, globeWidth, containerWidth);
 
     const maxMeters = left.distanceTo(right);
     // The real distance corresponding to 100px scale length is rounded off to
