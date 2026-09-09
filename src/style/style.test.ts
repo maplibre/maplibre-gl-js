@@ -2077,10 +2077,8 @@ describe('Style.setGlobalState', () => {
 });
 
 describe('a global state change transitions what reads it, issue #8395', () => {
-    const transition = {duration: 300, delay: 0};
-
     function at(now: number): EvaluationParameters {
-        return new EvaluationParameters(0, {now, transition});
+        return new EvaluationParameters(0, {now, transition: {duration: 300, delay: 0}});
     }
 
     function backgroundOpacity(style: Style, id: string): number {
@@ -2153,7 +2151,7 @@ describe('a global state change transitions what reads it, issue #8395', () => {
         expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
     });
 
-    test('a transition that was running keeps its start when the state it read changes', async () => {
+    test('a running transition keeps its start when the state its prior value reads changes', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             state: {opacity: {default: 0.2}},
@@ -2167,7 +2165,6 @@ describe('a global state change transitions what reads it, issue #8395', () => {
         style.update(at(150));
         expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
 
-        // The value being set no longer reads the state, but the one it transitions from still does.
         style.setGlobalStateProperty('opacity', 0);
         style.update(at(150));
         expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
