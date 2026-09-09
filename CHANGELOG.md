@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `Map#calculateCameraOptions` to calculate a complete camera state without mutating or rendering the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

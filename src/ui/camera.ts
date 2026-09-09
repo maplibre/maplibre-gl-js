@@ -102,6 +102,34 @@ export type JumpToOptions = CameraOptions & {
 };
 
 /**
+ * Options for {@link Map.calculateCameraOptions}.
+ *
+ * Use `anchorLocation` to keep a geographic location at its current screen position while
+ * changing the camera. Supply `anchorScreenPoint` as well to keep that location at a specific
+ * screen position, such as the mouse cursor.
+ */
+export type CameraCalculationOptions = JumpToOptions & {
+    /** The geographic location to keep fixed on screen while the camera changes. */
+    anchorLocation?: LngLatLike;
+    /**
+     * The screen point at which `anchorLocation` should remain. If omitted, the current projected
+     * screen position of `anchorLocation` is used. Must not be supplied without `anchorLocation`.
+     */
+    anchorScreenPoint?: PointLike;
+};
+
+/** A complete public camera state returned by {@link Map.calculateCameraOptions}. */
+export type CameraState = {
+    center: LngLat;
+    zoom: number;
+    bearing: number;
+    pitch: number;
+    roll: number;
+    elevation: number;
+    padding: PaddingOptions;
+};
+
+/**
  * A options object for the {@link Map.cameraForBounds} method
  */
 export type CameraForBoundsOptions = CameraOptions & {
@@ -344,6 +372,8 @@ export class Camera extends Evented<MapEventType> {
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
+    /** Reusable scratch transform for stateless camera calculations. */
+    _cameraOptionsTransform?: ITransform;
     /**
      * A callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
@@ -407,6 +437,7 @@ export class Camera extends Evented<MapEventType> {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
+        delete this._cameraOptionsTransform;
         if (this._requestedCameraState) {
             // The requested camera state is a transform of the old projection, so it has to be
             // moved onto the new one as well, otherwise the camera keeps reading a transform
@@ -713,6 +744,64 @@ export class Camera extends Evented<MapEventType> {
         }
 
         return this.fire(new MapMovementEvent('moveend', eventData));
+    }
+
+    calculateCameraOptions(options: CameraCalculationOptions): CameraState {
+        if (options.anchorScreenPoint !== undefined && options.anchorLocation === undefined) {
+            throw new Error('`anchorScreenPoint` requires `anchorLocation` to be specified');
+        }
+
+        this._cameraOptionsTransform ||= this.transform.clone();
+        this._cameraOptionsTransform.apply(this.transform, false);
+        const tr = this._cameraOptionsTransform;
+        const bearing = options.bearing !== undefined ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
+        const pitch = options.pitch !== undefined ? +options.pitch : tr.pitch;
+        const roll = options.roll !== undefined ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
+        const padding = options.padding ?? tr.padding;
+        const anchorLocation = options.anchorLocation === undefined ? undefined : LngLat.convert(options.anchorLocation);
+        const anchorScreenPoint = anchorLocation === undefined ? undefined :
+            (options.anchorScreenPoint === undefined ? tr.locationToScreenPoint(anchorLocation) : Point.convert(options.anchorScreenPoint));
+        let zoom = options.zoom;
+        if (zoom !== undefined && this._zoomSnap) zoom = evaluateZoomSnap(+zoom, this._zoomSnap);
+
+        if (this.terrain) {
+            const elevationCenter = options.center ? LngLat.convert(options.center) : tr.center;
+            tr.setElevation(this.terrain.getElevationForLngLat(elevationCenter, tr));
+        }
+
+        const handler = this.cameraHelper.handleEaseTo(tr, {
+            bearing,
+            pitch,
+            roll,
+            padding,
+            around: anchorLocation,
+            aroundPoint: anchorScreenPoint,
+            offsetAsPoint: new Point(0, 0),
+            offset: [0, 0],
+            zoom,
+            center: options.center
+        });
+        handler.easeFunc(1);
+
+        if (this.terrain && options.elevation === undefined) {
+            tr.setElevation(this.terrain.getElevationForLngLat(handler.elevationCenter, tr));
+        } else if (options.elevation !== undefined) {
+            tr.setElevation(+options.elevation);
+        }
+
+        const elevated = this._elevateCameraIfInsideTerrain(tr);
+        if (elevated.zoom !== undefined) tr.setZoom(elevated.zoom);
+        if (elevated.pitch !== undefined) tr.setPitch(elevated.pitch);
+
+        return {
+            center: tr.center,
+            zoom: tr.zoom,
+            bearing: tr.bearing,
+            pitch: tr.pitch,
+            roll: tr.roll,
+            elevation: tr.elevation,
+            padding: tr.padding
+        };
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
