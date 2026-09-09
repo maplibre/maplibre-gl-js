@@ -23,10 +23,10 @@ import type {Shaping, PositionedIcon, TextJustify} from './shaping.ts';
 import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types.g.ts';
 import type {SymbolFeature} from '../data/bucket/symbol_bucket.ts';
 import type {StyleImage} from '../style/style_image.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
-import type {GlyphPosition} from '../render/glyph_atlas.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 
@@ -59,16 +59,8 @@ type ShapedTextOrientations = {
 
 export function performSymbolLayout(args: {
     bucket: SymbolBucket;
-    glyphMap: {
-        [_: string]: {
-            [x: number]: StyleGlyph;
-        };
-    };
-    glyphPositions: {
-        [_: string]: {
-            [x: number]: GlyphPosition;
-        };
-    };
+    glyphMap: GlyphMap;
+    glyphPositions: GlyphPositions;
     imageMap: {[_: string]: StyleImage};
     imagePositions: {[_: string]: ImagePosition};
     showCollisionBoxes: boolean;

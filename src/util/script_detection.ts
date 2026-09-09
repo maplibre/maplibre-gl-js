@@ -10,6 +10,11 @@ export function charIsWhitespace(char: number): boolean {
     return /\s/u.test(String.fromCodePoint(char));
 }
 
+/** Returns whether the codepoint is a punctuation or symbol character (`\p{P}` or `\p{S}`). */
+export function charIsSymbolOrPunctuation(codePoint: number): boolean {
+    return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
+}
+
 export function allowsIdeographicBreaking(chars: string): boolean {
     for (const char of chars) {
         if (!codePointAllowsIdeographicBreaking(char.codePointAt(0))) return false;

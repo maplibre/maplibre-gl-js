@@ -73,7 +73,7 @@ import type {CollisionBoxArray} from './data/array_types.g.ts';
 import type {AlphaImage} from './util/image.ts';
 import type {GlyphPosition, GlyphPositions} from './render/glyph_atlas.ts';
 import type {ImageAtlas} from './render/image_atlas.ts';
-import type {StyleGlyph} from './style/style_glyph.ts';
+import type {GlyphMap, GlyphVariants, StyleGlyph} from './style/style_glyph.ts';
 import type {FeatureIndex} from './data/feature_index.ts';
 import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
@@ -373,6 +373,8 @@ export {
     type AlphaImage,
     type GlyphPositions,
     type GlyphPosition,
+    type GlyphMap,
+    type GlyphVariants,
     type ImageAtlas,
     type MessageType,
     type StyleGlyph,

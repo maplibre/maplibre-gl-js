@@ -51,9 +51,9 @@ const actor = {
             const response: GetGlyphsResponse = {};
             for (const stack in stacks) {
                 glyphCache[stack] ||= loadGlyphs(stack);
-                response[stack] = {};
-                for (const id of stacks[stack]) {
-                    response[stack][id] = isCluster(id) ? null : glyphCache[stack][id.codePointAt(0)];
+                response[stack] = {normal: {}, vertical: {}};
+                for (const id of stacks[stack].normal) {
+                    response[stack].normal[id] = isCluster(id) ? null : glyphCache[stack][id.codePointAt(0)];
                 }
             }
             return Promise.resolve(response);

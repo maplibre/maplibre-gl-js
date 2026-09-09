@@ -9,22 +9,21 @@ import {getArrayBuffer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphVariants, StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
-import type {GetGlyphsResponse} from '../util/actor_messages.ts';
+import type {GetGlyphsParameters, GetGlyphsResponse} from '../util/actor_messages.ts';
 import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
     /**
-     * The glyphs drawn or downloaded so far, keyed by grapheme cluster. `null` means the glyph was
-     * asked for and is not available: either the range came back without it, or it is a cluster
-     * that no font file covers.
+     * The glyphs drawn or downloaded so far, keyed by variant and grapheme cluster. Pending loads
+     * are shared as promises, then replaced by the glyph or `null` if it is not available.
      */
-    glyphs: Record<string, StyleGlyph | null>;
-    requests: Record<number, Promise<{[_: number]: StyleGlyph | null}>>;
-    ranges: Record<number, boolean | null>;
+    glyphs: GlyphVariants<Record<string, StyleGlyph | null | Promise<StyleGlyph | null>>>;
+    /** PBF ranges shared during and after downloading, separate from the selected glyphs. */
+    rangeRequests: Record<number, Promise<Record<number, StyleGlyph | null>>>;
     tinySDF?: Promise<Rasterizer>;
     ideographTinySDF?: Promise<Rasterizer>;
     /**
@@ -83,6 +82,15 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
  */
 const clusterEmsWide = 3;
 
+/** Whether two glyphs have identical bitmaps and metrics. */
+function glyphsEqual(a: StyleGlyph, b: StyleGlyph): boolean {
+    return a.bitmap.width === b.bitmap.width && a.bitmap.height === b.bitmap.height &&
+        a.metrics.width === b.metrics.width && a.metrics.height === b.metrics.height &&
+        a.metrics.left === b.metrics.left && a.metrics.top === b.metrics.top &&
+        a.metrics.advance === b.metrics.advance &&
+        a.bitmap.data.every((value, index) => value === b.bitmap.data[index]);
+}
+
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string | false;
@@ -119,12 +127,18 @@ export class GlyphManager {
         this.entries = {};
     }
 
-    async getGlyphs(glyphs: Record<string, string[]>): Promise<GetGlyphsResponse> {
-        const glyphsPromises: Array<Promise<{stack: string; id: string; glyph: StyleGlyph}>> = [];
+    async getGlyphs(glyphs: GetGlyphsParameters['stacks']): Promise<GetGlyphsResponse> {
+        const glyphsPromises: Array<Promise<{stack: string; id: string; vertical: boolean; glyph: StyleGlyph}>> = [];
+        const hasFontFaces = this.fontFaceManager.hasFontFaces();
 
         for (const stack in glyphs) {
-            for (const id of glyphs[stack]) {
-                glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id));
+            for (const id of glyphs[stack].normal) {
+                glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id, false));
+            }
+            if (!hasFontFaces) continue;
+
+            for (const id of glyphs[stack].vertical) {
+                glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id, true));
             }
         }
 
@@ -132,10 +146,10 @@ export class GlyphManager {
 
         const result: GetGlyphsResponse = {};
 
-        for (const {stack, id, glyph} of updatedGlyphs) {
-            result[stack] ||= {};
+        for (const {stack, id, vertical, glyph} of updatedGlyphs) {
+            result[stack] ||= {normal: {}, vertical: {}};
             // Clone the glyph so that our own copy of its ArrayBuffer doesn't get transferred.
-            result[stack][id] = glyph && {
+            result[stack][vertical ? 'vertical' : 'normal'][id] = glyph && {
                 id: glyph.id,
                 bitmap: glyph.bitmap.clone(),
                 metrics: glyph.metrics
@@ -153,66 +167,76 @@ export class GlyphManager {
      * has no way to serve the one shape they are written as. A file the style pinned with
      * `font-faces` draws it where one covers it, and the local fonts otherwise. For a single
      * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
+     * Concurrent loads are shared; rejected loads are removed so callers can retry.
+     *
+     * @param vertical - `true` for the vertical variant, `false` for the normal glyph
      */
-    async _getAndCacheGlyphsPromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
-        // Create an entry for this fontstack if it doesn’t already exist.
-        this.entries[stack] ??= {glyphs: {}, requests: {}, ranges: {}};
+    async _getAndCacheGlyphsPromise(stack: string, id: string, vertical: boolean): Promise<{stack: string; id: string; vertical: boolean; glyph: StyleGlyph}> {
+        this.entries[stack] ??= {glyphs: {normal: {}, vertical: {}}, rangeRequests: {}};
         const entry = this.entries[stack];
+        const variant = vertical ? 'vertical' : 'normal';
+        const glyphs = entry.glyphs[variant];
+        if (glyphs[id] !== undefined) return {stack, id, vertical, glyph: await glyphs[id]};
 
-        // Try to get the glyph from the cache of client-side glyphs.
-        let glyph = entry.glyphs[id];
-        if (glyph !== undefined) {
-            return {stack, id, glyph};
+        const request = glyphs[id] = this._loadGlyph(entry, stack, id, vertical);
+        try {
+            const glyph = glyphs[id] = await request;
+            return {stack, id, vertical, glyph};
+        } finally {
+            if (glyphs[id] === request) delete glyphs[id];
         }
+    }
 
+    /**
+     * Loads from declared fonts or PBF/local fallbacks. Vertical glyphs require a declared font.
+     * Results from declared fonts are discarded if the faces change while loading.
+     * A `null` vertical glyph retains normal glyphs and the existing rotation or punctuation fallback.
+     */
+    async _loadGlyph(entry: Entry, stack: string, id: string, vertical: boolean): Promise<StyleGlyph | null> {
         const codePoint = id.codePointAt(0);
         const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
-            await this.fontFaceManager.getFontFamily(stack, codePoint) :
+            await this.fontFaceManager.getFontFamily(stack, codePoint, vertical) :
             null;
+        if (this.entries[stack] !== entry) return null;
 
         if (fontFaceFamily) {
-            glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
-            return {stack, id, glyph};
+            const glyph = await this._drawGlyph(entry, stack, id, vertical, fontFaceFamily);
+            if (this.entries[stack] !== entry) return null;
+            if (!vertical || !glyph) return glyph;
+
+            const original = await this._getAndCacheGlyphsPromise(stack, id, false);
+            if (this.entries[stack] !== entry || !original.glyph) return null;
+            return glyphsEqual(original.glyph, glyph) ? null : glyph;
         }
 
-        // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
-        // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
+        if (vertical) return null;
+
         if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
-            glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
-            return {stack, id, glyph};
+            return this._drawGlyph(entry, stack, id, false);
         }
 
-        return await this._downloadAndCacheRangePromise(stack, id);
+        return (await this._downloadAndCacheRangePromise(stack, id)).glyph;
     }
 
     /**
      * Gets a glyph from the server-side cache, downloading the PBF range it falls in if need be.
      *
      * Only reached for a single codepoint. What comes back is keyed by codepoint, as the file is,
-     * and is cached by cluster -- which for one codepoint is the character itself.
+     * and kept in the range cache so unrequested PBF glyphs cannot override declared fonts.
      */
     async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         const codePoint = id.codePointAt(0);
         const entry = this.entries[stack];
         const range = Math.floor(codePoint / 256);
-        if (entry.ranges[range]) {
-            return {stack, id, glyph: null};
-        }
-
         // Start downloading this range unless we’re currently downloading it.
-        entry.requests[range] ||= this._loadGlyphRange(stack, range);
+        entry.rangeRequests[range] ||= this._loadGlyphRange(stack, range);
 
         try {
-            // Get the response and cache the glyphs from it.
-            const response = await entry.requests[range];
-            for (const responseId in response) {
-                entry.glyphs[String.fromCodePoint(+responseId)] = response[+responseId];
-            }
-            entry.ranges[range] = true;
+            const response = await entry.rangeRequests[range];
             return {stack, id, glyph: response[codePoint] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
+            const glyph = entry.glyphs.normal[id] = await this._drawGlyph(entry, stack, id, false);
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
         }
@@ -260,11 +284,15 @@ export class GlyphManager {
      * Draws a glyph offscreen using TinySDF, created lazily. The whole cluster goes to TinySDF, which
      * is what lets the browser's text engine place a letter's marks on it.
      *
+     * @param vertical - `true` for vertical glyphs, which are rejected if they have no ink
      * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
+     * @returns the glyph, or `null` if the face was replaced or a vertical glyph has no ink
      */
-    async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
+    async _drawGlyph(entry: Entry, stack: string, id: string, vertical: boolean, fontFaceFamily?: string): Promise<StyleGlyph | null> {
         const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
+        if (fontFaceFamily && this.entries[stack] !== entry) return null;
         const char = tinySDF.draw(id);
+        if (vertical && (!char.glyphWidth || !char.glyphHeight)) return null;
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
@@ -423,9 +451,8 @@ export class GlyphManager {
             entry.tinySDF = null;
             entry.ideographTinySDF = null;
             entry.fontFaceTinySDFs = {};
-            entry.glyphs = {};
-            entry.requests = {};
-            entry.ranges = {};
+            entry.glyphs = {normal: {}, vertical: {}};
+            entry.rangeRequests = {};
         }
         this.entries = {};
         this.fontFaceManager.destroy();

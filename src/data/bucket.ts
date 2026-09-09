@@ -13,6 +13,7 @@ import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages.ts';
 import type {GlyphPositions} from '../render/glyph_atlas.ts';
+import type {GlyphVariants} from '../style/style_glyph.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -32,12 +33,13 @@ export type PopulateParameters = {
     /**
      * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
      * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     * Normal and vertical glyphs are requested separately.
      * @example
      * ```json
-     * {"SomeFontName": {"a": true, " ": true, "\u05e9\u05b0\u05c1": true}}
+     * {"SomeFontName": {"normal": {"a": true, "ー": true}, "vertical": {"ー": true}}}
      * ```
      */
-    glyphDependencies: Record<string, Record<string, boolean>>;
+    glyphDependencies: Record<string, GlyphVariants<Record<string, boolean>>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
