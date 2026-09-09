@@ -649,6 +649,9 @@ export class Painter {
             this.drawFunctions.debugPadding(this);
         }
 
+        // a frame at rest has reused every pooled drape it needs; the rest stay resident until freed here
+        if (this.renderToTexture && !this.options.moving) this.clearRTTPool();
+
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.
         this.context.setDefault();
@@ -787,6 +790,35 @@ export class Painter {
     }
 
     /**
+     * Destroys the pooled {@link RTTObject}s, the drapes no tile holds. Called at the end of a frame at rest,
+     * when they would otherwise stay resident until the next gesture reuses them.
+     */
+    clearRTTPool(): void {
+        for (const obj of this._rttObjectRecyclePool) {
+            obj.texture.destroy();
+        }
+        this._rttObjectRecyclePool.length = 0;
+    }
+
+    /**
+     * Frees the pooled drapes and the shared render-to-texture FBO. Called when terrain is removed, after its tiles
+     * released their drapes.
+     */
+    destroyRTTResources(): void {
+        this.clearRTTPool();
+        if (this._rttSharedFbo) {
+            // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
+            // that we already manage separately.
+            this._rttSharedFbo.fbo.colorAttachment.set(null);
+            this._rttSharedFbo.fbo.depthAttachment.set(null);
+            const gl = this.context.gl;
+            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+            this._rttSharedFbo = null;
+        }
+    }
+
+    /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
@@ -880,21 +912,7 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        for (const obj of this._rttObjectRecyclePool) {
-            obj.texture.destroy();
-        }
-        this._rttObjectRecyclePool = [];
-
-        if (this._rttSharedFbo) {
-            // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
-            // that we already manage separately.
-            this._rttSharedFbo.fbo.colorAttachment.set(null);
-            this._rttSharedFbo.fbo.depthAttachment.set(null);
-            const gl = this.context.gl;
-            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
-            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
-            this._rttSharedFbo = null;
-        }
+        this.destroyRTTResources();
 
         this.layerOpacityFbo?.destroy();
         this.layerOpacityFbo = null;
