@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.60">
     
     
       
@@ -34,7 +34,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -2729,7 +2729,7 @@
   <span class="md-ellipsis">
     
   
-  getRTLTextPluginStatus()
+  ~~getRTLTextPluginStatus()~~
 
     
   </span>
@@ -3053,7 +3053,7 @@
   <span class="md-ellipsis">
     
   
-  setRTLTextPlugin()
+  ~~setRTLTextPlugin()~~
 
     
   </span>
@@ -7514,33 +7514,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-support-for-right-to-left-scripts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Add support for right-to-left scripts
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../examples/adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
         
   
@@ -10864,7 +10837,7 @@
 
 
 <h1 id="terraincontrol">TerrainControl</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/control/terrain_control.ts#L24">ui/control/terrain_control.ts:24</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/control/terrain_control.ts#L24">ui/control/terrain_control.ts:24</a></p>
 <p>A <code>TerrainControl</code> control contains a button for turning the terrain on and off.</p>
 <h2 id="example">Example</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">({</span><span class="nx">TerrainControl</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">})</span>
@@ -10888,7 +10861,7 @@
 <blockquote>
 <p><strong>new TerrainControl</strong>(<code>options</code>: <code>TerrainSpecification</code>): <code>TerrainControl</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/control/terrain_control.ts#L33">ui/control/terrain_control.ts:33</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/control/terrain_control.ts#L33">ui/control/terrain_control.ts:33</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -10913,7 +10886,7 @@
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/control/terrain_control.ts#L38">ui/control/terrain_control.ts:38</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/control/terrain_control.ts#L38">ui/control/terrain_control.ts:38</a></p>
 <p>Register a control on the map and give it a chance to register event listeners
 and resources. This method is called by <a href="../Map/#addcontrol">Map.addControl</a>
 internally.</p>
@@ -10947,7 +10920,7 @@ as necessary.</p>
 <blockquote>
 <p><strong>onRemove</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/control/terrain_control.ts#L52">ui/control/terrain_control.ts:52</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/control/terrain_control.ts#L52">ui/control/terrain_control.ts:52</a></p>
 <p>Unregister a control on the map and give it a chance to detach event listeners
 and resources. This method is called by <a href="../Map/#removecontrol">Map.removeControl</a>
 internally.</p>
@@ -11088,7 +11061,7 @@ internally.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.88ee1349.min.js"></script>
       
     
   </body>

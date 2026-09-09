@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.60">
     
     
       
@@ -34,7 +34,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -2729,7 +2729,7 @@
   <span class="md-ellipsis">
     
   
-  getRTLTextPluginStatus()
+  ~~getRTLTextPluginStatus()~~
 
     
   </span>
@@ -3053,7 +3053,7 @@
   <span class="md-ellipsis">
     
   
-  setRTLTextPlugin()
+  ~~setRTLTextPlugin()~~
 
     
   </span>
@@ -7514,33 +7514,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-support-for-right-to-left-scripts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Add support for right-to-left scripts
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../examples/adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
         
   
@@ -10864,7 +10837,7 @@
 
 
 <h1 id="cooperativegestureshandler">CooperativeGesturesHandler</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/handler/cooperative_gestures.ts#L29">ui/handler/cooperative_gestures.ts:29</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/handler/cooperative_gestures.ts#L29">ui/handler/cooperative_gestures.ts:29</a></p>
 <p>A <code>CooperativeGestureHandler</code> is a control that adds cooperative gesture info when user tries to zoom in/out.</p>
 <p>When the CooperativeGestureHandler blocks a gesture, it will emit a <code>cooperativegestureprevented</code> event.</p>
 <h2 id="example">Example</h2>
@@ -10883,7 +10856,7 @@
 <blockquote>
 <p><strong>isActive</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/handler/cooperative_gestures.ts#L44">ui/handler/cooperative_gestures.ts:44</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/handler/cooperative_gestures.ts#L44">ui/handler/cooperative_gestures.ts:44</a></p>
 <p>This is used to indicate if the handler is currently active or not.
 In case a handler is active, it will block other handlers from getting the relevant events.
 There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
@@ -10896,7 +10869,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>reset</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/handler/cooperative_gestures.ts#L47">ui/handler/cooperative_gestures.ts:47</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/handler/cooperative_gestures.ts#L47">ui/handler/cooperative_gestures.ts:47</a></p>
 <p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
@@ -10907,7 +10880,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>_bypassKey</strong>: <code>"ctrlKey"</code> | <code>"metaKey"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/handler/cooperative_gestures.ts#L36">ui/handler/cooperative_gestures.ts:36</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/handler/cooperative_gestures.ts#L36">ui/handler/cooperative_gestures.ts:36</a></p>
 <p>This is the key that will allow to bypass the cooperative gesture protection</p>
 
 
@@ -11042,7 +11015,7 @@ There is an allow list of handlers that can be active at the same time, which is
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.88ee1349.min.js"></script>
       
     
   </body>

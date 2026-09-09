@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.60">
     
     
       
@@ -34,7 +34,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -1554,6 +1554,17 @@
   
     <nav class="md-nav" aria-label="Methods">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_shouldhandleinitialresize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        _shouldHandleInitialResize()
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#addcontrol" class="md-nav__link">
@@ -4413,7 +4424,7 @@
   <span class="md-ellipsis">
     
   
-  getRTLTextPluginStatus()
+  ~~getRTLTextPluginStatus()~~
 
     
   </span>
@@ -4737,7 +4748,7 @@
   <span class="md-ellipsis">
     
   
-  setRTLTextPlugin()
+  ~~setRTLTextPlugin()~~
 
     
   </span>
@@ -9198,33 +9209,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-support-for-right-to-left-scripts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Add support for right-to-left scripts
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../examples/adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
         
   
@@ -12608,6 +12592,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#_shouldhandleinitialresize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        _shouldHandleInitialResize()
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#addcontrol" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -14232,7 +14227,7 @@
 
 
 <h1 id="map">Map</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L592">ui/map.ts:592</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L592">ui/map.ts:592</a></p>
 <p>The <code>Map</code> object represents the map on your page. It exposes methods
 and properties that enable you to programmatically change the map,
 and fires events as users interact with it.</p>
@@ -14268,7 +14263,7 @@ Then MapLibre GL JS initializes the map on the page and returns your <code>Map</
 <blockquote>
 <p><strong>get</strong> <strong>repaint</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4624">ui/map.ts:4624</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4641">ui/map.ts:4641</a></p>
 <p>Gets and sets a Boolean indicating whether the map will
 continuously repaint. This information is useful for analyzing performance.</p>
 <h5 id="returns">Returns</h5>
@@ -14279,7 +14274,7 @@ continuously repaint. This information is useful for analyzing performance.</p>
 <blockquote>
 <p><strong>get</strong> <strong>showCollisionBoxes</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4592">ui/map.ts:4592</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4609">ui/map.ts:4609</a></p>
 <p>Gets and sets a Boolean indicating whether the map will render boxes
 around all symbols in the data source, revealing which symbols
 were rendered or which were hidden due to collisions.
@@ -14292,7 +14287,7 @@ This information is useful for debugging.</p>
 <blockquote>
 <p><strong>get</strong> <strong>showOverdrawInspector</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4613">ui/map.ts:4613</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4630">ui/map.ts:4630</a></p>
 <p>Gets and sets a Boolean indicating whether the map should color-code
 each fragment to show how many times it has been shaded.
 White fragments have been shaded 8 or more times.
@@ -14306,7 +14301,7 @@ This information is useful for debugging.</p>
 <blockquote>
 <p><strong>get</strong> <strong>showPadding</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4579">ui/map.ts:4579</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4596">ui/map.ts:4596</a></p>
 <p>Gets and sets a Boolean indicating whether the map will visualize
 the padding offsets.</p>
 <h5 id="returns_3">Returns</h5>
@@ -14317,7 +14312,7 @@ the padding offsets.</p>
 <blockquote>
 <p><strong>get</strong> <strong>showTileBoundaries</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4568">ui/map.ts:4568</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4585">ui/map.ts:4585</a></p>
 <p>Gets and sets a Boolean indicating whether the map will render an outline
 around each tile and the tile ID. These tile boundaries are useful for
 debugging.</p>
@@ -14334,7 +14329,7 @@ corner of each tile, next to the tile ID.</p>
 <blockquote>
 <p><strong>get</strong> <strong>version</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4639">ui/map.ts:4639</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4656">ui/map.ts:4656</a></p>
 <p>Returns the package version of the library</p>
 <h5 id="returns_5">Returns</h5>
 <p><code>string</code></p>
@@ -14345,7 +14340,7 @@ corner of each tile, next to the tile ID.</p>
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layer</code>: <code>string</code>, <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2449">ui/map.ts:2449</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2451">ui/map.ts:2451</a></p>
 <p>Removes an event listener for events previously added with <code>{@link Map.on}</code>.</p>
 <h5 id="type-parameters">Type Parameters</h5>
 <table>
@@ -14395,7 +14390,7 @@ corner of each tile, next to the tile ID.</p>
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layers</code>: <code>string</code>[], <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2462">ui/map.ts:2462</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2464">ui/map.ts:2464</a></p>
 <p>Overload of the <code>off</code> method that allows to remove an event created with multiple layers.
 Provide the same layer IDs as to <code>on</code> or <code>once</code>, when the listener was registered.</p>
 <h5 id="type-parameters_1">Type Parameters</h5>
@@ -14446,7 +14441,7 @@ Provide the same layer IDs as to <code>on</code> or <code>once</code>, when the 
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2473">ui/map.ts:2473</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2475">ui/map.ts:2475</a></p>
 <p>Overload of the <code>off</code> method that allows to remove an event created without specifying a layer.</p>
 <h5 id="type-parameters_2">Type Parameters</h5>
 <table>
@@ -14491,7 +14486,7 @@ Provide the same layer IDs as to <code>on</code> or <code>once</code>, when the 
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2480">ui/map.ts:2480</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2482">ui/map.ts:2482</a></p>
 <p>Overload of the <code>off</code> method that allows to remove an event created without specifying a layer.</p>
 <h5 id="parameters_3">Parameters</h5>
 <table>
@@ -14525,7 +14520,7 @@ Provide the same layer IDs as to <code>on</code> or <code>once</code>, when the 
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layer</code>: <code>string</code>, <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2286">ui/map.ts:2286</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2288">ui/map.ts:2288</a></p>
 <p>Adds a listener for events of a specified type, optionally limited to features in a specified style layer(s).
 See <a href="../../type-aliases/MapEventType/">MapEventType</a> and <a href="../../type-aliases/MapLayerEventType/">MapLayerEventType</a> for a full list of events and their description.</p>
 <table>
@@ -14825,7 +14820,7 @@ See <a href="../../type-aliases/MapEventType/">MapEventType</a> and <a href="../
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layerIds</code>: <code>string</code>[], <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2298">ui/map.ts:2298</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2300">ui/map.ts:2300</a></p>
 <p>Overload of the <code>on</code> method that allows to listen to events specifying multiple layers.</p>
 <h5 id="type-parameters_4">Type Parameters</h5>
 <table>
@@ -14875,7 +14870,7 @@ See <a href="../../type-aliases/MapEventType/">MapEventType</a> and <a href="../
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2309">ui/map.ts:2309</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2311">ui/map.ts:2311</a></p>
 <p>Overload of the <code>on</code> method that allows to listen to events without specifying a layer.</p>
 <h5 id="type-parameters_5">Type Parameters</h5>
 <table>
@@ -14920,7 +14915,7 @@ See <a href="../../type-aliases/MapEventType/">MapEventType</a> and <a href="../
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2316">ui/map.ts:2316</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2318">ui/map.ts:2318</a></p>
 <p>Overload of the <code>on</code> method that allows to listen to events without specifying a layer.</p>
 <h5 id="parameters_7">Parameters</h5>
 <table>
@@ -14954,7 +14949,7 @@ See <a href="../../type-aliases/MapEventType/">MapEventType</a> and <a href="../
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layer</code>: <code>string</code>, <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2355">ui/map.ts:2355</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2357">ui/map.ts:2357</a></p>
 <p>Adds a listener that will be called only once to a specified event type, optionally limited to features in a specified style layer.</p>
 <h5 id="type-parameters_6">Type Parameters</h5>
 <table>
@@ -15005,7 +15000,7 @@ See <a href="../../type-aliases/MapEventType/">MapEventType</a> and <a href="../
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layer</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2367">ui/map.ts:2367</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2369">ui/map.ts:2369</a></p>
 <p>Overload of the <code>once</code> method that, with a single layer and no listener, returns a promise
 resolving with the event for easier usage of async/await.</p>
 <h5 id="type-parameters_7">Type Parameters</h5>
@@ -15051,7 +15046,7 @@ resolving with the event for easier usage of async/await.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layerIds</code>: <code>string</code>[], <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2378">ui/map.ts:2378</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2380">ui/map.ts:2380</a></p>
 <p>Overload of the <code>once</code> method that allows to listen to events specifying multiple layers.</p>
 <h5 id="type-parameters_8">Type Parameters</h5>
 <table>
@@ -15101,7 +15096,7 @@ resolving with the event for easier usage of async/await.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>layerIds</code>: <code>string</code>[]): <code>Promise</code>&lt;<a href="../../type-aliases/MapLayerEventType/"><code>MapLayerEventType</code></a>[<code>T</code>] &amp; <code>Object</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2390">ui/map.ts:2390</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2392">ui/map.ts:2392</a></p>
 <p>Overload of the <code>once</code> method that, with multiple layers and no listener, returns a promise
 resolving with the event for easier usage of async/await.</p>
 <h5 id="type-parameters_9">Type Parameters</h5>
@@ -15147,7 +15142,7 @@ resolving with the event for easier usage of async/await.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>ev</code>: <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>[<code>T</code>] &amp; <code>Object</code>) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2400">ui/map.ts:2400</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2402">ui/map.ts:2402</a></p>
 <p>Overload of the <code>once</code> method that allows to listen to events without specifying a layer.</p>
 <h5 id="type-parameters_10">Type Parameters</h5>
 <table>
@@ -15192,7 +15187,7 @@ resolving with the event for easier usage of async/await.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>&gt;(<code>type</code>: <code>T</code>): <code>Promise</code>&lt;<a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>[<code>T</code>] &amp; <code>Object</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2407">ui/map.ts:2407</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2409">ui/map.ts:2409</a></p>
 <p>Overload of the <code>once</code> method that returns a promise resolving with the event,
 for easier usage of async/await, when no listener is provided.</p>
 <h5 id="type-parameters_11">Type Parameters</h5>
@@ -15233,7 +15228,7 @@ for easier usage of async/await, when no listener is provided.</p>
 <blockquote>
 <p><strong>once</strong>(<code>type</code>: keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>, <code>listener?</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>Promise</code>&lt;<code>any</code>&gt; | <code>Map</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2414">ui/map.ts:2414</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2416">ui/map.ts:2416</a></p>
 <p>Overload of the <code>once</code> method that allows to listen to events without specifying a layer.</p>
 <h5 id="parameters_14">Parameters</h5>
 <table>
@@ -15262,11 +15257,21 @@ for easier usage of async/await, when no listener is provided.</p>
 <h5 id="overrides_14">Overrides</h5>
 <p><code>Evented.once</code></p>
 <h2 id="methods">Methods</h2>
+<h3 id="_shouldhandleinitialresize">_shouldHandleInitialResize()</h3>
+<blockquote>
+<p><strong>_shouldHandleInitialResize</strong>(): <code>boolean</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4075">ui/map.ts:4075</a></p>
+<p>Determines if the initial resize event should be handled based on the container's dimensions.</p>
+<h4 id="returns_21">Returns</h4>
+<p><code>boolean</code></p>
+<p><code>true</code> if the initial resize event should be handled, <code>false</code> otherwise.</p>
+<hr />
 <h3 id="addcontrol">addControl()</h3>
 <blockquote>
 <p><strong>addControl</strong>(<code>control</code>: <a href="../../interfaces/IControl/"><code>IControl</code></a>, <code>position?</code>: <a href="../../type-aliases/ControlPosition/"><code>ControlPosition</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L936">ui/map.ts:936</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L936">ui/map.ts:936</a></p>
 <p>Adds an <a href="../../interfaces/IControl/">IControl</a> to the map, calling <code>control.onAdd(this)</code>.</p>
 <p>An <a href="../ErrorEvent/">ErrorEvent</a> will be fired if the control is invalid.</p>
 <h4 id="parameters_15">Parameters</h4>
@@ -15291,7 +15296,7 @@ for easier usage of async/await, when no listener is provided.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_21">Returns</h4>
+<h4 id="returns_22">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_2">Example</h4>
 <p>Add zoom and rotation controls to the map.
@@ -15304,7 +15309,7 @@ for easier usage of async/await, when no listener is provided.</p>
 <blockquote>
 <p><strong>addImage</strong>(<code>id</code>: <code>string</code>, <code>image</code>: <a href="../../type-aliases/StyleImageSource/"><code>StyleImageSource</code></a>, <code>options?</code>: <code>Partial</code>&lt;<a href="../../type-aliases/StyleImageMetadata/"><code>StyleImageMetadata</code></a>&gt;): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3189">ui/map.ts:3189</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3191">ui/map.ts:3191</a></p>
 <p>Add an image to the style. This image can be displayed on the map like any other icon in the style's
 sprite using the image's ID with
 <a href="https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image"><code>icon-image</code></a>,
@@ -15339,7 +15344,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 </tr>
 </tbody>
 </table>
-<h4 id="returns_22">Returns</h4>
+<h4 id="returns_23">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_3">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// If the style's sprite does not already contain an image with ID 'cat',</span>
@@ -15367,7 +15372,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 <blockquote>
 <p><strong>addLayer</strong>(<code>layer</code>: <a href="../../type-aliases/AddLayerObject/"><code>AddLayerObject</code></a>, <code>beforeId?</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3502">ui/map.ts:3502</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3504">ui/map.ts:3504</a></p>
 <p>Adds a <a href="https://maplibre.org/maplibre-style-spec/layers">MapLibre style layer</a>
 to the map's style.</p>
 <p>A layer defines how data from a specified source will be styled. Read more about layer types
@@ -15394,7 +15399,7 @@ and available paint and layout properties in the <a href="https://maplibre.org/m
 </tr>
 </tbody>
 </table>
-<h4 id="returns_23">Returns</h4>
+<h4 id="returns_24">Returns</h4>
 <p><code>this</code></p>
 <h4 id="examples_1">Examples</h4>
 <p>Add a circle layer with a vector source
@@ -15458,7 +15463,7 @@ and available paint and layout properties in the <a href="https://maplibre.org/m
 <blockquote>
 <p><strong>addSource</strong>(<code>id</code>: <code>string</code>, <code>source</code>: <a href="https://maplibre.org/maplibre-style-spec/sources/"><code>SourceSpecification</code></a> | <a href="../../type-aliases/CanvasSourceSpecification/"><code>CanvasSourceSpecification</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2905">ui/map.ts:2905</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2907">ui/map.ts:2907</a></p>
 <p>Adds a source to the map's style.</p>
 <p>Events triggered:</p>
 <p>Triggers the <code>source.add</code> event.</p>
@@ -15484,7 +15489,7 @@ and available paint and layout properties in the <a href="https://maplibre.org/m
 </tr>
 </tbody>
 </table>
-<h4 id="returns_24">Returns</h4>
+<h4 id="returns_25">Returns</h4>
 <p><code>this</code></p>
 <h4 id="examples_2">Examples</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addSource</span><span class="p">(</span><span class="s1">'my-data'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
@@ -15514,7 +15519,7 @@ and available paint and layout properties in the <a href="https://maplibre.org/m
 <blockquote>
 <p><strong>addSprite</strong>(<code>id</code>: <code>string</code>, <code>url</code>: <code>string</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3784">ui/map.ts:3784</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3786">ui/map.ts:3786</a></p>
 <p>Adds a sprite to the map's style. Fires the <code>style</code> event.</p>
 <h4 id="parameters_19">Parameters</h4>
 <table>
@@ -15543,7 +15548,7 @@ and available paint and layout properties in the <a href="https://maplibre.org/m
 </tr>
 </tbody>
 </table>
-<h4 id="returns_25">Returns</h4>
+<h4 id="returns_26">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_4">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addSprite</span><span class="p">(</span><span class="s1">'sprite-two'</span><span class="p">,</span><span class="w"> </span><span class="s1">'http://example.com/sprite-two'</span><span class="p">);</span>
@@ -15553,10 +15558,10 @@ and available paint and layout properties in the <a href="https://maplibre.org/m
 <blockquote>
 <p><strong>areTilesLoaded</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3047">ui/map.ts:3047</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3049">ui/map.ts:3049</a></p>
 <p>Returns a Boolean indicating whether all tiles in the viewport from all sources on
 the style are loaded.</p>
-<h4 id="returns_26">Returns</h4>
+<h4 id="returns_27">Returns</h4>
 <p><code>boolean</code></p>
 <p>A Boolean indicating whether all tiles are loaded.</p>
 <h4 id="example_5">Example</h4>
@@ -15567,7 +15572,7 @@ the style are loaded.</p>
 <blockquote>
 <p><strong>calculateCameraOptionsFromCameraLngLatAltRotation</strong>(<code>cameraLngLat</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <code>cameraAlt</code>: <code>number</code>, <code>bearing</code>: <code>number</code>, <code>pitch</code>: <code>number</code>, <code>roll?</code>: <code>number</code>): <a href="../../type-aliases/CameraOptions/"><code>CameraOptions</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1440">ui/map.ts:1440</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1440">ui/map.ts:1440</a></p>
 <p>Given a camera position and rotation, calculates zoom and center point and returns them as <a href="../../type-aliases/CameraOptions/">CameraOptions</a>.</p>
 <h4 id="parameters_20">Parameters</h4>
 <table>
@@ -15606,7 +15611,7 @@ the style are loaded.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_27">Returns</h4>
+<h4 id="returns_28">Returns</h4>
 <p><a href="../../type-aliases/CameraOptions/"><code>CameraOptions</code></a></p>
 <p>the calculated camera options</p>
 <h4 id="example_6">Example</h4>
@@ -15625,7 +15630,7 @@ the style are loaded.</p>
 <blockquote>
 <p><strong>calculateCameraOptionsFromTo</strong>(<code>from</code>: <a href="../LngLat/"><code>LngLat</code></a>, <code>altitudeFrom</code>: <code>number</code>, <code>to</code>: <a href="../LngLat/"><code>LngLat</code></a>, <code>altitudeTo?</code>: <code>number</code>): <a href="../../type-aliases/CameraOptions/"><code>CameraOptions</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1545">ui/map.ts:1545</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1545">ui/map.ts:1545</a></p>
 <p>Given a camera 'from' position and a position to look at (<code>to</code>), calculates zoom and camera rotation and returns them as <a href="../../type-aliases/CameraOptions/">CameraOptions</a>.
 Under <code>globe</code> and <code>vertical-perspective</code> the calculation follows the sphere while the map renders as a globe, keeping the point looked at on the sea-level sphere; <code>altitudeTo</code> only becomes the center elevation.</p>
 <h4 id="parameters_21">Parameters</h4>
@@ -15660,7 +15665,7 @@ Under <code>globe</code> and <code>vertical-perspective</code> the calculation f
 </tr>
 </tbody>
 </table>
-<h4 id="returns_28">Returns</h4>
+<h4 id="returns_29">Returns</h4>
 <p><a href="../../type-aliases/CameraOptions/"><code>CameraOptions</code></a></p>
 <p>the calculated camera options</p>
 <h4 id="example_7">Example</h4>
@@ -15678,7 +15683,7 @@ Under <code>globe</code> and <code>vertical-perspective</code> the calculation f
 <blockquote>
 <p><strong>cameraForBounds</strong>(<code>bounds</code>: <a href="../../type-aliases/LngLatBoundsLike/"><code>LngLatBoundsLike</code></a>, <code>options?</code>: <a href="../../type-aliases/CameraForBoundsOptions/"><code>CameraForBoundsOptions</code></a>): <a href="../../type-aliases/CenterZoomBearing/"><code>CenterZoomBearing</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1348">ui/map.ts:1348</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1348">ui/map.ts:1348</a></p>
 <h4 id="parameters_22">Parameters</h4>
 <table>
 <thead>
@@ -15701,7 +15706,7 @@ Under <code>globe</code> and <code>vertical-perspective</code> the calculation f
 </tr>
 </tbody>
 </table>
-<h4 id="returns_29">Returns</h4>
+<h4 id="returns_30">Returns</h4>
 <p><a href="../../type-aliases/CenterZoomBearing/"><code>CenterZoomBearing</code></a></p>
 <p>If map is able to fit to provided bounds, returns <code>center</code>, <code>zoom</code>, and <code>bearing</code>.
 If map is unable to fit, method will warn and return undefined.</p>
@@ -15716,7 +15721,7 @@ If map is unable to fit, method will warn and return undefined.</p>
 <blockquote>
 <p><strong>coveringTiles</strong>(<code>options</code>: <code>CoveringTilesOptions</code>): <a href="../../interfaces/OverscaledTileID/"><code>OverscaledTileID</code></a>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1018">ui/map.ts:1018</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1018">ui/map.ts:1018</a></p>
 <p>Returns an array of <code>OverscaledTileID</code> objects that cover the current viewport for a given tile size.
 This method is useful for determining which tiles are visible in the current viewport.</p>
 <h4 id="parameters_23">Parameters</h4>
@@ -15736,7 +15741,7 @@ This method is useful for determining which tiles are visible in the current vie
 </tr>
 </tbody>
 </table>
-<h4 id="returns_30">Returns</h4>
+<h4 id="returns_31">Returns</h4>
 <p><a href="../../interfaces/OverscaledTileID/"><code>OverscaledTileID</code></a>[]</p>
 <p>An array of <code>OverscaledTileID</code> objects.</p>
 <h4 id="example_9">Example</h4>
@@ -15748,7 +15753,7 @@ This method is useful for determining which tiles are visible in the current vie
 <blockquote>
 <p><strong>easeTo</strong>(<code>options</code>: <a href="../../type-aliases/EaseToOptions/"><code>EaseToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1459">ui/map.ts:1459</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1459">ui/map.ts:1459</a></p>
 <p>Changes any combination of <code>center</code>, <code>zoom</code>, <code>bearing</code>, <code>pitch</code>, <code>roll</code>, and <code>padding</code> with an animated transition
 between old and new values. The map will retain its current values for any
 details not specified in <code>options</code>.</p>
@@ -15782,7 +15787,7 @@ unless <code>options</code> includes <code>essential: true</code>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_31">Returns</h4>
+<h4 id="returns_32">Returns</h4>
 <p><code>this</code></p>
 <h4 id="see_6">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/">Navigate the map with game-like controls</a></p>
@@ -15792,7 +15797,7 @@ unless <code>options</code> includes <code>essential: true</code>.</p>
 <blockquote>
 <p><strong>fire</strong>(<code>event</code>: <a href="../ErrorEvent/"><code>ErrorEvent</code></a> | <a href="../MapStyleImageMissingEvent/"><code>MapStyleImageMissingEvent</code></a> | <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>unknown</code>&gt; | <a href="../MapSourceDataEvent/"><code>MapSourceDataEvent</code></a> | <a href="../MapMovementEvent/"><code>MapMovementEvent</code></a> | <a href="../MapContextEvent/"><code>MapContextEvent</code></a> | <a href="../MapStyleDataEvent/"><code>MapStyleDataEvent</code></a> | <a href="../MapStyleLoadEvent/"><code>MapStyleLoadEvent</code></a> | <a href="../MapBoxZoomEvent/"><code>MapBoxZoomEvent</code></a> | <a href="../MapTouchEvent/"><code>MapTouchEvent</code></a> | <a href="../MapMouseEvent/"><code>MapMouseEvent</code></a> | <a href="../MapWheelEvent/"><code>MapWheelEvent</code></a> | <a href="../MapTerrainEvent/"><code>MapTerrainEvent</code></a> | <a href="../MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>TouchEvent</code> | <code>WheelEvent</code>&gt; &amp; <code>object</code> | <a href="../MapProjectionEvent/"><code>MapProjectionEvent</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L156">util/evented.ts:156</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L156">util/evented.ts:156</a></p>
 <p>Calls every listener registered for the event's type.</p>
 <h5 id="parameters_25">Parameters</h5>
 <table>
@@ -15809,7 +15814,7 @@ unless <code>options</code> includes <code>essential: true</code>.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_32">Returns</h5>
+<h5 id="returns_33">Returns</h5>
 <p><code>this</code></p>
 <h5 id="inherited-from">Inherited from</h5>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#fire"><code>fire</code></a></p>
@@ -15817,7 +15822,7 @@ unless <code>options</code> includes <code>essential: true</code>.</p>
 <blockquote>
 <p><strong>fire</strong>(<code>type</code>: keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>, <code>properties?</code>: <code>object</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L162">util/evented.ts:162</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L162">util/evented.ts:162</a></p>
 <p>Compatibility with the (type: string, properties: Object) signature from previous versions.
 See https://github.com/mapbox/mapbox-gl-js/issues/6522,
     https://github.com/mapbox/mapbox-gl-draw/issues/766</p>
@@ -15840,7 +15845,7 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 </tr>
 </tbody>
 </table>
-<h5 id="returns_33">Returns</h5>
+<h5 id="returns_34">Returns</h5>
 <p><code>this</code></p>
 <h5 id="inherited-from_1">Inherited from</h5>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#fire"><code>fire</code></a></p>
@@ -15849,7 +15854,7 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 <blockquote>
 <p><strong>fitBounds</strong>(<code>bounds</code>: <a href="../../type-aliases/LngLatBoundsLike/"><code>LngLatBoundsLike</code></a>, <code>options?</code>: <a href="../../type-aliases/FitBoundsOptions/"><code>FitBoundsOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1369">ui/map.ts:1369</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1369">ui/map.ts:1369</a></p>
 <p>Pans and zooms the map to contain its visible area within the specified geographical bounds.
 This function will also reset the map's bearing to 0 if bearing is nonzero.</p>
 <p>Triggers the following events: <code>movestart</code> and <code>moveend</code>.</p>
@@ -15880,7 +15885,7 @@ This function will also reset the map's bearing to 0 if bearing is nonzero.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_34">Returns</h4>
+<h4 id="returns_35">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_10">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">bbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="o">-</span><span class="mf">79</span><span class="p">,</span><span class="w"> </span><span class="mf">43</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">73</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">]];</span>
@@ -15895,7 +15900,7 @@ This function will also reset the map's bearing to 0 if bearing is nonzero.</p>
 <blockquote>
 <p><strong>fitScreenCoordinates</strong>(<code>p0</code>: <a href="../../type-aliases/PointLike/"><code>PointLike</code></a>, <code>p1</code>: <a href="../../type-aliases/PointLike/"><code>PointLike</code></a>, <code>bearing</code>: <code>number</code>, <code>options?</code>: <a href="../../type-aliases/FitBoundsOptions/"><code>FitBoundsOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1392">ui/map.ts:1392</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1392">ui/map.ts:1392</a></p>
 <p>Pans, rotates and zooms the map to to fit the box made by points p0 and p1
 once the map is rotated to the specified bearing. To zoom without rotating,
 pass in the current map bearing.</p>
@@ -15937,7 +15942,7 @@ pass in the current map bearing.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_35">Returns</h4>
+<h4 id="returns_36">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_11">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">p0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">220</span><span class="p">,</span><span class="w"> </span><span class="mf">400</span><span class="p">];</span>
@@ -15953,7 +15958,7 @@ pass in the current map bearing.</p>
 <blockquote>
 <p><strong>flyTo</strong>(<code>options</code>: <a href="../../type-aliases/FlyToOptions/"><code>FlyToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1496">ui/map.ts:1496</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1496">ui/map.ts:1496</a></p>
 <p>Changes any combination of center, zoom, bearing, pitch, and roll, animating the transition along a curve that
 evokes flight. The animation seamlessly incorporates zooming and panning to help
 the user maintain her bearings even after traversing a great distance.</p>
@@ -15987,7 +15992,7 @@ unless 'options' includes <code>essential: true</code>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_36">Returns</h4>
+<h4 id="returns_37">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_12">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// fly with default options to null island</span>
@@ -16014,10 +16019,10 @@ unless 'options' includes <code>essential: true</code>.</p>
 <blockquote>
 <p><strong>getAnisotropicFilterPitch</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1943">ui/map.ts:1943</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1945">ui/map.ts:1945</a></p>
 <p>Returns the map's anisotropic filter pitch.
 If the map is pitched beyond this threshold, anisotropic filtering will be applied to all raster layers.</p>
-<h4 id="returns_37">Returns</h4>
+<h4 id="returns_38">Returns</h4>
 <p><code>number</code></p>
 <p>The anisotropicFilterPitch</p>
 <h4 id="example_13">Example</h4>
@@ -16028,10 +16033,10 @@ If the map is pitched beyond this threshold, anisotropic filtering will be appli
 <blockquote>
 <p><strong>getBearing</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1211">ui/map.ts:1211</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1211">ui/map.ts:1211</a></p>
 <p>Returns the map's current bearing. The bearing is the compass direction that is "up"; for example, a bearing
 of 90° orients the map so that east is up.</p>
-<h4 id="returns_38">Returns</h4>
+<h4 id="returns_39">Returns</h4>
 <p><code>number</code></p>
 <p>The map's current bearing.</p>
 <h4 id="see_10">See</h4>
@@ -16041,10 +16046,10 @@ of 90° orients the map so that east is up.</p>
 <blockquote>
 <p><strong>getBounds</strong>(): <a href="../LngLatBounds/"><code>LngLatBounds</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1689">ui/map.ts:1689</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1691">ui/map.ts:1691</a></p>
 <p>Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
 an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.</p>
-<h4 id="returns_39">Returns</h4>
+<h4 id="returns_40">Returns</h4>
 <p><a href="../LngLatBounds/"><code>LngLatBounds</code></a></p>
 <p>The geographical bounds of the map as <a href="../LngLatBounds/">LngLatBounds</a>.</p>
 <h4 id="example_14">Example</h4>
@@ -16055,11 +16060,11 @@ an axis-aligned rectangle, and the result is the smallest bounds that encompasse
 <blockquote>
 <p><strong>getCameraTargetElevation</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4649">ui/map.ts:4649</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4666">ui/map.ts:4666</a></p>
 <p>Returns the elevation for the point where the camera is looking.
 This value corresponds to:
 "meters above sea level" * "exaggeration"</p>
-<h4 id="returns_40">Returns</h4>
+<h4 id="returns_41">Returns</h4>
 <p><code>number</code></p>
 <p>The elevation.</p>
 <hr />
@@ -16067,9 +16072,9 @@ This value corresponds to:
 <blockquote>
 <p><strong>getCanvas</strong>(): <code>HTMLCanvasElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4052">ui/map.ts:4052</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4054">ui/map.ts:4054</a></p>
 <p>Returns the map's <code>&lt;canvas&gt;</code> element.</p>
-<h4 id="returns_41">Returns</h4>
+<h4 id="returns_42">Returns</h4>
 <p><code>HTMLCanvasElement</code></p>
 <p>The map's <code>&lt;canvas&gt;</code> element.</p>
 <h4 id="see_11">See</h4>
@@ -16083,13 +16088,13 @@ This value corresponds to:
 <blockquote>
 <p><strong>getCanvasContainer</strong>(): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4040">ui/map.ts:4040</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4042">ui/map.ts:4042</a></p>
 <p>Returns the HTML element containing the map's <code>&lt;canvas&gt;</code> element.</p>
 <p>If you want to add non-GL overlays to the map, you should append them to this element.</p>
 <p>This is the element to which event bindings for map interactivity (such as panning and zooming) are
 attached. It will receive bubbled events from child elements such as the <code>&lt;canvas&gt;</code>, but not from
 map controls.</p>
-<h4 id="returns_42">Returns</h4>
+<h4 id="returns_43">Returns</h4>
 <p><code>HTMLElement</code></p>
 <p>The container of the map's <code>&lt;canvas&gt;</code>.</p>
 <h4 id="see_12">See</h4>
@@ -16099,9 +16104,9 @@ map controls.</p>
 <blockquote>
 <p><strong>getCenter</strong>(): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1040">ui/map.ts:1040</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1040">ui/map.ts:1040</a></p>
 <p>Returns the map's geographical centerpoint.</p>
-<h4 id="returns_43">Returns</h4>
+<h4 id="returns_44">Returns</h4>
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The map's geographical centerpoint.</p>
 <h4 id="example_15">Example</h4>
@@ -16115,22 +16120,22 @@ map controls.</p>
 <blockquote>
 <p><strong>getCenterClampedToGround</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1523">ui/map.ts:1523</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1523">ui/map.ts:1523</a></p>
 <p>Returns the value of <code>centerClampedToGround</code>.</p>
 <p>If true, the elevation of the center point will automatically be set to the terrain elevation
 (or zero if terrain is not enabled). If false, the elevation of the center point will default
 to sea level and will not automatically update. Defaults to true. Needs to be set to false to
 keep the camera above ground when pitch &gt; 90 degrees.</p>
-<h4 id="returns_44">Returns</h4>
+<h4 id="returns_45">Returns</h4>
 <p><code>boolean</code></p>
 <hr />
 <h3 id="getcenterelevation">getCenterElevation()</h3>
 <blockquote>
 <p><strong>getCenterElevation</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1059">ui/map.ts:1059</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1059">ui/map.ts:1059</a></p>
 <p>Returns the elevation of the map's center point.</p>
-<h4 id="returns_45">Returns</h4>
+<h4 id="returns_46">Returns</h4>
 <p><code>number</code></p>
 <p>The elevation of the map's center point, in meters above sea level.</p>
 <hr />
@@ -16138,9 +16143,9 @@ keep the camera above ground when pitch &gt; 90 degrees.</p>
 <blockquote>
 <p><strong>getContainer</strong>(): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4024">ui/map.ts:4024</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4026">ui/map.ts:4026</a></p>
 <p>Returns the map's containing HTML element.</p>
-<h4 id="returns_46">Returns</h4>
+<h4 id="returns_47">Returns</h4>
 <p><code>HTMLElement</code></p>
 <p>The map's container.</p>
 <hr />
@@ -16148,7 +16153,7 @@ keep the camera above ground when pitch &gt; 90 degrees.</p>
 <blockquote>
 <p><strong>getFeatureState</strong>(<code>feature</code>: <a href="../../type-aliases/FeatureIdentifier/"><code>FeatureIdentifier</code></a>): <code>any</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4015">ui/map.ts:4015</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4017">ui/map.ts:4017</a></p>
 <p>Gets the <code>state</code> of a feature.
 A feature's <code>state</code> is a set of user-defined key-value pairs that are assigned to a feature at runtime.
 Features are identified by their <code>feature.id</code> attribute, which can be any number or string.</p>
@@ -16173,7 +16178,7 @@ Features are identified by their <code>feature.id</code> attribute, which can be
 </tr>
 </tbody>
 </table>
-<h4 id="returns_47">Returns</h4>
+<h4 id="returns_48">Returns</h4>
 <p><code>any</code></p>
 <p>The state of the feature: a set of key-value pairs that was assigned to the feature at runtime.</p>
 <h4 id="example_16">Example</h4>
@@ -16194,7 +16199,7 @@ get the feature state for the feature under the mouse
 <blockquote>
 <p><strong>getFilter</strong>(<code>layerId</code>: <code>string</code>): <code>void</code> | <code>FilterSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3645">ui/map.ts:3645</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3647">ui/map.ts:3647</a></p>
 <p>Returns the filter applied to the specified style layer.</p>
 <h4 id="parameters_31">Parameters</h4>
 <table>
@@ -16213,7 +16218,7 @@ get the feature state for the feature under the mouse
 </tr>
 </tbody>
 </table>
-<h4 id="returns_48">Returns</h4>
+<h4 id="returns_49">Returns</h4>
 <p><code>void</code> | <code>FilterSpecification</code></p>
 <p>The layer's filter.</p>
 <hr />
@@ -16221,9 +16226,9 @@ get the feature state for the feature under the mouse
 <blockquote>
 <p><strong>getFontFaces</strong>(): <code>FontFacesSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3769">ui/map.ts:3769</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3771">ui/map.ts:3771</a></p>
 <p>Returns the value of the style's <code>font-faces</code> property.</p>
-<h4 id="returns_49">Returns</h4>
+<h4 id="returns_50">Returns</h4>
 <p><code>FontFacesSpecification</code></p>
 <p>The style's font faces, or <code>null</code> if it declares none.</p>
 <hr />
@@ -16231,9 +16236,9 @@ get the feature state for the feature under the mouse
 <blockquote>
 <p><strong>getGlobalState</strong>(): <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L917">ui/map.ts:917</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L917">ui/map.ts:917</a></p>
 <p>Returns the global map state</p>
-<h4 id="returns_50">Returns</h4>
+<h4 id="returns_51">Returns</h4>
 <p><code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;</p>
 <p>The map state object.</p>
 <hr />
@@ -16241,9 +16246,9 @@ get the feature state for the feature under the mouse
 <blockquote>
 <p><strong>getGlyphs</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3731">ui/map.ts:3731</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3733">ui/map.ts:3733</a></p>
 <p>Returns the value of the style's glyphs URL</p>
-<h4 id="returns_51">Returns</h4>
+<h4 id="returns_52">Returns</h4>
 <p><code>string</code></p>
 <p>glyphs Style's glyphs url, or <code>null</code> if glyphs are unset.</p>
 <hr />
@@ -16251,7 +16256,7 @@ get the feature state for the feature under the mouse
 <blockquote>
 <p><strong>getImage</strong>(<code>id</code>: <code>string</code>): <a href="../../type-aliases/StyleImage/"><code>StyleImage</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3336">ui/map.ts:3336</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3338">ui/map.ts:3338</a></p>
 <p>Returns an image, specified by ID, currently available in the map.
 This includes both images from the style's original sprite
 and any images that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
@@ -16272,7 +16277,7 @@ and any images that have been added at runtime using <a href="#addimage">Map.add
 </tr>
 </tbody>
 </table>
-<h4 id="returns_52">Returns</h4>
+<h4 id="returns_53">Returns</h4>
 <p><a href="../../type-aliases/StyleImage/"><code>StyleImage</code></a></p>
 <p>An image in the map with the specified ID.</p>
 <h4 id="example_17">Example</h4>
@@ -16283,7 +16288,7 @@ and any images that have been added at runtime using <a href="#addimage">Map.add
 <blockquote>
 <p><strong>getLayer</strong>(<code>id</code>: <code>string</code>): <a href="../../interfaces/StyleLayer/"><code>StyleLayer</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3557">ui/map.ts:3557</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3559">ui/map.ts:3559</a></p>
 <p>Returns the layer with the specified ID in the map's style.</p>
 <h4 id="parameters_33">Parameters</h4>
 <table>
@@ -16302,7 +16307,7 @@ and any images that have been added at runtime using <a href="#addimage">Map.add
 </tr>
 </tbody>
 </table>
-<h4 id="returns_53">Returns</h4>
+<h4 id="returns_54">Returns</h4>
 <p><a href="../../interfaces/StyleLayer/"><code>StyleLayer</code></a></p>
 <p>The layer with the specified ID, or <code>undefined</code>
 if the ID corresponds to no existing layers.</p>
@@ -16319,9 +16324,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getLayersOrder</strong>(): <code>string</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3571">ui/map.ts:3571</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3573">ui/map.ts:3573</a></p>
 <p>Return the ids of all layers currently in the style, including custom layers, in order.</p>
-<h4 id="returns_54">Returns</h4>
+<h4 id="returns_55">Returns</h4>
 <p><code>string</code>[]</p>
 <p>ids of layers, in order</p>
 <h4 id="example_19">Example</h4>
@@ -16332,7 +16337,7 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getLayoutProperty</strong>&lt;<code>K</code> <em>extends</em> keyof <code>AllLayoutProperties</code>&gt;(<code>layerId</code>: <code>string</code>, <code>name</code>: <code>K</code>): <code>AllLayoutProperties</code>[<code>K</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3705">ui/map.ts:3705</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3707">ui/map.ts:3707</a></p>
 <p>Returns the value of a layout property in the specified style layer.</p>
 <h4 id="type-parameters_12">Type Parameters</h4>
 <table>
@@ -16369,7 +16374,7 @@ if the ID corresponds to no existing layers.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_55">Returns</h4>
+<h4 id="returns_56">Returns</h4>
 <p><code>AllLayoutProperties</code>[<code>K</code>]</p>
 <p>The value of the specified layout property.</p>
 <hr />
@@ -16377,9 +16382,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getLight</strong>(): <code>LightSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3861">ui/map.ts:3861</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3863">ui/map.ts:3863</a></p>
 <p>Returns the value of the light object.</p>
-<h4 id="returns_56">Returns</h4>
+<h4 id="returns_57">Returns</h4>
 <p><code>LightSpecification</code></p>
 <p>light Light properties of the style.</p>
 <hr />
@@ -16387,9 +16392,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getMaxBounds</strong>(): <a href="../LngLatBounds/"><code>LngLatBounds</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1701">ui/map.ts:1701</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1703">ui/map.ts:1703</a></p>
 <p>Returns the maximum geographical bounds the map is constrained to, or <code>null</code> if none set.</p>
-<h4 id="returns_57">Returns</h4>
+<h4 id="returns_58">Returns</h4>
 <p><a href="../LngLatBounds/"><code>LngLatBounds</code></a></p>
 <p>The map object.</p>
 <h4 id="example_20">Example</h4>
@@ -16400,9 +16405,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getMaxPitch</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1931">ui/map.ts:1931</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1933">ui/map.ts:1933</a></p>
 <p>Returns the map's maximum allowable pitch.</p>
-<h4 id="returns_58">Returns</h4>
+<h4 id="returns_59">Returns</h4>
 <p><code>number</code></p>
 <p>The maxPitch</p>
 <hr />
@@ -16410,9 +16415,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getMaxZoom</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1839">ui/map.ts:1839</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1841">ui/map.ts:1841</a></p>
 <p>Returns the map's maximum allowable zoom level.</p>
-<h4 id="returns_59">Returns</h4>
+<h4 id="returns_60">Returns</h4>
 <p><code>number</code></p>
 <p>The maxZoom</p>
 <h4 id="example_21">Example</h4>
@@ -16423,9 +16428,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getMinPitch</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1885">ui/map.ts:1885</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1887">ui/map.ts:1887</a></p>
 <p>Returns the map's minimum allowable pitch.</p>
-<h4 id="returns_60">Returns</h4>
+<h4 id="returns_61">Returns</h4>
 <p><code>number</code></p>
 <p>The minPitch</p>
 <hr />
@@ -16433,7 +16438,7 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getMinZoom</strong>(<code>constrained?</code>: <code>boolean</code>): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1786">ui/map.ts:1786</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1788">ui/map.ts:1788</a></p>
 <p>Returns the map's minimum allowable zoom level.</p>
 <h4 id="parameters_35">Parameters</h4>
 <table>
@@ -16454,7 +16459,7 @@ if the ID corresponds to no existing layers.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_61">Returns</h4>
+<h4 id="returns_62">Returns</h4>
 <p><code>number</code></p>
 <p>minZoom</p>
 <h4 id="example_22">Example</h4>
@@ -16465,9 +16470,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getPadding</strong>(): <a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1246">ui/map.ts:1246</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1246">ui/map.ts:1246</a></p>
 <p>Returns the current padding applied around the map viewport.</p>
-<h4 id="returns_62">Returns</h4>
+<h4 id="returns_63">Returns</h4>
 <p><a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a></p>
 <p>The current padding around the map viewport.</p>
 <hr />
@@ -16475,7 +16480,7 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getPaintProperty</strong>&lt;<code>K</code> <em>extends</em> keyof <code>AllPaintProperties</code>&gt;(<code>layerId</code>: <code>string</code>, <code>name</code>: <code>K</code>): <code>AllPaintProperties</code>[<code>K</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3677">ui/map.ts:3677</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3679">ui/map.ts:3679</a></p>
 <p>Returns the value of a paint property in the specified style layer.</p>
 <h4 id="type-parameters_13">Type Parameters</h4>
 <table>
@@ -16512,7 +16517,7 @@ if the ID corresponds to no existing layers.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_63">Returns</h4>
+<h4 id="returns_64">Returns</h4>
 <p><code>AllPaintProperties</code>[<code>K</code>]</p>
 <p>The value of the specified paint property.</p>
 <hr />
@@ -16520,9 +16525,9 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getPitch</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1307">ui/map.ts:1307</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1307">ui/map.ts:1307</a></p>
 <p>Returns the map's current pitch (tilt).</p>
-<h4 id="returns_64">Returns</h4>
+<h4 id="returns_65">Returns</h4>
 <p><code>number</code></p>
 <p>The map's current pitch, measured in degrees away from the plane of the screen.</p>
 <hr />
@@ -16530,10 +16535,10 @@ if the ID corresponds to no existing layers.</p>
 <blockquote>
 <p><strong>getPixelRatio</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1663">ui/map.ts:1663</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1665">ui/map.ts:1665</a></p>
 <p>Returns the map's pixel ratio.
 Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.</p>
-<h4 id="returns_65">Returns</h4>
+<h4 id="returns_66">Returns</h4>
 <p><code>number</code></p>
 <p>The pixel ratio.</p>
 <hr />
@@ -16541,9 +16546,9 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 <blockquote>
 <p><strong>getProjection</strong>(): <a href="https://maplibre.org/maplibre-style-spec/projection/"><code>ProjectionSpecification</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4661">ui/map.ts:4661</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4678">ui/map.ts:4678</a></p>
 <p>Gets the <a href="https://maplibre.org/maplibre-style-spec/projection/">ProjectionSpecification</a>.</p>
-<h4 id="returns_66">Returns</h4>
+<h4 id="returns_67">Returns</h4>
 <p><a href="https://maplibre.org/maplibre-style-spec/projection/"><code>ProjectionSpecification</code></a></p>
 <p>the projection specification.</p>
 <h4 id="example_23">Example</h4>
@@ -16554,7 +16559,7 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 <blockquote>
 <p><strong>getRenderWorldCopies</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1989">ui/map.ts:1989</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1991">ui/map.ts:1991</a></p>
 <p>Returns the state of <code>renderWorldCopies</code>. If <code>true</code>, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to <code>false</code>:</p>
 <ul>
 <li>When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
@@ -16562,7 +16567,7 @@ container, there will be blank space beyond 180 and -180 degrees longitude.</li>
 <li>Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
 map and the other on the left edge of the map) at every zoom level.</li>
 </ul>
-<h4 id="returns_67">Returns</h4>
+<h4 id="returns_68">Returns</h4>
 <p><code>boolean</code></p>
 <p>The renderWorldCopies</p>
 <h4 id="example_24">Example</h4>
@@ -16575,9 +16580,9 @@ map and the other on the left edge of the map) at every zoom level.</li>
 <blockquote>
 <p><strong>getRoll</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1322">ui/map.ts:1322</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1322">ui/map.ts:1322</a></p>
 <p>Returns the map's current roll angle.</p>
-<h4 id="returns_68">Returns</h4>
+<h4 id="returns_69">Returns</h4>
 <p><code>number</code></p>
 <p>The map's current roll, measured in degrees about the camera boresight.</p>
 <hr />
@@ -16585,9 +16590,9 @@ map and the other on the left edge of the map) at every zoom level.</li>
 <blockquote>
 <p><strong>getSky</strong>(): <code>SkySpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3891">ui/map.ts:3891</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3893">ui/map.ts:3893</a></p>
 <p>Returns the value of the style's sky.</p>
-<h4 id="returns_69">Returns</h4>
+<h4 id="returns_70">Returns</h4>
 <p><code>SkySpecification</code></p>
 <p>the sky properties of the style.</p>
 <h4 id="example_25">Example</h4>
@@ -16598,7 +16603,7 @@ map and the other on the left edge of the map) at every zoom level.</li>
 <blockquote>
 <p><strong>getSource</strong>&lt;<code>TSource</code> <em>extends</em> <a href="../../interfaces/Source/"><code>Source</code></a>&gt;(<code>id</code>: <code>string</code>): <code>TSource</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3093">ui/map.ts:3093</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3095">ui/map.ts:3095</a></p>
 <p>Returns the source with the specified ID in the map's style.</p>
 <p>This method is often used to update a source using the instance members for the relevant
 source type as defined in classes that derive from <a href="../../interfaces/Source/">Source</a>.
@@ -16634,7 +16639,7 @@ of an image source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_70">Returns</h4>
+<h4 id="returns_71">Returns</h4>
 <p><code>TSource</code></p>
 <p>The style source with the specified ID or <code>undefined</code> if the ID
 corresponds to no existing sources.
@@ -16655,9 +16660,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getSprite</strong>(): <code>object</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3815">ui/map.ts:3815</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3817">ui/map.ts:3817</a></p>
 <p>Returns the as-is value of the style's sprite.</p>
-<h4 id="returns_71">Returns</h4>
+<h4 id="returns_72">Returns</h4>
 <p><code>object</code>[]</p>
 <p>style's sprite list of id-url pairs</p>
 <hr />
@@ -16665,9 +16670,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getStyle</strong>(): <code>StyleSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2815">ui/map.ts:2815</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2817">ui/map.ts:2817</a></p>
 <p>Returns the map's MapLibre style object, a JSON object which can be used to recreate the map's style.</p>
-<h4 id="returns_72">Returns</h4>
+<h4 id="returns_73">Returns</h4>
 <p><code>StyleSpecification</code></p>
 <p>The map's style JSON object.</p>
 <h4 id="example_27">Example</h4>
@@ -16678,9 +16683,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getStyleUrl</strong>(): <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2831">ui/map.ts:2831</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2833">ui/map.ts:2833</a></p>
 <p>Returns the URL the map's style was loaded from.</p>
-<h4 id="returns_73">Returns</h4>
+<h4 id="returns_74">Returns</h4>
 <p><code>string</code></p>
 <p>The URL given to <a href="#setstyle">Map.setStyle</a> or the <code>style</code> map option, or <code>null</code> when the style was given as an object or the map has no style.</p>
 <h4 id="example_28">Example</h4>
@@ -16691,9 +16696,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getTerrain</strong>(): <code>TerrainSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3033">ui/map.ts:3033</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3035">ui/map.ts:3035</a></p>
 <p>Get the terrain-options if terrain is loaded</p>
-<h4 id="returns_74">Returns</h4>
+<h4 id="returns_75">Returns</h4>
 <p><code>TerrainSpecification</code></p>
 <p>the TerrainSpecification passed to setTerrain</p>
 <h4 id="example_29">Example</h4>
@@ -16704,9 +16709,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getVerticalFieldOfView</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1188">ui/map.ts:1188</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1188">ui/map.ts:1188</a></p>
 <p>Returns the map's current vertical field of view, in degrees.</p>
-<h4 id="returns_75">Returns</h4>
+<h4 id="returns_76">Returns</h4>
 <p><code>number</code></p>
 <p>The map's current vertical field of view.</p>
 <h4 id="default-value">Default Value</h4>
@@ -16720,9 +16725,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getZoom</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1115">ui/map.ts:1115</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1115">ui/map.ts:1115</a></p>
 <p>Returns the map's current zoom level.</p>
-<h4 id="returns_76">Returns</h4>
+<h4 id="returns_77">Returns</h4>
 <p><code>number</code></p>
 <p>The map's current zoom level.</p>
 <h4 id="example_31">Example</h4>
@@ -16733,9 +16738,9 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>getZoomSnap</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1234">ui/map.ts:1234</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1234">ui/map.ts:1234</a></p>
 <p>Returns the map's current zoom snap level.</p>
-<h4 id="returns_77">Returns</h4>
+<h4 id="returns_78">Returns</h4>
 <p><code>number</code></p>
 <p>The map's current zoom snap level.</p>
 <hr />
@@ -16743,7 +16748,7 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>hasControl</strong>(<code>control</code>: <a href="../../interfaces/IControl/"><code>IControl</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1002">ui/map.ts:1002</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1002">ui/map.ts:1002</a></p>
 <p>Checks if a control exists on the map.</p>
 <h4 id="parameters_38">Parameters</h4>
 <table>
@@ -16762,7 +16767,7 @@ A list of options for each source type is available on the MapLibre Style Specif
 </tr>
 </tbody>
 </table>
-<h4 id="returns_78">Returns</h4>
+<h4 id="returns_79">Returns</h4>
 <p><code>boolean</code></p>
 <p>true if map contains control.</p>
 <h4 id="example_32">Example</h4>
@@ -16778,7 +16783,7 @@ A list of options for each source type is available on the MapLibre Style Specif
 <blockquote>
 <p><strong>hasImage</strong>(<code>id</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3356">ui/map.ts:3356</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3358">ui/map.ts:3358</a></p>
 <p>Check whether or not an image with a specific ID exists in the style. This checks both images
 in the style's original sprite and any images
 that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
@@ -16800,7 +16805,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_79">Returns</h4>
+<h4 id="returns_80">Returns</h4>
 <p><code>boolean</code></p>
 <p>A Boolean indicating whether the image exists.</p>
 <h4 id="example_33">Example</h4>
@@ -16812,9 +16817,9 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>isMoving</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2074">ui/map.ts:2074</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2076">ui/map.ts:2076</a></p>
 <p>Returns true if the map is panning, zooming, rotating, or pitching due to a camera animation or user gesture.</p>
-<h4 id="returns_80">Returns</h4>
+<h4 id="returns_81">Returns</h4>
 <p><code>boolean</code></p>
 <p>true if the map is moving.</p>
 <h4 id="example_34">Example</h4>
@@ -16825,9 +16830,9 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>isRotating</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2098">ui/map.ts:2098</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2100">ui/map.ts:2100</a></p>
 <p>Returns true if the map is rotating due to a camera animation or user gesture.</p>
-<h4 id="returns_81">Returns</h4>
+<h4 id="returns_82">Returns</h4>
 <p><code>boolean</code></p>
 <p>true if the map is rotating.</p>
 <h4 id="example_35">Example</h4>
@@ -16838,7 +16843,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>isSourceLoaded</strong>(<code>id</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2924">ui/map.ts:2924</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2926">ui/map.ts:2926</a></p>
 <p>Returns a Boolean indicating whether the source is loaded. Returns <code>true</code> if the source with
 the given ID in the map's style has no outstanding network requests, otherwise <code>false</code>.</p>
 <p>A <a href="../ErrorEvent/">ErrorEvent</a> event will be fired if there is no source with the specified ID.</p>
@@ -16859,7 +16864,7 @@ the given ID in the map's style has no outstanding network requests, otherwise <
 </tr>
 </tbody>
 </table>
-<h4 id="returns_82">Returns</h4>
+<h4 id="returns_83">Returns</h4>
 <p><code>boolean</code></p>
 <p>A Boolean indicating whether the source is loaded.</p>
 <h4 id="example_36">Example</h4>
@@ -16870,9 +16875,9 @@ the given ID in the map's style has no outstanding network requests, otherwise <
 <blockquote>
 <p><strong>isStyleLoaded</strong>(): <code>boolean</code> | <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2860">ui/map.ts:2860</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2862">ui/map.ts:2862</a></p>
 <p>Returns a Boolean indicating whether the map's style is fully loaded.</p>
-<h4 id="returns_83">Returns</h4>
+<h4 id="returns_84">Returns</h4>
 <p><code>boolean</code> | <code>void</code></p>
 <p>A Boolean indicating whether the style is fully loaded.</p>
 <h4 id="example_37">Example</h4>
@@ -16883,9 +16888,9 @@ the given ID in the map's style has no outstanding network requests, otherwise <
 <blockquote>
 <p><strong>isZooming</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2086">ui/map.ts:2086</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2088">ui/map.ts:2088</a></p>
 <p>Returns true if the map is zooming due to a camera animation or user gesture.</p>
-<h4 id="returns_84">Returns</h4>
+<h4 id="returns_85">Returns</h4>
 <p><code>boolean</code></p>
 <p>true if the map is zooming.</p>
 <h4 id="example_38">Example</h4>
@@ -16896,7 +16901,7 @@ the given ID in the map's style has no outstanding network requests, otherwise <
 <blockquote>
 <p><strong>jumpTo</strong>(<code>options</code>: <a href="../../type-aliases/JumpToOptions/"><code>JumpToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1418">ui/map.ts:1418</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1418">ui/map.ts:1418</a></p>
 <p>Changes any combination of center, zoom, bearing, pitch, and roll, without
 an animated transition. The map will retain its current values for any
 details not specified in <code>options</code>.</p>
@@ -16924,7 +16929,7 @@ details not specified in <code>options</code>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_85">Returns</h4>
+<h4 id="returns_86">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_39">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="c1">// jump to coordinates at current zoom</span>
@@ -16947,7 +16952,7 @@ details not specified in <code>options</code>.</p>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: keyof <a href="../../type-aliases/MapEventType/"><code>MapEventType</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L206">util/evented.ts:206</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L206">util/evented.ts:206</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_42">Parameters</h4>
 <table>
@@ -16966,7 +16971,7 @@ details not specified in <code>options</code>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_86">Returns</h4>
+<h4 id="returns_87">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
 <h4 id="inherited-from_2">Inherited from</h4>
@@ -16976,11 +16981,11 @@ details not specified in <code>options</code>.</p>
 <blockquote>
 <p><strong>listImages</strong>(): <code>string</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3419">ui/map.ts:3419</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3421">ui/map.ts:3421</a></p>
 <p>Returns an Array of strings containing the IDs of all images currently available in the map.
 This includes both images from the style's original sprite
 and any images that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
-<h4 id="returns_87">Returns</h4>
+<h4 id="returns_88">Returns</h4>
 <p><code>string</code>[]</p>
 <p>An Array of strings containing the names of all sprites/images currently available in the map.</p>
 <h4 id="example_40">Example</h4>
@@ -16991,12 +16996,12 @@ and any images that have been added at runtime using <a href="#addimage">Map.add
 <blockquote>
 <p><strong>loaded</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4292">ui/map.ts:4292</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4309">ui/map.ts:4309</a></p>
 <p>Returns a Boolean indicating whether the map is fully loaded.</p>
 <p>Returns <code>false</code> if the style is not yet fully loaded,
 or if there has been a change to the sources or style that
 has not yet fully loaded.</p>
-<h4 id="returns_88">Returns</h4>
+<h4 id="returns_89">Returns</h4>
 <p><code>boolean</code></p>
 <p>A Boolean indicating whether the map is fully loaded.</p>
 <hr />
@@ -17004,7 +17009,7 @@ has not yet fully loaded.</p>
 <blockquote>
 <p><strong>loadImage</strong>(<code>url</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/GetResourceResponse/"><code>GetResourceResponse</code></a>&lt;<code>ImageBitmap</code> | <code>HTMLImageElement</code>&gt;&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3399">ui/map.ts:3399</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3401">ui/map.ts:3401</a></p>
 <p>Load an image from an external URL to be used with <a href="#addimage">Map.addImage</a>. External
 domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS">CORS</a>.</p>
 <h4 id="parameters_43">Parameters</h4>
@@ -17024,7 +17029,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 </tr>
 </tbody>
 </table>
-<h4 id="returns_89">Returns</h4>
+<h4 id="returns_90">Returns</h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/GetResourceResponse/"><code>GetResourceResponse</code></a>&lt;<code>ImageBitmap</code> | <code>HTMLImageElement</code>&gt;&gt;</p>
 <p>a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)</p>
 <h4 id="example_41">Example</h4>
@@ -17040,7 +17045,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 <blockquote>
 <p><strong>moveLayer</strong>(<code>id</code>: <code>string</code>, <code>beforeId?</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3520">ui/map.ts:3520</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3522">ui/map.ts:3522</a></p>
 <p>Moves a layer to a different z-position.</p>
 <h4 id="parameters_44">Parameters</h4>
 <table>
@@ -17064,7 +17069,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 </tr>
 </tbody>
 </table>
-<h4 id="returns_90">Returns</h4>
+<h4 id="returns_91">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_42">Example</h4>
 <p>Move a layer with ID 'polygon' before the layer with ID 'country-label'. The <code>polygon</code> layer will appear beneath the <code>country-label</code> layer on the map.
@@ -17075,7 +17080,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 <blockquote>
 <p><strong>panBy</strong>(<code>offset</code>: <a href="../../type-aliases/PointLike/"><code>PointLike</code></a>, <code>options?</code>: <a href="../../type-aliases/EaseToOptions/"><code>EaseToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1088">ui/map.ts:1088</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1088">ui/map.ts:1088</a></p>
 <p>Pans the map by the specified offset.</p>
 <p>Triggers the following events: <code>movestart</code> and <code>moveend</code>.</p>
 <h4 id="parameters_45">Parameters</h4>
@@ -17105,7 +17110,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 </tr>
 </tbody>
 </table>
-<h4 id="returns_91">Returns</h4>
+<h4 id="returns_92">Returns</h4>
 <p><code>this</code></p>
 <h4 id="see_18">See</h4>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/">Navigate the map with game-like controls</a></p>
@@ -17114,7 +17119,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 <blockquote>
 <p><strong>panTo</strong>(<code>lnglat</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <code>options?</code>: <a href="../../type-aliases/EaseToOptions/"><code>EaseToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1105">ui/map.ts:1105</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1105">ui/map.ts:1105</a></p>
 <p>Pans the map to the specified location with an animated transition.</p>
 <p>Triggers the following events: <code>movestart</code> and <code>moveend</code>.</p>
 <h4 id="parameters_46">Parameters</h4>
@@ -17144,7 +17149,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 </tr>
 </tbody>
 </table>
-<h4 id="returns_92">Returns</h4>
+<h4 id="returns_93">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_43">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">panTo</span><span class="p">([</span><span class="o">-</span><span class="mf">74</span><span class="p">,</span><span class="w"> </span><span class="mf">38</span><span class="p">]);</span>
@@ -17158,7 +17163,7 @@ domains must support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/
 <blockquote>
 <p><strong>project</strong>(<code>lnglat</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>): <code>Point</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2044">ui/map.ts:2044</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2046">ui/map.ts:2046</a></p>
 <p>Returns a <a href="https://github.com/mapbox/point-geometry">Point</a> representing pixel coordinates, relative to the map's <code>container</code>,
 that correspond to the specified geographical location.</p>
 <h4 id="parameters_47">Parameters</h4>
@@ -17178,7 +17183,7 @@ that correspond to the specified geographical location.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_93">Returns</h4>
+<h4 id="returns_94">Returns</h4>
 <p><code>Point</code></p>
 <p>The <a href="https://github.com/mapbox/point-geometry">Point</a> corresponding to <code>lnglat</code>, relative to the map's <code>container</code>.</p>
 <h4 id="example_44">Example</h4>
@@ -17190,7 +17195,7 @@ that correspond to the specified geographical location.</p>
 <blockquote>
 <p><strong>queryRenderedFeatures</strong>(<code>geometryOrOptions?</code>: <a href="../../type-aliases/PointLike/"><code>PointLike</code></a> | <a href="../../type-aliases/QueryRenderedFeaturesOptions/"><code>QueryRenderedFeaturesOptions</code></a> | [<a href="../../type-aliases/PointLike/"><code>PointLike</code></a>, <a href="../../type-aliases/PointLike/"><code>PointLike</code></a>], <code>options?</code>: <a href="../../type-aliases/QueryRenderedFeaturesOptions/"><code>QueryRenderedFeaturesOptions</code></a>): <a href="../../type-aliases/MapGeoJSONFeature/"><code>MapGeoJSONFeature</code></a>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2572">ui/map.ts:2572</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2574">ui/map.ts:2574</a></p>
 <p>Returns an array of MapGeoJSONFeature objects
 representing visible features that satisfy the query parameters.</p>
 <h4 id="parameters_48">Parameters</h4>
@@ -17215,7 +17220,7 @@ representing visible features that satisfy the query parameters.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_94">Returns</h4>
+<h4 id="returns_95">Returns</h4>
 <p><a href="../../type-aliases/MapGeoJSONFeature/"><code>MapGeoJSONFeature</code></a>[]</p>
 <p>An array of MapGeoJSONFeature objects.</p>
 <p>The <code>properties</code> value of each returned feature object contains the properties of its source feature. For GeoJSON sources, only
@@ -17273,7 +17278,7 @@ tiles due to tile buffering.</p>
 <blockquote>
 <p><strong>querySourceFeatures</strong>(<code>sourceId</code>: <code>string</code>, <code>parameters?</code>: <a href="../../type-aliases/QuerySourceFeatureOptions/"><code>QuerySourceFeatureOptions</code></a>): <a href="../../interfaces/GeoJSONFeature/"><code>GeoJSONFeature</code></a>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2622">ui/map.ts:2622</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2624">ui/map.ts:2624</a></p>
 <p>Returns an array of MapGeoJSONFeature objects
 representing features within the specified vector tile or GeoJSON source that satisfy the query parameters.</p>
 <h4 id="parameters_49">Parameters</h4>
@@ -17298,7 +17303,7 @@ representing features within the specified vector tile or GeoJSON source that sa
 </tr>
 </tbody>
 </table>
-<h4 id="returns_95">Returns</h4>
+<h4 id="returns_96">Returns</h4>
 <p><a href="../../interfaces/GeoJSONFeature/"><code>GeoJSONFeature</code></a>[]</p>
 <p>An array of MapGeoJSONFeature objects.</p>
 <p>In contrast to <a href="#queryrenderedfeatures">Map.queryRenderedFeatures</a>, this function returns all features matching the query parameters,
@@ -17323,7 +17328,7 @@ tiles due to tile buffering.</p>
 <blockquote>
 <p><strong>queryTerrainElevation</strong>(<code>lngLatLike</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1509">ui/map.ts:1509</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1509">ui/map.ts:1509</a></p>
 <p>Gets the elevation at a given location, in meters above sea level.
 Returns null if terrain is not enabled.
 If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
@@ -17345,7 +17350,7 @@ This method should be used for proper positioning of custom 3d objects, as expla
 </tr>
 </tbody>
 </table>
-<h4 id="returns_96">Returns</h4>
+<h4 id="returns_97">Returns</h4>
 <p><code>number</code></p>
 <p>elevation in meters</p>
 <hr />
@@ -17353,9 +17358,9 @@ This method should be used for proper positioning of custom 3d objects, as expla
 <blockquote>
 <p><strong>redraw</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4468">ui/map.ts:4468</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4485">ui/map.ts:4485</a></p>
 <p>Force a synchronous redraw of the map.</p>
-<h4 id="returns_97">Returns</h4>
+<h4 id="returns_98">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_46">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-58-1"><a id="__codelineno-58-1" name="__codelineno-58-1" href="#__codelineno-58-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">redraw</span><span class="p">();</span>
@@ -17365,7 +17370,7 @@ This method should be used for proper positioning of custom 3d objects, as expla
 <blockquote>
 <p><strong>refreshTiles</strong>(<code>sourceId</code>: <code>string</code>, <code>tileIds?</code>: <code>object</code>[]): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3143">ui/map.ts:3143</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3145">ui/map.ts:3145</a></p>
 <p>Triggers a reload of the selected tiles</p>
 <h4 id="parameters_51">Parameters</h4>
 <table>
@@ -17389,7 +17394,7 @@ This method should be used for proper positioning of custom 3d objects, as expla
 </tr>
 </tbody>
 </table>
-<h4 id="returns_98">Returns</h4>
+<h4 id="returns_99">Returns</h4>
 <p><code>void</code></p>
 <h4 id="example_47">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-59-1"><a id="__codelineno-59-1" name="__codelineno-59-1" href="#__codelineno-59-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">refreshTiles</span><span class="p">(</span><span class="s1">'satellite'</span><span class="p">,</span><span class="w"> </span><span class="p">[{</span><span class="nx">x</span><span class="o">:</span><span class="kt">1024</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="kt">1023</span><span class="p">,</span><span class="w"> </span><span class="nx">z</span><span class="o">:</span><span class="w"> </span><span class="kt">11</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nx">x</span><span class="o">:</span><span class="kt">1023</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="kt">1023</span><span class="p">,</span><span class="w"> </span><span class="nx">z</span><span class="o">:</span><span class="w"> </span><span class="kt">11</span><span class="p">}]);</span>
@@ -17399,20 +17404,20 @@ This method should be used for proper positioning of custom 3d objects, as expla
 <blockquote>
 <p><strong>remove</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4489">ui/map.ts:4489</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4506">ui/map.ts:4506</a></p>
 <p>Clean up and release all internal resources associated with this map.</p>
 <p>This includes DOM elements, event bindings, web workers, and WebGL resources.</p>
 <p>Use this method when you are done using the map and wish to ensure that it no
 longer consumes browser resources. Afterwards, you must not call any other
 methods on the map.</p>
-<h4 id="returns_99">Returns</h4>
+<h4 id="returns_100">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="removecontrol">removeControl()</h3>
 <blockquote>
 <p><strong>removeControl</strong>(<code>control</code>: <a href="../../interfaces/IControl/"><code>IControl</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L976">ui/map.ts:976</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L976">ui/map.ts:976</a></p>
 <p>Removes the control from the map.</p>
 <p>An <a href="../ErrorEvent/">ErrorEvent</a> will be fired if the control is invalid.</p>
 <h4 id="parameters_52">Parameters</h4>
@@ -17432,7 +17437,7 @@ methods on the map.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_100">Returns</h4>
+<h4 id="returns_101">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_48">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-60-1"><a id="__codelineno-60-1" name="__codelineno-60-1" href="#__codelineno-60-1"></a><span class="c1">// Define a new navigation control.</span>
@@ -17447,7 +17452,7 @@ methods on the map.</p>
 <blockquote>
 <p><strong>removeFeatureState</strong>(<code>target</code>: <a href="../../type-aliases/FeatureIdentifier/"><code>FeatureIdentifier</code></a>, <code>key?</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3983">ui/map.ts:3983</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3985">ui/map.ts:3985</a></p>
 <p>Removes the <code>state</code> of a feature, setting it back to the default behavior.
 If only a <code>target.source</code> is specified, it will remove the state for all features from that source.
 If <code>target.id</code> is also specified, it will remove all keys for that feature's state.
@@ -17475,7 +17480,7 @@ Features are identified by their <code>feature.id</code> attribute, which can be
 </tr>
 </tbody>
 </table>
-<h4 id="returns_101">Returns</h4>
+<h4 id="returns_102">Returns</h4>
 <p><code>this</code></p>
 <h4 id="examples_4">Examples</h4>
 <p>Reset the entire state object for all features in the <code>my-source</code> source
@@ -17510,7 +17515,7 @@ state for the feature under the mouse
 <blockquote>
 <p><strong>removeImage</strong>(<code>id</code>: <code>string</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3379">ui/map.ts:3379</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3381">ui/map.ts:3381</a></p>
 <p>Remove an image from a style. This can be an image from the style's original
 sprite or any images
 that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
@@ -17531,7 +17536,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_102">Returns</h4>
+<h4 id="returns_103">Returns</h4>
 <p><code>void</code></p>
 <h4 id="example_49">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-64-1"><a id="__codelineno-64-1" name="__codelineno-64-1" href="#__codelineno-64-1"></a><span class="c1">// If an image with the ID 'cat' exists in</span>
@@ -17543,7 +17548,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>removeLayer</strong>(<code>id</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3538">ui/map.ts:3538</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3540">ui/map.ts:3540</a></p>
 <p>Removes the layer with the given ID from the map's style.</p>
 <p>An <a href="../ErrorEvent/">ErrorEvent</a> will be fired if no such layer exists.</p>
 <h4 id="parameters_55">Parameters</h4>
@@ -17563,7 +17568,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_103">Returns</h4>
+<h4 id="returns_104">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_50">Example</h4>
 <p>If a layer with ID 'state-data' exists, remove it.
@@ -17574,7 +17579,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>removeSource</strong>(<code>id</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3066">ui/map.ts:3066</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3068">ui/map.ts:3068</a></p>
 <p>Removes a source from the map's style.</p>
 <h4 id="parameters_56">Parameters</h4>
 <table>
@@ -17593,7 +17598,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_104">Returns</h4>
+<h4 id="returns_105">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_51">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-66-1"><a id="__codelineno-66-1" name="__codelineno-66-1" href="#__codelineno-66-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">removeSource</span><span class="p">(</span><span class="s1">'bathymetry-data'</span><span class="p">);</span>
@@ -17603,7 +17608,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>removeSprite</strong>(<code>id</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3804">ui/map.ts:3804</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3806">ui/map.ts:3806</a></p>
 <p>Removes the sprite from the map's style. Fires the <code>style</code> event.</p>
 <h4 id="parameters_57">Parameters</h4>
 <table>
@@ -17622,7 +17627,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_105">Returns</h4>
+<h4 id="returns_106">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_52">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-67-1"><a id="__codelineno-67-1" name="__codelineno-67-1" href="#__codelineno-67-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">removeSprite</span><span class="p">(</span><span class="s1">'sprite-two'</span><span class="p">);</span>
@@ -17633,7 +17638,7 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 <blockquote>
 <p><strong>resetNorth</strong>(<code>options?</code>: <a href="../../type-aliases/AnimationOptions/"><code>AnimationOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1282">ui/map.ts:1282</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1282">ui/map.ts:1282</a></p>
 <p>Rotates the map so that north is up (0° bearing), with an animated transition.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>moveend</code>, and <code>rotate</code>.</p>
 <h4 id="parameters_58">Parameters</h4>
@@ -17658,14 +17663,14 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_106">Returns</h4>
+<h4 id="returns_107">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="resetnorthpitch">resetNorthPitch()</h3>
 <blockquote>
 <p><strong>resetNorthPitch</strong>(<code>options?</code>: <a href="../../type-aliases/AnimationOptions/"><code>AnimationOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1291">ui/map.ts:1291</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1291">ui/map.ts:1291</a></p>
 <p>Rotates and pitches the map so that north is up (0° bearing) and pitch and roll are 0°, with an animated transition.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, <code>moveend</code>, <code>pitchstart</code>, <code>pitch</code>, <code>pitchend</code>, <code>rollstart</code>, <code>roll</code>, <code>rollend</code>, and <code>rotate</code>.</p>
 <h4 id="parameters_59">Parameters</h4>
@@ -17690,19 +17695,21 @@ that have been added at runtime using <a href="#addimage">Map.addImage</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_107">Returns</h4>
+<h4 id="returns_108">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="resize">resize()</h3>
 <blockquote>
 <p><strong>resize</strong>(<code>eventData?</code>: <code>any</code>, <code>constrainTransform?</code>: <code>boolean</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1572">ui/map.ts:1572</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1574">ui/map.ts:1574</a></p>
 <p>Resizes the map according to the dimensions of its
 <code>container</code> element.</p>
 <p>Checks if the map container size changed and updates the map if it has changed.
-This method must be called after the map's <code>container</code> is resized programmatically
-or when the map is shown after being initially hidden with CSS.</p>
+With the default <code>trackResize: true</code>, container size changes are picked up automatically,
+including a container that becomes visible after being hidden with CSS. Call this method
+explicitly when <code>trackResize</code> is <code>false</code>, or when the map's size changes in a way the
+container's <code>ResizeObserver</code> cannot observe.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, <code>moveend</code>, and <code>resize</code>.</p>
 <h4 id="parameters_60">Parameters</h4>
 <table>
@@ -17729,19 +17736,19 @@ or when the map is shown after being initially hidden with CSS.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_108">Returns</h4>
+<h4 id="returns_109">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_53">Example</h4>
-<p>Resize the map when the map container is shown after being initially hidden with CSS.
+<p>Resize a map with <code>trackResize</code> disabled when its container is shown after being hidden with CSS.
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-68-1"><a id="__codelineno-68-1" name="__codelineno-68-1" href="#__codelineno-68-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">mapDiv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">'map'</span><span class="p">);</span>
-</span><span id="__span-68-2"><a id="__codelineno-68-2" name="__codelineno-68-2" href="#__codelineno-68-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">mapDiv</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"> </span><span class="nx">map</span><span class="p">.</span><span class="nx">resize</span><span class="p">();</span>
+</span><span id="__span-68-2"><a id="__codelineno-68-2" name="__codelineno-68-2" href="#__codelineno-68-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">mapDiv</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">'visible'</span><span class="p">)</span><span class="w"> </span><span class="nx">map</span><span class="p">.</span><span class="nx">resize</span><span class="p">();</span>
 </span></code></pre></div></p>
 <hr />
 <h3 id="rotateto">rotateTo()</h3>
 <blockquote>
 <p><strong>rotateTo</strong>(<code>bearing</code>: <code>number</code>, <code>options?</code>: <a href="../../type-aliases/EaseToOptions/"><code>EaseToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1273">ui/map.ts:1273</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1273">ui/map.ts:1273</a></p>
 <p>Rotates the map to the specified bearing, with an animated transition. The bearing is the compass direction
 that is "up"; for example, a bearing of 90° orients the map so that east is up.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>moveend</code>, and <code>rotate</code>.</p>
@@ -17772,14 +17779,14 @@ that is "up"; for example, a bearing of 90° orients the map so that east is up.
 </tr>
 </tbody>
 </table>
-<h4 id="returns_109">Returns</h4>
+<h4 id="returns_110">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setanisotropicfilterpitch">setAnisotropicFilterPitch()</h3>
 <blockquote>
 <p><strong>setAnisotropicFilterPitch</strong>(<code>anisotropicFilterPitch?</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1959">ui/map.ts:1959</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1961">ui/map.ts:1961</a></p>
 <p>Sets the map's anisotropic filter pitch or reverts it to its default.</p>
 <p>A <a href="../ErrorEvent/">ErrorEvent</a> event will be fired if anisotropicFilterPitch is out of bounds.</p>
 <h4 id="parameters_62">Parameters</h4>
@@ -17799,7 +17806,7 @@ that is "up"; for example, a bearing of 90° orients the map so that east is up.
 </tr>
 </tbody>
 </table>
-<h4 id="returns_110">Returns</h4>
+<h4 id="returns_111">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_54">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-69-1"><a id="__codelineno-69-1" name="__codelineno-69-1" href="#__codelineno-69-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setAnisotropicFilterPitch</span><span class="p">(</span><span class="mf">85</span><span class="p">);</span>
@@ -17809,7 +17816,7 @@ that is "up"; for example, a bearing of 90° orients the map so that east is up.
 <blockquote>
 <p><strong>setBearing</strong>(<code>bearing</code>: <code>number</code>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1228">ui/map.ts:1228</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1228">ui/map.ts:1228</a></p>
 <p>Sets the map's bearing (rotation). The bearing is the compass direction that is "up"; for example, a bearing
 of 90° orients the map so that east is up.</p>
 <p>Equivalent to <code>jumpTo({bearing: bearing})</code>.</p>
@@ -17836,7 +17843,7 @@ of 90° orients the map so that east is up.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_111">Returns</h4>
+<h4 id="returns_112">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_55">Example</h4>
 <p>Rotate the map to 90 degrees
@@ -17847,7 +17854,7 @@ of 90° orients the map so that east is up.</p>
 <blockquote>
 <p><strong>setCenter</strong>(<code>center</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <code>eventData?</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1053">ui/map.ts:1053</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1053">ui/map.ts:1053</a></p>
 <p>Sets the map's geographical centerpoint. Equivalent to <code>jumpTo({center: center})</code>.</p>
 <p>Triggers the following events: <code>movestart</code> and <code>moveend</code>.</p>
 <h4 id="parameters_64">Parameters</h4>
@@ -17872,7 +17879,7 @@ of 90° orients the map so that east is up.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_112">Returns</h4>
+<h4 id="returns_113">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_56">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-71-1"><a id="__codelineno-71-1" name="__codelineno-71-1" href="#__codelineno-71-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setCenter</span><span class="p">([</span><span class="o">-</span><span class="mf">74</span><span class="p">,</span><span class="w"> </span><span class="mf">38</span><span class="p">]);</span>
@@ -17882,7 +17889,7 @@ of 90° orients the map so that east is up.</p>
 <blockquote>
 <p><strong>setCenterClampedToGround</strong>(<code>centerClampedToGround</code>: <code>boolean</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1077">ui/map.ts:1077</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1077">ui/map.ts:1077</a></p>
 <p>Sets the value of <code>centerClampedToGround</code>.</p>
 <p>If true, the elevation of the center point will automatically be set to the terrain elevation
 (or zero if terrain is not enabled). If false, the elevation of the center point will default
@@ -17903,14 +17910,14 @@ keep the camera above ground when pitch &gt; 90 degrees.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_113">Returns</h4>
+<h4 id="returns_114">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="setcenterelevation">setCenterElevation()</h3>
 <blockquote>
 <p><strong>setCenterElevation</strong>(<code>elevation</code>: <code>number</code>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1068">ui/map.ts:1068</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1068">ui/map.ts:1068</a></p>
 <p>Sets the elevation of the map's center point, in meters above sea level. Equivalent to <code>jumpTo({elevation: elevation})</code>.</p>
 <p>Triggers the following events: <code>movestart</code> and <code>moveend</code>.</p>
 <h4 id="parameters_66">Parameters</h4>
@@ -17935,14 +17942,14 @@ keep the camera above ground when pitch &gt; 90 degrees.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_114">Returns</h4>
+<h4 id="returns_115">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>&lt;<a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a>&gt;, <code>data?</code>: <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a> | (() =&gt; <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a>)): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L217">util/evented.ts:217</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L217">util/evented.ts:217</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_67">Parameters</h4>
 <table>
@@ -17963,7 +17970,7 @@ keep the camera above ground when pitch &gt; 90 degrees.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_115">Returns</h4>
+<h4 id="returns_116">Returns</h4>
 <p><code>this</code></p>
 <h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
@@ -17972,7 +17979,7 @@ keep the camera above ground when pitch &gt; 90 degrees.</p>
 <blockquote>
 <p><strong>setFeatureState</strong>(<code>feature</code>: <a href="../../type-aliases/FeatureIdentifier/"><code>FeatureIdentifier</code></a>, <code>state</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3932">ui/map.ts:3932</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3934">ui/map.ts:3934</a></p>
 <p>Sets the <code>state</code> of a feature.
 A feature's <code>state</code> is a set of user-defined key-value pairs that are assigned to a feature at runtime.
 When using this method, the <code>state</code> object is merged with any existing key-value pairs in the feature's state.
@@ -18009,7 +18016,7 @@ Features are identified by their <code>feature.id</code> attribute, which can be
 </tr>
 </tbody>
 </table>
-<h4 id="returns_116">Returns</h4>
+<h4 id="returns_117">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_57">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-72-1"><a id="__codelineno-72-1" name="__codelineno-72-1" href="#__codelineno-72-1"></a><span class="c1">// When the mouse moves over the `my-layer` layer, update</span>
@@ -18033,7 +18040,7 @@ Features are identified by their <code>feature.id</code> attribute, which can be
 <blockquote>
 <p><strong>setFilter</strong>(<code>layerId</code>: <code>string</code>, <code>filter?</code>: <code>FilterSpecification</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3634">ui/map.ts:3634</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3636">ui/map.ts:3636</a></p>
 <p>Sets the filter for the specified style layer.</p>
 <p>Filters control which features a style layer renders from its source.
 Any feature for which the filter expression evaluates to <code>true</code> will be
@@ -18067,7 +18074,7 @@ rendered on the map. Those that are false will be hidden.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_117">Returns</h4>
+<h4 id="returns_118">Returns</h4>
 <p><code>this</code></p>
 <h4 id="examples_5">Examples</h4>
 <p>Display only features with the 'name' property 'USA'
@@ -18086,7 +18093,7 @@ rendered on the map. Those that are false will be hidden.</p>
 <blockquote>
 <p><strong>setFontFaces</strong>(<code>fontFaces</code>: <code>FontFacesSpecification</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3758">ui/map.ts:3758</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3760">ui/map.ts:3760</a></p>
 <p>Sets the value of the style's <code>font-faces</code> property, which points at the font files used to
 draw text that the style's <code>glyphs</code> URL does not cover. Pass a falsy value (null or undefined)
 to unset it.</p>
@@ -18112,7 +18119,7 @@ written as -- which is what a <code>glyphs</code> URL, serving one codepoint at 
 </tr>
 </tbody>
 </table>
-<h4 id="returns_118">Returns</h4>
+<h4 id="returns_119">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_58">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-76-1"><a id="__codelineno-76-1" name="__codelineno-76-1" href="#__codelineno-76-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setFontFaces</span><span class="p">({</span>
@@ -18126,7 +18133,7 @@ written as -- which is what a <code>glyphs</code> URL, serving one codepoint at 
 <blockquote>
 <p><strong>setGlobalStateProperty</strong>(<code>propertyName</code>: <code>string</code>, <code>value</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L907">ui/map.ts:907</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L907">ui/map.ts:907</a></p>
 <p>Sets a global state property that can be retrieved with the <a href="https://maplibre.org/maplibre-style-spec/expressions/#global-state"><code>global-state</code> expression</a>.
 If the value is null, it resets the property to its default value defined in the <a href="https://maplibre.org/maplibre-style-spec/root/#state"><code>state</code> style property</a>.</p>
 <h4 id="parameters_71">Parameters</h4>
@@ -18151,14 +18158,14 @@ If the value is null, it resets the property to its default value defined in the
 </tr>
 </tbody>
 </table>
-<h4 id="returns_119">Returns</h4>
+<h4 id="returns_120">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setglyphs">setGlyphs()</h3>
 <blockquote>
 <p><strong>setGlyphs</strong>(<code>glyphsUrl</code>: <code>string</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3720">ui/map.ts:3720</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3722">ui/map.ts:3722</a></p>
 <p>Sets the value of the style's glyphs property. Pass a falsy value (null or undefined)
 to unset glyphs.
  *
@@ -18185,7 +18192,7 @@ to unset glyphs.
 </tr>
 </tbody>
 </table>
-<h4 id="returns_120">Returns</h4>
+<h4 id="returns_121">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_59">Example</h4>
 <ul>
@@ -18198,7 +18205,7 @@ to unset glyphs.
 <blockquote>
 <p><strong>setLayerZoomRange</strong>(<code>layerId</code>: <code>string</code>, <code>minzoom</code>: <code>number</code>, <code>maxzoom</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3596">ui/map.ts:3596</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3598">ui/map.ts:3598</a></p>
 <p>Sets the zoom extent for the specified style layer. The zoom extent includes the
 <a href="https://maplibre.org/maplibre-style-spec/layers/#minzoom">minimum zoom level</a>
 and <a href="https://maplibre.org/maplibre-style-spec/layers/#maxzoom">maximum zoom level</a>)
@@ -18237,7 +18244,7 @@ layer will not be rendered at all zoom levels in the zoom range.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_121">Returns</h4>
+<h4 id="returns_122">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_60">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-77-1"><a id="__codelineno-77-1" name="__codelineno-77-1" href="#__codelineno-77-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setLayerZoomRange</span><span class="p">(</span><span class="s1">'my-layer'</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">5</span><span class="p">);</span>
@@ -18247,7 +18254,7 @@ layer will not be rendered at all zoom levels in the zoom range.</p>
 <blockquote>
 <p><strong>setLayoutProperty</strong>&lt;<code>K</code> <em>extends</em> keyof <code>AllLayoutProperties</code>&gt;(<code>layerId</code>: <code>string</code>, <code>name</code>: <code>K</code>, <code>value</code>: <code>AllLayoutProperties</code>[<code>K</code>], <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3693">ui/map.ts:3693</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3695">ui/map.ts:3695</a></p>
 <p>Sets the value of a layout property in the specified style layer.</p>
 <h4 id="type-parameters_15">Type Parameters</h4>
 <table>
@@ -18294,7 +18301,7 @@ layer will not be rendered at all zoom levels in the zoom range.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_122">Returns</h4>
+<h4 id="returns_123">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_61">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-78-1"><a id="__codelineno-78-1" name="__codelineno-78-1" href="#__codelineno-78-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setLayoutProperty</span><span class="p">(</span><span class="s1">'my-layer'</span><span class="p">,</span><span class="w"> </span><span class="s1">'visibility'</span><span class="p">,</span><span class="w"> </span><span class="s1">'none'</span><span class="p">);</span>
@@ -18304,7 +18311,7 @@ layer will not be rendered at all zoom levels in the zoom range.</p>
 <blockquote>
 <p><strong>setLight</strong>(<code>light</code>: <code>LightSpecification</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3850">ui/map.ts:3850</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3852">ui/map.ts:3852</a></p>
 <p>Sets the any combination of light values.</p>
 <h4 id="parameters_75">Parameters</h4>
 <table>
@@ -18328,7 +18335,7 @@ layer will not be rendered at all zoom levels in the zoom range.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_123">Returns</h4>
+<h4 id="returns_124">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_62">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-79-1"><a id="__codelineno-79-1" name="__codelineno-79-1" href="#__codelineno-79-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">layerVisibility</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">map</span><span class="p">.</span><span class="nx">getLayoutProperty</span><span class="p">(</span><span class="s1">'my-layer'</span><span class="p">,</span><span class="w"> </span><span class="s1">'visibility'</span><span class="p">);</span>
@@ -18338,7 +18345,7 @@ layer will not be rendered at all zoom levels in the zoom range.</p>
 <blockquote>
 <p><strong>setMaxBounds</strong>(<code>bounds?</code>: <a href="../../type-aliases/LngLatBoundsLike/"><code>LngLatBoundsLike</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1726">ui/map.ts:1726</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1728">ui/map.ts:1728</a></p>
 <p>Sets or clears the map's geographical bounds.</p>
 <p>Pan and zoom operations are constrained within these bounds.
 If a pan or zoom is performed that would
@@ -18363,7 +18370,7 @@ remaining within the bounds.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_124">Returns</h4>
+<h4 id="returns_125">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_63">Example</h4>
 <p>Define bounds that conform to the <code>LngLatBoundsLike</code> object as set the max bounds.
@@ -18378,7 +18385,7 @@ remaining within the bounds.</p>
 <blockquote>
 <p><strong>setMaxPitch</strong>(<code>maxPitch?</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1898">ui/map.ts:1898</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1900">ui/map.ts:1900</a></p>
 <p>Sets or clears the map's maximum pitch.
 If the map's current pitch is higher than the new maximum,
 the map will pitch to the new maximum and trigger the following events:
@@ -18401,14 +18408,14 @@ the map will pitch to the new maximum and trigger the following events:
 </tr>
 </tbody>
 </table>
-<h4 id="returns_125">Returns</h4>
+<h4 id="returns_126">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setmaxzoom">setMaxZoom()</h3>
 <blockquote>
 <p><strong>setMaxZoom</strong>(<code>maxZoom?</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1806">ui/map.ts:1806</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1808">ui/map.ts:1808</a></p>
 <p>Sets or clears the map's maximum zoom level.
 If the map's current zoom level is higher than the new maximum,
 the map will zoom to the new maximum and trigger the following events:
@@ -18431,7 +18438,7 @@ the map will zoom to the new maximum and trigger the following events:
 </tr>
 </tbody>
 </table>
-<h4 id="returns_126">Returns</h4>
+<h4 id="returns_127">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_64">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-81-1"><a id="__codelineno-81-1" name="__codelineno-81-1" href="#__codelineno-81-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setMaxZoom</span><span class="p">(</span><span class="mf">18.75</span><span class="p">);</span>
@@ -18441,7 +18448,7 @@ the map will zoom to the new maximum and trigger the following events:
 <blockquote>
 <p><strong>setMinPitch</strong>(<code>minPitch?</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1852">ui/map.ts:1852</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1854">ui/map.ts:1854</a></p>
 <p>Sets or clears the map's minimum pitch.
 If the map's current pitch is lower than the new minimum,
 the map will pitch to the new minimum and trigger the following events:
@@ -18464,14 +18471,14 @@ the map will pitch to the new minimum and trigger the following events:
 </tr>
 </tbody>
 </table>
-<h4 id="returns_127">Returns</h4>
+<h4 id="returns_128">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setminzoom">setMinZoom()</h3>
 <blockquote>
 <p><strong>setMinZoom</strong>(<code>minZoom?</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1751">ui/map.ts:1751</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1753">ui/map.ts:1753</a></p>
 <p>Sets or clears the map's minimum zoom level.
 If the map's current zoom level is lower than the new minimum,
 the map will zoom to the new minimum and trigger the following events:
@@ -18498,7 +18505,7 @@ no matter what the <code>minZoom</code> is set to.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_128">Returns</h4>
+<h4 id="returns_129">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_65">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-82-1"><a id="__codelineno-82-1" name="__codelineno-82-1" href="#__codelineno-82-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setMinZoom</span><span class="p">(</span><span class="mf">12.25</span><span class="p">);</span>
@@ -18508,7 +18515,7 @@ no matter what the <code>minZoom</code> is set to.</p>
 <blockquote>
 <p><strong>setMissingStyleImageResolver</strong>(<code>resolver</code>: <a href="../../type-aliases/MissingStyleImageResolver/"><code>MissingStyleImageResolver</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3220">ui/map.ts:3220</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3222">ui/map.ts:3222</a></p>
 <p>Sets a callback that is invoked when an icon or pattern needed by the style is missing.</p>
 <p>The resolver typically loads or generates the image and registers it with <a href="#addimage">Map.addImage</a>.
 MapLibre awaits the returned promise before treating the image as missing, so async work is
@@ -18530,7 +18537,7 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 </tr>
 </tbody>
 </table>
-<h4 id="returns_129">Returns</h4>
+<h4 id="returns_130">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_66">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-83-1"><a id="__codelineno-83-1" name="__codelineno-83-1" href="#__codelineno-83-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setMissingStyleImageResolver</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">id</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
@@ -18544,7 +18551,7 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 <blockquote>
 <p><strong>setPadding</strong>(<code>padding</code>: <a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1262">ui/map.ts:1262</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1262">ui/map.ts:1262</a></p>
 <p>Sets the padding in pixels around the viewport.</p>
 <p>Equivalent to <code>jumpTo({padding: padding})</code>.</p>
 <p>Triggers the following events: <code>movestart</code> and <code>moveend</code>.</p>
@@ -18570,7 +18577,7 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 </tr>
 </tbody>
 </table>
-<h4 id="returns_130">Returns</h4>
+<h4 id="returns_131">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_67">Example</h4>
 <p>Sets a left padding of 300px, and a top padding of 50px
@@ -18581,7 +18588,7 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 <blockquote>
 <p><strong>setPaintProperty</strong>&lt;<code>K</code> <em>extends</em> keyof <code>AllPaintProperties</code>&gt;(<code>layerId</code>: <code>string</code>, <code>name</code>: <code>K</code>, <code>value</code>: <code>AllPaintProperties</code>[<code>K</code>], <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3665">ui/map.ts:3665</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3667">ui/map.ts:3667</a></p>
 <p>Sets the value of a paint property in the specified style layer.</p>
 <h4 id="type-parameters_16">Type Parameters</h4>
 <table>
@@ -18628,7 +18635,7 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 </tr>
 </tbody>
 </table>
-<h4 id="returns_131">Returns</h4>
+<h4 id="returns_132">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_68">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-85-1"><a id="__codelineno-85-1" name="__codelineno-85-1" href="#__codelineno-85-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setPaintProperty</span><span class="p">(</span><span class="s1">'my-layer'</span><span class="p">,</span><span class="w"> </span><span class="s1">'fill-color'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#faafee'</span><span class="p">);</span>
@@ -18643,7 +18650,7 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 <blockquote>
 <p><strong>setPitch</strong>(<code>pitch</code>: <code>number</code>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1316">ui/map.ts:1316</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1316">ui/map.ts:1316</a></p>
 <p>Sets the map's pitch (tilt). Equivalent to <code>jumpTo({pitch: pitch})</code>.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>moveend</code>, <code>pitchstart</code>, and <code>pitchend</code>.</p>
 <h4 id="parameters_84">Parameters</h4>
@@ -18668,14 +18675,14 @@ supported. If the image is still missing afterwards, the <code>styleimagemissing
 </tr>
 </tbody>
 </table>
-<h4 id="returns_132">Returns</h4>
+<h4 id="returns_133">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setpixelratio">setPixelRatio()</h3>
 <blockquote>
 <p><strong>setPixelRatio</strong>(<code>pixelRatio</code>: <code>number</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1675">ui/map.ts:1675</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1677">ui/map.ts:1677</a></p>
 <p>Sets the map's pixel ratio. This allows to override <code>devicePixelRatio</code>.
 After this call, the canvas' <code>width</code> attribute will be <code>container.clientWidth * pixelRatio</code>
 and its height attribute will be <code>container.clientHeight * pixelRatio</code>.
@@ -18698,14 +18705,14 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 </tr>
 </tbody>
 </table>
-<h4 id="returns_133">Returns</h4>
+<h4 id="returns_134">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="setprojection">setProjection()</h3>
 <blockquote>
 <p><strong>setProjection</strong>(<code>projection</code>: <a href="https://maplibre.org/maplibre-style-spec/projection/"><code>ProjectionSpecification</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4668">ui/map.ts:4668</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4685">ui/map.ts:4685</a></p>
 <p>Sets the <a href="https://maplibre.org/maplibre-style-spec/projection/">ProjectionSpecification</a>.</p>
 <h4 id="parameters_86">Parameters</h4>
 <table>
@@ -18724,14 +18731,14 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 </tr>
 </tbody>
 </table>
-<h4 id="returns_134">Returns</h4>
+<h4 id="returns_135">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setrenderworldcopies">setRenderWorldCopies()</h3>
 <blockquote>
 <p><strong>setRenderWorldCopies</strong>(<code>renderWorldCopies?</code>: <code>boolean</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2008">ui/map.ts:2008</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2010">ui/map.ts:2010</a></p>
 <p>Sets the state of <code>renderWorldCopies</code>.</p>
 <h4 id="parameters_87">Parameters</h4>
 <table>
@@ -18750,7 +18757,7 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 </tr>
 </tbody>
 </table>
-<h4 id="returns_135">Returns</h4>
+<h4 id="returns_136">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_69">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-86-1"><a id="__codelineno-86-1" name="__codelineno-86-1" href="#__codelineno-86-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setRenderWorldCopies</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
@@ -18762,7 +18769,7 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 <blockquote>
 <p><strong>setRoll</strong>(<code>roll</code>: <code>number</code>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1331">ui/map.ts:1331</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1331">ui/map.ts:1331</a></p>
 <p>Sets the map's roll angle. Equivalent to <code>jumpTo({roll: roll})</code>.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>moveend</code>, <code>rollstart</code>, and <code>rollend</code>.</p>
 <h4 id="parameters_88">Parameters</h4>
@@ -18787,14 +18794,14 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 </tr>
 </tbody>
 </table>
-<h4 id="returns_136">Returns</h4>
+<h4 id="returns_137">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="setsky">setSky()</h3>
 <blockquote>
 <p><strong>setSky</strong>(<code>sky</code>: <code>SkySpecification</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3876">ui/map.ts:3876</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3878">ui/map.ts:3878</a></p>
 <p>Sets the value of style's sky properties.</p>
 <h4 id="parameters_89">Parameters</h4>
 <table>
@@ -18818,7 +18825,7 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 </tr>
 </tbody>
 </table>
-<h4 id="returns_137">Returns</h4>
+<h4 id="returns_138">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_70">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-87-1"><a id="__codelineno-87-1" name="__codelineno-87-1" href="#__codelineno-87-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setSky</span><span class="p">({</span><span class="s1">'atmosphere-blend'</span><span class="o">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
@@ -18828,7 +18835,7 @@ Note that the pixel ratio actually applied may be lower to respect maxCanvasSize
 <blockquote>
 <p><strong>setSourceTileLodParams</strong>(<code>maxZoomLevelsOnScreen</code>: <code>number</code>, <code>tileCountMaxMinRatio</code>: <code>number</code>, <code>sourceId?</code>: <code>string</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3117">ui/map.ts:3117</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3119">ui/map.ts:3119</a></p>
 <p>Change the tile Level of Detail behavior of the specified source. These parameters have no effect when
 pitch == 0, and the largest effect when the horizon is visible on screen.</p>
 <h4 id="parameters_90">Parameters</h4>
@@ -18858,7 +18865,7 @@ pitch == 0, and the largest effect when the horizon is visible on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_138">Returns</h4>
+<h4 id="returns_139">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_71">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-88-1"><a id="__codelineno-88-1" name="__codelineno-88-1" href="#__codelineno-88-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setSourceTileLodParams</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="s1">'terrain'</span><span class="p">);</span>
@@ -18870,7 +18877,7 @@ pitch == 0, and the largest effect when the horizon is visible on screen.</p>
 <blockquote>
 <p><strong>setSprite</strong>(<code>spriteUrl</code>: <code>string</code>, <code>options?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3829">ui/map.ts:3829</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3831">ui/map.ts:3831</a></p>
 <p>Sets the value of the style's sprite property.</p>
 <h4 id="parameters_91">Parameters</h4>
 <table>
@@ -18894,7 +18901,7 @@ pitch == 0, and the largest effect when the horizon is visible on screen.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_139">Returns</h4>
+<h4 id="returns_140">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_72">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-89-1"><a id="__codelineno-89-1" name="__codelineno-89-1" href="#__codelineno-89-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setSprite</span><span class="p">(</span><span class="s1">'YOUR_SPRITE_URL'</span><span class="p">);</span>
@@ -18904,7 +18911,7 @@ pitch == 0, and the largest effect when the horizon is visible on screen.</p>
 <blockquote>
 <p><strong>setStyle</strong>(<code>style</code>: <code>string</code> | <code>StyleSpecification</code>, <code>options?</code>: <a href="../../type-aliases/StyleSwapOptions/"><code>StyleSwapOptions</code></a> &amp; <a href="../../type-aliases/StyleOptions/"><code>StyleOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2673">ui/map.ts:2673</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2675">ui/map.ts:2675</a></p>
 <p>Updates the map's MapLibre style object with a new value.</p>
 <p>If a style is already set when this is used and options.diff is set to true, the map renderer will attempt to compare the given style
 against the map's current state and perform only the changes necessary to make the map style match the desired state. Changes in sprites
@@ -18933,7 +18940,7 @@ the given one from scratch.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_140">Returns</h4>
+<h4 id="returns_141">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_73">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-90-1"><a id="__codelineno-90-1" name="__codelineno-90-1" href="#__codelineno-90-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setStyle</span><span class="p">(</span><span class="s2">"https://demotiles.maplibre.org/style.json"</span><span class="p">);</span>
@@ -18971,7 +18978,7 @@ the given one from scratch.</p>
 <blockquote>
 <p><strong>setTerrain</strong>(<code>options</code>: <code>TerrainSpecification</code>, <code>styleOptions?</code>: <a href="../../type-aliases/StyleSetterOptions/"><code>StyleSetterOptions</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2944">ui/map.ts:2944</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2946">ui/map.ts:2946</a></p>
 <p>Loads a 3D terrain mesh, based on a "raster-dem" source.</p>
 <p>Triggers the <code>terrain</code> event.</p>
 <h4 id="parameters_93">Parameters</h4>
@@ -18996,7 +19003,7 @@ the given one from scratch.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_141">Returns</h4>
+<h4 id="returns_142">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_74">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-91-1"><a id="__codelineno-91-1" name="__codelineno-91-1" href="#__codelineno-91-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setTerrain</span><span class="p">({</span><span class="w"> </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s1">'terrain'</span><span class="w"> </span><span class="p">});</span>
@@ -19006,7 +19013,7 @@ the given one from scratch.</p>
 <blockquote>
 <p><strong>setTransformCameraUpdate</strong>(<code>value</code>: <a href="../../type-aliases/CameraUpdateTransformFunction/"><code>CameraUpdateTransformFunction</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1026">ui/map.ts:1026</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1026">ui/map.ts:1026</a></p>
 <p>Sets the callback used to defer camera updates or apply arbitrary constraints.
 If specified, this Camera instance can be used as a stateless component in React etc.</p>
 <h4 id="parameters_94">Parameters</h4>
@@ -19024,14 +19031,14 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_142">Returns</h4>
+<h4 id="returns_143">Returns</h4>
 <p><code>void</code></p>
 <hr />
 <h3 id="settransformconstrain">setTransformConstrain()</h3>
 <blockquote>
 <p><strong>setTransformConstrain</strong>(<code>constrain?</code>: <a href="../../type-aliases/TransformConstrainFunction/"><code>TransformConstrainFunction</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2027">ui/map.ts:2027</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2029">ui/map.ts:2029</a></p>
 <p>Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.</p>
 <h4 id="parameters_95">Parameters</h4>
 <table>
@@ -19050,7 +19057,7 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_143">Returns</h4>
+<h4 id="returns_144">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_75">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-92-1"><a id="__codelineno-92-1" name="__codelineno-92-1" href="#__codelineno-92-1"></a><span class="kd">function</span><span class="w"> </span><span class="nx">customTransformConstrain</span><span class="p">(</span><span class="nx">lngLat</span><span class="p">,</span><span class="w"> </span><span class="nx">zoom</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -19065,7 +19072,7 @@ If specified, this Camera instance can be used as a stateless component in React
 <blockquote>
 <p><strong>setTransformRequest</strong>(<code>transformRequest</code>: <a href="../../type-aliases/RequestTransformFunction/"><code>RequestTransformFunction</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2701">ui/map.ts:2701</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2703">ui/map.ts:2703</a></p>
 <p>Updates the requestManager's transform request with a new function</p>
 <h4 id="parameters_96">Parameters</h4>
 <table>
@@ -19084,7 +19091,7 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_144">Returns</h4>
+<h4 id="returns_145">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_76">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-93-1"><a id="__codelineno-93-1" name="__codelineno-93-1" href="#__codelineno-93-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setTransformRequest</span><span class="p">((</span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceType</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{});</span>
@@ -19094,7 +19101,7 @@ If specified, this Camera instance can be used as a stateless component in React
 <blockquote>
 <p><strong>setVerticalFieldOfView</strong>(<code>fov</code>: <code>number</code>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1203">ui/map.ts:1203</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1203">ui/map.ts:1203</a></p>
 <p>Sets the map's vertical field of view, in degrees.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, and <code>moveend</code>.</p>
 <h4 id="parameters_97">Parameters</h4>
@@ -19119,7 +19126,7 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_145">Returns</h4>
+<h4 id="returns_146">Returns</h4>
 <p><code>this</code></p>
 <h4 id="default-value_1">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-94-1"><a id="__codelineno-94-1" name="__codelineno-94-1" href="#__codelineno-94-1"></a><span class="mf">36.87</span>
@@ -19133,7 +19140,7 @@ If specified, this Camera instance can be used as a stateless component in React
 <blockquote>
 <p><strong>setZoom</strong>(<code>zoom</code>: <code>number</code>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1129">ui/map.ts:1129</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1129">ui/map.ts:1129</a></p>
 <p>Sets the map's zoom level. Equivalent to <code>jumpTo({zoom: zoom})</code>.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, <code>moveend</code>, <code>zoomstart</code>, <code>zoom</code>, and <code>zoomend</code>.</p>
 <h4 id="parameters_98">Parameters</h4>
@@ -19158,7 +19165,7 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_146">Returns</h4>
+<h4 id="returns_147">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_78">Example</h4>
 <p>Zoom to the zoom level 5 without an animated transition
@@ -19169,7 +19176,7 @@ If specified, this Camera instance can be used as a stateless component in React
 <blockquote>
 <p><strong>setZoomSnap</strong>(<code>snap</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1240">ui/map.ts:1240</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1240">ui/map.ts:1240</a></p>
 <p>Sets the map's zoom snap level.</p>
 <h4 id="parameters_99">Parameters</h4>
 <table>
@@ -19188,14 +19195,14 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_147">Returns</h4>
+<h4 id="returns_148">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="snaptonorth">snapToNorth()</h3>
 <blockquote>
 <p><strong>snapToNorth</strong>(<code>options?</code>: <a href="../../type-aliases/AnimationOptions/"><code>AnimationOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1301">ui/map.ts:1301</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1301">ui/map.ts:1301</a></p>
 <p>Snaps the map so that north is up (0° bearing), if the current bearing is close enough to it (i.e. within the
 <code>bearingSnap</code> threshold).</p>
 <p>Triggers the following events: <code>movestart</code>, <code>moveend</code>, and <code>rotate</code>.</p>
@@ -19221,27 +19228,27 @@ If specified, this Camera instance can be used as a stateless component in React
 </tr>
 </tbody>
 </table>
-<h4 id="returns_148">Returns</h4>
+<h4 id="returns_149">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="stop">stop()</h3>
 <blockquote>
 <p><strong>stop</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1500">ui/map.ts:1500</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1500">ui/map.ts:1500</a></p>
 <p>Stops any animated transition underway.</p>
-<h4 id="returns_149">Returns</h4>
+<h4 id="returns_150">Returns</h4>
 <p><code>this</code></p>
 <hr />
 <h3 id="triggerrepaint">triggerRepaint()</h3>
 <blockquote>
 <p><strong>triggerRepaint</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L4530">ui/map.ts:4530</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L4547">ui/map.ts:4547</a></p>
 <p>Trigger the rendering of a single frame. Use this method with custom layers to
 repaint the map when the layer changes. Calling this multiple times before the
 next frame is rendered will still result in only a single frame being rendered.</p>
-<h4 id="returns_150">Returns</h4>
+<h4 id="returns_151">Returns</h4>
 <p><code>void</code></p>
 <h4 id="example_79">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-97-1"><a id="__codelineno-97-1" name="__codelineno-97-1" href="#__codelineno-97-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">triggerRepaint</span><span class="p">();</span>
@@ -19256,7 +19263,7 @@ next frame is rendered will still result in only a single frame being rendered.<
 <blockquote>
 <p><strong>unproject</strong>(<code>point</code>: <a href="../../type-aliases/PointLike/"><code>PointLike</code></a>): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L2062">ui/map.ts:2062</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L2064">ui/map.ts:2064</a></p>
 <p>Returns a <a href="../LngLat/">LngLat</a> representing geographical coordinates that correspond
 to the specified pixel coordinates.</p>
 <h4 id="parameters_101">Parameters</h4>
@@ -19276,7 +19283,7 @@ to the specified pixel coordinates.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_151">Returns</h4>
+<h4 id="returns_152">Returns</h4>
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The <a href="../LngLat/">LngLat</a> corresponding to <code>point</code>.</p>
 <h4 id="example_80">Example</h4>
@@ -19290,7 +19297,7 @@ to the specified pixel coordinates.</p>
 <blockquote>
 <p><strong>updateImage</strong>(<code>id</code>: <code>string</code>, <code>image</code>: <a href="../../type-aliases/StyleImageSource/"><code>StyleImageSource</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L3288">ui/map.ts:3288</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L3290">ui/map.ts:3290</a></p>
 <p>Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
 sprite using the image's ID with
 <a href="https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image"><code>icon-image</code></a>,
@@ -19320,7 +19327,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 </tr>
 </tbody>
 </table>
-<h4 id="returns_152">Returns</h4>
+<h4 id="returns_153">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_81">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-99-1"><a id="__codelineno-99-1" name="__codelineno-99-1" href="#__codelineno-99-1"></a><span class="c1">// If an image with the ID 'cat' already exists in the style's sprite,</span>
@@ -19332,7 +19339,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 <blockquote>
 <p><strong>zoomIn</strong>(<code>options?</code>: <a href="../../type-aliases/AnimationOptions/"><code>AnimationOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1163">ui/map.ts:1163</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1163">ui/map.ts:1163</a></p>
 <p>Incrementally increases the map's zoom level by 1, first snapping to the nearest <code>zoomSnap</code> increment.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, <code>moveend</code>, <code>zoomstart</code>, <code>zoom</code>, and <code>zoomend</code>.</p>
 <h4 id="parameters_103">Parameters</h4>
@@ -19357,7 +19364,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 </tr>
 </tbody>
 </table>
-<h4 id="returns_153">Returns</h4>
+<h4 id="returns_154">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_82">Example</h4>
 <p>Zoom the map in one level with a custom animation duration
@@ -19368,7 +19375,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 <blockquote>
 <p><strong>zoomOut</strong>(<code>options?</code>: <a href="../../type-aliases/AnimationOptions/"><code>AnimationOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1177">ui/map.ts:1177</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1177">ui/map.ts:1177</a></p>
 <p>Decreases the map's zoom level by 1, first snapping to the nearest <code>zoomSnap</code> increment.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, <code>moveend</code>, <code>zoomstart</code>, <code>zoom</code>, and <code>zoomend</code>.</p>
 <h4 id="parameters_104">Parameters</h4>
@@ -19393,7 +19400,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 </tr>
 </tbody>
 </table>
-<h4 id="returns_154">Returns</h4>
+<h4 id="returns_155">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_83">Example</h4>
 <p>Zoom the map out one level with a custom animation offset
@@ -19404,7 +19411,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 <blockquote>
 <p><strong>zoomTo</strong>(<code>zoom</code>: <code>number</code>, <code>options?</code>: <a href="../../type-aliases/EaseToOptions/"><code>EaseToOptions</code></a>, <code>eventData?</code>: <code>any</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L1149">ui/map.ts:1149</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L1149">ui/map.ts:1149</a></p>
 <p>Zooms the map to the specified zoom level, with an animated transition.</p>
 <p>Triggers the following events: <code>movestart</code>, <code>move</code>, <code>moveend</code>, <code>zoomstart</code>, <code>zoom</code>, and <code>zoomend</code>.</p>
 <h4 id="parameters_105">Parameters</h4>
@@ -19434,7 +19441,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 </tr>
 </tbody>
 </table>
-<h4 id="returns_155">Returns</h4>
+<h4 id="returns_156">Returns</h4>
 <p><code>this</code></p>
 <h4 id="example_84">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-102-1"><a id="__codelineno-102-1" name="__codelineno-102-1" href="#__codelineno-102-1"></a><span class="c1">// Zoom to the zoom level 5 without an animated transition</span>
@@ -19450,7 +19457,7 @@ or <a href="https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pat
 <blockquote>
 <p><strong>boxZoom</strong>: <a href="../BoxZoomHandler/"><code>BoxZoomHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L685">ui/map.ts:685</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L685">ui/map.ts:685</a></p>
 <p>The map's <a href="../BoxZoomHandler/">BoxZoomHandler</a>, which implements zooming using a drag gesture with the Shift key pressed.
 Find more details and examples using <code>boxZoom</code> in the <a href="../BoxZoomHandler/">BoxZoomHandler</a> section.</p>
 <hr />
@@ -19458,7 +19465,7 @@ Find more details and examples using <code>boxZoom</code> in the <a href="../Box
 <blockquote>
 <p><strong>cancelPendingTileRequestsWhileZooming</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L736">ui/map.ts:736</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L736">ui/map.ts:736</a></p>
 <p>The map's property which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
 * If <code>true</code>, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
 * If <code>false</code>, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.</p>
@@ -19470,7 +19477,7 @@ Find more details and examples using <code>boxZoom</code> in the <a href="../Box
 <blockquote>
 <p><strong>cooperativeGestures</strong>: <a href="../CooperativeGesturesHandler/"><code>CooperativeGesturesHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L728">ui/map.ts:728</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L728">ui/map.ts:728</a></p>
 <p>The map's <a href="../CooperativeGesturesHandler/">CooperativeGesturesHandler</a>, which allows the user to see cooperative gesture info when user tries to zoom in/out.
 Find more details and examples using <code>cooperativeGestures</code> in the <a href="../CooperativeGesturesHandler/">CooperativeGesturesHandler</a> section.</p>
 <hr />
@@ -19478,7 +19485,7 @@ Find more details and examples using <code>cooperativeGestures</code> in the <a 
 <blockquote>
 <p><strong>doubleClickZoom</strong>: <a href="../DoubleClickZoomHandler/"><code>DoubleClickZoomHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L710">ui/map.ts:710</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L710">ui/map.ts:710</a></p>
 <p>The map's <a href="../DoubleClickZoomHandler/">DoubleClickZoomHandler</a>, which allows the user to zoom by double clicking.
 Find more details and examples using <code>doubleClickZoom</code> in the <a href="../DoubleClickZoomHandler/">DoubleClickZoomHandler</a> section.</p>
 <hr />
@@ -19486,7 +19493,7 @@ Find more details and examples using <code>doubleClickZoom</code> in the <a href
 <blockquote>
 <p><strong>dragPan</strong>: <a href="../DragPanHandler/"><code>DragPanHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L698">ui/map.ts:698</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L698">ui/map.ts:698</a></p>
 <p>The map's <a href="../DragPanHandler/">DragPanHandler</a>, which implements dragging the map with a mouse or touch gesture.
 Find more details and examples using <code>dragPan</code> in the <a href="../DragPanHandler/">DragPanHandler</a> section.</p>
 <hr />
@@ -19494,7 +19501,7 @@ Find more details and examples using <code>dragPan</code> in the <a href="../Dra
 <blockquote>
 <p><strong>dragRotate</strong>: <a href="../DragRotateHandler/"><code>DragRotateHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L692">ui/map.ts:692</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L692">ui/map.ts:692</a></p>
 <p>The map's <a href="../DragRotateHandler/">DragRotateHandler</a>, which implements rotating the map while dragging with the right
 mouse button or with the Control key pressed. Find more details and examples using <code>dragRotate</code>
 in the <a href="../DragRotateHandler/">DragRotateHandler</a> section.</p>
@@ -19503,7 +19510,7 @@ in the <a href="../DragRotateHandler/">DragRotateHandler</a> section.</p>
 <blockquote>
 <p><strong>keyboard</strong>: <a href="../KeyboardHandler/"><code>KeyboardHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L704">ui/map.ts:704</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L704">ui/map.ts:704</a></p>
 <p>The map's <a href="../KeyboardHandler/">KeyboardHandler</a>, which allows the user to zoom, rotate, and pan the map using keyboard
 shortcuts. Find more details and examples using <code>keyboard</code> in the <a href="../KeyboardHandler/">KeyboardHandler</a> section.</p>
 <hr />
@@ -19511,7 +19518,7 @@ shortcuts. Find more details and examples using <code>keyboard</code> in the <a 
 <blockquote>
 <p><strong>scrollZoom</strong>: <a href="../ScrollZoomHandler/"><code>ScrollZoomHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L679">ui/map.ts:679</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L679">ui/map.ts:679</a></p>
 <p>The map's <a href="../ScrollZoomHandler/">ScrollZoomHandler</a>, which implements zooming in and out with a scroll wheel or trackpad.
 Find more details and examples using <code>scrollZoom</code> in the <a href="../ScrollZoomHandler/">ScrollZoomHandler</a> section.</p>
 <hr />
@@ -19519,7 +19526,7 @@ Find more details and examples using <code>scrollZoom</code> in the <a href="../
 <blockquote>
 <p><strong>touchPitch</strong>: <a href="../TwoFingersTouchPitchHandler/"><code>TwoFingersTouchPitchHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L722">ui/map.ts:722</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L722">ui/map.ts:722</a></p>
 <p>The map's <a href="../TwoFingersTouchPitchHandler/">TwoFingersTouchPitchHandler</a>, which allows the user to pitch the map with touch gestures.
 Find more details and examples using <code>touchPitch</code> in the <a href="../TwoFingersTouchPitchHandler/">TwoFingersTouchPitchHandler</a> section.</p>
 <hr />
@@ -19527,7 +19534,7 @@ Find more details and examples using <code>touchPitch</code> in the <a href="../
 <blockquote>
 <p><strong>touchZoomRotate</strong>: <a href="../TwoFingersTouchZoomRotateHandler/"><code>TwoFingersTouchZoomRotateHandler</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/map.ts#L716">ui/map.ts:716</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/map.ts#L716">ui/map.ts:716</a></p>
 <p>The map's <a href="../TwoFingersTouchZoomRotateHandler/">TwoFingersTouchZoomRotateHandler</a>, which allows the user to zoom or rotate the map with touch gestures.
 Find more details and examples using <code>touchZoomRotate</code> in the <a href="../TwoFingersTouchZoomRotateHandler/">TwoFingersTouchZoomRotateHandler</a> section.</p>
 
@@ -19663,7 +19670,7 @@ Find more details and examples using <code>touchZoomRotate</code> in the <a href
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.88ee1349.min.js"></script>
       
     
   </body>

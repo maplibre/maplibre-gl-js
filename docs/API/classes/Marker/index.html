@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.60">
     
     
       
@@ -34,7 +34,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -3081,7 +3081,7 @@
   <span class="md-ellipsis">
     
   
-  getRTLTextPluginStatus()
+  ~~getRTLTextPluginStatus()~~
 
     
   </span>
@@ -3405,7 +3405,7 @@
   <span class="md-ellipsis">
     
   
-  setRTLTextPlugin()
+  ~~setRTLTextPlugin()~~
 
     
   </span>
@@ -7866,33 +7866,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/add-support-for-right-to-left-scripts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Add support for right-to-left scripts
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../examples/adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
         
   
@@ -11568,7 +11541,7 @@
 
 
 <h1 id="marker">Marker</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L287">ui/marker.ts:287</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L287">ui/marker.ts:287</a></p>
 <p>Creates a marker component</p>
 <h2 id="examples">Examples</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">marker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Marker</span><span class="p">()</span>
@@ -11613,7 +11586,7 @@ Use this class to apply custom styles to covered markers.</p>
 <blockquote>
 <p><strong>new Marker</strong>(<code>options?</code>: <a href="../../type-aliases/MarkerOptions/"><code>MarkerOptions</code></a>): <code>Marker</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L319">ui/marker.ts:319</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L319">ui/marker.ts:319</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -11640,7 +11613,7 @@ Use this class to apply custom styles to covered markers.</p>
 <blockquote>
 <p><strong>_onKeyDown</strong>(<code>e</code>: <code>KeyboardEvent</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L588">ui/marker.ts:588</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L588">ui/marker.ts:588</a></p>
 <p>Move a focused draggable default marker with the arrow keys
 (1 screen pixel per keydown; 10 with Shift).
 Mirrors the pointer drag gesture: the position updates before <code>dragstart</code>
@@ -11669,7 +11642,7 @@ produces repeated <code>drag</code> events within a single gesture.</p>
 <blockquote>
 <p><strong>_updateAccessibilityRole</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L980">ui/marker.ts:980</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L980">ui/marker.ts:980</a></p>
 <p>Keep the default marker role aligned with interactivity.
 Default markers need a role because <code>aria-label</code> is set in <a href="#addto">Marker.addTo</a>.
 Non-interactive markers use <code>role=img</code>; interactive ones (draggable or with a popup) use <code>role=button</code>.
@@ -11683,7 +11656,7 @@ Explicit roles set by the application are preserved.</p>
 <blockquote>
 <p><strong>_updateTabIndex</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L956">ui/marker.ts:956</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L956">ui/marker.ts:956</a></p>
 <p>Keep the marker element focusable while it has built-in keyboard behavior.
 A popup makes any marker element interactive; dragging only manages
 focusability for the default marker so custom elements stay
@@ -11696,7 +11669,7 @@ never added, changed, or removed here.</p>
 <blockquote>
 <p><strong>addClassName</strong>(<code>className</code>: <code>string</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L802">ui/marker.ts:802</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L802">ui/marker.ts:802</a></p>
 <p>Adds a CSS class to the marker element.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -11726,7 +11699,7 @@ never added, changed, or removed here.</p>
 <blockquote>
 <p><strong>addTo</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L391">ui/marker.ts:391</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L391">ui/marker.ts:391</a></p>
 <p>Attaches the <code>Marker</code> to a <code>Map</code> object.</p>
 <h4 id="parameters_3">Parameters</h4>
 <table>
@@ -11758,7 +11731,7 @@ never added, changed, or removed here.</p>
 <blockquote>
 <p><strong>fire</strong>(<code>event</code>: <a href="../MarkerDragEvent/"><code>MarkerDragEvent</code></a> | <a href="../MarkerClickEvent/"><code>MarkerClickEvent</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L156">util/evented.ts:156</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L156">util/evented.ts:156</a></p>
 <p>Calls every listener registered for the event's type.</p>
 <h5 id="parameters_4">Parameters</h5>
 <table>
@@ -11783,7 +11756,7 @@ never added, changed, or removed here.</p>
 <blockquote>
 <p><strong>fire</strong>(<code>type</code>: keyof <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>, <code>properties?</code>: <code>object</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L162">util/evented.ts:162</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L162">util/evented.ts:162</a></p>
 <p>Compatibility with the (type: string, properties: Object) signature from previous versions.
 See https://github.com/mapbox/mapbox-gl-js/issues/6522,
     https://github.com/mapbox/mapbox-gl-draw/issues/766</p>
@@ -11815,7 +11788,7 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 <blockquote>
 <p><strong>getElement</strong>(): <code>HTMLElement</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L504">ui/marker.ts:504</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L504">ui/marker.ts:504</a></p>
 <p>Returns the <code>Marker</code>'s HTML element.</p>
 <h4 id="returns_8">Returns</h4>
 <p><code>HTMLElement</code></p>
@@ -11825,7 +11798,7 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 <blockquote>
 <p><strong>getLngLat</strong>(): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L475">ui/marker.ts:475</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L475">ui/marker.ts:475</a></p>
 <p>Get the marker's geographical location.</p>
 <p>The longitude of the result may differ by a multiple of 360 degrees from the longitude previously
 set by <code>setLngLat</code> because <code>Marker</code> wraps the anchor longitude across copies of the world to keep
@@ -11846,7 +11819,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>getOffset</strong>(): <code>Point</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L777">ui/marker.ts:777</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L777">ui/marker.ts:777</a></p>
 <p>Get the marker's offset.</p>
 <h4 id="returns_10">Returns</h4>
 <p><code>Point</code></p>
@@ -11856,7 +11829,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>getPitchAlignment</strong>(): <a href="../../type-aliases/Alignment/"><code>Alignment</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L1045">ui/marker.ts:1045</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L1045">ui/marker.ts:1045</a></p>
 <p>Returns the current <code>pitchAlignment</code> property of the marker.</p>
 <h4 id="returns_11">Returns</h4>
 <p><a href="../../type-aliases/Alignment/"><code>Alignment</code></a></p>
@@ -11866,7 +11839,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>getPopup</strong>(): <a href="../Popup/"><code>Popup</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L653">ui/marker.ts:653</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L653">ui/marker.ts:653</a></p>
 <p>Returns the <a href="../Popup/">Popup</a> instance that is bound to the Marker.</p>
 <h4 id="returns_12">Returns</h4>
 <p><a href="../Popup/"><code>Popup</code></a></p>
@@ -11884,7 +11857,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>getRotation</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L1009">ui/marker.ts:1009</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L1009">ui/marker.ts:1009</a></p>
 <p>Returns the current rotation angle of the marker (in degrees).</p>
 <h4 id="returns_13">Returns</h4>
 <p><code>number</code></p>
@@ -11894,7 +11867,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>getRotationAlignment</strong>(): <a href="../../type-aliases/Alignment/"><code>Alignment</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L1027">ui/marker.ts:1027</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L1027">ui/marker.ts:1027</a></p>
 <p>Returns the current <code>rotationAlignment</code> property of the marker.</p>
 <h4 id="returns_14">Returns</h4>
 <p><a href="../../type-aliases/Alignment/"><code>Alignment</code></a></p>
@@ -11904,7 +11877,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>isDraggable</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L945">ui/marker.ts:945</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L945">ui/marker.ts:945</a></p>
 <p>Returns true if the marker can be dragged</p>
 <h4 id="returns_15">Returns</h4>
 <p><code>boolean</code></p>
@@ -11914,7 +11887,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: keyof <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L206">util/evented.ts:206</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L206">util/evented.ts:206</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_6">Parameters</h4>
 <table>
@@ -11943,7 +11916,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L117">util/evented.ts:117</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L117">util/evented.ts:117</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="type-parameters">Type Parameters</h4>
 <table>
@@ -11989,7 +11962,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L100">util/evented.ts:100</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L100">util/evented.ts:100</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="type-parameters_1">Type Parameters</h4>
 <table>
@@ -12036,7 +12009,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>&gt;(<code>type</code>: <code>T</code>): <code>Promise</code>&lt;<a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>[<code>T</code>]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L132">util/evented.ts:132</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L132">util/evented.ts:132</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_2">Type Parameters</h5>
@@ -12078,7 +12051,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/MarkerEventType/"><code>MarkerEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L142">util/evented.ts:142</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L142">util/evented.ts:142</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_3">Type Parameters</h5>
@@ -12126,7 +12099,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>remove</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L427">ui/marker.ts:427</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L427">ui/marker.ts:427</a></p>
 <p>Removes the marker from a map</p>
 <h4 id="returns_21">Returns</h4>
 <p><code>this</code></p>
@@ -12139,7 +12112,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>removeClassName</strong>(<code>className</code>: <code>string</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L817">ui/marker.ts:817</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L817">ui/marker.ts:817</a></p>
 <p>Removes a CSS class from the marker element.</p>
 <h4 id="parameters_11">Parameters</h4>
 <table>
@@ -12169,7 +12142,7 @@ the marker on screen.</p>
 <blockquote>
 <p><strong>setDraggable</strong>(<code>shouldBeDraggable?</code>: <code>boolean</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L907">ui/marker.ts:907</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L907">ui/marker.ts:907</a></p>
 <p>Sets the <code>draggable</code> property and functionality of the marker.
 A draggable default marker is also keyboard focusable and movable with the
 arrow keys (see <a href="../../type-aliases/MarkerOptions/#draggable">MarkerOptions.draggable</a>); custom marker elements keep
@@ -12198,7 +12171,7 @@ their focusability and keyboard behavior application-owned.</p>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>&lt;<a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a>&gt;, <code>data?</code>: <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a> | (() =&gt; <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a>)): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/util/evented.ts#L217">util/evented.ts:217</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/util/evented.ts#L217">util/evented.ts:217</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_13">Parameters</h4>
 <table>
@@ -12228,7 +12201,7 @@ their focusability and keyboard behavior application-owned.</p>
 <blockquote>
 <p><strong>setLngLat</strong>(<code>lnglat</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L492">ui/marker.ts:492</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L492">ui/marker.ts:492</a></p>
 <p>Set the marker's geographical position and move it.</p>
 <h4 id="parameters_14">Parameters</h4>
 <table>
@@ -12265,7 +12238,7 @@ their focusability and keyboard behavior application-owned.</p>
 <blockquote>
 <p><strong>setOffset</strong>(<code>offset</code>: <a href="../../type-aliases/PointLike/"><code>PointLike</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L785">ui/marker.ts:785</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L785">ui/marker.ts:785</a></p>
 <p>Sets the offset of the marker</p>
 <h4 id="parameters_15">Parameters</h4>
 <table>
@@ -12291,7 +12264,7 @@ their focusability and keyboard behavior application-owned.</p>
 <blockquote>
 <p><strong>setOpacity</strong>(<code>opacity?</code>: <code>string</code> | <code>number</code>, <code>opacityWhenCovered?</code>: <code>string</code> | <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L1055">ui/marker.ts:1055</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L1055">ui/marker.ts:1055</a></p>
 <p>Sets the <code>opacity</code> and <code>opacityWhenCovered</code> properties of the marker.
 When called without arguments, resets opacity and opacityWhenCovered to defaults</p>
 <h4 id="parameters_16">Parameters</h4>
@@ -12323,7 +12296,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>setPitchAlignment</strong>(<code>alignment?</code>: <a href="../../type-aliases/Alignment/"><code>Alignment</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L1035">ui/marker.ts:1035</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L1035">ui/marker.ts:1035</a></p>
 <p>Sets the <code>pitchAlignment</code> property of the marker.</p>
 <h4 id="parameters_17">Parameters</h4>
 <table>
@@ -12349,7 +12322,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>setPopup</strong>(<code>popup?</code>: <a href="../Popup/"><code>Popup</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L521">ui/marker.ts:521</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L521">ui/marker.ts:521</a></p>
 <p>Binds a <a href="../Popup/">Popup</a> to the Marker.</p>
 <h4 id="parameters_18">Parameters</h4>
 <table>
@@ -12383,7 +12356,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>setRotation</strong>(<code>rotation?</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L999">ui/marker.ts:999</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L999">ui/marker.ts:999</a></p>
 <p>Sets the <code>rotation</code> property of the marker.</p>
 <h4 id="parameters_19">Parameters</h4>
 <table>
@@ -12409,7 +12382,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>setRotationAlignment</strong>(<code>alignment?</code>: <a href="../../type-aliases/Alignment/"><code>Alignment</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L1017">ui/marker.ts:1017</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L1017">ui/marker.ts:1017</a></p>
 <p>Sets the <code>rotationAlignment</code> property of the marker.</p>
 <h4 id="parameters_20">Parameters</h4>
 <table>
@@ -12435,7 +12408,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>setSubpixelPositioning</strong>(<code>value</code>: <code>boolean</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L565">ui/marker.ts:565</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L565">ui/marker.ts:565</a></p>
 <p>Set the option to allow subpixel positioning of the marker by passing a boolean</p>
 <h4 id="parameters_21">Parameters</h4>
 <table>
@@ -12465,7 +12438,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>toggleClassName</strong>(<code>className</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L834">ui/marker.ts:834</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L834">ui/marker.ts:834</a></p>
 <p>Add or remove the given CSS class on the marker element, depending on whether the element currently has that class.</p>
 <h4 id="parameters_22">Parameters</h4>
 <table>
@@ -12496,7 +12469,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
 <blockquote>
 <p><strong>togglePopup</strong>(): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/9df21da874e49ee4943aecb3350db9dfd98e7d1b/src/ui/marker.ts#L669">ui/marker.ts:669</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f985318d1fa7e01d8b7e32a719aaf91efcb348d4/src/ui/marker.ts#L669">ui/marker.ts:669</a></p>
 <p>Opens or closes the <a href="../Popup/">Popup</a> instance that is bound to the Marker, depending on the current state of the <a href="../Popup/">Popup</a>.</p>
 <h4 id="returns_34">Returns</h4>
 <p><code>this</code></p>
@@ -12641,7 +12614,7 @@ When called without arguments, resets opacity and opacityWhenCovered to defaults
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.88ee1349.min.js"></script>
       
     
   </body>
