@@ -9,7 +9,7 @@ vi.mock(import('../../util/geolocation_support'), () => (
     }
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
-import type {LngLat} from '../../geo/lng_lat.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
@@ -747,6 +747,52 @@ describe('GeolocateControl with no options', () => {
         await zoomendPromise;
 
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+    });
+
+    test('keeps a zoom above fitBoundsOptions.maxZoom on a location update when trackZoom is false', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            trackZoom: false,
+            fitBoundsOptions: {
+                duration: 0,
+                maxZoom: 15
+            }
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const firstFix = geolocate.once('geolocate');
+        geolocate._geolocateButton.dispatchEvent(new window.Event('click'));
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await firstFix;
+        const userZoom = 20;
+        const zoomend = map.once('zoomend');
+        map.zoomTo(userZoom, {duration: 0});
+        await zoomend;
+
+        const moveend = map.once('moveend');
+        geolocation.change({latitude: 11, longitude: 21, accuracy: 500});
+        await moveend;
+
+        expect(map.getZoom()).toBe(userZoom);
+        expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '11.0000', lng: '21.0000'});
+    });
+
+    test('fits the accuracy circle on a location update by default', async () => {
+        const geolocate = new GeolocateControl({trackUserLocation: true});
+        map.addControl(geolocate);
+        await sleep(0);
+        const firstFix = geolocate.once('geolocate');
+        geolocate._geolocateButton.dispatchEvent(new window.Event('click'));
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await firstFix;
+        const fitBounds = vi.spyOn(map, 'fitBounds');
+
+        const secondFix = geolocate.once('geolocate');
+        geolocation.change({latitude: 11, longitude: 21, accuracy: 500});
+        await secondFix;
+
+        const accuracyCircle = LngLatBounds.fromLngLat(new LngLat(21, 11), 500);
+        expect(fitBounds).toHaveBeenCalledWith(accuracyCircle, {bearing: 0, maxZoom: 15}, {geolocateSource: true});
     });
 
     test('switches to BACKGROUND state on map manipulation', async () => {
