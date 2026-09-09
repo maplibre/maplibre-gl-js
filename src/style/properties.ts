@@ -1,4 +1,4 @@
-import {clone, extend, easeCubicInOut, warnOnce} from '../util/util.ts';
+import {clone, deepEqual, extend, easeCubicInOut, warnOnce} from '../util/util.ts';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
@@ -175,6 +175,18 @@ export class Transitionable<Props> {
         // Note that we do not _remove_ an own property in the case where a value is being reset
         // to the default: the transition might still be non-default.
         this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._propertyRootKey(name), this._globalState);
+    }
+
+    /** Applies a whole spec, skipping the values we already hold so they do not transition. */
+    setValues(values: {[name: string]: unknown}): void {
+        for (const name in values) {
+            const value = values[name];
+            if (name.endsWith(TRANSITION_SUFFIX)) {
+                this.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
+            } else if (!deepEqual(this._values[name].value.value, value)) {
+                this.setValue(name as keyof Props, value);
+            }
+        }
     }
 
     getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
