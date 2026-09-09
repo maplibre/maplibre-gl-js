@@ -14,7 +14,7 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 
-import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
@@ -437,6 +437,19 @@ export class MercatorTransform implements ITransform {
         return null;
     }
 
+    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        if (!terrain.getCoverageIndex()) return false;
+
+        const segment = this.getRaySegmentFromPixel(p);
+        const location = MercatorCoordinate.fromLngLat(lngLat);
+        const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
+        if (tLocation <= 0 || tLocation > 1) return true;
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return hit != null && raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
+    }
+
     /**
      * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
      */
@@ -838,13 +851,6 @@ export class MercatorTransform implements ITransform {
         return camMercator.toLngLat();
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        const coord = MercatorCoordinate.fromLngLat(lngLat);
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, this._viewProjMatrix);
-        return (p[2] / p[3]);
-    }
-
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
@@ -955,4 +961,15 @@ function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
 
 function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
     return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
+}
+
+/**
+ * Where the point of `segment` closest to the given world pixel position and elevation lies along it,
+ * as the fraction from `near` (0) to `far` (1).
+ */
+function raySegmentParameter({near, far}: RaySegment, worldX: number, worldY: number, elevation: number): number {
+    const dx = far[0] - near[0];
+    const dy = far[1] - near[1];
+    const dz = far[2] - near[2];
+    return ((worldX - near[0]) * dx + (worldY - near[1]) * dy + (elevation - near[2]) * dz) / (dx * dx + dy * dy + dz * dz);
 }

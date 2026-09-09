@@ -11,7 +11,7 @@ import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, 
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 
-import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -574,14 +574,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(surface);
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        const vec = angularCoordinatesToSurfaceVector(lngLat);
-        vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
-        const result = createVec4f64();
-        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixF64);
-        return result[2] / result[3];
-    }
-
     populateCache(_coords: OverscaledTileID[]): void {
         // Do nothing
     }
@@ -898,6 +890,19 @@ export class VerticalPerspectiveTransform implements ITransform {
         return !!intersection;
     }
 
+    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        if (!terrain.getCoverageIndex()) return false;
+
+        const origin = this.cameraPosition;
+        const direction = this.getRayDirectionFromPixel(p);
+        const tLocation = globeRayParameter(origin, direction, lngLat, elevation);
+        if (tLocation <= 0) return true;
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return hit != null && globeRayParameter(origin, direction, hit.toLngLat(), hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
+    }
+
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
@@ -1048,4 +1053,14 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
 function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
     const {sample, radius} = globeSampleAt(ray, t);
     return isBelowTerrainSample(sample, (radius - 1) * earthRadius);
+}
+
+/**
+ * Where the point of the ray closest to the location lies along it, in units of `direction` from `origin`.
+ */
+function globeRayParameter(origin: vec3, direction: vec3, lngLat: LngLat, elevation: number): number {
+    const location = angularCoordinatesToSurfaceVector(lngLat);
+    vec3.scale(location, location, 1 + elevation / earthRadius);
+    vec3.subtract(location, location, origin);
+    return vec3.dot(location, direction);
 }

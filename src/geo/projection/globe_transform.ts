@@ -384,10 +384,6 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getCameraLngLat();
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
-    }
-
     populateCache(coords: OverscaledTileID[]): void {
         this._mercatorTransform.populateCache(coords);
         this._verticalPerspectiveTransform.populateCache(coords);
@@ -440,6 +436,11 @@ export class GlobeTransform implements ITransform {
     /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
         return this.currentTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
+    }
+
+    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
+    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
+        return this.currentTransform.isLocationOccludedByTerrain(p, lngLat, elevation, terrain);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
