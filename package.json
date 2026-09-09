@@ -75,7 +75,7 @@
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.59.3",
     "@typescript/native-preview": "beta",
-    "@unicode/unicode-17.0.0": "^2.0.2",
+    "@unicode/unicode-17.0.0": "^2.0.4",
     "@vitest/coverage-v8": "4.1.11",
     "@vitest/eslint-plugin": "^1.6.27",
     "@vitest/ui": "4.1.11",

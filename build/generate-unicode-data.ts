@@ -31,17 +31,21 @@ async function createSet(blocks: string[], scripts: string[]): Promise<regenerat
  * Returns a character class matching the scripts that are written cursively, and so cannot have
  * their letters spaced apart without coming apart.
  *
- * The ISO 15924 code of each script is given because that is how the Unicode Standard names them,
- * and how this list read before it was generated.
+ * A script is one of them when its letters have a joining type, which says they are drawn joined to
+ * what stands beside them. Duployan is written joined up as well, by a rule the character database
+ * does not state as a joining type, so it is named here.
  */
 async function isInCursiveScript(): Promise<string> {
-    const set = await createSet([], [
-        'Arabic', // Arab
-        'Duployan', // Dupl
-        'Mongolian', // Mong
-        'Old Uyghur', // Ougr
-        'Syriac', // Syrc
-    ]);
+    const joiningTypes = await readJoiningTypes();
+    const joins = (codePoint: number) => ['D', 'L', 'R', 'C'].includes(joiningTypes.get(codePoint));
+
+    const set = await createSet([], ['Duployan']);
+    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.js`)).default.Script;
+    for (const script of scripts) {
+        if (script === 'Common' || script === 'Inherited') continue;
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.js`)).default;
+        if (codePoints.some(joins)) set.add(codePoints);
+    }
 
     return set.toString();
 }
@@ -49,62 +53,39 @@ async function isInCursiveScript(): Promise<string> {
 /**
  * Returns a character class matching the scripts that are written horizontally from right to left.
  *
- * The ISO 15924 code of each script is given because that is how the Unicode Standard names them,
- * and how this list read before it was generated.
+ * A script is one of them when the bidirectional algorithm reads its letters from right to left. The
+ * whole script is taken, the marks and digits written with it included, so that a word keeps all its
+ * parts. `Common` is left out: it holds the characters every script shares, a handful of which are
+ * read right to left while the rest of it is not.
  */
 async function isInRTLScript(): Promise<string> {
-    const set = await createSet([], [
-        'Adlam', // Adlm
-        'Arabic', // Arab
-        'Imperial Aramaic', // Armi
-        'Avestan', // Avst
-        'Chorasmian', // Chrs
-        'Cypriot', // Cprt
-        'Egyptian Hieroglyphs', // Egyp
-        'Elymaic', // Elym
-        'Garay', // Gara
-        'Hatran', // Hatr
-        'Hebrew', // Hebr
-        'Old Hungarian', // Hung
-        'Kharoshthi', // Khar
-        'Lydian', // Lydi
-        'Mandaic', // Mand
-        'Manichaean', // Mani
-        'Mende Kikakui', // Mend
-        'Meroitic Cursive', // Merc
-        'Meroitic Hieroglyphs', // Mero
-        'Old North Arabian', // Narb
-        'Nabataean', // Nbat
-        'Nko', // Nkoo
-        'Old Turkic', // Orkh
-        'Palmyrene', // Palm
-        'Inscriptional Pahlavi', // Phli
-        'Psalter Pahlavi', // Phlp
-        'Phoenician', // Phnx
-        'Inscriptional Parthian', // Prti
-        'Hanifi Rohingya', // Rohg
-        'Samaritan', // Samr
-        'Old South Arabian', // Sarb
-        'Old Sogdian', // Sogo
-        'Syriac', // Syrc
-        'Thaana', // Thaa
-        'Todhri', // Todr
-        'Yezidi', // Yezi
-    ]);
+    const readRightToLeft = new Set<number>();
+    for (const bidiClass of ['Right_To_Left', 'Arabic_Letter']) {
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Bidi_Class/${bidiClass}/code-points.js`)).default;
+        for (const codePoint of codePoints) readRightToLeft.add(codePoint);
+    }
+
+    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.js`)).default.Script;
+    const set = regenerate.default();
+    for (const script of scripts) {
+        if (script === 'Common') continue;
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.js`)).default;
+        if (codePoints.some((codePoint: number) => readRightToLeft.has(codePoint))) set.add(codePoints);
+    }
 
     return set.toString();
 }
 
+/**
+ * Returns a character class matching the blocks whose glyphs are drawn locally by TinySDF.
+ *
+ * These are the writing systems TinySDF draws well and cheaply: in general, any system typically set
+ * in a monospaced font. Hanzi, Kanji and Hanja, from the CJK Unified Ideographs blocks, are the
+ * clearest case, with more than 99,000 codepoints reached essentially at random, which is a great
+ * deal of bandwidth to spend on a glyph server. The smaller CJKV and other siniform blocks are drawn
+ * locally too, so that text mixing them looks of a piece.
+ */
 async function usesLocalIdeographFontFamily(): Promise<string> {
-    // Local rendering is preferred for Unicode code blocks that represent
-    // writing systems for which TinySDF produces optimal results and greatly
-    // reduces bandwidth consumption. In general, TinySDF is best for any
-    // writing system typically set in a monospaced font. With more than 99,000
-    // codepoints accessed essentially at random, Hanzi/Kanji/Hanja (from the
-    // CJK Unified Ideographs blocks) is the canonical example of wasteful
-    // bandwidth consumption when rendered remotely. For visual consistency
-    // within CJKV text, even relatively small CJKV and other siniform code
-    // blocks prefer local rendering.
     const set = await createSet([
         'CJK Compatibility Forms',
         'CJK Compatibility',
@@ -180,67 +161,28 @@ async function allowsIdeographicBreaking(): Promise<string> {
     return set.toString();
 }
 
-// The following logic comes from
-// <https://www.unicode.org/Public/17.0.0/ucd/VerticalOrientation.txt>.
-// Keep it synchronized with
-// <https://www.unicode.org/Public/UCD/latest/ucd/VerticalOrientation.txt>.
-// The data file denotes with “U” or “Tu” any codepoint that may be drawn
-// upright in vertical text but does not distinguish between upright and
-// “neutral” characters.
-
+/**
+ * Returns a character class matching the characters drawn upright in vertical text.
+ *
+ * `Vertical_Orientation` names every character that may be drawn upright, without saying which of
+ * them stand upright in their own right and which only follow the characters beside them. Those that
+ * follow are taken out, being the ones {@link neutralVerticalOrientationSet} names, and the blocks
+ * added back below are the ones read both ways: upright standing alone, neutral in company. What is
+ * removed after that is a character that block reads the other way.
+ */
 async function hasUprightVerticalOrientation(): Promise<string> {
-    const set = await createSet([
-        'Alchemical Symbols',
-        'Anatolian Hieroglyphs',
-        'Byzantine Musical Symbols',
-        'Chess Symbols',
+    const set = regenerate.default();
+    for (const orientation of ['U', 'Tu']) {
+        set.add((await import(`@unicode/unicode-${unicodeVersion}/Vertical_Orientation/${orientation}/code-points.js`)).default);
+    }
+    set.remove(await neutralVerticalOrientationSet());
+    set.add(await createSet([
         'CJK Compatibility Forms',
-        'CJK Compatibility',
-        'CJK Strokes',
         'CJK Symbols And Punctuation',
-        'Counting Rod Numerals',
-        'Domino Tiles',
-        'Emoticons',
-        'Enclosed Alphanumeric Supplement',
-        'Enclosed CJK Letters And Months',
-        'Geometric Shapes Extended',
         'Halfwidth And Fullwidth Forms',
-        'Ideographic Description Characters',
-        'Kanbun',
         'Katakana',
-        'Mahjong Tiles',
-        'Mayan Numerals',
-        'Meroitic Hieroglyphs',
-        'Miscellaneous Symbols And Pictographs',
-        'Miscellaneous Symbols Supplement',
-        'Musical Symbols',
-        'Ornamental Dingbats',
-        'Playing Cards',
-        'Siddham',
         'Small Form Variants',
-        'Small Kana Extension',
-        'Soyombo',
-        'Supplemental Symbols And Pictographs',
-        'Sutton SignWriting',
-        'Symbols And Pictographs Extended-A',
-        'Tai Xuan Jing Symbols',
-        'Transport And Map Symbols',
-        'Vertical Forms',
-        'Yijing Hexagram Symbols',
-        'Zanabazar Square',
-        'Znamenny Musical Notation',
-    ], [
-        'Bopomofo',
-        'Canadian Aboriginal',
-        'Han',
-        'Hangul',
-        'Hiragana',
-        'Katakana',
-        'Khitan Small Script',
-        'Nushu',
-        'Tangut',
-        'Yi',
-    ]);
+    ], []));
 
     set.add(0x02EA /* modifier letter yin departing tone mark */);
     set.add(0x02EB /* modifier letter yang departing tone mark */);
@@ -276,6 +218,16 @@ async function hasUprightVerticalOrientation(): Promise<string> {
 }
 
 async function hasNeutralVerticalOrientation(): Promise<string> {
+    return (await neutralVerticalOrientationSet()).toString();
+}
+
+/**
+ * The characters drawn upright in vertical text only because the characters beside them are.
+ *
+ * `Vertical_Orientation` does not draw this distinction, naming both these and the characters that
+ * stand upright in their own right, so which of them merely follow their neighbours is settled here.
+ */
+async function neutralVerticalOrientationSet(): Promise<regenerate.regenerate> {
     const set = await createSet([
         'CJK Compatibility Forms',
         'CJK Symbols And Punctuation',
@@ -349,7 +301,7 @@ async function hasNeutralVerticalOrientation(): Promise<string> {
     set.add(0xFFFC /* object replacement character */);
     set.add(0xFFFD /* replacement character */);
 
-    return set.toString();
+    return set;
 }
 
 /**
@@ -376,19 +328,20 @@ async function canFormGraphemeCluster(): Promise<string> {
  * Text in these has no punctuation to break a line at, so the only way to wrap it is to ask the
  * browser's word segmenter where the words are. Elsewhere the segmenter is the wrong tool: it
  * isolates a comma as a word of its own, and a line must not begin with one.
+ *
+ * `Line_Break` names the South East Asian scripts that need a dictionary to be broken into lines.
+ * The three scripts added to them are written without spaces as well, and are broken by the same
+ * means, but the standard gives them a line breaking class of their own.
  */
 async function isWrittenWithoutSpaces(): Promise<string> {
-    const set = await createSet([], [
+    const set = regenerate.default();
+    set.add((await import(`@unicode/unicode-${unicodeVersion}/Line_Break/Complex_Context/code-points.js`)).default);
+
+    return set.add(await createSet([], [
         'Balinese',
         'Javanese',
-        'Khmer',
-        'Lao',
-        'Myanmar',
-        'Thai',
         'Tibetan',
-    ]);
-
-    return set.toString();
+    ])).toString();
 }
 
 /**
@@ -407,43 +360,35 @@ async function joinsToTheFollowingGrapheme(): Promise<string> {
     return set.toString();
 }
 
-const downloads = new Map<string, Promise<string>>();
+const downloadedRows = new Map<string, Promise<string[][]>>();
 /**
- * Downloads one file of the Unicode Character Database, keeping it for the rest of the run.
- *
- * The joining types and the presentation forms are in neither the `@unicode` packages the rest of
- * this script reads nor anything else small enough to depend on: the one package that carries them
- * unpacks to more than 250 MB. They are fetched here instead, in the same way the packages
- * themselves are fetched by `npm install`.
+ * The rows of one file of the Unicode Character Database, each split into its fields, with the
+ * comments and blank lines dropped. A file is downloaded from unicode.org and parsed once, and kept
+ * for the rest of the run.
  */
-function fetchUnicodeData(file: string): Promise<string> {
-    if (!downloads.has(file)) {
-        downloads.set(file, (async () => {
+function unicodeDataRows(file: string): Promise<string[][]> {
+    if (!downloadedRows.has(file)) {
+        downloadedRows.set(file, (async () => {
             const url = `https://www.unicode.org/Public/${unicodeVersion}/ucd/${file}`;
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
             }
-            return response.text();
+            return (await response.text())
+                .split('\n')
+                .map(line => line.split('#')[0])
+                .filter(line => line.trim())
+                .map(line => line.split(';').map(field => field.trim()));
         })());
     }
-    return downloads.get(file);
-}
-
-/** The rows of a Unicode Character Database file, with its comments and blank lines dropped. */
-async function unicodeDataRows(file: string): Promise<string[][]> {
-    return (await fetchUnicodeData(file))
-        .split('\n')
-        .map(line => line.split('#')[0])
-        .filter(line => line.trim())
-        .map(line => line.split(';').map(field => field.trim()));
+    return downloadedRows.get(file);
 }
 
 /**
  * The blocks the Arabic script is written from, plus the two joiners that steer it.
  *
- * Only Arabic is shaped. The other cursive scripts have no presentation forms for MapLibre to name a
- * glyph by, so shaping them would have nothing to say.
+ * Only Arabic is tabulated. A cursive script outside these blocks has no presentation forms, and so
+ * no code point by which MapLibre could name a shaped glyph.
  */
 const arabicBlocks: Array<[number, number]> = [
     [0x0600, 0x06ff],
@@ -467,27 +412,17 @@ function isArabic(codePoint: number): boolean {
 type JoiningType = 'R' | 'L' | 'D' | 'C' | 'U' | 'T';
 
 /**
- * The joining type of every Arabic character the database gives one for.
+ * The joining type of every character: which side, if any, it joins the letters beside it on.
  *
- * Characters the file leaves out default to non-joining, except the combining marks and format
- * characters, which are transparent: a vowel point must not break the word it is written on.
+ * `DerivedJoiningType.txt` states the property for every code point, the combining marks and format
+ * characters that join through included.
  */
 async function readJoiningTypes(): Promise<Map<number, JoiningType>> {
     const joiningTypes = new Map<number, JoiningType>();
 
-    const transparent = await createSet([], []);
-    for (const category of ['Nonspacing_Mark', 'Enclosing_Mark', 'Format']) {
-        transparent.add((await import(`@unicode/unicode-${unicodeVersion}/General_Category/${category}/code-points.js`)).default);
-    }
-    for (const codePoint of transparent.toArray()) {
-        if (isArabic(codePoint)) {
-            joiningTypes.set(codePoint, 'T');
-        }
-    }
-
-    for (const [hex, , type] of await unicodeDataRows('ArabicShaping.txt')) {
-        const codePoint = parseInt(hex, 16);
-        if (isArabic(codePoint)) {
+    for (const [codePoints, type] of await unicodeDataRows('extracted/DerivedJoiningType.txt')) {
+        const [first, last] = codePoints.split('..').map(hex => parseInt(hex, 16));
+        for (let codePoint = first; codePoint <= (last ?? first); codePoint++) {
             joiningTypes.set(codePoint, type as JoiningType);
         }
     }
@@ -510,12 +445,12 @@ const markCarriers = new Set([0x0020, 0x0640]);
 /**
  * The Presentation Forms shape of each Arabic letter, and the two shapes of each lam-alef ligature.
  *
- * These are read out of the compatibility decompositions of the presentation blocks rather than
- * hard-coded, so `<final> 0628` is what says U+FE90 is the final form of beh.
+ * The shapes come from the compatibility decompositions of the presentation blocks: `<final> 0628`
+ * is what says U+FE90 is the final form of beh.
  *
- * Only lam-alef is taken from the two-character decompositions. It is the one ligature Arabic
- * shaping is required to form; the rest of the presentation blocks hold typographic ligatures a font
- * offers rather than ones the text is obliged to use.
+ * Of the two-character decompositions only lam-alef is taken. It is the one ligature Arabic shaping
+ * is required to form; the rest of the presentation blocks are typographic ligatures, which a font
+ * offers and the text is free to do without.
  */
 async function readPresentationForms(): Promise<{
     forms: Map<number, PresentationForms>;
@@ -582,7 +517,7 @@ function encodeCodePointRanges(codePoints: number[]): string {
 async function encodedJoiningTypes(): Promise<string> {
     const byType = new Map<JoiningType, number[]>();
     for (const [codePoint, type] of await readJoiningTypes()) {
-        if (type === 'U') continue;
+        if (type === 'U' || !isArabic(codePoint)) continue;
         byType.set(type, (byType.get(type) ?? []).concat(codePoint));
     }
 

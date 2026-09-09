@@ -424,9 +424,8 @@ export class SymbolBucket implements Bucket {
      * Collects the glyphs a label needs into `stacks`, so that the tile can ask for them.
      *
      * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
-     * shape it is written as. Its codepoints are asked for as well: not every cluster can be drawn
-     * -- it takes a font file the style pinned with `font-faces` -- and where one cannot, layout
-     * falls back to drawing it a codepoint at a time, exactly as it did before. See `shapeLines`.
+     * shape it is written as. Its codepoints are asked for as well, to give layout something to draw
+     * a codepoint at a time where the cluster itself yields no glyph. See `shapeLines`.
      *
      * A cluster can span two sections, a letter in one and the accent written on it in the next, so
      * the label is taken as a whole and each cluster attributed to the section its first character
