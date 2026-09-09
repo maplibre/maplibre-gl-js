@@ -1484,6 +1484,28 @@ describe('Style.setSky', () => {
         expect(inputJson.sky).toBe(inputSky);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
+
+    test('fires an error on the style when given an invalid property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky: {'sky-color': 'red'}}));
+        await style.once('style.load');
+
+        const promise = style.once('error');
+        style.setSky({'sky-color': 'blue', 'not-a-sky-property': 1} as any);
+        const event = await promise;
+        expect(event.error.message).toContain('not-a-sky-property');
+    });
+
+    test('keeps the previous value from getSky() after a rejected setSky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky: {'sky-color': 'red'}}));
+        await style.once('style.load');
+
+        style.on('error', () => {});
+        style.setSky({'sky-color': 'blue', 'not-a-sky-property': 1} as any);
+
+        expect(style.getSky()).toEqual({'sky-color': 'red'});
+    });
 });
 
 describe('Style.setGlyphs', () => {
