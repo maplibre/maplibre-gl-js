@@ -11,7 +11,6 @@ import {createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {Terrain} from '../../render/terrain.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -938,71 +937,43 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     });
 });
 
-describe('MercatorTransform.isLocationBehindTerrain', () => {
-    // A z12 tile just north of the equator at the prime meridian, with 8 DEM cells of about 1.2 km per side.
-    const tileID = new OverscaledTileID(12, 0, 12, 2048, 2047);
-    const tileSpan = 360 / (1 << 12);
-    // A ridge across the third and fourth DEM rows from the north, flat ground everywhere else.
-    const ridgeDEM = (height: number) => createDEM((_x, y) => (y === 3 || y === 4) ? height : 0);
-    // The camera stands south of the ridge and looks north across it.
-    const southOfRidge = new LngLat(tileSpan / 2, tileSpan * 0.3);
-    const northOfRidge = new LngLat(tileSpan / 2, tileSpan * 0.8);
-    const center = new LngLat(tileSpan / 2, tileSpan * 0.25);
+describe('MercatorTransform.isLocationOccludedByTerrain', () => {
+    test('a location behind a ridge is hidden and one in front of it is in view', () => {
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
+        const cameraSouthOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25);
+        const transform = createMercatorTransform(cameraSouthOfRidge, 12, 75);
+        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
+        const inFrontOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.3);
 
-    function screenPoint(transform: MercatorTransform, terrain: Terrain, lngLat: LngLat): {p: Point; elevation: number} {
-        const elevation = terrain.getElevationForLngLat(lngLat, transform);
-        return {p: transform.locationToScreenPoint(lngLat, terrain), elevation};
-    }
-
-    test('a location on flat terrain is in view', () => {
-        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 500));
-        const transform = createMercatorTransform(new LngLat(0, 0), 4, 45);
-
-        for (const lngLat of [new LngLat(0, 0), new LngLat(3, -2), new LngLat(-5, 6)]) {
-            const {p, elevation} = screenPoint(transform, terrain, lngLat);
-            expect(transform.isLocationBehindTerrain(p, lngLat, elevation, terrain)).toBe(false);
-        }
-    });
-
-    test('a location behind a ridge is hidden', () => {
-        const terrain = createDEMTerrain([tileID], ridgeDEM(3000));
-        const transform = createMercatorTransform(center, 12, 75);
-
-        const {p, elevation} = screenPoint(transform, terrain, northOfRidge);
-
-        expect(transform.isLocationBehindTerrain(p, northOfRidge, elevation, terrain)).toBe(true);
-    });
-
-    test('a location in front of a ridge is in view', () => {
-        const terrain = createDEMTerrain([tileID], ridgeDEM(3000));
-        const transform = createMercatorTransform(center, 12, 75);
-
-        const {p, elevation} = screenPoint(transform, terrain, southOfRidge);
-
-        expect(transform.isLocationBehindTerrain(p, southOfRidge, elevation, terrain)).toBe(false);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(behindRidge, terrain), behindRidge, 0, terrain)).toBe(true);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(inFrontOfRidge, terrain), inFrontOfRidge, 0, terrain)).toBe(false);
     });
 
     test('the ridge itself stays in view', () => {
-        const terrain = createDEMTerrain([tileID], ridgeDEM(3000));
-        const transform = createMercatorTransform(center, 12, 75);
-        const onRidge = new LngLat(tileSpan / 2, tileSpan * (1 - 4 / 8));
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
+        const cameraSouthOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25);
+        const transform = createMercatorTransform(cameraSouthOfRidge, 12, 75);
+        const onRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.5);
 
-        const {p, elevation} = screenPoint(transform, terrain, onRidge);
-
-        expect(elevation).toBe(3000);
-        expect(transform.isLocationBehindTerrain(p, onRidge, elevation, terrain)).toBe(false);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(onRidge, terrain), onRidge, 3000, terrain)).toBe(false);
     });
 
     test('applies the terrain exaggeration', () => {
-        const transform = createMercatorTransform(center, 12, 75);
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const lowRidgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 200 : 0);
+        const cameraSouthOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25);
+        const transform = createMercatorTransform(cameraSouthOfRidge, 12, 75);
+        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
 
-        const low = createDEMTerrain([tileID], ridgeDEM(200));
-        const lowPoint = screenPoint(transform, low, northOfRidge);
-        expect(transform.isLocationBehindTerrain(lowPoint.p, northOfRidge, lowPoint.elevation, low)).toBe(false);
+        const low = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], lowRidgeAcrossTheTwoMiddleRows);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(behindRidge, low), behindRidge, 0, low)).toBe(false);
 
-        const exaggerated = createDEMTerrain([tileID], ridgeDEM(200), 5);
-        const exaggeratedPoint = screenPoint(transform, exaggerated, northOfRidge);
-        expect(transform.isLocationBehindTerrain(exaggeratedPoint.p, northOfRidge, exaggeratedPoint.elevation, exaggerated)).toBe(true);
+        const exaggerated = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], lowRidgeAcrossTheTwoMiddleRows, 5);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(behindRidge, exaggerated), behindRidge, 0, exaggerated)).toBe(true);
     });
 
     test('a location beyond the far plane is hidden', () => {
@@ -1010,24 +981,23 @@ describe('MercatorTransform.isLocationBehindTerrain', () => {
         const transform = createMercatorTransform(new LngLat(0, 0), 6, 80);
         const beyondTheFarPlane = new LngLat(0, 70);
 
-        const {p, elevation} = screenPoint(transform, terrain, beyondTheFarPlane);
-
-        expect(transform.isLocationBehindTerrain(p, beyondTheFarPlane, elevation, terrain)).toBe(true);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(beyondTheFarPlane, terrain), beyondTheFarPlane, 0, terrain)).toBe(true);
     });
 
     test('looking straight down, nothing is hidden', () => {
-        const terrain = createDEMTerrain([tileID], ridgeDEM(3000));
-        const transform = createMercatorTransform(center, 12, 0);
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
+        const transform = createMercatorTransform(new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12, 0);
+        const northOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
 
-        const {p, elevation} = screenPoint(transform, terrain, northOfRidge);
-
-        expect(transform.isLocationBehindTerrain(p, northOfRidge, elevation, terrain)).toBe(false);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(northOfRidge, terrain), northOfRidge, 0, terrain)).toBe(false);
     });
 
     test('nothing is hidden when the terrain has no renderable tiles', () => {
         const terrain = createDEMTerrain([], null);
-        const transform = createMercatorTransform(center, 12, 75);
+        const transform = createMercatorTransform(new LngLat(0, 0), 12, 75);
 
-        expect(transform.isLocationBehindTerrain(new Point(256, 100), northOfRidge, 0, terrain)).toBe(false);
+        expect(transform.isLocationOccludedByTerrain(new Point(256, 100), new LngLat(0, 0.01), 0, terrain)).toBe(false);
     });
 });

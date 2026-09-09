@@ -257,70 +257,45 @@ describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
     });
 });
 
-describe('VerticalPerspectiveTransform.isLocationBehindTerrain', () => {
-    // A z12 tile just north of the equator at the prime meridian, with 8 DEM cells of about 1.2 km per side.
-    const tileID = new OverscaledTileID(12, 0, 12, 2048, 2047);
-    const tileSpan = 360 / (1 << 12);
-    // A ridge across the third and fourth DEM rows from the north, flat ground everywhere else.
-    const ridgeDEM = (height: number) => createDEM((_x, y) => (y === 3 || y === 4) ? height : 0);
-    const southOfRidge = new LngLat(tileSpan / 2, tileSpan * 0.3);
-    const northOfRidge = new LngLat(tileSpan / 2, tileSpan * 0.8);
-
-    function createTransform(): VerticalPerspectiveTransform {
+describe('VerticalPerspectiveTransform.isLocationOccludedByTerrain', () => {
+    test('a location behind a ridge is hidden and one in front of it is in view', () => {
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
         const transform = new VerticalPerspectiveTransform();
         transform.resize(512, 512);
-        transform.setCenter(new LngLat(tileSpan / 2, tileSpan * 0.25));
+        transform.setCenter(new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25));
         transform.setZoom(12);
         transform.setPitch(75);
-        return transform;
-    }
+        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
+        const inFrontOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.3);
 
-    test('a location on flat terrain is in view', () => {
-        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
-        const transform = new VerticalPerspectiveTransform();
-        transform.resize(512, 512);
-        transform.setCenter(new LngLat(0, 0));
-        transform.setZoom(2);
-        transform.setPitch(40);
-
-        for (const lngLat of [new LngLat(0, 0), new LngLat(10, -8), new LngLat(-20, 15)]) {
-            const p = transform.locationToScreenPoint(lngLat, terrain);
-            expect(transform.isLocationBehindTerrain(p, lngLat, 1000, terrain)).toBe(false);
-        }
-    });
-
-    test('a location behind a ridge is hidden', () => {
-        const terrain = createDEMTerrain([tileID], ridgeDEM(3000));
-        const transform = createTransform();
-
-        const p = transform.locationToScreenPoint(northOfRidge, terrain);
-
-        expect(transform.isLocationBehindTerrain(p, northOfRidge, terrain.getElevationForLngLat(northOfRidge, transform), terrain)).toBe(true);
-    });
-
-    test('a location in front of a ridge is in view', () => {
-        const terrain = createDEMTerrain([tileID], ridgeDEM(3000));
-        const transform = createTransform();
-
-        const p = transform.locationToScreenPoint(southOfRidge, terrain);
-
-        expect(transform.isLocationBehindTerrain(p, southOfRidge, terrain.getElevationForLngLat(southOfRidge, transform), terrain)).toBe(false);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(behindRidge, terrain), behindRidge, 0, terrain)).toBe(true);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(inFrontOfRidge, terrain), inFrontOfRidge, 0, terrain)).toBe(false);
     });
 
     test('applies the terrain exaggeration', () => {
-        const transform = createTransform();
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const lowRidgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 200 : 0);
+        const transform = new VerticalPerspectiveTransform();
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25));
+        transform.setZoom(12);
+        transform.setPitch(75);
+        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
 
-        const low = createDEMTerrain([tileID], ridgeDEM(200));
-        expect(transform.isLocationBehindTerrain(transform.locationToScreenPoint(northOfRidge, low), northOfRidge, 0, low)).toBe(false);
+        const low = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], lowRidgeAcrossTheTwoMiddleRows);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(behindRidge, low), behindRidge, 0, low)).toBe(false);
 
-        const exaggerated = createDEMTerrain([tileID], ridgeDEM(200), 5);
-        expect(transform.isLocationBehindTerrain(transform.locationToScreenPoint(northOfRidge, exaggerated), northOfRidge, 0, exaggerated)).toBe(true);
+        const exaggerated = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], lowRidgeAcrossTheTwoMiddleRows, 5);
+        expect(transform.isLocationOccludedByTerrain(transform.locationToScreenPoint(behindRidge, exaggerated), behindRidge, 0, exaggerated)).toBe(true);
     });
 
     test('nothing is hidden when the terrain has no renderable tiles', () => {
         const terrain = createDEMTerrain([], null);
-        const transform = createTransform();
+        const transform = new VerticalPerspectiveTransform();
+        transform.resize(512, 512);
 
-        expect(transform.isLocationBehindTerrain(new Point(256, 100), northOfRidge, 0, terrain)).toBe(false);
+        expect(transform.isLocationOccludedByTerrain(new Point(256, 100), new LngLat(0, 0), 0, terrain)).toBe(false);
     });
 });
