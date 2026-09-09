@@ -102,9 +102,11 @@ export type JumpToOptions = CameraOptions & {
 };
 
 /**
- * Options for {@link Map.calculateCameraOptions}. Omitted camera properties inherit
- * their values from the map's current camera state.
- */
+   * Options for {@link Map.calculateCameraOptions}.
+   *
+   * Use `around` to keep a geographic location at its current screen position while zooming or rotating.
+   * Supply `aroundPoint` to keep the `around` location at a specific screen position (e.g. the mouse cursor).
+   */
 export type CameraCalculationOptions = JumpToOptions & {
     /** The geographic location to keep fixed on screen. */
     around?: LngLatLike;
@@ -743,7 +745,6 @@ export class Camera extends Evented<MapEventType> {
         return this.fire(new MapMovementEvent('moveend', eventData));
     }
 
-<<<<<<< HEAD
     calculateCameraOptions(options: CameraCalculationOptions): CameraState {
         if (options.aroundPoint !== undefined && options.around === undefined) {
             throw new Error('`aroundPoint` requires `around` to be specified');
@@ -828,8 +829,6 @@ export class Camera extends Evented<MapEventType> {
         };
     }
 
-=======
->>>>>>> main
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
         const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
         return {
