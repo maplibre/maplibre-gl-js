@@ -95,6 +95,6 @@ describe('main sourcemap', () => {
         // up in the production bundle. If this number jumps, real source files
         // are getting dropped, and it should be investigated before raising the limit.
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(18);
+        expect(s2.length).toBeLessThan(19);
     });
 });

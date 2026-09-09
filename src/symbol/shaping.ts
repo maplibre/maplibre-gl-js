@@ -4,9 +4,11 @@ import {
 import {
     charIsWhitespace,
     charInComplexShapingScript,
-    charInRTLScript
+    charInRTLScript,
+    stringContainsRTLText
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import {processBidirectionalText, processStyledBidirectionalText} from './bidi.ts';
 import {isCluster} from '../util/graphemes.ts';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
@@ -167,30 +169,51 @@ function sectionForEachCodeUnit(input: TaggedString): number[] {
 }
 
 /**
+ * Puts a label that reads in both directions into the order it is drawn, and breaks it into lines.
+ *
+ * The bidirectional algorithm works in code units rather than in the graphemes the rest of layout
+ * counts in, so the line breaks are converted on the way in and the sections on the way out. A
+ * plugin registered through the deprecated {@link setRTLTextPlugin} is used in place of the built-in
+ * implementation, so that a map relying on one keeps the behaviour it had.
+ */
+function bidiLines(logicalInput: TaggedString, lineBreaks: number[]): TaggedString[] {
+    const codeUnitBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
+    const plugin = rtlWorkerPlugin.isParsed() ? rtlWorkerPlugin : null;
+
+    if (logicalInput.sections.length === 1) {
+        if (plugin) {
+            return plugin.processBidirectionalText(logicalInput.toString(), codeUnitBreaks)
+                .map(line => taggedLineFromPlugin(line, logicalInput.sections, [...line].map(() => 0)));
+        }
+        return processBidirectionalText(logicalInput.toString(), codeUnitBreaks)
+            .map(line => taggedLine([...line], logicalInput.sections, [...line].map(() => 0)));
+    }
+
+    const sectionForCodeUnit = sectionForEachCodeUnit(logicalInput);
+    if (plugin) {
+        return plugin.processStyledBidirectionalText(logicalInput.text, sectionForCodeUnit, codeUnitBreaks)
+            .map(([line, sections]) => taggedLineFromPlugin(line, logicalInput.sections, sections));
+    }
+    return processStyledBidirectionalText(logicalInput.text, sectionForCodeUnit, codeUnitBreaks)
+        .map(([line, sections]) => {
+            const chars = [...line];
+            return taggedLine(chars, logicalInput.sections, codeUnitOfEachCharacter(chars).map(at => sections[at] ?? 0));
+        });
+}
+
+/**
  * Builds a line out of what a text plugin returned: the text in reading order, and the section of
  * each code unit. A cluster belongs to the section its first character does.
  */
-function taggedLineFromPlugin(
-    line: string,
-    sections: SectionOptions[],
-    sectionForCodeUnit: number[]
-): TaggedString {
-    const chars = [...line];
-    const codeUnitOf: number[] = [];
-    let codeUnit = 0;
-    for (const char of chars) {
-        codeUnitOf.push(codeUnit);
-        codeUnit += char.length;
-    }
+/**
+ * Builds a line of a label from text that is already in the order it is drawn.
+ *
+ * The sections arrive one per code unit, as the bidirectional algorithm counts, and are handed on
+ * one per grapheme cluster, as the rest of layout counts.
+ */
+function taggedLine(chars: string[], sections: SectionOptions[], sectionOfChar: number[]): TaggedString {
+    const tagged = new TaggedString(chars.join(''), sections, []);
 
-    const order = combiningMarksAfterTheirBase(chars);
-    const tagged = new TaggedString(
-        order.map(index => chars[index]).join(''),
-        sections,
-        []
-    );
-
-    const sectionOfChar = order.map(index => sectionForCodeUnit[codeUnitOf[index]] ?? 0);
     let at = 0;
     for (const grapheme of tagged.graphemes()) {
         tagged.sectionIndex.push(sectionOfChar[at] ?? 0);
@@ -198,6 +221,39 @@ function taggedLineFromPlugin(
     }
 
     return tagged;
+}
+
+/** The code unit each character of a line starts at. */
+function codeUnitOfEachCharacter(chars: string[]): number[] {
+    const offsets: number[] = [];
+    let codeUnit = 0;
+    for (const char of chars) {
+        offsets.push(codeUnit);
+        codeUnit += char.length;
+    }
+    return offsets;
+}
+
+/**
+ * Builds a line from what a plugin registered through the deprecated `setRTLTextPlugin` returned.
+ *
+ * A plugin reorders one code point at a time, as ICU does, which leaves the marks of a right-to-left
+ * run before the letter they are written on, so rule L3 has to be applied here. The built-in
+ * implementation reorders whole grapheme clusters and needs none of this.
+ */
+function taggedLineFromPlugin(
+    line: string,
+    sections: SectionOptions[],
+    sectionForCodeUnit: number[]
+): TaggedString {
+    const chars = [...line];
+    const codeUnitOf = codeUnitOfEachCharacter(chars);
+    const order = combiningMarksAfterTheirBase(chars);
+
+    return taggedLine(
+        order.map(index => chars[index]),
+        sections,
+        order.map(index => sectionForCodeUnit[codeUnitOf[index]] ?? 0));
 }
 
 function shapeText(
@@ -223,37 +279,10 @@ function shapeText(
         logicalInput.verticalizePunctuation();
     }
 
-    let lines: TaggedString[];
-
-    let lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
-    const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
-    if (processBidirectionalText && logicalInput.sections.length === 1) {
-        // Bidi doesn't have to be style-aware
-        lines = [];
-        // ICU operates on code units.
-        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
-        const untaggedLines =
-            processBidirectionalText(logicalInput.toString(), lineBreaks);
-        for (const line of untaggedLines) {
-            lines.push(taggedLineFromPlugin(line, logicalInput.sections, [...line].map(() => 0)));
-        }
-    } else if (processStyledBidirectionalText) {
-        // Need version of mapbox-gl-rtl-text with style support for combining RTL text
-        // with formatting
-        lines = [];
-        // ICU operates on code units.
-        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
-
-        const sectionIndex = sectionForEachCodeUnit(logicalInput);
-
-        const processedLines =
-            processStyledBidirectionalText(logicalInput.text, sectionIndex, lineBreaks);
-        for (const line of processedLines) {
-            lines.push(taggedLineFromPlugin(line[0], logicalInput.sections, line[1]));
-        }
-    } else {
-        lines = breakLines(logicalInput, lineBreaks);
-    }
+    const lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+    const lines = stringContainsRTLText(logicalInput.text) ?
+        bidiLines(logicalInput, lineBreaks) :
+        breakLines(logicalInput, lineBreaks);
 
     const positionedLines = [];
     const shaping = {

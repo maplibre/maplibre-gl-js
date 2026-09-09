@@ -32,7 +32,8 @@ type Entry = {
      */
     fontFaceTinySDFs?: Record<string, Promise<Rasterizer>>;
     /**
-     * The same, for drawing whole grapheme clusters, which need a wider canvas to fit in.
+     * One TinySDF per font selection used to draw whole grapheme clusters, which need a wider canvas
+     * to fit in than a single codepoint does.
      */
     clusterTinySDFs?: Record<string, Promise<Rasterizer>>;
 };
@@ -148,9 +149,10 @@ export class GlyphManager {
      * Gets one glyph, asked for by grapheme cluster so that a letter and its marks are drawn as the
      * one shape they are written as.
      *
-     * Only a file the style pinned with `font-faces` can draw a cluster -- a glyphs URL serves
-     * codepoints -- so where none covers it this returns nothing and layout falls back to codepoints.
-     * For a single codepoint a declared file still wins over the glyphs URL and the local fallbacks.
+     * A cluster is drawn from a font rather than fetched, because a glyphs URL serves codepoints and
+     * has no way to serve the one shape they are written as. A file the style pinned with
+     * `font-faces` draws it where one covers it, and the local fonts otherwise. For a single
+     * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
@@ -173,13 +175,9 @@ export class GlyphManager {
             return {stack, id, glyph};
         }
 
-        if (isCluster(id)) {
-            glyph = entry.glyphs[id] = null;
-            return {stack, id, glyph};
-        }
-
-        // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
-        if (!this.url || this._charUsesLocalIdeographFontFamily(codePoint)) {
+        // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
+        // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
+        if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
             glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
             return {stack, id, glyph};
         }
@@ -311,8 +309,9 @@ export class GlyphManager {
      * Where no file covers the grapheme, `localIdeographFontFamily` beats the last resort fontstack.
      */
     _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<Rasterizer> {
+        const cluster = isCluster(id);
+
         if (fontFaceFamily) {
-            const cluster = isCluster(id);
             const cache = cluster ? 'clusterTinySDFs' : 'fontFaceTinySDFs';
 
             entry[cache] ??= {};
@@ -323,9 +322,16 @@ export class GlyphManager {
         const usesLocalIdeographFontFamily = stack === defaultStack &&
             this.localIdeographFontFamily !== '' &&
             this._charUsesLocalIdeographFontFamily(id.codePointAt(0));
-        const cache = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
+        const family = usesLocalIdeographFontFamily ? this.localIdeographFontFamily as string : stack;
 
-        entry[cache] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
+        if (cluster) {
+            entry.clusterTinySDFs ??= {};
+            entry.clusterTinySDFs[family] ||= this._createTinySDF(family, true, clusterEmsWide);
+            return entry.clusterTinySDFs[family];
+        }
+
+        const cache = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
+        entry[cache] ||= this._createTinySDF(family);
         return entry[cache];
     }
 
