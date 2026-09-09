@@ -737,9 +737,6 @@ export class Style extends Evented<MapEventType> {
                 this._layers[id].updateTransitions(parameters);
             }
 
-            this.light.updateTransitions(parameters);
-            this.sky.updateTransitions(parameters);
-
             this._resetUpdates();
         }
 
