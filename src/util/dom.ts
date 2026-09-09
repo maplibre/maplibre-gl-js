@@ -93,9 +93,9 @@ export class DOM {
         const parser = new DOMParser();
         const doc = parser.parseFromString(str, 'text/html');
         const html = doc.body || document.createElement('body');
-        const scripts = html.querySelectorAll('script');
-        for (const script of scripts) {
-            script.remove();
+        const dangerousElements = html.querySelectorAll('script, iframe');
+        for (const element of dangerousElements) {
+            element.remove();
         }
 
         DOM.clean(html);
@@ -111,6 +111,7 @@ export class DOM {
         if (['src', 'href', 'xlink:href'].includes(name)) {
             if (val.includes('javascript:') || val.includes('data:')) return true;
         }
+        if (name === 'srcdoc') return true;
         if (name.startsWith('on')) return true;
     }
 
