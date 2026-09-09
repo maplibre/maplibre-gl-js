@@ -328,6 +328,14 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
         this._transitioningPaint = this._transitionablePaint.transitioned(parameters, this._transitioningPaint);
     }
 
+    /**
+     * Has a running paint transition read `priorGlobalState`, a copy of the global state from before the keys in
+     * `refs` changed, so that a paint property set again transitions from the value it had.
+     */
+    retainGlobalState(refs: string[], priorGlobalState: Record<string, any>): void {
+        this._transitioningPaint?.retainGlobalState(refs, priorGlobalState);
+    }
+
     hasTransition(): boolean {
         return this._transitioningPaint.hasTransition();
     }

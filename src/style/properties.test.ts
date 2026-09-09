@@ -119,6 +119,82 @@ describe('Transitionable', () => {
     });
 });
 
+describe('a global state change transitions from the value the state had, issue #8395', () => {
+    const transition = {duration: 300, delay: 0};
+
+    test('a running transition keeps reading the state it started from', () => {
+        const globalState = {exaggeration: 0.2};
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', globalState);
+        transitionable.setValue('hillshade-exaggeration', ['global-state', 'exaggeration']);
+        const transitioning = transitionable.untransitioned();
+
+        const priorGlobalState = {...globalState};
+        globalState.exaggeration = 1;
+        transitioning.retainGlobalState(['exaggeration'], priorGlobalState);
+        expect(transitionable.rereadGlobalState(['exaggeration'])).toBe(true);
+        const transitioned = transitionable.transitioned({now: 0, transition}, transitioning);
+
+        expect(transitioned.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.6);
+        expect(transitioned.possiblyEvaluate({zoom: 0, now: 301} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
+        expect(transitioned.hasTransition()).toBe(false);
+    });
+
+    test('a value already reading an earlier copy of the state keeps it', () => {
+        const globalState = {exaggeration: 0.2};
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', globalState);
+        transitionable.setValue('hillshade-exaggeration', ['global-state', 'exaggeration']);
+        const transitioning = transitionable.untransitioned();
+
+        // Two changes before a frame: the transition runs from what was on screen, the first copy.
+        const firstPriorGlobalState = {...globalState};
+        globalState.exaggeration = 0.5;
+        transitioning.retainGlobalState(['exaggeration'], firstPriorGlobalState);
+        const secondPriorGlobalState = {...globalState};
+        globalState.exaggeration = 1;
+        transitioning.retainGlobalState(['exaggeration'], secondPriorGlobalState);
+        transitionable.rereadGlobalState(['exaggeration']);
+        const transitioned = transitionable.transitioned({now: 0, transition}, transitioning);
+
+        expect(transitioned.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.6);
+    });
+
+    test('a value that cannot transition snaps to the new state', () => {
+        const globalState = {direction: 90, opacity: 0.2};
+        const transitionable = new Transitionable(symbolProperties.paint, 'layers[0].paint', globalState);
+        // `text-translate-anchor` never transitions; `text-opacity` here is data-driven, which never transitions either.
+        transitionable.setValue('text-translate-anchor', ['case', ['>', ['global-state', 'direction'], 180], 'map', 'viewport']);
+        transitionable.setValue('text-opacity', ['case', ['has', 'name'], ['global-state', 'opacity'], 1]);
+        const transitioning = transitionable.untransitioned();
+
+        const priorGlobalState = {...globalState};
+        globalState.direction = 270;
+        globalState.opacity = 1;
+        transitioning.retainGlobalState(['direction', 'opacity'], priorGlobalState);
+        transitionable.rereadGlobalState(['direction', 'opacity']);
+        const transitioned = transitionable.transitioned({now: 0, transition}, transitioning);
+
+        const evaluated = transitioned.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters);
+        expect(evaluated.get('text-translate-anchor')).toBe('map');
+        expect(evaluated.get('text-opacity').evaluate({properties: {name: 'x'}} as any, {})).toBe(1);
+        expect(transitioned.hasTransition()).toBe(false);
+    });
+
+    test('a value that reads none of the changed keys keeps reading the state', () => {
+        const globalState = {exaggeration: 0.2, unrelated: 0};
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', globalState);
+        transitionable.setValue('hillshade-exaggeration', ['global-state', 'exaggeration']);
+        const transitioning = transitionable.untransitioned();
+
+        const priorGlobalState = {...globalState};
+        globalState.unrelated = 1;
+        transitioning.retainGlobalState(['unrelated'], priorGlobalState);
+        expect(transitionable.rereadGlobalState(['unrelated'])).toBe(false);
+
+        globalState.exaggeration = 1;
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 0} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
+    });
+});
+
 describe('paint property transitions between arrays of different length, issue #6606', () => {
     const transition = {duration: 300, delay: 0};
 
