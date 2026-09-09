@@ -491,17 +491,24 @@ export class MercatorTransform implements ITransform {
         return this._offScreenPointBehindCamera(p[0], p[1], w);
     }
 
+    /**
+     * Returns a screen point outside the viewport for a coordinate that is behind the camera.
+     * The point lies on the boundary of the viewport enlarged by one viewport size on each side,
+     * on whichever edge the ray from the screen centre in the coordinate's direction reaches first.
+     * A coordinate exactly behind the camera has no direction to leave through, so it is placed straight down.
+     * @param x - the x component of the clip space position, before the division by w
+     * @param y - the y component of the clip space position, before the division by w
+     * @param w - the w component of the clip space position, zero or negative
+     * @returns screen point outside the viewport
+     */
     private _offScreenPointBehindCamera(x: number, y: number, w: number): Point {
         const cx = this.width / 2;
         const cy = this.height / 2;
         const dx = x - cx * w;
         let dy = y - cy * w;
         if (dx === 0 && dy === 0) {
-            // Exactly behind the camera: no direction to leave through, so use straight down.
             dy = 1;
         }
-        // Scale the direction so the point lands on the boundary of the viewport enlarged by one
-        // viewport size on each side, on whichever edge the ray from the centre reaches first.
         const halfExtentX = cx + this.width;
         const halfExtentY = cy + this.height;
         const scale = Math.min(
