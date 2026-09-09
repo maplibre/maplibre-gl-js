@@ -135,7 +135,8 @@ function setScale(container: HTMLElement, maxWidth: number, maxDistance: number,
     const distance = getRoundNum(maxDistance);
     const ratio = distance / maxDistance;
     container.style.width = `${maxWidth * ratio}px`;
-    container.innerHTML = `${distance}&nbsp;${unit}`;
+    const label = `${distance}\u00a0${unit}`;
+    if (container.textContent !== label) container.textContent = label;
 }
 
 function getDecimalRoundNum(d) {
