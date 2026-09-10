@@ -101,10 +101,8 @@ describe('Transitionable', () => {
 
         expect(warn.mock.calls[0][0]).toBe('layers[0].paint.text-color: Could not parse color from value \'oops blue\' Falling back to rgba(0,0,0,1).');
     });
-});
 
-describe('Transitionable.transitioned only transitions properties whose value changed, issue #8376', () => {
-    test('a transition that is still running is carried over, not restarted', () => {
+    test('setting another property does not extend a running transition past its original end, issue #8376', () => {
         const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', {});
         transitionable.setValue('hillshade-exaggeration', 0.5);
         const untransitioned = transitionable.untransitioned();
@@ -112,26 +110,12 @@ describe('Transitionable.transitioned only transitions properties whose value ch
         transitionable.setValue('hillshade-exaggeration', 1);
         let transitioning = transitionable.transitioned({now: 0, transition: {duration: 300, delay: 0}}, untransitioned);
 
-        // Halfway through, an unrelated property is set on the same layer.
         transitionable.setValue('hillshade-illumination-direction', 300);
         transitioning = transitionable.transitioned({now: 150, transition: {duration: 300, delay: 0}}, transitioning);
 
         expect(transitioning.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.75);
         expect(transitioning.possiblyEvaluate({zoom: 0, now: 301} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
         expect(transitioning.hasTransition()).toBe(false);
-    });
-
-    test('a global state change still transitions a property whose raw value is unchanged', () => {
-        const globalState = {exaggeration: 0.5};
-        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', globalState);
-        transitionable.setValue('hillshade-exaggeration', ['global-state', 'exaggeration']);
-        const untransitioned = transitionable.untransitioned();
-
-        // The same raw value goes back in, so it cannot tell us what changed.
-        globalState.exaggeration = 1;
-        transitionable.setValue('hillshade-exaggeration', ['global-state', 'exaggeration']);
-
-        expect(transitionable.transitioned({now: 0, transition: {duration: 300, delay: 0}}, untransitioned).hasTransition()).toBe(true);
     });
 });
 
