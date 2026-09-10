@@ -142,10 +142,10 @@ export class FillBucket implements Bucket {
         });
     }
 
-    addFeatures({options, canonical, imagePositions, imageMap}: BucketDependencyParameters): void {
-        this.detectSdfPatterns(imageMap);
+    addFeatures({options, canonical, patternPositions, patternMap}: BucketDependencyParameters): void {
+        this.detectSdfPatterns(patternMap);
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, patternPositions, options.subdivisionGranularity);
         }
     }
 

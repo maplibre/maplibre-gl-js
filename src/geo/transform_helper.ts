@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
-import {cameraMercatorCoordinate, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
@@ -565,24 +565,27 @@ export class TransformHelper implements ITransformGetters {
      * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
      * This function should update the transform's internal data, such as matrices.
      * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
+     * While either dimension is zero there is no view to build, so the derived function is not called at all.
      */
     private _calcMatrices(): void {
-        if (this._width && this._height) {
-            this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-
-            let m = mat4.identity(new Float64Array(16));
-            mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
-            mat4.translate(m, m, [1, -1, 0]);
-            this._clipSpaceToPixelsMatrix = m;
-
-            m = mat4.identity(new Float64Array(16));
-            mat4.scale(m, m, [1, -1, 1]);
-            mat4.translate(m, m, [-1, -1, 0]);
-            mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-            this._pixelsToClipSpaceMatrix = m;
-            const halfFov = this.fovInRadians / 2;
-            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
+        this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        if (!this._width || !this._height) {
+            return;
         }
+        this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
+
+        let m = mat4.identity(new Float64Array(16));
+        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
+        mat4.translate(m, m, [1, -1, 0]);
+        this._clipSpaceToPixelsMatrix = m;
+
+        m = mat4.identity(new Float64Array(16));
+        mat4.scale(m, m, [1, -1, 1]);
+        mat4.translate(m, m, [-1, -1, 0]);
+        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
+        this._pixelsToClipSpaceMatrix = m;
+        const halfFov = this.fovInRadians / 2;
+        this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._callbacks.calcMatrices();
     }
 
@@ -678,15 +681,6 @@ export class TransformHelper implements ITransformGetters {
         const pitch = this.pitchInRadians;
         const offset = Math.tan(pitch) * (this.cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
-    }
-
-    getCameraAltitude(): number {
-        const altitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._pixelPerMeter;
-        return altitude + this.elevation;
-    }
-
-    getCameraLngLat(): LngLat {
-        return cameraMercatorCoordinate(this).toLngLat();
     }
 
     getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
