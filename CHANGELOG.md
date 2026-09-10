@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix native rendering after custom layers change shared uniform-buffer bindings.
+- Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ## 6.9.0
