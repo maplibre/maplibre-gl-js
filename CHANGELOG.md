@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix native rendering after custom layers change shared uniform-buffer bindings.
 - _...Add new stuff here..._
 
 ## 6.9.0
