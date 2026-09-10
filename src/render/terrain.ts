@@ -1,7 +1,6 @@
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RGBAImage} from '../util/image.ts';
-import {warnOnce} from '../util/util.ts';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
 import pos3dAttributes from '../data/pos3d_attributes.ts';
 import {SegmentVector} from '../data/segment.ts';
@@ -339,12 +338,10 @@ export class Terrain {
         const cachedMatrix = this._demMatrixCache.get(matrixKey);
         if (cachedMatrix) return cachedMatrix;
 
-        const maxzoom = this.tileManager.getSource().maxzoom;
-        let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
-        if (tileID.overscaledZ > tileID.canonical.z) {
-            if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
-            else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
-        }
+        // The DEM tile that is actually used defines the transform. getSourceTile falls back to
+        // a loaded parent while the deepest DEM tile is still loading, so its own zoom level,
+        // rather than the source's declared maxzoom, sets the scale and the offset.
+        const dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
         const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
         const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
         const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
