@@ -86,6 +86,16 @@ describe('Light.setLight', () => {
         expect(lightSpy.mock.calls[0][2]).toEqual({validate: false});
         expect(light.properties.get('color')).toEqual([999]);
     });
+
+    test('changing only the non-transitionable anchor transitions nothing, issue #8376', () => {
+        const initial: LightSpecification = {anchor: 'map', color: '#ff0000', intensity: 0.5};
+        const light = new Light(initial, {});
+
+        light.setLight({...initial, anchor: 'viewport'});
+        light.updateTransitions({now: 0, transition: {duration: 300, delay: 0}});
+
+        expect(light.hasTransition()).toBe(false);
+    });
 });
 
 describe('Light runtime error logging', () => {
