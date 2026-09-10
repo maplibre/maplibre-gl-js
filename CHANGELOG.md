@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
+- Fix `setStyle(style, {diff: true})` throwing on every terrain change, which made it fall back to a full style rebuild ([#8404](https://github.com/maplibre/maplibre-gl-js/issues/8404)) (by [@jadhavgaurav](https://github.com/jadhavgaurav))
 - _...Add new stuff here..._
 
 ## 6.9.0
