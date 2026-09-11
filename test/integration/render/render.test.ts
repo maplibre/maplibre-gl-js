@@ -514,10 +514,24 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
+        /** Leaves indexed uniform-buffer slots unbound before the next native layer draws. */
+        class UnbindUniformBuffers {
+            id = 'unbind-uniform-buffers';
+            type = 'custom';
+            renderingMode = '3d';
+
+            render(gl: WebGL2RenderingContext) {
+                for (let binding = 0; binding < 3; binding++) {
+                    gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, null);
+                }
+            }
+        }
+
         const customLayerImplementations = {
             'tent-3d': Tent3D,
             'tent-3d-globe': Tent3DGlobe,
-            'null-island': NullIsland
+            'null-island': NullIsland,
+            'unbind-uniform-buffers': UnbindUniformBuffers
         };
 
         async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
