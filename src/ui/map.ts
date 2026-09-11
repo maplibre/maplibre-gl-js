@@ -2035,6 +2035,10 @@ export class Map extends Evented<MapEventType> {
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
+     * A location behind the camera has no corresponding pixel. For such a location the
+     * returned point is outside the viewport, on the side through which the location left
+     * the screen, one viewport width or height away from the edge.
+     *
      * @param lnglat - The geographical location to project.
      * @returns The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
      * @example

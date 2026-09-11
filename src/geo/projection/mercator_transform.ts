@@ -479,12 +479,42 @@ export class MercatorTransform implements ITransform {
      * @param coord - the coordinates
      * @param elevation - the elevation
      * @param pixelMatrix - the pixel matrix
-     * @returns screen point
+     * @returns screen point. Point will be outside the viewport if the coordinate is behind the camera.
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
-        return new Point(p[0] / p[3], p[1] / p[3]);
+        const w = p[3];
+        if (w > 0) {
+            return new Point(p[0] / w, p[1] / w);
+        }
+        return this._offScreenPointBehindCamera(p[0], p[1], w);
+    }
+
+    /**
+     * Returns a screen point outside the viewport for a coordinate that is behind the camera.
+     * The point lies on the boundary of the viewport enlarged by one viewport size on each side,
+     * on whichever edge the ray from the screen centre in the coordinate's direction reaches first.
+     * A coordinate exactly behind the camera has no direction to leave through, so it is placed straight down.
+     * @param x - the x component of the clip space position, before the division by w
+     * @param y - the y component of the clip space position, before the division by w
+     * @param w - the w component of the clip space position, zero or negative
+     * @returns screen point outside the viewport
+     */
+    private _offScreenPointBehindCamera(x: number, y: number, w: number): Point {
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const dx = x - cx * w;
+        let dy = y - cy * w;
+        if (dx === 0 && dy === 0) {
+            dy = 1;
+        }
+        const halfExtentX = cx + this.width;
+        const halfExtentY = cy + this.height;
+        const scale = Math.min(
+            dx !== 0 ? halfExtentX / Math.abs(dx) : Infinity,
+            dy !== 0 ? halfExtentY / Math.abs(dy) : Infinity);
+        return new Point(cx + dx * scale, cy + dy * scale);
     }
 
     getBounds(): LngLatBounds {
