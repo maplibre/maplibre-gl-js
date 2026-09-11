@@ -1260,6 +1260,26 @@ describe('Style.setState', () => {
         expect(() => style.setState(targetStyle)).not.toThrow();
     });
 
+    test('setState applies a terrain change to the map', async () => {
+        const sources = {
+            'terrain-source': {
+                type: 'raster-dem',
+                tiles: ['http://example.com/{z}/{x}/{y}.png'],
+                tileSize: 256
+            } as SourceSpecification
+        };
+        const map = getStubMap();
+        const style = new Style(map);
+        style.loadJSON(createStyleJSON({sources}));
+        await style.once('style.load');
+
+        const terrain = {source: 'terrain-source', exaggeration: 2};
+        const didChange = style.setState(createStyleJSON({sources, terrain}));
+
+        expect(didChange).toBeTruthy();
+        expect(map.getTerrain()).toEqual(terrain);
+    });
+
     test('setState preserves serialized style when target has no projection', async () => {
         const style = createStyle();
         const initialStyle = createStyleJSON({
