@@ -278,10 +278,8 @@ describe('Terrain', () => {
         expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
     });
 
-    test('getDEMElevation samples the correct part of a parent DEM tile for an overscaled tile', () => {
+    test('getDEMElevation maps an overscaled tile onto the loaded parent DEM tile when the maxzoom DEM tile is not loaded yet', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
-        // A zoom 3 render tile drawn from the zoom 2 vector tile. The source's own maxzoom DEM
-        // tile has not arrived yet, so getSourceTile falls back to the loaded zoom 1 parent.
         const overscaledTileID = new OverscaledTileID(3, 0, 2, 3, 3);
         const loadedParentTileID = new OverscaledTileID(1, 0, 1, 1, 1);
         const sampleBilinear = vi.fn(() => 42);
@@ -293,8 +291,6 @@ describe('Terrain', () => {
         terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 2}) as any);
 
         expect(terrain.getDEMElevation(overscaledTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
-        // The zoom 2 tile is the bottom-right quarter of its zoom 1 parent, so its centre is at
-        // 75% of both parent axes.
         expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
     });
 

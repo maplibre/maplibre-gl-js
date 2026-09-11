@@ -333,14 +333,20 @@ export class Terrain {
         return sampler;
     }
 
+    /**
+     * Get the matrix that maps a tile's coordinates into the DEM tile it is rendered with.
+     * The transform is derived from the loaded DEM tile's own zoom level, not from the source's
+     * declared maxzoom: getSourceTile falls back to a loaded parent tile while the deepest DEM
+     * tile is still loading, and the scale and offset must match the tile that is actually used.
+     * @param tileID - the tile id
+     * @param sourceTile - the DEM tile that is used for this tile, either its own tile or a loaded parent
+     * @returns the matrix that maps the tile's coordinates onto the DEM tile
+     */
     _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {
         const matrixKey = `${sourceTile.tileID.key}/${tileID.key}`;
         const cachedMatrix = this._demMatrixCache.get(matrixKey);
         if (cachedMatrix) return cachedMatrix;
 
-        // The DEM tile that is actually used defines the transform. getSourceTile falls back to
-        // a loaded parent while the deepest DEM tile is still loading, so its own zoom level,
-        // rather than the source's declared maxzoom, sets the scale and the offset.
         const dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
         const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
         const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
