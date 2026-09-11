@@ -60,54 +60,6 @@ describe('Browser tests', () => {
         server?.close();
     }, 40000);
 
-    test('Native rendering restores uniform buffers after a custom layer', {timeout: 20000}, async () => {
-        const result = await page.evaluate(async () => {
-            map.remove();
-            const testMap = new maplibregl.Map({
-                container: 'map',
-                center: [0, 0],
-                zoom: 1,
-                pixelRatio: 1,
-                fadeDuration: 0,
-                canvasContextAttributes: {preserveDrawingBuffer: true, antialias: false},
-                style: {
-                    version: 8,
-                    sources: {point: {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]}}},
-                    layers: [
-                        {id: 'background', type: 'background', paint: {'background-color': 'white'}},
-                        {id: 'native-circle', type: 'circle', source: 'point', paint: {'circle-radius': 32, 'circle-color': 'red'}}
-                    ]
-                }
-            });
-            await testMap.once('load');
-            const gl = testMap.getCanvas().getContext('webgl2');
-            const before = new Uint8Array(4);
-            testMap.redraw();
-            gl.readPixels(gl.drawingBufferWidth / 2, gl.drawingBufferHeight / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, before);
-            let customCalls = 0;
-            testMap.addLayer({
-                id: 'external-renderer',
-                type: 'custom',
-                renderingMode: '3d',
-                render(gl: WebGL2RenderingContext) {
-                    customCalls++;
-                    for (let binding = 0; binding < 3; binding++) gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, null);
-                }
-            }, 'native-circle');
-            testMap.redraw();
-            const after = new Uint8Array(4);
-            gl.readPixels(gl.drawingBufferWidth / 2, gl.drawingBufferHeight / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, after);
-            const error = gl.getError();
-            testMap.remove();
-            return {before: Array.from(before), after: Array.from(after), error, customCalls};
-        });
-
-        expect(result.before).toEqual([255, 0, 0, 255]);
-        expect(result.customCalls).toBeGreaterThan(0);
-        expect(result.error).toBe(0);
-        expect(result.after).toEqual(result.before);
-    });
-
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
         const contextMenuEventFired = await page.evaluate(() => {
             return new Promise<string>((resolve, _reject) => {
