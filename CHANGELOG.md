@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
+- Skip the loaded-tile scan for constant `symbol-height-offset` layers when computing tile coverage, and name the elevated culling helper ([#8424](https://github.com/maplibre/maplibre-gl-js/pull/8424)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
