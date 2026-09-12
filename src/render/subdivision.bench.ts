@@ -37,3 +37,9 @@ bench('subdividePolygon', () => {
         subdividePolygon(polygon, tileID, granularity, true);
     }
 });
+
+bench('subdividePolygon without subdivision', () => {
+    for (let i = 0; i < 10; i++) {
+        subdividePolygon(polygon, tileID, 1, true);
+    }
+});
