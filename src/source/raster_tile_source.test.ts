@@ -188,6 +188,62 @@ describe('RasterTileSource', () => {
             expect.anything());
     });
 
+    test('a 204 with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        const getTileTexture = vi.fn();
+        source.map.painter = {context: {}, getTileTexture} as any;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(getTileTexture).not.toHaveBeenCalled();
+    });
+
+    test('a missing tile does not record the expiry of its 204, so it is requested again in full when it is needed again', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        source.map.painter = {context: {}, getTileTexture: vi.fn()} as any;
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData: vi.fn()
+        } as any as Tile;
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.setExpiryData).not.toHaveBeenCalled();
+    });
+
     test('can asynchronously transform tile request', async () => {
         server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']

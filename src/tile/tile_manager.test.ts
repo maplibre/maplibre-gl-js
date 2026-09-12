@@ -479,6 +479,38 @@ describe('TileManager / Source lifecycle', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
+    test('requests the parent when an ideal tile loads without data and without an error', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        const tileManager = createTileManager();
+        const requestedZooms: number[] = [];
+        tileManager._source.loadTile = async (tile) => {
+            requestedZooms.push(tile.tileID.canonical.z);
+            await sleep(0);
+            // the four z1 tiles come back without data, as a source with emptyTileBehavior missing
+            // leaves them on an empty response; the single z0 parent loads
+            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        const idealTileLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 1);
+        tileManager.update(transform);
+        await idealTileLoaded;
+        expect(requestedZooms).toEqual([1, 1, 1, 1]);
+
+        // the map marks its sources dirty on that event and updates on its next frame
+        const parentLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 0);
+        tileManager.update(transform);
+        await parentLoaded;
+
+        expect(requestedZooms).toEqual([1, 1, 1, 1, 0]);
+        const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
+        expect(renderableZooms).toEqual([0]);
+    });
+
     test('loaded() true after tile error', async () => {
         const transform = new MercatorTransform();
         transform.resize(511, 511);

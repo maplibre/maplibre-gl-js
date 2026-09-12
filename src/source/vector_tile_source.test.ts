@@ -15,6 +15,9 @@ import {type WorkerTileParameters} from './worker_source.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
 import {type MapSourceDataEvent} from '../ui/events.ts';
+import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {type IActor} from '../util/actor.ts';
 
 class StubbedEvented extends Evented {}
 
@@ -38,6 +41,20 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
 
     source.on('error', () => { }); // to prevent console log of errors
 
+    return source;
+}
+
+/**
+ * A source whose worker runs in this thread, so the fake server answers the tile requests the worker makes.
+ */
+function createSourceWithWorker(options) {
+    const source = createSource(options);
+    const workerSource = new VectorTileWorkerSource({sendAsync: () => Promise.resolve({})} as IActor, new StyleLayerIndex([]), []);
+    source.dispatcher = getWrapDispatcher()({
+        sendAsync(message) {
+            return workerSource.loadTile(message.data as WorkerTileParameters);
+        }
+    });
     return source;
 }
 
@@ -319,6 +336,77 @@ describe('VectorTileSource', () => {
         } as any as Tile;
         await source.loadTile(tile);
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
+    });
+
+    test('a 404 with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [404, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyTileBehavior: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.loadVectorData).not.toHaveBeenCalled();
+    });
+
+    test('a 204 with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyTileBehavior: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.loadVectorData).not.toHaveBeenCalled();
+    });
+
+    test('a missing tile records neither the expiry nor the etag of its 204, so it is requested again in full when it is needed again', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyTileBehavior: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: vi.fn(),
+            setExpiryData: vi.fn()
+        } as any as Tile;
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.setExpiryData).not.toHaveBeenCalled();
+        expect(tile.etag).toBeUndefined();
     });
 
     test('reloads a loading tile properly', async () => {

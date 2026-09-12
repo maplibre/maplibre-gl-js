@@ -12,6 +12,7 @@ import {RGBAImage} from '../util/image.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
+import type {EmptyTileBehavior} from './worker_source.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -20,6 +21,13 @@ import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
+
+export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
+    /**
+     * How a tile response with an empty body is handled, see {@link EmptyTileBehavior}.
+     */
+    emptyTileBehavior?: EmptyTileBehavior;
+};
 
 /**
  * A source containing raster tiles (See the [raster source documentation](https://maplibre.org/maplibre-style-spec/sources/#raster) for detailed documentation of options.)
@@ -69,11 +77,11 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     tiles: string[];
 
     _loaded: boolean;
-    _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _options: RasterTileSourceOptions;
     _premultiplyAlpha: boolean;
     _tileJSONRequest: AbortController;
 
-    constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: RasterTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -224,12 +232,18 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
+                // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'missing'` is left without data
+                // or expiry, like a 404, so a loaded tile from another zoom level shows in its place.
+                if (!response.data && this._options.emptyTileBehavior === 'missing') {
+                    tile.state = 'errored';
+                    return;
+                }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const context = this.map.painter.context;
                 const gl = context.gl;
-                // An empty response (e.g. HTTP 204) is a tile that exists but has no content:
+                // An empty response (e.g. HTTP 204) is otherwise a tile that exists but has no content:
                 // it is drawn as fully transparent, which keeps it distinct from a missing
                 // tile (404), where the parent tile shows through instead.
                 const img = response.data ?? new RGBAImage({width: 1, height: 1}, new Uint8Array(4));
