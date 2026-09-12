@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Speed up fill and fill-extrusion triangulation by looking up each vertex's deduplicated index once instead of hashing every triangle corner and unsubdivided outline point again ([#8425](https://github.com/maplibre/maplibre-gl-js/pull/8425)) (by [@cherenkov](https://github.com/cherenkov))
+- Speed up fill and fill-extrusion triangulation by looking up each vertex's deduplicated index once instead of hashing every triangle corner, and every outline point of a ring that is not subdivided, again ([#8425](https://github.com/maplibre/maplibre-gl-js/pull/8425)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
