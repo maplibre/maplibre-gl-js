@@ -243,14 +243,14 @@ describe('Terrain', () => {
         const sourceTile = {
             tileID,
             dem: {
-                dim: 1,
+                dim: 2,
                 sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
             }
         } as any as Tile;
         terrain.tileManager.getSourceTile = vi.fn(() => sourceTile);
         terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
 
-        expect(terrain.getDEMElevation(tileID, EXTENT * 0.4, EXTENT * 0.2)).toBeCloseTo(42);
+        expect(terrain.getDEMElevation(tileID, EXTENT * 0.75, EXTENT * 0.25)).toBeCloseTo(100);
         expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
         expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(1);
@@ -274,8 +274,26 @@ describe('Terrain', () => {
         terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 22}) as any);
 
         expect(terrain.getDEMElevation(childTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
-        // The center of the bottom-right child is at 75% of both parent axes.
-        expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
+        // The center of the bottom-right child is at 75% of both parent axes, halfway between DEM pixels 2 and 3.
+        expect(sampleBilinear).toHaveBeenCalledWith(2.5, 2.5);
+    });
+
+    test('getDEMElevation places DEM pixels at cell centres, matching hillshade', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const sampleBilinear = vi.fn(() => 42);
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID,
+            dem: {dim: 4, sampleBilinear}
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 22}) as any);
+
+        terrain.getDEMElevation(tileID, EXTENT * 2.5 / 4, EXTENT * 1.5 / 4);
+        expect(sampleBilinear).toHaveBeenLastCalledWith(2, 1);
+        // The tile corner lies half a cell before the first pixel, in the border the neighbouring tile fills.
+        terrain.getDEMElevation(tileID, 0, 0);
+        expect(sampleBilinear).toHaveBeenLastCalledWith(-0.5, -0.5);
     });
 
     test('getDEMElevation maps an overscaled tile onto the loaded parent DEM tile when the maxzoom DEM tile is not loaded yet', () => {
@@ -291,7 +309,8 @@ describe('Terrain', () => {
         terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 2}) as any);
 
         expect(terrain.getDEMElevation(overscaledTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
-        expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
+        // The center of the bottom-right child is at 75% of both parent axes, halfway between DEM pixels 2 and 3.
+        expect(sampleBilinear).toHaveBeenCalledWith(2.5, 2.5);
     });
 
     test('getElevation retries sampling setup when DEM data becomes available', () => {
@@ -302,7 +321,7 @@ describe('Terrain', () => {
         terrain.tileManager.getSourceTile = vi.fn(() => ({
             tileID,
             dem: tileHasDem ? {
-                dim: 1,
+                dim: 2,
                 sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
             } : undefined
         }) as any as Tile);
