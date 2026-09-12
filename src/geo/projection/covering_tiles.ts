@@ -248,14 +248,33 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3
 }
 
 /**
+ * The horizon culling plane and the frustum's far plane both assume content sits on the
+ * surface. Content elevated to radius r (in planet radii) stays visible up to acos(1/r)
+ * beyond the surface horizon and up to sqrt(r^2-1) farther away, so both are pushed back
+ * accordingly; without this, tiles under highly elevated symbols would be dropped while
+ * the symbols are still in view.
+ * @param frustum - The covering frustum, fitted to the surface horizon.
+ * @param plane - The horizon culling plane used by globe transform.
+ * @param cameraPos - The camera position, in the frustum's space.
+ * @param maxContentElevation - The highest elevation the content may reach, in meters.
+ */
+export function expandCullingToContentElevation(frustum: Frustum, plane: vec4, cameraPos: vec3, maxContentElevation: number): {frustum: Frustum; plane: vec4} {
+    const len = Math.hypot(plane[0], plane[1], plane[2]);
+    if (len === 0) {
+        return {frustum, plane};
+    }
+    const shellRadius = 1.0 + maxContentElevation / earthRadius;
+    const horizonCos = clamp(-plane[3] / len, -1, 1);
+    const shellCos = Math.cos(Math.acos(horizonCos) + Math.acos(1.0 / shellRadius));
+    return {
+        frustum: pushFrustumFarPlane(frustum, Math.sqrt(shellRadius * shellRadius - 1.0), cameraPos),
+        plane: [plane[0], plane[1], plane[2], -shellCos * len] as vec4,
+    };
+}
+
+/**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
- *
- * The horizon culling plane and the frustum's far plane both assume content sits on the
- * surface. When `options.maxContentElevation` is set, a point elevated to radius r (in planet
- * radii) stays visible up to acos(1/r) beyond the surface horizon and up to sqrt(r^2-1)
- * farther away, so both are pushed back accordingly; without this, tiles under highly
- * elevated symbols would be dropped while the symbols are still in view.
  * @param transform - The transform instance.
  * @param frustum - The covering frustum.
  * @param plane - The clipping plane used by globe transform, or null.
@@ -269,14 +288,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     let frustum = transform.getCameraFrustum();
     let plane = transform.getClippingPlane();
     if (plane && options.maxContentElevation > 0) {
-        const len = Math.hypot(plane[0], plane[1], plane[2]);
-        if (len > 0) {
-            const shellRadius = 1.0 + options.maxContentElevation / earthRadius;
-            const horizonCos = clamp(-plane[3] / len, -1, 1);
-            const shellCos = Math.cos(Math.acos(horizonCos) + Math.acos(1.0 / shellRadius));
-            plane = [plane[0], plane[1], plane[2], -shellCos * len] as vec4;
-            frustum = pushFrustumFarPlane(frustum, Math.sqrt(shellRadius * shellRadius - 1.0), transform.cameraPosition);
-        }
+        ({frustum, plane} = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, options.maxContentElevation));
     }
     const cameraCoord = cameraMercatorCoordinate(transform);
     const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);

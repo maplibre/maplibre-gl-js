@@ -1,7 +1,9 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform.ts';
 import {LngLat} from '../lng_lat.ts';
-import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
+import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, expandCullingToContentElevation, type CoveringTilesOptions} from './covering_tiles.ts';
+import {earthRadius} from '../lng_lat.ts';
+import type {vec4} from 'gl-matrix';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 
@@ -865,5 +867,33 @@ describe('coveringZoomLevel', () => {
         options.roundZoom = true;
         transform.setZoom(11.5);
         expect(coveringZoomLevel(transform, options)).toBe(13);
+    });
+});
+describe('expandCullingToContentElevation', () => {
+    test('pushes the horizon plane and the far plane back by the elevated shell', () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setZoom(2);
+        const frustum = transform.getCameraFrustum();
+        const plane = transform.getClippingPlane();
+        const shellRadius = 1 + 500000 / earthRadius;
+
+        const expanded = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, 500000);
+
+        const len = Math.hypot(plane[0], plane[1], plane[2]);
+        const expectedCos = Math.cos(Math.acos(-plane[3] / len) + Math.acos(1 / shellRadius));
+        expect([expanded.plane[0], expanded.plane[1], expanded.plane[2]]).toEqual([plane[0], plane[1], plane[2]]);
+        expect(expanded.plane[3]).toBeCloseTo(-expectedCos * len, 10);
+        expect(expanded.frustum.planes[1][3] - frustum.planes[1][3]).toBeCloseTo(Math.sqrt(shellRadius * shellRadius - 1), 10);
+    });
+
+    test('leaves a degenerate plane alone', () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        const frustum = transform.getCameraFrustum();
+        const plane: vec4 = [0, 0, 0, 1];
+
+        expect(expandCullingToContentElevation(frustum, plane, transform.cameraPosition, 500000)).toEqual({frustum, plane});
     });
 });
