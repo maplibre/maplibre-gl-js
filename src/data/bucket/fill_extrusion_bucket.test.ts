@@ -1,4 +1,4 @@
-import {beforeAll, describe, test, expect} from 'vitest';
+import {beforeAll, describe, test, expect, vi} from 'vitest';
 import {FillExtrusionBucket} from './fill_extrusion_bucket.ts';
 import {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -7,6 +7,7 @@ import {type ZoomHistory} from '../../style/zoom_history.ts';
 import {type BucketParameters} from '../bucket.ts';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 import {type VectorTileLayerLike} from '@maplibre/vt-pbf';
+import * as roundPolygonCornersModule from './round_polygon_corners.ts';
 
 function createFillExtrusionBucket({id, layout, paint, globalState, availableImages}: CreateBucketParameters): FillExtrusionBucket {
     const layer = new FillExtrusionStyleLayer({
@@ -64,5 +65,21 @@ describe('FillExtrusionBucket', () => {
 
         expect(bucketWithoutRounding.layoutVertexArray.length).toBeGreaterThan(0);
         expect(bucketWithRounding.layoutVertexArray.length).toBeGreaterThan(bucketWithoutRounding.layoutVertexArray.length);
+    });
+
+    test('FillExtrusionBucket rounds each feature\'s corners once', () => {
+        const bucket = createFillExtrusionBucket({
+            id: 'test-rounding-once',
+            layout: {'fill-extrusion-rounded-corner-distance': 10},
+            paint: {'fill-extrusion-height': 10}
+        });
+        const features = getFeaturesFromLayer(sourceLayer);
+        const spy = vi.spyOn(roundPolygonCornersModule, 'roundPolygonCorners');
+
+        bucket.populate(features, createPopulateOptions([]), {x: 0, y: 0, z: 14} as any);
+
+        // Rounding an already rounded geometry reshapes its arcs and inflates the vertex count.
+        expect(spy).toHaveBeenCalledTimes(features.length);
+        spy.mockRestore();
     });
 });
