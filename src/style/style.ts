@@ -345,13 +345,8 @@ export class Style extends Evented<MapEventType> {
             this.stylesheet.state?.[name]?.default ?? null :
             value;
 
-        if (deepEqual(newValue, this._globalState[name])) {
-            return this;
-        }
-
-        this._globalState[name] = newValue;
-
-        this._applyGlobalStateChanges([name]);
+        this._setGlobalStateValues({[name]: newValue});
+        return this;
     }
 
     getGlobalState(): Record<string, any> {
@@ -361,49 +356,68 @@ export class Style extends Evented<MapEventType> {
     setGlobalState(newStylesheetState: StateSpecification): void {
         this._checkLoaded();
 
-        const changedGlobalStateRefs = [];
-
+        const values: Record<string, any> = {};
         for (const propertyName in newStylesheetState) {
-            const didChange = !deepEqual(this._globalState[propertyName], newStylesheetState[propertyName].default);
-
-            if (didChange) {
-                changedGlobalStateRefs.push(propertyName);
-                this._globalState[propertyName] = newStylesheetState[propertyName].default;
-            }
+            values[propertyName] = newStylesheetState[propertyName].default;
         }
 
-        this._applyGlobalStateChanges(changedGlobalStateRefs);
+        this._setGlobalStateValues(values);
+    }
+
+    /**
+     * Sets the global state keys in `values` whose value differs from the one the state holds, keeping a copy of the
+     * state from before the change so that what reads those keys can transition from the value it had.
+     */
+    _setGlobalStateValues(values: Record<string, any>): void {
+        const changedGlobalStateRefs: string[] = [];
+        for (const ref in values) {
+            if (!deepEqual(values[ref], this._globalState[ref])) {
+                changedGlobalStateRefs.push(ref);
+            }
+        }
+        if (changedGlobalStateRefs.length === 0) {
+            return;
+        }
+
+        const priorGlobalState = {...this._globalState};
+        for (const ref of changedGlobalStateRefs) {
+            this._globalState[ref] = values[ref];
+        }
+
+        this._applyGlobalStateChanges(changedGlobalStateRefs, priorGlobalState);
     }
 
     /**
      * @internal
      * Find all sources that are affected by the global state changes and reload them.
-     * Find all paint properties that are affected by the global state changes and update them.
+     * Find all paint properties that are affected by the global state changes and update them, and the same for
+     * the light and the sky; each transitions from the value it had under `priorGlobalState`, the state from
+     * before the change.
      * For example, if a layer filter uses global-state expression, this function will find the source id of that layer.
      */
-    _applyGlobalStateChanges(globalStateRefs: string[]): void {
-        if (globalStateRefs.length === 0) {
-            return;
-        }
-
+    _applyGlobalStateChanges(globalStateRefs: string[], priorGlobalState: Record<string, any>): void {
         const sourceIdsToReload = new Set<string>();
         const globalStateChange = {};
 
         for (const ref of globalStateRefs) {
             globalStateChange[ref] = this._globalState[ref];
+        }
 
-            for (const layerId in this._layers) {
-                const layer = this._layers[layerId];
-                const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
-                const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
-                const visibilityAffectingGlobalStateRefs = layer.getVisibilityAffectingGlobalStateRefs();
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+            layer.retainGlobalState(globalStateRefs, priorGlobalState);
 
+            const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+            const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+            const visibilityAffectingGlobalStateRefs = layer.getVisibilityAffectingGlobalStateRefs();
+
+            for (const ref of globalStateRefs) {
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
                 }
                 if (paintAffectingGlobalStateRefs.has(ref)) {
                     for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
-                        this._updatePaintProperty(layer, name, value);
+                        this._updatePaintProperty(layer, name, value, {validate: false});
                     }
                 }
                 if (visibilityAffectingGlobalStateRefs?.has(ref)) {
@@ -412,6 +426,10 @@ export class Style extends Evented<MapEventType> {
                 }
             }
         }
+
+        const parameters = {now: now(), transition: this.getTransition()};
+        this.light?.updateGlobalState(globalStateRefs, priorGlobalState, parameters);
+        this.sky?.updateGlobalState(globalStateRefs, priorGlobalState, parameters);
 
         // Propagate global state changes to workers
         this.dispatcher.broadcast(MessageType.updateGlobalState, globalStateChange);
