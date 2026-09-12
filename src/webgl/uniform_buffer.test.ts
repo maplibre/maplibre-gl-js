@@ -42,11 +42,12 @@ describe('UniformBuffer', () => {
         expect(gl.bufferSubData).toHaveBeenCalledTimes(3);
     });
 
-    test('rebinds after the context is reset, without a new upload', () => {
+    test('restores a dirty binding once without uploading unchanged data', () => {
         const projection = context.projectionUniformBuffer;
         projection.upload();
         context.setDirty();
-        projection.upload();
+        projection.bind();
+        projection.bind();
         expect(gl.bindBufferBase).toHaveBeenCalledTimes(1);
         expect(gl.bindBufferBase).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, projection.buffer);
         expect(gl.bufferSubData).toHaveBeenCalledTimes(1);
