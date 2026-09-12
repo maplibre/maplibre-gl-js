@@ -118,9 +118,9 @@ describe('setTerrain', () => {
         });
         map.setTerrain({source: 'terrainrgb'});
         const terrainDepth = vi.spyOn(map.painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
-        map._render();
+        map._render(0);
         terrainDepth.mockClear();
-        map._render();
+        map._render(0);
         expect(terrainDepth).not.toHaveBeenCalled();
 
         map._terrainDataCallback({
@@ -130,7 +130,7 @@ describe('setTerrain', () => {
             source: {type: 'geojson'},
             tile: {tileID: new OverscaledTileID(0, 0, 0, 0, 0)}
         } as any);
-        map._render();
+        map._render(0);
         expect(terrainDepth).not.toHaveBeenCalled();
 
         map._terrainDataCallback({
@@ -140,7 +140,7 @@ describe('setTerrain', () => {
             source: {type: 'raster-dem'},
             tile: {tileID: new OverscaledTileID(0, 0, 0, 0, 0)}
         } as any);
-        map._render();
+        map._render(0);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
     });
 
