@@ -35,6 +35,24 @@ into named functions that can each carry one.
 Do not restate the code (`// increment i`), and do not narrate the change you are making
 (`// now uses the segmenter`) — the diff already says that, and it stops being true immediately.
 
+**Describe what the code does, not how it came to be that way.** Two things read as documentation
+but are not.
+
+The first is the change itself. A comment that frames the present approach against an earlier one —
+"reads the derived table rather than `ArabicShaping.txt`", "no longer needs the plugin", "this used
+to be done per codepoint" — is a changelog entry to everyone who arrives after the change, and what
+it contrasts with is not in the file for them to compare against.
+
+The second is the decision behind it. A comment that argues the choice — "the package that carries
+this unpacks to more than 250 MB", "we went with this because the alternative was too slow" — is the
+case for a pull request, written for reviewers who are weighing the options. Whoever reads the merged
+code is not weighing anything, and the rationale belongs in the PR or the issue that tracks it.
+
+Write as though the code had always looked this way and no other way was ever on the table. Where a
+future maintainer would otherwise walk into a trap, state the trap as a fact about the problem — "a
+glyphs URL serves codepoints, so it has no way to serve a cluster" — rather than as the story of how
+it came to be avoided.
+
 **No file-level preamble.** A comment belongs to the thing below it, not to the file. A block at the
 top of a module explaining the subject in general has nothing to attach to: it is not in the API
 docs, nobody scrolls back up to it from the function they are reading, and it drifts once the file

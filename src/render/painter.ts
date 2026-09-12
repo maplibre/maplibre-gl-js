@@ -595,6 +595,7 @@ export class Painter {
 
             for (renderOptions.currentLayer = layerIds.length - 1; renderOptions.currentLayer >= 0; renderOptions.currentLayer--) {
                 const layer = this.style._layers[layerIds[renderOptions.currentLayer]];
+                if (layer.isHidden(this.transform.zoom)) continue;
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
@@ -611,6 +612,7 @@ export class Painter {
 
         for (renderOptions.currentLayer = 0; renderOptions.currentLayer < layerIds.length; renderOptions.currentLayer++) {
             const layer = this.style._layers[layerIds[renderOptions.currentLayer]];
+            if (layer.isHidden(this.transform.zoom)) continue;
             const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
@@ -658,7 +660,7 @@ export class Painter {
      * Update the depth framebuffer if the camera has moved or tiles have reloaded.
      */
     maybeDrawDepth(): void {
-        if (!this.style?.map?.terrain) {
+        if (!this.style?.projection || !this.style.map?.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;

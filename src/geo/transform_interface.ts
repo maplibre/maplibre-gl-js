@@ -261,6 +261,11 @@ interface ITransformMutators {
 }
 
 /**
+ * The camera placement {@link IReadonlyTransform.calculateCameraOptionsFromTo} solves for.
+ */
+export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
+
+/**
  * @internal
  * A variant of {@link ITransform} without any mutating functions.
  * Note that an instance of {@link IReadonlyTransform} may still be mutated
@@ -450,6 +455,17 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @param pitch - pitch angle of the camera, in degrees
      */
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
+
+    /**
+     * Given the camera position and the point it looks at, both as lng, lat and altitude above sea level in meters,
+     * calculate the center, elevation, zoom, pitch and bearing that place the camera there.
+     * @param from - lng, lat of the camera
+     * @param altitudeFrom - altitude of the camera above sea level, in meters
+     * @param to - lng, lat of the point the camera looks at, which becomes the center
+     * @param altitudeTo - altitude of that point above sea level, in meters
+     * @throws when the camera and the point coincide
+     */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
 
     getRayDirectionFromPixel(p: Point): vec3;
 

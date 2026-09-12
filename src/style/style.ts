@@ -737,9 +737,6 @@ export class Style extends Evented<MapEventType> {
                 this._layers[id].updateTransitions(parameters);
             }
 
-            this.light.updateTransitions(parameters);
-            this.sky.updateTransitions(parameters);
-
             this._resetUpdates();
         }
 
@@ -1226,6 +1223,10 @@ export class Style extends Evented<MapEventType> {
         }
         delete this._updatedLayers[id];
         delete this._updatedPaintProps[id];
+
+        if (layer.type === 'symbol' && layer.source) {
+            this.tileManagers[layer.source]?.resetMaxContentElevation();
+        }
 
         if (layer.onRemove) {
             layer.onRemove(this.map);

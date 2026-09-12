@@ -19,7 +19,7 @@ vi.mock(import('../../tile/tile'));
 vi.mock(import('../../data/bucket/symbol_bucket'), () => {
     return {
         SymbolBucket: vi.fn()
-    } as any;
+    };
 });
 vi.mock(import('../../symbol/projection'));
 
