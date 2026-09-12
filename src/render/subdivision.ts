@@ -34,6 +34,12 @@ class Subdivider {
      * Map of "vertex x and y coordinate" to "index of such vertex".
      */
     private _vertexDictionary: Map<number, number> = new Map<number, number>();
+
+    /**
+     * Index into the vertex buffer for each input vertex, in the order `flatten` produced them.
+     */
+    private _inputRemap: number[] = [];
+
     private _used: boolean = false;
 
     private readonly _canonical: CanonicalTileID;
@@ -65,8 +71,9 @@ class Subdivider {
         const xInt = Math.round(x) | 0;
         const yInt = Math.round(y) | 0;
         const key = this._getKey(xInt, yInt);
-        if (this._vertexDictionary.has(key)) {
-            return this._vertexDictionary.get(key);
+        const existing = this._vertexDictionary.get(key);
+        if (existing !== undefined) {
+            return existing;
         }
         const index = this._vertexBuffer.length / 2;
         this._vertexDictionary.set(key, index);
@@ -418,11 +425,13 @@ class Subdivider {
     /**
      * Generates an outline for a given polygon, returns a list of arrays of line indices.
      */
-    private _generateOutline(polygon: Point[][]): number[][] {
+    private _generateOutline(polygon: Point[][], ringStarts: number[]): number[][] {
         const subdividedLines: number[][] = [];
-        for (const ring of polygon) {
-            const line = subdivideVertexLine(ring, this._granularity, true);
-            const pathIndices = this._pointArrayToIndices(line);
+        for (let r = 0; r < polygon.length; r++) {
+            const ring = polygon[r];
+            const pathIndices = this._granularity < 2 ?
+                this._ringPathIndices(ring, ringStarts[r]) :
+                this._pointArrayToIndices(subdivideVertexLine(ring, this._granularity, true));
             // Points returned by subdivideVertexLine are "path" waypoints,
             // for example with indices 0 1 2 3 0.
             // We need list of individual line segments for rendering,
@@ -435,6 +444,23 @@ class Subdivider {
             subdividedLines.push(lineIndices);
         }
         return subdividedLines;
+    }
+
+    /**
+     * Path indices of an unsubdivided ring, read from `_inputRemap`; empty and closed as `subdivideVertexLine` would make it.
+     */
+    private _ringPathIndices(ring: Point[], start: number): number[] {
+        if (ring.length < 2) {
+            return [];
+        }
+        const indices: number[] = [];
+        for (let i = 0; i < ring.length; i++) {
+            indices.push(this._inputRemap[start + i]);
+        }
+        if (ringIsOpen(ring)) {
+            indices.push(this._inputRemap[start]);
+        }
+        return indices;
     }
 
     /**
@@ -568,7 +594,7 @@ class Subdivider {
      */
     private _initializeVertices(flattened: number[]) {
         for (let i = 0; i < flattened.length; i += 2) {
-            this._vertexToIndex(flattened[i], flattened[i + 1]);
+            this._inputRemap.push(this._vertexToIndex(flattened[i], flattened[i + 1]));
         }
     }
 
@@ -586,15 +612,14 @@ class Subdivider {
         this._used = true;
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
-        const {flattened, holeIndices} = flatten(polygon);
+        const {flattened, holeIndices, ringStarts} = flatten(polygon);
         this._initializeVertices(flattened);
 
         // Subdivide triangles
         let subdividedTriangles: number[];
         try {
-            // At this point this._finalVertices is just flattened polygon points
             const earcutResult = earcut(flattened, holeIndices);
-            const cut = this._convertIndices(flattened, earcutResult);
+            const cut = this._convertIndices(earcutResult);
             subdividedTriangles = this._subdivideTrianglesScanline(cut);
         } catch (e) {
             console.error(e);
@@ -603,7 +628,7 @@ class Subdivider {
         // Subdivide lines
         let subdividedLines: number[][] = [];
         if (generateOutlineLines) {
-            subdividedLines = this._generateOutline(polygon);
+            subdividedLines = this._generateOutline(polygon, ringStarts);
         }
 
         // Ensure no vertex has the special value used for pole vertices
@@ -666,20 +691,12 @@ class Subdivider {
     }
 
     /**
-     * Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
-     * That is not allowed for purposes of subdivision, duplicates are removed in `this.initializeVertices`.
-     * This function converts the original index array that indexes into the original vertex array with duplicates
-     * into an index array that indexes into `this._finalVertices`.
-     * @param vertices - Flattened vertex array used by the old indices. This may contain duplicate vertices.
-     * @param oldIndices - Indices into the old vertex array.
-     * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
+     * Maps indices into the flattened input vertices to indices into the deduplicated vertex buffer.
      */
-    private _convertIndices(vertices: number[], oldIndices: number[]): number[] {
-        const newIndices = [];
-        for (const oldIndex of oldIndices) {
-            const x = vertices[oldIndex * 2];
-            const y = vertices[oldIndex * 2 + 1];
-            newIndices.push(this._vertexToIndex(x, y));
+    private _convertIndices(oldIndices: number[]): number[] {
+        const newIndices = new Array(oldIndices.length);
+        for (let i = 0; i < oldIndices.length; i++) {
+            newIndices[i] = this._inputRemap[oldIndices[i]];
         }
         return newIndices;
     }
@@ -765,9 +782,7 @@ export function subdivideVertexLine(linePoints: Point[], granularity: number, is
 
     // Generate an extra line segment between the input array's first and last points,
     // but only if isRing=true AND the first and last points actually differ.
-    const first = linePoints[0];
-    const last = linePoints[linePoints.length - 1];
-    const addLastToFirstSegment = isRing && (first.x !== last.x || first.y !== last.y);
+    const addLastToFirstSegment = isRing && ringIsOpen(linePoints);
 
     if (granularity < 2) {
         if (addLastToFirstSegment) {
@@ -870,17 +885,27 @@ export function subdivideVertexLine(linePoints: Point[], granularity: number, is
 }
 
 /**
+ * Whether a ring's last vertex differs from its first, so that drawing it needs a closing segment.
+ */
+function ringIsOpen(ring: Point[]): boolean {
+    return !ring[0].equals(ring[ring.length - 1]);
+}
+
+/**
  * Takes a polygon as an array of point rings, returns a flattened array of the X,Y coordinates of these points.
- * Also creates an array of hole indices. Both returned arrays are required for `earcut`.
+ * Also creates an array of hole indices, which `earcut` needs, and the index of each ring's first vertex.
  */
 function flatten(polygon: Point[][]): {
     flattened: number[];
     holeIndices: number[];
+    ringStarts: number[];
 } {
     const holeIndices = [];
     const flattened = [];
+    const ringStarts = [];
 
     for (const ring of polygon) {
+        ringStarts.push(flattened.length / 2);
         if (ring.length === 0) {
             continue;
         }
@@ -897,7 +922,8 @@ function flatten(polygon: Point[][]): {
 
     return {
         flattened,
-        holeIndices
+        holeIndices,
+        ringStarts
     };
 }
 
