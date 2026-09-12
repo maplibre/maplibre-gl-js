@@ -5,6 +5,7 @@ import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {type Map} from '../map.ts';
 
@@ -107,6 +108,40 @@ describe('setTerrain', () => {
         } as any);
 
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
+    });
+
+    test('redraws the depth framebuffer when a terrain source tile arrives, but not for a tile from another source', async () => {
+        await map.once('load');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.setTerrain({source: 'terrainrgb'});
+        const terrainDepth = vi.spyOn(map.painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+        map._render();
+        terrainDepth.mockClear();
+        map._render();
+        expect(terrainDepth).not.toHaveBeenCalled();
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'other',
+            sourceDataType: 'content',
+            source: {type: 'geojson'},
+            tile: {tileID: new OverscaledTileID(0, 0, 0, 0, 0)}
+        } as any);
+        map._render();
+        expect(terrainDepth).not.toHaveBeenCalled();
+
+        map._terrainDataCallback({
+            dataType: 'source',
+            sourceId: 'terrainrgb',
+            sourceDataType: 'content',
+            source: {type: 'raster-dem'},
+            tile: {tileID: new OverscaledTileID(0, 0, 0, 0, 0)}
+        } as any);
+        map._render();
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
     });
 
     test('re-places symbols when terrain is set', async () => {

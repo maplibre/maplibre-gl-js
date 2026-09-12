@@ -7,6 +7,7 @@
 - Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix 3D terrain reading elevation from the wrong part of a parent DEM tile while the deepest DEM tile is still loading ([#8407](https://github.com/maplibre/maplibre-gl-js/pull/8407)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix 3D terrain sampling DEM pixels at tile corners while hillshade and color-relief sample them at cell centres, which offset draped shading from the terrain by half a DEM cell ([#8411](https://github.com/maplibre/maplibre-gl-js/issues/8411)) (by [@ArcSolver](https://github.com/ArcSolver))
+- Fix symbols and markers showing through 3D terrain when a DEM tile loads after the terrain depth buffer was drawn ([#8420](https://github.com/maplibre/maplibre-gl-js/pull/8420)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 

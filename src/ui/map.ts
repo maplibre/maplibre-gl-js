@@ -3009,6 +3009,11 @@ export class Map extends Evented<MapEventType> {
             this.terrain.resetElevationCache();
             this.style.triggerSymbolPlacement();
         }
+        if (isTerrainSourceEvent && event.tile) {
+            // A DEM tile that arrives after the depth framebuffer was drawn changes the rendered surface
+            // without moving the camera or changing the terrain tile set, which are the only other triggers.
+            this.painter.terrainFacilitator.depthDirty = true;
+        }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (this.getCenterClampedToGround()) {
