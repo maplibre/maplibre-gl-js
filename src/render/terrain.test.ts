@@ -278,6 +278,22 @@ describe('Terrain', () => {
         expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
     });
 
+    test('getDEMElevation maps an overscaled tile onto the loaded parent DEM tile when the maxzoom DEM tile is not loaded yet', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const overscaledTileID = new OverscaledTileID(3, 0, 2, 3, 3);
+        const loadedParentTileID = new OverscaledTileID(1, 0, 1, 1, 1);
+        const sampleBilinear = vi.fn(() => 42);
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID: loadedParentTileID,
+            dem: {dim: 4, sampleBilinear}
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 2}) as any);
+
+        expect(terrain.getDEMElevation(overscaledTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
+        expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
+    });
+
     test('getElevation retries sampling setup when DEM data becomes available', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 1} as any);
         const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
