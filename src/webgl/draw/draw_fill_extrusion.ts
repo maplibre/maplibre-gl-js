@@ -103,3 +103,4 @@ function drawExtrusionTiles(
             programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }
 }
+
