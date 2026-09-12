@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a `line-pattern` driven by a zoom expression rendering as an unpatterned line at some zoom levels ([#4787](https://github.com/maplibre/maplibre-gl-js/issues/4787)) (by [@SomSamantray](https://github.com/SomSamantray))
 - Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
