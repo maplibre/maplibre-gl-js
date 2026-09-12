@@ -956,7 +956,7 @@ export class Placement {
             bucket.text.placedSymbolArray.get(index).placedOrientation = horizontal;
         }
 
-        if (symbolInstance.verticalPlacedTextSymbolIndex) {
+        if (symbolInstance.verticalPlacedTextSymbolIndex >= 0) {
             bucket.text.placedSymbolArray.get(symbolInstance.verticalPlacedTextSymbolIndex).placedOrientation = vertical;
         }
     }
