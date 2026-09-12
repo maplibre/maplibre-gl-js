@@ -66,6 +66,27 @@ describe('drawLine', () => {
         expect(programConfiguration.setConstantPatternPositions).toHaveBeenCalledWith(toPosition, fromPosition);
     });
 
+    test('should use the from position for both pattern positions when the atlas holds only the from sprite', () => {
+        const painterMock: Painter = constructMockPainter();
+        const layer: LineStyleLayer = constructMockPatternLayer();
+        const programMock = new Program(null, null, null, null, null, null, null, null);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+
+        const fromPosition = {x: 3, y: 4};
+        const mockTile = constructMockTile(layer, {'patternA': fromPosition});
+
+        const tileManagerMock = new TileManager(null, null, null);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
+
+        drawLine(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderOptions);
+
+        const bucket: LineBucket = (mockTile.getBucket(layer) as any);
+        const programConfiguration = bucket.programConfigurations.get(layer.id);
+
+        expect(programConfiguration.setConstantPatternPositions).toHaveBeenCalledTimes(1);
+        expect(programConfiguration.setConstantPatternPositions).toHaveBeenCalledWith(fromPosition, fromPosition);
+    });
+
     test('should not bind pattern positions when neither sprite is in the atlas', () => {
         const painterMock: Painter = constructMockPainter();
         const layer: LineStyleLayer = constructMockPatternLayer();
