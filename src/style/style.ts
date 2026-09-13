@@ -272,7 +272,8 @@ export class Style extends Evented<MapEventType> {
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
-        this._setInitialValues(options.globalState);
+        this._setInitialValues();
+        this._initialGlobalState = options.globalState;
 
         this._resetUpdates();
 
@@ -303,13 +304,13 @@ export class Style extends Evented<MapEventType> {
         });
     }
 
-    private _setInitialValues(initialGlobalState: Record<string, any>) {
+    private _setInitialValues() {
         this._layers = {};
         this._order = [];
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._imagesListDirty = false;
-        this._initialGlobalState = initialGlobalState ?? {};
+        this._initialGlobalState = {};
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -2129,7 +2130,7 @@ export class Style extends Evented<MapEventType> {
         }
 
         // reset internal state
-        this._setInitialValues({});
+        this._setInitialValues();
 
         // Remove event listeners
         this.setEventedParent(null);
