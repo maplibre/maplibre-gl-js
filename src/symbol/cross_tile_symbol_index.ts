@@ -344,7 +344,8 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number): boolean {
+    /** @param reindexedBuckets - Collects the buckets whose cross tile IDs this (re)assigned. */
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number, reindexedBuckets?: Set<number>): boolean {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
@@ -367,6 +368,7 @@ export class CrossTileSymbolIndex {
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
                 symbolBucketsChanged = true;
+                reindexedBuckets?.add(symbolBucket.bucketInstanceId);
             }
             currentBucketIDs[symbolBucket.bucketInstanceId] = true;
         }

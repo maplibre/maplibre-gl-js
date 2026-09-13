@@ -6,7 +6,7 @@ import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {Tile} from '../../tile/tile.ts';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index.ts';
 import {FeatureIndex} from '../../data/feature_index.ts';
-import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
+import {createGlyphMap, createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
 import {RGBAImage} from '../../util/image.ts';
 import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
@@ -14,18 +14,12 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
 import type {StyleImage} from '../../style/style_image.ts';
-import type {StyleGlyph} from '../../style/style_glyph.ts';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
 
-const glyphsByCluster = {
-    'Test': Object.fromEntries(
-        Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
-    )
-} as unknown as Record<string, Record<string, StyleGlyph>>;
+const glyphsByCluster = createGlyphMap();
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);

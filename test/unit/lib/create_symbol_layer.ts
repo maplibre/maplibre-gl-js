@@ -4,12 +4,24 @@ import {featureFilter, type LayerSpecification} from '@maplibre/maplibre-gl-styl
 import {type EvaluationParameters} from '../../../src/style/evaluation_parameters.ts';
 import {type BucketParameters} from '../../../src/data/bucket.ts';
 import {type CollisionBoxArray} from '../../../src/data/array_types.g.ts';
+import {type StyleGlyph} from '../../../src/style/style_glyph.ts';
+import glyphs from '../assets/fontstack-glyphs.json' with {type: 'json'};
 
-export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray): SymbolBucket {
+/**
+ * The `Test` fontstack fixture, keyed by grapheme cluster the way shaping expects.
+ * Its glyphs carry `rect` and `metrics`, so it doubles as the atlas positions.
+ */
+export function createGlyphMap(): Record<string, Record<string, StyleGlyph>> {
+    return {Test: Object.fromEntries(
+        Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
+    )} as unknown as Record<string, Record<string, StyleGlyph>>;
+}
+
+export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray, extraLayout?: Record<string, unknown>): SymbolBucket {
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
-        layout: {'text-font': [font], 'text-field': text},
+        layout: {'text-font': [font], 'text-field': text, ...extraLayout},
         filter: featureFilter(undefined, 'filter')
     } as any as LayerSpecification, {});
     layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
