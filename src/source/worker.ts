@@ -126,7 +126,13 @@ export default class Worker {
         this.self.addProtocol = addProtocol;
         this.self.removeProtocol = removeProtocol;
 
-        // Invoked by the RTL text plugin once it has fetched and parsed.
+        /**
+         * Invoked by a right-to-left text plugin once it has fetched and parsed.
+         *
+         * @deprecated MapLibre shapes Arabic and reorders bidirectional text itself. A plugin
+         * registered here still replaces the built-in implementation, but this will be removed in a
+         * future release.
+         */
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };

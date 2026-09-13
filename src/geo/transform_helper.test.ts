@@ -12,6 +12,17 @@ const emptyCallbacks = {
 };
 
 describe('TransformHelper', () => {
+    test('does not calculate the projection matrices while the width or height is zero', () => {
+        let calls = 0;
+        const helper = new TransformHelper({...emptyCallbacks, calcMatrices: () => { calls++; }});
+        helper.resize(0, 480, false);
+        helper.resize(640, 0, false);
+        helper.resize(0, 0, false);
+        expect(calls).toBe(0);
+        helper.resize(640, 480, false);
+        expect(calls).toBe(1);
+    });
+
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
         original.setConstrainOverride((lngLat, zoom) => {

@@ -636,6 +636,65 @@ describe('mergeSourceDiffs', () => {
         expect(merged.update[0].removeProperties).toHaveLength(1);
     });
 
+    test('removes properties after a geometry-only update', () => {
+        const point: GeoJSON.Feature = {
+            type: 'Feature',
+            id: 'point',
+            geometry: {type: 'Point', coordinates: [0, 0]},
+            properties: {remove: 'old', keep: 'unchanged'}
+        };
+        const diff1 = {
+            update: [{id: 'point', newGeometry: {type: 'Point', coordinates: [1, 1]}}]
+        } satisfies GeoJSONSourceDiff;
+        const diff2 = {
+            update: [{id: 'point', removeProperties: ['remove']}]
+        } satisfies GeoJSONSourceDiff;
+        const sequential = toUpdateable(point);
+        applySourceDiff(sequential, diff1);
+        applySourceDiff(sequential, diff2);
+
+        const merged = toUpdateable(point);
+        applySourceDiff(merged, mergeSourceDiffs(diff1, diff2));
+
+        expect(merged).toEqual(sequential);
+        expect(merged.get('point')).toEqual({
+            ...point,
+            geometry: {type: 'Point', coordinates: [1, 1]},
+            properties: {keep: 'unchanged'}
+        });
+    });
+
+    test('removes all queued updates for a property while retaining other updates', () => {
+        const point: GeoJSON.Feature = {
+            type: 'Feature',
+            id: 'point',
+            geometry: {type: 'Point', coordinates: [0, 0]},
+            properties: {remove: 'old', keep: 'old'}
+        };
+        const diff1 = {
+            update: [{id: 'point', addOrUpdateProperties: [{key: 'remove', value: 'first'}]}]
+        } satisfies GeoJSONSourceDiff;
+        const diff2 = {
+            update: [{id: 'point', addOrUpdateProperties: [
+                {key: 'remove', value: 'second'},
+                {key: 'keep', value: 'updated'}
+            ]}]
+        } satisfies GeoJSONSourceDiff;
+        const diff3 = {
+            update: [{id: 'point', removeProperties: ['remove']}]
+        } satisfies GeoJSONSourceDiff;
+        const sequential = toUpdateable(point);
+        applySourceDiff(sequential, diff1);
+        applySourceDiff(sequential, diff2);
+        applySourceDiff(sequential, diff3);
+
+        const merged = toUpdateable(point);
+        applySourceDiff(merged, mergeSourceDiffs(mergeSourceDiffs(diff1, diff2), diff3));
+
+        expect(merged).toEqual(sequential);
+        expect(merged.get('point').properties).toEqual({keep: 'updated'});
+    });
+
     test('merges two diffs remove feature properties then update feature properties - retains both operations', () => {
         const diff1 = {
             update: [{id: 'feature1', removeProperties: ['prop1']}]

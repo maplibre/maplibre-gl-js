@@ -47,6 +47,24 @@ describe('DOM', () => {
             expect(output).not.toContain('ontoggle');
         });
 
+        test('should remove iframe tags', () => {
+            const input = '<iframe src=\'https://example.com\'></iframe>';
+            const output = DOM.sanitize(input);
+            expect(output).toBe('');
+        });
+
+        test('should remove iframe tags from nested elements', () => {
+            const input = '<div><iframe srcdoc=\'<script>alert(1)</script>\'></iframe></div>';
+            const output = DOM.sanitize(input);
+            expect(output).toBe('<div></div>');
+        });
+
+        test('should remove srcdoc attributes', () => {
+            const input = '<object srcdoc=\'<script>alert(1)</script>\'>x</object>';
+            const output = DOM.sanitize(input);
+            expect(output).toBe('<object>x</object>');
+        });
+
         test('should remove dangerous attributes that follow a removed attribute', () => {
             const input = '<a href=\'javascript:alert(1)\' onclick=\'alert(1)\'>click me</a>';
             const output = DOM.sanitize(input);

@@ -177,4 +177,71 @@ describe('browser', () => {
     test('hardwareConcurrency', () => {
         expect(browser.hardwareConcurrency).toBeTypeOf('number');
     });
+
+    describe('getImageCanvasContext', () => {
+        const image = {width: 4, height: 3} as unknown as ImageBitmap;
+
+        /**
+         * A canvas that records `drawImage` instead of rasterising. `getImageData` answers with the
+         * bytes `isOffscreenCanvasDistorted` expects, or with zeroes to fail it (see #3185).
+         */
+        function createFakeCanvas(distorted = false) {
+            const canvas = {width: 0, height: 0, getContext: () => context};
+            const context = {
+                canvas,
+                fillRect: () => {},
+                drawImage: vi.fn(),
+                getImageData: (_x: number, _y: number, width: number, height: number) => ({
+                    data: Uint8ClampedArray.from({length: width * height * 4}, (_, i) => distorted ? 0 : i)
+                })
+            };
+            return canvas;
+        }
+
+        /**
+         * Draws `image` through a fresh copy of `browser.ts`, since the two `OffscreenCanvas` probes
+         * behind `getImageCanvasContext` cache their answer in module scope. Only the document canvas
+         * comes back sized, so `context.canvas.width` says which path ran.
+         */
+        async function drawImageWith(OffscreenCanvas: unknown) {
+            vi.stubGlobal('OffscreenCanvas', OffscreenCanvas);
+            vi.stubGlobal('createImageBitmap', vi.fn());
+            vi.spyOn(window.document, 'createElement').mockReturnValue(createFakeCanvas() as unknown as HTMLElement);
+            vi.resetModules();
+            return (await import('./browser.ts')).browser.getImageCanvasContext(image);
+        }
+
+        afterEach(() => {
+            vi.unstubAllGlobals();
+            vi.restoreAllMocks();
+            vi.resetModules();
+        });
+
+        test('draws into an OffscreenCanvas sized to the image when the browser has one that reads back faithfully', async () => {
+            const OffscreenCanvasStub = vi.fn(function () {
+                return createFakeCanvas();
+            });
+
+            const context = await drawImageWith(OffscreenCanvasStub);
+
+            expect(OffscreenCanvasStub).toHaveBeenCalledWith(4, 3);
+            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+        });
+
+        test('draws into a document canvas sized to the image when the browser has no OffscreenCanvas', async () => {
+            const context = await drawImageWith(undefined);
+
+            expect([context.canvas.width, context.canvas.height]).toEqual([4, 3]);
+            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+        });
+
+        test('falls back to a document canvas when the OffscreenCanvas distorts pixels', async () => {
+            const context = await drawImageWith(vi.fn(function () {
+                return createFakeCanvas(true);
+            }));
+
+            expect([context.canvas.width, context.canvas.height]).toEqual([4, 3]);
+            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+        });
+    });
 });

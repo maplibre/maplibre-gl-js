@@ -38,7 +38,6 @@ import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker.ts';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -425,9 +424,8 @@ export class SymbolBucket implements Bucket {
      * Collects the glyphs a label needs into `stacks`, so that the tile can ask for them.
      *
      * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
-     * shape it is written as. Its codepoints are asked for as well: not every cluster can be drawn
-     * -- it takes a font file the style pinned with `font-faces` -- and where one cannot, layout
-     * falls back to drawing it a codepoint at a time, exactly as it did before. See `shapeLines`.
+     * shape it is written as. Its codepoints are asked for as well, to give layout something to draw
+     * a codepoint at a time where the cluster itself yields no glyph. See `shapeLines`.
      *
      * A cluster can span two sections, a letter in one and the accent written on it in the next, so
      * the label is taken as a whole and each cluster attributed to the section its first character
@@ -511,15 +509,8 @@ export class SymbolBucket implements Bucket {
                 const resolvedTokens = layer.getValueAndResolveTokens('text-field', evaluationFeature, canonical, availableImages);
                 const formattedText = Formatted.factory(resolvedTokens);
 
-                // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
                 this.hasRTLText ||= containsRTLText(formattedText);
-                if (
-                    !this.hasRTLText || // non-rtl text so can proceed safely
-                    rtlWorkerPlugin.getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
-                    this.hasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
-                ) {
-                    text = transformText(formattedText, layer, evaluationFeature);
-                }
+                text = transformText(formattedText, layer, evaluationFeature);
             }
 
             let icon: ResolvedImage;
@@ -610,9 +601,7 @@ export class SymbolBucket implements Bucket {
     }
 
     isEmpty(): boolean {
-        // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
-        // In order for the bucket to be serialized, and not discarded as an empty bucket both checks are necessary.
-        return this.symbolInstances.length === 0 && !this.hasRTLText;
+        return this.symbolInstances.length === 0;
     }
 
     uploadPending(): boolean {
