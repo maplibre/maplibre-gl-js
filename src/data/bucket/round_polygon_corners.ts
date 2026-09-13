@@ -6,22 +6,26 @@ import type Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
 /**
- * Rounds polygon corners by calculating arc points at each corner vertex.
- * @param polygon - Collection of polygon rings (outer ring and hole rings)
+ * Builds the function that rounds polygon corners by calculating arc points at each corner vertex.
+ * A distance of zero or less disables rounding.
  * @param distanceInMeters - Desired corner rounding distance in meters
  * @param canonical - Canonical tile ID used for meter to tile unit conversion
  */
-export function roundPolygonCorners(
-    polygon: Point[][],
+export function createPolygonCornerRounder(
     distanceInMeters: number,
     canonical: CanonicalTileID
-): Point[][] {
-    if (distanceInMeters <= 0 || !polygon || polygon.length === 0) {
-        return polygon;
+): (polygon: Point[][]) => Point[][] {
+    if (distanceInMeters <= 0) {
+        return polygon => polygon;
     }
 
     const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
-    return polygon.map(ring => roundRing(ring, distanceInTileUnits));
+    return polygon => {
+        if (!polygon || polygon.length === 0) {
+            return polygon;
+        }
+        return polygon.map(ring => roundRing(ring, distanceInTileUnits));
+    };
 }
 
 function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
@@ -59,17 +63,21 @@ function roundRing(ring: Point[], distanceInTileUnits: number): Point[] {
 
     const newRing: Point[] = [];
 
+    let previousIsBoundary = isBoundaryEdge(ring[vertexCount - 1], ring[0]);
+
     for (let i = 0; i < vertexCount; i++) {
         const previous = ring[(i - 1 + vertexCount) % vertexCount];
         const current = ring[i];
         const next = ring[(i + 1) % vertexCount];
+        const nextIsBoundary = isBoundaryEdge(current, next);
 
-        if (isBoundaryEdge(previous, current) || isBoundaryEdge(current, next)) {
+        if (previousIsBoundary || nextIsBoundary) {
             newRing.push(current.clone());
-            continue;
+        } else {
+            appendRoundCorner(newRing, previous, current, next, distanceInTileUnits);
         }
 
-        appendRoundCorner(newRing, previous, current, next, distanceInTileUnits);
+        previousIsBoundary = nextIsBoundary;
     }
 
     const snapped = snapToIntegerGrid(newRing);

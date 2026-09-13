@@ -36,7 +36,7 @@ import type {SubdivisionGranularitySetting} from '../../render/subdivision_granu
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
-import {roundPolygonCorners} from './round_polygon_corners.ts';
+import {createPolygonCornerRounder} from './round_polygon_corners.ts';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -106,7 +106,7 @@ export class FillExtrusionBucket implements Bucket {
 
         const globalProperties = new EvaluationParameters(this.zoom);
         const layer = this.layers[0];
-        const roundedCornerDistance = layer.layout.get('fill-extrusion-rounded-corner-distance');
+        const roundCorners = createPolygonCornerRounder(layer.layout.get('fill-extrusion-rounded-corner-distance'), canonical);
         const needGeometry = layer._featureFilter.needGeometry;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
@@ -114,8 +114,7 @@ export class FillExtrusionBucket implements Bucket {
 
             if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 
-            const rawGeometry = needGeometry ? evaluationFeature.geometry : loadGeometry(feature);
-            const geometry = roundedCornerDistance > 0 ? roundPolygonCorners(rawGeometry, roundedCornerDistance, canonical) : rawGeometry;
+            const geometry = roundCorners(needGeometry ? evaluationFeature.geometry : loadGeometry(feature));
 
             const bucketFeature: BucketFeature = {
                 id,
