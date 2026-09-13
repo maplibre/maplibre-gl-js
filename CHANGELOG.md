@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
+- Support data-driven `icon-rotation-alignment` for point symbols with viewport-aligned pitch. Unsupported layer configurations retain the layer-wide alignment and log a warning ([#3461](https://github.com/maplibre/maplibre-gl-js/issues/3461))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

@@ -320,7 +320,7 @@ export class Placement {
         width: number,
         height: number,
         textBoxScale: number,
-        rotateWithMap: boolean,
+        textRotatesWithMap: boolean,
         pitchWithMap: boolean,
         textPixelRatio: number,
         tileID: OverscaledTileID,
@@ -353,7 +353,7 @@ export class Placement {
             tileID,
             unwrappedTileID,
             pitchWithMap,
-            rotateWithMap,
+            textRotatesWithMap,
             translationText,
             collisionGroup.predicate,
             getElevation,
@@ -371,7 +371,7 @@ export class Placement {
                 tileID,
                 unwrappedTileID,
                 pitchWithMap,
-                rotateWithMap,
+                textRotatesWithMap,
                 translationIcon,
                 collisionGroup.predicate,
                 getElevation,
@@ -435,7 +435,7 @@ export class Placement {
         const textAlwaysOverlap = textOverlapMode === 'always';
         const iconOverlapMode = getOverlapMode(layout, 'icon-overlap', 'icon-allow-overlap');
         const iconAlwaysOverlap = iconOverlapMode === 'always';
-        const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
+        const textRotatesWithMap = layout.get('text-rotation-alignment') === 'map';
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
         const zOrderByViewportY = layout.get('symbol-z-order') === 'viewport-y';
@@ -465,6 +465,13 @@ export class Placement {
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this._getTerrainElevationFunc(tileID);
         const simpleProjectionMatrix = this.transform.getFastPathSimpleProjectionMatrix(tileID);
+        const placedIconRotatesWithMap = (placedIconSymbolIndex: number): boolean => {
+            if (!bucket.layers[0].hasDataDrivenIconRotationAlignment() || placedIconSymbolIndex < 0) {
+                return textRotatesWithMap;
+            }
+            const placedIcon = bucket.icon.placedSymbolArray.get(placedIconSymbolIndex);
+            return symbolSize.iconSizeRotatesWithMap(placedIcon.upperSize);
+        };
 
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
@@ -546,7 +553,7 @@ export class Placement {
                             tileID,
                             unwrappedTileID,
                             pitchWithMap,
-                            rotateWithMap,
+                            textRotatesWithMap,
                             translationText,
                             collisionGroup.predicate,
                             getElevation,
@@ -605,7 +612,7 @@ export class Placement {
 
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
-                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
+                                    textBoxScale, textRotatesWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
                                     collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, simpleProjectionMatrix, symbolHeightOffset, heightAnchorGround);
 
                                 if (result) {
@@ -635,7 +642,7 @@ export class Placement {
                                 tileID,
                                 unwrappedTileID,
                                 pitchWithMap,
-                                rotateWithMap,
+                                textRotatesWithMap,
                                 translationText,
                                 collisionGroup.predicate,
                                 getElevation,
@@ -735,7 +742,9 @@ export class Placement {
             }
 
             if (collisionArrays.iconBox) {
-                const placeIconFeature = iconBox => {
+                const placeIconFeature = (iconBox, placedIconSymbolIndex: number) => {
+                    // Fitted icons follow the text's variable anchor and retain its collision alignment.
+                    const rotateWithMap = hasIconTextFit && shift ? textRotatesWithMap : placedIconRotatesWithMap(placedIconSymbolIndex);
                     return this.collisionIndex.placeCollisionBox(
                         iconBox,
                         iconOverlapMode,
@@ -755,10 +764,10 @@ export class Placement {
                 };
 
                 if (placedVerticalText && placedVerticalText.placeable && collisionArrays.verticalIconBox) {
-                    placedIconBoxes = placeIconFeature(collisionArrays.verticalIconBox);
+                    placedIconBoxes = placeIconFeature(collisionArrays.verticalIconBox, symbolInstance.verticalPlacedIconSymbolIndex);
                     placeIcon = placedIconBoxes.placeable;
                 } else {
-                    placedIconBoxes = placeIconFeature(collisionArrays.iconBox);
+                    placedIconBoxes = placeIconFeature(collisionArrays.iconBox, symbolInstance.placedIconSymbolIndex);
                     placeIcon = placedIconBoxes.placeable;
                 }
                 offscreen &&= placedIconBoxes.offscreen;

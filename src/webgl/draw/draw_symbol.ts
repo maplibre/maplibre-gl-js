@@ -17,6 +17,7 @@ import ONE_EM from '../../symbol/one_em.ts';
 
 import {
     type SymbolIconUniformsType,
+    SymbolRotationMode,
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
@@ -322,6 +323,10 @@ function drawLayerSymbols(
     // Pitched point labels are automatically rotated by the pitchedLabelPlaneMatrix projection
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
+    let rotationMode = rotateInShader ? SymbolRotationMode.Map : SymbolRotationMode.Viewport;
+    if (!isText && layer.hasDataDrivenIconRotationAlignment()) {
+        rotationMode = SymbolRotationMode.PerFeature;
+    }
 
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
@@ -415,16 +420,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                    size, rotationMode, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset, heightAnchorGround);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                    size, rotationMode, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling, isOffset, heightAnchorGround);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                size, rotationMode, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                 uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling, isOffset, heightAnchorGround);
         }
 
