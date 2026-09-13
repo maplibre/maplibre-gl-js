@@ -26,7 +26,7 @@ describe('Browser tests', () => {
         server = http.createServer(
             st(process.cwd())
         );
-        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        await new Promise<void>((resolve) => server.listen(resolve));
 
         browser = await launchPuppeteer();
 
@@ -38,7 +38,7 @@ describe('Browser tests', () => {
 
         const port = (server.address() as AddressInfo).port;
 
-        await page.goto(`http://127.0.0.1:${port}/test/integration/browser/fixtures/land.html`, {waitUntil: 'domcontentloaded'});
+        await page.goto(`http://localhost:${port}/test/integration/browser/fixtures/land.html`, {waitUntil: 'domcontentloaded'});
 
         await page.evaluate(() => {
             new Promise<void>((resolve, _reject) => {
