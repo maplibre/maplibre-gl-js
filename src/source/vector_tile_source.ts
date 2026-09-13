@@ -171,6 +171,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
      */
     setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
+            this.tiles = tiles;
             this._options.tiles = tiles;
         });
 

@@ -227,3 +227,48 @@ describe('symbol fade after the placement guard', () => {
         expect(idle).toHaveBeenCalled();
     });
 });
+
+describe('render-to-texture follow-up frame', () => {
+    test('keeps rendering, deferring idle, until the follow-up frame is no longer needed', async () => {
+        const map = createMap();
+        await map.once('idle');
+        const rtt = {needsFollowUpFrame: true, prepareForRender: () => {}, renderLayer: () => false, getTexture: () => null};
+        map.painter.renderToTexture = rtt;
+        const idle = vi.fn();
+        map.on('idle', idle);
+        const repaint = vi.spyOn(map, 'triggerRepaint');
+
+        map.redraw();
+        expect(repaint).toHaveBeenCalled();
+        expect(idle).not.toHaveBeenCalled();
+
+        rtt.needsFollowUpFrame = false;
+        map.redraw();
+        expect(idle).toHaveBeenCalled();
+        map.remove();
+    });
+});
+
+describe('hidden layers', () => {
+    test('a layer hidden at the current zoom does not render tile clipping masks for its source', async () => {
+        const square: GeoJSON.Feature = {type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]}, properties: {}};
+        const map = createMap({style: {
+            version: 8,
+            sources: {shared: {type: 'geojson', data: square}, other: {type: 'geojson', data: square}},
+            layers: [
+                {id: 'shared-fill', type: 'fill', source: 'shared'},
+                {id: 'other-fill', type: 'fill', source: 'other'},
+                {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
+            ]
+        }});
+        const lastSourceToRenderClippingMasks = () => map.painter.currentStencilSource;
+
+        await map.once('idle');
+        expect(lastSourceToRenderClippingMasks()).toBe('other');
+
+        map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
+        await map.once('idle');
+        expect(lastSourceToRenderClippingMasks()).toBe('shared');
+        map.remove();
+    });
+});

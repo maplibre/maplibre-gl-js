@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -374,12 +374,14 @@ export class GlobeTransform implements ITransform {
         return this._helper.getCameraPoint();
     }
 
+    /** The camera of the child that renders the current frame. */
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        return this.currentTransform.getCameraAltitude();
     }
 
+    /** See {@link getCameraAltitude}. */
     getCameraLngLat(): LngLat {
-        return this._helper.getCameraLngLat();
+        return this.currentTransform.getCameraLngLat();
     }
 
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
@@ -405,6 +407,11 @@ export class GlobeTransform implements ITransform {
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
+    }
+
+    /** See {@link getCameraAltitude}. */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+        return this.currentTransform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
 
     /**

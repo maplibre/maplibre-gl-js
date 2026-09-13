@@ -2,6 +2,10 @@ import {IndexBuffer} from './index_buffer.ts';
 
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
+import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
+import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
+import type {UniformBuffer} from './uniform_buffer.ts';
 import {type DepthMode} from './depth_mode.ts';
 import {type StencilMode} from './stencil_mode.ts';
 import {ColorMode} from './color_mode.ts';
@@ -63,6 +67,9 @@ export class Context {
     pixelStoreUnpack: PixelStoreUnpack;
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+    projectionUniformBuffer: UniformBuffer;
+    terrainUniformBuffer: UniformBuffer;
+    frameUniformBuffer: UniformBuffer;
 
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
@@ -111,6 +118,10 @@ export class Context {
 
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
+
+        this.projectionUniformBuffer = createProjectionUniformBuffer(this);
+        this.terrainUniformBuffer = createTerrainUniformBuffer(this);
+        this.frameUniformBuffer = createFrameUniformBuffer(this);
     }
 
     setDefault(): void {
@@ -175,6 +186,9 @@ export class Context {
         this.pixelStoreUnpack.dirty = true;
         this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
         this.pixelStoreUnpackFlipY.dirty = true;
+        this.projectionUniformBuffer.bindingDirty = true;
+        this.terrainUniformBuffer.bindingDirty = true;
+        this.frameUniformBuffer.bindingDirty = true;
     }
 
     /**

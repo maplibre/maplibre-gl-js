@@ -14,10 +14,7 @@ layout(location = 0) in ivec2 a_pos_normal;
 layout(location = 1) in uvec4 a_data;
 
 uniform vec2 u_translation;
-uniform vec2 u_units_to_pixels;
 uniform mediump float u_ratio;
-uniform lowp float u_device_pixel_ratio;
-
 out vec2 v_normal;
 flat out vec2 v_width2;
 out float v_linesofar;

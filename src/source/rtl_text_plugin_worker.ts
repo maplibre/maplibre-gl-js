@@ -1,5 +1,11 @@
 import {type PluginState, type RTLPluginStatus} from './rtl_text_plugin_status.ts';
 
+/**
+ * The three functions a right-to-left text plugin supplies.
+ *
+ * @deprecated MapLibre implements all three itself. A registered plugin still replaces the built-in
+ * implementation, but this will be removed in a future release.
+ */
 export interface RTLTextPlugin {
     applyArabicShaping: (a: string) => string;
     processBidirectionalText: ((b: string, a: number[]) => string[]);

@@ -1,4 +1,3 @@
-uniform vec2 u_world;
 uniform vec2 u_fill_translate;
 
 layout(location = 0) in vec2 a_pos;
@@ -23,7 +22,7 @@ void main() {
 
     gl_Position = projectTile(a_pos + u_fill_translate, a_pos);
 
-    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;
+    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world_size;
     #ifdef GLOBE
     v_depth = gl_Position.z / gl_Position.w;
     #endif

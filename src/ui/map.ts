@@ -54,6 +54,7 @@ import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_
 import type {TaskID} from '../util/task_queue.ts';
 import type {
     FilterSpecification,
+    FontFacesSpecification,
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
@@ -388,6 +389,7 @@ export type MapOptions = {
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
+     * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
      * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
@@ -632,6 +634,7 @@ export class Map extends Evented<MapEventType> {
     _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
+    _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
     _removed: boolean;
@@ -1521,6 +1524,7 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
+     * Under `globe` and `vertical-perspective` the calculation follows the sphere while the map renders as a globe, keeping the point looked at on the sea-level sphere; `altitudeTo` only becomes the center elevation.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
@@ -1542,7 +1546,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform);
         }
-        return this._camera.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        return this._camera.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1550,8 +1554,10 @@ export class Map extends Evented<MapEventType> {
      * `container` element.
      *
      * Checks if the map container size changed and updates the map if it has changed.
-     * This method must be called after the map's `container` is resized programmatically
-     * or when the map is shown after being initially hidden with CSS.
+     * With the default `trackResize: true`, container size changes are picked up automatically,
+     * including a container that becomes visible after being hidden with CSS. Call this method
+     * explicitly when `trackResize` is `false`, or when the map's size changes in a way the
+     * container's `ResizeObserver` cannot observe.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, and `resize`.
      *
@@ -1559,10 +1565,10 @@ export class Map extends Evented<MapEventType> {
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
      * @example
-     * Resize the map when the map container is shown after being initially hidden with CSS.
+     * Resize a map with `trackResize` disabled when its container is shown after being hidden with CSS.
      * ```ts
      * let mapDiv = document.getElementById('map');
-     * if (mapDiv.style.visibility === true) map.resize();
+     * if (mapDiv.style.visibility === 'visible') map.resize();
      * ```
      */
     resize(eventData?: any, constrainTransform = true): this {
@@ -1629,6 +1635,8 @@ export class Map extends Evented<MapEventType> {
      * @internal
      * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
+     * Warns once when the ratio is scaled down. The message carries no sizes: this runs on every
+     * resize and `warnOnce` de-duplicates by message, so sizes would warn on every drag frame.
      */
     _getClampedPixelRatio(width: number, height: number): number {
         const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
@@ -1640,7 +1648,13 @@ export class Map extends Evented<MapEventType> {
         const widthScaleFactor = canvasWidth > maxCanvasWidth ? (maxCanvasWidth / canvasWidth) : 1;
         const heightScaleFactor = canvasHeight > maxCanvasHeight ? (maxCanvasHeight / canvasHeight) : 1;
 
-        return Math.min(widthScaleFactor, heightScaleFactor) * pixelRatio;
+        const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
+
+        if (scaleFactor < 1) {
+            warnOnce('The canvas is larger than maxCanvasSize and is rendered at a lower pixel ratio to fit. Increase maxCanvasSize, within MAX_TEXTURE_SIZE, to render at full resolution.');
+        }
+
+        return scaleFactor * pixelRatio;
     }
 
     /**
@@ -1763,13 +1777,18 @@ export class Map extends Evented<MapEventType> {
     /**
      * Returns the map's minimum allowable zoom level.
      *
+     * @param constrained - If `true`, returns the effective minimum zoom after applying the map's viewport constraints.
+     * If `false` or omitted, returns the configured minimum zoom.
      * @returns minZoom
      * @example
      * ```ts
      * let minZoom = map.getMinZoom();
      * ```
      */
-    getMinZoom(): number { return this._camera.transform.minZoom; }
+    getMinZoom(constrained = false): number {
+        const transform = this._camera.transform;
+        return constrained ? transform.applyConstrain(transform.center, transform.minZoom).zoom : transform.minZoom;
+    }
 
     /**
      * Sets or clears the map's maximum zoom level.
@@ -2665,6 +2684,7 @@ export class Map extends Evented<MapEventType> {
                 localIdeographFontFamily: this._localIdeographFontFamily,
                 validate: this._validateStyle
             }, options);
+        this._styleUrl = typeof style === 'string' ? style : null;
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
             this._diffStyle(style, options);
@@ -2804,6 +2824,20 @@ export class Map extends Evented<MapEventType> {
         if (this.style) {
             return this.style.serialize();
         }
+    }
+
+    /**
+     * Returns the URL the map's style was loaded from.
+     *
+     * @returns The URL given to {@link Map.setStyle} or the `style` map option, or `null` when the style was given as an object or the map has no style.
+     *
+     * @example
+     * ```ts
+     * const styleUrl = map.getStyleUrl();
+     * ```
+     */
+    getStyleUrl(): string | null {
+        return this._styleUrl;
     }
 
     /**
@@ -3359,7 +3393,7 @@ export class Map extends Evented<MapEventType> {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @returns a promise that is resolved when the image is loaded
+     * @returns a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)
      *
      * @example
      * Load an image from an external URL.
@@ -3371,7 +3405,11 @@ export class Map extends Evented<MapEventType> {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        const response = await ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        if (!response.data) {
+            throw new Error(`Could not load image ${url}: the response is empty`);
+        }
+        return response;
     }
 
     /**
@@ -3703,6 +3741,44 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Sets the value of the style's `font-faces` property, which points at the font files used to
+     * draw text that the style's `glyphs` URL does not cover. Pass a falsy value (null or undefined)
+     * to unset it.
+     *
+     * The files are handed to the browser's CSS Font Loading API, so any format the browser can
+     * render text with may be used, and requests for them go through `transformRequest` as glyph
+     * requests do. Text is drawn a grapheme cluster at a time, so a letter and the marks written on
+     * it are handed to the browser's text engine together and come back as the one shape they are
+     * written as -- which is what a `glyphs` URL, serving one codepoint at a time, cannot do.
+     *
+     * @param fontFaces - The font faces to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/root/#font-faces).
+     * A declaration this cannot make sense of is skipped with a warning, as is a font file that
+     * fails to load, so the text it would have drawn falls back to the `glyphs` URL.
+     * @example
+     * ```ts
+     * map.setFontFaces({
+     *     'Noto Sans Regular': [
+     *         {url: 'https://example.com/NotoSansKhmer-Regular.ttf', 'unicode-range': ['U+1780-17FF']}
+     *     ]
+     * });
+     * ```
+     */
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): this {
+        this._lazyInitEmptyStyle();
+        this.style.setFontFaces(fontFaces);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's `font-faces` property.
+     *
+     * @returns The style's font faces, or `null` if it declares none.
+     */
+    getFontFaces(): FontFacesSpecification | null {
+        return this.style.getFontFaces();
+    }
+
+    /**
      * Adds a sprite to the map's style. Fires the `style` event.
      *
      * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
@@ -3998,6 +4074,19 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Determines if the initial resize event should be handled based on the container's dimensions.
+     *
+     * @returns `true` if the initial resize event should be handled, `false` otherwise.
+     */
+    _shouldHandleInitialResize(): boolean {
+        if (!this._container?.clientWidth || !this._container.clientHeight) {
+            return false;
+        }
+        const [width, height] = this._containerDimensions();
+        return width !== this._camera.transform.width || height !== this._camera.transform.height;
+    }
+
+    /**
      * @internal
      * Sets up the ResizeObserver to track container size changes.
      * Uses the owning window's ResizeObserver for cross-window support.
@@ -4015,7 +4104,9 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
             if (!initialResizeEventCaptured) {
                 initialResizeEventCaptured = true;
-                return;
+                if (!this._shouldHandleInitialResize()) {
+                    return;
+                }
             }
             throttledResizeCallback(entries);
         });
@@ -4046,6 +4137,9 @@ export class Map extends Evented<MapEventType> {
     }
 
     _setupContainer(): void {
+        const dimensions = this._containerDimensions();
+        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
+
         const container = this._container;
         container.classList.add('maplibregl-map');
 
@@ -4061,8 +4155,6 @@ export class Map extends Evented<MapEventType> {
         this._canvas.setAttribute('aria-label', this._getUIString('Map.Title'));
         this._canvas.setAttribute('role', 'region');
 
-        const dimensions = this._containerDimensions();
-        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
         this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
@@ -4376,7 +4468,7 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.painter.renderToTexture?.needsFollowUpFrame;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

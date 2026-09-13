@@ -17,7 +17,7 @@ export type SpriteOnDemandStyleImage = {
     height: number;
     x: number;
     y: number;
-    context: CanvasRenderingContext2D;
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 };
 
 /**

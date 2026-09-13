@@ -13,8 +13,6 @@ layout(location = 3) in float a_split_index;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
-uniform lowp float u_device_pixel_ratio;
-uniform vec2 u_units_to_pixels;
 uniform float u_image_height;
 
 out vec2 v_normal;

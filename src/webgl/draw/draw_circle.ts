@@ -6,7 +6,8 @@ import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import {type OverscaledTileID} from '../../tile/tile_id.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
 import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
@@ -36,7 +37,7 @@ type SegmentsTileRenderState = {
 };
 
 export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'translucent') return;
+    if (renderOptions.currentPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
     const opacity = layer.paint.get('circle-opacity');

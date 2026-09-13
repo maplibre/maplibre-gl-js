@@ -1,4 +1,3 @@
-uniform lowp float u_device_pixel_ratio;
 uniform sampler2D u_image;
 
 flat in vec2 v_width2;

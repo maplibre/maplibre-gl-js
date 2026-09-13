@@ -1,7 +1,8 @@
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {terrainUniformValues, terrainDepthUniformValues} from '../program/terrain_program.ts';
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {Tile} from '../../tile/tile.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
@@ -52,7 +53,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOp
         const texture = painter.renderToTexture.getTexture(tile);
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
         const eleDelta = terrain.getSkirtLength(tr.zoom);
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
         const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);

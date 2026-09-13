@@ -84,8 +84,10 @@ export type * from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
- * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
+ * @deprecated MapLibre shapes Arabic and reorders bidirectional text itself, so nothing has to be
+ * loaded for right-to-left languages to be drawn correctly. A plugin set here still replaces the
+ * built-in implementation, but this will be removed in a future release.
  * @param pluginURL - URL pointing to the Mapbox RTL text plugin source.
  * @param lazy - If set to `true`, maplibre will defer loading the plugin until rtl text is encountered,
  * rtl text will then be rendered only after the plugin finishes loading.
@@ -104,6 +106,8 @@ function setRTLTextPlugin(pluginURL: string, lazy: boolean): Promise<void> {
  * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
  * If the status is `loaded` and the plugin is requested again, an error will be thrown.
  *
+ * @deprecated The status says nothing about whether right-to-left text can be drawn, which it always
+ * can be. It reports only on a plugin set through the deprecated {@link setRTLTextPlugin}.
  * @example
  * ```ts
  * const pluginStatus = getRTLTextPluginStatus();

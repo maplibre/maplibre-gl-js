@@ -9,11 +9,7 @@ uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
 uniform highp float u_size_t; // used to interpolate between zoom stops when size is a composite function
 uniform highp float u_size; // used when size is both zoom and feature constant
-uniform highp float u_camera_to_center_distance;
-uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
-uniform highp float u_aspect_ratio;
-uniform float u_fade_change;
 uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
@@ -61,7 +57,7 @@ void main() {
 
     // compute opacity and exit if too transparent:
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
-    float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
+    float fade_change = fade_opacity[1] > 0.5 ? u_symbol_fade_change : -u_symbol_fade_change;
     // Terrain can hide the ground anchor while the elevated symbol remains visible.
     float visibility = calculate_visibility(projectedPoint);
     v_total_opacity = opacity * max(0.0, min(visibility, fade_opacity[0] + fade_change));

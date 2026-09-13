@@ -88,11 +88,13 @@ mat3 rotationMatrixFromAxisAngle(vec3 u, float angle) {
 
 #ifdef TERRAIN3D
 uniform sampler2D u_terrain;
-uniform float u_terrain_dim;
-uniform mat4 u_terrain_matrix;
-uniform vec4 u_terrain_unpack;
-uniform float u_terrain_exaggeration;
 uniform highp sampler2D u_depth;
+layout(std140) uniform TerrainUBO {
+    highp mat4 u_terrain_matrix;
+    highp vec4 u_terrain_unpack;
+    highp float u_terrain_dim;
+    highp float u_terrain_exaggeration;
+};
 #endif
 
 // methods for pack/unpack depth value to texture rgba
@@ -149,7 +151,7 @@ float get_elevation(vec2 pos) {
                 return 0.0;
             }
         #endif
-        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.0;
+        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 2.0;
         vec2 f = fract(coord);
         ivec2 c = ivec2(floor(coord)); // get the pixel center
         ivec2 hi = textureSize(u_terrain, 0) - 1;
@@ -167,4 +169,23 @@ float get_elevation(vec2 pos) {
 
 const float PI = 3.141592653589793;
 
-uniform mat4 u_projection_matrix;
+#define PROJECTION_UBO
+layout(std140) uniform ProjectionUBO {
+    highp mat4 u_projection_matrix;
+    highp mat4 u_projection_fallback_matrix;
+    highp vec4 u_projection_tile_mercator_coords;
+    highp vec4 u_projection_clipping_plane;
+    highp float u_projection_transition;
+    highp int u_projection_clip_antimeridian;
+};
+layout(std140) uniform FrameUBO {
+    highp vec2 u_units_to_pixels;
+    highp vec2 u_world_size;
+    highp float u_camera_to_center_distance;
+    highp float u_symbol_fade_change;
+    highp float u_aspect_ratio;
+    highp float u_device_pixel_ratio;
+    highp vec2 u_viewport_size;
+    highp vec2 u_pixel_extrude_scale;
+    highp float u_pitch;
+};

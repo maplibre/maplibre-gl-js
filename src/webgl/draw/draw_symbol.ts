@@ -22,7 +22,8 @@ import {
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {Texture, TextureFilter} from '../texture.ts';
@@ -62,7 +63,7 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
 }, renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'translucent') return;
+    if (renderOptions.currentPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.

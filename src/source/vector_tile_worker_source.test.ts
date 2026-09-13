@@ -8,7 +8,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type IActor} from '../util/actor.ts';
 import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source.ts';
 import {WorkerTile} from './worker_tile.ts';
-import {setPerformance, sleep} from '../util/test/util.ts';
+import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {ABORT_ERROR} from '../util/abort_error.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
@@ -81,6 +81,49 @@ describe('vector tile worker source', () => {
         await expect(reloadPromise).resolves.toBeTruthy();
     });
 
+    test('VectorTileWorkerSource keeps the etag across reloadTile so the next expiry refresh can return unmodified', async () => {
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'fill'
+        }]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = () => ({vectorTile: new VectorTile(new PbfReader(rawTileData)), rawData: rawTileData});
+
+        server.respondWith(request => {
+            request.respond(200, {
+                'Content-Type': 'application/pbf',
+                'ETag': '"v1"',
+                'Cache-Control': 'max-age=300'
+            }, new ArrayBuffer(0) as any);
+        });
+
+        const params = {
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters;
+
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        const loadResult = await loadPromise;
+        const reloadResult = await source.reloadTile(params);
+        const paramsWithEtagKeptFromReload = {...params, etag: reloadResult.etag};
+        const expiryRefreshPromise = source.loadTile(paramsWithEtagKeptFromReload);
+        server.respond();
+        const expiryRefreshResult = await expiryRefreshPromise;
+
+        expect(loadResult.etag).toBe('"v1"');
+        expect(loadResult.cacheControl).toBe('max-age=300');
+        expect(reloadResult.etag).toBe('"v1"');
+        expect(reloadResult.cacheControl).toBeUndefined();
+        expect(expiryRefreshResult.etagUnmodified).toBe(true);
+    });
+
     test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {
         const rawTileData = new ArrayBuffer(0);
 
@@ -96,21 +139,7 @@ describe('vector tile worker source', () => {
             }
         }]);
 
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                return new Promise((resolve, _reject) => {
-                    const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor();
 
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
         source.loadVectorTile = (_params, _rawData) => {
@@ -186,28 +215,7 @@ describe('vector tile worker source', () => {
         }]);
 
         let sendAsyncShouldAbort = false;
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                if (sendAsyncShouldAbort) {
-                    return new Promise((_resolve, reject) => {
-                        reject('aborted by test');
-                    });
-                }
-
-                return new Promise((resolve, reject) => {
-                    const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                        reject('aborted by abortController');
-                    });
-                });
-            }
-        };
+        const actor = createFakeActor(() => sendAsyncShouldAbort);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
         source.loadVectorTile = (_params, _rawData) => {

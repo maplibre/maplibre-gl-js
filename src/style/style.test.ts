@@ -13,7 +13,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from '../util/image_request.ts';
 
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
@@ -1527,6 +1527,72 @@ describe('Style.setGlyphs', () => {
     });
 });
 
+describe('Style.setFontFaces', () => {
+    const fontFaces = {
+        'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+    };
+
+    test('applies the font faces a loading style declares', async () => {
+        const style = new Style(getStubMap());
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('reports no font faces when the style declares none', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('hands the new font faces to the glyph manager', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+
+        style.setFontFaces(fontFaces);
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('allows font faces to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        style.setFontFaces(null);
+        expect(style.getFontFaces()).toBeNull();
+
+        style.setFontFaces(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+
+        style.setFontFaces(undefined);
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('round-trips through serialize, so setState can diff them', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(style.serialize()['font-faces']).toEqual(fontFaces);
+
+        const nextFontFaces = {'Noto Sans Regular': 'https://example.com/noto.ttf'};
+        expect(style.setState(createStyleJSON({'font-faces': nextFontFaces} as any))).toBe(true);
+        expect(style.getFontFaces()).toEqual(nextFontFaces);
+
+        expect(style.setState(createStyleJSON())).toBe(true);
+        expect(style.getFontFaces()).toBeNull();
+    });
+});
+
 describe('Style.addSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
@@ -2792,6 +2858,26 @@ describe('Style.moveLayer', () => {
         style.moveLayer('b', 'b');
         expect(style._order).toEqual(['a', 'b', 'c']);
     });
+
+    test('keeps the order when the before layer does not exist', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            layers: [
+                {id: 'a', type: 'background'},
+                {id: 'b', type: 'background'}
+            ]
+        }));
+
+        await style.once('style.load');
+        const promise = style.once('error');
+        style.moveLayer('a', 'c');
+        const {error} = await promise;
+        expect(error.message).toMatch(/Cannot move layer "a" before non-existing layer "c"/);
+        expect(style.getLayersOrder()).toEqual(['a', 'b']);
+
+        style.removeLayer('a');
+        expect(style.getLayersOrder()).toEqual(['b']);
+    });
 });
 
 describe('Style.setPaintProperty', () => {
@@ -3660,6 +3746,51 @@ describe('Style.hasTransitions', () => {
         style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
         expect(style.hasTransitions()).toBe(false);
     });
+
+    test('does not transition a sky or a light that has not changed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sky: {'sky-color': 'red'},
+            light: {color: '#ff0000'},
+            layers: [{id: 'background', type: 'background'}]
+        }));
+
+        await style.once('style.load');
+        style.setPaintProperty('background', 'background-color', 'blue');
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+
+        expect(style.sky.hasTransition()).toBe(false);
+        expect(style.light.hasTransition()).toBe(false);
+    });
+
+    test('transitions the sky and the light when they are set', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky({'sky-color': 'magenta'});
+        style.setLight({color: '#ff0000'});
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+
+        expect(style.sky.hasTransition()).toBe(true);
+        expect(style.light.hasTransition()).toBe(true);
+    });
+
+    test('applies a global state change to the sky without opening a transition', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {c: {default: '#ff0000'}},
+            sky: {'sky-color': ['global-state', 'c']}
+        }));
+
+        await style.once('style.load');
+        style.setGlobalStateProperty('c', '#0000ff');
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+        style.sky.recalculate(new EvaluationParameters(0));
+
+        expect(style.sky.hasTransition()).toBe(false);
+        expect(style.sky.properties.get('sky-color')).toEqual(Color.parse('#0000ff'));
+    });
 });
 
 describe('Style.serialize', () => {
@@ -3809,6 +3940,32 @@ describe('Style.serialize', () => {
             'fog-color': '#fff'
         });
         expect(style.serialize().sky).toBeDefined();
+    });
+
+    test('does not include state property when style has no state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.serialize().state).toBeUndefined();
+    });
+
+    test('include state property for style with state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {
+                showCircles: {
+                    default: true,
+                }
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().state).toEqual({
+            showCircles: {
+                default: true,
+            },
+        });
     });
 
     test('update sky properties after setting the sky on initial load', async () => {

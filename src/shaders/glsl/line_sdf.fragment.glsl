@@ -1,5 +1,3 @@
-
-uniform lowp float u_device_pixel_ratio;
 uniform lowp float u_lineatlas_width;
 uniform sampler2D u_image;
 uniform float u_mix;

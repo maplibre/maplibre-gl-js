@@ -101,6 +101,22 @@ describe('Transitionable', () => {
 
         expect(warn.mock.calls[0][0]).toBe('layers[0].paint.text-color: Could not parse color from value \'oops blue\' Falling back to rgba(0,0,0,1).');
     });
+
+    test('setting another property does not extend a running transition past its original end, issue #8376', () => {
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', {});
+        transitionable.setValue('hillshade-exaggeration', 0.5);
+        const untransitioned = transitionable.untransitioned();
+
+        transitionable.setValue('hillshade-exaggeration', 1);
+        let transitioning = transitionable.transitioned({now: 0, transition: {duration: 300, delay: 0}}, untransitioned);
+
+        transitionable.setValue('hillshade-illumination-direction', 300);
+        transitioning = transitionable.transitioned({now: 150, transition: {duration: 300, delay: 0}}, transitioning);
+
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.75);
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 301} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
+        expect(transitioning.hasTransition()).toBe(false);
+    });
 });
 
 describe('paint property transitions between arrays of different length, issue #6606', () => {

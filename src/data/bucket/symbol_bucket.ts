@@ -23,6 +23,8 @@ import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray, LineIndexArray} from '../array_types.g.ts';
 import {transformText} from '../../symbol/transform_text.ts';
 import {mergeLines} from '../../symbol/merge_lines.ts';
+import {isCluster} from '../../util/graphemes.ts';
+import {TaggedString} from '../../symbol/tagged_string.ts';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
 import {WritingMode} from '../../symbol/shaping.ts';
 import {loadGeometry} from '../load_geometry.ts';
@@ -30,17 +32,18 @@ import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {type Anchor} from '../../symbol/anchor.ts';
-import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
+import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
+import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker.ts';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -289,11 +292,10 @@ register('CollisionBuffers', CollisionBuffers);
  *    stores the feature data for use in subsequent step (this.features).
  *
  * 2. WorkerTile asynchronously requests from the main thread all of the glyphs
- *    and icons needed (by this bucket and any others). When glyphs and icons
- *    have been received, the WorkerTile creates a CollisionIndex and invokes:
+ *    and icons needed (by this bucket and any others).
  *
- * 3. performSymbolLayout(bucket, stacks, icons) perform texts shaping and
- *    layout on a Symbol Bucket. This step populates:
+ * 3. WorkerTile calls SymbolBucket.addFeatures(), which delegates text shaping
+ *    and layout to performSymbolLayout(). This step populates:
  *      `this.symbolInstances`: metadata on generated symbols
  *      `this.collisionBoxArray`: collision data for use by foreground
  *      `this.text`: SymbolBuffers for text symbols
@@ -308,9 +310,6 @@ register('CollisionBuffers', CollisionBuffers);
  *    using a dynamic "OpacityVertexArray".
  */
 export class SymbolBucket implements Bucket {
-    static MAX_GLYPHS: number;
-    static addDynamicAttributes: typeof addDynamicAttributes;
-
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
     overscaling: number;
@@ -331,6 +330,11 @@ export class SymbolBucket implements Bucket {
     iconSizeData: SizeData;
 
     glyphOffsetArray: GlyphOffsetArray;
+    /**
+     * The glyph cap for this bucket, normally {@link MAX_GLYPHS}. Tests lower it to
+     * exercise the overflow warning without filling a bucket with 65,535 glyphs.
+     */
+    maxGlyphs: number;
     lineVertexArray: SymbolLineVertexArray;
     features: SymbolFeature[];
     symbolInstances: SymbolInstanceArray;
@@ -346,6 +350,7 @@ export class SymbolBucket implements Bucket {
     canOverlap: boolean;
     sortedAngle: number;
     featureSortOrder: number[];
+    maxHeightOffset: number;
 
     collisionCircleArray: number[];
 
@@ -370,11 +375,13 @@ export class SymbolBucket implements Bucket {
         this.index = options.index;
         this.pixelRatio = options.pixelRatio;
         this.sourceLayerIndex = options.sourceLayerIndex;
-        this.hasDependencies = false;
+        this.hasDependencies = true;
         this.hasRTLText = false;
+        this.maxHeightOffset = 0;
         this.sortKeyRanges = [];
 
         this.collisionCircleArray = [];
+        this.maxGlyphs = MAX_GLYPHS;
 
         const layer = this.layers[0];
         const unevaluatedLayoutValues = layer._unevaluatedLayout._values;
@@ -413,20 +420,43 @@ export class SymbolBucket implements Bucket {
         this.textAnchorOffsets = new TextAnchorOffsetArray();
     }
 
+    /**
+     * Collects the glyphs a label needs into `stacks`, so that the tile can ask for them.
+     *
+     * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
+     * shape it is written as. Its codepoints are asked for as well, to give layout something to draw
+     * a codepoint at a time where the cluster itself yields no glyph. See `shapeLines`.
+     *
+     * A cluster can span two sections, a letter in one and the accent written on it in the next, so
+     * the label is taken as a whole and each cluster attributed to the section its first character
+     * came from -- the same way layout attributes it. Collecting each section's text on its own
+     * would ask for glyphs no cluster is ever looked up by.
+     */
     private calculateGlyphDependencies(
-        text: string,
-        stack: {[_: number]: boolean},
+        text: Formatted,
+        stacks: Record<string, Record<string, boolean>>,
+        fontStack: string,
         textAlongLine: boolean,
-        allowVerticalPlacement: boolean,
         doesAllowVerticalWritingMode: boolean): void {
 
-        for (const char of text) {
-            stack[char.codePointAt(0)] = true;
-            if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
+        const needsVerticalForms = (textAlongLine || this.allowVerticalPlacement) && doesAllowVerticalWritingMode;
+        const tagged = TaggedString.fromFeature(text, fontStack);
+        const graphemes = tagged.graphemes();
+
+        for (let i = 0; i < graphemes.length; i++) {
+            const section = tagged.getSection(i);
+            if ('imageName' in section) continue;
+
+            const stack = stacks[section.fontStack] ||= {};
+            const grapheme = graphemes[i];
+            if (isCluster(grapheme)) stack[grapheme] = true;
+
+            for (const char of grapheme) {
+                stack[char] = true;
+                if (!needsVerticalForms) continue;
+
                 const verticalChar = verticalizedCharacterMap[char];
-                if (verticalChar) {
-                    stack[verticalChar.codePointAt(0)] = true;
-                }
+                if (verticalChar) stack[verticalChar] = true;
             }
         }
     }
@@ -479,15 +509,8 @@ export class SymbolBucket implements Bucket {
                 const resolvedTokens = layer.getValueAndResolveTokens('text-field', evaluationFeature, canonical, availableImages);
                 const formattedText = Formatted.factory(resolvedTokens);
 
-                // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
                 this.hasRTLText ||= containsRTLText(formattedText);
-                if (
-                    !this.hasRTLText || // non-rtl text so can proceed safely
-                    rtlWorkerPlugin.getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
-                    this.hasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
-                ) {
-                    text = transformText(formattedText, layer, evaluationFeature);
-                }
+                text = transformText(formattedText, layer, evaluationFeature);
             }
 
             let icon: ResolvedImage;
@@ -531,16 +554,11 @@ export class SymbolBucket implements Bucket {
                 const fontStack = textFont.evaluate(evaluationFeature, {}, canonical).join(',');
                 const textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point';
                 this.allowVerticalPlacement = this.writingModes?.includes(WritingMode.vertical);
+                const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
+                this.calculateGlyphDependencies(text, stacks, fontStack, textAlongLine, doesAllowVerticalWritingMode);
+
                 for (const section of text.sections) {
-                    if (!section.image) {
-                        const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
-                        const sectionFont = section.fontStack || fontStack;
-                        stacks[sectionFont] ||= {};
-                        this.calculateGlyphDependencies(section.text, stacks[sectionFont], textAlongLine, this.allowVerticalPlacement, doesAllowVerticalWritingMode);
-                    } else {
-                        // Add section image to the list of dependencies.
-                        icons[section.image.name] = true;
-                    }
+                    if (section.image) icons[section.image.name] = true;
                 }
             }
         }
@@ -569,10 +587,21 @@ export class SymbolBucket implements Bucket {
         });
     }
 
+    addFeatures({options, canonical, glyphMap, glyphPositions, iconMap, iconPositions, showCollisionBoxes}: BucketDependencyParameters): void {
+        performSymbolLayout({
+            bucket: this,
+            glyphMap,
+            glyphPositions,
+            imageMap: iconMap,
+            imagePositions: iconPositions,
+            showCollisionBoxes,
+            canonical,
+            subdivisionGranularity: options.subdivisionGranularity
+        });
+    }
+
     isEmpty(): boolean {
-        // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
-        // In order for the bucket to be serialized, and not discarded as an empty bucket both checks are necessary.
-        return this.symbolInstances.length === 0 && !this.hasRTLText;
+        return this.symbolInstances.length === 0;
     }
 
     uploadPending(): boolean {
@@ -966,15 +995,5 @@ export class SymbolBucket implements Bucket {
 register('SymbolBucket', SymbolBucket, {
     omit: ['layers', 'collisionBoxArray', 'features', 'compareText']
 });
-
-// this constant is based on the size of StructArray indexes used in a symbol
-// bucket--namely, glyphOffsetArrayStart
-// eg the max valid UInt16 is 65,535
-// See https://github.com/mapbox/mapbox-gl-js/issues/2907 for motivation
-// lineStartIndex and textBoxStartIndex could potentially be concerns
-// but we expect there to be many fewer boxes/lines than glyphs
-SymbolBucket.MAX_GLYPHS = 65535;
-
-SymbolBucket.addDynamicAttributes = addDynamicAttributes;
 
 export {addDynamicAttributes};

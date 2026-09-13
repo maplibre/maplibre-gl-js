@@ -1,9 +1,10 @@
-import {vi, expect, onTestFinished} from 'vitest';
+import {vi, expect, onTestFinished, type Mock} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {type Dispatcher} from '../../util/dispatcher.ts';
 import {type IActor} from '../actor.ts';
+import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {type SourceEventType} from '../../ui/events.ts';
 import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -301,12 +302,12 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
 }
 
 export function createDEM(heightFn: (x: number, y: number) => number, dim: number = 8): DEMData {
-    const stride = dim + 2;
+    const stride = dim + 4;
     const pixels = new Uint8Array(stride * stride * 4);
     for (let y = 0; y < dim; y++) {
         for (let x = 0; x < dim; x++) {
             const value = heightFn(x, y) + 32768;
-            const index = ((y + 1) * stride + x + 1) * 4;
+            const index = ((y + 2) * stride + x + 2) * 4;
             pixels[index] = Math.floor(value / 256);
             pixels[index + 1] = Math.floor(value) % 256;
             pixels[index + 2] = Math.round((value - Math.floor(value)) * 256);
@@ -324,4 +325,48 @@ export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | nul
     terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
     terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
     return terrain;
+}
+
+const fakeImages = {
+    hello: {data: {width: 1, height: 1, data: new Uint8Array([0])}, pixelRatio: 1, sdf: false, version: 0}
+};
+
+/**
+ * The glyph a {@link createFakeActor} answers a `getGlyphs` request with, keyed by the grapheme
+ * cluster layout asks for it by.
+ */
+const fakeGlyphs = {
+    'StandardFont-Bold': {
+        e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+    }
+};
+
+/**
+ * An actor that answers a worker source's requests for images and glyphs with fixtures, after a
+ * delay long enough that a test can abort the request part-way.
+ *
+ * @param shouldAbort - consulted on every request. Where it is given, the actor also rejects a
+ * request that is aborted while in flight; where it is not, an aborted request is simply never
+ * answered, as it is for a source that has moved on.
+ * @param onAbort - called whenever a request in flight is aborted
+ */
+export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => void): IActor & {sendAsync: Mock} {
+    return {
+        sendAsync: vi.fn(<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> => {
+            if (shouldAbort?.()) return Promise.reject('aborted by test');
+
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    const response = message.type === MessageType.getImages ? fakeImages : fakeGlyphs;
+                    resolve(response as RequestResponseMessageMap[T][1]);
+                }, 100);
+
+                abortController?.signal.addEventListener('abort', () => {
+                    clearTimeout(timeout);
+                    onAbort?.();
+                    if (shouldAbort) reject('aborted by abortController');
+                });
+            });
+        })
+    };
 }

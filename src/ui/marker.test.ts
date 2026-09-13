@@ -27,6 +27,14 @@ beforeEach(() => {
 });
 
 describe('marker', () => {
+    test('colors the pin of the default marker and nothing else', () => {
+        const svg = new Marker({color: '#123456'}).getElement().firstElementChild;
+        const colored = svg.querySelectorAll('[fill="#123456"]');
+        expect(colored).toHaveLength(1);
+        expect(colored[0].firstElementChild.tagName).toBe('path');
+        expect(svg.querySelector('[fill="#3FB1CE"]')).toBeNull();
+    });
+
     test('Marker uses a default marker element with an appropriate offset', () => {
         const marker = new Marker();
         expect(marker.getElement()).toBeTruthy();
@@ -474,6 +482,20 @@ describe('marker', () => {
         marker.togglePopup();
 
         expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
+    });
+
+    test('Popup follows its marker onto the same world copy when the marker crosses the antimeridian', () => {
+        const map = createMap({width: 1024});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup();
+
+        marker.setLngLat([-179, 0]);
+
+        expect(marker.getPopup().getLngLat().lng).toBe(marker.getLngLat().lng);
         map.remove();
     });
 
@@ -1319,7 +1341,10 @@ describe('marker', () => {
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
+        // On the globe the marker sits at a camera depth of ~0.9998, so a depth-buffer
+        // reading of 1 (far plane) means nothing in front of it, and 0.9 means terrain in front.
         map.terrain = createTerrain(); // Enable terrain
+        map.terrain.depthAtPoint = () => 1;
         await sleep(100); // Give time for the terrain to load
         map.fire('terrain'); // Trigger terrain event for marker
         marker.setLngLat([180, 0]);
@@ -1328,6 +1353,12 @@ describe('marker', () => {
         marker.setLngLat([0, 0]);
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
+
+        await sleep(150); // The marker drops opacity updates within 100 ms of the previous one, let that window pass
+        map.terrain.depthAtPoint = () => .9;
+        marker.setLngLat([0, 0]);
+        await sleep(100); // Give marker change time to load
+        expect(marker.getElement().style.opacity).toBe('0.3');
 
         map.remove();
     });

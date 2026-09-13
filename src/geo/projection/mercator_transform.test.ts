@@ -9,7 +9,7 @@ import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
 import {createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import type {Tile} from '../../tile/tile.ts';
 
 describe('transform', () => {
@@ -66,6 +66,44 @@ describe('transform', () => {
             transform.resize(500, 500);
             transform.setCenter(new LngLat(50, -90));
         }).not.toThrow();
+    });
+
+    test('does not throw on a zero size', () => {
+        for (const [width, height] of [[0, 500], [500, 0], [0, 0]]) {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+            expect(() => transform.resize(width, height)).not.toThrow();
+            expect(transform.width).toBe(width);
+            expect(transform.height).toBe(height);
+        }
+    });
+
+    test('does not throw when a sized transform is resized to a zero width', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        expect(() => transform.resize(0, 500)).not.toThrow();
+        expect(() => transform.setZoom(3)).not.toThrow();
+    });
+
+    test('calculates matrices again once a zero width becomes a real size', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(0, 500);
+        transform.setZoom(5);
+        transform.setPitch(30);
+        transform.setBearing(45);
+        transform.setCenter(new LngLat(10, 20));
+        transform.resize(500, 500);
+
+        const expected = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        expected.resize(500, 500);
+        expected.setZoom(5);
+        expected.setPitch(30);
+        expected.setBearing(45);
+        expected.setCenter(new LngLat(10, 20));
+
+        expect([...transform.modelViewProjectionMatrix]).toEqual([...expected.modelViewProjectionMatrix]);
+        expect([...transform.cameraPosition]).toEqual([...expected.cameraPosition]);
+        expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 10, lat: 20});
+        expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual(fixedCoord(expected.screenPointToMercatorCoordinate(new Point(250, 250))));
     });
 
     test('setLocationAt', () => {
@@ -674,6 +712,69 @@ function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCo
     expect(Math.abs(actual.x - expected.x) * worldSize).toBeLessThan(1e-3);
     expect(Math.abs(actual.y - expected.y) * worldSize).toBeLessThan(1e-3);
 }
+
+describe('MercatorTransform.calculateCameraOptionsFromTo', () => {
+    const transform = new MercatorTransform();
+    transform.resize(512, 512);
+    transform.setZoom(1); // avoid the center being constrained by the mercator latitude limits
+
+    test('look at north', () => {
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 1, lat: 1}, 0);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.center).toBeDefined();
+        expect(cameraOptions.bearing).toBeCloseTo(0);
+    });
+
+    test('look at west', () => {
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0}, 0);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.bearing).toBeCloseTo(-90);
+    });
+
+    test('pitch 45', () => {
+        // altitude same as grounddistance => 45°
+        // distance between lng x and lng x+1 is 111.2km at same lat
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 0);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.pitch).toBeCloseTo(45);
+    });
+
+    test('pitch 90', () => {
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0}, 0);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.pitch).toBeCloseTo(90);
+    });
+
+    test('pitch 153.435', () => {
+
+        // distance between lng x and lng x+1 is 111.2km at same lat
+        // (elevation difference of cam and center) / 2 = grounddistance =>
+        // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 (looking up) = 153.435
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.pitch).toBeCloseTo(153.435);
+    });
+
+    test('zoom distance 1000', () => {
+        const expectedZoom = Math.log2(transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / transform.tileSize);
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
+
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
+    });
+
+    test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
+        const expectedZoom = Math.log2(transform.cameraToCenterDistance / mercatorZfromAltitude(Math.hypot(111200, 111200), 0) / transform.tileSize);
+        const cameraOptions = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
+
+        expect(cameraOptions).toBeDefined();
+        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
+    });
+
+    test('same To as From error', () => {
+        expect(() => transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow('Can\'t calculate camera options with same From and To');
+    });
+});
 
 describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     test('matches the plane intersection for a flat DEM', () => {

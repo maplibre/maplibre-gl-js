@@ -1,18 +1,13 @@
 import {FeatureIndex} from '../data/feature_index.ts';
-import {performSymbolLayout} from '../symbol/symbol_layout.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
-import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
-import {LineBucket} from '../data/bucket/line_bucket.ts';
-import {FillBucket} from '../data/bucket/fill_bucket.ts';
-import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket.ts';
 import {warnOnce, mapObject} from '../util/util.ts';
 import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 
-import type {Bucket} from '../data/bucket.ts';
+import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
@@ -42,6 +37,11 @@ export class WorkerTile {
 
     abort: AbortController;
     vectorTile: VectorTileLike;
+    /**
+     * The etag of the response this tile was loaded from. A reload has no new response, so it is returned again
+     * to keep the main thread's tile etag intact for the next expiry refresh.
+     */
+    etag?: string;
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {
@@ -70,7 +70,7 @@ export class WorkerTile {
 
         const buckets: {[_: string]: Bucket} = {};
 
-        const options = {
+        const options: PopulateParameters = {
             featureIndex,
             iconDependencies: {},
             patternDependencies: {},
@@ -125,9 +125,7 @@ export class WorkerTile {
             }
         }
 
-        // options.glyphDependencies looks like: {"SomeFontName":{"10":true,"32":true}}
-        // this line makes an object like: {"SomeFontName":[10,32]}
-        const stacks: {[_: string]: number[]} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();
@@ -172,22 +170,21 @@ export class WorkerTile {
 
         for (const key in buckets) {
             const bucket = buckets[key];
-            if (bucket instanceof SymbolBucket) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
-                performSymbolLayout({
-                    bucket,
-                    glyphMap,
-                    glyphPositions: glyphAtlas.positions,
-                    imageMap: iconMap,
-                    imagePositions: imageAtlas.iconPositions,
-                    showCollisionBoxes: this.showCollisionBoxes,
-                    canonical: this.tileID.canonical,
-                    subdivisionGranularity: options.subdivisionGranularity
-                });
-            } else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
-            }
+            if (!bucket.hasDependencies) continue;
+
+            recalculateLayers(bucket.layers, this.zoom, availableImages);
+            bucket.addFeatures({
+                options,
+                canonical: this.tileID.canonical,
+                glyphMap,
+                glyphPositions: glyphAtlas.positions,
+                iconMap,
+                iconPositions: imageAtlas.iconPositions,
+                patternMap,
+                patternPositions: imageAtlas.patternPositions,
+                dashPositions,
+                showCollisionBoxes: this.showCollisionBoxes
+            });
         }
 
         return {

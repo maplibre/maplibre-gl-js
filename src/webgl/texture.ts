@@ -3,7 +3,7 @@ import type {RGBAImage, AlphaImage} from '../util/image.ts';
 import {premultiplyAlpha} from '../util/image.ts';
 
 export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
-export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['NEAREST'];
+export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['LINEAR_MIPMAP_LINEAR'] | WebGLRenderingContextBase['NEAREST'];
 export type TextureWrap = WebGLRenderingContextBase['REPEAT'] | WebGLRenderingContextBase['CLAMP_TO_EDGE'] | WebGLRenderingContextBase['MIRRORED_REPEAT'];
 
 type EmptyImage = {
@@ -28,7 +28,8 @@ export class Texture {
     size: [number, number];
     texture: WebGLTexture;
     format: TextureFormat;
-    filter: TextureFilter;
+    magFilter: TextureFilter;
+    minFilter: TextureFilter;
     wrap: TextureWrap;
     useMipmap: boolean;
 
@@ -65,7 +66,8 @@ export class Texture {
             this.texture = gl.createTexture();
             this._ownedHandle = this.texture;
             // A fresh handle is back on GL's defaults, so bind() has to re-apply these.
-            this.filter = undefined;
+            this.magFilter = undefined;
+            this.minFilter = undefined;
             this.wrap = undefined;
         }
 
@@ -114,7 +116,7 @@ export class Texture {
             }
         }
 
-        if (this.useMipmap) {
+        if (this.useMipmap && !(hasDataProperty(image) && image.data === null)) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
@@ -143,7 +145,7 @@ export class Texture {
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
     }
 
-    bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null): void {
+    bind(magFilter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null): void {
         const {context} = this;
         const {gl} = context;
 
@@ -153,14 +155,19 @@ export class Texture {
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-        if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.useMipmap) {
+        if ((minFilter === gl.LINEAR_MIPMAP_NEAREST || minFilter === gl.LINEAR_MIPMAP_LINEAR) && !this.useMipmap) {
             minFilter = gl.LINEAR;
         }
+        const effectiveMinFilter = minFilter || magFilter;
 
-        if (filter !== this.filter) {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter || filter);
-            this.filter = filter;
+        if (magFilter !== this.magFilter) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, magFilter);
+            this.magFilter = magFilter;
+        }
+
+        if (effectiveMinFilter !== this.minFilter) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, effectiveMinFilter);
+            this.minFilter = effectiveMinFilter;
         }
 
         if (wrap !== this.wrap) {
@@ -168,6 +175,17 @@ export class Texture {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
             this.wrap = wrap;
         }
+    }
+
+    /**
+     * Builds the mip chain after the texture was drawn into as a framebuffer attachment.
+     * An allocation without pixels (`data: null`) gets no chain from `update`, so a render target is built once, here, after the draw.
+     */
+    generateMipmap(): void {
+        if (!this.useMipmap) return;
+        const {gl} = this.context;
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.generateMipmap(gl.TEXTURE_2D);
     }
 
     destroy(): void {

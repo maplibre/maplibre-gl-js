@@ -105,6 +105,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             const resourceTiming = this._finishRequestTiming(timing);
 
             workerTile.vectorTile = vectorTile;
+            workerTile.etag = tileResponse.etag;
             this.tileState.markLoaded(uid, workerTile);
             const parsingState = {rawData, cacheControl, resourceTiming};
             this.tileState.setParsing(uid, parsingState);
@@ -138,8 +139,12 @@ export class VectorTileWorkerSource implements WorkerSource {
             // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
             result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
             this.tileState.removeParsing(workerTile.uid);
+        } else if (workerTile.etag) {
+            // Reload: return the stored etag since the main thread overwrites the tile's etag with every
+            // result (#3309). cacheControl/expires are deliberately not re-sent: the main thread anchors
+            // max-age to the time it receives them, and the tile's expiration already survives a reload.
+            result = extend(result, {etag: workerTile.etag});
         }
-        // else: this seems like a missing case where cache control is lost? see #3309
 
         return result;
     }

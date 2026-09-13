@@ -13,7 +13,8 @@ import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {LineBucket} from '../../data/bucket/line_bucket.ts';
@@ -140,7 +141,7 @@ function bindGradientAndDashTextures(
 }
 
 export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'translucent') return;
+    if (renderOptions.currentPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
