@@ -109,7 +109,7 @@ export type StyleOptions = {
      */
     localIdeographFontFamily?: string | false;
     /**
-     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if setGlobalStateProperty was called after loading the style.
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the style.
      */
     globalState?: Record<string, any>;
 };
@@ -123,7 +123,7 @@ export type StyleSetterOptions = {
      */
     validate?: boolean;
     /**
-     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if setGlobalStateProperty was called after loading the style.
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the style.
      */
     globalState?: Record<string, any>;
 };
