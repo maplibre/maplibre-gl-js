@@ -150,7 +150,12 @@ export type MapLayerEventType = {
  * });
  * ```
  */
-export type MapEventType = {
+// This must stay an `interface`. Consumers rely on declaration merging to declare events
+// MapLibre does not ship itself - for example `draw.create` from `mapbox-gl-draw` - and a
+// `type` alias cannot be merged into.
+// See https://github.com/maplibre/maplibre-gl-js/issues/8419
+// eslint-disable-next-line local/prefer-type-for-data-shapes
+export interface MapEventType {
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
@@ -448,7 +453,7 @@ export type MapEventType = {
      * Fired when map's projection is modified in other ways than by map being moved.
      */
     projectiontransition: MapProjectionEvent;
-};
+}
 
 /**
  * `SourceEventType` - a mapping between the source data event names and their event value.
