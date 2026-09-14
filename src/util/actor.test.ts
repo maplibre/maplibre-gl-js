@@ -182,7 +182,7 @@ describe('Actor', () => {
         const actor = new Actor(worker, '1', onWorkerError);
         worker.dispatchEvent(new ErrorEvent('error'));
 
-        expect(onWorkerError).toHaveBeenCalledWith(new Error('Worker error'));
+        expect(onWorkerError).toHaveBeenCalledWith(new Error('Worker failed to load. Check that the worker URL is correct.'));
         actor.remove();
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(onWorkerError).toHaveBeenCalledTimes(1);

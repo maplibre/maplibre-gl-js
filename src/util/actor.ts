@@ -85,7 +85,7 @@ export class Actor implements IActor {
         this.invoker = new ThrottledInvoker(() => this.process());
         this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
         if (onWorkerError) {
-            this.workerErrorSubscription = subscribe(this.target, 'error', () => onWorkerError(new Error('Worker error')), false);
+            this.workerErrorSubscription = subscribe(this.target, 'error', () => onWorkerError(new Error('Worker failed to load. Check that the worker URL is correct.')), false);
         }
         this.globalScope = isWorker(self) ? target : window;
     }
