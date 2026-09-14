@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `setStyle` calling `Map.setTerrain` with the wrong `this`, which made a terrain change in a style diff throw ([#8451](https://github.com/maplibre/maplibre-gl-js/pull/8451)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.9.1
