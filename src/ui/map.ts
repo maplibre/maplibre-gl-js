@@ -819,7 +819,7 @@ export class Map extends Evented<MapEventType> {
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.depthDirty = true;
+            this.painter.markTerrainDepthDirty();
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
@@ -3012,6 +3012,9 @@ export class Map extends Evented<MapEventType> {
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
             this.style.triggerSymbolPlacement();
+        }
+        if (isTerrainSourceEvent && event.tile) {
+            this.painter.markTerrainDepthDirty();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));

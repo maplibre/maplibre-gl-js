@@ -61,6 +61,26 @@ describe('render', () => {
         expect(terrainDepth).toHaveBeenCalled();
     });
 
+    test('redraws cached terrain depth once after deferred invalidations', ({onTestFinished}) => {
+        const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {}).mockClear();
+        onTestFinished(() => terrainDepth.mockRestore());
+        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.markTerrainDepthDirty();
+        painter.markTerrainDepthDirty();
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
+    });
+
     test('uses terrain data for regular Mercator draws', () => {
         const {tileID, terrainData, getTerrainData} = mockTerrainData();
 
