@@ -335,11 +335,7 @@ export class GlobeTransform implements ITransform {
             return;
         }
         this._verticalPerspectiveTransform._calcMatrices();
-
-        const autoCalculateNearFarZ = this._helper._autoCalculateNearFarZ;
-        this._helper._autoCalculateNearFarZ = autoCalculateNearFarZ && !this.isGlobeRendering;
-        this._mercatorTransform._calcMatrices();
-        this._helper._autoCalculateNearFarZ = autoCalculateNearFarZ;
+        this._mercatorTransform._calcMatrices(this.autoCalculateNearFarZ && !this.isGlobeRendering);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {

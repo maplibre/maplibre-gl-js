@@ -678,10 +678,7 @@ export class MercatorTransform implements ITransform {
         return {center: toMercator.toLngLat(), elevation: altitudeTo, zoom, pitch, bearing};
     }
 
-    _calculateNearFarZIfNeeded(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
-        if (!this._helper.autoCalculateNearFarZ) {
-            return;
-        }
+    _calculateNearFarZ(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
         const minRenderDistanceBelowCameraInMeters = 100;
         const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
@@ -720,7 +717,12 @@ export class MercatorTransform implements ITransform {
         this._helper._nearZ = this._helper._height / 50;
     }
 
-    _calcMatrices(): void {
+    /**
+     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the helper already
+     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing transform such as {@link GlobeTransform}
+     * overrides it so that its two children share a single depth range.
+     */
+    _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
@@ -729,7 +731,9 @@ export class MercatorTransform implements ITransform {
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
         const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
 
-        this._calculateNearFarZIfNeeded(cameraToSeaLevelDistance, limitedPitchRadians, offset);
+        if (calculateNearFarZ) {
+            this._calculateNearFarZ(cameraToSeaLevelDistance, limitedPitchRadians, offset);
+        }
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
