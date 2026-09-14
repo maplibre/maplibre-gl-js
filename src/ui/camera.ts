@@ -17,7 +17,8 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
+import type {EaseToHandlerResult, ICameraHelper} from '../geo/projection/camera_helper.ts';
+import type {RollPitchBearing} from '../util/util.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -126,6 +127,13 @@ export type CameraState = {
     pitch: number;
     roll: number;
     elevation: number;
+    padding: PaddingOptions;
+};
+
+/** Normalized camera values and the projection-specific handler that applies them. */
+type EaseToPlan = EaseToHandlerResult & {
+    start: RollPitchBearing;
+    end: RollPitchBearing;
     padding: PaddingOptions;
 };
 
@@ -749,37 +757,20 @@ export class Camera extends Evented<MapEventType> {
         }
 
         const tr = this.transform.clone();
-        const bearing = options.bearing !== undefined ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
-        const pitch = options.pitch !== undefined ? +options.pitch : tr.pitch;
-        const roll = options.roll !== undefined ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;
-        const padding = options.padding ?? tr.padding;
         const anchorLocation = options.anchorLocation === undefined ? undefined : LngLat.convert(options.anchorLocation);
         const anchorScreenPoint = anchorLocation === undefined ? undefined :
             (options.anchorScreenPoint === undefined ? tr.locationToScreenPoint(anchorLocation) : Point.convert(options.anchorScreenPoint));
-        let zoom = options.zoom;
-        if (zoom !== undefined && this._zoomSnap) zoom = evaluateZoomSnap(+zoom, this._zoomSnap);
 
         if (this.terrain) {
             const elevationCenter = options.center ? LngLat.convert(options.center) : tr.center;
             tr.setElevation(this.terrain.getElevationForLngLat(elevationCenter, tr));
         }
 
-        const handler = this.cameraHelper.handleEaseTo(tr, {
-            bearing,
-            pitch,
-            roll,
-            padding,
-            around: anchorLocation,
-            aroundPoint: anchorScreenPoint,
-            offsetAsPoint: new Point(0, 0),
-            offset: [0, 0],
-            zoom,
-            center: options.center
-        });
-        handler.easeFunc(1);
+        const easeToPlan = this._prepareEaseTo(tr, options, tr.bearing, anchorLocation, anchorScreenPoint);
+        easeToPlan.easeFunc(1);
 
         if (this.terrain && options.elevation === undefined) {
-            tr.setElevation(this.terrain.getElevationForLngLat(handler.elevationCenter, tr));
+            tr.setElevation(this.terrain.getElevationForLngLat(easeToPlan.elevationCenter, tr));
         } else if (options.elevation !== undefined) {
             tr.setElevation(+options.elevation);
         }
@@ -820,30 +811,12 @@ export class Camera extends Evented<MapEventType> {
             easing: defaultEasing
         }, options);
 
-        if (options.zoom !== undefined && this._zoomSnap) {
-            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
-        }
-
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) {
             options.duration = 0;
         }
 
         const tr = this.getTransformForUpdate();
-        const startBearing = this.getBearing(),
-            startPitch = tr.pitch,
-            startRoll = tr.roll,
-            bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
-            pitch = options.pitch !== undefined ? +options.pitch : startPitch,
-            roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll,
-            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
-        const offsetAsPoint = Point.convert(options.offset);
-
-        let around, aroundPoint;
-
-        if (options.around) {
-            around = LngLat.convert(options.around);
-            aroundPoint = tr.locationToScreenPoint(around);
-        }
+        const easeToPlan = this._prepareEaseTo(tr, options, this.getBearing(), options.around);
 
         const currently = {
             moving: this._moving,
@@ -853,33 +826,20 @@ export class Camera extends Evented<MapEventType> {
             rolling: this._rolling
         };
 
-        const easeHandler = this.cameraHelper.handleEaseTo(tr, {
-            bearing,
-            pitch,
-            roll,
-            padding,
-            around,
-            aroundPoint,
-            offsetAsPoint,
-            offset: options.offset,
-            zoom: options.zoom,
-            center: options.center,
-        });
-
-        this._rotating ||= (startBearing !== bearing);
-        this._pitching ||= (pitch !== startPitch);
-        this._rolling ||= (roll !== startRoll);
-        this._padding = !tr.isPaddingEqual(padding);
-        this._zooming ||= easeHandler.isZooming;
+        this._rotating ||= (easeToPlan.start.bearing !== easeToPlan.end.bearing);
+        this._pitching ||= (easeToPlan.start.pitch !== easeToPlan.end.pitch);
+        this._rolling ||= (easeToPlan.start.roll !== easeToPlan.end.roll);
+        this._padding = !tr.isPaddingEqual(easeToPlan.padding);
+        this._zooming ||= easeToPlan.isZooming;
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
         if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter);
+            this._prepareElevation(easeToPlan.elevationCenter);
         }
 
         this._ease((k) => {
-            easeHandler.easeFunc(k);
+            easeToPlan.easeFunc(k);
 
             if (this.terrain && !options.freezeElevation) this._updateElevation(k);
             this.applyUpdatedTransform(tr);
@@ -891,6 +851,39 @@ export class Camera extends Evented<MapEventType> {
         }, options);
 
         return this;
+    }
+
+    /**
+     * Normalizes a camera update and creates the projection-specific handler that can apply it to
+     * the supplied transform without starting an animation or firing events.
+     */
+    _prepareEaseTo(tr: ITransform, options: EaseToOptions | CameraCalculationOptions, startBearing: number, around?: LngLatLike, aroundPoint?: PointLike): EaseToPlan {
+        const start = {bearing: startBearing, pitch: tr.pitch, roll: tr.roll};
+        const end = {
+            bearing: options.bearing !== undefined ? this._normalizeBearing(+options.bearing, start.bearing) : start.bearing,
+            pitch: options.pitch !== undefined ? +options.pitch : start.pitch,
+            roll: options.roll !== undefined ? this._normalizeBearing(+options.roll, start.roll) : start.roll
+        };
+        const padding = (options.padding ?? tr.padding) as PaddingOptions;
+        const offset = 'offset' in options ? options.offset ?? [0, 0] : [0, 0];
+        const anchorLocation = around === undefined ? undefined : LngLat.convert(around);
+        const anchorScreenPoint = anchorLocation === undefined ? undefined :
+            (aroundPoint === undefined ? tr.locationToScreenPoint(anchorLocation) : Point.convert(aroundPoint));
+        let zoom = options.zoom;
+        if (zoom !== undefined && this._zoomSnap) zoom = evaluateZoomSnap(+zoom, this._zoomSnap);
+
+        const handler = this.cameraHelper.handleEaseTo(tr, {
+            ...end,
+            padding,
+            around: anchorLocation,
+            aroundPoint: anchorScreenPoint,
+            offsetAsPoint: Point.convert(offset),
+            offset,
+            zoom,
+            center: options.center
+        });
+
+        return {...handler, start, end, padding};
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,
