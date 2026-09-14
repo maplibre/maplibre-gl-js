@@ -8,6 +8,8 @@ import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {type Map} from '../map.ts';
+import {Painter} from '../../render/painter.ts';
+import {MapSourceDataEvent} from '../events.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -110,40 +112,44 @@ describe('setTerrain', () => {
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
     });
 
-    test('redraws the depth framebuffer when a terrain source tile arrives, but not for a tile from another source', async () => {
+    test('invalidates terrain depth only for tiles from the terrain source', async ({onTestFinished}) => {
+        onTestFinished(() => map.remove());
         await map.once('load');
+        const terrainLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'terrainrgb' && e.sourceDataType === 'metadata');
+        const otherLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'other' && e.sourceDataType === 'metadata');
         map.addSource('terrainrgb', {
             type: 'raster-dem',
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
+        map.addSource('other', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/other/{z}/{x}/{y}.png']
+        });
+        await Promise.all([terrainLoaded, otherLoaded]);
+
+        const markTerrainDepthDirty = vi.spyOn(Painter.prototype, 'markTerrainDepthDirty');
+        onTestFinished(() => markTerrainDepthDirty.mockRestore());
         map.setTerrain({source: 'terrainrgb'});
-        const terrainDepth = vi.spyOn(map.painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
-        map._render(0);
-        terrainDepth.mockClear();
-        map._render(0);
-        expect(terrainDepth).not.toHaveBeenCalled();
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
+        markTerrainDepthDirty.mockClear();
 
-        map._terrainDataCallback({
-            dataType: 'source',
-            sourceId: 'other',
-            sourceDataType: 'content',
-            source: {type: 'geojson'},
-            tile: {tileID: new OverscaledTileID(0, 0, 0, 0, 0)}
-        } as any);
-        map._render(0);
-        expect(terrainDepth).not.toHaveBeenCalled();
+        const terrainSource = map.getSource('terrainrgb');
+        const otherSource = map.getSource('other');
+        if (!terrainSource || !otherSource) throw new Error('Expected both DEM sources to be set');
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = {tileID};
 
-        map._terrainDataCallback({
-            dataType: 'source',
-            sourceId: 'terrainrgb',
-            sourceDataType: 'content',
-            source: {type: 'raster-dem'},
-            tile: {tileID: new OverscaledTileID(0, 0, 0, 0, 0)}
-        } as any);
-        map._render(0);
-        expect(terrainDepth).toHaveBeenCalledTimes(1);
-        map._render(0);
-        expect(terrainDepth).toHaveBeenCalledTimes(1);
+        otherSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID}));
+        expect(markTerrainDepthDirty).not.toHaveBeenCalled();
+
+        terrainSource.fire(new MapSourceDataEvent('data', {sourceDataType: 'content'}));
+        expect(markTerrainDepthDirty).not.toHaveBeenCalled();
+
+        terrainSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID}));
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
+
+        terrainSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID, sourceDataType: 'content'}));
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(2);
     });
 
     test('re-places symbols when terrain is set', async () => {
