@@ -688,6 +688,12 @@ export class Marker extends Evented<MarkerEventType> {
      * preserving the previous opacity when terrain is present and the globe does not hide the marker.
      */
     _updateOpacity(force: boolean = false, readTerrainDepth: boolean = true): void {
+        const {width, height} = this._map._camera.transform;
+        if (!this._pos || this._pos.x < 0 || this._pos.y < 0 || this._pos.x > width || this._pos.y > height) {
+            // Nothing to compute for a marker the viewport does not show.
+            return;
+        }
+
         const terrain = this._map?.terrain;
         const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
