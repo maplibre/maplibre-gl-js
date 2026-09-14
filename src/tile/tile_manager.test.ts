@@ -2698,6 +2698,20 @@ describe('TileManager / etag', () => {
 });
 
 describe('TileManager content elevation', () => {
+    test('scans loaded tiles only for data-driven symbol-height-offset', () => {
+        const tileManager = createTileManager();
+        const getBucket = vi.fn().mockReturnValue({maxHeightOffset: 0});
+        const constantLayer = {type: 'symbol', source: tileManager.id, isHidden: () => false, layout: {get: () => ({constantOr: () => 100, isConstant: () => true})}};
+        const dataDrivenLayer = {type: 'symbol', source: tileManager.id, isHidden: () => false, layout: {get: () => ({constantOr: () => 0, isConstant: () => false})}};
+        tileManager.map = {style: {_layers: {constantLayer, dataDrivenLayer}}} as any;
+        tileManager.transform = new MercatorTransform();
+        tileManager._inViewTiles.getAllTiles = () => [{getBucket}] as any;
+
+        expect(tileManager._updateMaxContentElevation()).toBe(100);
+        expect(getBucket).toHaveBeenCalledTimes(1);
+        expect(getBucket).toHaveBeenCalledWith(dataDrivenLayer);
+    });
+
     test.each(['resetMaxContentElevation', 'clearTiles'] as const)(
         'preserves expanded tile coverage after unloading until %s', async (reset) => {
             const map = globalCreateMap({
