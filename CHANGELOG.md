@@ -1,9 +1,19 @@
 ## main
 ### ✨ Features and improvements
+- Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
+- Speed up merging adjacent `symbol-placement: line` features that share a label, which took time quadratic in the number of features that chain together ([#8436](https://github.com/maplibre/maplibre-gl-js/pull/8436)) (by [@cherenkov](https://github.com/cherenkov))
+- Convert the `fill-extrusion-rounded-corner-distance` rounding distance to tile units once per tile instead of once per feature ([#8435](https://github.com/maplibre/maplibre-gl-js/pull/8435)) (by [@cherenkov](https://github.com/cherenkov))
 - Add `Map#calculateCameraOptions` to calculate a complete camera state without mutating or rendering the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix raster tiles getting stuck at the start of a fade-in until the map moves. ([#8430](https://github.com/maplibre/maplibre-gl-js/pull/8430)) (by [@Kanahiro](https://github.com/Kanahiro))
+- Fix `fill-extrusion-vertical-gradient` disappearing over 3D terrain, where the gradient was computed from the extrusion's height above sea level instead of its own height ([#8410](https://github.com/maplibre/maplibre-gl-js/pull/8410)) (by [@ArcSolver](https://github.com/ArcSolver))
+- Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix 3D terrain reading elevation from the wrong part of a parent DEM tile while the deepest DEM tile is still loading ([#8407](https://github.com/maplibre/maplibre-gl-js/pull/8407)) (by [@ArcSolver](https://github.com/ArcSolver))
+- Align 3D terrain DEM sampling with hillshade and color-relief at cell centres ([#8420](https://github.com/maplibre/maplibre-gl-js/pull/8420)) (by [@ArcSolver](https://github.com/ArcSolver))
+- Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
+- Fix `fill-extrusion-rounded-corner-distance` rounding every feature twice, which over-rounded the corners and inflated the vertex count ([#8429](https://github.com/maplibre/maplibre-gl-js/pull/8429)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ## 6.9.0
@@ -21,6 +31,7 @@
 - Treat camera options passed as `undefined` as not given in `jumpTo`, `easeTo` and `flyTo`; they were coerced to NaN ([#8373](https://github.com/maplibre/maplibre-gl-js/pull/8373)) (by [@vlumi](https://github.com/vlumi))
 - Fix a `Not implemented.` error that broke panning and zooming when the projection was changed while the camera was moving, on maps with terrain enabled or a `transformCameraUpdate` callback ([#8351](https://github.com/maplibre/maplibre-gl-js/issues/8351)) (by [@lazerg](https://github.com/lazerg))
 - Fix a map created inside a hidden container staying at the `400x300` fallback size when the container is shown before the resize observer's first notification is delivered ([#8277](https://github.com/maplibre/maplibre-gl-js/issues/8277)) (by [@spliffone](https://github.com/spliffone))
+- Fix `Map#project` returning an incorrect on-screen point for a location behind the camera. It now returns a point outside the viewport, on the side through which the location left the screen, so DOM markers and popups are moved off-screen as expected. ([#8292](https://github.com/maplibre/maplibre-gl-js/issues/8292)) (by [@schickm](https://github.com/schickm))
 - Fix `MercatorTransform` throwing when it is resized to a zero width, and skip the matrix calculation of every projection while the transform has a zero width or height ([#8374](https://github.com/maplibre/maplibre-gl-js/pull/8374)) (by [@avosa](https://github.com/avosa))
 - Fix every style update opening a redundant sky and light transition, which kept `idle` from firing for the transition duration after the map was otherwise done, and could ease the sky and the light on a different curve from the layers ([#8348](https://github.com/maplibre/maplibre-gl-js/issues/8348)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix DOM sanitization for iframe and srcdoc ([#8396](https://github.com/maplibre/maplibre-gl-js/pull/8396)) (by [@HarelM](https://github.com/HarelM))
@@ -43,6 +54,7 @@
 - Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251)) (by [@patte](https://github.com/patte))
 - Fix a gap between the sky and the ground at high pitch while globe transitions to mercator ([#7382](https://github.com/maplibre/maplibre-gl-js/issues/7382)) (by [@birkskyum](https://github.com/birkskyum))
 - Treat an empty tile response (e.g. HTTP 204) as no data: raster-DEM tiles now load without elevation instead of failing with a `dem dimension mismatch` error, and empty raster tiles render as transparent ([#1551](https://github.com/maplibre/maplibre-gl-js/issues/1551)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Read the map container's dimensions before mutating it in `Map#_setupContainer`, avoiding a forced synchronous layout reflow on every map initialization ([#8307](https://github.com/maplibre/maplibre-gl-js/issues/8307)) (by [@lazerg](https://github.com/lazerg))
 - Validate the `before` layer in `map.moveLayer` before reordering, so passing the id of a layer that does not exist leaves the layer order untouched instead of dropping the moved layer out of it ([#8301](https://github.com/maplibre/maplibre-gl-js/issues/8301)) (by [@lazerg](https://github.com/lazerg))
 - Fix visible seams between hillshade tiles when using linear interpolation. ([#8302](https://github.com/maplibre/maplibre-gl-js/pull/8302)) (by [@Turbo87](https://github.com/Turbo87))
 - Fix the map freezing when a render task throws an error ([#6093](https://github.com/maplibre/maplibre-gl-js/issues/6093)) (by [@UberMouse](https://github.com/UberMouse))

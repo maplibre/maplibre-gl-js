@@ -36,7 +36,7 @@ import type {SubdivisionGranularitySetting} from '../../render/subdivision_granu
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
-import {roundPolygonCorners} from './round_polygon_corners.ts';
+import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -106,7 +106,8 @@ export class FillExtrusionBucket implements Bucket {
 
         const globalProperties = new EvaluationParameters(this.zoom);
         const layer = this.layers[0];
-        const roundedCornerDistance = layer.layout.get('fill-extrusion-rounded-corner-distance');
+        const roundedCornerDistanceInMeters = layer.layout.get('fill-extrusion-rounded-corner-distance');
+        const roundedCornerDistance = roundedCornerDistanceInMeters > 0 ? getTileUnitsForMeters(roundedCornerDistanceInMeters, canonical) : 0;
         const needGeometry = layer._featureFilter.needGeometry;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
@@ -115,7 +116,7 @@ export class FillExtrusionBucket implements Bucket {
             if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 
             const rawGeometry = needGeometry ? evaluationFeature.geometry : loadGeometry(feature);
-            const geometry = roundedCornerDistance > 0 ? roundPolygonCorners(rawGeometry, roundedCornerDistance, canonical) : rawGeometry;
+            const geometry = roundPolygonCornersIfNeeded(rawGeometry, roundedCornerDistance);
 
             const bucketFeature: BucketFeature = {
                 id,
@@ -179,11 +180,7 @@ export class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting): void {
-        const layer = this.layers[0];
-        const roundedCornerDistance = layer.layout ? layer.layout.get('fill-extrusion-rounded-corner-distance') : 0;
-        const processedGeometry = roundedCornerDistance > 0 ? roundPolygonCorners(geometry, roundedCornerDistance, canonical) : geometry;
-
-        for (const polygon of classifyRings(processedGeometry, EARCUT_MAX_RINGS)) {
+        for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
             const oldVertexCount = this.layoutVertexArray.length;
