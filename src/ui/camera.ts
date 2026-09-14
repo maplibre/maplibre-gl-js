@@ -865,7 +865,7 @@ export class Camera extends Evented<MapEventType> {
             roll: options.roll !== undefined ? this._normalizeBearing(+options.roll, start.roll) : start.roll
         };
         const padding = (options.padding ?? tr.padding) as PaddingOptions;
-        const offset = 'offset' in options ? options.offset ?? [0, 0] : [0, 0];
+        const offset: PointLike = 'offset' in options ? options.offset ?? [0, 0] : [0, 0];
         const anchorLocation = around === undefined ? undefined : LngLat.convert(around);
         const anchorScreenPoint = anchorLocation === undefined ? undefined :
             (aroundPoint === undefined ? tr.locationToScreenPoint(anchorLocation) : Point.convert(aroundPoint));
