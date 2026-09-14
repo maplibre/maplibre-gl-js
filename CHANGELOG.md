@@ -1,12 +1,14 @@
 ## main
 ### ✨ Features and improvements
 - Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
+- Speed up merging adjacent `symbol-placement: line` features that share a label, which took time quadratic in the number of features that chain together ([#8436](https://github.com/maplibre/maplibre-gl-js/pull/8436)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix 3D terrain reading elevation from the wrong part of a parent DEM tile while the deepest DEM tile is still loading ([#8407](https://github.com/maplibre/maplibre-gl-js/pull/8407)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
+- Fix `fill-extrusion-rounded-corner-distance` rounding every feature twice, which over-rounded the corners and inflated the vertex count ([#8429](https://github.com/maplibre/maplibre-gl-js/pull/8429)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix misplaced markers and popups after terrain loads or the globe is dragged, and markers remaining dimmed after projection changes. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
 - _...Add new stuff here..._
 
