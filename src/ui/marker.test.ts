@@ -1153,6 +1153,7 @@ describe('marker', () => {
         vi.spyOn(global, 'setTimeout');
         vi.spyOn(global, 'clearTimeout');
         const map = createMap();
+        await map.once('load');
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
@@ -1175,7 +1176,8 @@ describe('marker', () => {
             .setLngLat([1, 1])
             .addTo(map);
 
-        expect(map._oneTimeListeners.render).toBeUndefined();
+        // added while the map loads: the opacity read waits for the next render
+        expect(map._oneTimeListeners.render).toHaveLength(1);
 
         map.fire('terrain');
         expect(map._oneTimeListeners.render).toHaveLength(1);
@@ -1242,6 +1244,27 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Reads the terrain depth after the next render when added while the map loads', async () => {
+        const map = createMap({width: 1024});
+        await map.once('load');
+        map.terrain = createTerrain();
+        map.terrain.depthAtPoint = () => 0; // the depth buffer has not been drawn yet
+        let loaded = false;
+        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        expect(marker.getElement().style.opacity).toBe('');
+
+        map.terrain.depthAtPoint = () => 1; // the next frame draws the terrain behind the marker
+        loaded = true;
+        map.triggerRepaint();
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.remove();
+    });
+
     test('Applies the globe occlusion while the map loads after a projection change', async () => {
         const map = createMap({width: 1024});
         await map.once('load');
@@ -1300,6 +1323,7 @@ describe('marker', () => {
 
     test('Marker changes opacity behind terrain and when terrain is removed', async () => {
         const map = createMap();
+        await map.once('load');
         vi.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95); // Mocking distance to marker
         const marker = new Marker()
             .setLngLat([0, 0])
@@ -1333,6 +1357,7 @@ describe('marker', () => {
 
     test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', async () => {
         const map = createMap();
+        await map.once('load');
         vi.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95); // Mocking distance to marker
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
@@ -1349,6 +1374,7 @@ describe('marker', () => {
 
     test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
         const map = createMap();
+        await map.once('load');
         vi.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95); // Mocking distance to marker
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
@@ -1363,8 +1389,9 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', () => {
+    test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
         const map = createMap();
+        await map.once('load');
         map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         map.terrain = createTerrain();
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
@@ -1451,8 +1478,9 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Does not open a popup when behind 3d terrain', () => {
+    test('Does not open a popup when behind 3d terrain', async () => {
         const map = createMap();
+        await map.once('load');
         map._camera.transform.lngLatToCameraDepth = () => .95;
         map.terrain = createTerrain();
         const marker = new Marker()
@@ -1566,8 +1594,9 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Adds maplibregl-marker-covered class when marker is covered by 3d terrain', () => {
+    test('Adds maplibregl-marker-covered class when marker is covered by 3d terrain', async () => {
         const map = createMap();
+        await map.once('load');
         vi.spyOn(MercatorTransform.prototype, 'lngLatToCameraDepth').mockImplementation((_lngLat, _ele) => 0.95);
         map.terrain = createTerrain();
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker

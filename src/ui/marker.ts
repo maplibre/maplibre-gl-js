@@ -736,14 +736,14 @@ export class Marker extends Evented<MarkerEventType> {
 
     /**
      * @internal
-     * Positions the marker immediately. For map events or updates during camera movement, schedules the opacity check
-     * after rendering so it uses the updated terrain depth buffer. A setter on a stationary map checks opacity
-     * synchronously using the existing depth buffer, since an idle map may not render again.
+     * Positions the marker immediately. For map events, or while the map is moving or loading, schedules the opacity
+     * check after the next render so it reads a depth buffer drawn for the current state. A setter on a stationary,
+     * loaded map checks opacity synchronously against the displayed frame, since an idle map may not render again.
      */
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' }): void => {
         if (!this._map) return;
         this._updatePosition(e);
-        if (e || this._map.isMoving()) {
+        if (e || this._map.isMoving() || !this._map.loaded()) {
             this._map.once('render', this._updateAfterRender);
         } else {
             this._updateOpacity();
