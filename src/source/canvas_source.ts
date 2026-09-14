@@ -4,6 +4,7 @@ import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
+import {ensureError} from '../util/util.ts';
 
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -107,33 +108,38 @@ export class CanvasSource extends ImageSource {
     }
 
     async load(): Promise<void> {
-        this._loaded = true;
-        this.canvas ||= (this.options.canvas instanceof HTMLCanvasElement) ?
-            this.options.canvas :
-            document.getElementById(this.options.canvas) as HTMLCanvasElement;
-        // cast to HTMLCanvasElement in else of ternary
-        // should we do a safety check and throw if it's not actually HTMLCanvasElement?
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
+        try {
+            this._loaded = true;
+            this.canvas ||= (this.options.canvas instanceof HTMLCanvasElement) ?
+                this.options.canvas :
+                document.getElementById(this.options.canvas) as HTMLCanvasElement;
+            // cast to HTMLCanvasElement in else of ternary
+            // should we do a safety check and throw if it's not actually HTMLCanvasElement?
+            this.width = this.canvas.width;
+            this.height = this.canvas.height;
 
-        if (this._hasInvalidDimensions()) {
-            this.fire(new ErrorEvent(new Error('Canvas dimensions cannot be less than or equal to zero.')));
-            return;
-        }
-
-        this.play = function() {
-            this._playing = true;
-            this.map.triggerRepaint();
-        };
-
-        this.pause = function() {
-            if (this._playing) {
-                this.prepare();
-                this._playing = false;
+            if (this._hasInvalidDimensions()) {
+                this.fire(new ErrorEvent(new Error('Canvas dimensions cannot be less than or equal to zero.')));
+                return;
             }
-        };
 
-        this._finishLoading();
+            this.play = function() {
+                this._playing = true;
+                this.map.triggerRepaint();
+            };
+
+            this.pause = function() {
+                if (this._playing) {
+                    this.prepare();
+                    this._playing = false;
+                }
+            };
+
+            this._finishLoading();
+        } catch (err) {
+            this._loaded = true;
+            this.fire(new ErrorEvent(ensureError(err)));
+        }
     }
 
     /**
