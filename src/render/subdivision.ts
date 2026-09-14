@@ -612,10 +612,7 @@ class Subdivider {
         let subdividedTriangles: number[];
         try {
             const earcutResult = earcut(flattened, holeIndices);
-            for (let i = 0; i < earcutResult.length; i++) {
-                earcutResult[i] = inputRemap[earcutResult[i]];
-            }
-            subdividedTriangles = this._subdivideTrianglesScanline(earcutResult);
+            subdividedTriangles = this._subdivideTrianglesScanline(remapIndices(earcutResult, inputRemap));
         } catch (e) {
             console.error(e);
         }
@@ -905,6 +902,19 @@ function flatten(polygon: Point[][]): {
         flattened,
         holeIndices
     };
+}
+
+/**
+ * Returns a copy of `indices` where every index is replaced by `remap[index]`.
+ * @param indices - Indices into the array `remap` was built for.
+ * @param remap - The replacement for each index.
+ */
+function remapIndices(indices: number[], remap: number[]): number[] {
+    const remapped = new Array(indices.length);
+    for (let i = 0; i < indices.length; i++) {
+        remapped[i] = remap[indices[i]];
+    }
+    return remapped;
 }
 
 /**
