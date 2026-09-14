@@ -293,8 +293,8 @@ export class MercatorTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, constrain: boolean, forceOverrideZ?: boolean): void {
-        this._helper.apply(that, constrain, forceOverrideZ);
+    public apply(that: IReadonlyTransform, constrain: boolean): void {
+        this._helper.apply(that, constrain);
     }
 
     public get cameraPosition(): vec3 { return this._cameraPosition; }
