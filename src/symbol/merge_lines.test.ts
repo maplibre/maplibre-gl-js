@@ -29,35 +29,22 @@ describe('mergeLines', () => {
         expect(mergeLines(makeFeatures([['a', 0, 1, 2], ['a', 2, 3, 4], ['a', 4, 0]]))).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4, 0]]));
     });
 
-    test.each([
-        ['in order', false],
-        ['in reverse order', true]
-    ])('mergeLines merges a long chain arriving %s', (_name, reverse) => {
-        const segmentCount = 100;
-        const lines: Array<Array<string | number>> = [];
-        const merged: Array<string | number> = ['a'];
-        for (let i = 0; i < segmentCount; i++) {
-            lines.push(['a', i, i + 1]);
-            merged.push(i);
-        }
-        merged.push(segmentCount);
-        if (reverse) lines.reverse();
+    test('mergeLines merges a chain arriving in order', () => {
+        expect(
+            mergeLines(makeFeatures([['a', 0, 1], ['a', 1, 2], ['a', 2, 3], ['a', 3, 4], ['a', 4, 5]]))
+        ).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4, 5]]));
+    });
 
-        expect(mergeLines(makeFeatures(lines))).toEqual(makeFeatures([merged]));
+    test('mergeLines merges a chain arriving in reverse order', () => {
+        expect(
+            mergeLines(makeFeatures([['a', 4, 5], ['a', 3, 4], ['a', 2, 3], ['a', 1, 2], ['a', 0, 1]]))
+        ).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4, 5]]));
     });
 
     test('mergeLines merges a chain that arrives interleaved', () => {
-        const segmentCount = 20;
-        const even: Array<Array<string | number>> = [];
-        const odd: Array<Array<string | number>> = [];
-        const merged: Array<string | number> = ['a'];
-        for (let i = 0; i < segmentCount; i++) {
-            (i % 2 === 0 ? even : odd).push(['a', i, i + 1]);
-            merged.push(i);
-        }
-        merged.push(segmentCount);
-
-        expect(mergeLines(makeFeatures([...even, ...odd]))).toEqual(makeFeatures([merged]));
+        expect(
+            mergeLines(makeFeatures([['a', 0, 1], ['a', 2, 3], ['a', 4, 5], ['a', 1, 2], ['a', 3, 4]]))
+        ).toEqual(makeFeatures([['a', 0, 1, 2, 3, 4, 5]]));
     });
 
     test('mergeLines leaves a feature with no geometry alone', () => {

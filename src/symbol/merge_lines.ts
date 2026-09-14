@@ -40,32 +40,32 @@ function joinChunks(line: MergedLine): Point[] {
     return points;
 }
 
+function mergeFromRight(merged: MergedLine[], rightIndex: Record<string, number>, leftKey: string, rightKey: string, line: MergedLine) {
+    const i = rightIndex[leftKey];
+    delete rightIndex[leftKey];
+    rightIndex[rightKey] = i;
+
+    const target = merged[i];
+    target.last.next = line.first;
+    target.last = line.last;
+    return i;
+}
+
+function mergeFromLeft(merged: MergedLine[], leftIndex: Record<string, number>, leftKey: string, rightKey: string, line: MergedLine) {
+    const i = leftIndex[rightKey];
+    delete leftIndex[rightKey];
+    leftIndex[leftKey] = i;
+
+    const target = merged[i];
+    line.last.next = target.first;
+    target.first = line.first;
+    return i;
+}
+
 export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
-    const leftIndex: {[_: string]: number} = {};
-    const rightIndex: {[_: string]: number} = {};
+    const leftIndex: Record<string, number> = {};
+    const rightIndex: Record<string, number> = {};
     const merged: MergedLine[] = [];
-
-    function mergeFromRight(leftKey: string, rightKey: string, line: MergedLine) {
-        const i = rightIndex[leftKey];
-        delete rightIndex[leftKey];
-        rightIndex[rightKey] = i;
-
-        const target = merged[i];
-        target.last.next = line.first;
-        target.last = line.last;
-        return i;
-    }
-
-    function mergeFromLeft(leftKey: string, rightKey: string, line: MergedLine) {
-        const i = leftIndex[rightKey];
-        delete leftIndex[rightKey];
-        leftIndex[leftKey] = i;
-
-        const target = merged[i];
-        line.last.next = target.first;
-        target.first = line.first;
-        return i;
-    }
 
     for (const feature of features) {
         const text = feature.text ? feature.text.toString() : null;
@@ -83,8 +83,8 @@ export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
 
         if ((leftKey in rightIndex) && (rightKey in leftIndex) && (rightIndex[leftKey] !== leftIndex[rightKey])) {
             // found lines with the same text adjacent to both ends of the current line, merge all three
-            const j = mergeFromLeft(leftKey, rightKey, line);
-            const i = mergeFromRight(leftKey, rightKey, merged[j]);
+            const j = mergeFromLeft(merged, leftIndex, leftKey, rightKey, line);
+            const i = mergeFromRight(merged, rightIndex, leftKey, rightKey, merged[j]);
 
             delete leftIndex[leftKey];
             delete rightIndex[rightKey];
@@ -94,11 +94,11 @@ export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
 
         } else if (leftKey in rightIndex) {
             // found mergeable line adjacent to the start of the current line, merge
-            mergeFromRight(leftKey, rightKey, line);
+            mergeFromRight(merged, rightIndex, leftKey, rightKey, line);
 
         } else if (rightKey in leftIndex) {
             // found mergeable line adjacent to the end of the current line, merge
-            mergeFromLeft(leftKey, rightKey, line);
+            mergeFromLeft(merged, leftIndex, leftKey, rightKey, line);
 
         } else {
             // no adjacent lines, add as a new item
