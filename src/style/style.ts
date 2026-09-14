@@ -109,6 +109,10 @@ export type StyleOptions = {
      * Forces a full update.
      */
     localIdeographFontFamily?: string | false;
+    /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the style.
+     */
+    globalState?: Record<string, any>;
 };
 
 /**
@@ -119,6 +123,10 @@ export type StyleSetterOptions = {
      * Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      */
     validate?: boolean;
+    /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the style.
+     */
+    globalState?: Record<string, any>;
 };
 
 /**
@@ -235,6 +243,7 @@ export class Style extends Evented<MapEventType> {
     _layerOrderChanged: boolean;
     _symbolPlacementTriggered: boolean;
     _placedProjectionTransition: number;
+    _initialGlobalState: Record<string, any>;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -265,6 +274,7 @@ export class Style extends Evented<MapEventType> {
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         this._setInitialValues();
+        this._initialGlobalState = options.globalState;
 
         this._resetUpdates();
 
@@ -301,6 +311,7 @@ export class Style extends Evented<MapEventType> {
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._imagesListDirty = false;
+        this._initialGlobalState = {};
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -362,13 +373,16 @@ export class Style extends Evented<MapEventType> {
         this._checkLoaded();
 
         const changedGlobalStateRefs = [];
+        const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(this._initialGlobalState)]);
 
-        for (const propertyName in newStylesheetState) {
-            const didChange = !deepEqual(this._globalState[propertyName], newStylesheetState[propertyName].default);
+        for (const propertyName of propertyNames) {
+            // Initial global state has priority over global state defaults defined in the map style
+            const propertyValue = this._initialGlobalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
+            const didChange = !deepEqual(this._globalState[propertyName], propertyValue);
 
             if (didChange) {
                 changedGlobalStateRefs.push(propertyName);
-                this._globalState[propertyName] = newStylesheetState[propertyName].default;
+                this._globalState[propertyName] = propertyValue;
             }
         }
 
@@ -862,6 +876,7 @@ export class Style extends Evented<MapEventType> {
             return false;
         }
 
+        this._initialGlobalState = options.globalState ?? {};
         for (const styleChangeOperation of operations.operations) {
             styleChangeOperation();
         }

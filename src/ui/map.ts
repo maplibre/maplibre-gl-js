@@ -2670,6 +2670,12 @@ export class Map extends Evented<MapEventType> {
      *       ]
      *   })
      * });
+     *
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   globalState: {
+     *     showCircles: true,
+     *   }
+     * });
      * ```
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
