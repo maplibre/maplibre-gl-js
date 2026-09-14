@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Fire a `contextmenu` map event on long press for touch devices ([#373](https://github.com/maplibre/maplibre-gl-js/issues/373)) (by [@kirthi-b](https://github.com/kirthi-b))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
