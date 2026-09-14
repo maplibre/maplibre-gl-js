@@ -1,4 +1,4 @@
-import {type PossiblyEvaluated, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
+import {type PossiblyEvaluated, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
 import {Evented} from '../util/evented.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
@@ -37,14 +37,7 @@ export class Sky extends Evented {
             'atmosphere-blend': 0,
         };
 
-        for (const name in sky) {
-            const value = sky[name];
-            if (name.endsWith(TRANSITION_SUFFIX)) {
-                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof SkyProps, value);
-            } else {
-                this._transitionable.setValue(name as keyof SkyProps, value);
-            }
-        }
+        this._transitionable.setValues(sky);
     }
 
     getSky(): SkySpecification {
