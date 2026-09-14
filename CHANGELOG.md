@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix hillshade rendering artifacts on mobile GPUs at high zoom levels ([#8431](https://github.com/maplibre/maplibre-gl-js/pull/8431)) (by [@Turbo87](https://github.com/Turbo87))
 - _...Add new stuff here..._
 
 ## 6.9.1
