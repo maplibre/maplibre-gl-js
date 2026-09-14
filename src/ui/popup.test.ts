@@ -8,6 +8,8 @@ import {type PositionAnchor} from './anchor.ts';
 
 const containerWidth = 512;
 const containerHeight = 512;
+// The pixel translate of a popup element: `translate(-50%,-100%) translate(10px,20px)`
+const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
 
 function createMap(options?) {
     options ||= {};
@@ -373,6 +375,21 @@ describe('popup', () => {
             .setLngLat([0, 0]);
 
         expect(popup._pos).toEqual(map.project([0, 0]));
+    });
+
+    test('Popup whose location is behind the camera is not positioned inside the viewport', () => {
+        const map = createMap({maxPitch: 85, pitch: 80, zoom: 10, center: [0, 0]});
+        const popup = new Popup()
+            .setLngLat([0, -2])
+            .setText('Test')
+            .addTo(map);
+
+        const [, x, y] = popup.getElement().style.transform.match(translateRegex);
+        expect(parseFloat(x)).toBeGreaterThanOrEqual(0);
+        expect(parseFloat(x)).toBeLessThanOrEqual(containerWidth);
+        expect(parseFloat(y)).toBeGreaterThan(containerHeight);
+
+        map.remove();
     });
 
     test('Popup anchors as specified by the anchor option', () => {
