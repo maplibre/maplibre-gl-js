@@ -205,6 +205,9 @@ export class Program<Us extends UniformBindings> {
         if (this.failedToCreate) return;
 
         context.program.set(this.program);
+        context.projectionUniformBuffer.bind();
+        context.terrainUniformBuffer.bind();
+        context.frameUniformBuffer.bind();
         context.setDepthMode(depthMode);
         context.setStencilMode(stencilMode);
         context.setColorMode(colorMode);

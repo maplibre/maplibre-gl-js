@@ -1,0 +1,35 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128,
+      "description": "The native circle remains visible after a custom layer clears shared uniform-buffer bindings, including on a subsequent frame with unchanged uniforms.",
+      "operations": [
+        ["addCustomLayer", "unbind-uniform-buffers", "native-circle"],
+        ["redraw"]
+      ]
+    }
+  },
+  "center": [0, 0],
+  "zoom": 1,
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "data": {"type": "Point", "coordinates": [0, 0]}
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "native-circle",
+      "type": "circle",
+      "source": "point",
+      "paint": {"circle-radius": 32, "circle-color": "red"}
+    }
+  ]
+}
