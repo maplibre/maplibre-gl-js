@@ -14,6 +14,9 @@ type MapOptions = {
     renderWorldCopies?: boolean;
 };
 
+// The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
+const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
+
 function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
@@ -1097,6 +1100,25 @@ describe('marker', () => {
 
         const finalRotation = marker.getElement().style.transform.match(rotationRegex)[1];
         expect(initialRotation).not.toBe(finalRotation);
+
+        map.remove();
+    });
+
+    test('Marker whose location is behind the camera is not positioned inside the viewport', () => {
+        const map = createMap();
+        map.setMaxPitch(85);
+        map.setZoom(10);
+        map.setCenter([0, 0]);
+        map.setPitch(80);
+
+        const marker = new Marker()
+            .setLngLat([0, -2])
+            .addTo(map);
+
+        const [, x, y] = marker.getElement().style.transform.match(translateRegex);
+        expect(parseFloat(x)).toBeGreaterThanOrEqual(0);
+        expect(parseFloat(x)).toBeLessThanOrEqual(map.getContainer().clientWidth);
+        expect(parseFloat(y)).toBeGreaterThan(map.getContainer().clientHeight);
 
         map.remove();
     });
