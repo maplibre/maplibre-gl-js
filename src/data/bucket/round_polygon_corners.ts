@@ -11,8 +11,8 @@ import type {CanonicalTileID} from '../../tile/tile_id.ts';
  * @param polygon - Collection of polygon rings (outer ring and hole rings)
  * @param distanceInTileUnits - Corner rounding distance in tile units, as returned by {@link getTileUnitsForMeters}
  */
-export function roundPolygonCorners(polygon: Point[][], distanceInTileUnits: number): Point[][] {
-    if (distanceInTileUnits <= 0) {
+export function roundPolygonCornersIfNeeded(polygon: Point[][], distanceInTileUnits: number): Point[][] {
+    if (distanceInTileUnits <= 0 || !polygon || polygon.length === 0) {
         return polygon;
     }
 

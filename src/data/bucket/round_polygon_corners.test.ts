@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {getTileUnitsForMeters, roundPolygonCorners} from './round_polygon_corners.ts';
+import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
 
 function round(p: Point):GeoJSON.Position {
@@ -18,7 +18,7 @@ const square = [
     new Point(0, 0)
 ];
 
-describe('roundPolygonCorners', () => {
+describe('roundPolygonCornersIfNeeded', () => {
     const canonical = new CanonicalTileID(10, 500, 300);
     const tileUnits = (distanceInMeters: number) => getTileUnitsForMeters(distanceInMeters, canonical);
 
@@ -31,7 +31,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(0));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(0));
         expect(output).toBe(input);
     });
 
@@ -44,7 +44,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(-1));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(-1));
         expect(output).toBe(input);
     });
 
@@ -55,18 +55,18 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(10));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(10));
         expect(output).toStrictEqual(input);
     });
 
     test('collapses every arc back onto its corner when the distance is below one tile unit', () => {
-        const output = roundPolygonCorners([square], tileUnits(0.1));
+        const output = roundPolygonCornersIfNeeded([square], tileUnits(0.1));
 
         expect(output[0].map(round)).toEqual(square.map(round));
     });
 
     test('rounds corners of a square polygon into arc vertices', () => {
-        const output = roundPolygonCorners([square], tileUnits(2));
+        const output = roundPolygonCornersIfNeeded([square], tileUnits(2));
         const points = output[0].map(round);
 
         expect(points).toEqual([
@@ -76,7 +76,7 @@ describe('roundPolygonCorners', () => {
     });
 
     test('clamps corner rounding distance to 20% of edge length when requested distance is large', () => {
-        const output = roundPolygonCorners([square], tileUnits(1000));
+        const output = roundPolygonCornersIfNeeded([square], tileUnits(1000));
         const points = output[0].map(round);
 
         expect(points).toEqual([
@@ -95,7 +95,7 @@ describe('roundPolygonCorners', () => {
         ]];
 
         for (const distance of [0.5, 1, 2, 5, 50, 1000]) {
-            for (const ring of roundPolygonCorners(input, tileUnits(distance))) {
+            for (const ring of roundPolygonCornersIfNeeded(input, tileUnits(distance))) {
                 for (const point of ring) {
                     expect(point.x).toBe(Math.round(point.x));
                     expect(point.y).toBe(Math.round(point.y));
@@ -113,7 +113,7 @@ describe('roundPolygonCorners', () => {
             new Point(1000, -100)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(1000));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(1000));
         const points = output[0].map(round);
 
         expect(points).toEqual([
@@ -140,7 +140,7 @@ describe('roundPolygonCorners', () => {
             new Point(1200, 200)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(1000));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(1000));
         const points = output[0].map(round);
 
         expect(points).not.toContainEqual([2000, -100]);
@@ -148,7 +148,7 @@ describe('roundPolygonCorners', () => {
     });
 
     test('drops arc points that collapse onto their neighbour', () => {
-        const output = roundPolygonCorners([square], tileUnits(2));
+        const output = roundPolygonCornersIfNeeded([square], tileUnits(2));
         const ring = output[0];
 
         for (let i = 1; i < ring.length; i++) {
@@ -165,7 +165,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(5));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(5));
         const points = output[0].map(round);
 
         expect(points).toEqual([[0, 0], [100, 0], [0, 0.4], [0, 0]]);
@@ -181,7 +181,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(5));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(5));
         const points = output[0].map(round);
 
         expect(points).toEqual([
@@ -198,7 +198,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, tileUnits(5));
+        const output = roundPolygonCornersIfNeeded(input, tileUnits(5));
         const points = output[0].map(round);
 
         expect(points).toEqual([
