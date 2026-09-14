@@ -67,7 +67,6 @@
     "@types/nise": "^1.4.5",
     "@types/node": "^26.5.1",
     "@types/offscreencanvas": "^2019.7.3",
-    "@types/pixelmatch": "^7.1.0",
     "@types/pngjs": "^6.0.5",
     "@types/request": "^2.48.13",
     "@types/shuffle-seed": "^1.1.3",
