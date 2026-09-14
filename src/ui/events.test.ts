@@ -1,10 +1,9 @@
 import {describe, expect, test} from 'vitest';
-import {ErrorEvent, Event, Evented} from '../util/evented.ts';
-import type {MapEventType} from './events.ts';
+import {Event, Evented} from '../util/evented.ts';
 
 /**
- * An event MapLibre does not ship itself. This stands in for the events fired by a
- * third-party plugin on the map instance - `mapbox-gl-draw`, for example, fires
+ * Events MapLibre does not ship itself. These stand in for the events a third-party
+ * plugin fires on the map instance - `mapbox-gl-draw`, for example, fires
  * `draw.create` / `draw.update` / `draw.delete`.
  */
 class DrawCreateEvent extends Event<'draw.create'> {
@@ -16,9 +15,31 @@ class DrawCreateEvent extends Event<'draw.create'> {
     }
 }
 
+class DrawDeleteEvent extends Event<'draw.delete'> {}
+
 /**
- * The consumer-side escape hatch this file exists to pin down. Applications write the
- * same thing against the published package:
+ * An event map declared as an `interface` rather than a `type` alias, which is what
+ * consumers need in order to extend it. This is deliberately a local stand-in for
+ * {@link MapEventType} rather than an augmentation of it: augmenting the real type would
+ * add a fictional event to the public API surface and to the generated documentation.
+ *
+ * On its own, this declaration is the regression guard - before
+ * https://github.com/maplibre/maplibre-gl-js/issues/8419 an `interface` could not satisfy
+ * the `Evented` type parameter at all:
+ *
+ * ```
+ * error TS2344: Type 'PluginEventType' does not satisfy the constraint 'EventTypeMap'.
+ *   Index signature for type 'string' is missing in type 'PluginEventType'.
+ * ```
+ */
+// eslint-disable-next-line local/prefer-type-for-data-shapes
+interface PluginEventType {
+    'draw.create': DrawCreateEvent;
+}
+
+/**
+ * A second declaration of the same interface, which TypeScript merges into the first.
+ * This is the mechanism consumers use against the published package:
  *
  * ```ts
  * declare module 'maplibre-gl' {
@@ -27,26 +48,21 @@ class DrawCreateEvent extends Event<'draw.create'> {
  *     }
  * }
  * ```
- *
- * It compiles only because `MapEventType` is an `interface`; a `type` alias cannot be
- * merged into. See https://github.com/maplibre/maplibre-gl-js/issues/8419
  */
-declare module './events.ts' {
-    // eslint-disable-next-line local/prefer-type-for-data-shapes
-    interface MapEventType {
-        'draw.create': DrawCreateEvent;
-    }
+// eslint-disable-next-line local/prefer-type-for-data-shapes
+interface PluginEventType {
+    'draw.delete': DrawDeleteEvent;
 }
 
-class MapEventEmitter extends Evented<MapEventType> {}
+class PluginEmitter extends Evented<PluginEventType> {}
 
-describe('MapEventType declaration merging', () => {
-    test('an event added by a consumer is accepted, and its payload is inferred', () => {
-        const emitter = new MapEventEmitter();
+describe('extending an event map by declaration merging', () => {
+    test('an interface can be used as an event map, and infers its payloads', () => {
+        const emitter = new PluginEmitter();
         const received: object[][] = [];
 
         // `ev` is inferred as DrawCreateEvent - reading `.features` off it is what proves
-        // the payload survived the merge rather than collapsing to a union or to `any`.
+        // the payload type survived rather than collapsing to a union or to `any`.
         emitter.on('draw.create', (ev) => {
             received.push(ev.features);
         });
@@ -55,20 +71,20 @@ describe('MapEventType declaration merging', () => {
         expect(received).toEqual([[{id: 'polygon-1'}]]);
     });
 
-    test('built-in events still infer their own payload', () => {
-        const emitter = new MapEventEmitter();
-        const messages: string[] = [];
+    test('an event added by a second, merged declaration is also accepted', () => {
+        const emitter = new PluginEmitter();
+        const seen: string[] = [];
 
-        emitter.on('error', (ev) => {
-            messages.push(ev.error.message);
+        emitter.on('draw.delete', (ev) => {
+            seen.push(ev.type);
         });
-        emitter.fire(new ErrorEvent(new Error('boom')));
+        emitter.fire(new DrawDeleteEvent('draw.delete'));
 
-        expect(messages).toEqual(['boom']);
+        expect(seen).toEqual(['draw.delete']);
     });
 
     test('merging does not loosen the event map', () => {
-        const emitter = new MapEventEmitter();
+        const emitter = new PluginEmitter();
 
         // cspell:ignore craete
         // @ts-expect-error - a misspelled event name is still rejected
