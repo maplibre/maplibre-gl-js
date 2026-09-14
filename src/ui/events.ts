@@ -134,28 +134,34 @@ export type MapLayerEventType = {
 };
 
 /**
- * `MapEventType` - a mapping between the event name and the event value.
- * These events are used with the {@link Map.on} method.
- * When using a `layerId` with {@link Map.on} method, please refer to {@link MapLayerEventType}.
- * The following example can be used for all the events.
+ * `CustomMapEventType` - events added by consumers, empty by default.
+ *
+ * Declaration merging into this interface is how an application or a plugin types events
+ * MapLibre does not fire itself. `mapbox-gl-draw`, for example, fires `draw.create` /
+ * `draw.update` / `draw.delete` on the map instance:
+ *
+ * ```ts
+ * declare module 'maplibre-gl' {
+ *     interface CustomMapEventType {
+ *         'draw.create': DrawCreateEvent;
+ *     }
+ * }
+ * ```
  *
  * @group Event Related
- * @example
- * ```ts
- * // Initialize the map
- * let map = new Map({ // map options });
- * // Set an event listener
- * map.on('the-event-name', () => {
- *   console.log('An event has occurred!');
- * });
- * ```
  */
-// This must stay an `interface`. Consumers rely on declaration merging to declare events
-// MapLibre does not ship itself - for example `draw.create` from `mapbox-gl-draw` - and a
-// `type` alias cannot be merged into.
-// See https://github.com/maplibre/maplibre-gl-js/issues/8419
 // eslint-disable-next-line local/prefer-type-for-data-shapes
-export interface MapEventType {
+export interface CustomMapEventType {}
+
+/**
+ * `MapEventTypeBase` - the events MapLibre fires itself.
+ *
+ * Consumers extend {@link CustomMapEventType} rather than this; {@link MapEventType} is
+ * the combination of the two.
+ *
+ * @group Event Related
+ */
+export type MapEventTypeBase = {
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
@@ -453,7 +459,29 @@ export interface MapEventType {
      * Fired when map's projection is modified in other ways than by map being moved.
      */
     projectiontransition: MapProjectionEvent;
-}
+};
+
+/**
+ * `MapEventType` - a mapping between the event name and the event value.
+ * These events are used with the {@link Map.on} method.
+ * When using a `layerId` with {@link Map.on} method, please refer to {@link MapLayerEventType}.
+ * The following example can be used for all the events.
+ *
+ * @group Event Related
+ * @example
+ * ```ts
+ * // Initialize the map
+ * let map = new Map({ // map options });
+ * // Set an event listener
+ * map.on('the-event-name', () => {
+ *   console.log('An event has occurred!');
+ * });
+ * ```
+ */
+export type MapEventType = {
+    [K in keyof (MapEventTypeBase & CustomMapEventType)]:
+    (MapEventTypeBase & CustomMapEventType)[K];
+};
 
 /**
  * `SourceEventType` - a mapping between the source data event names and their event value.
