@@ -34,12 +34,6 @@ class Subdivider {
      * Map of "vertex x and y coordinate" to "index of such vertex".
      */
     private _vertexDictionary: Map<number, number> = new Map<number, number>();
-
-    /**
-     * Index into the vertex buffer for each input vertex, in the order `flatten` produced them.
-     */
-    private _inputRemap: number[] = [];
-
     private _used: boolean = false;
 
     private readonly _canonical: CanonicalTileID;
@@ -425,13 +419,14 @@ class Subdivider {
     /**
      * Generates an outline for a given polygon, returns a list of arrays of line indices.
      */
-    private _generateOutline(polygon: Point[][], ringStarts: number[]): number[][] {
+    private _generateOutline(polygon: Point[][], inputRemap: number[]): number[][] {
         const subdividedLines: number[][] = [];
-        for (let r = 0; r < polygon.length; r++) {
-            const ring = polygon[r];
+        let ringStart = 0;
+        for (const ring of polygon) {
             const pathIndices = this._granularity < 2 ?
-                this._ringPathIndices(ring, ringStarts[r]) :
+                this._ringPathIndices(ring, ringStart, inputRemap) :
                 this._pointArrayToIndices(subdivideVertexLine(ring, this._granularity, true));
+            ringStart += ring.length;
             // Points returned by subdivideVertexLine are "path" waypoints,
             // for example with indices 0 1 2 3 0.
             // We need list of individual line segments for rendering,
@@ -447,18 +442,13 @@ class Subdivider {
     }
 
     /**
-     * Path indices of an unsubdivided ring, read from `_inputRemap`; empty and closed as `subdivideVertexLine` would make it.
+     * The outline path `subdivideVertexLine(ring, granularity, true)` returns when the granularity is too low to
+     * subdivide, as vertex buffer indices rather than points, read from `inputRemap` instead of looked up per point.
      */
-    private _ringPathIndices(ring: Point[], start: number): number[] {
-        if (ring.length < 2) {
-            return [];
-        }
-        const indices: number[] = [];
-        for (let i = 0; i < ring.length; i++) {
-            indices.push(this._inputRemap[start + i]);
-        }
-        if (ringIsOpen(ring)) {
-            indices.push(this._inputRemap[start]);
+    private _ringPathIndices(ring: Point[], start: number, inputRemap: number[]): number[] {
+        const indices = inputRemap.slice(start, start + ring.length);
+        if (indices.length >= 2 && ringIsOpen(ring)) {
+            indices.push(indices[0]);
         }
         return indices;
     }
@@ -591,11 +581,14 @@ class Subdivider {
 
     /**
      * Adds all vertices in the supplied flattened vertex buffer into the internal vertex buffer.
+     * @returns The index into the internal vertex buffer for each input vertex, in the order `flatten` produced them.
      */
-    private _initializeVertices(flattened: number[]) {
+    private _initializeVertices(flattened: number[]): number[] {
+        const inputRemap: number[] = [];
         for (let i = 0; i < flattened.length; i += 2) {
-            this._inputRemap.push(this._vertexToIndex(flattened[i], flattened[i + 1]));
+            inputRemap.push(this._vertexToIndex(flattened[i], flattened[i + 1]));
         }
+        return inputRemap;
     }
 
     /**
@@ -612,15 +605,17 @@ class Subdivider {
         this._used = true;
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
-        const {flattened, holeIndices, ringStarts} = flatten(polygon);
-        this._initializeVertices(flattened);
+        const {flattened, holeIndices} = flatten(polygon);
+        const inputRemap = this._initializeVertices(flattened);
 
         // Subdivide triangles
         let subdividedTriangles: number[];
         try {
             const earcutResult = earcut(flattened, holeIndices);
-            const cut = this._convertIndices(earcutResult);
-            subdividedTriangles = this._subdivideTrianglesScanline(cut);
+            for (let i = 0; i < earcutResult.length; i++) {
+                earcutResult[i] = inputRemap[earcutResult[i]];
+            }
+            subdividedTriangles = this._subdivideTrianglesScanline(earcutResult);
         } catch (e) {
             console.error(e);
         }
@@ -628,7 +623,7 @@ class Subdivider {
         // Subdivide lines
         let subdividedLines: number[][] = [];
         if (generateOutlineLines) {
-            subdividedLines = this._generateOutline(polygon, ringStarts);
+            subdividedLines = this._generateOutline(polygon, inputRemap);
         }
 
         // Ensure no vertex has the special value used for pole vertices
@@ -688,17 +683,6 @@ class Subdivider {
             filtered.push(indices[i], indices[i + 1]);
         }
         return filtered;
-    }
-
-    /**
-     * Maps indices into the flattened input vertices to indices into the deduplicated vertex buffer.
-     */
-    private _convertIndices(oldIndices: number[]): number[] {
-        const newIndices = new Array(oldIndices.length);
-        for (let i = 0; i < oldIndices.length; i++) {
-            newIndices[i] = this._inputRemap[oldIndices[i]];
-        }
-        return newIndices;
     }
 
     /**
@@ -893,19 +877,16 @@ function ringIsOpen(ring: Point[]): boolean {
 
 /**
  * Takes a polygon as an array of point rings, returns a flattened array of the X,Y coordinates of these points.
- * Also creates an array of hole indices, which `earcut` needs, and the index of each ring's first vertex.
+ * Also creates an array of hole indices. Both returned arrays are required for `earcut`.
  */
 function flatten(polygon: Point[][]): {
     flattened: number[];
     holeIndices: number[];
-    ringStarts: number[];
 } {
     const holeIndices = [];
     const flattened = [];
-    const ringStarts = [];
 
     for (const ring of polygon) {
-        ringStarts.push(flattened.length / 2);
         if (ring.length === 0) {
             continue;
         }
@@ -922,8 +903,7 @@ function flatten(polygon: Point[][]): {
 
     return {
         flattened,
-        holeIndices,
-        ringStarts
+        holeIndices
     };
 }
 
