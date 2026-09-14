@@ -52,6 +52,17 @@ export class Sky extends Evented {
         return this._transitioning.hasTransition();
     }
 
+    /**
+     * Reads the properties that read one of the changed global state keys in `refs` again, transitioning each from
+     * the value it had under `priorGlobalState`, a copy of the state from before the change.
+     */
+    updateGlobalState(refs: string[], priorGlobalState: Record<string, any>, parameters: TransitionParameters): void {
+        this._transitioning.retainGlobalState(refs, priorGlobalState);
+        if (this._transitionable.rereadGlobalState(refs)) {
+            this.updateTransitions(parameters);
+        }
+    }
+
     recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }

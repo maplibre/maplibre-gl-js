@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
+- Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
