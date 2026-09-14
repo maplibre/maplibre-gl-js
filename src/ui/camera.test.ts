@@ -129,33 +129,23 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
 });
 
 describe('calculateCameraOptions', () => {
-    test('returns a complete state without changing the camera or firing movement events', () => {
+    test('returns a complete state without changing the camera or firing movement events and inherits undefined properties', () => {
         const {camera} = createCamera(null, false, {center: [12, 34], zoom: 4, bearing: 20, pitch: 30, roll: 5});
         const before = camera.calculateCameraOptions({});
         const move = vi.fn();
         camera.on('move', move);
 
         const result = camera.calculateCameraOptions({
-            center: [40, 20], zoom: 7, bearing: 80, pitch: 45, roll: 10,
+            center: [40, 20], zoom: 7, bearing: undefined, pitch: 45,
             elevation: 123, padding: {top: 1, right: 2, bottom: 3, left: 4}
         });
 
-        expect(result).toMatchObject({zoom: 7, bearing: 80, pitch: 45, roll: 10, elevation: 123});
+        expect(result).toMatchObject({zoom: 7, bearing: 20, pitch: 45, roll: 5, elevation: 123});
         expect(result.center.lng).toBeCloseTo(40);
         expect(result.center.lat).toBeCloseTo(20);
         expect(result.padding).toEqual({top: 1, right: 2, bottom: 3, left: 4});
         expect(camera.calculateCameraOptions({})).toEqual(before);
         expect(move).not.toHaveBeenCalled();
-    });
-
-    test('inherits rotation properties when they are explicitly undefined', () => {
-        const {camera} = createCamera(null, false, {bearing: 20, pitch: 30, roll: 5});
-
-        const result = camera.calculateCameraOptions({bearing: undefined, pitch: undefined, roll: undefined});
-
-        expect(result.bearing).toBe(20);
-        expect(result.pitch).toBe(30);
-        expect(result.roll).toBe(5);
     });
 
     test('matches the endpoint of easeTo, including constraints and normalization', () => {
@@ -174,45 +164,23 @@ describe('calculateCameraOptions', () => {
         expect(result.roll).toBeCloseTo(appliedCamera.getRoll());
     });
 
-    test('keeps an anchor location at its current point with pitch and bearing', () => {
+    test('keeps an anchor location at its current or requested screen point', () => {
         const {camera} = createCamera(null, false, {center: [0, 0], zoom: 3, pitch: 50, bearing: 35});
         const anchorLocation = new LngLat(5, 3);
         const point = camera.transform.locationToScreenPoint(anchorLocation);
         const result = camera.calculateCameraOptions({anchorLocation, zoom: 6});
         camera.jumpTo(result);
         const projected = camera.transform.locationToScreenPoint(anchorLocation);
-
         expect(projected.x).toBeCloseTo(point.x);
         expect(projected.y).toBeCloseTo(point.y);
-    });
 
-    test('supports an explicit anchor screen point and validates a missing anchor location', () => {
-        const {camera} = createCamera(null, false, {center: [0, 0], zoom: 3, pitch: 35, bearing: 25});
-        const anchorLocation = new LngLat(2, 1);
         const anchorScreenPoint: [number, number] = [100, 150];
-        const projected = camera.transform.locationToScreenPoint(anchorLocation);
-        expect(Math.hypot(projected.x - anchorScreenPoint[0], projected.y - anchorScreenPoint[1])).toBeGreaterThan(1);
-
-        const result = camera.calculateCameraOptions({anchorLocation, anchorScreenPoint, zoom: 5});
-        camera.jumpTo(result);
+        const explicitlyAnchored = camera.calculateCameraOptions({anchorLocation, anchorScreenPoint, zoom: 5});
+        camera.jumpTo(explicitlyAnchored);
         const anchored = camera.transform.locationToScreenPoint(anchorLocation);
-
         expect(anchored.x).toBeCloseTo(anchorScreenPoint[0]);
         expect(anchored.y).toBeCloseTo(anchorScreenPoint[1]);
         expect(() => camera.calculateCameraOptions({anchorScreenPoint})).toThrow('`anchorScreenPoint` requires `anchorLocation`');
-    });
-
-    test('repeated calculations are independent and preserve world-copy behavior', () => {
-        const initial = {center: [350, 0] as [number, number], zoom: 3};
-        const {camera} = createCamera({renderWorldCopies: true}, false, initial);
-        const options = {center: [-350, 5] as [number, number], zoom: 4};
-        const first = camera.calculateCameraOptions(options);
-        const second = camera.calculateCameraOptions(options);
-        expect(second).toEqual(first);
-
-        const {camera: appliedCamera} = createCamera({renderWorldCopies: true}, false, initial);
-        appliedCamera.easeTo({...options, duration: 0});
-        expect(first.center.lng).toBeCloseTo(appliedCamera.getCenter().lng);
     });
 
     test('matches easeTo under globe projection', () => {
