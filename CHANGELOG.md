@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a `line-pattern` driven by a zoom expression rendering as an unpatterned line at some zoom levels ([#4787](https://github.com/maplibre/maplibre-gl-js/issues/4787)) (by [@SomSamantray](https://github.com/SomSamantray))
 - Fix `fill-extrusion-vertical-gradient` disappearing over 3D terrain, where the gradient was computed from the extrusion's height above sea level instead of its own height ([#8410](https://github.com/maplibre/maplibre-gl-js/pull/8410)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix 3D terrain reading elevation from the wrong part of a parent DEM tile while the deepest DEM tile is still loading ([#8407](https://github.com/maplibre/maplibre-gl-js/pull/8407)) (by [@ArcSolver](https://github.com/ArcSolver))

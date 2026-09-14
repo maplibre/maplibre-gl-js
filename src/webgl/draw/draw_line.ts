@@ -213,8 +213,12 @@ function drawLineTiles(
 
         if (constantPattern && tile.imageAtlas) {
             const atlas = tile.imageAtlas;
-            const posTo = atlas.patternPositions[constantPattern.to.toString()];
-            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
+            let posTo = atlas.patternPositions[constantPattern.to.toString()];
+            let posFrom = atlas.patternPositions[constantPattern.from.toString()];
+
+            if (!posTo && posFrom) posTo = posFrom;
+            if (!posFrom && posTo) posFrom = posTo;
+
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         } else if (constantDasharray) {
             const round = layer.layout.get('line-cap').constantOr(null) === 'round';
