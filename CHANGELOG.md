@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `MapEventType` no longer being extensible, which left no way to type events MapLibre does not ship itself - such as the `draw.create` / `draw.update` / `draw.delete` events fired by `mapbox-gl-draw` ([#8432](https://github.com/maplibre/maplibre-gl-js/pull/8432)) (by [@add-le](https://github.com/add-le))
 - _...Add new stuff here..._
 
 ## 6.9.1
@@ -24,6 +25,7 @@
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix `fill-extrusion-rounded-corner-distance` rounding every feature twice, which over-rounded the corners and inflated the vertex count ([#8429](https://github.com/maplibre/maplibre-gl-js/pull/8429)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix `Map#project` returning an incorrect on-screen point for a location behind the camera. It now returns a point outside the viewport, on the side through which the location left the screen, so DOM markers and popups are moved off-screen as expected. ([#8292](https://github.com/maplibre/maplibre-gl-js/issues/8292)) (by [@schickm](https://github.com/schickm))
+- Fix `MapEventType` no longer being extensible, which left no way to type events MapLibre does not ship itself - such as the `draw.create` / `draw.update` / `draw.delete` events fired by `mapbox-gl-draw` ([#8419](https://github.com/maplibre/maplibre-gl-js/issues/8419)) (by [@add-le](https://github.com/add-le))
 
 ## 6.9.0
 

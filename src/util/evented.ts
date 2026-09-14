@@ -11,18 +11,38 @@ export type Listener<E extends Event = Event> = (event: E) => any;
 export type EventTypeMap = Record<string, Event>;
 
 /**
+ * The constraint used for the `EventType` generic parameter throughout this file.
+ *
+ * This is deliberately not {@link EventTypeMap}. An `interface` has no implicit index
+ * signature, so an interface can never satisfy `Record<string, Event>`:
+ *
+ * ```
+ * error TS2344: Type 'MapEventType' does not satisfy the constraint 'EventTypeMap'.
+ *   Index signature for type 'string' is missing in type 'MapEventType'.
+ * ```
+ *
+ * Expressing the same requirement homomorphically accepts interfaces while still
+ * demanding that every value be an {@link Event}, which is what allows consumers to add
+ * their own events - for example those fired by a plugin such as `mapbox-gl-draw` - via
+ * declaration merging on {@link MapEventType}.
+ *
+ * @see https://github.com/maplibre/maplibre-gl-js/issues/8419
+ */
+export type EventTypeConstraint<EventType> = {[K in keyof EventType]: Event};
+
+/**
  * The event names of an {@link EventTypeMap}.
  */
-export type EventNames<EventType extends EventTypeMap> = Extract<keyof EventType, string>;
+export type EventNames<EventType extends EventTypeConstraint<EventType>> = Extract<keyof EventType, string>;
 
 /**
  * Properties merged into every event bubbled up to an evented parent.
  */
 export type EventedParentData = Record<string, unknown>;
 
-type Listeners<EventType extends EventTypeMap> = {[K in keyof EventType]?: Array<Listener<EventType[K]>>};
+type Listeners<EventType extends EventTypeConstraint<EventType>> = {[K in keyof EventType]?: Array<Listener<EventType[K]>>};
 
-function _addEventListener<T extends EventTypeMap, K extends EventNames<T>>(type: K, listener: Listener<T[K]>, listenerList: Listeners<T>) {
+function _addEventListener<T extends EventTypeConstraint<T>, K extends EventNames<T>>(type: K, listener: Listener<T[K]>, listenerList: Listeners<T>) {
     const listenerExists = listenerList[type]?.includes(listener);
     if (!listenerExists) {
         listenerList[type] ||= [];
@@ -30,7 +50,7 @@ function _addEventListener<T extends EventTypeMap, K extends EventNames<T>>(type
     }
 }
 
-function _removeEventListener<T extends EventTypeMap, K extends EventNames<T>>(type: K, listener: Listener<T[K]>, listenerList: Listeners<T>) {
+function _removeEventListener<T extends EventTypeConstraint<T>, K extends EventNames<T>>(type: K, listener: Listener<T[K]>, listenerList: Listeners<T>) {
     if (listenerList?.[type]) {
         const index = listenerList[type].indexOf(listener);
         if (index !== -1) {
@@ -83,7 +103,7 @@ export type ErrorEventType = {
  *
  * @group Event Related
  */
-export abstract class Evented<EventType extends EventTypeMap = EventTypeMap> {
+export abstract class Evented<EventType extends EventTypeConstraint<EventType> = EventTypeMap> {
     _listeners?: Listeners<EventType>;
     _oneTimeListeners?: Listeners<EventType>;
     _eventedParent?: Evented;
