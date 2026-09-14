@@ -762,7 +762,7 @@ describe('GlobeTransform', () => {
     });
 
     describe('recalculateZoomAndCenter', () => {
-        test('applies the rendered child\'s result to the globe transform', () => {
+        test('adjusts elevation, zoom and center to the terrain under the rendered projection', () => {
             const terrain = createTerrain();
             terrain.getElevationForLngLat = () => 1000;
             const globe = new GlobeTransform();
