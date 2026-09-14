@@ -26,6 +26,11 @@ afterEach(() => {
 });
 
 describe('setTerrain', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
     test('warn when terrain and hillshade source identical', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
@@ -112,8 +117,7 @@ describe('setTerrain', () => {
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
     });
 
-    test('invalidates terrain depth only for tiles from the terrain source', async ({onTestFinished}) => {
-        onTestFinished(() => map.remove());
+    test('invalidates terrain depth only for tiles from the terrain source', async () => {
         await map.once('load');
         const terrainLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'terrainrgb' && e.sourceDataType === 'metadata');
         const otherLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'other' && e.sourceDataType === 'metadata');
@@ -128,14 +132,14 @@ describe('setTerrain', () => {
         await Promise.all([terrainLoaded, otherLoaded]);
 
         const markTerrainDepthDirty = vi.spyOn(Painter.prototype, 'markTerrainDepthDirty');
-        onTestFinished(() => markTerrainDepthDirty.mockRestore());
         map.setTerrain({source: 'terrainrgb'});
         expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
         markTerrainDepthDirty.mockClear();
 
         const terrainSource = map.getSource('terrainrgb');
         const otherSource = map.getSource('other');
-        if (!terrainSource || !otherSource) throw new Error('Expected both DEM sources to be set');
+        expect(terrainSource).toBeDefined();
+        expect(otherSource).toBeDefined();
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tile = {tileID};
 
