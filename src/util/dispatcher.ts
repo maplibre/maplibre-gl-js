@@ -17,20 +17,25 @@ export class Dispatcher {
     id: string | number;
     private removed: boolean;
 
-    constructor(workerPool: WorkerPool, mapId: string | number) {
+    /**
+     * @param workerPool - The shared pool from which this dispatcher acquires workers.
+     * @param mapId - The map whose messages this dispatcher routes.
+     * @param onWorkerError - Reports a worker failure to the map.
+     */
+    constructor(workerPool: WorkerPool, mapId: string | number, onWorkerError?: (error: Error) => void) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
         this.removed = false;
-        this.actorsPromise = this.initActors(mapId);
+        this.actorsPromise = this.initActors(mapId, onWorkerError);
     }
 
-    private async initActors(mapId: string | number): Promise<Actor[]> {
+    private async initActors(mapId: string | number, onWorkerError?: (error: Error) => void): Promise<Actor[]> {
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
-            const actor = new Actor(worker, mapId);
+            const actor = new Actor(worker, mapId, onWorkerError);
             actor.name = `Worker ${i}`;
             return actor;
         });

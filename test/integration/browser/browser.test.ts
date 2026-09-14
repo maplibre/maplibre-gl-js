@@ -114,6 +114,20 @@ describe('Browser tests', () => {
         expect(firstFiredEvent).toBe('load');
     });
 
+    test('Worker script load failures fire a map error', {timeout: 20000}, async () => {
+        const port = (server.address() as AddressInfo).port;
+        await page.goto(`http://localhost:${port}/test/integration/browser/fixtures/land.html?worker-error`, {waitUntil: 'domcontentloaded'});
+        const result = await page.evaluate(() => {
+            return Promise.race([
+                (window as any).workerErrorPromise,
+                new Promise<{type: 'timeout'}>((resolve) => window.setTimeout(() => resolve({type: 'timeout'}), 5000))
+            ]);
+        });
+
+        expect(result.type).toBe('error');
+        expect(result.message).toBe('Worker error');
+    });
+
     test('Map created in a hidden container resizes when shown, see #8277', {retry: 3, timeout: 20000}, async () => {
         const dimensions = await page.evaluate(async () => {
             const host = document.createElement('div');

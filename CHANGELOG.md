@@ -6,6 +6,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
 - Fix raster tiles getting stuck at the start of a fade-in until the map moves. ([#8430](https://github.com/maplibre/maplibre-gl-js/pull/8430)) (by [@Kanahiro](https://github.com/Kanahiro))
 - Fix `fill-extrusion-vertical-gradient` disappearing over 3D terrain, where the gradient was computed from the extrusion's height above sea level instead of its own height ([#8410](https://github.com/maplibre/maplibre-gl-js/pull/8410)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))

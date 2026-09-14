@@ -18,7 +18,8 @@
 <script type='module'>
 import * as maplibregl from '../../../../dist/maplibre-gl-dev.mjs';
 
-maplibregl.setWorkerUrl('../../../../dist/maplibre-gl-worker-dev.mjs');
+const testWorkerError = new URLSearchParams(location.search).has('worker-error');
+maplibregl.setWorkerUrl(testWorkerError ? './missing-maplibre-worker.mjs' : '../../../../dist/maplibre-gl-worker-dev.mjs');
 window.maplibregl = maplibregl;
 
 // `map` is read from `window` by the browser test; module scope doesn't expose it.
@@ -55,6 +56,9 @@ window.map = new maplibregl.Map({
         ]
     }
 });
+if (testWorkerError) {
+    window.workerErrorPromise = new Promise((resolve) => map.once('error', (event) => resolve({type: 'error', message: event.error.message})));
+}
 </script>
 
 </body>

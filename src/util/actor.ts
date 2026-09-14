@@ -67,12 +67,14 @@ export class Actor implements IActor {
     globalScope: ActorTarget;
     messageHandlers: { [K in MessageType]?: MessageHandler<K>};
     subscription: Subscription;
+    workerErrorSubscription?: Subscription;
 
     /**
      * @param target - The target
      * @param mapId - A unique identifier for the Map instance using this Actor.
+     * @param onWorkerError - Reports a fatal worker failure to the owning dispatcher.
      */
-    constructor(target: ActorTarget, mapId?: string | number) {
+    constructor(target: ActorTarget, mapId?: string | number, onWorkerError?: (error: Error) => void) {
         this.target = target;
         this.mapId = mapId;
         this.resolveRejects = {};
@@ -82,6 +84,9 @@ export class Actor implements IActor {
         this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(() => this.process());
         this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
+        if (onWorkerError) {
+            this.workerErrorSubscription = subscribe(this.target, 'error', () => onWorkerError(new Error('Worker error')), false);
+        }
         this.globalScope = isWorker(self) ? target : window;
     }
 
@@ -266,5 +271,6 @@ export class Actor implements IActor {
     remove(): void {
         this.invoker.remove();
         this.subscription.unsubscribe();
+        this.workerErrorSubscription?.unsubscribe();
     }
 }
