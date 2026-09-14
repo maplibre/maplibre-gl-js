@@ -3,7 +3,7 @@
 - Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
 - Speed up merging adjacent `symbol-placement: line` features that share a label, which took time quadratic in the number of features that chain together ([#8436](https://github.com/maplibre/maplibre-gl-js/pull/8436)) (by [@cherenkov](https://github.com/cherenkov))
 - Convert the `fill-extrusion-rounded-corner-distance` rounding distance to tile units once per tile instead of once per feature ([#8435](https://github.com/maplibre/maplibre-gl-js/pull/8435)) (by [@cherenkov](https://github.com/cherenkov))
-- Add `Map#calculateCameraOptions` to calculate a complete camera state without mutating or rendering the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288))
+- Add `Map#calculateCameraOptions` to calculate a complete camera state without mutating or rendering the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
