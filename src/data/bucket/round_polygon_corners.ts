@@ -20,12 +20,7 @@ export function createPolygonCornerRounder(
     }
 
     const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
-    return polygon => {
-        if (!polygon || polygon.length === 0) {
-            return polygon;
-        }
-        return polygon.map(ring => roundRing(ring, distanceInTileUnits));
-    };
+    return polygon => polygon.map(ring => roundRing(ring, distanceInTileUnits));
 }
 
 function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
