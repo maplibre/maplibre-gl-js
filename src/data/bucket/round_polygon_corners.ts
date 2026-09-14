@@ -6,24 +6,26 @@ import type Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
 /**
- * Builds the function that rounds polygon corners by calculating arc points at each corner vertex.
+ * Rounds polygon corners by calculating arc points at each corner vertex.
  * A distance of zero or less disables rounding.
- * @param distanceInMeters - Desired corner rounding distance in meters
- * @param canonical - Canonical tile ID used for meter to tile unit conversion
+ * @param polygon - Collection of polygon rings (outer ring and hole rings)
+ * @param distanceInTileUnits - Corner rounding distance in tile units, as returned by {@link getTileUnitsForMeters}
  */
-export function createPolygonCornerRounder(
-    distanceInMeters: number,
-    canonical: CanonicalTileID
-): (polygon: Point[][]) => Point[][] {
-    if (distanceInMeters <= 0) {
-        return polygon => polygon;
+export function roundPolygonCorners(polygon: Point[][], distanceInTileUnits: number): Point[][] {
+    if (distanceInTileUnits <= 0) {
+        return polygon;
     }
 
-    const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
-    return polygon => polygon.map(ring => roundRing(ring, distanceInTileUnits));
+    return polygon.map(ring => roundRing(ring, distanceInTileUnits));
 }
 
-function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
+/**
+ * Converts a distance in meters to tile units at the center of the given tile. The result only
+ * depends on the tile, so it is computed once per tile rather than once per feature.
+ * @param distanceInMeters - Distance in meters
+ * @param canonical - Canonical tile ID used for meter to tile unit conversion
+ */
+export function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
     const centerLocation = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, canonical);
     const mercatorCoord = MercatorCoordinate.fromLngLat(centerLocation);
     const meterInMercator = mercatorCoord.meterInMercatorCoordinateUnits();
