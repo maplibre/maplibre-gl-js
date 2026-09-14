@@ -372,8 +372,6 @@ export class Camera extends Evented<MapEventType> {
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
-    /** Reusable scratch transform for stateless camera calculations. */
-    _cameraOptionsTransform?: ITransform;
     /**
      * A callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
@@ -437,7 +435,6 @@ export class Camera extends Evented<MapEventType> {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
-        delete this._cameraOptionsTransform;
         if (this._requestedCameraState) {
             // The requested camera state is a transform of the old projection, so it has to be
             // moved onto the new one as well, otherwise the camera keeps reading a transform
@@ -751,9 +748,7 @@ export class Camera extends Evented<MapEventType> {
             throw new Error('`anchorScreenPoint` requires `anchorLocation` to be specified');
         }
 
-        this._cameraOptionsTransform ||= this.transform.clone();
-        this._cameraOptionsTransform.apply(this.transform, false);
-        const tr = this._cameraOptionsTransform;
+        const tr = this.transform.clone();
         const bearing = options.bearing !== undefined ? this._normalizeBearing(+options.bearing, tr.bearing) : tr.bearing;
         const pitch = options.pitch !== undefined ? +options.pitch : tr.pitch;
         const roll = options.roll !== undefined ? this._normalizeBearing(+options.roll, tr.roll) : tr.roll;

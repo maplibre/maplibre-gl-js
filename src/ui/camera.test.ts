@@ -205,12 +205,10 @@ describe('calculateCameraOptions', () => {
     test('repeated calculations are independent and preserve world-copy behavior', () => {
         const initial = {center: [350, 0] as [number, number], zoom: 3};
         const {camera} = createCamera({renderWorldCopies: true}, false, initial);
-        const clone = vi.spyOn(camera.transform, 'clone');
         const options = {center: [-350, 5] as [number, number], zoom: 4};
         const first = camera.calculateCameraOptions(options);
         const second = camera.calculateCameraOptions(options);
         expect(second).toEqual(first);
-        expect(clone).toHaveBeenCalledTimes(1);
 
         const {camera: appliedCamera} = createCamera({renderWorldCopies: true}, false, initial);
         appliedCamera.easeTo({...options, duration: 0});
