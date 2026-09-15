@@ -79,7 +79,8 @@ describe('getAtmosphereAltitudeBlend', () => {
         expect(getAtmosphereAltitudeBlend(100 * earthRadius, earthRadius)).toBe(1);
     });
 
-    test('is halfway between', () => {
-        expect(getAtmosphereAltitudeBlend(550000, earthRadius)).toBeCloseTo(0.5, 6);
+    test('follows a smoothstep between', () => {
+        expect(getAtmosphereAltitudeBlend(325000, earthRadius)).toBeCloseTo(0.15625, 6);
+        expect(getAtmosphereAltitudeBlend(775000, earthRadius)).toBeCloseTo(0.84375, 6);
     });
 });
