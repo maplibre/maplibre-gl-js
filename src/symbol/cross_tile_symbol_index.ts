@@ -1,8 +1,8 @@
 import KDBush from 'kdbush';
 import {EXTENT} from '../data/extent.ts';
 
+import type {SymbolInstanceArray} from '../data/array_types.g.ts';
 import type {SymbolInstance} from '../data/array_types.g.ts';
-import {type SymbolInstanceArray} from '../data/array_types.g.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {StyleLayer} from '../style/style_layer.ts';

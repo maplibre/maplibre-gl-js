@@ -1,12 +1,13 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {type StyleLayer} from '../../style/style_layer.ts';
 import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
-import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
 import {type MapLibreEvent, MapSourceDataEvent} from '../events.ts';
 import {Map} from '../map.ts';
 import {ErrorEvent} from '../../util/evented.ts';
-import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;

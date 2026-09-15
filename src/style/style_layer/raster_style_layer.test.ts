@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createStyleLayer} from '../create_style_layer.ts';
 import {extend} from '../../util/util.ts';
+
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 function createLayerSpec(properties?): LayerSpecification {
     return extend({

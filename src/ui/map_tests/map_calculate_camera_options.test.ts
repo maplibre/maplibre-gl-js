@@ -1,10 +1,11 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
-import {type CameraOptions} from '../camera.ts';
-import {type Terrain} from '../../render/terrain.ts';
 import {mercatorZfromAltitude} from '../../geo/mercator_coordinate.ts';
+
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {CameraOptions} from '../camera.ts';
+import type {Terrain} from '../../render/terrain.ts';
 
 beforeEach(() => {
     beforeMapTest();

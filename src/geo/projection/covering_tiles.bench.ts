@@ -3,6 +3,7 @@ import {LngLat} from '../lng_lat.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {GlobeTransform} from './globe_transform.ts';
+
 import type {ITransform} from '../transform_interface.ts';
 
 function coverWithPitch(transform: ITransform, pitch: number): void {

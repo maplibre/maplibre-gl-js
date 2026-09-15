@@ -2,6 +2,7 @@ import {type mat4, quat, type ReadonlyVec4, vec3, vec4} from 'gl-matrix';
 import {clamp, createVec3f64, createVec4f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
 import {LngLat} from '../lng_lat.ts';
 import {EXTENT} from '../../data/extent.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {ITransform} from '../transform_interface.ts';
 

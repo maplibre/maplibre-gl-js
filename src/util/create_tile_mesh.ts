@@ -1,10 +1,11 @@
-import {type Context} from '../webgl/context.ts';
 import {Mesh} from '../render/mesh.ts';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g.ts';
 import {SegmentVector} from '../data/segment.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../render/subdivision.ts';
 import {EXTENT} from '../data/extent.ts';
 import posAttributes from '../data/pos_attributes.ts';
+
+import type {Context} from '../webgl/context.ts';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.

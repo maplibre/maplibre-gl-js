@@ -1,12 +1,12 @@
 import {Uniform1i, Uniform1f, Uniform2f} from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {EXTENT} from '../../data/extent.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
 import type {Painter} from '../../render/painter.ts';
-import {EXTENT} from '../../data/extent.ts';
 
 export type CircleUniformsType = {
     'u_scale_with_map': Uniform1i;
