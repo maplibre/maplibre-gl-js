@@ -819,7 +819,7 @@ export class Map extends Evented<MapEventType> {
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.depthDirty = true;
+            this.painter.markTerrainDepthDirty();
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
@@ -2035,6 +2035,10 @@ export class Map extends Evented<MapEventType> {
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
+     * A location behind the camera has no corresponding pixel. For such a location the
+     * returned point is outside the viewport, on the side through which the location left
+     * the screen, one viewport width or height away from the edge.
+     *
      * @param lnglat - The geographical location to project.
      * @returns The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
      * @example
@@ -3009,6 +3013,9 @@ export class Map extends Evented<MapEventType> {
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
             this.style.triggerSymbolPlacement();
+        }
+        if (isTerrainSourceEvent && event.tile) {
+            this.painter.markTerrainDepthDirty();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));

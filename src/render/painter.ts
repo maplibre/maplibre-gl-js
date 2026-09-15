@@ -658,7 +658,16 @@ export class Painter {
     }
 
     /**
-     * Update the depth framebuffer if the camera has moved or tiles have reloaded.
+     * Invalidates cached terrain depth so the next eligible depth pass redraws it.
+     * DEM data can change the rendered surface while the camera and terrain tile set stay unchanged.
+     * Repeated calls coalesce without rendering or scheduling a frame, even if terrain is not yet present.
+     */
+    markTerrainDepthDirty(): void {
+        this.terrainFacilitator.depthDirty = true;
+    }
+
+    /**
+     * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
      */
     maybeDrawDepth(): void {
         if (!this.style?.projection || !this.style.map?.terrain) {
