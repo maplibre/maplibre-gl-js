@@ -12,6 +12,7 @@ type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
+    pitch?: number;
 };
 
 // The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
