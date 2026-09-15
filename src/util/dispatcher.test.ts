@@ -73,7 +73,8 @@ describe('Dispatcher', () => {
     });
 
     test('fires worker errors through Evented', async () => {
-        const worker = createActorTarget();
+        const worker = new EventTarget() as ActorTarget & EventTarget;
+        worker.postMessage = vi.fn();
         const workerPool = {
             acquire() {
                 return Promise.resolve([worker]);
@@ -95,9 +96,3 @@ describe('Dispatcher', () => {
         expect(listener).toHaveBeenCalledTimes(1);
     });
 });
-
-function createActorTarget(): ActorTarget & EventTarget {
-    const target = new EventTarget() as ActorTarget & EventTarget;
-    target.postMessage = vi.fn();
-    return target;
-}
