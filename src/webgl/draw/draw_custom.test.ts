@@ -4,13 +4,14 @@ import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
 import {createRenderContext} from '../../render/render_context.ts';
-import type {Map} from '../../ui/map.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
-import {type CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
+
+import type {CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
+import type {Map} from '../../ui/map.ts';
 
 vi.mock(import('../../render/painter'));
 vi.mock(import('../program'));

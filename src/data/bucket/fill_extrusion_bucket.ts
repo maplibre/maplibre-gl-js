@@ -1,5 +1,4 @@
 import {FillExtrusionLayoutArray, PosArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes.ts';
 import {type Segment, SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
@@ -13,6 +12,9 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
+import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -23,7 +25,6 @@ import type {
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
-
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {IndexBuffer} from '../../webgl/index_buffer.ts';
@@ -31,12 +32,8 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-
-import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
 
 const FACTOR = Math.pow(2, 13);
 

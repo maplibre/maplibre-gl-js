@@ -7,15 +7,14 @@ import {
     fillExtrusionPatternUniformValues,
 } from '../program/fill_extrusion_program.ts';
 import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
+import {translatePosition} from '../../util/util.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
-
-import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
-import {translatePosition} from '../../util/util.ts';
 
 export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
     const opacity = layer.paint.get('fill-extrusion-opacity');

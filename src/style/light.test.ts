@@ -2,8 +2,9 @@ import {describe, test, expect, vi, afterEach} from 'vitest';
 import {Light} from './light.ts';
 import {Color, latest as styleSpec, type LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {sphericalToCartesian} from '../util/util.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
-import {type TransitionParameters} from './properties.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {TransitionParameters} from './properties.ts';
 
 const spec = styleSpec.light;
 

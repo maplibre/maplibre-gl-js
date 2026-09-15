@@ -2,24 +2,25 @@ import {beforeEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {createRenderContext} from '../render/render_context.ts';
-import type {Painter, RTTObject} from '../render/painter.ts';
-import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {Context} from '../webgl/context.ts';
 import {ColorMode} from '../webgl/color_mode.ts';
 import {Terrain} from '../render/terrain.ts';
-import {type Style} from '../style/style.ts';
 import {Tile} from '../tile/tile.ts';
-import {type Map} from '../ui/map.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {type TileManager} from '../tile/tile_manager.ts';
-import {type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
-import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
-import {type HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
-import {type BackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
+
+import type {Style} from '../style/style.ts';
+import type {Map} from '../ui/map.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import type {Painter, RTTObject} from '../render/painter.ts';
 
 describe('render to texture', () => {
     const gl = createNullGL();

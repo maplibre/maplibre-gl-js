@@ -2,6 +2,7 @@ import {describe, test, expect, vi} from 'vitest';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
+
 import type {Painter} from '../render/painter.ts';
 
 describe('InViewTiles', () => {

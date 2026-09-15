@@ -2,13 +2,13 @@ import {Texture} from '../texture.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type ColorMode} from '../color_mode.ts';
 import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
 } from '../program/hillshade_program.ts';
 import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';

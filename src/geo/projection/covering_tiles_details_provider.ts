@@ -1,7 +1,7 @@
-import {type IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
-import {type MercatorCoordinate} from '../mercator_coordinate.ts';
-import {type IReadonlyTransform} from '../transform_interface.ts';
-import {type CoveringTilesOptionsInternal} from './covering_tiles.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
 
 export interface CoveringTilesDetailsProvider {
     /**

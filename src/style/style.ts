@@ -29,13 +29,22 @@ import {PauseablePlacement} from './pauseable_placement.ts';
 import {ZoomHistory} from './zoom_history.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+import {
+    type GetDashesParameters,
+    type GetDashesResponse,
+    MessageType,
+    type GetGlyphsParameters,
+    type GetGlyphsResponse,
+    type GetImagesParameters,
+    type GetImagesResponse
+} from '../util/actor_messages.ts';
+import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
 
 import type {Source} from '../source/source.ts';
 import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
-
 import type {Map} from '../ui/map.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
 import type {StyleImage} from './style_image.ts';
@@ -61,17 +70,7 @@ import type {
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
-import {
-    type GetDashesParameters,
-    type GetDashesResponse,
-    MessageType,
-    type GetGlyphsParameters,
-    type GetGlyphsResponse,
-    type GetImagesParameters,
-    type GetImagesResponse
-} from '../util/actor_messages.ts';
-import {type Projection} from '../geo/projection/projection.ts';
-import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import type {Projection} from '../geo/projection/projection.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 const empty = emptyStyle();

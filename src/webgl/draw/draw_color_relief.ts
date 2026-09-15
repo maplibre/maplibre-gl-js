@@ -1,13 +1,13 @@
 import {Texture} from '../texture.ts';
-import type {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type ColorMode} from '../color_mode.ts';
 import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
 import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {ColorMode} from '../color_mode.ts';
+import type {StencilMode} from '../stencil_mode.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer.ts';

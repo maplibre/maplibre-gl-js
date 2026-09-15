@@ -1,11 +1,11 @@
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {RenderContext} from '../../render/render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
-import {OverscaledTileID} from '../../tile/tile_id.ts';
 
 export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderContext: RenderContext): void {
 

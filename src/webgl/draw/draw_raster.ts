@@ -1,5 +1,4 @@
 import {clamp} from '../../util/util.ts';
-
 import {ImageSource} from '../../source/image_source.ts';
 import {now} from '../../util/time_control.ts';
 import {StencilMode} from '../stencil_mode.ts';

@@ -6,6 +6,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Evented} from '../util/evented.ts';
+
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Coordinates} from './image_source.ts';
 

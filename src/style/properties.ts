@@ -9,7 +9,7 @@ import {interpolates, type Color, type StylePropertySpecification, normalizeProp
 import {register} from '../util/web_worker_transfer.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
 
-import {type CanonicalTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 
 type TimePoint = number;
 
