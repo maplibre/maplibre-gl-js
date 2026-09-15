@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix partially blank maps in older Safari versions ([#8427](https://github.com/maplibre/maplibre-gl-js/issues/8427)).
+- Fix partially blank maps in older Safari versions ([#8427](https://github.com/maplibre/maplibre-gl-js/issues/8427)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `setStyle` calling `Map.setTerrain` with the wrong `this`, which made a terrain change in a style diff throw ([#8451](https://github.com/maplibre/maplibre-gl-js/pull/8451)) (by [@HarelM](https://github.com/HarelM))
 - Fix hillshade rendering artifacts on mobile GPUs at high zoom levels ([#8431](https://github.com/maplibre/maplibre-gl-js/pull/8431)) (by [@Turbo87](https://github.com/Turbo87))
 - Free the pooled terrain drape textures once the map is at rest and when terrain is removed, instead of keeping every drape allocated during a pan resident for the life of the map ([#8400](https://github.com/maplibre/maplibre-gl-js/pull/8400)) (by [@johncarmack1984](https://github.com/johncarmack1984))
