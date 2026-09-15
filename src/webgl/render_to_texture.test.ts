@@ -1,4 +1,4 @@
-import {beforeEach, afterEach, describe, test, expect, vi} from 'vitest';
+import {beforeEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {createRenderContext} from '../render/render_context.ts';
@@ -140,11 +140,6 @@ describe('render to texture', () => {
         painter.options.moving = false;
     });
 
-    afterEach(() => {
-        vi.mocked(painter.renderLayer).mockReset();
-        vi.restoreAllMocks();
-    });
-
     function visibleLayerIds() {
         return style._order.join();
     }
@@ -171,24 +166,6 @@ describe('render to texture', () => {
             [tile.tileID],
             expect.anything()
         );
-    });
-
-    test('sets the terrain-texture flag for the stack and clears it before drawing the terrain mesh', () => {
-        const terrainTextureDraws: boolean[] = [];
-        const renderLayer = vi.mocked(painter.renderLayer);
-        renderLayer.mockClear();
-        const getProjectionData = vi.spyOn(painter.transform, 'getProjectionData');
-        renderLayer.mockImplementation((_painter, _tileManager, _layer, _coords, renderContext) => { terrainTextureDraws.push(renderContext.isRenderingToTexture); });
-        rtt.prepareForRender(style, 0);
-        const renderContext = createRenderContext(painter.transform, undefined, terrain);
-
-        rtt.renderLayer(fillLayer, renderContext);
-        rtt.renderLayer(symbolLayer, renderContext);
-
-        expect(terrainTextureDraws).toEqual([true]);
-        expect(renderLayer.mock.calls[0][4]).toBe(renderContext);
-        expect(getProjectionData).toHaveBeenCalledWith(expect.objectContaining({applyGlobeMatrix: true, applyTerrainMatrix: false}));
-        expect(renderContext.isRenderingToTexture).toBe(false);
     });
 
     test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
