@@ -19,7 +19,7 @@ import {
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -347,7 +347,7 @@ function drawLayerSymbols(
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];

@@ -12,7 +12,7 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -148,16 +148,14 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const layerOpacity = layer.paint.get('line-layer-opacity');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    const useTerrain = !!painter.style.map.terrain;
-
     if (layerOpacity < 1) {
         const results = prepareDrawLayerOpacity(painter, layer, coords);
-        drawLineTiles(painter, tileManager, layer, coords, renderContext, useTerrain);
+        drawLineTiles(painter, tileManager, layer, coords, renderContext);
         drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
     }
 
-    drawLineTiles(painter, tileManager, layer, coords, renderContext, useTerrain);
+    drawLineTiles(painter, tileManager, layer, coords, renderContext);
 }
 
 function drawLineTiles(
@@ -165,8 +163,7 @@ function drawLineTiles(
     tileManager: TileManager,
     layer: LineStyleLayer,
     coords: OverscaledTileID[],
-    renderContext: RenderContext,
-    useTerrain: boolean
+    renderContext: RenderContext
 ) {
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
@@ -204,7 +201,7 @@ function drawLineTiles(
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture) : null;
+        const terrainData = getTerrainDataForTile(renderContext, coord);
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);

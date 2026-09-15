@@ -3,7 +3,7 @@ import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {translatePosition} from '../../util/util.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -77,7 +77,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
         const projectionData = getProjectionDataForTile(renderContext, coord);

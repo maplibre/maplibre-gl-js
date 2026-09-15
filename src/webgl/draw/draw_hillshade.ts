@@ -6,7 +6,7 @@ import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
 } from '../program/hillshade_program.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -71,7 +71,7 @@ function renderHillshade(
         }
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
 
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
