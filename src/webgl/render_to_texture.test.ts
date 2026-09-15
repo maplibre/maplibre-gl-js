@@ -1,4 +1,4 @@
-import {beforeEach, describe, test, expect, vi} from 'vitest';
+import {beforeEach, afterEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {createRenderOptions} from '../render/render_options.ts';
@@ -140,6 +140,11 @@ describe('render to texture', () => {
         painter.options.moving = false;
     });
 
+    afterEach(() => {
+        vi.mocked(painter.renderLayer).mockReset();
+        vi.restoreAllMocks();
+    });
+
     function visibleLayerIds() {
         return style._order.join();
     }
@@ -168,15 +173,11 @@ describe('render to texture', () => {
         );
     });
 
-    test('sets the terrain-texture flag for the stack and clears it before drawing the terrain mesh', ({onTestFinished}) => {
+    test('sets the terrain-texture flag for the stack and clears it before drawing the terrain mesh', () => {
         const terrainTextureDraws: boolean[] = [];
         const renderLayer = vi.mocked(painter.renderLayer);
         renderLayer.mockClear();
         const getProjectionData = vi.spyOn(painter.transform, 'getProjectionData');
-        onTestFinished(() => {
-            renderLayer.mockReset();
-            getProjectionData.mockRestore();
-        });
         renderLayer.mockImplementation((_painter, _tileManager, _layer, _coords, renderOptions) => { terrainTextureDraws.push(renderOptions.isRenderingToTexture); });
         rtt.prepareForRender(style, 0);
         const renderOptions = createRenderOptions(painter.transform, undefined, terrain);
