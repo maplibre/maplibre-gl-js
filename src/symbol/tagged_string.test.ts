@@ -1,8 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
+import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
 
 import type {StyleGlyph} from '../style/style_glyph.ts';
-import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
 
 describe('TaggedString', () => {
     const textSection = {

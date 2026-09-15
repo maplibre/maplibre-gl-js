@@ -1,4 +1,5 @@
 import {UBO_BINDINGS, UniformBuffer, std140Layout} from './uniform_buffer.ts';
+
 import type {Context} from './context.ts';
 import type {Painter} from '../render/painter.ts';
 

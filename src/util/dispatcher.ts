@@ -1,10 +1,10 @@
 import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
+import {MessageType} from './actor_messages.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
-import {MessageType} from './actor_messages.ts';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).

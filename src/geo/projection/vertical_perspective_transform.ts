@@ -10,8 +10,8 @@ import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
-
 import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -257,8 +257,14 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
-    public constructor(options?: TransformOptions) {
-        this._helper = new TransformHelper({
+    /**
+     * @param options - Initial state. Ignored when `sharedHelper` is given, which already carries it.
+     * @param sharedHelper - Camera to use instead of owning one, so that a composing transform such as
+     * {@link GlobeTransform} keeps a single copy of the state rather than one per child. Its owner then drives
+     * {@link _calcMatrices}, because a helper has only one `calcMatrices` callback.
+     */
+    public constructor(options?: TransformOptions, sharedHelper?: TransformHelper) {
+        this._helper = sharedHelper ?? new TransformHelper({
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
@@ -462,12 +468,17 @@ export class VerticalPerspectiveTransform implements ITransform {
         return cx * cx + cy * cy + cz * cz < 1.0;
     }
 
-    private _calcMatrices(): void {
+    /**
+     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the helper already
+     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing transform such as {@link GlobeTransform}
+     * overrides it so that its two children share a single depth range.
+     */
+    _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
-        if (this._helper.autoCalculateNearFarZ) {
+        if (calculateNearFarZ) {
             this._helper._nearZ = 0.5;
             this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         }

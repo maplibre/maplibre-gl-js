@@ -4,10 +4,6 @@ import path from 'path';
 import {WritingMode, shapeText, type Shaping} from '../../../src/symbol/shaping.ts';
 import {ResolvedImage, Formatted, FormattedSection, type VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 import {ImagePosition} from '../../../src/render/image_atlas.ts';
-import type {StyleImage} from '../../../src/style/style_image.ts';
-import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
-import type {GlyphPosition} from '../../../src/render/glyph_atlas.ts';
-
 import glyphsJson from '../assets/glyphs/fontstack-glyphs.json' with {type: 'json'};
 import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json'};
 import expectedImagesHorizontal from './tests/text-shaping-images-horizontal.json' with {type: 'json'};
@@ -17,6 +13,10 @@ import expectedBreakBeforeBracket from './tests/text-shaping-break-before-bracke
 // Prefer zero width spaces when breaking lines. Zero width spaces are used by MapLibre data sources as a hint that
 // a position is ideal for breaking.
 import expectedZeroWidthSpaceBreak from './tests/text-shaping-zero-width-space.json' with {type: 'json'};
+
+import type {GlyphPosition} from '../../../src/render/glyph_atlas.ts';
+import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
+import type {StyleImage} from '../../../src/style/style_image.ts';
 
 let UPDATE = false;
 if (typeof process !== 'undefined' && process.env !== undefined) {

@@ -9,6 +9,7 @@ import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {extend} from '../util/util.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
+
 import type {Painter} from '../render/painter.ts';
 
 describe('isRenderable', () => {

@@ -29,13 +29,22 @@ import {PauseablePlacement} from './pauseable_placement.ts';
 import {ZoomHistory} from './zoom_history.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+import {
+    type GetDashesParameters,
+    type GetDashesResponse,
+    MessageType,
+    type GetGlyphsParameters,
+    type GetGlyphsResponse,
+    type GetImagesParameters,
+    type GetImagesResponse
+} from '../util/actor_messages.ts';
+import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
 
 import type {Source} from '../source/source.ts';
 import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
-
 import type {Map} from '../ui/map.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
 import type {StyleImage} from './style_image.ts';
@@ -49,7 +58,6 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations,
     ProjectionSpecification,
     SkySpecification,
     StateSpecification,
@@ -61,17 +69,7 @@ import type {
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
-import {
-    type GetDashesParameters,
-    type GetDashesResponse,
-    MessageType,
-    type GetGlyphsParameters,
-    type GetGlyphsResponse,
-    type GetImagesParameters,
-    type GetImagesResponse
-} from '../util/actor_messages.ts';
-import {type Projection} from '../geo/projection/projection.ts';
-import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import type {Projection} from '../geo/projection/projection.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 const empty = emptyStyle();
@@ -876,8 +874,13 @@ export class Style extends Evented<MapEventType> {
         return true;
     }
 
-    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>): {operations: Function[]; unimplemented: string[]} {
-        const operations: Function[] = [];
+    /**
+     * Translates a style diff into the calls that apply it to this style.
+     * @param diff - the operations produced by the style-spec diff algorithm
+     * @returns the operations to run, and the names of the commands that are not supported
+     */
+    _getOperationsToPerform(diff: DiffCommand[]): {operations: Array<() => void>; unimplemented: string[]} {
+        const operations: Array<() => void> = [];
         const unimplemented: string[] = [];
         for (const op of diff) {
             switch (op.command) {
@@ -887,57 +890,91 @@ export class Style extends Evented<MapEventType> {
                 case 'setPitch':
                 case 'setRoll':
                     continue;
-                case 'addLayer':
-                    operations.push(() => this.addLayer.apply(this, op.args));
+                case 'addLayer': {
+                    const [layer, before] = op.args;
+                    operations.push(() => this.addLayer(layer, before));
                     break;
-                case 'removeLayer':
-                    operations.push(() => this.removeLayer.apply(this, op.args));
+                }
+                case 'removeLayer': {
+                    const [layerId] = op.args;
+                    operations.push(() => this.removeLayer(layerId));
                     break;
-                case 'setPaintProperty':
-                    operations.push(() => this.setPaintProperty.apply(this, op.args));
+                }
+                case 'setPaintProperty': {
+                    const [layerId, name, value] = op.args;
+                    operations.push(() => this.setPaintProperty(layerId, name, value));
                     break;
-                case 'setLayoutProperty':
-                    operations.push(() => this.setLayoutProperty.apply(this, op.args));
+                }
+                case 'setLayoutProperty': {
+                    const [layerId, name, value] = op.args;
+                    operations.push(() => this.setLayoutProperty(layerId, name, value));
                     break;
-                case 'setFilter':
-                    operations.push(() => this.setFilter.apply(this, op.args));
+                }
+                case 'setFilter': {
+                    const [layerId, filter] = op.args;
+                    operations.push(() => this.setFilter(layerId, filter));
                     break;
-                case 'addSource':
-                    operations.push(() => this.addSource.apply(this, op.args));
+                }
+                case 'addSource': {
+                    const [id, source] = op.args;
+                    operations.push(() => this.addSource(id, source));
                     break;
-                case 'removeSource':
-                    operations.push(() => this.removeSource.apply(this, op.args));
+                }
+                case 'removeSource': {
+                    const [id] = op.args;
+                    operations.push(() => this.removeSource(id));
                     break;
-                case 'setLayerZoomRange':
-                    operations.push(() => this.setLayerZoomRange.apply(this, op.args));
+                }
+                case 'setLayerZoomRange': {
+                    const [layerId, minzoom, maxzoom] = op.args;
+                    operations.push(() => this.setLayerZoomRange(layerId, minzoom, maxzoom));
                     break;
-                case 'setLight':
-                    operations.push(() => this.setLight.apply(this, op.args));
+                }
+                case 'setLight': {
+                    const [light] = op.args;
+                    operations.push(() => this.setLight(light));
                     break;
-                case 'setGeoJSONSourceData':
-                    operations.push(() => this.setGeoJSONSourceData.apply(this, op.args));
+                }
+                case 'setGeoJSONSourceData': {
+                    const [id, data] = op.args;
+                    operations.push(() => this.setGeoJSONSourceData(id, data));
                     break;
-                case 'setGlyphs':
-                    operations.push(() => this.setGlyphs.apply(this, op.args));
+                }
+                case 'setGlyphs': {
+                    const [glyphsUrl] = op.args;
+                    operations.push(() => this.setGlyphs(glyphsUrl));
                     break;
-                case 'setFontFaces':
-                    operations.push(() => this.setFontFaces.apply(this, op.args));
+                }
+                case 'setFontFaces': {
+                    const [fontFaces] = op.args;
+                    operations.push(() => this.setFontFaces(fontFaces));
                     break;
-                case 'setSprite':
-                    operations.push(() => this.setSprite.apply(this, op.args));
+                }
+                case 'setSprite': {
+                    const [sprite] = op.args;
+                    operations.push(() => this.setSprite(sprite));
                     break;
-                case 'setTerrain':
-                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                }
+                case 'setTerrain': {
+                    const [terrain] = op.args;
+                    operations.push(() => this.map.setTerrain(terrain));
                     break;
-                case 'setSky':
-                    operations.push(() => this.setSky.apply(this, op.args));
+                }
+                case 'setSky': {
+                    const [sky] = op.args;
+                    operations.push(() => this.setSky(sky));
                     break;
-                case 'setProjection':
-                    this.setProjection.apply(this, op.args);
+                }
+                case 'setProjection': {
+                    const [projection] = op.args;
+                    operations.push(() => this.setProjection(projection));
                     break;
-                case 'setGlobalState':
-                    operations.push(() => this.setGlobalState.apply(this, op.args));
+                }
+                case 'setGlobalState': {
+                    const [state] = op.args;
+                    operations.push(() => this.setGlobalState(state));
                     break;
+                }
                 case 'setTransition':
                     operations.push(() => {});
                     break;
@@ -946,11 +983,7 @@ export class Style extends Evented<MapEventType> {
                     break;
             }
         }
-        const result: {operations: Function[]; unimplemented: string[]} = {
-            operations,
-            unimplemented
-        };
-        return result;
+        return {operations, unimplemented};
     }
 
     addImage(id: string, image: StyleImage): void {

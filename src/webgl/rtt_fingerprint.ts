@@ -1,4 +1,4 @@
-import {type OverscaledTileID} from '../tile/tile_id.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 /**
  * What a render-to-texture tile's textures differ in from the state this frame would render them from,
