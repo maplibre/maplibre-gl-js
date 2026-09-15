@@ -299,8 +299,9 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return this.currentTransform.isLocationOccluded(location);
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -377,10 +378,6 @@ export class GlobeTransform implements ITransform {
     /** See {@link getCameraAltitude}. */
     getCameraLngLat(): LngLat {
         return this.currentTransform.getCameraLngLat();
-    }
-
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
     }
 
     populateCache(coords: OverscaledTileID[]): void {
