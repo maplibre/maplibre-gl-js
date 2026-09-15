@@ -12,6 +12,27 @@ beforeEach(() => {
     global.fetch = null;
 });
 
+describe('calculateAnchoredCameraOptions', () => {
+    test('calculates an anchored constrained camera update without changing the map', () => {
+        const map = createMap({center: [0, 0], zoom: 3, maxZoom: 5});
+        const anchorLocation = new LngLat(5, 3);
+        const anchorScreenPoint: [number, number] = [100, 150];
+        const centerBefore = map.getCenter();
+
+        expect(map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint).zoom).toBe(3);
+        const cameraOptions = map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint, {zoom: 10});
+
+        expect(cameraOptions.zoom).toBe(5);
+        expect(map.getCenter()).toEqual(centerBefore);
+        expect(map.getZoom()).toBe(3);
+
+        map.jumpTo(cameraOptions);
+        const projectedAnchor = map.project(anchorLocation);
+        expect(projectedAnchor.x).toBeCloseTo(anchorScreenPoint[0]);
+        expect(projectedAnchor.y).toBeCloseTo(anchorScreenPoint[1]);
+    });
+});
+
 describe('calculateCameraOptionsFromTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     test('pitch 90 with terrain', () => {

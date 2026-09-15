@@ -1417,6 +1417,25 @@ export class Map extends Evented<MapEventType> {
      */
     jumpTo(options: JumpToOptions, eventData?: any): this { this._camera.jumpTo(options, eventData); return this; }
     /**
+     * Calculates constrained camera options that place a geographic anchor at a screen point
+     * without changing the map, using the same logic as MapLibre's interaction handlers.
+     *
+     * @param anchorLocation - Geographic location to place at `anchorScreenPoint`.
+     * @param anchorScreenPoint - Target screen position in pixels.
+     * @param options - Optional zoom to apply with the movement.
+     * @returns Camera options that can be passed to {@link Map.jumpTo}.
+     * @example
+     * ```ts
+     * const cameraOptions = map.calculateAnchoredCameraOptions(
+     *   map.unproject(pointerDownPosition), currentPointerPosition, {
+     *   zoom: map.getZoom() + 1
+     * });
+     * ```
+     */
+    calculateAnchoredCameraOptions(anchorLocation: LngLatLike, anchorScreenPoint: PointLike, options?: Pick<CameraOptions, 'zoom'>): CameraOptions {
+        return this._camera.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint, options);
+    }
+    /**
      * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
      * @param cameraLngLat - The lng, lat of the camera to look from
      * @param cameraAlt - The altitude of the camera to look from, in meters above sea level
