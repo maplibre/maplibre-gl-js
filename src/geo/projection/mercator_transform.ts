@@ -497,6 +497,15 @@ export class MercatorTransform implements ITransform {
     }
 
     /**
+     * The coordinate in the clip space of `pixelMatrix`: pixel x and y and NDC depth, each times `w`, which is positive
+     * in front of the camera.
+     */
+    private _coordinateClipPoint(coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
+        return vec4.transformMat4(p, p, pixelMatrix);
+    }
+
+    /**
      * Returns a screen point outside the viewport for a coordinate that is behind the camera.
      * The point lies on the boundary of the viewport enlarged by one viewport size on each side,
      * on whichever edge the ray from the screen centre in the coordinate's direction reaches first.
@@ -908,7 +917,7 @@ export class MercatorTransform implements ITransform {
         elevation ??= terrain.getElevationForLngLat(lngLat, this);
         const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
         const w = clip[3];
-        if (w <= 0 || Math.abs(clip[2]) > w) return true;
+        if (w <= 0 || clip[2] > w) return true;
         const p = new Point(clip[0] / w, clip[1] / w);
 
         const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
@@ -916,15 +925,6 @@ export class MercatorTransform implements ITransform {
         const segment = this.getRaySegmentFromPixel(p);
         const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
         return raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
-    }
-
-    /**
-     * The coordinate in the clip space of `pixelMatrix`: pixel x and y and NDC depth, each times `w`, which is positive
-     * in front of the camera.
-     */
-    private _coordinateClipPoint(coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        return vec4.transformMat4(p, p, pixelMatrix);
     }
 
     getPixelScale(): number {
