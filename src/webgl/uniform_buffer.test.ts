@@ -34,17 +34,21 @@ describe('UniformBuffer', () => {
         buffer.upload();
         buffer.upload();
         expect(gl.bufferSubData).toHaveBeenCalledTimes(1);
+        expect(gl.bindBufferBase).toHaveBeenCalledTimes(1);
+        expect(gl.bindBufferBase).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, buffer.binding, buffer.buffer);
 
         buffer.pending[3] = 5;
         buffer.upload();
         buffer.pendingWords[4] = 1;
         buffer.upload();
         expect(gl.bufferSubData).toHaveBeenCalledTimes(3);
+        expect(gl.bindBufferBase).toHaveBeenCalledTimes(3);
     });
 
     test('restores a dirty binding once without uploading unchanged data', () => {
         const projection = context.projectionUniformBuffer;
         projection.upload();
+        vi.mocked(gl.bindBufferBase).mockClear();
         context.setDirty();
         projection.bind();
         projection.bind();
