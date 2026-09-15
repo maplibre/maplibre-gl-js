@@ -20,10 +20,6 @@ export class Dispatcher extends Evented<ErrorEventType> {
     private removed: boolean;
     private workerErrorSubscriptions: Subscription[];
 
-    /**
-     * @param workerPool - The shared pool from which this dispatcher acquires workers.
-     * @param mapId - The map whose messages this dispatcher routes.
-     */
     constructor(workerPool: WorkerPool, mapId: string | number) {
         super();
         this.workerPool = workerPool;
