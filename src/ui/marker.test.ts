@@ -1189,6 +1189,27 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker that leaves the viewport while a terrain check waits for its window keeps its opacity once the window closes', async () => {
+        const map = createMap();
+        await map.once('load');
+        map.terrain = createTerrain();
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(50);
+        expect(marker.getElement().style.opacity).toBe('0.2');
+
+        map._camera.transform.isLocationOccluded = () => false;
+        map.fire('move');
+        await sleep(40);
+        map.jumpTo({center: [90, 0], zoom: 4});
+
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toBe('0.2');
+        map.remove();
+    });
+
     test('Marker removed while a terrain check waits for its window leaves its element alone once the window closes', async () => {
         const map = createMap();
         await map.once('load');

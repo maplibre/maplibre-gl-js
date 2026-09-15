@@ -678,11 +678,7 @@ export class Marker extends Evented<MarkerEventType> {
     }
 
     _updateOpacity(): void {
-        const {width, height} = this._map._camera.transform;
-        if (!this._pos || this._pos.x < 0 || this._pos.y < 0 || this._pos.x > width || this._pos.y > height) {
-            // Nothing to compute for a marker the viewport does not show.
-            return;
-        }
+        if (!this._isInViewport()) return;
 
         const terrain = this._map?.terrain;
         const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
@@ -699,12 +695,22 @@ export class Marker extends Evented<MarkerEventType> {
 
     /**
      * @internal
+     * Whether the viewport shows the marker's position. There is nothing to compute for one it does not.
+     */
+    _isInViewport(): boolean {
+        const {width, height} = this._map._camera.transform;
+        return !!this._pos && this._pos.x >= 0 && this._pos.y >= 0 && this._pos.x <= width && this._pos.y <= height;
+    }
+
+    /**
+     * @internal
      * Applies `opacityWhenCovered` and the covered class while the terrain covers the marker, closing its popup;
-     * `_updateCovered` runs it at most once per 100 ms. Nothing to do once the marker or the terrain is gone.
+     * `_updateCovered` runs it at most once per 100 ms. Nothing to do once the marker, the terrain or the viewport's
+     * view of the marker is gone.
      */
     _updateCoveredUnthrottled = (): void => {
         const terrain = this._map?.terrain;
-        if (!terrain) return;
+        if (!terrain || !this._isInViewport()) return;
         const covered = this._isCovered(terrain);
         if (covered && this._popup?.isOpen()) this._popup.remove();
         this._element.style.opacity = covered ? this._opacityWhenCovered : this._opacity;
