@@ -700,7 +700,7 @@ export class Marker extends Evented<MarkerEventType> {
         }
         if (this._isOpacityUpdateThrottled(force)) return;
 
-        const covered = this._isCoveredByTerrain(terrain);
+        const covered = this._isCovered(terrain);
         if (covered && this._popup?.isOpen()) this._popup.remove();
         this._element.style.opacity = covered ? this._opacityWhenCovered : this._opacity;
         this._element.classList.toggle('maplibregl-marker-covered', covered);
@@ -728,7 +728,7 @@ export class Marker extends Evented<MarkerEventType> {
      * Whether the terrain covers the marker: its base and then, when the base is hidden, its center, raised above the
      * base by the height `offset` spans on screen. A marker whose center is in view shows in full.
      */
-    _isCoveredByTerrain(terrain: Terrain): boolean {
+    _isCovered(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
         const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
         if (!transform.isLocationOccluded(this._lngLat, terrain, elevation)) return false;
