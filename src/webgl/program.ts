@@ -1,8 +1,12 @@
 import {type PreparedShader, shaders} from '../shaders/shaders.ts';
-import {type ProgramConfiguration} from '../data/program_configuration.ts';
 import {VertexArrayObject} from './vertex_array_object.ts';
-import {type Context} from './context.ts';
+import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
+import {applyUBOBindings} from './uniform_buffer.ts';
+import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+import type {Context} from './context.ts';
 import type {SegmentVector} from '../data/segment.ts';
 import type {VertexBuffer} from './vertex_buffer.ts';
 import type {IndexBuffer} from './index_buffer.ts';
@@ -12,11 +16,7 @@ import type {ColorMode} from './color_mode.ts';
 import type {CullFaceMode} from './cull_face_mode.ts';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding.ts';
 import type {BinderUniform} from '../data/program_configuration.ts';
-import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
-import {applyUBOBindings} from './uniform_buffer.ts';
-import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
-import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];

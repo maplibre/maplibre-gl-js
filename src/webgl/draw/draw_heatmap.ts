@@ -4,15 +4,15 @@ import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {ColorMode} from '../color_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type Context} from '../context.ts';
-import {type Framebuffer} from '../framebuffer.ts';
-import {type Tile} from '../../tile/tile.ts';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
 } from '../program/heatmap_program.ts';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
 
+import type {Context} from '../context.ts';
+import type {Framebuffer} from '../framebuffer.ts';
+import type {Tile} from '../../tile/tile.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';

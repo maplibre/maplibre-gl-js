@@ -1,4 +1,5 @@
 import {type AddProtocolAction, config} from './config.ts';
+
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 import type {GetResourceResponse, RequestParameters} from './ajax.ts';

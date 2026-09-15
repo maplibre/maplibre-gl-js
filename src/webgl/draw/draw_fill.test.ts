@@ -6,18 +6,19 @@ import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
 import {createRenderOptions} from '../../render/render_options.ts';
 import {Program} from '../program.ts';
-import type {ZoomHistory} from '../../style/zoom_history.ts';
-import type {Map} from '../../ui/map.ts';
-import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
-import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
-import {type Style} from '../../style/style.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
-import {type ProgramConfiguration, type ProgramConfigurationSet} from '../../data/program_configuration.ts';
-import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
+
+import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
+import type {Style} from '../../style/style.ts';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
+import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {Map} from '../../ui/map.ts';
+import type {ZoomHistory} from '../../style/zoom_history.ts';
 
 vi.mock(import('../../render/painter'));
 vi.mock(import('../program'));

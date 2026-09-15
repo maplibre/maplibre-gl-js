@@ -10,6 +10,7 @@ import {mat4} from 'gl-matrix';
 import {createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+
 import type {Tile} from '../../tile/tile.ts';
 
 describe('transform', () => {

@@ -5,6 +5,7 @@ import {Popup} from './popup.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
+
 import type {defaultLocale} from './default_locale.ts';
 
 type MapOptions = {

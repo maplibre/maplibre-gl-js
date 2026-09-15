@@ -3,6 +3,7 @@ import {Map} from '../map.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
+
 import type {BoxZoomHandlerOptions} from './box_zoom.ts';
 
 function createMap(clickTolerance, boxZoom: boolean | BoxZoomHandlerOptions = true) {

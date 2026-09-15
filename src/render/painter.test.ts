@@ -240,6 +240,37 @@ describe('RTT pool', () => {
         expect(painter._rttSharedFbo.size).toBe(512);
     });
 
+    test('clearRTTPool destroys the pooled textures and leaves the ones tiles hold', () => {
+        const pooled = painter.acquireRTT(256);
+        const held = painter.acquireRTT(256);
+        vi.spyOn(pooled.texture, 'destroy');
+        vi.spyOn(held.texture, 'destroy');
+        painter.releaseRTT(pooled);
+
+        painter.clearRTTPool();
+
+        expect(pooled.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(held.texture.destroy).not.toHaveBeenCalled();
+        expect(painter.acquireRTT(256)).not.toBe(pooled);
+    });
+
+    test('destroyRTTResources frees the pool and the shared FBO, and both come back on the next acquire', () => {
+        const gl = painter.context.gl;
+        const obj = painter.acquireRTT(256);
+        vi.spyOn(obj.texture, 'destroy');
+        painter.bindRTT(obj);
+        painter.releaseRTT(obj);
+
+        painter.destroyRTTResources();
+
+        expect(obj.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(gl.deleteFramebuffer).toHaveBeenCalledTimes(1);
+        expect(gl.deleteRenderbuffer).toHaveBeenCalledTimes(1);
+
+        painter.bindRTT(painter.acquireRTT(256));
+        expect(gl.createFramebuffer).toHaveBeenCalledTimes(2);
+    });
+
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {
         const objs = [];
         for (let i = 0; i < 10; i++) {
