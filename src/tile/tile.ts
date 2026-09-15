@@ -163,10 +163,14 @@ export class Tile {
         this.featureStateRevision = -1;
     }
 
+    /**
+     * Incoming and self-fading raster tiles must remain renderable at zero opacity because
+     * drawing advances their opacity. Only transparent departing tiles have finished fading.
+     */
     isRenderable(symbolLayer: boolean): boolean {
         return (
             this.hasData() &&
-            (!this.fadeEndTime || this.fadeOpacity > 0) &&  // raster fading
+            (!this.fadeEndTime || this.fadingDirection !== FadingDirections.Departing || this.fadeOpacity > 0) &&
             (symbolLayer || !this.holdingForSymbolFade())   // symbol fading
         );
     }

@@ -5,8 +5,11 @@ import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {type Map} from '../map.ts';
+import {Painter} from '../../render/painter.ts';
+import {MapSourceDataEvent} from '../events.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -23,6 +26,11 @@ afterEach(() => {
 });
 
 describe('setTerrain', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
     test('warn when terrain and hillshade source identical', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
@@ -107,6 +115,45 @@ describe('setTerrain', () => {
         } as any);
 
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
+    });
+
+    test('invalidates terrain depth only for tiles from the terrain source', async () => {
+        await map.once('load');
+        const terrainLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'terrainrgb' && e.sourceDataType === 'metadata');
+        const otherLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'other' && e.sourceDataType === 'metadata');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.addSource('other', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/other/{z}/{x}/{y}.png']
+        });
+        await Promise.all([terrainLoaded, otherLoaded]);
+
+        const markTerrainDepthDirty = vi.spyOn(Painter.prototype, 'markTerrainDepthDirty');
+        map.setTerrain({source: 'terrainrgb'});
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
+        markTerrainDepthDirty.mockClear();
+
+        const terrainSource = map.getSource('terrainrgb');
+        const otherSource = map.getSource('other');
+        expect(terrainSource).toBeDefined();
+        expect(otherSource).toBeDefined();
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = {tileID};
+
+        otherSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID}));
+        expect(markTerrainDepthDirty).not.toHaveBeenCalled();
+
+        terrainSource.fire(new MapSourceDataEvent('data', {sourceDataType: 'content'}));
+        expect(markTerrainDepthDirty).not.toHaveBeenCalled();
+
+        terrainSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID}));
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
+
+        terrainSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID, sourceDataType: 'content'}));
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(2);
     });
 
     test('re-places symbols when terrain is set', async () => {

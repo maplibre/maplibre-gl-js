@@ -56,6 +56,11 @@ void main() {
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
 
+    // The vertical gradient describes the structure itself, so it keeps the extrusion's own
+    // base and height before the terrain elevation is added to them below.
+    float gradient_base = max(0.0, base);
+    float gradient_height = max(0.0, height);
+
     #ifdef TERRAIN3D
 	    // Raise the "ceiling" of elements by the elevation of the centroid, in meters.
         float height_terrain3d_offset = get_elevation(a_centroid);
@@ -101,7 +106,7 @@ void main() {
         // and otherwise calculates the gradient based on base + height
         directional *= (
             (1.0 - u_vertical_gradient) +
-            (u_vertical_gradient * clamp((t + base) * pow(height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0)));
+            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0)));
     }
 
     v_lighting.rgb += clamp(directional * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));

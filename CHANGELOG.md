@@ -1,16 +1,31 @@
 ## main
 ### ✨ Features and improvements
 - Test whether a `Marker` is behind terrain with a CPU ray walk over the DEM instead of a depth-buffer readback, removing a GPU stall per marker while a map with terrain moves ([#8387](https://github.com/maplibre/maplibre-gl-js/pull/8387)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
-- Speed up merging adjacent `symbol-placement: line` features that share a label, which took time quadratic in the number of features that chain together ([#8436](https://github.com/maplibre/maplibre-gl-js/pull/8436)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix hillshade rendering artifacts on mobile GPUs at high zoom levels ([#8431](https://github.com/maplibre/maplibre-gl-js/pull/8431)) (by [@Turbo87](https://github.com/Turbo87))
+- _...Add new stuff here..._
+
+## 6.9.1
+
+### ✨ Features and improvements
+
+- Stop the scale control forcing a synchronous layout and rewriting its DOM on every frame of a pan or zoom ([#8403](https://github.com/maplibre/maplibre-gl-js/pull/8403)) (by [@cherenkov](https://github.com/cherenkov))
+- Speed up merging adjacent `symbol-placement: line` features that share a label, which took time quadratic in the number of features that chain together ([#8436](https://github.com/maplibre/maplibre-gl-js/pull/8436)) (by [@cherenkov](https://github.com/cherenkov))
+- Convert the `fill-extrusion-rounded-corner-distance` rounding distance to tile units once per tile instead of once per feature ([#8435](https://github.com/maplibre/maplibre-gl-js/pull/8435)) (by [@cherenkov](https://github.com/cherenkov))
+
+### 🐞 Bug fixes
+
+- Redraw terrain depth when DEM tiles arrive so occluded symbols and markers stay hidden ([#8447](https://github.com/maplibre/maplibre-gl-js/pull/8447)) (by [@ArcSolver](https://github.com/ArcSolver))
+- Fix raster tiles getting stuck at the start of a fade-in until the map moves. ([#8430](https://github.com/maplibre/maplibre-gl-js/pull/8430)) (by [@Kanahiro](https://github.com/Kanahiro))
+- Fix `fill-extrusion-vertical-gradient` disappearing over 3D terrain, where the gradient was computed from the extrusion's height above sea level instead of its own height ([#8410](https://github.com/maplibre/maplibre-gl-js/pull/8410)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix missing map layers after custom layer rendering ([#8406](https://github.com/maplibre/maplibre-gl-js/pull/8406)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix 3D terrain reading elevation from the wrong part of a parent DEM tile while the deepest DEM tile is still loading ([#8407](https://github.com/maplibre/maplibre-gl-js/pull/8407)) (by [@ArcSolver](https://github.com/ArcSolver))
+- Align 3D terrain DEM sampling with hillshade and color-relief at cell centres ([#8420](https://github.com/maplibre/maplibre-gl-js/pull/8420)) (by [@ArcSolver](https://github.com/ArcSolver))
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix `fill-extrusion-rounded-corner-distance` rounding every feature twice, which over-rounded the corners and inflated the vertex count ([#8429](https://github.com/maplibre/maplibre-gl-js/pull/8429)) (by [@cherenkov](https://github.com/cherenkov))
-- _...Add new stuff here..._
+- Fix `Map#project` returning an incorrect on-screen point for a location behind the camera. It now returns a point outside the viewport, on the side through which the location left the screen, so DOM markers and popups are moved off-screen as expected. ([#8292](https://github.com/maplibre/maplibre-gl-js/issues/8292)) (by [@schickm](https://github.com/schickm))
 
 ## 6.9.0
 
