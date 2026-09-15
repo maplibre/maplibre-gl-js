@@ -403,6 +403,7 @@ export class Marker extends Evented<MarkerEventType> {
         map.on('moveend', this._update);
         map.on('terrain', this._update);
         map.on('projectiontransition', this._update);
+        map.on('idle', this._update);
 
         this._element.addEventListener('click', this._onClick);
         this.setDraggable(this._draggable);
@@ -431,7 +432,7 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
-            this._map.off('render', this._updateAfterRender);
+            this._map.off('idle', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -677,13 +678,7 @@ export class Marker extends Evented<MarkerEventType> {
         return this;
     }
 
-    /**
-     * Updates marker opacity and the covered class according to globe and terrain occlusion.
-     *
-     * @param checkTerrain - Whether to check terrain occlusion. When false, only globe occlusion is checked,
-     * preserving the previous opacity when terrain is present and the globe does not hide the marker.
-     */
-    _updateOpacity(checkTerrain: boolean = true): void {
+    _updateOpacity(): void {
         if (!this._isInViewport()) return;
 
         const terrain = this._map?.terrain;
@@ -696,7 +691,6 @@ export class Marker extends Evented<MarkerEventType> {
             }
             return;
         }
-        if (!checkTerrain) return;
         this._updateCovered();
     }
 
@@ -745,49 +739,13 @@ export class Marker extends Evented<MarkerEventType> {
 
     /**
      * @internal
-     * Positions the marker immediately. For map events, or while the map is moving or loading, schedules the opacity
-     * check after the next render so it reads a depth buffer drawn for the current state. A setter on a stationary,
-     * loaded map checks opacity synchronously against the displayed frame, since an idle map may not render again.
+     * Positions the marker and updates its opacity. As terrain tiles load, the map can adjust to the ground beneath
+     * its center without firing a `move` event. The `idle` event triggers a final marker update once the map has
+     * finished loading and rendering.
      */
-    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' }): void => {
+    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'idle' }): void => {
         if (!this._map) return;
-        this._updatePosition(e);
-        if (e || this._map.isMoving() || !this._map.loaded()) {
-            this._map.once('render', this._updateAfterRender);
-        } else {
-            this._updateOpacity();
-        }
-    };
 
-    /**
-     * Checks opacity after rendering. During camera movement, terrain-depth reads remain throttled and subsequent
-     * `move` events schedule further checks.
-     *
-     * Once movement stops, updates the position after each render to follow arriving terrain tiles. While the map is
-     * loading, checks only globe occlusion to avoid reading terrain depth while sources reload. When loading finishes,
-     * checks terrain occlusion without the throttle and stops scheduling updates.
-     */
-    _updateAfterRender = (): void => {
-        if (!this._map) return;
-        if (this._map.isMoving()) {
-            this._updateOpacity();
-            return;
-        }
-        this._updatePosition();
-        if (!this._map.loaded()) {
-            this._map.once('render', this._updateAfterRender);
-            this._updateOpacity(false);
-            return;
-        }
-        this._updateOpacity();
-    };
-
-    /**
-     * Projects the marker's location and applies its offset, rotation and pitch. Keeps a separate position without
-     * terrain elevation for world wrapping. Unless subpixel positioning is enabled, rounds on `moveend` and calls
-     * without an event; rounding during `move` events would make zooming stutter.
-     */
-    _updatePosition(e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' }): void {
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
@@ -810,12 +768,16 @@ export class Marker extends Evented<MarkerEventType> {
             pitch = `rotateX(${this._map.getPitch()}deg)`;
         }
 
-        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
+        // rounding the coordinates at every `move` event causes stuttered zooming,
+        // so the position is rounded only once the movement has stopped
+        if (!this._subpixelPositioning && e?.type !== 'move') {
             this._pos = this._pos.round();
         }
 
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
-    }
+
+        this._updateOpacity();
+    };
 
     /**
      * Get the marker's offset.

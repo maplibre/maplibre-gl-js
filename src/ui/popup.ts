@@ -256,6 +256,7 @@ export class Popup extends Evented<PopupEventType> {
         this._map.on('remove', this.remove);
         this._map.on('terrain', this._update);
         this._map.on('projectiontransition', this._update);
+        this._map.on('idle', this._update);
         this._update();
         this._focusFirstElement();
 
@@ -322,7 +323,7 @@ export class Popup extends Evented<PopupEventType> {
             this._map.off('remove', this.remove);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
-            this._map.off('render', this._updateAfterRender);
+            this._map.off('idle', this._update);
             this._map.off('mousemove', this._update);
             this._map.off('mouseup', this._update);
             this._map.off('drag', this._update);
@@ -635,11 +636,6 @@ export class Popup extends Evented<PopupEventType> {
         }
     }
 
-    /**
-     * @internal
-     * Positions the popup immediately. For a popup anchored to a location, a map event also schedules an update after
-     * the next render so its position can update to any terrain changes.
-     */
     _update = (event?: MapLibreEvent | MapMouseEvent): void => {
         const hasPosition = this._lngLat || this._trackPointer;
 
@@ -722,23 +718,6 @@ export class Popup extends Evented<PopupEventType> {
         applyAnchorClass(this._container, anchor, 'popup');
 
         this._updateOpacity();
-
-        // a pointer-tracked popup follows the cursor, not the ground
-        if (event && !this._trackPointer) {
-            this._map.once('render', this._updateAfterRender);
-        }
-    };
-
-    /**
-     * Updates the popup's position after rendering, once camera movement has stopped. Terrain tiles can still arrive
-     * after a move or projection change, so updates continue after each render until the map has finished loading.
-     */
-    _updateAfterRender = (): void => {
-        if (!this._map || this._map.isMoving()) return;
-        this._update();
-        if (!this._map.loaded()) {
-            this._map.once('render', this._updateAfterRender);
-        }
     };
 
     _focusFirstElement(): void {

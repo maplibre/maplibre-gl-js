@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest, sleep, createTerrain} from '../util/test/util.ts';
+import {createMap as globalCreateMap, beforeMapTest, createTerrain} from '../util/test/util.ts';
 import {Popup, type Offset} from './popup.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
@@ -1137,16 +1137,12 @@ describe('popup', () => {
             .setLngLat([40.01, 30.01])
             .setText('Test')
             .addTo(map);
-        let loaded = false;
-        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
 
         map.jumpTo({center: [40.001, 30.001]});
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(604px,203px)');
 
-        elevation = 1000; // the terrain tiles under the popup arrive
-        loaded = true;
-        map.triggerRepaint();
-        await sleep(100);
+        elevation = 1000; // the terrain tiles under the popup arrive, then the map settles
+        map.fire('idle');
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(611px,100px)');
 
         map.remove();

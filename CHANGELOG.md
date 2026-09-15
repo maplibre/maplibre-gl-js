@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix misplaced markers and popups after terrain loads or the globe is dragged, and markers remaining dimmed after projection changes. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
+- Fix markers and popups misplaced after a projection change or by terrain that loads after the map settles. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
 - _...Add new stuff here..._
 
 ## 6.10.0

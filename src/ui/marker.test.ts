@@ -1232,32 +1232,6 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker after the terrain event must listen to the render event till is fully loaded', async () => {
-        const map = createMap();
-
-        new Marker()
-            .setLngLat([1, 1])
-            .addTo(map);
-
-        // added while the map loads: the opacity read waits for the next render
-        expect(map._oneTimeListeners.render).toHaveLength(1);
-
-        map.fire('terrain');
-        expect(map._oneTimeListeners.render).toHaveLength(1);
-
-        map.fire('render');
-        expect(map._oneTimeListeners.render).toHaveLength(1);
-
-        map.fire('render');
-        expect(map._oneTimeListeners.render).toHaveLength(1);
-
-        // await idle to be fully loaded
-        await map.once('idle');
-        map.fire('render');
-        expect(map._oneTimeListeners.render).toHaveLength(0);
-        map.remove();
-    });
-
     test('Follows the terrain that loads after a move', async () => {
         const map = createMap({width: 1024, center: [40, 30], zoom: 13, pitch: 60, centerClampedToGround: false});
         await map.once('load');
@@ -1267,22 +1241,18 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([40.01, 30.01])
             .addTo(map);
-        let loaded = false;
-        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
 
         map.jumpTo({center: [40.001, 30.001]});
         expect(marker.getElement().style.transform).toBe('translate(-50%,-50%) translate(604px, 189px) rotateX(0deg) rotateZ(0deg)');
 
-        elevation = 1000; // the terrain tiles under the marker arrive
-        loaded = true;
-        map.triggerRepaint();
-        await sleep(100);
+        elevation = 1000; // the terrain tiles under the marker arrive, then the map settles
+        map.fire('idle');
         expect(marker.getElement().style.transform).toBe('translate(-50%,-50%) translate(611px, 86px) rotateX(0deg) rotateZ(0deg)');
 
         map.remove();
     });
 
-    test('Keeps its opacity while the terrain reloads after a projection change, and reads it once the map is loaded', async () => {
+    test('Checks the terrain occlusion again once the map is idle', async () => {
         const map = createMap({width: 1024});
         await map.once('load');
         map.terrain = createTerrain();
@@ -1292,43 +1262,15 @@ describe('marker', () => {
             .addTo(map);
         expect(marker.getElement().style.opacity).toBe('0.7');
 
-        let loaded = false;
-        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain; // the terrain without its tiles says covered
-        map.setProjection({type: 'globe'});
-        await sleep(100);
-        expect(marker.getElement().style.opacity).toBe('0.7');
-
-        loaded = true;
-        map.triggerRepaint();
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain; // the terrain tiles that arrive cover the marker
+        map.fire('idle');
         await sleep(100);
         expect(marker.getElement().style.opacity).toBe('0.3');
 
         map.remove();
     });
 
-    test('Reads the terrain depth after the next render when added while the map loads', async () => {
-        const map = createMap({width: 1024});
-        await map.once('load');
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain; // the terrain tiles are not loaded yet
-        let loaded = false;
-        vi.spyOn(map, 'loaded').mockImplementation(() => loaded);
-        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
-            .setLngLat([0, 0])
-            .addTo(map);
-        expect(marker.getElement().style.opacity).toBe('');
-
-        map._camera.transform.isLocationOccluded = () => false; // the next frame draws the terrain behind the marker
-        loaded = true;
-        map.triggerRepaint();
-        await sleep(100);
-        expect(marker.getElement().style.opacity).toBe('0.7');
-
-        map.remove();
-    });
-
-    test('Applies the globe occlusion while the map loads after a projection change', async () => {
+    test('Applies the globe occlusion after a projection change', async () => {
         const map = createMap({width: 1024});
         await map.once('load');
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
@@ -1336,7 +1278,6 @@ describe('marker', () => {
             .addTo(map);
         expect(marker.getElement().style.opacity).toBe('0.7');
 
-        vi.spyOn(map, 'loaded').mockReturnValue(false);
         map.setProjection({type: 'globe'});
         await sleep(100);
         expect(marker.getElement().style.opacity).toBe('0.3');
@@ -1473,6 +1414,10 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
+        map.terrain = createTerrain();
+        await sleep(100);
+        map.fire('terrain');
+
         expect(marker.getElement().style.opacity).toMatch('0.3');
         map.remove();
     });
@@ -1487,6 +1432,7 @@ describe('marker', () => {
 
         map.terrain = createTerrain();
         map.fire('terrain');
+        await sleep(100); // the terrain check's 100 ms window closes
 
         marker.setOpacity(undefined, '0.35');
 
@@ -1666,6 +1612,7 @@ describe('marker', () => {
 
         map.terrain = createTerrain();
         map.fire('terrain');
+        await sleep(100); // the terrain check's 100 ms window closes
 
         marker.setOpacity(undefined, 0.35);
 
