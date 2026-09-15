@@ -5,7 +5,6 @@ import {browser} from '../util/browser.ts';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
-
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data.ts';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted.ts';

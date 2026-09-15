@@ -25,10 +25,17 @@ import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
-
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -45,16 +52,6 @@ import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-
-import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
-import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
-import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
-import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
-import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
-import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
-import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
-import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-
 import type {ProgramConfiguration} from '../data/program_configuration.ts';
 
 type PainterOptions = {
