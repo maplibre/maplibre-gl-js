@@ -12,7 +12,7 @@ import {
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -136,7 +136,7 @@ function drawTiles(
                 context.extTextureFilterAnisotropicMax);
         }
 
-        const terrainData = painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
         const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 

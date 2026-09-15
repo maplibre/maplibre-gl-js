@@ -1,6 +1,6 @@
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Projection} from '../geo/projection/projection.ts';
-import type {Terrain} from './terrain.ts';
+import type {Terrain, TerrainData} from './terrain.ts';
 import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {DepthRangeType} from '../webgl/types.ts';
@@ -46,4 +46,13 @@ export function getProjectionDataForTile(renderContext: RenderContext, tileID: O
         applyGlobeMatrix: !renderContext.isRenderingToTexture,
         applyTerrainMatrix: options.applyTerrainMatrix ?? true
     });
+}
+
+/**
+ * Returns terrain data for a tile.
+ * Returns null if terrain is not configured or tiles are being rendered to a texture.
+ */
+export function getTerrainDataForTile(renderContext: RenderContext, tileID: OverscaledTileID): TerrainData | null {
+    if (renderContext.isRenderingToTexture) return null;
+    return renderContext.terrain?.getTerrainData(tileID) ?? null;
 }

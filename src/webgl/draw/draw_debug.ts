@@ -4,7 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {debugUniformValues} from '../program/debug_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Style} from '../../style/style.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -76,7 +76,7 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const id = '$debug';
-    const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+    const terrainData = getTerrainDataForTile(renderContext, coord);
 
     context.activeTexture.set(gl.TEXTURE0);
 
