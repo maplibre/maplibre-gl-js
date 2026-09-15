@@ -1,15 +1,17 @@
-import {type Painter} from '../render/painter.ts';
-import type {RenderOptions} from '../render/render_options.ts';
-import {type Tile} from '../tile/tile.ts';
+
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {type OverscaledTileID} from '../tile/tile_id.ts';
 import {drawTerrain} from './draw/draw_terrain.ts';
-import {type Style} from '../style/style.ts';
-import {type Terrain} from '../render/terrain.ts';
-import {type Texture} from './texture.ts';
-import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {RTT_DIFFERENCES, RTTFingerprint, type RTTDifference} from './rtt_fingerprint.ts';
+
+import type {Tile} from '../tile/tile.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {Style} from '../style/style.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {Texture} from './texture.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {Painter} from '../render/painter.ts';
+import type {RenderOptions} from '../render/render_options.ts';
 
 /**
  * lookup table which layers should rendered to texture

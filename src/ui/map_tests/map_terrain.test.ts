@@ -3,13 +3,14 @@ import {createMap, beforeMapTest, waitForEvent, createTerrain} from '../../util/
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
-import {type Map} from '../map.ts';
 import {Painter} from '../../render/painter.ts';
 import {MapSourceDataEvent} from '../events.ts';
+
+import type {Map} from '../map.ts';
+import type {Terrain} from '../../render/terrain.ts';
 
 let server: FakeServer;
 let map: Map;

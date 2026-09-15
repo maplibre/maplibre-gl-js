@@ -1,5 +1,4 @@
 import Point from '@mapbox/point-geometry';
-
 import {DOM} from '../../util/dom.ts';
 import {degreesToRadians, extend, getAngleDelta} from '../../util/util.ts';
 import {DragHandler, type DragMoveHandler, type DragRotateResult} from '../handler/drag_handler.ts';
