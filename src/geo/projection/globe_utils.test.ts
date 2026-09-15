@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
-import {getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
+import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
 import {GlobeTransform} from './globe_transform.ts';
 
 describe('globe utils', () => {
@@ -66,5 +66,21 @@ describe('globe utils', () => {
         transform.setPitch(85);
         const pitched = getGlobeCenterInViewSpace(transform);
         expect(Math.hypot(...pitched) / radius).toBeCloseTo(Math.hypot(...transform.cameraPosition), 8);
+    });
+});
+
+describe('getAtmosphereAltitudeBlend', () => {
+    const earthRadius = 6371000;
+
+    test('is 0 inside the atmosphere and 1 from ten times its height', () => {
+        expect(getAtmosphereAltitudeBlend(0, earthRadius)).toBe(0);
+        expect(getAtmosphereAltitudeBlend(100000, earthRadius)).toBe(0);
+        expect(getAtmosphereAltitudeBlend(1000000, earthRadius)).toBe(1);
+        expect(getAtmosphereAltitudeBlend(100 * earthRadius, earthRadius)).toBe(1);
+    });
+
+    test('follows a smoothstep between', () => {
+        expect(getAtmosphereAltitudeBlend(325000, earthRadius)).toBeCloseTo(0.15625, 6);
+        expect(getAtmosphereAltitudeBlend(775000, earthRadius)).toBeCloseTo(0.84375, 6);
     });
 });
