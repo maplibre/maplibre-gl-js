@@ -289,22 +289,6 @@ describe('VerticalPerspectiveTransform.isLocationOccluded', () => {
         expect(transform.isLocationOccluded(behindRidge, terrain, elevationAboveRidge)).toBe(false);
     });
 
-    test('a location behind a ridge is in view through a screen point above the ridge crest', () => {
-        const tileSpanAtZoom12 = 360 / (1 << 12);
-        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
-        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
-        const transform = new VerticalPerspectiveTransform();
-        transform.resize(512, 512);
-        transform.setCenter(new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25));
-        transform.setZoom(12);
-        transform.setPitch(75);
-        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
-        const ridgeCrest = transform.locationToScreenPoint(new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.5), terrain);
-        const aboveRidgeCrest = new Point(ridgeCrest.x, ridgeCrest.y - 40);
-
-        expect(transform.isLocationOccluded(behindRidge, terrain, 0, aboveRidgeCrest)).toBe(false);
-    });
-
     test('a location behind the camera is hidden', () => {
         const tileSpanAtZoom12 = 360 / (1 << 12);
         const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], createDEM(() => 0));

@@ -300,8 +300,8 @@ export class GlobeTransform implements ITransform {
     }
 
     /** {@inheritDoc ITransform.isLocationOccluded} */
-    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number, p?: Point): boolean {
-        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation, p);
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation);
     }
 
     public transformLightDirection(dir: vec3): vec3 {

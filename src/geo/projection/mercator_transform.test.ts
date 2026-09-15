@@ -1006,19 +1006,6 @@ describe('MercatorTransform.isLocationOccluded', () => {
         expect(transform.isLocationOccluded(behindRidge, terrain, elevationAboveRidge)).toBe(false);
     });
 
-    test('a location behind a ridge is in view through a screen point above the ridge crest', () => {
-        const tileSpanAtZoom12 = 360 / (1 << 12);
-        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
-        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
-        const cameraSouthOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25);
-        const transform = createMercatorTransform(cameraSouthOfRidge, 12, 75);
-        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
-        const ridgeCrest = transform.locationToScreenPoint(new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.5), terrain);
-        const aboveRidgeCrest = new Point(ridgeCrest.x, ridgeCrest.y - 40);
-
-        expect(transform.isLocationOccluded(behindRidge, terrain, 0, aboveRidgeCrest)).toBe(false);
-    });
-
     test('a location behind the camera or beyond the far plane is hidden', () => {
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
         const transform = createMercatorTransform(new LngLat(0, 0), 6, 80);

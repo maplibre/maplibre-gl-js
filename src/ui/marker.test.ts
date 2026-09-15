@@ -1299,17 +1299,15 @@ describe('marker', () => {
     });
 
     test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
-        const map = createMap();
+        const map = createMap({pitch: 60});
         await map.once('load');
-        const centerY = 256;
-        const offsetUp = -20;
-        const baseY = centerY + offsetUp;
-        const marker = new Marker({opacity: '0.7', offset: [0, offsetUp]})
+        const marker = new Marker({opacity: '0.7', offset: [0, -20]})
             .setLngLat([0, 0])
             .addTo(map);
 
         map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain, _elevation, p) => !!terrain && p.y === baseY;
+        const baseElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform);
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === baseElevation;
         await sleep(100);
         map.fire('terrain');
 

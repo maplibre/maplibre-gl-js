@@ -381,13 +381,13 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /** {@inheritDoc ITransform.isLocationOccluded} */
-    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number, p?: Point): boolean {
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         const surfacePoint = angularCoordinatesToSurfaceVector(lngLat);
         if (!this.isSurfacePointVisible(surfacePoint)) return true;
         if (!terrain?.getCoverageIndex()) return false;
 
         elevation ??= terrain.getElevationForLngLat(lngLat, this);
-        p ??= this._projectSurfacePointToScreen(vec3.scale(surfacePoint, surfacePoint, 1 + elevation / earthRadius));
+        const p = this._projectSurfacePointToScreen(vec3.scale(surfacePoint, surfacePoint, 1 + elevation / earthRadius));
         const origin = this.cameraPosition;
         const direction = this.getRayDirectionFromPixel(p);
         const tLocation = globeRayParameter(origin, direction, lngLat, elevation);

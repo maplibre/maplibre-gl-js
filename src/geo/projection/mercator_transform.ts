@@ -901,7 +901,7 @@ export class MercatorTransform implements ITransform {
     }
 
     /** {@inheritDoc ITransform.isLocationOccluded} */
-    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number, p?: Point): boolean {
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         if (!terrain?.getCoverageIndex()) return false;
 
         const location = MercatorCoordinate.fromLngLat(lngLat);
@@ -909,7 +909,7 @@ export class MercatorTransform implements ITransform {
         const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
         const w = clip[3];
         if (w <= 0 || Math.abs(clip[2]) > w) return true;
-        p ??= new Point(clip[0] / w, clip[1] / w);
+        const p = new Point(clip[0] / w, clip[1] / w);
 
         const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
         if (hit == null) return false;

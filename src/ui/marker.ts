@@ -725,18 +725,17 @@ export class Marker extends Evented<MarkerEventType> {
 
     /**
      * @internal
-     * Whether terrain hides the marker: its base and then, when the base is hidden, its center, `offset` away from the
-     * base on screen and raised by the matching height. A marker whose center is in view shows in full.
+     * Whether the terrain covers the marker: its base and then, when the base is hidden, its center, raised above the
+     * base by the height `offset` spans on screen. A marker whose center is in view shows in full.
      */
     _isCoveredByTerrain(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
         const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
-        if (!transform.isLocationOccluded(this._lngLat, terrain, elevation, this._pos)) return false;
+        if (!transform.isLocationOccluded(this._lngLat, terrain, elevation)) return false;
 
         const metersToCenter = -this._offset.y / transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
-        const centerPoint = new Point(this._pos.x, this._pos.y - this._offset.y);
-        return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter, centerPoint);
+        return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }): void => {
