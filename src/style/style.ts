@@ -968,7 +968,7 @@ export class Style extends Evented<MapEventType> {
                 }
                 case 'setProjection': {
                     const [projection] = op.args;
-                    this.setProjection(projection);
+                    operations.push(() => this.setProjection(projection));
                     break;
                 }
                 case 'setGlobalState': {
