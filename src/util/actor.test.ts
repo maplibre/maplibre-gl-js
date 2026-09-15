@@ -176,21 +176,6 @@ describe('Actor', () => {
         expect(addEventListenerSpy.mock.calls[0]).toEqual(removeEventListenerSpy.mock.calls[0]);
     });
 
-    test('reports worker failures until it is removed', () => {
-        const worker = createActorTarget();
-        const listener = vi.fn();
-        const actor = new Actor(worker, '1');
-        actor.on('error', listener);
-        worker.dispatchEvent(new ErrorEvent('error'));
-
-        expect(listener).toHaveBeenCalledWith(expect.objectContaining({
-            error: new Error('Worker failed to load. Check that the worker URL is correct.')
-        }));
-        actor.remove();
-        worker.dispatchEvent(new ErrorEvent('error'));
-        expect(listener).toHaveBeenCalledTimes(1);
-    });
-
     test('send a message that is rejected', async () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
@@ -290,9 +275,3 @@ describe('Actor', () => {
         expect(spy).toHaveBeenCalled();
     });
 });
-
-function createActorTarget(): ActorTarget & EventTarget {
-    const target = new EventTarget() as ActorTarget & EventTarget;
-    target.postMessage = vi.fn();
-    return target;
-}

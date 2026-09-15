@@ -2,7 +2,8 @@ import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
-import {Evented, type ErrorEventType} from './evented.ts';
+import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
+import {type Subscription, subscribe} from './util.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
@@ -17,6 +18,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
     currentActor: number;
     id: string | number;
     private removed: boolean;
+    private workerErrorSubscriptions: Subscription[];
 
     /**
      * @param workerPool - The shared pool from which this dispatcher acquires workers.
@@ -29,6 +31,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.currentActor = 0;
         this.id = mapId;
         this.removed = false;
+        this.workerErrorSubscriptions = [];
         this.actorsPromise = this.initActors(mapId);
     }
 
@@ -36,7 +39,10 @@ export class Dispatcher extends Evented<ErrorEventType> {
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
-            const actor = new Actor(worker, mapId).setEventedParent(this);
+            this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
+                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
+            }, false));
+            const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
             return actor;
         });
@@ -78,7 +84,12 @@ export class Dispatcher extends Evented<ErrorEventType> {
         for (const actor of this.actors) {
             actor.remove();
         }
+        for (const subscription of this.workerErrorSubscriptions) {
+            subscription.unsubscribe();
+        }
         this.actors = [];
+        this.workerErrorSubscriptions = [];
+        this.setEventedParent(null);
         if (mapRemoved) this.workerPool.release(this.id);
     }
 

@@ -91,6 +91,8 @@ describe('Dispatcher', () => {
             error: new Error('Worker failed to load. Check that the worker URL is correct.')
         }));
         dispatcher.remove();
+        worker.dispatchEvent(new ErrorEvent('error'));
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 });
 
