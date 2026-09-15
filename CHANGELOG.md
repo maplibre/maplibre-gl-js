@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ## 6.10.0
