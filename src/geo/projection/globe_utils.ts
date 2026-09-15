@@ -506,12 +506,13 @@ export function raySphereIntersection(origin: vec3, direction: vec3, radius: num
     };
 }
 
-/** Atmosphere height as a fraction of the globe radius: 100 km over Earth's 6371 km. */
+/** Height of the atmosphere relative to the globe radius, 100 km for Earth. */
 const ATMOSPHERE_HEIGHT_TO_GLOBE_RADIUS = 100000 / 6371000;
 
 /**
- * Blend factor of the atmosphere for a camera at `altitude` above the globe: 0 inside the atmosphere,
- * 1 from ten times its height up. The sky fades out on the same curve, so one of them owns the horizon.
+ * Returns how much of the atmosphere to draw for a camera at the given altitude above the globe.
+ * It is 0 inside the atmosphere and reaches 1 at ten times the atmosphere height. The sky shader
+ * fades out along the same curve.
  */
 export function getAtmosphereAltitudeBlend(altitude: number, globeRadius: number): number {
     const atmosphereHeight = globeRadius * ATMOSPHERE_HEIGHT_TO_GLOBE_RADIUS;
