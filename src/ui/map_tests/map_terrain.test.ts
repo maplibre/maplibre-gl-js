@@ -6,7 +6,8 @@ import {fakeServer, type FakeServer} from 'nise';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
-import {Painter} from '../../render/painter.ts';
+import {ImageRequest} from '../../util/image_request.ts';
+import {Painter, type RTTObject} from '../../render/painter.ts';
 import {MapSourceDataEvent} from '../events.ts';
 
 import type {Map} from '../map.ts';
@@ -77,6 +78,45 @@ describe('setTerrain', () => {
 
         expect(errorSpy).not.toHaveBeenCalled();
         expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
+    });
+
+    test('removing terrain frees the pooled drape textures', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        map.setTerrain({source: 'dem'});
+        const drape = map.painter.acquireRTT(512);
+        vi.spyOn(drape.texture, 'destroy');
+        map.painter.releaseRTT(drape);
+
+        map.setTerrain(null);
+
+        expect(drape.texture.destroy).toHaveBeenCalledTimes(1);
+    });
+
+    test('destroys the drapes a zoom out leaves unused once the map is at rest', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {
+                dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256},
+                land: {type: 'geojson', data: {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]]]}}}
+            },
+            layers: [{id: 'land', type: 'fill', source: 'land'}],
+            terrain: {source: 'dem'}
+        }});
+        const acquireRTT = vi.spyOn(map.painter, 'acquireRTT');
+        await map.once('idle');
+        const drapesAtZoom14 = [...new Set(acquireRTT.mock.results.map(({value}) => value as RTTObject))];
+        for (const drape of drapesAtZoom14) vi.spyOn(drape.texture, 'destroy');
+        const terrainTilesAtZoom14 = map.terrain.tileManager.getRenderableTiles().length;
+
+        map.jumpTo({zoom: 0});
+        await map.once('idle');
+
+        const terrainTilesAtZoom0 = map.terrain.tileManager.getRenderableTiles().length;
+        expect(terrainTilesAtZoom0).toBeLessThan(terrainTilesAtZoom14);
+        const destroyedDrapes = drapesAtZoom14.filter(({texture}) => vi.mocked(texture.destroy).mock.calls.length > 0);
+        expect(destroyedDrapes).toHaveLength(drapesAtZoom14.length - terrainTilesAtZoom0);
     });
 
     test('drops the previous source attribution when switching terrain to a new source', async () => {
