@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Speed up fill and fill-extrusion triangulation by looking up each vertex's deduplicated index once instead of hashing every triangle corner, and every outline point of a ring that is not subdivided, again ([#8425](https://github.com/maplibre/maplibre-gl-js/pull/8425)) (by [@cherenkov](https://github.com/cherenkov))
+- Add a `trackZoom` option to `GeolocateControlOptions` to allow control over map zoom adjustments in line with the Geolocation Position update accuracy, while `trackUserLocation` is `true` ([#7908](https://github.com/maplibre/maplibre-gl-js/issues/7908), [#8324](https://github.com/maplibre/maplibre-gl-js/pull/8324), continues [#7909](https://github.com/maplibre/maplibre-gl-js/pull/7909)) (by [@timsluis](https://github.com/timsluis))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
