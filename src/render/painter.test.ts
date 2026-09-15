@@ -255,6 +255,7 @@ describe('RTT pool', () => {
     });
 
     test('destroyRTTResources frees the pool and the shared FBO, and both come back on the next acquire', () => {
+        const gl = painter.context.gl;
         const obj = painter.acquireRTT(256);
         vi.spyOn(obj.texture, 'destroy');
         painter.bindRTT(obj);
@@ -263,10 +264,11 @@ describe('RTT pool', () => {
         painter.destroyRTTResources();
 
         expect(obj.texture.destroy).toHaveBeenCalledTimes(1);
-        expect(painter._rttSharedFbo).toBeNull();
+        expect(gl.deleteFramebuffer).toHaveBeenCalledTimes(1);
+        expect(gl.deleteRenderbuffer).toHaveBeenCalledTimes(1);
 
         painter.bindRTT(painter.acquireRTT(256));
-        expect(painter._rttSharedFbo.size).toBe(256);
+        expect(gl.createFramebuffer).toHaveBeenCalledTimes(2);
     });
 
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {
