@@ -77,10 +77,11 @@ class Subdivider {
 
     /**
      * Subdivides a polygon by iterating over rows of granularity subdivision cells and splitting each row along vertical subdivision axes.
-     * @param inputIndices - Indices into the internal vertex buffer of the triangulated polygon (after running `earcut`).
+     * @param inputIndices - Indices into the flattened input vertices of the triangulated polygon (the output of `earcut`).
+     * @param inputRemap - Index into the internal vertex buffer for each flattened input vertex.
      * @returns Indices into the internal vertex buffer for triangles that are a subdivision of the input geometry.
      */
-    private _subdivideTrianglesScanline(inputIndices: number[]): number[] {
+    private _subdivideTrianglesScanline(inputIndices: number[], inputRemap: number[]): number[] {
         // A granularity cell is the square space between axes that subdivide geometry.
         // For granularity 8, cells would be 1024 by 1024 units.
         // For each triangle, we iterate over all cell rows it intersects, and generate subdivided geometry
@@ -93,7 +94,7 @@ class Subdivider {
         if (this._granularity < 2) {
             // The actual subdivision code always produces triangles with the correct winding order.
             // Also apply winding order correction when skipping subdivision altogether to maintain consistency.
-            return fixWindingOrder(this._vertexBuffer, inputIndices);
+            return fixWindingOrder(this._vertexBuffer, remapIndices(inputIndices, inputRemap));
         }
 
         const finalIndices = [];
@@ -102,18 +103,18 @@ class Subdivider {
         const numIndices = inputIndices.length;
         for (let primitiveIndex = 0; primitiveIndex < numIndices; primitiveIndex += 3) {
             const triangleIndices: [number, number, number] = [
-                inputIndices[primitiveIndex + 0], // v0
-                inputIndices[primitiveIndex + 1], // v1
-                inputIndices[primitiveIndex + 2], // v2
+                inputRemap[inputIndices[primitiveIndex + 0]], // v0
+                inputRemap[inputIndices[primitiveIndex + 1]], // v1
+                inputRemap[inputIndices[primitiveIndex + 2]], // v2
             ];
 
             const triangleVertices: [number, number, number, number, number, number] = [
-                this._vertexBuffer[inputIndices[primitiveIndex + 0] * 2 + 0], // v0.x
-                this._vertexBuffer[inputIndices[primitiveIndex + 0] * 2 + 1], // v0.y
-                this._vertexBuffer[inputIndices[primitiveIndex + 1] * 2 + 0], // v1.x
-                this._vertexBuffer[inputIndices[primitiveIndex + 1] * 2 + 1], // v1.y
-                this._vertexBuffer[inputIndices[primitiveIndex + 2] * 2 + 0], // v2.x
-                this._vertexBuffer[inputIndices[primitiveIndex + 2] * 2 + 1], // v2.y
+                this._vertexBuffer[triangleIndices[0] * 2 + 0], // v0.x
+                this._vertexBuffer[triangleIndices[0] * 2 + 1], // v0.y
+                this._vertexBuffer[triangleIndices[1] * 2 + 0], // v1.x
+                this._vertexBuffer[triangleIndices[1] * 2 + 1], // v1.y
+                this._vertexBuffer[triangleIndices[2] * 2 + 0], // v2.x
+                this._vertexBuffer[triangleIndices[2] * 2 + 1], // v2.y
             ];
 
             let minX = Infinity;
@@ -612,7 +613,7 @@ class Subdivider {
         let subdividedTriangles: number[];
         try {
             const earcutResult = earcut(flattened, holeIndices);
-            subdividedTriangles = this._subdivideTrianglesScanline(remapIndices(earcutResult, inputRemap));
+            subdividedTriangles = this._subdivideTrianglesScanline(earcutResult, inputRemap);
         } catch (e) {
             console.error(e);
         }
