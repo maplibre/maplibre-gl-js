@@ -24,16 +24,6 @@ function createMap(options: MapOptions = {}) {
     return globalCreateMap({container, ...options});
 }
 
-/**
- * A map whose style has loaded. The map builds its transform when the style's projection is first set,
- * so a test that replaces a transform method waits for this.
- */
-async function createLoadedMap() {
-    const map = createMap();
-    await map.once('load');
-    return map;
-}
-
 beforeEach(() => {
     beforeMapTest();
 });
@@ -1261,7 +1251,8 @@ describe('marker', () => {
     });
 
     test('Marker changes opacity behind terrain and when terrain is removed', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
@@ -1307,7 +1298,8 @@ describe('marker', () => {
     });
 
     test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         const centerY = 256;
         const offsetUp = -20;
         const baseY = centerY + offsetUp;
@@ -1325,7 +1317,8 @@ describe('marker', () => {
     });
 
     test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
             .setLngLat([0, 0])
@@ -1340,7 +1333,8 @@ describe('marker', () => {
     });
 
     test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker({opacityWhenCovered: '0.15'})
             .setLngLat([0, 0])
@@ -1390,7 +1384,8 @@ describe('marker', () => {
     });
 
     test('Removes an open popup when going behind 3d terrain', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
@@ -1413,7 +1408,8 @@ describe('marker', () => {
     });
 
     test('Does not open a popup when behind 3d terrain', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
@@ -1517,7 +1513,8 @@ describe('marker', () => {
     });
 
     test('Applies new "opacityWhenCovered" provided by setOpacity when provided a number', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker({opacityWhenCovered: 0.15})
             .setLngLat([0, 0])
@@ -1533,7 +1530,8 @@ describe('marker', () => {
     });
 
     test('Adds maplibregl-marker-covered class when marker is covered by 3d terrain', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
@@ -1548,7 +1546,8 @@ describe('marker', () => {
     });
 
     test('Removes maplibregl-marker-covered class when marker is no longer covered by 3d terrain', async () => {
-        const map = await createLoadedMap();
+        const map = createMap();
+        await map.once('load');
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
