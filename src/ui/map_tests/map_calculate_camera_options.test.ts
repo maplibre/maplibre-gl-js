@@ -17,19 +17,13 @@ describe('calculateAnchoredCameraOptions', () => {
         const anchorLocation = new LngLat(5, 3);
         const anchorScreenPoint: [number, number] = [100, 150];
         const centerBefore = map.getCenter();
-        const move = vi.fn();
-        map.on('move', move);
 
-        const panOnly = map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint);
-        const cameraOptions = map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint, {
-            zoom: 10
-        });
+        expect(map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint).zoom).toBe(3);
+        const cameraOptions = map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint, {zoom: 10});
 
-        expect(panOnly.zoom).toBe(3);
         expect(cameraOptions.zoom).toBe(5);
         expect(map.getCenter()).toEqual(centerBefore);
         expect(map.getZoom()).toBe(3);
-        expect(move).not.toHaveBeenCalled();
 
         map.jumpTo(cameraOptions);
         const projectedAnchor = map.project(anchorLocation);

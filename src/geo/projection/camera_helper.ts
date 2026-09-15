@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {type IReadonlyTransform, type ITransform} from '../transform_interface.ts';
 import {type LngLat, type LngLatLike} from '../lng_lat.ts';
-import {type AnchoredCameraOptions, type CameraForBoundsOptions, type PointLike} from '../../ui/camera.ts';
+import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera.ts';
 import {type PaddingOptions} from '../edge_insets.ts';
 import {type LngLatBounds} from '../lng_lat_bounds.ts';
 import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
@@ -127,35 +127,6 @@ export interface ICameraHelper {
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
 
     handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
-}
-
-/**
- * @internal
- * Applies an anchored camera change through the projection-specific control calculations.
- *
- * The anchor starts at `anchorStartScreenPoint` and follows the pointer to
- * `anchorScreenPoint` while the requested camera values are applied.
- */
-export function updateAnchoredCamera(
-    cameraHelper: ICameraHelper,
-    tr: ITransform,
-    anchorLocation: LngLat,
-    anchorStartScreenPoint: Point,
-    anchorScreenPoint: Point,
-    options: AnchoredCameraOptions,
-    anchorElevation?: number
-): void {
-    const deltas: MapControlsDeltas = {
-        panDelta: anchorScreenPoint.sub(anchorStartScreenPoint),
-        zoomDelta: options.zoom === undefined ? 0 : options.zoom - tr.zoom,
-        bearingDelta: 0,
-        pitchDelta: 0,
-        rollDelta: 0,
-        around: anchorScreenPoint,
-        aroundElevation: anchorElevation
-    };
-    cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
-    cameraHelper.handleMapControlsPan(deltas, tr, anchorLocation);
 }
 
 /**

@@ -13,7 +13,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
-import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -1417,9 +1417,8 @@ export class Map extends Evented<MapEventType> {
      */
     jumpTo(options: JumpToOptions, eventData?: any): this { this._camera.jumpTo(options, eventData); return this; }
     /**
-     * Calculates camera options that move a geographic anchor from its current position to a
-     * specified screen point without changing the map. The calculation uses the same
-     * projection-specific movement and constraint logic as MapLibre's interaction handlers.
+     * Calculates constrained camera options that place a geographic anchor at a screen point
+     * without changing the map, using the same logic as MapLibre's interaction handlers.
      *
      * @param anchorLocation - Geographic location to place at `anchorScreenPoint`.
      * @param anchorScreenPoint - Target screen position in pixels.
@@ -1427,13 +1426,13 @@ export class Map extends Evented<MapEventType> {
      * @returns Camera options that can be passed to {@link Map.jumpTo}.
      * @example
      * ```ts
-     * const anchorLocation = map.unproject(pointerDownPosition);
-     * const cameraOptions = map.calculateAnchoredCameraOptions(anchorLocation, currentPointerPosition, {
+     * const cameraOptions = map.calculateAnchoredCameraOptions(
+     *   map.unproject(pointerDownPosition), currentPointerPosition, {
      *   zoom: map.getZoom() + 1
      * });
      * ```
      */
-    calculateAnchoredCameraOptions(anchorLocation: LngLatLike, anchorScreenPoint: PointLike, options?: AnchoredCameraOptions): CameraOptions {
+    calculateAnchoredCameraOptions(anchorLocation: LngLatLike, anchorScreenPoint: PointLike, options?: Pick<CameraOptions, 'zoom'>): CameraOptions {
         return this._camera.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint, options);
     }
     /**

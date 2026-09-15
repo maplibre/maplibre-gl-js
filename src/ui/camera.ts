@@ -17,7 +17,7 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import {updateAnchoredCamera, type ICameraHelper} from '../geo/projection/camera_helper.ts';
+import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -99,12 +99,6 @@ export type JumpToOptions = CameraOptions & {
      * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
      */
     padding?: PaddingOptions;
-};
-
-/** Options for {@link Map.calculateAnchoredCameraOptions}. */
-export type AnchoredCameraOptions = {
-    /** The desired zoom level. */
-    zoom?: number;
 };
 
 /**
@@ -725,12 +719,21 @@ export class Camera extends Evented<MapEventType> {
      * Calculates camera options for moving a geographic anchor to a screen point without
      * changing this camera.
      */
-    calculateAnchoredCameraOptions(anchorLocation: LngLatLike, anchorScreenPoint: PointLike, options: AnchoredCameraOptions = {}): CameraOptions {
+    calculateAnchoredCameraOptions(anchorLocation: LngLatLike, anchorScreenPoint: PointLike, options: Pick<CameraOptions, 'zoom'> = {}): CameraOptions {
         const tr = this.transform.clone();
         const anchor = LngLat.convert(anchorLocation);
-        const anchorStartScreenPoint = this.transform.locationToScreenPoint(anchor, this.terrain);
-        const anchorElevation = this.terrain?.getElevationForLngLat(anchor, tr);
-        updateAnchoredCamera(this.cameraHelper, tr, anchor, anchorStartScreenPoint, Point.convert(anchorScreenPoint), options, anchorElevation);
+        const target = Point.convert(anchorScreenPoint);
+        const deltas: MapControlsDeltas = {
+            panDelta: target.sub(this.transform.locationToScreenPoint(anchor, this.terrain)),
+            zoomDelta: options.zoom === undefined ? 0 : options.zoom - tr.zoom,
+            bearingDelta: 0,
+            pitchDelta: 0,
+            rollDelta: 0,
+            around: target,
+            aroundElevation: this.terrain?.getElevationForLngLat(anchor, tr)
+        };
+        this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
+        this.cameraHelper.handleMapControlsPan(deltas, tr, anchor);
 
         return {
             center: tr.center,
