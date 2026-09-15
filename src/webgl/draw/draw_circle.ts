@@ -3,12 +3,12 @@ import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
+import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {translatePosition} from '../../util/util.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Program} from '../program.ts';
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
 import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
@@ -36,10 +36,9 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (renderOptions.currentPass !== 'translucent') return;
+export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
+    if (renderContext.currentPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderOptions;
     const opacity = layer.paint.get('circle-opacity');
     const strokeWidth = layer.paint.get('circle-stroke-width');
     const strokeOpacity = layer.paint.get('circle-stroke-opacity');
@@ -81,7 +80,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         const terrainData = painter.style.map.terrain?.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const projectionData = getProjectionDataForTile(renderContext, coord);
 
         const state: TileRenderState = {
             programConfiguration,

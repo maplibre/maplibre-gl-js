@@ -4,6 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
+import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {VertexBuffer} from '../vertex_buffer.ts';
 import type {IndexBuffer} from '../index_buffer.ts';
@@ -21,9 +22,8 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean): void {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, renderContext: RenderContext): void {
     const context = painter.context;
-    const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
     const tileBatches: TileBatch[] = [];
@@ -61,7 +61,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             CullFaceMode.disabled,
             null,
             painter.style.map.terrain?.getTerrainData(coord),
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            getProjectionDataForTile(renderContext, coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
