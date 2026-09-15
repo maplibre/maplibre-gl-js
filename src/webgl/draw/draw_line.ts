@@ -12,9 +12,9 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
+import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {LineBucket} from '../../data/bucket/line_bucket.ts';
@@ -140,8 +140,8 @@ function bindGradientAndDashTextures(
     programConfiguration.updatePaintBuffers(crossfade);
 }
 
-export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (renderOptions.currentPass !== 'translucent') return;
+export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
+    if (renderContext.currentPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
@@ -151,13 +151,13 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const useTerrain = !!painter.style.map.terrain;
 
     if (layerOpacity < 1) {
-        const results = prepareDrawLayerOpacity(painter, layer, coords, useTerrain);
-        drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
+        const results = prepareDrawLayerOpacity(painter, layer, coords);
+        drawLineTiles(painter, tileManager, layer, coords, renderContext, useTerrain);
         drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
     }
 
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
+    drawLineTiles(painter, tileManager, layer, coords, renderContext, useTerrain);
 }
 
 function drawLineTiles(
@@ -165,11 +165,9 @@ function drawLineTiles(
     tileManager: TileManager,
     layer: LineStyleLayer,
     coords: OverscaledTileID[],
-    renderOptions: RenderOptions,
+    renderContext: RenderContext,
     useTerrain: boolean
 ) {
-    const {isRenderingToTexture} = renderOptions;
-
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
@@ -206,7 +204,7 @@ function drawLineTiles(
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, isRenderingToTexture) : null;
+        const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture) : null;
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);
@@ -223,11 +221,7 @@ function drawLineTiles(
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);
         }
 
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: coord,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
+        const projectionData = getProjectionDataForTile(renderContext, coord);
 
         const pixelRatio = transform.getPixelScale();
 

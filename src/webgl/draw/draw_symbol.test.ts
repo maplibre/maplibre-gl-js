@@ -6,7 +6,7 @@ import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import {Painter} from '../../render/painter.ts';
-import {createRenderOptions} from '../../render/render_options.ts';
+import {createRenderContext} from '../../render/render_context.ts';
 import {Program} from '../program.ts';
 import {drawSymbols} from './draw_symbol.ts';
 import * as symbolProjection from '../../symbol/projection.ts';
@@ -57,10 +57,10 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null, null);
-        const renderOptions = createRenderOptions(null, undefined, null);
-        renderOptions.currentPass = 'opaque';
+        const renderContext = createRenderContext(null, undefined, null);
+        renderContext.currentPass = 'opaque';
 
-        drawSymbols(mockPainter, null, null, null, null, renderOptions);
+        drawSymbols(mockPainter, null, null, null, null, renderContext);
 
         expect(mockPainter.colorModeForRenderPass).not.toHaveBeenCalled();
     });
@@ -74,8 +74,8 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.transform = createMockTransform();
-        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
-        painterMock.renderOptions.currentPass = 'translucent';
+        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
             map: {},
@@ -122,7 +122,7 @@ describe('drawSymbol', () => {
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         tileManagerMock.getTile = (_a) => tile;
 
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.renderOptions);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.renderContext);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
     });
@@ -137,8 +137,8 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.transform = createMockTransform();
-        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
-        painterMock.renderOptions.currentPass = 'translucent';
+        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
 
         const layerSpec = {
@@ -190,7 +190,7 @@ describe('drawSymbol', () => {
         } as any as Style;
 
         const spy = vi.spyOn(symbolProjection, 'updateLineLabels');
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.renderOptions);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.renderContext);
 
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
@@ -205,8 +205,8 @@ describe('drawSymbol', () => {
             }
         } as any;
         painterMock.transform = createMockTransform();
-        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
-        painterMock.renderOptions.currentPass = 'translucent';
+        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
             projection: new MercatorProjection()
@@ -252,7 +252,7 @@ describe('drawSymbol', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.renderOptions);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.renderContext);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });
