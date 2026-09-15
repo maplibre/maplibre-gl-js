@@ -7,6 +7,7 @@ import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {bufferToArrayBuffer} from '../util/test/util.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
+
 import type {CreateRasterizer} from './glyph_manager.ts';
 
 describe('GlyphManager', () => {

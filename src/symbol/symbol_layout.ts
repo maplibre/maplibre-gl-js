@@ -16,6 +16,7 @@ import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_st
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
 import {type VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
 import {subdivideVertexLine} from '../render/subdivision.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {CanonicalTileID} from '../tile/tile_id.ts';

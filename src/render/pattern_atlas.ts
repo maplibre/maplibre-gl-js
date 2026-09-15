@@ -1,6 +1,5 @@
 /* eslint-disable key-spacing */
 import potpack from 'potpack';
-
 import {RGBAImage} from '../util/image.ts';
 import {ImagePosition} from './image_atlas.ts';
 import {Texture} from '../webgl/texture.ts';

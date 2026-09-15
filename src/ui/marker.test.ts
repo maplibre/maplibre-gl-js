@@ -6,6 +6,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
+
 import type {defaultLocale} from './default_locale.ts';
 
 type MapOptions = {
