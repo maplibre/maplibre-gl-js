@@ -1,8 +1,9 @@
 import {VariableAnchorOffsetCollection, type VariableAnchorOffsetCollectionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type SymbolFeature} from '../../data/bucket/symbol_bucket.ts';
-import {type CanonicalTileID} from '../../tile/tile_id.ts';
 import ONE_EM from '../../symbol/one_em.ts';
-import {type SymbolStyleLayer} from './symbol_style_layer.ts';
+
+import type {SymbolFeature} from '../../data/bucket/symbol_bucket.ts';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import type {SymbolStyleLayer} from './symbol_style_layer.ts';
 
 export enum TextAnchorEnum {
     'center' = 1,

@@ -1,5 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
+
 import type {WebGLContextAttributesWithType} from '../map.ts';
 
 beforeEach(() => {

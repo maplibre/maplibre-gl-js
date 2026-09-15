@@ -80,17 +80,22 @@ export class UniformBuffer {
             }
         }
 
-        if (this.bindingDirty) {
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
-            this.bindingDirty = false;
-        }
+        this.bind();
 
         if (!changed) return;
 
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.pending);
         this.uploaded.set(this.pending);
         this.hasData = true;
+    }
+
+    /** Restores the indexed binding after external rendering without uploading unchanged data. */
+    bind(): void {
+        if (!this.bindingDirty) return;
+        const gl = this.context.gl;
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
+        this.bindingDirty = false;
     }
 
     destroy(): void {

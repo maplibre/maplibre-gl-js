@@ -3,7 +3,8 @@ import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
 import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
 import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('PropertyValue', () => {
     test('set global state', () => {

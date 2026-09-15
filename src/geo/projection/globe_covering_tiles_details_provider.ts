@@ -3,14 +3,15 @@ import {projectTileCoordinatesToSphere} from './globe_utils.ts';
 import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache.ts';
 import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import {vec3, type vec4} from 'gl-matrix';
-import type {IReadonlyTransform} from '../transform_interface.ts';
-import type {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
-import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 import {threePlaneIntersection} from '../../util/util.ts';
+
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.

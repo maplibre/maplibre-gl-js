@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
-import {Tile} from './tile.ts';
+import {FadingDirections, FadingRoles, Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import fs from 'fs';
 import path from 'path';
@@ -9,7 +9,49 @@ import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {extend} from '../util/util.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
+
 import type {Painter} from '../render/painter.ts';
+
+describe('isRenderable', () => {
+    test('keeps transparent incoming raster tiles renderable so their fade can advance', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'loaded';
+        tile.setCrossFadeLogic({
+            fadingRole: FadingRoles.Base,
+            fadingDirection: FadingDirections.Incoming,
+            fadingParentID: new OverscaledTileID(0, 0, 0, 0, 0),
+            fadeEndTime: 300
+        });
+        tile.fadeOpacity = 0;
+
+        expect(tile.isRenderable(false)).toBe(true);
+    });
+
+    test('keeps transparent self-fading raster tiles renderable only after loading', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.setSelfFadeLogic(300);
+        tile.fadeOpacity = 0;
+
+        expect(tile.isRenderable(false)).toBe(false);
+        tile.state = 'loaded';
+        expect(tile.isRenderable(false)).toBe(true);
+    });
+
+    test('excludes departing raster tiles once they are transparent', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'loaded';
+        tile.setCrossFadeLogic({
+            fadingRole: FadingRoles.Base,
+            fadingDirection: FadingDirections.Departing,
+            fadingParentID: new OverscaledTileID(0, 0, 0, 0, 0),
+            fadeEndTime: 300
+        });
+
+        expect(tile.isRenderable(false)).toBe(true);
+        tile.fadeOpacity = 0;
+        expect(tile.isRenderable(false)).toBe(false);
+    });
+});
 
 describe('querySourceFeatures', () => {
     const features = [{
