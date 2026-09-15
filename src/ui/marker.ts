@@ -731,12 +731,12 @@ export class Marker extends Evented<MarkerEventType> {
     _isCoveredByTerrain(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
         const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
-        if (!transform.isLocationOccludedByTerrain(this._pos, this._lngLat, elevation, terrain)) return false;
+        if (!transform.isLocationOccluded(this._lngLat, terrain, elevation, this._pos)) return false;
 
         const metersToCenter = -this._offset.y / transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
         const centerPoint = new Point(this._pos.x, this._pos.y - this._offset.y);
-        return transform.isLocationOccludedByTerrain(centerPoint, this._lngLat, elevation + elevationToCenter, terrain);
+        return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter, centerPoint);
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }): void => {

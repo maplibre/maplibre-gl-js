@@ -299,8 +299,9 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return this.currentTransform.isLocationOccluded(location);
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number, p?: Point): boolean {
+        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation, p);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -424,11 +425,6 @@ export class GlobeTransform implements ITransform {
     /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
         return this.currentTransform.screenTerrainPointToMercatorCoordinate(p, terrain);
-    }
-
-    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
-    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
-        return this.currentTransform.isLocationOccludedByTerrain(p, lngLat, elevation, terrain);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {

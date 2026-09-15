@@ -380,8 +380,21 @@ export class VerticalPerspectiveTransform implements ITransform {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number, p?: Point): boolean {
+        const surfacePoint = angularCoordinatesToSurfaceVector(lngLat);
+        if (!this.isSurfacePointVisible(surfacePoint)) return true;
+        if (!terrain?.getCoverageIndex()) return false;
+
+        elevation ??= terrain.getElevationForLngLat(lngLat, this);
+        p ??= this._projectSurfacePointToScreen(vec3.scale(surfacePoint, surfacePoint, 1 + elevation / earthRadius));
+        const origin = this.cameraPosition;
+        const direction = this.getRayDirectionFromPixel(p);
+        const tLocation = globeRayParameter(origin, direction, lngLat, elevation);
+        if (tLocation <= 0) return true;
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return hit != null && globeRayParameter(origin, direction, hit.toLngLat(), hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -899,19 +912,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         return !!intersection;
-    }
-
-    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
-    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
-        if (!terrain.getCoverageIndex()) return false;
-
-        const origin = this.cameraPosition;
-        const direction = this.getRayDirectionFromPixel(p);
-        const tLocation = globeRayParameter(origin, direction, lngLat, elevation);
-        if (tLocation <= 0) return true;
-
-        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
-        return hit != null && globeRayParameter(origin, direction, hit.toLngLat(), hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     /**

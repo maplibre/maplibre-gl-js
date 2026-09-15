@@ -443,19 +443,6 @@ export class MercatorTransform implements ITransform {
         return null;
     }
 
-    /** {@inheritDoc ITransform.isLocationOccludedByTerrain} */
-    isLocationOccludedByTerrain(p: Point, lngLat: LngLat, elevation: number, terrain: Terrain): boolean {
-        if (!terrain.getCoverageIndex()) return false;
-
-        const segment = this.getRaySegmentFromPixel(p);
-        const location = MercatorCoordinate.fromLngLat(lngLat);
-        const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
-        if (tLocation <= 0 || tLocation > 1) return true;
-
-        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
-        return hit != null && raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
-    }
-
     /**
      * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
      */
@@ -501,8 +488,7 @@ export class MercatorTransform implements ITransform {
      * @returns screen point. Point will be outside the viewport if the coordinate is behind the camera.
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, pixelMatrix);
+        const p = this._coordinateClipPoint(coord, elevation, pixelMatrix);
         const w = p[3];
         if (w > 0) {
             return new Point(p[0] / w, p[1] / w);
@@ -914,8 +900,31 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    isLocationOccluded(_: LngLat): boolean {
-        return false;
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number, p?: Point): boolean {
+        if (!terrain?.getCoverageIndex()) return false;
+
+        const location = MercatorCoordinate.fromLngLat(lngLat);
+        elevation ??= terrain.getElevationForLngLat(lngLat, this);
+        const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
+        const w = clip[3];
+        if (w <= 0 || Math.abs(clip[2]) > w) return true;
+        p ??= new Point(clip[0] / w, clip[1] / w);
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        if (hit == null) return false;
+        const segment = this.getRaySegmentFromPixel(p);
+        const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
+        return raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
+    }
+
+    /**
+     * The coordinate in the clip space of `pixelMatrix`: pixel x and y and NDC depth, each times `w`, which is positive
+     * in front of the camera.
+     */
+    private _coordinateClipPoint(coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
+        return vec4.transformMat4(p, p, pixelMatrix);
     }
 
     getPixelScale(): number {
