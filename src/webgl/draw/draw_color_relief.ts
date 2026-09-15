@@ -4,7 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {StencilMode} from '../stencil_mode.ts';
@@ -100,7 +100,7 @@ function renderColorRelief(
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
 
         const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
 

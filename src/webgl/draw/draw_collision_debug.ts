@@ -4,7 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {VertexBuffer} from '../vertex_buffer.ts';
 import type {IndexBuffer} from '../index_buffer.ts';
@@ -60,7 +60,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             null,
-            painter.style.map.terrain?.getTerrainData(coord),
+            getTerrainDataForTile(renderContext, coord),
             getProjectionDataForTile(renderContext, coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
@@ -114,7 +114,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             null,
-            painter.style.map.terrain?.getTerrainData(batch.coord),
+            getTerrainDataForTile(renderContext, batch.coord),
             null,
             layer.id,
             vertexBuffer,
