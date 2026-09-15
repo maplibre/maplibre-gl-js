@@ -10,15 +10,16 @@ import {createRenderOptions} from '../../render/render_options.ts';
 import {Program} from '../program.ts';
 import {drawSymbols} from './draw_symbol.ts';
 import * as symbolProjection from '../../symbol/projection.ts';
+import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
+import {createIdentityMat4f32} from '../../util/util.ts';
+
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
 import type {Map} from '../../ui/map.ts';
-import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type Style} from '../../style/style.ts';
-import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
+import type {Style} from '../../style/style.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
-import {createIdentityMat4f32} from '../../util/util.ts';
 
 vi.mock(import('../../render/painter'));
 vi.mock(import('../program'));

@@ -1,11 +1,12 @@
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type Program} from '../program.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {translatePosition} from '../../util/util.ts';
 
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Program} from '../program.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -17,7 +18,6 @@ import type {IndexBuffer} from '../index_buffer.ts';
 import type {UniformValues} from '../uniform_binding.ts';
 import type {CircleUniformsType} from '../program/circle_program.ts';
 import type {TerrainData} from '../../render/terrain.ts';
-import {translatePosition} from '../../util/util.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 type TileRenderState = {

@@ -1,13 +1,13 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {type Browser, type ConsoleMessage, type Page} from 'puppeteer';
 import {execSync} from 'node:child_process';
 import {existsSync, readdirSync, statSync} from 'node:fs';
 import http, {type Server} from 'node:http';
-import type {AddressInfo} from 'node:net';
 import path from 'node:path';
 import st from 'st';
-
 import {launchPuppeteer} from '../lib/puppeteer_config';
+
+import type {Browser, ConsoleMessage, Page} from 'puppeteer';
+import type {AddressInfo} from 'node:net';
 
 // Smoke-tests each bundler example under `test/integration/bundler/`:
 // installs deps, builds, opens the result in headless Chrome, and verifies

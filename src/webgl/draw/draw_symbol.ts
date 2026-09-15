@@ -1,6 +1,5 @@
 import Point from '@mapbox/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug.ts';
-
 import {SegmentVector} from '../../data/segment.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../../symbol/symbol_size.ts';
@@ -14,7 +13,6 @@ import {getAnchorAlignment, WritingMode} from '../../symbol/shaping.ts';
 import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels, elevationAt} from '../../symbol/projection.ts';
 import {translatePosition} from '../../util/util.ts';
 import ONE_EM from '../../symbol/one_em.ts';
-
 import {
     type SymbolIconUniformsType,
     symbolIconUniformValues,

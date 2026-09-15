@@ -5,6 +5,15 @@ import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {Texture} from '../webgl/texture.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
+import {Bounds} from '../geo/bounds.ts';
+import {isAbortError} from '../util/abort_error.ts';
+import {
+    bilinearImageWarp,
+    type RasterImageWarp
+} from '../webgl/program/raster_program.ts';
+import {mat2} from 'gl-matrix';
+import {createTileMeshWithBuffers} from '../util/create_tile_mesh.ts';
 
 import type {Source} from './source.ts';
 import type {CanvasSourceSpecification} from './canvas_source.ts';
@@ -16,16 +25,6 @@ import type {
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
-import {Bounds} from '../geo/bounds.ts';
-import {isAbortError} from '../util/abort_error.ts';
-import {
-    bilinearImageWarp,
-    type RasterImageWarp
-} from '../webgl/program/raster_program.ts';
-import {mat2} from 'gl-matrix';
-import {createTileMeshWithBuffers} from '../util/create_tile_mesh.ts';
-
 import type {Context} from '../webgl/context.ts';
 import type {Mesh} from '../render/mesh.ts';
 

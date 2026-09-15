@@ -1,9 +1,10 @@
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent.ts';
-import {type CanonicalTileID} from '../tile/tile_id.ts';
 import earcut from 'earcut';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from './subdivision_granularity_settings.ts';
 import {register} from '../util/web_worker_transfer.ts';
+
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 
 register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
 register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);

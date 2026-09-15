@@ -13,6 +13,7 @@ import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';

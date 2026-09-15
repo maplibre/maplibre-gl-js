@@ -11,12 +11,13 @@ import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
+import {createDEM} from '../util/test/util.ts';
+
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data.ts';
 import type {Painter} from './painter.ts';
-import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
 
 describe('Terrain', () => {
     let gl: WebGL2RenderingContext;
