@@ -22,8 +22,6 @@ export type RenderContext = {
     readonly terrain: Terrain | null;
     readonly projectionTransition: number;
     readonly isRenderingGlobe: boolean;
-    /** Whether the configured projection is Mercator, independent of transition progress. */
-    readonly isMercator: boolean;
 };
 
 export function createRenderContext(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null): RenderContext {
@@ -37,8 +35,7 @@ export function createRenderContext(transform: IReadonlyTransform, projection: P
         transform,
         terrain,
         projectionTransition,
-        isRenderingGlobe: projectionTransition > 0,
-        isMercator: projection?.name === 'mercator'
+        isRenderingGlobe: projectionTransition > 0
     };
 }
 
@@ -53,9 +50,9 @@ export function getProjectionDataForTile(renderContext: RenderContext, tileID: O
 
 /**
  * Returns terrain data for a tile.
- * Returns null if terrain is not configured or Mercator tiles are being rendered to a texture.
+ * Returns null if terrain is not configured or tiles are being rendered to a texture.
  */
 export function getTerrainDataForTile(renderContext: RenderContext, tileID: OverscaledTileID): TerrainData | null {
-    if (renderContext.isRenderingToTexture && renderContext.isMercator) return null;
+    if (renderContext.isRenderingToTexture) return null;
     return renderContext.terrain?.getTerrainData(tileID) ?? null;
 }

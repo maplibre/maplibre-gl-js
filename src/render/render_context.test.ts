@@ -53,13 +53,13 @@ describe('getTerrainDataForTile', () => {
         expect(getTerrainData).not.toHaveBeenCalled();
     });
 
-    test('keeps terrain data for non-Mercator render-to-texture draws', () => {
-        const {tileID, terrainData, getTerrainData, terrain} = mockTerrainData();
+    test('skips terrain data for globe render-to-texture draws', () => {
+        const {tileID, getTerrainData, terrain} = mockTerrainData();
         const {projection, transform} = createProjectionFromName('globe', undefined, {});
         const renderContext = createRenderContext(transform, projection, terrain);
         renderContext.isRenderingToTexture = true;
 
-        expect(getTerrainDataForTile(renderContext, tileID)).toBe(terrainData);
-        expect(getTerrainData).toHaveBeenCalledWith(tileID);
+        expect(getTerrainDataForTile(renderContext, tileID)).toBeNull();
+        expect(getTerrainData).not.toHaveBeenCalled();
     });
 });
