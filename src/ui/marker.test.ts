@@ -1168,22 +1168,43 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker removed after update when terrain is on should clear timeout', async () => {
-        vi.spyOn(global, 'setTimeout');
-        vi.spyOn(global, 'clearTimeout');
+    test('Marker runs the last terrain check a 100 ms window held back once the window closes', async () => {
         const map = createMap();
+        await map.once('load');
+        map.terrain = createTerrain();
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        map.terrain = createTerrain();
+        await sleep(50);
+        expect(marker.getElement().style.opacity).toBe('0.2');
 
-        marker.setOffset([10, 10]);
+        map._camera.transform.isLocationOccluded = () => false;
+        map.fire('move');
+        await sleep(40);
+        expect(marker.getElement().style.opacity).toBe('0.2');
+
         await sleep(100);
+        expect(marker.getElement().style.opacity).toBe('1');
+        map.remove();
+    });
 
-        expect(setTimeout).toHaveBeenCalled();
+    test('Marker removed while a terrain check waits for its window leaves its element alone once the window closes', async () => {
+        const map = createMap();
+        await map.once('load');
+        map.terrain = createTerrain();
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(50);
+        map._camera.transform.isLocationOccluded = () => false;
+        map.fire('move');
+        await sleep(40);
         marker.remove();
-        expect(clearTimeout).toHaveBeenCalled();
 
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toBe('0.2');
         map.remove();
     });
 
@@ -1299,7 +1320,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
+    test('Applies options.opacity when 3d terrain hides the marker\'s location but not its center above it', async () => {
         const map = createMap({pitch: 60});
         await map.once('load');
         const marker = new Marker({opacity: '0.7', offset: [0, -20]})
@@ -1307,12 +1328,29 @@ describe('marker', () => {
             .addTo(map);
 
         map.terrain = createTerrain();
-        const baseElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform);
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === baseElevation;
+        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform);
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === locationElevation;
         await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Applies options.opacityWhenCovered when 3d terrain hides the location of a marker whose offset lowers its element', async () => {
+        const map = createMap({pitch: 60});
+        await map.once('load');
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3', offset: [0, 20]})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = createTerrain();
+        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform);
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === locationElevation;
+        await sleep(100);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('0.3');
         map.remove();
     });
 
@@ -1374,7 +1412,6 @@ describe('marker', () => {
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
-        await sleep(150); // The marker drops opacity updates within 100 ms of the previous one, let that window pass
         map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         marker.setLngLat([0, 0]);
         await sleep(100); // Give marker change time to load

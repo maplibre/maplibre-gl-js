@@ -488,13 +488,14 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Whether the camera cannot see a location. The planet hides it when the location lies on the far side of the globe.
-     * With `terrain`, the terrain hides it when the ray from the camera to the location meets the rendered terrain surface
+     * Whether the camera cannot see a location. The planet hides it when the location, at its elevation, lies beyond
+     * the globe's horizon plane, the plane the globe shaders clip an elevated vertex with. With `terrain`, the terrain
+     * hides it when the ray from the camera to the location meets the rendered terrain surface
      * (see {@link screenTerrainPointToMercatorCoordinate}) before it reaches the location, and a location behind the
      * camera or beyond the far plane is hidden too.
      * @param lngLat - the location
      * @param terrain - the terrain that can hide the location; without it only the planet can
-     * @param elevation - the location's elevation in meters, the terrain's elevation there when omitted; `Marker` raises its center with it
+     * @param elevation - the location's elevation in meters; the terrain's elevation there when omitted, zero without terrain. `Marker` raises its center with it
      * @returns true when the planet or the terrain lies between the camera and the location, false when the location is
      * in view. Terrain with no renderable tiles hides nothing.
      */

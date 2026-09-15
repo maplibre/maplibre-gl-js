@@ -382,19 +382,20 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     /** {@inheritDoc ITransform.isLocationOccluded} */
     public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
-        const surfacePoint = angularCoordinatesToSurfaceVector(lngLat);
-        if (!this.isSurfacePointVisible(surfacePoint)) return true;
-        if (!terrain?.getCoverageIndex()) return false;
+        const coverage = terrain?.getCoverageIndex();
+        elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, this) : 0;
+        const location = raisedSurfaceVector(lngLat, elevation);
+        if (!this.isSurfacePointVisible(location)) return true;
+        if (!coverage) return false;
 
-        elevation ??= terrain.getElevationForLngLat(lngLat, this);
-        const p = this._projectSurfacePointToScreen(vec3.scale(surfacePoint, surfacePoint, 1 + elevation / earthRadius));
+        const p = this._projectSurfacePointToScreen(location);
         const origin = this.cameraPosition;
         const direction = this.getRayDirectionFromPixel(p);
-        const tLocation = globeRayParameter(origin, direction, lngLat, elevation);
+        const tLocation = rayParameter(origin, direction, location);
         if (tLocation <= 0) return true;
 
         const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
-        return hit != null && globeRayParameter(origin, direction, hit.toLngLat(), hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
+        return hit != null && rayParameter(origin, direction, raisedSurfaceVector(hit.toLngLat(), hit.z)) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -937,8 +938,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * For a given point on the unit sphere of the planet, returns whether it is visible from
-     * camera's position (not taking into account camera rotation at all).
+     * For a given point on the unit sphere of the planet, or raised above it, returns whether it lies on the camera's
+     * side of the horizon plane, the plane the globe shaders clip with (not taking into account camera rotation at all).
      */
     private isSurfacePointVisible(p: vec3): boolean {
         const plane = this._cachedClippingPlane;
@@ -1067,11 +1068,17 @@ function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
 }
 
 /**
- * Where the point of the ray closest to the location lies along it, in units of `direction` from `origin`.
+ * The location as a vector from the globe's center in globe radii, raised `elevation` meters above the surface.
  */
-function globeRayParameter(origin: vec3, direction: vec3, lngLat: LngLat, elevation: number): number {
-    const location = angularCoordinatesToSurfaceVector(lngLat);
-    vec3.scale(location, location, 1 + elevation / earthRadius);
-    vec3.subtract(location, location, origin);
-    return vec3.dot(location, direction);
+function raisedSurfaceVector(lngLat: LngLat, elevation: number): vec3 {
+    const vector = angularCoordinatesToSurfaceVector(lngLat);
+    return vec3.scale(vector, vector, 1 + elevation / earthRadius);
+}
+
+/**
+ * Where the point of the ray closest to `point` lies along it, in units of `direction` from `origin`.
+ */
+function rayParameter(origin: vec3, direction: vec3, point: vec3): number {
+    const offset = vec3.subtract(createVec3f64(), point, origin);
+    return vec3.dot(offset, direction);
 }

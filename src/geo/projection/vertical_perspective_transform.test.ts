@@ -258,6 +258,21 @@ describe('VerticalPerspectiveTransform.calculateCameraOptionsFromTo', () => {
 });
 
 describe('VerticalPerspectiveTransform.isLocationOccluded', () => {
+    test('a location just past the horizon is hidden on the ground and in view once raised above the horizon plane', () => {
+        const transform = new VerticalPerspectiveTransform();
+        transform.resize(512, 512);
+        const oneEarthRadiusAboveTheEquator = transform.calculateCameraOptionsFromTo(new LngLat(0, 0), earthRadius, new LngLat(0, 0.001), 0);
+        transform.setCenter(oneEarthRadiusAboveTheEquator.center);
+        transform.setZoom(oneEarthRadiusAboveTheEquator.zoom);
+        transform.setPitch(oneEarthRadiusAboveTheEquator.pitch);
+        transform.setBearing(oneEarthRadiusAboveTheEquator.bearing);
+        const justPastTheSixtyDegreeHorizon = new LngLat(0, 60.03);
+        const highEnoughToClearTheHorizonPlane = 8000;
+
+        expect(transform.isLocationOccluded(justPastTheSixtyDegreeHorizon)).toBe(true);
+        expect(transform.isLocationOccluded(justPastTheSixtyDegreeHorizon, undefined, highEnoughToClearTheHorizonPlane)).toBe(false);
+    });
+
     test('a location behind a ridge is hidden and one in front of it is in view', () => {
         const tileSpanAtZoom12 = 360 / (1 << 12);
         const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);

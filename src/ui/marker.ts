@@ -1,4 +1,5 @@
 import {DOM} from '../util/dom.ts';
+import {throttle} from '../util/throttle.ts';
 import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
@@ -308,7 +309,6 @@ export class Marker extends Evented<MarkerEventType> {
     _rotationAlignment: Alignment;
     _opacity: string;
     _opacityWhenCovered: string;
-    _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
     _roleManaged: boolean;
     _tabIndexManaged: boolean;
@@ -426,10 +426,6 @@ export class Marker extends Evented<MarkerEventType> {
      * ```
      */
     remove(): this {
-        if (this._opacityTimeout) {
-            clearTimeout(this._opacityTimeout);
-            delete this._opacityTimeout;
-        }
         if (this._map) {
             this._map.off('click', this._onMapClick);
             this._map.off('move', this._update);
@@ -681,7 +677,7 @@ export class Marker extends Evented<MarkerEventType> {
         return this;
     }
 
-    _updateOpacity(force: boolean = false): void {
+    _updateOpacity(): void {
         const {width, height} = this._map._camera.transform;
         if (!this._pos || this._pos.x < 0 || this._pos.y < 0 || this._pos.x > width || this._pos.y > height) {
             // Nothing to compute for a marker the viewport does not show.
@@ -698,42 +694,38 @@ export class Marker extends Evented<MarkerEventType> {
             }
             return;
         }
-        if (this._isOpacityUpdateThrottled(force)) return;
+        this._updateCovered();
+    }
 
+    /**
+     * @internal
+     * Applies `opacityWhenCovered` and the covered class while the terrain covers the marker, closing its popup;
+     * `_updateCovered` runs it at most once per 100 ms. Nothing to do once the marker or the terrain is gone.
+     */
+    _updateCoveredUnthrottled = (): void => {
+        const terrain = this._map?.terrain;
+        if (!terrain) return;
         const covered = this._isCovered(terrain);
         if (covered && this._popup?.isOpen()) this._popup.remove();
         this._element.style.opacity = covered ? this._opacityWhenCovered : this._opacity;
         this._element.classList.toggle('maplibregl-marker-covered', covered);
-    }
+    };
 
     /**
      * @internal
-     * Limits the terrain checks to one per 100 ms: true while the window a previous check opened is still open,
-     * otherwise opens a new one. `force` skips the window.
+     * The terrain check, at most once per 100 ms while the map moves; the last call in a window runs when the window closes.
      */
-    _isOpacityUpdateThrottled(force: boolean): boolean {
-        if (force) {
-            this._opacityTimeout = null;
-            return false;
-        }
-        if (this._opacityTimeout) return true;
-        this._opacityTimeout = setTimeout(() => {
-            this._opacityTimeout = null;
-        }, 100);
-        return false;
-    }
+    _updateCovered: () => ReturnType<typeof setTimeout> = throttle(this._updateCoveredUnthrottled, 100);
 
     /**
      * @internal
-     * Whether the terrain covers the marker: its base and then, when the base is hidden, its center, raised above the
-     * base by the height `offset` spans on screen. A marker whose center is in view shows in full.
+     * Whether the terrain covers the marker's center: the location raised by the height `offset` lifts the element
+     * above it on screen, or the location itself when the offset lowers the element.
      */
     _isCovered(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
         const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
-        if (!transform.isLocationOccluded(this._lngLat, terrain, elevation)) return false;
-
-        const metersToCenter = -this._offset.y / transform.pixelsPerMeter;
+        const metersToCenter = Math.max(0, -this._offset.y) / transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
         return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
     }
@@ -778,7 +770,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render
-            this._updateOpacity(e?.type === 'moveend');
+            this._updateOpacity();
         }).catch(() => {});
     };
 
@@ -1079,7 +1071,7 @@ export class Marker extends Evented<MarkerEventType> {
         }
 
         if (this._map) {
-            this._updateOpacity(true);
+            this._updateOpacity();
         }
         return this;
     }
