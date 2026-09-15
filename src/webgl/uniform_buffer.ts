@@ -84,7 +84,7 @@ export class UniformBuffer {
 
         if (!changed) return;
 
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
         gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.pending);
         this.uploaded.set(this.pending);
         this.hasData = true;
