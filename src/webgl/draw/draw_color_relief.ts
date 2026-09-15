@@ -6,9 +6,9 @@ import {type ColorMode} from '../color_mode.ts';
 import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';

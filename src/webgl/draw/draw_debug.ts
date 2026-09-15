@@ -4,9 +4,9 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {debugUniformValues} from '../program/debug_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import {type Style} from '../../style/style.ts';

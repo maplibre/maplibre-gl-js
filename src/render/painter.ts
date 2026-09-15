@@ -22,6 +22,7 @@ import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webg
 import {type OverscaledTileID} from '../tile/tile_id.ts';
 import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
+import {createRenderOptions, getProjectionDataForTile, type RenderOptions} from './render_options.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
@@ -37,7 +38,6 @@ import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
-import {createRenderOptions, getProjectionDataForTile, type RenderOptions} from './render_options.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';

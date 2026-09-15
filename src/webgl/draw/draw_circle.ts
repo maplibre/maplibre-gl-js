@@ -5,9 +5,9 @@ import {type Program} from '../program.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
 import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
