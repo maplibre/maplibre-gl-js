@@ -4,7 +4,8 @@ import {Popup, type Offset} from './popup.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
-import {type PositionAnchor} from './anchor.ts';
+
+import type {PositionAnchor} from './anchor.ts';
 
 const containerWidth = 512;
 const containerHeight = 512;

@@ -3,10 +3,10 @@ import {AbortError} from './abort_error.ts';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
 import {ThrottledInvoker} from './throttled_invoker.ts';
 
-import {
-    type MessageType,
-    type ActorMessage,
-    type RequestResponseMessageMap,
+import type {
+    MessageType,
+    ActorMessage,
+    RequestResponseMessageMap,
 } from './actor_messages.ts';
 
 /**

@@ -1,11 +1,11 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
-import {type Page, type Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
-import type {AddressInfo} from 'net';
-
 import {sleep} from '../../../src/util/test/util.ts';
 import {launchPuppeteer} from '../lib/puppeteer_config.ts';
+
+import type {Page, Browser} from 'puppeteer';
+import type {AddressInfo} from 'net';
 import type {Map} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 

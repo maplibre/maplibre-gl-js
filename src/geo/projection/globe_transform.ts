@@ -1,11 +1,11 @@
-import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
-import {type LngLat, type LngLatLike,} from '../lng_lat.ts';
 import {lerp} from '../../util/util.ts';
-import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 
+import type {LngLat, LngLatLike,} from '../lng_lat.ts';
+import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
+import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
@@ -299,8 +299,9 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return this.currentTransform.isLocationOccluded(location);
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -377,10 +378,6 @@ export class GlobeTransform implements ITransform {
     /** See {@link getCameraAltitude}. */
     getCameraLngLat(): LngLat {
         return this.currentTransform.getCameraLngLat();
-    }
-
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
     }
 
     populateCache(coords: OverscaledTileID[]): void {

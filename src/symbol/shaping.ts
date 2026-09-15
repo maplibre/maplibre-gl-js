@@ -12,13 +12,13 @@ import {processBidirectionalText, processStyledBidirectionalText} from './bidi.t
 import {isCluster} from '../util/graphemes.ts';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
-
 import {TaggedString, type SectionOptions, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
-import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
 import {TextFit} from '../style/style_image.ts';
-import type {ImagePosition} from '../render/image_atlas.ts';
 import {IMAGE_PADDING} from '../render/image_atlas.ts';
+
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas.ts';
 import type {Formatted, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
