@@ -1,7 +1,8 @@
 
 import {describe, test, expect, vi} from 'vitest';
 import {SourceFeatureState} from './source_state.ts';
-import {type InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
+
+import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
 import type {Painter} from '../render/painter.ts';
 
 describe('SourceFeatureState', () => {

@@ -4,7 +4,6 @@ import {
     collisionBoxLayout,
     dynamicLayoutAttributes,
 } from './symbol_attributes.ts';
-
 import {SymbolLayoutArray,
     SymbolDynamicLayoutArray,
     SymbolOpacityArray,
@@ -16,7 +15,6 @@ import {SymbolLayoutArray,
     SymbolLineVertexArray,
     TextAnchorOffsetArray
 } from '../array_types.g.ts';
-
 import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
@@ -31,14 +29,14 @@ import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
-import {type Anchor} from '../../symbol/anchor.ts';
 import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
-
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode.ts';
+
+import type {Anchor} from '../../symbol/anchor.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,

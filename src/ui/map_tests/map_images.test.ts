@@ -1,8 +1,9 @@
 import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
-import {type StyleImageInterface} from '../../style/style_image.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MessageType} from '../../util/actor_messages.ts';
+
+import type {StyleImageInterface} from '../../style/style_image.ts';
 
 beforeEach(() => {
     beforeMapTest();

@@ -1,6 +1,8 @@
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Projection} from '../geo/projection/projection.ts';
 import type {Terrain} from './terrain.ts';
+import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {DepthRangeType} from '../webgl/types.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
@@ -10,7 +12,7 @@ export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
  * Shared draw state, created per render and updated as rendering proceeds.
  * Corresponds to part of MapLibre Native's `PaintParameters`.
  */
-export type RenderOptions = {
+export type RenderContext = {
     currentPass: RenderPass;
     currentLayer: number;
     opaquePassCutoff: number;
@@ -22,7 +24,7 @@ export type RenderOptions = {
     readonly isRenderingGlobe: boolean;
 };
 
-export function createRenderOptions(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null): RenderOptions {
+export function createRenderContext(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null): RenderContext {
     const projectionTransition = projection?.transitionState ?? 0;
     return {
         currentPass: 'offscreen',
@@ -35,4 +37,13 @@ export function createRenderOptions(transform: IReadonlyTransform, projection: P
         projectionTransition,
         isRenderingGlobe: projectionTransition > 0
     };
+}
+
+export function getProjectionDataForTile(renderContext: RenderContext, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
+    return renderContext.transform.getProjectionData({
+        overscaledTileID: tileID,
+        aligned: options.aligned,
+        applyGlobeMatrix: !renderContext.isRenderingToTexture,
+        applyTerrainMatrix: options.applyTerrainMatrix ?? true
+    });
 }

@@ -7,10 +7,10 @@ import {EdgeInsets} from './edge_insets.ts';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
 import {cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
+import {Bounds} from './bounds.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
 import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
-import {Bounds} from './bounds.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.
@@ -189,7 +189,7 @@ export class TransformHelper implements ITransformGetters {
         this._autoCalculateNearFarZ = true;
     }
 
-    public apply(thatI: ITransformGetters, constrain: boolean, forceOverrideZ?: boolean): void {
+    public apply(thatI: ITransformGetters, constrain: boolean): void {
         this._constrainOverride = thatI.constrainOverride;
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
@@ -215,7 +215,7 @@ export class TransformHelper implements ITransformGetters {
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
-        this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
+        this._autoCalculateNearFarZ = thatI.autoCalculateNearFarZ;
         if (constrain) {
             this.constrainInternal();
         }

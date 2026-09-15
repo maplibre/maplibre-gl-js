@@ -1,16 +1,18 @@
-import type {Painter} from '../../render/painter.ts';
-import type {TileManager} from '../../tile/tile_manager.ts';
-import type {StyleLayer} from '../../style/style_layer.ts';
-import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {type VertexBuffer} from '../vertex_buffer.ts';
-import {type IndexBuffer} from '../index_buffer.ts';
+import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+
+import type {VertexBuffer} from '../vertex_buffer.ts';
+import type {IndexBuffer} from '../index_buffer.ts';
+import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {Painter} from '../../render/painter.ts';
 
 type TileBatch = {
     circleArray: number[];
@@ -20,9 +22,8 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean): void {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, renderContext: RenderContext): void {
     const context = painter.context;
-    const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
     const tileBatches: TileBatch[] = [];
@@ -60,7 +61,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             CullFaceMode.disabled,
             null,
             painter.style.map.terrain?.getTerrainData(coord),
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            getProjectionDataForTile(renderContext, coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);

@@ -5,8 +5,6 @@ import {PbfReader} from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type IActor} from '../util/actor.ts';
-import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {ABORT_ERROR} from '../util/abort_error.ts';
@@ -14,6 +12,9 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
+
+import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source.ts';
+import type {IActor} from '../util/actor.ts';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;

@@ -1,4 +1,5 @@
 import {mat4} from 'gl-matrix';
+
 import type Point from '@mapbox/point-geometry';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {StyleLayer} from '../style/style_layer.ts';

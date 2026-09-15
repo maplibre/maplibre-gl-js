@@ -1,4 +1,3 @@
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {afterEach, beforeEach, describe, expect, onTestFinished, test, vi} from 'vitest';
 import {TileManager} from './tile_manager.ts';
 import {addSourceType, type Source} from '../source/source.ts';
@@ -8,16 +7,17 @@ import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
 import {ErrorEvent, Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
-import {type Dispatcher} from '../util/dispatcher.ts';
 import {TileBounds} from './tile_bounds.ts';
 import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {now, restoreNow, setNow} from '../util/time_control.ts';
-
-import {type Map} from '../ui/map.ts';
-import {type TileCache} from './tile_cache.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+
+import type {TileCache} from './tile_cache.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
 class SourceMock extends Evented implements Source {

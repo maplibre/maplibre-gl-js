@@ -10,6 +10,7 @@ import {mat4} from 'gl-matrix';
 import {createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+
 import type {Tile} from '../../tile/tile.ts';
 
 describe('transform', () => {
@@ -482,6 +483,48 @@ describe('transform', () => {
         expect(projection.point.y).toBeCloseTo(0.8136784996777623, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6699126802941, precisionDigits);
         expect(projection.isOccluded).toBe(false);
+    });
+
+    function createPitchedTransform(): MercatorTransform {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setPitch(80);
+        return transform;
+    }
+
+    test('locationToScreenPoint projects a location in front of the camera', () => {
+        const transform = createPitchedTransform();
+
+        const inFrontOfCamera = transform.locationToScreenPoint(new LngLat(0, 0.05));
+        expect(inFrontOfCamera.x).toBeCloseTo(256, 1);
+        expect(inFrontOfCamera.y).toBeCloseTo(244.4, 1);
+    });
+
+    test('locationToScreenPoint puts a location behind the camera outside the edge it left through', () => {
+        const transform = createPitchedTransform();
+
+        // The camera looks north, so a location south of it left the screen through the bottom edge.
+        const behindCamera = transform.locationToScreenPoint(new LngLat(0, -2));
+        expect(behindCamera.x).toBeCloseTo(256, 6);
+        expect(behindCamera.y).toBeCloseTo(1024, 6);
+
+        // West of a north-facing camera is the left side of the screen.
+        const behindLeft = transform.locationToScreenPoint(new LngLat(-2, -2));
+        expect(behindLeft.x).toBeCloseTo(-512, 6);
+        expect(behindLeft.y).toBeGreaterThan(256);
+        expect(behindLeft.y).toBeLessThan(1024);
+
+        const behindRight = transform.locationToScreenPoint(new LngLat(2, -2));
+        expect(behindRight.x).toBeCloseTo(1024, 6);
+        expect(behindRight.y).toBeCloseTo(behindLeft.y, 6);
+
+        // A location only slightly west still leaves through the bottom edge, left of centre.
+        const behindSlightlyLeft = transform.locationToScreenPoint(new LngLat(-0.2, -2));
+        expect(behindSlightlyLeft.y).toBeCloseTo(1024, 6);
+        expect(behindSlightlyLeft.x).toBeLessThan(256);
+        expect(behindSlightlyLeft.x).toBeGreaterThan(-512);
     });
 
     test('getCameraLngLat', () => {

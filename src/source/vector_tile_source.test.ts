@@ -1,8 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Source} from './source.ts';
 import {VectorTileSource} from './vector_tile_source.ts';
-import {type Tile} from '../tile/tile.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -10,14 +8,17 @@ import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
-import {type Map} from '../ui/map.ts';
-import {type WorkerTileParameters} from './worker_source.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
-import {type MapSourceDataEvent} from '../ui/events.ts';
 import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
-import {type IActor} from '../util/actor.ts';
+
+import type {Map} from '../ui/map.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {Source} from './source.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {IActor} from '../util/actor.ts';
 
 class StubbedEvented extends Evented {}
 

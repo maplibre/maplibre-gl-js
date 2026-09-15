@@ -1,6 +1,5 @@
 import Point from '@mapbox/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug.ts';
-
 import {SegmentVector} from '../../data/segment.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../../symbol/symbol_size.ts';
@@ -14,16 +13,15 @@ import {getAnchorAlignment, WritingMode} from '../../symbol/shaping.ts';
 import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels, elevationAt} from '../../symbol/projection.ts';
 import {translatePosition} from '../../util/util.ts';
 import ONE_EM from '../../symbol/one_em.ts';
-
 import {
     type SymbolIconUniformsType,
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
+import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {Texture, TextureFilter} from '../texture.ts';
@@ -62,10 +60,9 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 
 export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
-}, renderOptions: RenderOptions): void {
-    if (renderOptions.currentPass !== 'translucent') return;
+}, renderContext: RenderContext): void {
+    if (renderContext.currentPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderOptions;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
@@ -90,7 +87,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('icon-rotation-alignment').constantOr('viewport'),
             layer.layout.get('icon-pitch-alignment'),
             layer.layout.get('icon-keep-upright'),
-            stencilMode, colorMode, isRenderingToTexture
+            stencilMode, colorMode, renderContext
         );
     }
 
@@ -101,13 +98,13 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
             layer.layout.get('text-keep-upright'),
-            stencilMode, colorMode, isRenderingToTexture
+            stencilMode, colorMode, renderContext
         );
     }
 
     if (tileManager.map.showCollisionBoxes) {
-        drawCollisionDebug(painter, tileManager, layer, coords, true);
-        drawCollisionDebug(painter, tileManager, layer, coords, false);
+        drawCollisionDebug(painter, tileManager, layer, coords, true, renderContext);
+        drawCollisionDebug(painter, tileManager, layer, coords, false, renderContext);
     }
 }
 
@@ -309,7 +306,7 @@ function drawLayerSymbols(
     keepUpright: boolean,
     stencilMode: StencilMode,
     colorMode: Readonly<ColorMode>,
-    isRenderingToTexture: boolean) {
+    renderContext: RenderContext) {
 
     const context = painter.context;
     const gl = context.gl;
@@ -383,7 +380,7 @@ function drawLayerSymbols(
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const projectionData = getProjectionDataForTile(renderContext, coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&

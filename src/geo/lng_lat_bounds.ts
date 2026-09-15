@@ -1,6 +1,7 @@
 import {LngLat} from './lng_lat.ts';
-import type {LngLatLike} from './lng_lat.ts';
 import {wrap} from '../util/util.ts';
+
+import type {LngLatLike} from './lng_lat.ts';
 
 /**
  * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in `[sw, ne]` order,
