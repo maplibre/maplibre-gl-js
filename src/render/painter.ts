@@ -6,7 +6,6 @@ import {SegmentVector} from '../data/segment.ts';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g.ts';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
 import posAttributes from '../data/pos_attributes.ts';
-import {type ProgramConfiguration} from '../data/program_configuration.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {Program} from '../webgl/program.ts';
@@ -19,10 +18,24 @@ import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
-import {type OverscaledTileID} from '../tile/tile_id.ts';
 import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
+import {createRenderOptions, type RenderOptions} from './render_options.ts';
+import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
+import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -37,22 +50,9 @@ import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
-import {createRenderOptions, type RenderOptions} from './render_options.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
-import {coveringTiles} from '../geo/projection/covering_tiles.ts';
-import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
-import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
-import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
-import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
-import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
-import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
-import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
-import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
-import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
-import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
-import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
 
 type PainterOptions = {
     showOverdrawInspector: boolean;
@@ -649,13 +649,25 @@ export class Painter {
             this.drawFunctions.debugPadding(this);
         }
 
+        // a frame at rest has reused every pooled drape it needs; the rest stay resident until freed here
+        if (this.renderToTexture && !this.options.moving) this.clearRTTPool();
+
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.
         this.context.setDefault();
     }
 
     /**
-     * Update the depth framebuffer if the camera has moved or tiles have reloaded.
+     * Invalidates cached terrain depth so the next eligible depth pass redraws it.
+     * DEM data can change the rendered surface while the camera and terrain tile set stay unchanged.
+     * Repeated calls coalesce without rendering or scheduling a frame, even if terrain is not yet present.
+     */
+    markTerrainDepthDirty(): void {
+        this.terrainFacilitator.depthDirty = true;
+    }
+
+    /**
+     * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
      */
     maybeDrawDepth(): void {
         if (!this.style?.projection || !this.style.map?.terrain) {
@@ -787,6 +799,34 @@ export class Painter {
     }
 
     /**
+     * Destroys the pooled {@link RTTObject}s, the drapes no tile holds. Called at the end of a frame at rest,
+     * when they would otherwise stay resident until the next gesture reuses them.
+     */
+    clearRTTPool(): void {
+        for (const obj of this._rttObjectRecyclePool) {
+            obj.texture.destroy();
+        }
+        this._rttObjectRecyclePool.length = 0;
+    }
+
+    /**
+     * Frees the pooled drapes and the shared render-to-texture FBO. Called when terrain is removed, after its tiles
+     * released their drapes.
+     */
+    destroyRTTResources(): void {
+        this.clearRTTPool();
+        if (!this._rttSharedFbo) return;
+        // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
+        // that we already manage separately.
+        this._rttSharedFbo.fbo.colorAttachment.set(null);
+        this._rttSharedFbo.fbo.depthAttachment.set(null);
+        const gl = this.context.gl;
+        gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+        gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+        this._rttSharedFbo = null;
+    }
+
+    /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
@@ -880,21 +920,7 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        for (const obj of this._rttObjectRecyclePool) {
-            obj.texture.destroy();
-        }
-        this._rttObjectRecyclePool = [];
-
-        if (this._rttSharedFbo) {
-            // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
-            // that we already manage separately.
-            this._rttSharedFbo.fbo.colorAttachment.set(null);
-            this._rttSharedFbo.fbo.depthAttachment.set(null);
-            const gl = this.context.gl;
-            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
-            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
-            this._rttSharedFbo = null;
-        }
+        this.destroyRTTResources();
 
         this.layerOpacityFbo?.destroy();
         this.layerOpacityFbo = null;

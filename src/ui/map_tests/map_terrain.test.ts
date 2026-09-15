@@ -3,10 +3,15 @@ import {createMap, beforeMapTest, waitForEvent, createTerrain} from '../../util/
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
-import {type Map} from '../map.ts';
+import {ImageRequest} from '../../util/image_request.ts';
+import {Painter, type RTTObject} from '../../render/painter.ts';
+import {MapSourceDataEvent} from '../events.ts';
+
+import type {Map} from '../map.ts';
+import type {Terrain} from '../../render/terrain.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -23,6 +28,11 @@ afterEach(() => {
 });
 
 describe('setTerrain', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
     test('warn when terrain and hillshade source identical', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
@@ -70,6 +80,45 @@ describe('setTerrain', () => {
         expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
     });
 
+    test('removing terrain frees the pooled drape textures', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        map.setTerrain({source: 'dem'});
+        const drape = map.painter.acquireRTT(512);
+        vi.spyOn(drape.texture, 'destroy');
+        map.painter.releaseRTT(drape);
+
+        map.setTerrain(null);
+
+        expect(drape.texture.destroy).toHaveBeenCalledTimes(1);
+    });
+
+    test('destroys the drapes a zoom out leaves unused once the map is at rest', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {
+                dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256},
+                land: {type: 'geojson', data: {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]]]}}}
+            },
+            layers: [{id: 'land', type: 'fill', source: 'land'}],
+            terrain: {source: 'dem'}
+        }});
+        const acquireRTT = vi.spyOn(map.painter, 'acquireRTT');
+        await map.once('idle');
+        const drapesAtZoom14 = [...new Set(acquireRTT.mock.results.map(({value}) => value as RTTObject))];
+        for (const drape of drapesAtZoom14) vi.spyOn(drape.texture, 'destroy');
+        const terrainTilesAtZoom14 = map.terrain.tileManager.getRenderableTiles().length;
+
+        map.jumpTo({zoom: 0});
+        await map.once('idle');
+
+        const terrainTilesAtZoom0 = map.terrain.tileManager.getRenderableTiles().length;
+        expect(terrainTilesAtZoom0).toBeLessThan(terrainTilesAtZoom14);
+        const destroyedDrapes = drapesAtZoom14.filter(({texture}) => vi.mocked(texture.destroy).mock.calls.length > 0);
+        expect(destroyedDrapes).toHaveLength(drapesAtZoom14.length - terrainTilesAtZoom0);
+    });
+
     test('drops the previous source attribution when switching terrain to a new source', async () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
@@ -107,6 +156,45 @@ describe('setTerrain', () => {
         } as any);
 
         expect(resetElevationCache).toHaveBeenCalledTimes(1);
+    });
+
+    test('invalidates terrain depth only for tiles from the terrain source', async () => {
+        await map.once('load');
+        const terrainLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'terrainrgb' && e.sourceDataType === 'metadata');
+        const otherLoaded = waitForEvent(map, 'sourcedata', (e) => e.sourceId === 'other' && e.sourceDataType === 'metadata');
+        map.addSource('terrainrgb', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        map.addSource('other', {
+            type: 'raster-dem',
+            tiles: ['http://example.com/other/{z}/{x}/{y}.png']
+        });
+        await Promise.all([terrainLoaded, otherLoaded]);
+
+        const markTerrainDepthDirty = vi.spyOn(Painter.prototype, 'markTerrainDepthDirty');
+        map.setTerrain({source: 'terrainrgb'});
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
+        markTerrainDepthDirty.mockClear();
+
+        const terrainSource = map.getSource('terrainrgb');
+        const otherSource = map.getSource('other');
+        expect(terrainSource).toBeDefined();
+        expect(otherSource).toBeDefined();
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = {tileID};
+
+        otherSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID}));
+        expect(markTerrainDepthDirty).not.toHaveBeenCalled();
+
+        terrainSource.fire(new MapSourceDataEvent('data', {sourceDataType: 'content'}));
+        expect(markTerrainDepthDirty).not.toHaveBeenCalled();
+
+        terrainSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID}));
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(1);
+
+        terrainSource.fire(new MapSourceDataEvent('data', {tile, coord: tileID, sourceDataType: 'content'}));
+        expect(markTerrainDepthDirty).toHaveBeenCalledTimes(2);
     });
 
     test('re-places symbols when terrain is set', async () => {

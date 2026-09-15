@@ -1,7 +1,6 @@
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RGBAImage} from '../util/image.ts';
-import {warnOnce} from '../util/util.ts';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
 import pos3dAttributes from '../data/pos3d_attributes.ts';
 import {SegmentVector} from '../data/segment.ts';
@@ -14,6 +13,7 @@ import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
@@ -44,8 +44,15 @@ const MAX_BISECTIONS = 40;
 const HIT_EPSILON_M = 1e-6;
 /** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
 const BRACKET_PADDING_M = 10;
-/** `DEMData.sampleBilinear` throws on the far tile edge, so samples stop just short of it. */
+/** Tile coordinates run from 0 up to but not including `EXTENT`; a point on the far edge is clamped back into the tile. */
 const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
+
+/**
+ * Offset, in DEM pixels, from a tile coordinate scaled by `dim` to the pixel index `DEMData.sampleBilinear` expects.
+ * DEM pixel `i` describes the cell centred at tile coordinate `(i + 0.5) / dim`, the same placement hillshade and
+ * color-relief use, so a sample between two cell centres interpolates the pixels on either side of it.
+ */
+const DEM_CELL_CENTER_OFFSET = -0.5;
 
 export type TerrainSample = {
     covered: boolean;
@@ -305,6 +312,7 @@ export class Terrain {
 
     /**
      * Get a function that samples the raw DEM elevation of a tile, without exaggeration.
+     * The sampler places DEM pixels at cell centres, matching `get_elevation` in the vertex shader prelude.
      * @param tileID - the tile id
      * @returns the sampler, or null when the tile's DEM data is not loaded
      */
@@ -321,8 +329,8 @@ export class Terrain {
         // Store the vector-tile to DEM-pixel transform once for the hot sampling loop.
         const demPixelScaleX = matrix[0] * dem.dim;
         const demPixelScaleY = matrix[5] * dem.dim;
-        const demPixelOffsetX = matrix[12] * dem.dim;
-        const demPixelOffsetY = matrix[13] * dem.dim;
+        const demPixelOffsetX = matrix[12] * dem.dim + DEM_CELL_CENTER_OFFSET;
+        const demPixelOffsetY = matrix[13] * dem.dim + DEM_CELL_CENTER_OFFSET;
         const sampler = (x: number, y: number, extent: number): number => {
             const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
             return dem.sampleBilinear(
@@ -334,17 +342,21 @@ export class Terrain {
         return sampler;
     }
 
+    /**
+     * Get the matrix that maps a tile's coordinates into the DEM tile it is rendered with.
+     * The transform is derived from the loaded DEM tile's own zoom level, not from the source's
+     * declared maxzoom: getSourceTile falls back to a loaded parent tile while the deepest DEM
+     * tile is still loading, and the scale and offset must match the tile that is actually used.
+     * @param tileID - the tile id
+     * @param sourceTile - the DEM tile that is used for this tile, either its own tile or a loaded parent
+     * @returns the matrix that maps the tile's coordinates onto the DEM tile
+     */
     _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {
         const matrixKey = `${sourceTile.tileID.key}/${tileID.key}`;
         const cachedMatrix = this._demMatrixCache.get(matrixKey);
         if (cachedMatrix) return cachedMatrix;
 
-        const maxzoom = this.tileManager.getSource().maxzoom;
-        let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
-        if (tileID.overscaledZ > tileID.canonical.z) {
-            if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
-            else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
-        }
+        const dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
         const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
         const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
         const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);

@@ -5,13 +5,13 @@ import {
     backgroundUniformValues,
     backgroundPatternUniformValues
 } from '../program/background_program.ts';
+import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
-import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('background-color');

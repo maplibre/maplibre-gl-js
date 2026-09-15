@@ -61,6 +61,26 @@ describe('render', () => {
         expect(terrainDepth).toHaveBeenCalled();
     });
 
+    test('redraws cached terrain depth once after deferred invalidations', ({onTestFinished}) => {
+        const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {}).mockClear();
+        onTestFinished(() => terrainDepth.mockRestore());
+        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.markTerrainDepthDirty();
+        painter.markTerrainDepthDirty();
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
+    });
+
     test('uses terrain data for regular Mercator draws', () => {
         const {tileID, terrainData, getTerrainData} = mockTerrainData();
 
@@ -218,6 +238,37 @@ describe('RTT pool', () => {
         const b = painter.acquireRTT(512);
         painter.bindRTT(b);
         expect(painter._rttSharedFbo.size).toBe(512);
+    });
+
+    test('clearRTTPool destroys the pooled textures and leaves the ones tiles hold', () => {
+        const pooled = painter.acquireRTT(256);
+        const held = painter.acquireRTT(256);
+        vi.spyOn(pooled.texture, 'destroy');
+        vi.spyOn(held.texture, 'destroy');
+        painter.releaseRTT(pooled);
+
+        painter.clearRTTPool();
+
+        expect(pooled.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(held.texture.destroy).not.toHaveBeenCalled();
+        expect(painter.acquireRTT(256)).not.toBe(pooled);
+    });
+
+    test('destroyRTTResources frees the pool and the shared FBO, and both come back on the next acquire', () => {
+        const gl = painter.context.gl;
+        const obj = painter.acquireRTT(256);
+        vi.spyOn(obj.texture, 'destroy');
+        painter.bindRTT(obj);
+        painter.releaseRTT(obj);
+
+        painter.destroyRTTResources();
+
+        expect(obj.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(gl.deleteFramebuffer).toHaveBeenCalledTimes(1);
+        expect(gl.deleteRenderbuffer).toHaveBeenCalledTimes(1);
+
+        painter.bindRTT(painter.acquireRTT(256));
+        expect(gl.createFramebuffer).toHaveBeenCalledTimes(2);
     });
 
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {

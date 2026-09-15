@@ -5,6 +5,7 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
+
 import type {Terrain} from '../../render/terrain.ts';
 
 const DEM_DIM = 256;

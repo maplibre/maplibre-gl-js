@@ -3,7 +3,8 @@ import {EvaluationContext, type FormattedSection, createExpression, type StyleEx
 import properties from './style_layer/symbol_style_layer_properties.g.ts';
 import {PossiblyEvaluatedPropertyValue} from './properties.ts';
 import {FormatSectionOverride} from './format_section_override.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('evaluate', () => {
 
