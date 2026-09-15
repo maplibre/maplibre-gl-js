@@ -178,14 +178,17 @@ describe('Actor', () => {
 
     test('reports worker failures until it is removed', () => {
         const worker = createActorTarget();
-        const onWorkerError = vi.fn();
-        const actor = new Actor(worker, '1', onWorkerError);
+        const listener = vi.fn();
+        const actor = new Actor(worker, '1');
+        actor.on('error', listener);
         worker.dispatchEvent(new ErrorEvent('error'));
 
-        expect(onWorkerError).toHaveBeenCalledWith(new Error('Worker failed to load. Check that the worker URL is correct.'));
+        expect(listener).toHaveBeenCalledWith(expect.objectContaining({
+            error: new Error('Worker failed to load. Check that the worker URL is correct.')
+        }));
         actor.remove();
         worker.dispatchEvent(new ErrorEvent('error'));
-        expect(onWorkerError).toHaveBeenCalledTimes(1);
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
     test('send a message that is rejected', async () => {

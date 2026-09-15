@@ -1,5 +1,6 @@
 import {type Subscription, ensureError, isWorker, subscribe} from './util.ts';
 import {AbortError} from './abort_error.ts';
+import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
 import {ThrottledInvoker} from './throttled_invoker.ts';
 
@@ -55,7 +56,7 @@ const addEventDefaultOptions: AddEventListenerOptions = {once: true};
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
  */
-export class Actor implements IActor {
+export class Actor extends Evented<ErrorEventType> implements IActor {
     target: ActorTarget;
     mapId: string | number | null;
     resolveRejects: { [x: string]: ResolveReject};
@@ -72,9 +73,9 @@ export class Actor implements IActor {
     /**
      * @param target - The target
      * @param mapId - A unique identifier for the Map instance using this Actor.
-     * @param onWorkerError - Reports a fatal worker failure to the owning dispatcher.
      */
-    constructor(target: ActorTarget, mapId?: string | number, onWorkerError?: (error: Error) => void) {
+    constructor(target: ActorTarget, mapId?: string | number) {
+        super();
         this.target = target;
         this.mapId = mapId;
         this.resolveRejects = {};
@@ -84,10 +85,13 @@ export class Actor implements IActor {
         this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(() => this.process());
         this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
-        if (onWorkerError) {
-            this.workerErrorSubscription = subscribe(this.target, 'error', () => onWorkerError(new Error('Worker failed to load. Check that the worker URL is correct.')), false);
+        const isWorkerScope = isWorker(self);
+        if (!isWorkerScope) {
+            this.workerErrorSubscription = subscribe(this.target, 'error', () => {
+                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
+            }, false);
         }
-        this.globalScope = isWorker(self) ? target : window;
+        this.globalScope = isWorkerScope ? target : window;
     }
 
     registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
@@ -272,5 +276,6 @@ export class Actor implements IActor {
         this.invoker.remove();
         this.subscription.unsubscribe();
         this.workerErrorSubscription?.unsubscribe();
+        this.setEventedParent(null);
     }
 }

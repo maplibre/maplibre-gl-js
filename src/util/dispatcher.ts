@@ -2,6 +2,7 @@ import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
+import {Evented, type ErrorEventType} from './evented.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
@@ -9,7 +10,7 @@ import type {RequestResponseMessageMap} from './actor_messages.ts';
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
  */
-export class Dispatcher {
+export class Dispatcher extends Evented<ErrorEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
     actorsPromise: Promise<Actor[]>;
@@ -20,22 +21,22 @@ export class Dispatcher {
     /**
      * @param workerPool - The shared pool from which this dispatcher acquires workers.
      * @param mapId - The map whose messages this dispatcher routes.
-     * @param onWorkerError - Reports a worker failure to the map.
      */
-    constructor(workerPool: WorkerPool, mapId: string | number, onWorkerError?: (error: Error) => void) {
+    constructor(workerPool: WorkerPool, mapId: string | number) {
+        super();
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
         this.removed = false;
-        this.actorsPromise = this.initActors(mapId, onWorkerError);
+        this.actorsPromise = this.initActors(mapId);
     }
 
-    private async initActors(mapId: string | number, onWorkerError?: (error: Error) => void): Promise<Actor[]> {
+    private async initActors(mapId: string | number): Promise<Actor[]> {
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
-            const actor = new Actor(worker, mapId, onWorkerError);
+            const actor = new Actor(worker, mapId).setEventedParent(this);
             actor.name = `Worker ${i}`;
             return actor;
         });
