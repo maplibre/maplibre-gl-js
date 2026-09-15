@@ -12,7 +12,7 @@ export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
  * Shared draw state, created per render and updated as rendering proceeds.
  * Corresponds to part of MapLibre Native's `PaintParameters`.
  */
-export type RenderOptions = {
+export type RenderContext = {
     currentPass: RenderPass;
     currentLayer: number;
     opaquePassCutoff: number;
@@ -24,7 +24,7 @@ export type RenderOptions = {
     readonly isRenderingGlobe: boolean;
 };
 
-export function createRenderOptions(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null): RenderOptions {
+export function createRenderContext(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null): RenderContext {
     const projectionTransition = projection?.transitionState ?? 0;
     return {
         currentPass: 'offscreen',
@@ -39,11 +39,11 @@ export function createRenderOptions(transform: IReadonlyTransform, projection: P
     };
 }
 
-export function getProjectionDataForTile(renderOptions: RenderOptions, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
-    return renderOptions.transform.getProjectionData({
+export function getProjectionDataForTile(renderContext: RenderContext, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
+    return renderContext.transform.getProjectionData({
         overscaledTileID: tileID,
         aligned: options.aligned,
-        applyGlobeMatrix: !renderOptions.isRenderingToTexture,
+        applyGlobeMatrix: !renderContext.isRenderingToTexture,
         applyTerrainMatrix: options.applyTerrainMatrix ?? true
     });
 }

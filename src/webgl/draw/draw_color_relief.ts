@@ -6,15 +6,15 @@ import {type ColorMode} from '../color_mode.ts';
 import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
-import {getProjectionDataForTile, type RenderOptions} from '../../render/render_options.ts';
+import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (renderOptions.currentPass !== 'translucent') return;
+export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderContext: RenderContext): void {
+    if (renderContext.currentPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
     const projection = painter.style.projection;
@@ -28,12 +28,12 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
     if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        renderColorRelief(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, renderOptions); // draw without borders
-        renderColorRelief(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, renderOptions); // draw with borders
+        renderColorRelief(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, renderContext); // draw without borders
+        renderColorRelief(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, renderContext); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        renderColorRelief(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, renderOptions);
+        renderColorRelief(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, renderContext);
     }
 }
 
@@ -53,7 +53,7 @@ function renderColorRelief(
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
-    renderOptions: RenderOptions
+    renderContext: RenderContext
 ) {
     const projection = painter.style.projection;
     const context = painter.context;
@@ -100,9 +100,9 @@ function renderColorRelief(
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = painter.getTerrainDataForTile(coord, renderOptions.isRenderingToTexture);
+        const terrainData = painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture);
 
-        const projectionData = getProjectionDataForTile(renderOptions, coord, {aligned: align});
+        const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

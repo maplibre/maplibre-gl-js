@@ -4,7 +4,7 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {createRenderOptions} from '../../render/render_options.ts';
+import {createRenderContext} from '../../render/render_context.ts';
 import {Program} from '../program.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
 import type {Map} from '../../ui/map.ts';
@@ -46,7 +46,7 @@ describe('drawFill', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderOptions);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderContext);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);
@@ -107,8 +107,8 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.renderOptions = createRenderOptions(painterMock.transform, undefined, null);
-        painterMock.renderOptions.currentPass = 'translucent';
+        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
             map: {
