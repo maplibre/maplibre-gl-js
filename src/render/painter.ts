@@ -815,16 +815,15 @@ export class Painter {
      */
     destroyRTTResources(): void {
         this.clearRTTPool();
-        if (this._rttSharedFbo) {
-            // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
-            // that we already manage separately.
-            this._rttSharedFbo.fbo.colorAttachment.set(null);
-            this._rttSharedFbo.fbo.depthAttachment.set(null);
-            const gl = this.context.gl;
-            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
-            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
-            this._rttSharedFbo = null;
-        }
+        if (!this._rttSharedFbo) return;
+        // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
+        // that we already manage separately.
+        this._rttSharedFbo.fbo.colorAttachment.set(null);
+        this._rttSharedFbo.fbo.depthAttachment.set(null);
+        const gl = this.context.gl;
+        gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+        gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+        this._rttSharedFbo = null;
     }
 
     /**
