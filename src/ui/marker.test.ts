@@ -12,7 +12,10 @@ type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
+    center?: [number, number];
+    zoom?: number;
     pitch?: number;
+    centerClampedToGround?: boolean;
 };
 
 // The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
@@ -1229,28 +1232,56 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker after the terrain event must listen to the render event till is fully loaded', async () => {
-        const map = createMap();
-
-        new Marker()
-            .setLngLat([1, 1])
+    test('Follows the terrain that loads after a move', async () => {
+        const map = createMap({width: 1024, center: [40, 30], zoom: 13, pitch: 60, centerClampedToGround: false});
+        await map.once('load');
+        map.terrain = createTerrain();
+        let elevation = 0;
+        map.terrain.getElevationForLngLat = () => elevation;
+        const marker = new Marker()
+            .setLngLat([40.01, 30.01])
             .addTo(map);
 
-        expect(map._oneTimeListeners.render).toBeUndefined();
+        map.jumpTo({center: [40.001, 30.001]});
+        expect(marker.getElement().style.transform).toBe('translate(-50%,-50%) translate(604px, 189px) rotateX(0deg) rotateZ(0deg)');
 
-        map.fire('terrain');
-        expect(map._oneTimeListeners.render).toHaveLength(1);
+        elevation = 1000; // the terrain tiles under the marker arrive, then the map settles
+        map.fire('idle');
+        expect(marker.getElement().style.transform).toBe('translate(-50%,-50%) translate(611px, 86px) rotateX(0deg) rotateZ(0deg)');
 
-        map.fire('render');
-        expect(map._oneTimeListeners.render).toHaveLength(1);
+        map.remove();
+    });
 
-        map.fire('render');
-        expect(map._oneTimeListeners.render).toHaveLength(1);
+    test('Checks the terrain occlusion again once the map is idle', async () => {
+        const map = createMap({width: 1024});
+        await map.once('load');
+        map.terrain = createTerrain();
+        map._camera.transform.isLocationOccluded = () => false;
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        expect(marker.getElement().style.opacity).toBe('0.7');
 
-        // await idle to be fully loaded
-        await map.once('idle');
-        map.fire('render');
-        expect(map._oneTimeListeners.render).toHaveLength(0);
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain; // the terrain tiles that arrive cover the marker
+        map.fire('idle');
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toBe('0.3');
+
+        map.remove();
+    });
+
+    test('Applies the globe occlusion after a projection change', async () => {
+        const map = createMap({width: 1024});
+        await map.once('load');
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([180, 0])
+            .addTo(map);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+
+        map.setProjection({type: 'globe'});
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toBe('0.3');
+
         map.remove();
     });
 
@@ -1401,6 +1432,7 @@ describe('marker', () => {
 
         map.terrain = createTerrain();
         map.fire('terrain');
+        await sleep(100); // the terrain check's 100 ms window closes
 
         marker.setOpacity(undefined, '0.35');
 
@@ -1580,6 +1612,7 @@ describe('marker', () => {
 
         map.terrain = createTerrain();
         map.fire('terrain');
+        await sleep(100); // the terrain check's 100 ms window closes
 
         marker.setOpacity(undefined, 0.35);
 
