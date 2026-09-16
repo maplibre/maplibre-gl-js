@@ -1,7 +1,6 @@
 ## main
 ### ✨ Features and improvements
 - Add `addProjection`, `removeProjection` and a built-in `simple` projection for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
-- Tile source `bounds` follow a projection registered with `addProjection` ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
