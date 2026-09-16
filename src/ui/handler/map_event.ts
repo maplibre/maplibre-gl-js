@@ -1,5 +1,6 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events.ts';
-import {type Handler, type HandlerResult} from '../handler_manager.ts';
+
+import type {Handler, HandlerResult} from '../handler_manager.ts';
 import type {Map} from '../map.ts';
 import type Point from '@mapbox/point-geometry';
 

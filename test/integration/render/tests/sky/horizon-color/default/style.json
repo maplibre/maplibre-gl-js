@@ -1,0 +1,36 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "timeout": 60000,
+      "height": 128,
+      "width": 256,
+      "maxPitch": 85,
+      "operations": [
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "center": [
+    35.38,
+    31.55
+  ],
+  "zoom": 15,
+  "pitch": 85,
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ccaa83"
+      }
+    }
+  ],
+  "sky": {
+    "sky-color": "#88C6FC",
+    "horizon-color": "#ffffff"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "sky": { "atmosphere-blend": 0.0 },
+  "center": [0.0, 0.0],
+  "zoom": 0,
+  "state": {
+    "projectionType": { "default": "vertical-perspective" }
+  },
+  "projection": {
+    "type": ["global-state", "projectionType"]
+  },
+  "sources": {
+    "vector_tiles": {
+      "type": "vector",
+      "maxzoom": 0,
+      "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
+    }
+  },
+  "layers": [
+    { "id": "background", "type": "background", "paint": { "background-color": "white" } },
+    { "id": "land", "type": "fill", "source": "vector_tiles", "source-layer": "water", "paint": { "fill-color": "blue" } }
+  ]
+}

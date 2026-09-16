@@ -1,16 +1,17 @@
-import {type OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
 import {EXTENT} from '../data/extent.ts';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented.ts';
-import type {ITransform} from '../geo/transform_interface.ts';
-import type {TileManager} from './tile_manager.ts';
-import type {Source} from '../source/source.ts';
-import {type Terrain} from '../render/terrain.ts';
 import {now} from '../util/time_control.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {createMat4f64} from '../util/util.ts';
-import {type CanonicalTileRange} from '../source/image_source.ts';
+
+import type {Terrain} from '../render/terrain.ts';
+import type {CanonicalTileRange} from '../source/image_source.ts';
+import type {Source} from '../source/source.ts';
+import type {TileManager} from './tile_manager.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
 
 /**
  * @internal
@@ -56,7 +57,7 @@ export class TerrainTileManager extends Evented {
      */
     deltaZoom: number;
     /**
-     * used to determine whether depth & coord framebuffers need updating
+     * used to determine whether the depth framebuffer needs updating
      */
     _lastTilesetChange: number = now();
 
@@ -88,13 +89,15 @@ export class TerrainTileManager extends Evented {
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param transform - the operation to do
      * @param terrain - the terrain
+     * @returns true when the set of renderable tiles changed
      */
-    update(transform: ITransform, terrain: Terrain): void {
+    update(transform: ITransform, terrain: Terrain): boolean {
         // load raster-dem tiles for the current scene.
         this.tileManager.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
+        let changed = false;
         for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
@@ -110,6 +113,7 @@ export class TerrainTileManager extends Evented {
                 mat4.ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
                 this._lastTilesetChange = now();
+                changed = true;
             }
         }
         // free unused tiles
@@ -117,8 +121,10 @@ export class TerrainTileManager extends Evented {
             if (!keys[key]) {
                 this._tiles[key].releaseRTT(this.tileManager.map.painter);
                 delete this._tiles[key];
+                changed = true;
             }
         }
+        return changed;
     }
 
     /**
@@ -306,7 +312,7 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update the depth framebuffer.
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */

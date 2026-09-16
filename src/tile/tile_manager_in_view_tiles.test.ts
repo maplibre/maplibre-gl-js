@@ -2,6 +2,7 @@ import {describe, test, expect, vi} from 'vitest';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
+
 import type {Painter} from '../render/painter.ts';
 
 describe('InViewTiles', () => {
@@ -81,7 +82,7 @@ describe('InViewTiles', () => {
         inViewTiles.handleWrapJump(1);
 
         const tiles = inViewTiles.getAllTiles();
-        expect(tiles.length).toBe(1);
+        expect(tiles).toHaveLength(1);
         expect(tiles[0].tileID.wrap).toBe(1);
         expect(inViewTiles.getTileById(tiles[0].tileID.key)).toBe(tiles[0]);
     });
@@ -96,7 +97,7 @@ describe('InViewTiles', () => {
         inViewTiles.handleWrapJump(-1);
 
         const tiles = inViewTiles.getAllTiles();
-        expect(tiles.length).toBe(2);
+        expect(tiles).toHaveLength(2);
         
         const updatedTile1 = tiles.find(t => t.uid === tile1.uid);
         const updatedTile2 = tiles.find(t => t.uid === tile2.uid);

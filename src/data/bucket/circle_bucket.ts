@@ -1,5 +1,4 @@
 import {CircleLayoutArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes} from './circle_attributes.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
@@ -10,11 +9,13 @@ import {EXTENT} from '../extent.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
+import type {CircleGranularity} from '../../render/subdivision_granularity_settings.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -26,7 +27,6 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {type CircleGranularity} from '../../render/subdivision_granularity_settings.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const VERTEX_MIN_VALUE = -32768; // -(2^15)
@@ -102,11 +102,12 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
 
         const granularity = subdivide ? options.subdivisionGranularity.circle : 1;
 
+        const globalProperties = new EvaluationParameters(this.zoom);
+        const needGeometry = this.layers[0]._featureFilter.needGeometry;
         for (const {feature, id, index, sourceLayerIndex} of features) {
-            const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 
             const sortKey = sortFeaturesByKey ?
                 circleSortKey.evaluate(evaluationFeature, {}, canonical) :
@@ -146,6 +147,8 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             imagePositions
         });
     }
+
+    addFeatures(_parameters: BucketDependencyParameters): void {}
 
     isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;

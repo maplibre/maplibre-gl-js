@@ -3,6 +3,7 @@ import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program.ts';
 import {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+
 import type {CrossFaded} from '../style/properties.ts';
 import type {FillLayerSpecification, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {ProgramConfiguration} from '../data/program_configuration.ts';
@@ -52,7 +53,7 @@ describe('updatePatternPositionsInProgram', () => {
         const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
         tile.imageAtlas = {} as any;
         tile.imageAtlas.patternPositions = {
-            'volcano_11': {paddedRect: {x: 0, y: 0, w: 0, h: 0}, version: 0, tl: [0, 0], pixelRatio: 1, br: [0, 0], tlbr: [0, 0, 0, 0], displaySize: [0, 0], stretchX: [], stretchY: [], content: [0, 0, 0, 0], textFitWidth: undefined, textFitHeight: undefined},
+            'volcano_11': {paddedRect: {x: 0, y: 0, w: 0, h: 0}, version: 0, needsFirstWebGLRender: false, tl: [0, 0], pixelRatio: 1, br: [0, 0], tlbr: [0, 0, 0, 0], displaySize: [0, 0], stretchX: [], stretchY: [], content: [0, 0, 0, 0], textFitWidth: undefined, textFitHeight: undefined},
         };
         const crossFadeResolveImage: CrossFaded<ResolvedImage> = {
             from: {name: 'zoo_11', available: false, toString: () => 'zoo_11'},

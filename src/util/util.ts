@@ -1,11 +1,12 @@
 import Point from '@mapbox/point-geometry';
 import unitBezierFactory from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
-import type {Size} from './image.ts';
-import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
-import {type OverscaledTileID} from '../tile/tile_id.ts';
+
+import type {Size} from './image.ts';
+import type {WorkerGlobalScopeInterface} from './web_worker.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Event} from './evented.ts';
 
 /**
@@ -535,8 +536,12 @@ export function evaluateZoomSnap(zoom: number, zoomSnap: number, delta?: number)
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  */
-export function mapObject(input: any, iterator: Function, context?: any): any {
-    const output = {};
+export function mapObject<Input extends object, Output>(
+    input: Input,
+    iterator: (value: Input[keyof Input], key: Extract<keyof Input, string>, input: Input) => Output,
+    context?: unknown
+): {[K in keyof Input]: Output} {
+    const output = {} as {[K in keyof Input]: Output};
     for (const key in input) {
         output[key] = iterator.call(context || this, input[key], key, input);
     }
@@ -667,12 +672,7 @@ export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point)
  * @param spherical - Spherical coordinates, in [radial, azimuthal, polar]
  * @returns cartesian coordinates in [x, y, z]
  */
-
-export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): {
-    x: number;
-    y: number;
-    z: number;
-} {
+export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): vec3 {
     // We abstract "north"/"up" (compass-wise) to be 0° when really this is 90° (π/2):
     // correct for that here
     azimuthal += 90;
@@ -681,11 +681,11 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
     azimuthal *= Math.PI / 180;
     polar *= Math.PI / 180;
 
-    return {
-        x: r * Math.cos(azimuthal) * Math.sin(polar),
-        y: r * Math.sin(azimuthal) * Math.sin(polar),
-        z: r * Math.cos(polar)
-    };
+    return [
+        r * Math.cos(azimuthal) * Math.sin(polar),
+        r * Math.sin(azimuthal) * Math.sin(polar),
+        r * Math.cos(polar)
+    ];
 }
 
 /**
@@ -782,9 +782,6 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * @returns - A  promise resolved when the conversion is finished
  */
 export const arrayBufferToImageBitmap = async (data: ArrayBuffer, options?: ImageBitmapOptions): Promise<ImageBitmap> => {
-    if (data.byteLength === 0) {
-        return createImageBitmap(new ImageData(1, 1), options);
-    }
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     try {
         return createImageBitmap(blob, options);
@@ -819,7 +816,7 @@ export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement>
         };
         img.onerror = () => reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
         const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-        img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
+        img.src = URL.createObjectURL(blob);
     });
 };
 

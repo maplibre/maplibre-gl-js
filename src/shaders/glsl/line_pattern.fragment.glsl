@@ -1,7 +1,6 @@
 #ifdef GL_ES
     precision highp float;
 #endif
-uniform lowp float u_device_pixel_ratio;
 uniform vec2 u_texsize;
 uniform float u_fade;
 uniform mediump vec3 u_scale;
@@ -32,6 +31,8 @@ void main() {
 
     #pragma maplibre: initialize lowp float blur
     #pragma maplibre: initialize lowp float opacity
+
+    clipAntimeridian();
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;

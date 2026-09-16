@@ -1,0 +1,45 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "maxPitch": 20
+    }
+  },
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.mvt"
+      ]
+    }
+  },
+  "pitch": 75,
+  "bearing": 15,
+  "zoom": 17,
+  "center": [-84.2542, 39.2748],
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "maplibre",
+      "source-layer": "building",
+      "layout": {
+        "fill-extrusion-rounded-corner-distance": 4
+      },
+      "paint": {
+        "fill-extrusion-color": "blue",
+        "fill-extrusion-height": 30
+      }
+    }
+  ]
+}

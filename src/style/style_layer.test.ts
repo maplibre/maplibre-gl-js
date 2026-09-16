@@ -1,19 +1,20 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {createStyleLayer} from './create_style_layer.ts';
 import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
 import {extend} from '../util/util.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
-import {type TransitionParameters} from './properties.ts';
-import {type BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
-import {type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
-import {type CircleStyleLayer} from './style_layer/circle_style_layer.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {TransitionParameters} from './properties.ts';
+import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import type {SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
+import type {CircleStyleLayer} from './style_layer/circle_style_layer.ts';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification, {});
 
-        expect(layer instanceof FillStyleLayer).toBeTruthy();
+        expect(layer).toBeInstanceOf(FillStyleLayer);
     });
 });
 
@@ -171,8 +172,8 @@ describe('StyleLayer.setPaintProperty', () => {
         layer.updateTransitions({} as TransitionParameters);
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
 
-        layer.paint.get('fill-outline-color');
-
+        const outlineColor = layer.paint.get('fill-outline-color');
+        expect(outlineColor.value).toMatchObject({kind: 'constant', value: {r: 1, g: 0, b: 0, a: 1}});
     });
 
     test('sets null property value', () => {
@@ -379,6 +380,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
     });
 
     test('returns global-state references from visibility', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const layer = createStyleLayer({
             id: 'background',
             type: 'background',
@@ -507,54 +509,7 @@ describe('StyleLayer.serialize', () => {
 
 });
 
-describe('StyleLayer.serialize', () => {
-
-    function createSymbolLayer(layer?) {
-        return extend({
-            id: 'symbol',
-            type: 'symbol',
-            paint: {
-                'text-color': 'blue'
-            },
-            layout: {
-                'text-transform': 'uppercase'
-            }
-        }, layer);
-    }
-
-    test('serializes layers', () => {
-        expect(createStyleLayer(createSymbolLayer(), {}).serialize()).toEqual(createSymbolLayer());
-    });
-
-    test('serializes functions', () => {
-        const layerPaint = {
-            'text-color': {
-                base: 2,
-                stops: [[0, 'red'], [1, 'blue']]
-            }
-        };
-
-        expect(createStyleLayer(createSymbolLayer({paint: layerPaint}), {}).serialize().paint).toEqual(layerPaint);
-    });
-
-    test('serializes added paint properties', () => {
-        const layer = createStyleLayer(createSymbolLayer(), {});
-        layer.setPaintProperty('text-halo-color', 'orange');
-
-        expect(layer.serialize().paint['text-halo-color']).toBe('orange');
-        expect(layer.serialize().paint['text-color']).toBe('blue');
-
-    });
-
-    test('serializes added layout properties', () => {
-        const layer = createStyleLayer(createSymbolLayer(), {});
-        layer.setLayoutProperty('text-size', 20);
-
-        expect(layer.serialize().layout['text-transform']).toBe('uppercase');
-        expect(layer.serialize().layout['text-size']).toBe(20);
-
-    });
-
+describe('StyleLayer.paint', () => {
     test('layer.paint is never undefined', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification, {});
         // paint is never undefined

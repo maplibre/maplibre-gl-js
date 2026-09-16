@@ -1,11 +1,12 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
-import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 import {clamp} from '../../util/util.ts';
-import {type MercatorCoordinate} from '../mercator_coordinate.ts';
-import {type IReadonlyTransform} from '../transform_interface.ts';
-import {type CoveringTilesOptionsInternal} from './covering_tiles.ts';
-import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 
@@ -28,13 +29,13 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
      * @param tileID - Tile x, y and z for zoom.
      */
     getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): Aabb {
-        let minElevation = 0;
-        let maxElevation = 0;
+        let minElevation = Math.min(0, elevation);
+        let maxElevation = Math.max(0, elevation);
         if (options?.terrain) {
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
-            minElevation = minMax.minElevation ?? Math.min(0, elevation);
-            maxElevation = minMax.maxElevation ?? Math.max(0, elevation);
+            minElevation = minMax.minElevation ?? minElevation;
+            maxElevation = minMax.maxElevation ?? maxElevation;
         }
         const numTiles = 1 << tileID.z;
         return new Aabb([wrap + tileID.x / numTiles, tileID.y / numTiles, minElevation],

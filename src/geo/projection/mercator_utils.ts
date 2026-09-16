@@ -3,6 +3,7 @@ import {EXTENT} from '../../data/extent.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} from '../../util/util.ts';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
+
 import type {UnwrappedTileIDType} from '../transform_helper.ts';
 import type {LngLat} from '../lng_lat.ts';
 
@@ -92,8 +93,27 @@ export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, el
     const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
     const dxMercator = dMercator * -x;
     const dyMercator = dMercator * -y;
-    const dzMercator = dMercator * -z;
+    // Unlike x and y, z already points from the center up towards the camera.
+    const dzMercator = dMercator * z;
     return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
+}
+
+/**
+ * Returns the position of the camera in mercator coordinates, with its altitude in `z`.
+ * Computed from the center, pitch, bearing and camera distance, so it holds for any projection.
+ */
+export function cameraMercatorCoordinate(transform: {
+    center: LngLat;
+    elevation: number;
+    pitch: number;
+    bearing: number;
+    cameraToCenterDistance: number;
+    worldSize: number;
+}): MercatorCoordinate {
+    const pixelPerMeter = mercatorZfromAltitude(1, transform.center.lat) * transform.worldSize;
+    return cameraMercatorCoordinateFromCenterAndRotation(
+        transform.center, transform.elevation, transform.pitch, transform.bearing,
+        transform.cameraToCenterDistance / pixelPerMeter);
 }
 
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {

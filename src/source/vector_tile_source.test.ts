@@ -1,8 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Source} from './source.ts';
 import {VectorTileSource} from './vector_tile_source.ts';
-import {type Tile} from '../tile/tile.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -10,11 +8,14 @@ import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
-import {type Map} from '../ui/map.ts';
-import {type WorkerTileParameters} from './worker_source.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
-import {type MapSourceDataEvent} from '../ui/events.ts';
+
+import type {Map} from '../ui/map.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {Source} from './source.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
 
 class StubbedEvented extends Evented {}
 
@@ -454,7 +455,7 @@ describe('VectorTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(server.requests.length).toBe(2);
+        expect(server.requests).toHaveLength(2);
         expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'vector',
@@ -478,6 +479,31 @@ describe('VectorTileSource', () => {
             attribution: 'MapLibre',
             tiles: ['http://example2.com/{z}/{x}/{y}.png']
         });
+    });
+
+    test('loadTile requests the new URLs right after setTiles, before the source reloads', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        let receivedMessage: ActorMessage<MessageType> = null;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                receivedMessage = message;
+                return Promise.resolve({});
+            }
+        });
+
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.png']);
+
+        await source.loadTile({
+            loadVectorData() {},
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5)
+        } as any as Tile);
+
+        expect((receivedMessage.data as WorkerTileParameters).request.url)
+            .toBe('http://example2.com/10/5/5.png');
     });
 
     test('setTiles updates tiles without clearing the cache', async () => {

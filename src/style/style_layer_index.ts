@@ -1,6 +1,7 @@
 import {createStyleLayer} from './create_style_layer.ts';
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
 import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+
 import type {StyleLayer} from './style_layer.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -35,7 +36,7 @@ export class StyleLayerIndex {
             this._layerConfigs[layerConfig.id] = layerConfig;
 
             const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
-            layer._featureFilter = featureFilter(layer.filter, globalState);
+            layer._featureFilter = featureFilter(layer.filter, `layers[${layerConfig.id}].filter`, globalState);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }

@@ -7,6 +7,7 @@ import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
+import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
@@ -30,6 +31,7 @@ import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
+import {isStyleImageWebGLData} from '../style/style_image.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
@@ -52,6 +54,7 @@ import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_
 import type {TaskID} from '../util/task_queue.ts';
 import type {
     FilterSpecification,
+    FontFacesSpecification,
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
@@ -356,6 +359,17 @@ export type MapOptions = {
      */
     rollEnabled?: boolean;
     /**
+     * Degrees the map's bearing changes per pixel of horizontal drag when rotating.
+     * @defaultValue 0.8
+     */
+    rotateSpeed?: number;
+    /**
+     * Degrees the map's pitch changes per pixel of vertical drag. Negative, so that
+     * dragging up pitches the map toward the horizon.
+     * @defaultValue -0.5
+     */
+    pitchSpeed?: number;
+    /**
      * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
      * @defaultValue undefined
      */
@@ -375,6 +389,7 @@ export type MapOptions = {
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
+     * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
      * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
@@ -530,6 +545,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    rotateSpeed: 0.8,
+    pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
@@ -617,6 +634,7 @@ export class Map extends Evented<MapEventType> {
     _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
+    _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
     _removed: boolean;
@@ -780,8 +798,6 @@ export class Map extends Evented<MapEventType> {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
         }
 
-        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
-
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
         this._container = this._resolveContainer(resolvedOptions.container);
@@ -791,14 +807,19 @@ export class Map extends Evented<MapEventType> {
         }
 
         this._setupContainer();
-        this._setupPainter();
-        if (!this.painter) return;
+        try {
+            this._setupPainter();
+        } catch (error) {
+            this._cleanupContainer();
+            throw error;
+        }
+        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.depthDirty = true;
+            this.painter.markTerrainDepthDirty();
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
@@ -1485,7 +1506,7 @@ export class Map extends Evented<MapEventType> {
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
-    queryTerrainElevation(lngLatLike: LngLatLike): number | null { 
+    queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {
             return null;
         }
@@ -1503,6 +1524,7 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
+     * Under `globe` and `vertical-perspective` the calculation follows the sphere while the map renders as a globe, keeping the point looked at on the sea-level sphere; `altitudeTo` only becomes the center elevation.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
@@ -1524,7 +1546,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform);
         }
-        return this._camera.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        return this._camera.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1532,8 +1554,10 @@ export class Map extends Evented<MapEventType> {
      * `container` element.
      *
      * Checks if the map container size changed and updates the map if it has changed.
-     * This method must be called after the map's `container` is resized programmatically
-     * or when the map is shown after being initially hidden with CSS.
+     * With the default `trackResize: true`, container size changes are picked up automatically,
+     * including a container that becomes visible after being hidden with CSS. Call this method
+     * explicitly when `trackResize` is `false`, or when the map's size changes in a way the
+     * container's `ResizeObserver` cannot observe.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, and `resize`.
      *
@@ -1541,10 +1565,10 @@ export class Map extends Evented<MapEventType> {
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
      * @example
-     * Resize the map when the map container is shown after being initially hidden with CSS.
+     * Resize a map with `trackResize` disabled when its container is shown after being hidden with CSS.
      * ```ts
      * let mapDiv = document.getElementById('map');
-     * if (mapDiv.style.visibility === true) map.resize();
+     * if (mapDiv.style.visibility === 'visible') map.resize();
      * ```
      */
     resize(eventData?: any, constrainTransform = true): this {
@@ -1611,6 +1635,8 @@ export class Map extends Evented<MapEventType> {
      * @internal
      * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
+     * Warns once when the ratio is scaled down. The message carries no sizes: this runs on every
+     * resize and `warnOnce` de-duplicates by message, so sizes would warn on every drag frame.
      */
     _getClampedPixelRatio(width: number, height: number): number {
         const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
@@ -1622,7 +1648,13 @@ export class Map extends Evented<MapEventType> {
         const widthScaleFactor = canvasWidth > maxCanvasWidth ? (maxCanvasWidth / canvasWidth) : 1;
         const heightScaleFactor = canvasHeight > maxCanvasHeight ? (maxCanvasHeight / canvasHeight) : 1;
 
-        return Math.min(widthScaleFactor, heightScaleFactor) * pixelRatio;
+        const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
+
+        if (scaleFactor < 1) {
+            warnOnce('The canvas is larger than maxCanvasSize and is rendered at a lower pixel ratio to fit. Increase maxCanvasSize, within MAX_TEXTURE_SIZE, to render at full resolution.');
+        }
+
+        return scaleFactor * pixelRatio;
     }
 
     /**
@@ -1745,13 +1777,18 @@ export class Map extends Evented<MapEventType> {
     /**
      * Returns the map's minimum allowable zoom level.
      *
+     * @param constrained - If `true`, returns the effective minimum zoom after applying the map's viewport constraints.
+     * If `false` or omitted, returns the configured minimum zoom.
      * @returns minZoom
      * @example
      * ```ts
      * let minZoom = map.getMinZoom();
      * ```
      */
-    getMinZoom(): number { return this._camera.transform.minZoom; }
+    getMinZoom(constrained = false): number {
+        const transform = this._camera.transform;
+        return constrained ? transform.applyConstrain(transform.center, transform.minZoom).zoom : transform.minZoom;
+    }
 
     /**
      * Sets or clears the map's maximum zoom level.
@@ -1997,6 +2034,10 @@ export class Map extends Evented<MapEventType> {
     /**
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
+     *
+     * A location behind the camera has no corresponding pixel. For such a location the
+     * returned point is outside the viewport, on the side through which the location left
+     * the screen, one viewport width or height away from the edge.
      *
      * @param lnglat - The geographical location to project.
      * @returns The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
@@ -2641,6 +2682,7 @@ export class Map extends Evented<MapEventType> {
                 localIdeographFontFamily: this._localIdeographFontFamily,
                 validate: this._validateStyle
             }, options);
+        this._styleUrl = typeof style === 'string' ? style : null;
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
             this._diffStyle(style, options);
@@ -2783,6 +2825,20 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Returns the URL the map's style was loaded from.
+     *
+     * @returns The URL given to {@link Map.setStyle} or the `style` map option, or `null` when the style was given as an object or the map has no style.
+     *
+     * @example
+     * ```ts
+     * const styleUrl = map.getStyleUrl();
+     * ```
+     */
+    getStyleUrl(): string | null {
+        return this._styleUrl;
+    }
+
+    /**
      * @internal
      * Returns the map's style and cloned images to restore context.
      * @returns An object containing the style and images.
@@ -2891,8 +2947,12 @@ export class Map extends Evented<MapEventType> {
      * map.setTerrain({ source: 'terrain' });
      * ```
      */
-    setTerrain(options: TerrainSpecification | null): this {
+    setTerrain(options: TerrainSpecification | null, styleOptions: StyleSetterOptions = {}): this {
         this.style._checkLoaded();
+
+        if (options && validateAndEmit(this, validateStyle.terrain, {value: options}, styleOptions)) {
+            return this;
+        }
 
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
@@ -2904,6 +2964,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = null;
             this.painter.renderToTexture = null;
+            this.painter.destroyRTTResources();
             this._camera.terrain = null;
             this._camera.transform.setMinElevationForCurrentTile(0);
             if (this.getCenterClampedToGround()) {
@@ -2925,34 +2986,50 @@ export class Map extends Evented<MapEventType> {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.terrain = this.terrain;
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._terrainDataCallback = e => {
-                if (e.dataType === 'style') {
-                    this.terrain.tileManager.releaseAllRTT();
-                } else if (e.dataType === 'source' && e.tile) {
-                    if (e.sourceId === options.source && !this._camera.elevationFreeze) {
-                        this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        if (this.getCenterClampedToGround()) {
-                            this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        }
-                    }
-
-                    if (e.source?.type === 'image') {
-                        this.terrain.tileManager.releaseAllRTT();
-                    } else {
-                        this.terrain.tileManager.releaseRTT(e.tile.tileID);
-                    }
-                }
-            };
+            this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+            this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
 
+        this.style.triggerSymbolPlacement();
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
+    }
+
+    private _handleTerrainDataEvent(event: MapStyleDataEvent | MapSourceDataEvent, terrainSourceId: string): void {
+        if (event.dataType === 'style') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+
+        const isTerrainSourceEvent = event.sourceId === terrainSourceId;
+        if (isTerrainSourceEvent) {
+            this.terrain.resetElevationCache();
+            this.style.triggerSymbolPlacement();
+        }
+        if (isTerrainSourceEvent && event.tile) {
+            this.painter.markTerrainDepthDirty();
+        }
+        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
+            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            if (this.getCenterClampedToGround()) {
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+            }
+        }
+
+        if (!event.tile) return;
+        if (event.source?.type === 'image') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+        this.terrain.tileManager.releaseRTT(event.tile.tileID);
     }
 
     /**
@@ -3179,9 +3256,11 @@ export class Map extends Evented<MapEventType> {
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
+            const isWebGLImage = isStyleImageWebGLData(userImage.data);
 
             return {
-                data: new RGBAImage({width, height}, new Uint8Array(data)),
+                // A WebGL image paints its own slot, so its pixels are only ever transparent padding.
+                data: isWebGLImage ? new RGBAImage({width, height}) : new RGBAImage({width, height}, new Uint8Array(data)),
                 pixelRatio,
                 stretchX,
                 stretchY,
@@ -3190,6 +3269,7 @@ export class Map extends Evented<MapEventType> {
                 textFitHeight,
                 sdf,
                 version,
+                isWebGLImage,
                 userImage
             };
         }
@@ -3238,8 +3318,13 @@ export class Map extends Evented<MapEventType> {
                 'The width and height of the updated image must be that same as the previous version of the image')));
         }
 
-        const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
-        existingImage.data.replace(data, copy);
+        existingImage.isWebGLImage = isStyleImageWebGLData(data);
+        if (existingImage.isWebGLImage) {
+            existingImage.userImage = image as StyleImageInterface;
+        } else {
+            const copy = !(image instanceof HTMLImageElement || isImageBitmap(image));
+            existingImage.data.replace(data as Uint8Array | Uint8ClampedArray, copy);
+        }
 
         this.style.updateImage(id, existingImage);
         return this;
@@ -3310,7 +3395,7 @@ export class Map extends Evented<MapEventType> {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @returns a promise that is resolved when the image is loaded
+     * @returns a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)
      *
      * @example
      * Load an image from an external URL.
@@ -3322,7 +3407,11 @@ export class Map extends Evented<MapEventType> {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        const response = await ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        if (!response.data) {
+            throw new Error(`Could not load image ${url}: the response is empty`);
+        }
+        return response;
     }
 
     /**
@@ -3654,6 +3743,44 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Sets the value of the style's `font-faces` property, which points at the font files used to
+     * draw text that the style's `glyphs` URL does not cover. Pass a falsy value (null or undefined)
+     * to unset it.
+     *
+     * The files are handed to the browser's CSS Font Loading API, so any format the browser can
+     * render text with may be used, and requests for them go through `transformRequest` as glyph
+     * requests do. Text is drawn a grapheme cluster at a time, so a letter and the marks written on
+     * it are handed to the browser's text engine together and come back as the one shape they are
+     * written as -- which is what a `glyphs` URL, serving one codepoint at a time, cannot do.
+     *
+     * @param fontFaces - The font faces to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/root/#font-faces).
+     * A declaration this cannot make sense of is skipped with a warning, as is a font file that
+     * fails to load, so the text it would have drawn falls back to the `glyphs` URL.
+     * @example
+     * ```ts
+     * map.setFontFaces({
+     *     'Noto Sans Regular': [
+     *         {url: 'https://example.com/NotoSansKhmer-Regular.ttf', 'unicode-range': ['U+1780-17FF']}
+     *     ]
+     * });
+     * ```
+     */
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): this {
+        this._lazyInitEmptyStyle();
+        this.style.setFontFaces(fontFaces);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's `font-faces` property.
+     *
+     * @returns The style's font faces, or `null` if it declares none.
+     */
+    getFontFaces(): FontFacesSpecification | null {
+        return this.style.getFontFaces();
+    }
+
+    /**
      * Adds a sprite to the map's style. Fires the `style` event.
      *
      * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
@@ -3949,6 +4076,19 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Determines if the initial resize event should be handled based on the container's dimensions.
+     *
+     * @returns `true` if the initial resize event should be handled, `false` otherwise.
+     */
+    _shouldHandleInitialResize(): boolean {
+        if (!this._container?.clientWidth || !this._container.clientHeight) {
+            return false;
+        }
+        const [width, height] = this._containerDimensions();
+        return width !== this._camera.transform.width || height !== this._camera.transform.height;
+    }
+
+    /**
      * @internal
      * Sets up the ResizeObserver to track container size changes.
      * Uses the owning window's ResizeObserver for cross-window support.
@@ -3966,7 +4106,9 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
             if (!initialResizeEventCaptured) {
                 initialResizeEventCaptured = true;
-                return;
+                if (!this._shouldHandleInitialResize()) {
+                    return;
+                }
             }
             throttledResizeCallback(entries);
         });
@@ -3997,6 +4139,9 @@ export class Map extends Evented<MapEventType> {
     }
 
     _setupContainer(): void {
+        const dimensions = this._containerDimensions();
+        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
+
         const container = this._container;
         container.classList.add('maplibregl-map');
 
@@ -4012,8 +4157,6 @@ export class Map extends Evented<MapEventType> {
         this._canvas.setAttribute('aria-label', this._getUIString('Map.Title'));
         this._canvas.setAttribute('role', 'region');
 
-        const dimensions = this._containerDimensions();
-        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
         this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
@@ -4023,6 +4166,19 @@ export class Map extends Evented<MapEventType> {
         }
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
+    }
+
+    /**
+     * @internal
+     * Reverses the DOM mutations of {@link Map._setupContainer}, returning the container element to its pre-construction state.
+     */
+    _cleanupContainer(): void {
+        this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
+        this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
+        this._canvasContainer.remove();
+        this._controlContainer.remove();
+        this._container.removeEventListener('scroll', this._onMapScroll, false);
+        this._container.classList.remove('maplibregl-map');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number): void {
@@ -4035,6 +4191,10 @@ export class Map extends Evented<MapEventType> {
         this._canvas.style.height = `${height}px`;
     }
 
+    /**
+     * @internal
+     * Creates the WebGL2 context and the painter. Throws {@link GPUInitializationError} when the context cannot be created.
+     */
     _setupPainter(): void {
 
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
@@ -4055,8 +4215,7 @@ export class Map extends Evented<MapEventType> {
         const gl: WebGL2RenderingContext | null = this._canvas.getContext('webgl2', attributes);
 
         if (!gl) {
-            this.fire(new ErrorEvent(new GPUInitializationError(attributes, creationEvent)));
-            return;
+            throw new GPUInitializationError(attributes, creationEvent);
         }
 
         this.painter = new Painter(gl, this._camera.transform);
@@ -4117,12 +4276,21 @@ export class Map extends Evented<MapEventType> {
 
         if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
+            // The atlas textures died with the old context, so images that render themselves with WebGL owe every atlas a fresh render.
+            for (const id in this._lostContextStyle.images) {
+                const image = this._lostContextStyle.images[id];
+                if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
+            }
         }
 
         this._lostContextStyle = {style: null, images: null};
 
-        this._setupPainter();
-        if (!this.painter) return;
+        try {
+            this._setupPainter();
+        } catch (error) {
+            this.fire(new ErrorEvent(error));
+            return;
+        }
         this.resize();
         this._update();
         this._resizeInternal();
@@ -4237,8 +4405,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-        this.style.projection?.setErrorQueryLatitudeDegrees(this._camera.transform.center.lat);
-        this._camera.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
+        this._camera.transform.setTransitionState(this.style.projection?.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we
@@ -4250,10 +4417,14 @@ export class Map extends Evented<MapEventType> {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            // The cached samplers and coverage index are only valid for the tile set they were built from.
+            if (renderableTilesChanged) {
+                this.terrain.resetElevationCache();
+            }
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
             }
         } else {
             this._camera.transform.setMinElevationForCurrentTile(0);
@@ -4299,7 +4470,7 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.painter.renderToTexture?.needsFollowUpFrame;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -4365,12 +4536,7 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension?.loseContext) extension.loseContext();
-        this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
-        this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
-        this._canvasContainer.remove();
-        this._controlContainer.remove();
-        this._container.removeEventListener('scroll', this._onMapScroll, false);
-        this._container.classList.remove('maplibregl-map');
+        this._cleanupContainer();
 
         this._removed = true;
         this.fire(new MapLibreEvent('remove'));

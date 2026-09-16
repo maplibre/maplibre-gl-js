@@ -1,6 +1,7 @@
-import {describe, test, expect, beforeEach, vi, afterEach, type Mock} from 'vitest';
+import {describe, test, expect, beforeEach, vi, afterEach} from 'vitest';
 import {beforeMapTest, createMap as globalCreateMap} from './test/util.ts';
 import {browser} from './browser.ts';
+import {AbortError} from './abort_error.ts';
 
 describe('browser', () => {
     describe('frame',() => {
@@ -56,7 +57,7 @@ describe('browser', () => {
 
             expect(fn).toHaveBeenCalledTimes(1);
             const callArg = fn.mock.calls[0][0];
-            expect(typeof callArg).toBe('number');
+            expect(callArg).toBeTypeOf('number');
 
             expect(window.cancelAnimationFrame).not.toHaveBeenCalled();
             expect(reject).not.toHaveBeenCalled();
@@ -69,11 +70,8 @@ describe('browser', () => {
         test('when AbortController is aborted before frame fires, calls cancelAnimationFrame and reject', () => {
             // We override the default mock so that the callback is NOT called immediately
             // giving us time to abort.
-            (window.requestAnimationFrame as Mock).mockImplementation(
-                () => {
-                    // Return ID but do not invoke cb
-                    return 42;
-                }
+            (vi.mocked(window.requestAnimationFrame)).mockReturnValue(
+                42
             );
 
             const abortController = new AbortController();
@@ -145,7 +143,7 @@ describe('browser', () => {
             const abortController = new AbortController();
             const promise = browser.frameAsync(abortController);
             abortController.abort();
-            await expect(promise).rejects.toThrow();
+            await expect(promise).rejects.toThrow(AbortError);
         });
     });
 
@@ -177,6 +175,73 @@ describe('browser', () => {
     });
 
     test('hardwareConcurrency', () => {
-        expect(typeof browser.hardwareConcurrency).toBe('number');
+        expect(browser.hardwareConcurrency).toBeTypeOf('number');
+    });
+
+    describe('getImageCanvasContext', () => {
+        const image = {width: 4, height: 3} as unknown as ImageBitmap;
+
+        /**
+         * A canvas that records `drawImage` instead of rasterising. `getImageData` answers with the
+         * bytes `isOffscreenCanvasDistorted` expects, or with zeroes to fail it (see #3185).
+         */
+        function createFakeCanvas(distorted = false) {
+            const canvas = {width: 0, height: 0, getContext: () => context};
+            const context = {
+                canvas,
+                fillRect: () => {},
+                drawImage: vi.fn(),
+                getImageData: (_x: number, _y: number, width: number, height: number) => ({
+                    data: Uint8ClampedArray.from({length: width * height * 4}, (_, i) => distorted ? 0 : i)
+                })
+            };
+            return canvas;
+        }
+
+        /**
+         * Draws `image` through a fresh copy of `browser.ts`, since the two `OffscreenCanvas` probes
+         * behind `getImageCanvasContext` cache their answer in module scope. Only the document canvas
+         * comes back sized, so `context.canvas.width` says which path ran.
+         */
+        async function drawImageWith(OffscreenCanvas: unknown) {
+            vi.stubGlobal('OffscreenCanvas', OffscreenCanvas);
+            vi.stubGlobal('createImageBitmap', vi.fn());
+            vi.spyOn(window.document, 'createElement').mockReturnValue(createFakeCanvas() as unknown as HTMLElement);
+            vi.resetModules();
+            return (await import('./browser.ts')).browser.getImageCanvasContext(image);
+        }
+
+        afterEach(() => {
+            vi.unstubAllGlobals();
+            vi.restoreAllMocks();
+            vi.resetModules();
+        });
+
+        test('draws into an OffscreenCanvas sized to the image when the browser has one that reads back faithfully', async () => {
+            const OffscreenCanvasStub = vi.fn(function () {
+                return createFakeCanvas();
+            });
+
+            const context = await drawImageWith(OffscreenCanvasStub);
+
+            expect(OffscreenCanvasStub).toHaveBeenCalledWith(4, 3);
+            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+        });
+
+        test('draws into a document canvas sized to the image when the browser has no OffscreenCanvas', async () => {
+            const context = await drawImageWith(undefined);
+
+            expect([context.canvas.width, context.canvas.height]).toEqual([4, 3]);
+            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+        });
+
+        test('falls back to a document canvas when the OffscreenCanvas distorts pixels', async () => {
+            const context = await drawImageWith(vi.fn(function () {
+                return createFakeCanvas(true);
+            }));
+
+            expect([context.canvas.width, context.canvas.height]).toEqual([4, 3]);
+            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0, 4, 3);
+        });
     });
 });

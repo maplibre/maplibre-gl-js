@@ -1,5 +1,3 @@
-uniform lowp float u_device_pixel_ratio;
-
 flat in vec2 v_width2;
 in vec2 v_normal;
 in float v_gamma_scale;
@@ -15,6 +13,8 @@ void main() {
     #pragma maplibre: initialize highp vec4 color
     #pragma maplibre: initialize lowp float blur
     #pragma maplibre: initialize lowp float opacity
+
+    clipAntimeridian();
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;

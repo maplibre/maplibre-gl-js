@@ -1,0 +1,97 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Dashed line on globe, pole to pole: the dash period must follow the line thickness scaling towards the poles. Source capped to maxzoom 0 to keep the line in a single tile, since dash phase restarts at tile boundaries and the line crosses the tile corner at 0/0 mid-frame."
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0.0,
+    0.0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "sources": {
+    "fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -90
+            ],
+            [
+              -180,
+              90
+            ],
+            [
+              180,
+              90
+            ],
+            [
+              180,
+              -90
+            ],
+            [
+              -180,
+              -90
+            ]
+          ]
+        ]
+      }
+    },
+    "line": {
+      "type": "geojson",
+      "maxzoom": 0,
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -90,
+            -85
+          ],
+          [
+            90,
+            85
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "fill",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "grey"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#0000ff",
+        "line-dasharray": [
+          2,
+          2
+        ]
+      }
+    }
+  ]
+}

@@ -60,15 +60,13 @@ import symbolSDFVert from './glsl/symbol_sdf.vertex.glsl.g.ts';
 import symbolTextAndIconFrag from './glsl/symbol_text_and_icon.fragment.glsl.g.ts';
 import symbolTextAndIconVert from './glsl/symbol_text_and_icon.vertex.glsl.g.ts';
 import terrainDepthFrag from './glsl/terrain_depth.fragment.glsl.g.ts';
-import terrainCoordsFrag from './glsl/terrain_coords.fragment.glsl.g.ts';
 import terrainFrag from './glsl/terrain.fragment.glsl.g.ts';
 import terrainVert from './glsl/terrain.vertex.glsl.g.ts';
 import terrainVertDepth from './glsl/terrain_depth.vertex.glsl.g.ts';
-import terrainVertCoords from './glsl/terrain_coords.vertex.glsl.g.ts';
-import projectionErrorMeasurementVert from './glsl/projection_error_measurement.vertex.glsl.g.ts';
-import projectionErrorMeasurementFrag from './glsl/projection_error_measurement.fragment.glsl.g.ts';
 import projectionMercatorVert from './glsl/_projection_mercator.vertex.glsl.g.ts';
+import projectionMercatorFrag from './glsl/_projection_mercator.fragment.glsl.g.ts';
 import projectionGlobeVert from './glsl/_projection_globe.vertex.glsl.g.ts';
+import projectionGlobeFrag from './glsl/_projection_globe.fragment.glsl.g.ts';
 import atmosphereFrag from './glsl/atmosphere.fragment.glsl.g.ts';
 import atmosphereVert from './glsl/atmosphere.vertex.glsl.g.ts';
 import skyFrag from './glsl/sky.fragment.glsl.g.ts';
@@ -116,14 +114,12 @@ export const shaders: {
     symbolTextAndIcon: PreparedShader;
     terrain: PreparedShader;
     terrainDepth: PreparedShader;
-    terrainCoords: PreparedShader;
-    projectionErrorMeasurement: PreparedShader;
     atmosphere: PreparedShader;
     sky: PreparedShader;
 } = {
     prelude: prepare(preludeFrag, preludeVert),
-    projectionMercator: prepare('', projectionMercatorVert),
-    projectionGlobe: prepare('', projectionGlobeVert),
+    projectionMercator: prepare(projectionMercatorFrag, projectionMercatorVert),
+    projectionGlobe: prepare(projectionGlobeFrag, projectionGlobeVert),
     background: prepare(backgroundFrag, backgroundVert),
     backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
     circle: prepare(circleFrag, circleVert),
@@ -155,8 +151,6 @@ export const shaders: {
     symbolTextAndIcon: prepare(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: prepare(terrainFrag, terrainVert),
     terrainDepth: prepare(terrainDepthFrag, terrainVertDepth),
-    terrainCoords: prepare(terrainCoordsFrag, terrainVertCoords),
-    projectionErrorMeasurement: prepare(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
     atmosphere: prepare(atmosphereFrag, atmosphereVert),
     sky: prepare(skyFrag, skyVert),
 };

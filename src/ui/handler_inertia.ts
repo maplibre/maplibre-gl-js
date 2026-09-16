@@ -3,6 +3,7 @@ import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {DragPanOptions} from './handler/shim/drag_pan.ts';
+import type {HandlerResult} from './handler_manager.ts';
 import type {EaseToOptions} from './camera.ts';
 import type {Map} from './map.ts';
 
@@ -43,12 +44,24 @@ export type InertiaOptions = {
     maxSpeed: number;
 };
 
+/**
+ * The maximum age of a recorded gesture update, in milliseconds.
+ */
+const BUFFER_CUTOFF = 160;
+
+/**
+ * The time window the gesture velocity is measured over, in milliseconds.
+ */
+const VELOCITY_WINDOW = 60;
+
+type InertiaBufferEntry = {
+    time: number;
+    settings: HandlerResult;
+};
+
 export class HandlerInertia {
     _map: Map;
-    _inertiaBuffer: Array<{
-        time: number;
-        settings: any;
-    }>;
+    _inertiaBuffer: InertiaBufferEntry[];
 
     constructor(map: Map) {
         this._map = map;
@@ -59,23 +72,54 @@ export class HandlerInertia {
         this._inertiaBuffer = [];
     }
 
-    record(settings: any): void {
+    record(settings: HandlerResult): void {
         this._drainInertiaBuffer();
         this._inertiaBuffer.push({time: now(), settings});
     }
 
     _drainInertiaBuffer(): void {
         const inertia = this._inertiaBuffer,
-            currentTime = now(),
-            cutoff = 160;   //msec
+            currentTime = now();
 
-        while (inertia.length > 0 && currentTime - inertia[0].time > cutoff)
+        while (inertia.length > 0 && currentTime - inertia[0].time > BUFFER_CUTOFF)
             inertia.shift();
     }
 
+    /**
+     * Returns the entries the velocity is measured from: everything recorded within
+     * {@link VELOCITY_WINDOW} before now, but never fewer than the last two, so that
+     * inertia also works below two recorded updates per window.
+     */
+    _getVelocityEntries(): InertiaBufferEntry[] {
+        const inertia = this._inertiaBuffer;
+        const windowStart = now() - VELOCITY_WINDOW;
+
+        let firstIndex = Math.max(0, inertia.length - 2);
+        while (firstIndex > 0 && inertia[firstIndex - 1].time >= windowStart) {
+            firstIndex--;
+        }
+
+        return inertia.slice(firstIndex);
+    }
+
+    /**
+     * Returns the ease which continues the gesture that has just ended.
+     *
+     * The velocity is measured over the time up to the release and not up to the last
+     * recorded movement, so that a gesture held still before being released has a lower
+     * velocity, down to no inertia at all. The delta of an entry happened before it was
+     * recorded, so the first entry only marks the start of the measured interval; anchors
+     * are the exception, as they describe the state at the moment of their entry.
+     *
+     * @param panInertiaOptions - overrides for the pan inertia defaults
+     * @returns the ease options, or `undefined` when the measured interval holds no
+     * movement, which terrain gestures produce by recording updates without any delta
+     */
     _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
         this._drainInertiaBuffer();
-        if (this._inertiaBuffer.length < 2) {
+        const entries = this._getVelocityEntries();
+        if (entries.length < 2) {
+            this.clear();
             return;
         }
 
@@ -89,18 +133,25 @@ export class HandlerInertia {
             around: undefined
         };
 
-        for (const {settings} of this._inertiaBuffer) {
+        for (const {settings} of entries) {
+            if (settings.around) deltas.around = settings.around;
+            if (settings.pinchAround) deltas.pinchAround = settings.pinchAround;
+        }
+
+        for (const {settings} of entries.slice(1)) {
             deltas.zoom += settings.zoomDelta || 0;
             deltas.bearing += settings.bearingDelta || 0;
             deltas.pitch += settings.pitchDelta || 0;
             deltas.roll += settings.rollDelta || 0;
             if (settings.panDelta) deltas.pan._add(settings.panDelta);
-            if (settings.around) deltas.around = settings.around;
-            if (settings.pinchAround) deltas.pinchAround = settings.pinchAround;
         }
 
-        const lastEntry = this._inertiaBuffer[this._inertiaBuffer.length - 1];
-        const duration = (lastEntry.time - this._inertiaBuffer[0].time);
+        if (!deltas.pan.mag() && !deltas.zoom && !deltas.bearing && !deltas.pitch && !deltas.roll) {
+            this.clear();
+            return;
+        }
+
+        const duration = now() - entries[0].time;
 
         const easeOptions = {} as any;
 

@@ -28,7 +28,7 @@ describe('normalizeSpriteURL', () => {
         ).toBe('http://www.foo.com/bar@2x.png?fresh=true');
     });
 
-    test('test relative URL', () => {
+    test('relative URL', () => {
         expect(
             () => normalizeSpriteURL('/bar?fresh=true', '@2x', '.png')
         ).toThrow(/Invalid/i);

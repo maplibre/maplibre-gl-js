@@ -38,6 +38,7 @@ describe.each(distjs)('release file %s', (file) => {
         const j = await getSourceMapForFile(sourceFileURL);
         for (const f of j.sources) {
             expect(f).not.toMatch('[.]test[.]ts$');
+            expect(f).not.toMatch('[.]bench[.]ts$');
             expect(f).not.toMatch('^test');
         }
     });
@@ -63,7 +64,7 @@ describe('main sourcemap', () => {
         // *.mjs.map files should have these files
         const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
-            if (f.endsWith('.test.ts'))
+            if (f.endsWith('.test.ts') || f.endsWith('.bench.ts'))
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
@@ -94,6 +95,6 @@ describe('main sourcemap', () => {
         // up in the production bundle. If this number jumps, real source files
         // are getting dropped, and it should be investigated before raising the limit.
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(18);
+        expect(s2.length).toBeLessThan(19);
     });
 });

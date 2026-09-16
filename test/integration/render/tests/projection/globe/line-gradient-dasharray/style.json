@@ -1,0 +1,113 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Dashed gradient line on globe, pole to pole: the dash period must follow the line thickness scaling towards the poles. No maxzoom cap needed here, line metrics keep both the gradient and the dash phase continuous across tile boundaries."
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0.0,
+    0.0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "sources": {
+    "fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -180,
+              -90
+            ],
+            [
+              -180,
+              90
+            ],
+            [
+              180,
+              90
+            ],
+            [
+              180,
+              -90
+            ],
+            [
+              -180,
+              -90
+            ]
+          ]
+        ]
+      }
+    },
+    "line": {
+      "type": "geojson",
+      "lineMetrics": true,
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -90,
+            -85
+          ],
+          [
+            90,
+            85
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "fill",
+      "paint": {
+        "fill-antialias": false,
+        "fill-color": "grey"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "line",
+      "paint": {
+        "line-width": 10,
+        "line-gradient": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "line-progress"
+          ],
+          0,
+          "blue",
+          0.35,
+          "cyan",
+          0.65,
+          "yellow",
+          1,
+          "red"
+        ],
+        "line-dasharray": [
+          4,
+          2
+        ]
+      }
+    }
+  ]
+}

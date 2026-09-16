@@ -1,10 +1,9 @@
 import {FillExtrusionLayoutArray, PosArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes.ts';
 import {type Segment, SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../index_array_type.ts';
-import {EXTENT} from '../extent.ts';
+import {isBoundaryEdge, isEntirelyOutside} from '../extent_bounds.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
@@ -13,16 +12,19 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
+import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
-
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {IndexBuffer} from '../../webgl/index_buffer.ts';
@@ -30,9 +32,7 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const FACTOR = Math.pow(2, 13);
@@ -101,17 +101,25 @@ export class FillExtrusionBucket implements Bucket {
         this.features = [];
         this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
 
+        const globalProperties = new EvaluationParameters(this.zoom);
+        const layer = this.layers[0];
+        const roundedCornerDistanceInMeters = layer.layout.get('fill-extrusion-rounded-corner-distance');
+        const roundedCornerDistance = roundedCornerDistanceInMeters > 0 ? getTileUnitsForMeters(roundedCornerDistanceInMeters, canonical) : 0;
+        const needGeometry = layer._featureFilter.needGeometry;
+
         for (const {feature, id, index, sourceLayerIndex} of features) {
-            const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+            if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+
+            const rawGeometry = needGeometry ? evaluationFeature.geometry : loadGeometry(feature);
+            const geometry = roundPolygonCornersIfNeeded(rawGeometry, roundedCornerDistance);
 
             const bucketFeature: BucketFeature = {
                 id,
                 sourceLayerIndex,
                 index,
-                geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
+                geometry,
                 properties: feature.properties,
                 type: feature.type,
                 patterns: {}
@@ -127,10 +135,10 @@ export class FillExtrusionBucket implements Bucket {
         }
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}): void {
+    addFeatures({options, canonical, patternPositions}: BucketDependencyParameters): void {
         for (const feature of this.features) {
             const {geometry} = feature;
-            this.addFeature(feature, geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, geometry, feature.index, canonical, patternPositions, options.subdivisionGranularity);
         }
     }
 
@@ -322,15 +330,3 @@ function accumulatePointsToCentroid(centroid: CentroidAccumulator, geometry: Poi
 }
 
 register('FillExtrusionBucket', FillExtrusionBucket, {omit: ['layers', 'features']});
-
-function isBoundaryEdge(p1, p2) {
-    return (p1.x === p2.x && (p1.x < 0 || p1.x > EXTENT)) ||
-        (p1.y === p2.y && (p1.y < 0 || p1.y > EXTENT));
-}
-
-function isEntirelyOutside(ring) {
-    return ring.every(p => p.x < 0) ||
-        ring.every(p => p.x > EXTENT) ||
-        ring.every(p => p.y < 0) ||
-        ring.every(p => p.y > EXTENT);
-}
