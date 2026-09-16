@@ -511,6 +511,7 @@ export class Style extends Evented<MapEventType> {
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
         this.sky = new Sky(this.stylesheet.sky, this._globalState);
+        this.sky.setEventedParent(this);
 
         // The stylesheet's terrain was already validated as part of the style itself.
         this.map.setTerrain(this.stylesheet.terrain ?? null, {validate: false});
@@ -1769,6 +1770,7 @@ export class Style extends Evented<MapEventType> {
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}): void {
         this._checkLoaded();
+
         const sky = this.getSky();
 
         let update = false;
@@ -1796,8 +1798,8 @@ export class Style extends Evented<MapEventType> {
             }, this.stylesheet.transition)
         };
 
+        if (!this.sky.setSky(skyOptions, options)) return;
         this.stylesheet.sky = skyOptions;
-        this.sky.setSky(skyOptions, options);
         this.sky.updateTransitions(parameters);
     }
 
