@@ -1155,6 +1155,41 @@ describe('MercatorTransform over the simple CRS', () => {
             expect(camera.lat).toBeCloseTo(20, 6);
         });
     });
+
+    describe('calculateCameraOptionsFromTo', () => {
+        test('bearing and zoom follow the identity CRS, where lng and lat are the world axes and equal steps make a 45 degree bearing', () => {
+            const transform = createSimpleCrsTransform(512, 512);
+            transform.setZoom(1);
+            const worldUnitsPerDegree = 1 / 180;
+            const worldDistance = Math.hypot(10 * worldUnitsPerDegree, 10 * worldUnitsPerDegree);
+
+            const options = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0);
+
+            expect(options.bearing).toBeCloseTo(45, 10);
+            expect(options.pitch).toBeCloseTo(90, 10);
+            expect(options.center).toEqual(new LngLat(10, 10));
+            expect(options.zoom).toBeCloseTo(Math.log2(transform.cameraToCenterDistance / worldDistance / transform.tileSize), 10);
+        });
+
+        test('mercator tilts the bearing of the same step by its latitude stretch', () => {
+            const transform = new MercatorTransform();
+            transform.resize(512, 512);
+            transform.setZoom(1);
+
+            expect(transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0).bearing).not.toBeCloseTo(45, 1);
+        });
+
+        test('altitude is scaled by the CRS meters per world unit, so 90 meters down in a 180 meter world is half a world unit', () => {
+            const transform = createSimpleCrsTransform(512, 512);
+            transform.setZoom(1);
+            const halfAWorldUnit = 0.5;
+
+            const options = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 90, {lng: 0, lat: 0}, 0);
+
+            expect(options.pitch).toBeCloseTo(0, 10);
+            expect(options.zoom).toBeCloseTo(Math.log2(transform.cameraToCenterDistance / halfAWorldUnit / transform.tileSize), 10);
+        });
+    });
 });
 
 describe('MercatorTransform.isLocationOccluded', () => {

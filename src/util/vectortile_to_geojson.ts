@@ -1,9 +1,11 @@
 import {classifyRings} from '@mapbox/vector-tile';
 import {JSON_PREFIX} from './util.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
 
 /**
  * A helper for type to omit a property from a type
@@ -39,13 +41,19 @@ export class GeoJSONFeature {
     _z: number;
 
     _vectorTileFeature: VectorTileFeatureLike;
+    /**
+     * The map projection's world-to-lng/lat mapping, stored only when it is not the mercator one so mercator
+     * query output stays float-identical to the inline formula in `projectPoint`.
+     */
+    private _worldCoordinateHelper: WorldCoordinateHelper | undefined;
 
-    constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined) {
+    constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined, worldCoordinateHelper: WorldCoordinateHelper) {
         this.type = 'Feature';
         this._vectorTileFeature = vectorTileFeature;
         this._x = x;
         this._y = y;
         this._z = z;
+        this._worldCoordinateHelper = worldCoordinateHelper === mercatorWorldCoordinateHelper ? undefined : worldCoordinateHelper;
 
         for (const key in vectorTileFeature.properties) {
             if (typeof vectorTileFeature.properties[key] !== 'string' || !vectorTileFeature.properties[key].startsWith(JSON_PREFIX)) {
@@ -59,6 +67,10 @@ export class GeoJSONFeature {
     }
 
     private projectPoint(p: Point, x0: number, y0: number, size: number): [number, number] {
+        if (this._worldCoordinateHelper) {
+            const lngLat = this._worldCoordinateHelper.lngLatFromWorld((p.x + x0) / size, (p.y + y0) / size);
+            return [lngLat.lng, lngLat.lat];
+        }
         return [
             (p.x + x0) * 360 / size - 180,
             360 / Math.PI * Math.atan(Math.exp((1 - (p.y + y0) * 2 / size) * Math.PI)) - 90
@@ -126,7 +138,7 @@ export class GeoJSONFeature {
             geometry: this.geometry
         };
         for (const i in this) {
-            if (i === '_geometry' || i === '_vectorTileFeature' || i === '_x' || i === '_y' || i === '_z') continue;
+            if (i === '_geometry' || i === '_vectorTileFeature' || i === '_x' || i === '_y' || i === '_z' || i === '_worldCoordinateHelper') continue;
             json[i] = (this)[i];
         }
         return json;

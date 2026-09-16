@@ -7,6 +7,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
+import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -97,5 +98,45 @@ describe('FeatureIndex', () => {
             expect(result.layer[0].feature.properties.admin_level).toBeDefined();
             expect(result.layer[0].feature.geometry.type).toBe('LineString');
         });
+    });
+});
+
+describe('FeatureIndex in a planar projection', () => {
+    function createIndexWithFeature() {
+        const features = [{type: 1, geometry: [0, 0], tags: {}} as any as Feature];
+        const geojsonWrapper = new GeoJSONWrapper(features);
+        geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
+        const layer = new CircleStyleLayer({source: 'source', paint: {}} as LayerSpecification, {});
+        layer.recalculate({} as EvaluationParameters, []);
+        const featureIndex = new FeatureIndex(new OverscaledTileID(3, 0, 2, 1, 2));
+        featureIndex.rawTileData = fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}}) as any as ArrayBuffer;
+        featureIndex.bucketLayerIDs = [['layer']];
+        featureIndex.insert(geojsonWrapper.feature(0), [[new Point(1, 1)]], 0, 0, 0);
+        return {featureIndex, layer};
+    }
+
+    test('query returns geometry through the transform projection', () => {
+        const {featureIndex, layer} = createIndexWithFeature();
+        const transform = new MercatorTransform();
+        transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
+        transform.resize(500, 500);
+
+        const result = featureIndex.query({
+            queryPadding: 0,
+            tileSize: 512,
+            scale: 1,
+            queryGeometry: [new Point(0, 0), new Point(10, 10)],
+            cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
+            params: {},
+            transform
+        } as any, {layer}, [], undefined);
+        expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);
+    });
+
+    test('lookupSymbolFeatures returns geometry through the helper in its filter params', () => {
+        const {featureIndex, layer} = createIndexWithFeature();
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+        const result = featureIndex.lookupSymbolFeatures([0], {}, 0, 0, {filterSpec: undefined, globalState: {}, worldCoordinateHelper}, null, [], {layer});
+        expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);
     });
 });
