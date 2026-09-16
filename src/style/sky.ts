@@ -27,8 +27,12 @@ export class Sky extends Evented {
         this.recalculate(new EvaluationParameters(0));
     }
 
-    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): void {
-        if (this._validate(validateStyle.sky, sky, options)) return;
+    /**
+     * Validates and applies the sky. Returns false, after firing `error`, when
+     * the value was rejected and nothing changed.
+     */
+    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): boolean {
+        if (this._validate(validateStyle.sky, sky, options)) return false;
 
         sky ||= {
             'sky-color': 'transparent',
@@ -39,6 +43,7 @@ export class Sky extends Evented {
         };
 
         this._transitionable.setValues(sky);
+        return true;
     }
 
     getSky(): SkySpecification {
