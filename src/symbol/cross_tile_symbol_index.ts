@@ -345,13 +345,17 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number): boolean {
+    /**
+     * @returns whether any bucket was added or removed, and the buckets whose cross tile IDs this
+     * (re)assigned
+     */
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number): {bucketsChanged: boolean; reindexedBuckets: Set<number>} {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
         }
 
-        let symbolBucketsChanged = false;
+        const reindexedBuckets = new Set<number>();
         const currentBucketIDs = {};
 
         layerIndex.handleWrapJump(lng);
@@ -367,16 +371,14 @@ export class CrossTileSymbolIndex {
             }
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
-                symbolBucketsChanged = true;
+                reindexedBuckets.add(symbolBucket.bucketInstanceId);
             }
             currentBucketIDs[symbolBucket.bucketInstanceId] = true;
         }
 
-        if (layerIndex.removeStaleBuckets(currentBucketIDs)) {
-            symbolBucketsChanged = true;
-        }
+        const staleBucketsRemoved = layerIndex.removeStaleBuckets(currentBucketIDs);
 
-        return symbolBucketsChanged;
+        return {bucketsChanged: staleBucketsRemoved || reindexedBuckets.size > 0, reindexedBuckets};
     }
 
     pruneUnusedLayers(usedLayers: string[]): void {

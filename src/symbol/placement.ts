@@ -209,6 +209,12 @@ export class Placement {
         text: number[];
         icon: number[];
     }>>;
+    /**
+     * Each symbol's cross tile ID and whether it was hidden as a duplicate, as of the last time a
+     * bucket's opacity buffers were written. Held apart from `symbolInstances` so that reading them
+     * back does not go through `SymbolInstanceArray.get`, which builds a struct per symbol.
+     */
+    opacityInputs: Map<number, {crossTileIDs: Uint32Array; duplicates: Uint8Array}>;
 
     constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
@@ -227,6 +233,7 @@ export class Placement {
             text: number[];
             icon: number[];
         }>>();
+        this.opacityInputs = new Map();
 
         this.prevPlacement = prevPlacement;
         if (prevPlacement) {
@@ -1026,14 +1033,56 @@ export class Placement {
         }
     }
 
-    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]): void {
+    /**
+     * @param reindexedBuckets - Buckets that cannot be reused because
+     * {@link CrossTileSymbolIndex.addLayer} just (re)assigned their cross tile
+     * IDs. `null` rebuilds every bucket, as a commit requires.
+     */
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[], reindexedBuckets: Set<number> | null = null): void {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
-            const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
-            if (symbolBucket && tile.latestFeatureIndex && styleLayer.id === symbolBucket.layerIds[0]) {
-                this.updateBucketOpacities(symbolBucket, tile.tileID, seenCrossTileIDs, tile.collisionBoxArray);
+            const bucket = tile.getBucket(styleLayer) as SymbolBucket;
+            if (!bucket || !tile.latestFeatureIndex || styleLayer.id !== bucket.layerIds[0]) continue;
+
+            if (!this._reuseBucketOpacities(bucket, seenCrossTileIDs, reindexedBuckets)) {
+                this.updateBucketOpacities(bucket, tile.tileID, seenCrossTileIDs, tile.collisionBoxArray);
+            }
+
+            bucket.sortFeatures(-this.transform.bearingInRadians);
+            if (this.retainedQueryData[bucket.bucketInstanceId]) {
+                this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
             }
         }
+    }
+
+    /**
+     * Keeps a bucket's opacity buffers and marks its cross tile IDs seen, where rewriting them would
+     * write the same bytes. Answers `false` where it cannot tell, leaving the bucket to a rebuild.
+     *
+     * The one thing a rebuild reads from outside the bucket is `seenCrossTileIDs`: a label carried by
+     * several tiles is drawn by whichever bucket is walked first, and hidden as a duplicate in the
+     * rest. So the buffers still stand if every symbol is a duplicate exactly where it was when they
+     * were written, which is what `opacityInputs` recorded.
+     */
+    _reuseBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}, reindexedBuckets: Set<number> | null): boolean {
+        if (!reindexedBuckets || reindexedBuckets.has(bucket.bucketInstanceId)) return false;
+        // Debug geometry follows the bearing, and updateBucketOpacities is what hands over pending circles.
+        if (bucket.hasDebugData() || bucket.bucketInstanceId in this.collisionCircleArrays) return false;
+
+        const written = this.opacityInputs.get(bucket.bucketInstanceId);
+        if (!written) return false;
+
+        const {crossTileIDs, duplicates} = written;
+        for (let i = 0; i < crossTileIDs.length; i++) {
+            const wasDuplicate = duplicates[i] === 1;
+            const isDuplicate = seenCrossTileIDs[crossTileIDs[i]] === true;
+            if (isDuplicate !== wasDuplicate) return false;
+        }
+
+        for (const crossTileID of crossTileIDs) {
+            seenCrossTileIDs[crossTileID] = true;
+        }
+        return true;
     }
 
     updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
@@ -1080,6 +1129,8 @@ export class Placement {
         };
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);
+        const crossTileIDs = new Uint32Array(bucket.symbolInstances.length);
+        const duplicates = new Uint8Array(bucket.symbolInstances.length);
 
         for (let s = 0; s < bucket.symbolInstances.length; s++) {
             const symbolInstance = bucket.symbolInstances.get(s);
@@ -1101,6 +1152,8 @@ export class Placement {
             }
 
             seenCrossTileIDs[crossTileID] = true;
+            crossTileIDs[s] = crossTileID;
+            duplicates[s] = isDuplicate ? 1 : 0;
 
             const hasText = numHorizontalGlyphVertices > 0 || numVerticalGlyphVertices > 0;
             const hasIcon = symbolInstance.numIconVertices > 0;
@@ -1233,10 +1286,7 @@ export class Placement {
             }
         }
 
-        bucket.sortFeatures(-this.transform.bearingInRadians);
-        if (this.retainedQueryData[bucket.bucketInstanceId]) {
-            this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
-        }
+        this.opacityInputs.set(bucket.bucketInstanceId, {crossTileIDs, duplicates});
 
         if (bucket.hasTextData() && bucket.text.opacityVertexBuffer) {
             bucket.text.opacityVertexBuffer.updateData(bucket.text.opacityVertexArray);

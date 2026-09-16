@@ -1908,6 +1908,7 @@ export class Style extends Evented<MapEventType> {
         let placementCommitted = false;
 
         const layerTiles = {};
+        const reindexedBuckets = new Set<number>();
 
         for (const layerID of this._order) {
             const styleLayer = this._layers[layerID];
@@ -1920,8 +1921,11 @@ export class Style extends Evented<MapEventType> {
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
-            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.center.lng);
-            symbolBucketsChanged ||= layerBucketsChanged;
+            const layerResult = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.center.lng);
+            symbolBucketsChanged ||= layerResult.bucketsChanged;
+            for (const bucketInstanceId of layerResult.reindexedBuckets) {
+                reindexedBuckets.add(bucketInstanceId);
+            }
         }
         this.crossTileSymbolIndex.pruneUnusedLayers(this._order);
 
@@ -1971,7 +1975,7 @@ export class Style extends Evented<MapEventType> {
             for (const layerID of this._order) {
                 const styleLayer = this._layers[layerID];
                 if (styleLayer.type !== 'symbol') continue;
-                this.placement.updateLayerOpacities(styleLayer, layerTiles[styleLayer.source]);
+                this.placement.updateLayerOpacities(styleLayer, layerTiles[styleLayer.source], placementCommitted ? null : reindexedBuckets);
             }
         }
 
