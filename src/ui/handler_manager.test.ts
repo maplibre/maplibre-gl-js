@@ -574,6 +574,37 @@ describe('terrain gesture anchoring', () => {
         expect(map.project(landmark).dist(landmarkBeforeRelease)).toBeLessThan(0.5);
     });
 
+    test('a right-drag rotation keeps its speed when a DEM tile lands under the held center', async () => {
+        map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch: 60, bearing: 0});
+        await map.once('load');
+        addLoadingDem();
+        const demStillLoading = 0;
+        const demLanded = 3000;
+        const elevationAtCenter = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(demStillLoading);
+        const rotateSpeedDegreesPerPixel = 0.8;
+        const pixelsPerMove = 10;
+        const pointerY = 180;
+        let pointerX = 40;
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: pointerX, clientY: pointerY});
+        map._renderTaskQueue.run();
+        const bearingChangeOfOneMove = (): number => {
+            const before = map.getBearing();
+            pointerX += pixelsPerMove;
+            simulate.mousemove(window.document.body, {buttons: 2, clientX: pointerX, clientY: pointerY});
+            map._renderTaskQueue.run();
+            return map.getBearing() - before;
+        };
+
+        const beforeLanding = bearingChangeOfOneMove();
+        expect(beforeLanding).toBeCloseTo(pixelsPerMove * rotateSpeedDegreesPerPixel, 5);
+
+        elevationAtCenter.mockReturnValue(demLanded);
+        demTileLands();
+        const afterLanding = bearingChangeOfOneMove();
+        expect(afterLanding).toBeCloseTo(beforeLanding, 5);
+        simulate.mouseup(window.document.body, {buttons: 0, button: 2, clientX: pointerX, clientY: pointerY});
+    });
+
     test('a pitch-only gesture over globe terrain holds the center elevation while DEM lands, then lets it catch up on the next frame', async () => {
         const target = await setupPitchOnlyMap();
         map.setProjection({type: 'globe'});

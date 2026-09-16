@@ -321,7 +321,9 @@ export class HandlerManager {
         if (options.interactive && options.touchPitch) {
             map.touchPitch.enable(options.touchPitch);
         }
-        const getCenter = () => map.project(map.getCenter());
+        // the screen center the rotate and roll handlers measure the pointer against; the transform's own point, not the
+        // projected center, so a terrain elevation the gesture holds off the transform cannot move it
+        const getCenter = () => this._camera.transform.centerPoint;
         const mouseRotate = generateMouseRotationHandler(options, getCenter);
         const mousePitch = generateMousePitchHandler(options);
         const mouseRoll = generateMouseRollHandler(options, getCenter);
