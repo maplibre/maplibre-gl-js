@@ -7,6 +7,7 @@ import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {bufferToArrayBuffer} from '../util/test/util.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
+
 import type {CreateRasterizer} from './glyph_manager.ts';
 
 describe('GlyphManager', () => {
@@ -195,6 +196,25 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Ctrl Alt Del'][char(0x202e)].metrics.advance).toBe(0);
     });
 
+    test('GlyphManager locally generates a grapheme cluster when the style has no glyphs URL', async () => {
+        const manager = createGlyphManager(false, 'sans-serif');
+
+        // \u0926\u093f is Devanagari DA with the vowel sign I, which is written as one shape
+        const cluster = '\u0926\u093f';
+        const returnedGlyphs = await manager.getGlyphs({'Noto Sans': [cluster]});
+
+        expect(returnedGlyphs['Noto Sans'][cluster].metrics.advance).toBeGreaterThan(0);
+    });
+
+    test('GlyphManager locally generates a grapheme cluster the glyphs URL has no way to serve', async () => {
+        const manager = createGlyphManager(true, 'sans-serif');
+
+        const cluster = '\u0926\u093f';
+        const returnedGlyphs = await manager.getGlyphs({'Noto Sans': [cluster]});
+
+        expect(returnedGlyphs['Noto Sans'][cluster].metrics.advance).toBeGreaterThan(0);
+    });
+
     test('GlyphManager matches font styles', async () => {
         const manager = createGlyphManager(false, 'sans-serif');
 
@@ -343,7 +363,7 @@ describe('GlyphManager', () => {
             expect(glyphRangeRequests()).toHaveLength(0);
         });
 
-        test('leaves a cluster undrawn where the declared file does not cover the letter it starts with, so that layout can fall back', async () => {
+        test('draws a cluster the declared files do not cover from the local fonts instead', async () => {
             stubFontFaces();
             serveGlyphRanges();
             const createRasterizer = fakeRasterizer();
@@ -355,7 +375,8 @@ describe('GlyphManager', () => {
             const shinWithShevaAndDot = '\u05E9\u05B0\u05C1';
             const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [shinWithShevaAndDot]});
 
-            expect(returnedGlyphs['Arial Unicode MS'][shinWithShevaAndDot]).toBeNull();
+            expect(returnedGlyphs['Arial Unicode MS'][shinWithShevaAndDot]).not.toBeNull();
+            expect(createRasterizer).toHaveBeenCalled();
         });
 
         test('leaves a codepoint outside every declared range to the glyphs URL', async () => {

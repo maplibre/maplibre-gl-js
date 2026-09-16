@@ -5,6 +5,7 @@ import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+
 import type {Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events.ts';

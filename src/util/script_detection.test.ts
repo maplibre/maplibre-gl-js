@@ -17,7 +17,7 @@ describe('charAllowsLetterSpacing', () => {
         expect(charAllowsLetterSpacing('A'.codePointAt(0))).toBe(true);
     });
 
-    test('disallows ideographic breaking of Arabic text', () => {
+    test('disallows letter spacing of Arabic text', () => {
         // Arabic
         expect(charAllowsLetterSpacing('۳'.codePointAt(0))).toBe(false);
         // Arabic Supplement
@@ -30,6 +30,37 @@ describe('charAllowsLetterSpacing', () => {
         expect(charAllowsLetterSpacing('ﰤ'.codePointAt(0))).toBe(false);
         // Arabic Presentation Forms-B
         expect(charAllowsLetterSpacing('ﺽ'.codePointAt(0))).toBe(false);
+    });
+
+    test('disallows letter spacing of cursive scripts written outside the basic plane', () => {
+        // Duployan
+        expect(charAllowsLetterSpacing(0x1bc00)).toBe(false);
+        // Old Uyghur
+        expect(charAllowsLetterSpacing(0x10f70)).toBe(false);
+    });
+
+    test('disallows letter spacing of every script whose letters join, not only Arabic', () => {
+        // Mongolian
+        expect(charAllowsLetterSpacing(0x1820)).toBe(false);
+        // Syriac
+        expect(charAllowsLetterSpacing(0x0710)).toBe(false);
+        // Adlam
+        expect(charAllowsLetterSpacing(0x1e900)).toBe(false);
+        // N'Ko
+        expect(charAllowsLetterSpacing(0x07ca)).toBe(false);
+        // Mandaic
+        expect(charAllowsLetterSpacing(0x0840)).toBe(false);
+        // Hanifi Rohingya
+        expect(charAllowsLetterSpacing(0x10d00)).toBe(false);
+    });
+
+    test('allows letter spacing of scripts whose letters stand apart', () => {
+        // Hebrew, which is read right to left but is not written joined up
+        expect(charAllowsLetterSpacing('ה'.codePointAt(0))).toBe(true);
+        // Thaana
+        expect(charAllowsLetterSpacing('ޘ'.codePointAt(0))).toBe(true);
+        // Devanagari
+        expect(charAllowsLetterSpacing('द'.codePointAt(0))).toBe(true);
     });
 });
 
@@ -82,5 +113,26 @@ describe('charInRTLScript', () => {
     test('identifies Thaana text as right-to-left', () => {
         // Thaana
         expect(charInRTLScript('ޘ'.codePointAt(0))).toBe(true);
+    });
+
+    test('identifies the scripts added in recent versions of the standard', () => {
+        // Garay
+        expect(charInRTLScript(0x10d40)).toBe(true);
+        // Sidetic
+        expect(charInRTLScript(0x10940)).toBe(true);
+        // Old Uyghur
+        expect(charInRTLScript(0x10f70)).toBe(true);
+    });
+
+    test('leaves a script the standard reads left to right alone, however it is written by hand', () => {
+        // Todhri
+        expect(charInRTLScript(0x105c0)).toBe(false);
+        // Egyptian Hieroglyphs
+        expect(charInRTLScript(0x13000)).toBe(false);
+    });
+
+    test('leaves left-to-right text alone', () => {
+        expect(charInRTLScript('A'.codePointAt(0))).toBe(false);
+        expect(charInRTLScript('あ'.codePointAt(0))).toBe(false);
     });
 });

@@ -1,10 +1,11 @@
 import {describe, test, expect, vi} from 'vitest';
-import {type TileManager} from '../../tile/tile_manager.ts';
-import {type RasterSourceSpecification, type SourceSpecification, type VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../../style/style.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import {selectDebugSource} from './draw_debug.ts';
+
+import type {RasterSourceSpecification, SourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {TileManager} from '../../tile/tile_manager.ts';
 
 vi.mock(import('../../style/style'));
 

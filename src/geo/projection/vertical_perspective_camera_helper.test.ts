@@ -4,7 +4,8 @@ import {LngLat} from '../lng_lat.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {getZoomAdjustment} from './globe_utils.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
-import {type MapControlsDeltas} from './camera_helper.ts';
+
+import type {MapControlsDeltas} from './camera_helper.ts';
 
 describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
     test('preserves bearing away from the poles', () => {

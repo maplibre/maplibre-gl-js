@@ -2,29 +2,31 @@ import {EXTENT} from '../extent.ts';
 import {isBoundaryEdge} from '../extent_bounds.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from '../../geo/projection/mercator_utils.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
 /**
  * Rounds polygon corners by calculating arc points at each corner vertex.
+ * A distance of zero or less disables rounding.
  * @param polygon - Collection of polygon rings (outer ring and hole rings)
- * @param distanceInMeters - Desired corner rounding distance in meters
- * @param canonical - Canonical tile ID used for meter to tile unit conversion
+ * @param distanceInTileUnits - Corner rounding distance in tile units, as returned by {@link getTileUnitsForMeters}
  */
-export function roundPolygonCorners(
-    polygon: Point[][],
-    distanceInMeters: number,
-    canonical: CanonicalTileID
-): Point[][] {
-    if (distanceInMeters <= 0 || !polygon || polygon.length === 0) {
+export function roundPolygonCornersIfNeeded(polygon: Point[][], distanceInTileUnits: number): Point[][] {
+    if (distanceInTileUnits <= 0 || !polygon || polygon.length === 0) {
         return polygon;
     }
 
-    const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
     return polygon.map(ring => roundRing(ring, distanceInTileUnits));
 }
 
-function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
+/**
+ * Converts a distance in meters to tile units at the center of the given tile. The result only
+ * depends on the tile, so it is computed once per tile rather than once per feature.
+ * @param distanceInMeters - Distance in meters
+ * @param canonical - Canonical tile ID used for meter to tile unit conversion
+ */
+export function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
     const centerLocation = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, canonical);
     const mercatorCoord = MercatorCoordinate.fromLngLat(centerLocation);
     const meterInMercator = mercatorCoord.meterInMercatorCoordinateUnits();
@@ -59,17 +61,21 @@ function roundRing(ring: Point[], distanceInTileUnits: number): Point[] {
 
     const newRing: Point[] = [];
 
+    let previousIsBoundary = isBoundaryEdge(ring[vertexCount - 1], ring[0]);
+
     for (let i = 0; i < vertexCount; i++) {
         const previous = ring[(i - 1 + vertexCount) % vertexCount];
         const current = ring[i];
         const next = ring[(i + 1) % vertexCount];
+        const nextIsBoundary = isBoundaryEdge(current, next);
 
-        if (isBoundaryEdge(previous, current) || isBoundaryEdge(current, next)) {
+        if (previousIsBoundary || nextIsBoundary) {
             newRing.push(current.clone());
-            continue;
+        } else {
+            appendRoundCorner(newRing, previous, current, next, distanceInTileUnits);
         }
 
-        appendRoundCorner(newRing, previous, current, next, distanceInTileUnits);
+        previousIsBoundary = nextIsBoundary;
     }
 
     const snapped = snapToIntegerGrid(newRing);

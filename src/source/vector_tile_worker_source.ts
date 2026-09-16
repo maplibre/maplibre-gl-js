@@ -9,6 +9,7 @@ import {ensureError, extend} from '../util/util.ts';
 import {RequestPerformance} from '../util/request_performance.ts';
 import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed.ts';
 import {MLTVectorTile} from './vector_tile_mlt.ts';
+
 import type {
     WorkerSource,
     WorkerTileParameters,

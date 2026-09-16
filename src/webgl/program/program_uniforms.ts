@@ -13,6 +13,7 @@ import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsTy
 import {terrainUniforms, terrainDepthUniforms, type TerrainUniformsType, type TerrainDepthUniformsType} from './terrain_program.ts';
 import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program.ts';
 import {skyUniforms, type SkyUniformsType} from './sky_program.ts';
+
 import type {Context} from '../context.ts';
 import type {UniformLocations} from '../uniform_binding.ts';
 

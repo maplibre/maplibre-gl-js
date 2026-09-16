@@ -3,7 +3,8 @@ import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
 import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
 import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('PropertyValue', () => {
     test('set global state', () => {
@@ -100,6 +101,22 @@ describe('Transitionable', () => {
         evaluated.get('text-color').evaluate({type: 1, properties: {col: 'oops blue'}} as any, {} as any);
 
         expect(warn.mock.calls[0][0]).toBe('layers[0].paint.text-color: Could not parse color from value \'oops blue\' Falling back to rgba(0,0,0,1).');
+    });
+
+    test('setting another property does not extend a running transition past its original end, issue #8376', () => {
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', {});
+        transitionable.setValue('hillshade-exaggeration', 0.5);
+        const untransitioned = transitionable.untransitioned();
+
+        transitionable.setValue('hillshade-exaggeration', 1);
+        let transitioning = transitionable.transitioned({now: 0, transition: {duration: 300, delay: 0}}, untransitioned);
+
+        transitionable.setValue('hillshade-illumination-direction', 300);
+        transitioning = transitionable.transitioned({now: 150, transition: {duration: 300, delay: 0}}, transitioning);
+
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.75);
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 301} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
+        expect(transitioning.hasTransition()).toBe(false);
     });
 });
 

@@ -1,18 +1,17 @@
 import {IndexBuffer} from './index_buffer.ts';
-
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
 import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
 import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
 import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
-import type {UniformBuffer} from './uniform_buffer.ts';
-import {type DepthMode} from './depth_mode.ts';
-import {type StencilMode} from './stencil_mode.ts';
 import {ColorMode} from './color_mode.ts';
-import {type CullFaceMode} from './cull_face_mode.ts';
 import {deepEqual} from '../util/util.ts';
 import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value.ts';
 
+import type {DepthMode} from './depth_mode.ts';
+import type {StencilMode} from './stencil_mode.ts';
+import type {CullFaceMode} from './cull_face_mode.ts';
+import type {UniformBuffer} from './uniform_buffer.ts';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
 import type {
     StructArray,

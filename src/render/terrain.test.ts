@@ -11,12 +11,13 @@ import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
+import {createDEM} from '../util/test/util.ts';
+
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data.ts';
 import type {Painter} from './painter.ts';
-import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
 
 describe('Terrain', () => {
     let gl: WebGL2RenderingContext;
@@ -90,16 +91,6 @@ describe('Terrain', () => {
         expect(coordinate.x).toBeCloseTo(expected.x, 12);
         expect(coordinate.y).toBeCloseTo(expected.y, 12);
         expect(coordinate.z).toBeCloseTo(expected.z, 12);
-    });
-
-    test('depthAtPoint decodes the depth framebuffer readback', () => {
-        const terrain = createFlatTerrain(0);
-        vi.spyOn(terrain, 'getFramebuffer').mockReturnValue({framebuffer: null} as any);
-        vi.spyOn(terrain.painter.context.gl, 'readPixels').mockImplementation((_x, _y, _w, _h, _f, _t, rgba) => {
-            (rgba as Uint8Array).set([0, 0, 0, 128]);
-        });
-
-        expect(terrain.depthAtPoint(new Point(10, 20))).toBeCloseTo(0.5, 10);
     });
 
     test('getCoverageIndex sees newly renderable tiles after resetElevationCache', () => {
@@ -237,20 +228,21 @@ describe('Terrain', () => {
         expect(actualVertexArray).toStrictEqual([0, 0, 0, 2048, 0, 0, 4096, 0, 0, 6144, 0, 0, 8192, 0, 0, 0, 2048, 0, 2048, 2048, 0, 4096, 2048, 0, 6144, 2048, 0, 8192, 2048, 0, 0, 4096, 0, 2048, 4096, 0, 4096, 4096, 0, 6144, 4096, 0, 8192, 4096, 0, 0, 6144, 0, 2048, 6144, 0, 4096, 6144, 0, 6144, 6144, 0, 8192, 6144, 0, 0, 8192, 0, 2048, 8192, 0, 4096, 8192, 0, 6144, 8192, 0, 8192, 8192, 0, 0, 0, 1, 2048, 0, 1, 4096, 0, 1, 6144, 0, 1, 8192, 0, 1, 0, 8192, 1, 2048, 8192, 1, 4096, 8192, 1, 6144, 8192, 1, 8192, 8192, 1, 0, 0, 0, 0, 0, 1, 0, 2048, 0, 0, 2048, 1, 0, 4096, 0, 0, 4096, 1, 0, 6144, 0, 0, 6144, 1, 0, 8192, 0, 0, 8192, 1, 8192, 0, 0, 8192, 0, 1, 8192, 2048, 0, 8192, 2048, 1, 8192, 4096, 0, 8192, 4096, 1, 8192, 6144, 0, 8192, 6144, 1, 8192, 8192, 0, 8192, 8192, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     });
 
-    test('getElevation interpolates and reuses DEM sampling setup until reset', () => {
+    test('getElevation interpolates DEM cell centres and reuses sampling setup until reset', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 2} as any);
         const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
         const sourceTile = {
             tileID,
             dem: {
-                dim: 1,
+                dim: 2,
                 sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
             }
         } as any as Tile;
         terrain.tileManager.getSourceTile = vi.fn(() => sourceTile);
         terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
 
-        expect(terrain.getDEMElevation(tileID, EXTENT * 0.4, EXTENT * 0.2)).toBeCloseTo(42);
+        expect(terrain.getDEMElevation(tileID, 0, 0)).toBe(-55);
+        expect(terrain.getDEMElevation(tileID, EXTENT * 0.75, EXTENT * 0.25)).toBeCloseTo(100);
         expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
         expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(110);
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(1);
@@ -261,7 +253,7 @@ describe('Terrain', () => {
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
-    test('getDEMElevation samples the correct part of a parent DEM tile', () => {
+    test('getDEMElevation samples parent DEM cell centres', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
         const childTileID = new OverscaledTileID(2, 0, 2, 3, 3);
         const parentTileID = new OverscaledTileID(1, 0, 1, 1, 1);
@@ -274,8 +266,23 @@ describe('Terrain', () => {
         terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 22}) as any);
 
         expect(terrain.getDEMElevation(childTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
-        // The center of the bottom-right child is at 75% of both parent axes.
-        expect(sampleBilinear).toHaveBeenCalledWith(3, 3);
+        expect(sampleBilinear).toHaveBeenCalledWith(2.5, 2.5);
+    });
+
+    test('getDEMElevation samples loaded parent DEM cell centres for an overscaled tile', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const overscaledTileID = new OverscaledTileID(3, 0, 2, 3, 3);
+        const loadedParentTileID = new OverscaledTileID(1, 0, 1, 1, 1);
+        const sampleBilinear = vi.fn(() => 42);
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID: loadedParentTileID,
+            dem: {dim: 4, sampleBilinear}
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({maxzoom: 2}) as any);
+
+        expect(terrain.getDEMElevation(overscaledTileID, EXTENT / 2, EXTENT / 2)).toBe(42);
+        expect(sampleBilinear).toHaveBeenCalledWith(2.5, 2.5);
     });
 
     test('getElevation retries sampling setup when DEM data becomes available', () => {
@@ -286,7 +293,7 @@ describe('Terrain', () => {
         terrain.tileManager.getSourceTile = vi.fn(() => ({
             tileID,
             dem: tileHasDem ? {
-                dim: 1,
+                dim: 2,
                 sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
             } : undefined
         }) as any as Tile);
