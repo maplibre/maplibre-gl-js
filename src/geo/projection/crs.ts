@@ -1,5 +1,6 @@
 import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
+
 import type {WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TileMatrix} from './tile_matrix.ts';
 

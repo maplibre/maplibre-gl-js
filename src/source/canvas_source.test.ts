@@ -6,6 +6,7 @@ import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {waitForEvent} from '../util/test/util.ts';
+
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';

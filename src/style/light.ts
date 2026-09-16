@@ -2,13 +2,12 @@ import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
+import {Transitionable, type Transitioning, type PossiblyEvaluated} from './properties.ts';
 
 import type {vec3} from 'gl-matrix';
 import type {LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {StyleSetterOptions} from '../style/style.ts';
-import {Transitionable, type Transitioning, type PossiblyEvaluated, TRANSITION_SUFFIX} from './properties.ts';
-
 import type {TransitionParameters} from './properties.ts';
 
 /*
@@ -42,14 +41,7 @@ export class Light extends Evented {
             return;
         }
 
-        for (const name in light) {
-            const value = light[name];
-            if (name.endsWith(TRANSITION_SUFFIX)) {
-                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof LightProps, value);
-            } else {
-                this._transitionable.setValue(name as keyof LightProps, value);
-            }
-        }
+        this._transitionable.setValues(light);
     }
 
     updateTransitions(parameters: TransitionParameters): void {

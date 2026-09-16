@@ -1,11 +1,11 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
-import {type Page, type Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
-import type {AddressInfo} from 'net';
-
 import {sleep} from '../../../src/util/test/util.ts';
 import {launchPuppeteer} from '../lib/puppeteer_config.ts';
+
+import type {Page, Browser} from 'puppeteer';
+import type {AddressInfo} from 'net';
 import type {Map} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
@@ -112,6 +112,43 @@ describe('Browser tests', () => {
             });
         });
         expect(firstFiredEvent).toBe('load');
+    });
+
+    test('Map created in a hidden container resizes when shown, see #8277', {retry: 3, timeout: 20000}, async () => {
+        const dimensions = await page.evaluate(async () => {
+            const host = document.createElement('div');
+            host.style.display = 'none';
+
+            const container = document.createElement('div');
+            container.style.cssText = 'width: 640px; height: 480px';
+            host.append(container);
+            document.body.append(host);
+
+            const hiddenMap = new maplibregl.Map({
+                container,
+                style: {version: 8, sources: {}, layers: []}
+            });
+            const canvas = hiddenMap.getCanvas();
+
+            host.style.display = 'block';
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            const result = {
+                containerWidth: container.clientWidth,
+                containerHeight: container.clientHeight,
+                canvasWidth: canvas.clientWidth,
+                canvasHeight: canvas.clientHeight
+            };
+
+            hiddenMap.remove();
+            host.remove();
+            return result;
+        });
+
+        expect(dimensions.containerWidth).toBe(640);
+        expect(dimensions.containerHeight).toBe(480);
+        expect(dimensions.canvasWidth).toBe(640);
+        expect(dimensions.canvasHeight).toBe(480);
     });
 
     test('Should continue zooming from last mouse position after scroll and flyto, see #2709', {retry: 3, timeout: 20000}, async () => {
@@ -287,7 +324,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
-        expect(markerScreenPosition.y).toBeCloseTo(377.425);
+        expect(markerScreenPosition.y).toBeCloseTo(377.135);
     });
 
     test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {

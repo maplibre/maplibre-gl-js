@@ -5,13 +5,13 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
-import type {WorldCoordinateHelper} from './transform_interface.ts';
 import {mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
+import {Bounds} from './bounds.ts';
 
+import type {WorldCoordinateHelper} from './transform_interface.ts';
 import type {PaddingOptions} from './edge_insets.ts';
 import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
-import {Bounds} from './bounds.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
@@ -198,7 +198,7 @@ export class TransformHelper implements ITransformGetters {
         this._autoCalculateNearFarZ = true;
     }
 
-    public apply(thatI: ITransformGetters, constrain: boolean, forceOverrideZ?: boolean): void {
+    public apply(thatI: ITransformGetters, constrain: boolean): void {
         this._constrainOverride = thatI.constrainOverride;
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
@@ -224,7 +224,7 @@ export class TransformHelper implements ITransformGetters {
         this._cameraToCenterDistance = thatI.cameraToCenterDistance;
         this._nearZ = thatI.nearZ;
         this._farZ = thatI.farZ;
-        this._autoCalculateNearFarZ = !forceOverrideZ && thatI.autoCalculateNearFarZ;
+        this._autoCalculateNearFarZ = thatI.autoCalculateNearFarZ;
         if (constrain) {
             this.constrainInternal();
         }
@@ -588,25 +588,27 @@ export class TransformHelper implements ITransformGetters {
      * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
      * This function should update the transform's internal data, such as matrices.
      * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
+     * While either dimension is zero there is no view to build, so the derived function is not called at all.
      */
     private _calcMatrices(): void {
-        if (this._width && this._height) {
-            this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-
-            let m = mat4.identity(new Float64Array(16));
-            mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
-            mat4.translate(m, m, [1, -1, 0]);
-            this._clipSpaceToPixelsMatrix = m;
-
-            m = mat4.identity(new Float64Array(16));
-            mat4.scale(m, m, [1, -1, 1]);
-            mat4.translate(m, m, [-1, -1, 0]);
-            mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-            this._pixelsToClipSpaceMatrix = m;
-            const halfFov = this.fovInRadians / 2;
-            this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
-        }
         this._pixelPerMeter = this.worldCoordinateHelper.worldZFromAltitude(1, this.center) * this.worldSize;
+        if (!this._width || !this._height) {
+            return;
+        }
+        this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
+
+        let m = mat4.identity(new Float64Array(16));
+        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
+        mat4.translate(m, m, [1, -1, 0]);
+        this._clipSpaceToPixelsMatrix = m;
+
+        m = mat4.identity(new Float64Array(16));
+        mat4.scale(m, m, [1, -1, 1]);
+        mat4.translate(m, m, [-1, -1, 0]);
+        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
+        this._pixelsToClipSpaceMatrix = m;
+        const halfFov = this.fovInRadians / 2;
+        this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._callbacks.calcMatrices();
     }
 

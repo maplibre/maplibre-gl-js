@@ -820,7 +820,7 @@ export class Map extends Evented<MapEventType> {
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.depthDirty = true;
+            this.painter.markTerrainDepthDirty();
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
@@ -1556,8 +1556,10 @@ export class Map extends Evented<MapEventType> {
      * `container` element.
      *
      * Checks if the map container size changed and updates the map if it has changed.
-     * This method must be called after the map's `container` is resized programmatically
-     * or when the map is shown after being initially hidden with CSS.
+     * With the default `trackResize: true`, container size changes are picked up automatically,
+     * including a container that becomes visible after being hidden with CSS. Call this method
+     * explicitly when `trackResize` is `false`, or when the map's size changes in a way the
+     * container's `ResizeObserver` cannot observe.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, and `resize`.
      *
@@ -1565,10 +1567,10 @@ export class Map extends Evented<MapEventType> {
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
      * @example
-     * Resize the map when the map container is shown after being initially hidden with CSS.
+     * Resize a map with `trackResize` disabled when its container is shown after being hidden with CSS.
      * ```ts
      * let mapDiv = document.getElementById('map');
-     * if (mapDiv.style.visibility === true) map.resize();
+     * if (mapDiv.style.visibility === 'visible') map.resize();
      * ```
      */
     resize(eventData?: any, constrainTransform = true): this {
@@ -2038,6 +2040,10 @@ export class Map extends Evented<MapEventType> {
     /**
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
+     *
+     * A location behind the camera has no corresponding pixel. For such a location the
+     * returned point is outside the viewport, on the side through which the location left
+     * the screen, one viewport width or height away from the edge.
      *
      * @param lnglat - The geographical location to project.
      * @returns The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
@@ -2964,6 +2970,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = null;
             this.painter.renderToTexture = null;
+            this.painter.destroyRTTResources();
             this._camera.terrain = null;
             this._camera.transform.setMinElevationForCurrentTile(0);
             if (this.getCenterClampedToGround()) {
@@ -3012,6 +3019,9 @@ export class Map extends Evented<MapEventType> {
         if (isTerrainSourceEvent) {
             this.terrain.resetElevationCache();
             this.style.triggerSymbolPlacement();
+        }
+        if (isTerrainSourceEvent && event.tile) {
+            this.painter.markTerrainDepthDirty();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
@@ -4072,6 +4082,19 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
+     * Determines if the initial resize event should be handled based on the container's dimensions.
+     *
+     * @returns `true` if the initial resize event should be handled, `false` otherwise.
+     */
+    _shouldHandleInitialResize(): boolean {
+        if (!this._container?.clientWidth || !this._container.clientHeight) {
+            return false;
+        }
+        const [width, height] = this._containerDimensions();
+        return width !== this._camera.transform.width || height !== this._camera.transform.height;
+    }
+
+    /**
      * @internal
      * Sets up the ResizeObserver to track container size changes.
      * Uses the owning window's ResizeObserver for cross-window support.
@@ -4089,7 +4112,9 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
             if (!initialResizeEventCaptured) {
                 initialResizeEventCaptured = true;
-                return;
+                if (!this._shouldHandleInitialResize()) {
+                    return;
+                }
             }
             throttledResizeCallback(entries);
         });
@@ -4120,6 +4145,9 @@ export class Map extends Evented<MapEventType> {
     }
 
     _setupContainer(): void {
+        const dimensions = this._containerDimensions();
+        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
+
         const container = this._container;
         container.classList.add('maplibregl-map');
 
@@ -4135,8 +4163,6 @@ export class Map extends Evented<MapEventType> {
         this._canvas.setAttribute('aria-label', this._getUIString('Map.Title'));
         this._canvas.setAttribute('role', 'region');
 
-        const dimensions = this._containerDimensions();
-        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
         this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);

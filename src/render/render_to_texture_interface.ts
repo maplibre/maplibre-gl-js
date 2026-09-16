@@ -1,7 +1,7 @@
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
-import type {RenderOptions} from './render_options.ts';
+import type {RenderContext} from './render_context.ts';
 
 /**
  * Interface for render-to-texture implementations.
@@ -9,10 +9,11 @@ import type {RenderOptions} from './render_options.ts';
  */
 export interface IRenderToTexture {
     /**
-     * Whether the render loop needs a follow-up frame to refresh cached textures retained while zooming.
+     * Whether the render loop needs a follow-up frame to refresh cached textures that were kept this frame:
+     * textures rendered at another zoom, and stale textures beyond the per-frame budget.
      */
     needsFollowUpFrame: boolean;
     prepareForRender(style: Style, zoom: number): void;
-    renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean;
+    renderLayer(layer: StyleLayer, renderContext: RenderContext): boolean;
     getTexture(tile: Tile): any;
 }

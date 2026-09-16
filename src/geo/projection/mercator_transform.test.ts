@@ -10,8 +10,9 @@ import {mat4} from 'gl-matrix';
 import {createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
-import type {Tile} from '../../tile/tile.ts';
 import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
+
+import type {Tile} from '../../tile/tile.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -67,6 +68,44 @@ describe('transform', () => {
             transform.resize(500, 500);
             transform.setCenter(new LngLat(50, -90));
         }).not.toThrow();
+    });
+
+    test('does not throw on a zero size', () => {
+        for (const [width, height] of [[0, 500], [500, 0], [0, 0]]) {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+            expect(() => transform.resize(width, height)).not.toThrow();
+            expect(transform.width).toBe(width);
+            expect(transform.height).toBe(height);
+        }
+    });
+
+    test('does not throw when a sized transform is resized to a zero width', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        expect(() => transform.resize(0, 500)).not.toThrow();
+        expect(() => transform.setZoom(3)).not.toThrow();
+    });
+
+    test('calculates matrices again once a zero width becomes a real size', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(0, 500);
+        transform.setZoom(5);
+        transform.setPitch(30);
+        transform.setBearing(45);
+        transform.setCenter(new LngLat(10, 20));
+        transform.resize(500, 500);
+
+        const expected = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        expected.resize(500, 500);
+        expected.setZoom(5);
+        expected.setPitch(30);
+        expected.setBearing(45);
+        expected.setCenter(new LngLat(10, 20));
+
+        expect([...transform.modelViewProjectionMatrix]).toEqual([...expected.modelViewProjectionMatrix]);
+        expect([...transform.cameraPosition]).toEqual([...expected.cameraPosition]);
+        expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 10, lat: 20});
+        expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual(fixedCoord(expected.screenPointToMercatorCoordinate(new Point(250, 250))));
     });
 
     test('setLocationAt', () => {
@@ -418,16 +457,6 @@ describe('transform', () => {
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.screenPointToLocation(new Point(0, top)).toArray());
     });
 
-    test('lngLatToCameraDepth', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-        transform.resize(500, 500);
-        transform.setCenter(new LngLat(10.0, 50.0));
-
-        expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9997324396231673);
-        transform.setPitch(60);
-        expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9865782165762236);
-    });
-
     test('projectTileCoordinates', () => {
         const precisionDigits = 10;
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
@@ -445,6 +474,48 @@ describe('transform', () => {
         expect(projection.point.y).toBeCloseTo(0.8136784996777623, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6699126802941, precisionDigits);
         expect(projection.isOccluded).toBe(false);
+    });
+
+    function createPitchedTransform(): MercatorTransform {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setPitch(80);
+        return transform;
+    }
+
+    test('locationToScreenPoint projects a location in front of the camera', () => {
+        const transform = createPitchedTransform();
+
+        const inFrontOfCamera = transform.locationToScreenPoint(new LngLat(0, 0.05));
+        expect(inFrontOfCamera.x).toBeCloseTo(256, 1);
+        expect(inFrontOfCamera.y).toBeCloseTo(244.4, 1);
+    });
+
+    test('locationToScreenPoint puts a location behind the camera outside the edge it left through', () => {
+        const transform = createPitchedTransform();
+
+        // The camera looks north, so a location south of it left the screen through the bottom edge.
+        const behindCamera = transform.locationToScreenPoint(new LngLat(0, -2));
+        expect(behindCamera.x).toBeCloseTo(256, 6);
+        expect(behindCamera.y).toBeCloseTo(1024, 6);
+
+        // West of a north-facing camera is the left side of the screen.
+        const behindLeft = transform.locationToScreenPoint(new LngLat(-2, -2));
+        expect(behindLeft.x).toBeCloseTo(-512, 6);
+        expect(behindLeft.y).toBeGreaterThan(256);
+        expect(behindLeft.y).toBeLessThan(1024);
+
+        const behindRight = transform.locationToScreenPoint(new LngLat(2, -2));
+        expect(behindRight.x).toBeCloseTo(1024, 6);
+        expect(behindRight.y).toBeCloseTo(behindLeft.y, 6);
+
+        // A location only slightly west still leaves through the bottom edge, left of centre.
+        const behindSlightlyLeft = transform.locationToScreenPoint(new LngLat(-0.2, -2));
+        expect(behindSlightlyLeft.y).toBeCloseTo(1024, 6);
+        expect(behindSlightlyLeft.x).toBeLessThan(256);
+        expect(behindSlightlyLeft.x).toBeGreaterThan(-512);
     });
 
     test('getCameraLngLat', () => {
@@ -911,14 +982,14 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
 });
 
 // Outputs captured from commit 407a8ce9e, before lng/lat math was routed through the world coordinate helper.
-// Each row is 11 inputs followed by 10 outputs; the comparison is exact so the refactor cannot change a bit.
+// Each row is 11 inputs followed by 9 outputs; the comparison is exact so the refactor cannot change a bit.
 // Remove once the planar CRS series (#168) has landed: it guards the refactor, not a behavior.
 const bitIdentityRows: number[][] = [
-    [-47.66947732307017, -31.891872510313988, 12.335080658085644, 44.56127839162946, 336.473432360217, 2708.1988365389407, 633.7583729997277, 333.5038125514984, -48.08538376772776, -32.09453024622053, 6542.761099524796, 0.06608625848037492, -47.635173521078315, -0.07879338518436896, -48.10138014914466, -32.06339765398657, 2708.1988365389407, 13.435703555287978, -47.63887852731972, 0.006589276563389035, 1.0141147771923014],
-    [29.529827423393726, -44.010491259396076, 4.350916175171733, 40.40351155679673, 295.4289326816797, 742.9703597445041, 119.00203712284565, 341.0222121980041, 30.327826311811805, -44.438611211720854, 11584.925448521972, 0.0002609985923233138, 47.682901433135356, -8.598491341610824, 30.222915348529853, -44.402985754807105, 742.9703597445041, 11.785820788692991, 27.14136282768186, -9.145886234506918, 0.9691228484020332],
-    [-175.4359111469239, -60.00771701335907, 11.576151768676937, 56.23234930448234, 272.34073103405535, 2335.907760076225, 152.67861243337393, 567.1612800098956, -174.8650802965276, -59.31432515755296, 16009.216147474945, 0.039052676546020515, -175.26376370720283, -0.007036734336963946, -175.22507664128196, -59.30681470736939, 2335.907760076225, 10.511814234993162, -175.36093089187702, -0.042540721064781906, 1.0132583202764962],
-    [-144.41486184485257, 7.587629780173302, 19.653839827515185, 37.38076251000166, 167.28623329661787, 1020.5210256390274, 658.2415254786611, 348.03880993276834, -144.6090480950661, 8.191629043780267, 13963.913300074637, 10.550601155815519, -144.4149643458768, 0.0004543238948713224, -144.5892778507015, 8.104884388547887, 1020.5210256390274, 12.06229126031695, -144.41507905283308, 1.7517999424399022e-06, 1.0012305848915197],
-    [-89.8710085451603, 64.21592768281698, 1.8496395740658045, 48.10014402028173, 158.33662692457438, 657.6341448817402, 48.85685257613659, 331.04150402359664, -90.20058967545629, 64.65715769259259, 19041.576908901334, 4.609766002574671e-05, -138.11462647842262, 76.308455124853, -90.04266543186203, 64.48644307922879, 657.6341448817402, 10.104601204958453, -31.785299776317714, 30.85807805159577, 0.9761501769742178]
+    [-47.66947732307017, -31.891872510313988, 12.335080658085644, 44.56127839162946, 336.473432360217, 2708.1988365389407, 633.7583729997277, 333.5038125514984, -48.08538376772776, -32.09453024622053, 6542.761099524796, 0.06608625848037492, -47.635173521078315, -0.07879338518436896, -48.10138014914466, -32.06339765398657, 2708.1988365389407, 13.435703555287978, -47.63887852731972, 0.006589276563389035],
+    [29.529827423393726, -44.010491259396076, 4.350916175171733, 40.40351155679673, 295.4289326816797, 742.9703597445041, 119.00203712284565, 341.0222121980041, 30.327826311811805, -44.438611211720854, 11584.925448521972, 0.0002609985923233138, 47.682901433135356, -8.598491341610824, 30.222915348529853, -44.402985754807105, 742.9703597445041, 11.785820788692991, 27.14136282768186, -9.145886234506918],
+    [-175.4359111469239, -60.00771701335907, 11.576151768676937, 56.23234930448234, 272.34073103405535, 2335.907760076225, 152.67861243337393, 567.1612800098956, -174.8650802965276, -59.31432515755296, 16009.216147474945, 0.039052676546020515, -175.26376370720283, -0.007036734336963946, -175.22507664128196, -59.30681470736939, 2335.907760076225, 10.511814234993162, -175.36093089187702, -0.042540721064781906],
+    [-144.41486184485257, 7.587629780173302, 19.653839827515185, 37.38076251000166, 167.28623329661787, 1020.5210256390274, 658.2415254786611, 348.03880993276834, -144.6090480950661, 8.191629043780267, 13963.913300074637, 10.550601155815519, -144.4149643458768, 0.0004543238948713224, -144.5892778507015, 8.104884388547887, 1020.5210256390274, 12.06229126031695, -144.41507905283308, 1.7517999424399022e-06],
+    [-89.8710085451603, 64.21592768281698, 1.8496395740658045, 48.10014402028173, 158.33662692457438, 657.6341448817402, 48.85685257613659, 331.04150402359664, -90.20058967545629, 64.65715769259259, 19041.576908901334, 4.609766002574671e-05, -138.11462647842262, 76.308455124853, -90.04266543186203, 64.48644307922879, 657.6341448817402, 10.104601204958453, -31.785299776317714, 30.85807805159577]
 ];
 
 describe('mercator transform bit identity with the pre-refactor transform', () => {
@@ -934,12 +1005,11 @@ describe('mercator transform bit identity with the pre-refactor transform', () =
         const camera = transform.getCameraLngLat();
         const fromCamera = transform.calculateCenterFromCameraLngLatAlt(new LngLat(camLng, camLat), alt, bearing, pitch);
         const screen = transform.screenPointToLocation(new Point(px, py));
-        const depth = transform.lngLatToCameraDepth(new LngLat(camLng, camLat), elevation);
 
         expect([
             transform.pixelsPerMeter, camera.lng, camera.lat,
             fromCamera.center.lng, fromCamera.center.lat, fromCamera.elevation, fromCamera.zoom,
-            screen.lng, screen.lat, depth,
+            screen.lng, screen.lat,
         ]).toEqual(expected);
     });
 });
@@ -1086,5 +1156,49 @@ describe('MercatorTransform over the simple CRS', () => {
             expect(camera.lng).toBeCloseTo(10, 6);
             expect(camera.lat).toBeCloseTo(20, 6);
         });
+    });
+});
+
+describe('MercatorTransform.isLocationOccluded', () => {
+    test('a location behind a ridge is hidden and one in front of it is in view', () => {
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
+        const cameraSouthOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25);
+        const transform = createMercatorTransform(cameraSouthOfRidge, 12, 75);
+        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
+        const inFrontOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.3);
+
+        expect(transform.isLocationOccluded(behindRidge, terrain)).toBe(true);
+        expect(transform.isLocationOccluded(inFrontOfRidge, terrain)).toBe(false);
+    });
+
+    test('a location behind a ridge is in view once raised above the ridge', () => {
+        const tileSpanAtZoom12 = 360 / (1 << 12);
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
+        const cameraSouthOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25);
+        const transform = createMercatorTransform(cameraSouthOfRidge, 12, 75);
+        const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
+        const elevationAboveRidge = 3500;
+
+        expect(transform.isLocationOccluded(behindRidge, terrain, elevationAboveRidge)).toBe(false);
+    });
+
+    test('a location behind the camera or beyond the far plane is hidden', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
+        const transform = createMercatorTransform(new LngLat(0, 0), 6, 80);
+        const behindTheCamera = new LngLat(0, -70);
+        const beyondTheFarPlane = new LngLat(0, 70);
+
+        expect(transform.isLocationOccluded(behindTheCamera, terrain)).toBe(true);
+        expect(transform.isLocationOccluded(beyondTheFarPlane, terrain)).toBe(true);
+    });
+
+    test('nothing is hidden when the terrain has no renderable tiles', () => {
+        const terrain = createDEMTerrain([], null);
+        const transform = createMercatorTransform(new LngLat(0, 0), 12, 75);
+
+        expect(transform.isLocationOccluded(new LngLat(0, 0.01), terrain)).toBe(false);
     });
 });

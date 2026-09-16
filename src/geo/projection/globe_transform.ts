@@ -2,8 +2,9 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {lerp} from '../../util/util.ts';
-import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
+
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
+import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
@@ -19,6 +20,12 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.
+ *
+ * The two child transforms share this transform's {@link TransformHelper}, so the camera exists exactly once:
+ * a child that moves itself - as {@link setLocationAtPoint} has it do, since only the child knows its own
+ * projection's geometry - has moved this transform too, with no copying back. The children own only what they
+ * derive from that shared camera, such as their matrices, and this transform drives their `_calcMatrices`
+ * because a helper has a single `calcMatrices` callback.
  */
 export class GlobeTransform implements ITransform {
     private _helper: TransformHelper;
@@ -255,8 +262,8 @@ export class GlobeTransform implements ITransform {
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._mercatorTransform = new MercatorTransform();
-        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform();
+        this._mercatorTransform = new MercatorTransform(undefined, this._helper);
+        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(undefined, this._helper);
     }
 
     clone(): ITransform {
@@ -268,8 +275,6 @@ export class GlobeTransform implements ITransform {
 
     public apply(that: IReadonlyTransform, constrain: boolean): void {
         this._helper.apply(that, constrain);
-        this._mercatorTransform.apply(this, false);
-        this._verticalPerspectiveTransform.apply(this, false);
     }
 
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
@@ -294,8 +299,9 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return this.currentTransform.isLocationOccluded(location);
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -320,26 +326,17 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
     }
 
+    /**
+     * Both children write their near/far Z into the shared helper, so the order here is what keeps the two render
+     * paths at the same depth across the globe-to-mercator transition: vertical perspective computes the globe's Z
+     * first, and while the globe is rendering mercator is made to reuse that result instead of computing its own.
+     */
     private _calcMatrices(): void {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        // VerticalPerspective reads our near/farZ values and autoCalculateNearFarZ:
-        // - if autoCalculateNearFarZ is true then it computes globe Z values
-        // - if autoCalculateNearFarZ is false then it inherits our Z values
-        // In either case, its Z values are consistent with out settings and we want to copy its Z values to our helper.
-        this._verticalPerspectiveTransform.apply(this, false);
-        this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
-        this._helper._farZ = this._verticalPerspectiveTransform.farZ;
-
-        // When transitioning between globe and mercator, we need to synchronize the depth values in both transforms.
-        // For this reason we first update vertical perspective and then sync our Z values to its result.
-        // Now if globe rendering, we always want to force mercator transform to adapt our Z values.
-        // If not, it will either compute its own (autoCalculateNearFarZ=false) or adapt our (autoCalculateNearFarZ=true).
-        // In either case we want to (again) sync our Z values, this time with
-        this._mercatorTransform.apply(this, true, this.isGlobeRendering);
-        this._helper._nearZ = this._mercatorTransform.nearZ;
-        this._helper._farZ = this._mercatorTransform.farZ;
+        this._verticalPerspectiveTransform._calcMatrices();
+        this._mercatorTransform._calcMatrices(this.autoCalculateNearFarZ && !this.isGlobeRendering);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
@@ -387,10 +384,6 @@ export class GlobeTransform implements ITransform {
         return this._helper.worldCoordinateHelper;
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
-    }
-
     populateCache(coords: OverscaledTileID[]): void {
         this._mercatorTransform.populateCache(coords);
         this._verticalPerspectiveTransform.populateCache(coords);
@@ -422,14 +415,7 @@ export class GlobeTransform implements ITransform {
      * (same size before and after a {@link setLocationAtPoint} call).
      */
     setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
-        if (!this.isGlobeRendering) {
-            this._mercatorTransform.setLocationAtPoint(lnglat, point, elevation);
-            this.apply(this._mercatorTransform, false);
-            return;
-        }
-        this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point, elevation);
-        this.apply(this._verticalPerspectiveTransform, false);
-        return;
+        this.currentTransform.setLocationAtPoint(lnglat, point, elevation);
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
@@ -459,6 +445,9 @@ export class GlobeTransform implements ITransform {
 
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
+     *
+     * Always answered by the vertical perspective child: the ray is in unit-sphere space, so it is only meaningful
+     * to the globe camera controls that ask for it, and the mercator transform does not implement it at all.
      */
     getRayDirectionFromPixel(p: Point): vec3 {
         return this._verticalPerspectiveTransform.getRayDirectionFromPixel(p);

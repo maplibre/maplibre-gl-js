@@ -5,6 +5,7 @@ import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
+
 import type {Projection, TileMeshUsage} from './projection.ts';
 import type {PreparedShader} from '../../shaders/shaders.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';

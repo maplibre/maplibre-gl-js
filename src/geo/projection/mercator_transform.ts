@@ -13,7 +13,7 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -273,8 +273,14 @@ export class MercatorTransform implements ITransform {
 
     private _coveringTilesDetailsProvider;
 
-    constructor(options?: TransformOptions) {
-        this._helper = new TransformHelper({
+    /**
+     * @param options - Initial state. Ignored when `sharedHelper` is given, which already carries it.
+     * @param sharedHelper - Camera to use instead of owning one, so that a composing transform such as
+     * {@link GlobeTransform} keeps a single copy of the state rather than one per child. Its owner then drives
+     * {@link _calcMatrices}, because a helper has only one `calcMatrices` callback.
+     */
+    constructor(options?: TransformOptions, sharedHelper?: TransformHelper) {
+        this._helper = sharedHelper ?? new TransformHelper({
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
@@ -301,8 +307,8 @@ export class MercatorTransform implements ITransform {
         this._helper.setWorldCoordinateHelper(worldCoordinateHelper);
     }
 
-    public apply(that: IReadonlyTransform, constrain: boolean, forceOverrideZ?: boolean): void {
-        this._helper.apply(that, constrain, forceOverrideZ);
+    public apply(that: IReadonlyTransform, constrain: boolean): void {
+        this._helper.apply(that, constrain);
     }
 
     public get cameraPosition(): vec3 { return this._cameraPosition; }
@@ -502,12 +508,50 @@ export class MercatorTransform implements ITransform {
      * @param coord - the coordinates
      * @param elevation - the elevation
      * @param pixelMatrix - the pixel matrix
-     * @returns screen point
+     * @returns screen point. Point will be outside the viewport if the coordinate is behind the camera.
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
+        const p = this._coordinateClipPoint(coord, elevation, pixelMatrix);
+        const w = p[3];
+        if (w > 0) {
+            return new Point(p[0] / w, p[1] / w);
+        }
+        return this._offScreenPointBehindCamera(p[0], p[1], w);
+    }
+
+    /**
+     * The coordinate in the clip space of `pixelMatrix`: pixel x and y and NDC depth, each times `w`, which is positive
+     * in front of the camera.
+     */
+    private _coordinateClipPoint(coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, pixelMatrix);
-        return new Point(p[0] / p[3], p[1] / p[3]);
+        return vec4.transformMat4(p, p, pixelMatrix);
+    }
+
+    /**
+     * Returns a screen point outside the viewport for a coordinate that is behind the camera.
+     * The point lies on the boundary of the viewport enlarged by one viewport size on each side,
+     * on whichever edge the ray from the screen centre in the coordinate's direction reaches first.
+     * A coordinate exactly behind the camera has no direction to leave through, so it is placed straight down.
+     * @param x - the x component of the clip space position, before the division by w
+     * @param y - the y component of the clip space position, before the division by w
+     * @param w - the w component of the clip space position, zero or negative
+     * @returns screen point outside the viewport
+     */
+    private _offScreenPointBehindCamera(x: number, y: number, w: number): Point {
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const dx = x - cx * w;
+        let dy = y - cy * w;
+        if (dx === 0 && dy === 0) {
+            dy = 1;
+        }
+        const halfExtentX = cx + this.width;
+        const halfExtentY = cy + this.height;
+        const scale = Math.min(
+            dx !== 0 ? halfExtentX / Math.abs(dx) : Infinity,
+            dy !== 0 ? halfExtentY / Math.abs(dy) : Infinity);
+        return new Point(cx + dx * scale, cy + dy * scale);
     }
 
     getBounds(): LngLatBounds {
@@ -733,10 +777,7 @@ export class MercatorTransform implements ITransform {
         return {center: toMercator.toLngLat(), elevation: altitudeTo, zoom, pitch, bearing};
     }
 
-    _calculateNearFarZIfNeeded(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
-        if (!this._helper.autoCalculateNearFarZ) {
-            return;
-        }
+    _calculateNearFarZ(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
         const minRenderDistanceBelowCameraInMeters = 100;
         const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
@@ -775,9 +816,12 @@ export class MercatorTransform implements ITransform {
         this._helper._nearZ = this._helper._height / 50;
     }
 
-    _calcMatrices(): void {
-        if (!this._helper._height) return;
-
+    /**
+     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the helper already
+     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing transform such as {@link GlobeTransform}
+     * overrides it so that its two children share a single depth range.
+     */
+    _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
         const offset = this.centerOffset;
         const worldCoordinateHelper = this.worldCoordinateHelper;
         const point = projectToWorldCoordinates(this.worldSize, this.center, worldCoordinateHelper);
@@ -787,7 +831,9 @@ export class MercatorTransform implements ITransform {
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
         const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
 
-        this._calculateNearFarZIfNeeded(cameraToSeaLevelDistance, limitedPitchRadians, offset);
+        if (calculateNearFarZ) {
+            this._calculateNearFarZ(cameraToSeaLevelDistance, limitedPitchRadians, offset);
+        }
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
@@ -906,13 +952,6 @@ export class MercatorTransform implements ITransform {
         return worldCoordinateHelper.lngLatFromWorld(camMercator.x, camMercator.y);
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        const coord = this.worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, this._viewProjMatrix);
-        return (p[2] / p[3]);
-    }
-
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
@@ -936,8 +975,22 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    isLocationOccluded(_: LngLat): boolean {
-        return false;
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        if (!terrain?.getCoverageIndex()) return false;
+
+        const location = MercatorCoordinate.fromLngLat(lngLat);
+        elevation ??= terrain.getElevationForLngLat(lngLat, this);
+        const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
+        const w = clip[3];
+        if (w <= 0 || clip[2] > w) return true;
+        const p = new Point(clip[0] / w, clip[1] / w);
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        if (hit == null) return false;
+        const segment = this.getRaySegmentFromPixel(p);
+        const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
+        return raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     getPixelScale(): number {
@@ -1023,4 +1076,15 @@ function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
 
 function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
     return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
+}
+
+/**
+ * Where the point of `segment` closest to the given world pixel position and elevation lies along it,
+ * as the fraction from `near` (0) to `far` (1).
+ */
+function raySegmentParameter({near, far}: RaySegment, worldX: number, worldY: number, elevation: number): number {
+    const dx = far[0] - near[0];
+    const dy = far[1] - near[1];
+    const dz = far[2] - near[2];
+    return ((worldX - near[0]) * dx + (worldY - near[1]) * dy + (elevation - near[2]) * dz) / (dx * dx + dy * dy + dz * dz);
 }

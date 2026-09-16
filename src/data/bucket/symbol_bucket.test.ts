@@ -12,10 +12,11 @@ import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
+
 import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
 import type {StyleImage} from '../../style/style_image.ts';
 import type {StyleGlyph} from '../../style/style_glyph.ts';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
@@ -241,15 +242,8 @@ describe('SymbolBucket', () => {
         expect(ltrBucket.hasRTLText).toBeFalsy();
     });
 
-    // Test to prevent symbol bucket with rtl from text being culled by worker serialization.
-    test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
-        const rtlBucket = bucketSetup('مرحبا');
-        const options = createPopulateOptions([]);
-        rtlBucket.createArrays();
-        rtlBucket.populate(features, options, undefined);
-
-        expect(rtlBucket.isEmpty()).toBeFalsy();
-        expect(rtlBucket.symbolInstances).toHaveLength(0);
+    test('SymbolBucket shapes rtl text', () => {
+        expect(glyphsRequestedFor('مرحبا')).toEqual(['ﻣ', 'ﺮ', 'ﺣ', 'ﺒ', 'ﺎ']);
     });
 
     test('SymbolBucket detects rtl text mixed with ltr text', () => {

@@ -60,12 +60,6 @@ bench('setLocationAtPoint', () => {
     }
 });
 
-bench('lngLatToCameraDepth', () => {
-    for (let i = 0; i < 100; i++) {
-        transform.lngLatToCameraDepth(lngLats[i], 0);
-    }
-});
-
 bench('coveringTiles', () => {
     coveringTiles(transform, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
 });

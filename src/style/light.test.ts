@@ -2,8 +2,9 @@ import {describe, test, expect, vi, afterEach} from 'vitest';
 import {Light} from './light.ts';
 import {Color, latest as styleSpec, type LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {sphericalToCartesian} from '../util/util.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
-import {type TransitionParameters} from './properties.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {TransitionParameters} from './properties.ts';
 
 const spec = styleSpec.light;
 
@@ -85,6 +86,16 @@ describe('Light.setLight', () => {
         expect(lightSpy).toHaveBeenCalledTimes(1);
         expect(lightSpy.mock.calls[0][2]).toEqual({validate: false});
         expect(light.properties.get('color')).toEqual([999]);
+    });
+
+    test('changing only the non-transitionable anchor transitions nothing, issue #8376', () => {
+        const initial: LightSpecification = {anchor: 'map', color: '#ff0000', intensity: 0.5};
+        const light = new Light(initial, {});
+
+        light.setLight({...initial, anchor: 'viewport'});
+        light.updateTransitions({now: 0, transition: {duration: 300, delay: 0}});
+
+        expect(light.hasTransition()).toBe(false);
     });
 });
 
