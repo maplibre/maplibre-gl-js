@@ -27,13 +27,15 @@ describe('UniformBuffer', () => {
         context = new Context(gl);
         buffer = new UniformBuffer(context, 5, std140Layout([{name: 'value', type: 'vec4'}, {name: 'flag', type: 'int'}]));
         vi.mocked(gl.bindBufferBase).mockClear();
+        vi.mocked(gl.bufferData).mockClear();
     });
 
     test('uploads only when the content changes', () => {
         buffer.pending.set([1, 2, 3, 4]);
         buffer.upload();
         buffer.upload();
-        expect(gl.bufferSubData).toHaveBeenCalledTimes(1);
+        expect(gl.bufferData).toHaveBeenCalledTimes(1);
+        expect(gl.bufferData).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, buffer.pending, gl.DYNAMIC_DRAW);
         expect(gl.bindBufferBase).toHaveBeenCalledTimes(1);
         expect(gl.bindBufferBase).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, buffer.binding, buffer.buffer);
 
@@ -41,7 +43,7 @@ describe('UniformBuffer', () => {
         buffer.upload();
         buffer.pendingWords[4] = 1;
         buffer.upload();
-        expect(gl.bufferSubData).toHaveBeenCalledTimes(3);
+        expect(gl.bufferData).toHaveBeenCalledTimes(3);
         expect(gl.bindBufferBase).toHaveBeenCalledTimes(3);
     });
 
@@ -54,7 +56,7 @@ describe('UniformBuffer', () => {
         projection.bind();
         expect(gl.bindBufferBase).toHaveBeenCalledTimes(1);
         expect(gl.bindBufferBase).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, projection.buffer);
-        expect(gl.bufferSubData).toHaveBeenCalledTimes(1);
+        expect(gl.bufferData).toHaveBeenCalledTimes(1);
     });
 
     test('destroy deletes the buffer once', () => {
