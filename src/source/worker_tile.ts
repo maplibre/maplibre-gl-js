@@ -59,7 +59,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting, crossTileIDs?: Map<string, number>): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
         this.data = data;
 
         this.collisionBoxArray = new CollisionBoxArray();
@@ -183,8 +183,7 @@ export class WorkerTile {
                 patternMap,
                 patternPositions: imageAtlas.patternPositions,
                 dashPositions,
-                showCollisionBoxes: this.showCollisionBoxes,
-                crossTileIDs
+                showCollisionBoxes: this.showCollisionBoxes
             });
         }
 

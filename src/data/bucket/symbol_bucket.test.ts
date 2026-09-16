@@ -268,3 +268,84 @@ describe('SymbolBucket', () => {
         expect(devanagari).toEqual(expect.arrayContaining(['द', 'ि']));
     });
 });
+
+describe('SymbolBucket.addFeatures cross-tile key', () => {
+    const parentTileID = new OverscaledTileID(6, 0, 6, 8, 8);
+    const childTileID = new OverscaledTileID(7, 0, 7, 16, 16);
+    const parentAnchor = {x: 1000, y: 1000};
+    const childAnchorOverParentAnchor = {x: 2000, y: 2000};
+
+    function createPointFeature(id: number | string, anchor: {x: number; y: number}, index: number, properties: Record<string, unknown> = {}): IndexedFeature {
+        return {
+            feature: {
+                extent: 8192,
+                type: 1,
+                id,
+                properties,
+                loadGeometry() {
+                    return [[anchor]];
+                }
+            },
+            id,
+            index,
+            sourceLayerIndex: 0
+        } as any as IndexedFeature;
+    }
+
+    function layoutTile(tileID: OverscaledTileID, features: IndexedFeature[], promoteId?: string) {
+        const bucket = createSymbolBucket('test', 'Test', 'abcde', collisionBoxArray);
+        const options = createPopulateOptions([]);
+        options.featureIndex = new FeatureIndex(tileID, promoteId);
+        bucket.populate(features, options, tileID.canonical);
+        bucket.addFeatures({
+            options,
+            canonical: tileID.canonical,
+            glyphMap: glyphsByCluster,
+            glyphPositions: {},
+            iconMap: {},
+            iconPositions: {},
+            patternMap: {},
+            patternPositions: {},
+            dashPositions: {},
+            showCollisionBoxes: false
+        });
+        const tile = new Tile(tileID, 512);
+        tile.buckets = {test: bucket};
+        tile.collisionBoxArray = collisionBoxArray;
+        return {tile, bucket};
+    }
+
+    test('with promoteId, a label only matches the same feature\'s label at another zoom, not another feature\'s label at the same spot', () => {
+        const parent = layoutTile(parentTileID, [createPointFeature('a', parentAnchor, 0)], 'name');
+        const child = layoutTile(childTileID, [
+            createPointFeature('b', childAnchorOverParentAnchor, 0),
+            createPointFeature('a', childAnchorOverParentAnchor, 1)
+        ], 'name');
+
+        new CrossTileSymbolIndex().addLayer(parent.bucket.layers[0], [parent.tile, child.tile], 0);
+
+        const parentCrossTileID = parent.bucket.symbolInstances.get(0).crossTileID;
+        expect(child.bucket.symbolInstances.get(1).crossTileID).toBe(parentCrossTileID);
+        expect(child.bucket.symbolInstances.get(0).crossTileID).not.toBe(parentCrossTileID);
+    });
+
+    test('without promoteId, labels with the same text at the same spot match across zooms whatever their feature ids', () => {
+        const parent = layoutTile(parentTileID, [createPointFeature(1, parentAnchor, 0)]);
+        const child = layoutTile(childTileID, [createPointFeature(2, childAnchorOverParentAnchor, 0)]);
+
+        new CrossTileSymbolIndex().addLayer(parent.bucket.layers[0], [parent.tile, child.tile], 0);
+
+        expect(child.bucket.symbolInstances.get(0).crossTileID).toBe(parent.bucket.symbolInstances.get(0).crossTileID);
+    });
+
+    test('with promoteId, cluster labels still match across zooms although a cluster has a different id at every zoom', () => {
+        const parentCluster = {cluster: true, cluster_id: 100, point_count: 5};
+        const childCluster = {cluster: true, cluster_id: 200, point_count: 5};
+        const parent = layoutTile(parentTileID, [createPointFeature(parentCluster.cluster_id, parentAnchor, 0, parentCluster)], 'name');
+        const child = layoutTile(childTileID, [createPointFeature(childCluster.cluster_id, childAnchorOverParentAnchor, 0, childCluster)], 'name');
+
+        new CrossTileSymbolIndex().addLayer(parent.bucket.layers[0], [parent.tile, child.tile], 0);
+
+        expect(child.bucket.symbolInstances.get(0).crossTileID).toBe(parent.bucket.symbolInstances.get(0).crossTileID);
+    });
+});

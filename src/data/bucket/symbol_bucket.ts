@@ -585,7 +585,7 @@ export class SymbolBucket implements Bucket {
         });
     }
 
-    addFeatures({options, canonical, glyphMap, glyphPositions, iconMap, iconPositions, showCollisionBoxes, crossTileIDs}: BucketDependencyParameters): void {
+    addFeatures({options, canonical, glyphMap, glyphPositions, iconMap, iconPositions, showCollisionBoxes}: BucketDependencyParameters): void {
         performSymbolLayout({
             bucket: this,
             glyphMap,
@@ -595,7 +595,7 @@ export class SymbolBucket implements Bucket {
             showCollisionBoxes,
             canonical,
             subdivisionGranularity: options.subdivisionGranularity,
-            crossTileIDs
+            hasPromoteId: options.featureIndex.promoteId != null
         });
     }
 
