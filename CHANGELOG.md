@@ -1,11 +1,14 @@
 ## main
 ### ✨ Features and improvements
+- Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
 - Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
 - Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix slow panning and zooming in Firefox on macOS since 6.8.0 ([#8468](https://github.com/maplibre/maplibre-gl-js/issues/8468)) (by [@timsluis](https://github.com/timsluis) and [@birkskyum](https://github.com/birkskyum))
+- Keep source-specific tile LOD settings from changing internal terrain render-to-texture tile selection ([#8048](https://github.com/maplibre/maplibre-gl-js/pull/8048)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
 
 ## 6.10.0
