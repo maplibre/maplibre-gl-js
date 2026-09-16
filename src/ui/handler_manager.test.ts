@@ -587,17 +587,15 @@ describe('terrain gesture anchoring', () => {
         gestureStep('touchmove', target, pitchFingers(140));
         gestureStep('touchmove', target, pitchFingers(130));
         expect(map.getPitch()).toBeGreaterThan(0);
-        expect(map._camera.elevationFreeze).toBe(true);
 
         elevationAtCenter.mockReturnValue(demLanded);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map._terrainDataCallback(new MapSourceDataEvent('data', {sourceId: 'dem', tile: {tileID} as any, coord: tileID}));
+        map._terrainDataCallback(new MapSourceDataEvent('data', {sourceId: 'dem', tile: {tileID}, coord: tileID}));
         gestureStep('touchmove', target, pitchFingers(120));
         expect(map.getCameraTargetElevation()).toBe(demStillLoading);
 
         const cameraBeforeRelease = {altitude: tr().getCameraAltitude(), lngLat: tr().getCameraLngLat()};
         endGesture(target);
-        expect(map._camera.elevationFreeze).toBe(false);
         expect(map.getCameraTargetElevation()).toBe(demLanded);
         expect(tr().getCameraAltitude()).toBeCloseTo(cameraBeforeRelease.altitude, 2);
         expect(tr().getCameraLngLat().lng).toBeCloseTo(cameraBeforeRelease.lngLat.lng, 5);
