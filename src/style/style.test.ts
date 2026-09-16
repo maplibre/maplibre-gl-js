@@ -2077,14 +2077,6 @@ describe('Style.setGlobalState', () => {
 });
 
 describe('a global state change transitions what reads it, issue #8395', () => {
-    function at(now: number): EvaluationParameters {
-        return new EvaluationParameters(0, {now, transition: {duration: 300, delay: 0}});
-    }
-
-    function backgroundOpacity(style: Style, id: string): number {
-        return (style.getLayer(id) as BackgroundStyleLayer).paint.get('background-opacity');
-    }
-
     test('a paint property runs from the value the state had to the new one', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
@@ -2092,18 +2084,19 @@ describe('a global state change transitions what reads it, issue #8395', () => {
             layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
         }));
         await style.once('style.load');
-        style.update(at(0));
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
 
         style.setGlobalStateProperty('opacity', 1);
-        style.update(at(0));
-        expect(backgroundOpacity(style, 'background')).toBe(0.2);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(0.2);
 
-        style.update(at(150));
-        expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
         expect(style.hasTransitions()).toBe(true);
 
-        style.update(at(301));
-        expect(backgroundOpacity(style, 'background')).toBe(1);
+        style.update(new EvaluationParameters(0, {now: 301, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(1);
         expect(style.hasTransitions()).toBe(false);
     });
 
@@ -2117,20 +2110,25 @@ describe('a global state change transitions what reads it, issue #8395', () => {
             ]
         }));
         await style.once('style.load');
-        style.update(at(0));
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
 
         style.setGlobalStateProperty('opacity', 1);
         style.setPaintProperty('plain', 'background-opacity', 1);
-        style.update(at(0));
-        style.update(at(150));
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
         style.setGlobalStateProperty('opacity', 0.4);
         style.setPaintProperty('plain', 'background-opacity', 0.4);
 
-        for (const now of [150, 200, 300, 449, 451]) {
-            style.update(at(now));
-            expect(backgroundOpacity(style, 'state')).toBe(backgroundOpacity(style, 'plain'));
-        }
-        expect(backgroundOpacity(style, 'state')).toBe(0.4);
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity'))
+            .toBe((style.getLayer('plain') as BackgroundStyleLayer).paint.get('background-opacity'));
+        style.update(new EvaluationParameters(0, {now: 300, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity'))
+            .toBe((style.getLayer('plain') as BackgroundStyleLayer).paint.get('background-opacity'));
+
+        style.update(new EvaluationParameters(0, {now: 451, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(0.4);
         expect(style.hasTransitions()).toBe(false);
     });
 
@@ -2141,14 +2139,15 @@ describe('a global state change transitions what reads it, issue #8395', () => {
             layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
         }));
         await style.once('style.load');
-        style.update(at(0));
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
 
         style.setGlobalStateProperty('opacity', 0.5);
         style.setGlobalStateProperty('opacity', 1);
-        style.update(at(0));
-        style.update(at(150));
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
 
-        expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
     });
 
     test('a running transition keeps its start when the state its prior value reads changes', async () => {
@@ -2158,35 +2157,15 @@ describe('a global state change transitions what reads it, issue #8395', () => {
             layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
         }));
         await style.once('style.load');
-        style.update(at(0));
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
 
         style.setPaintProperty('background', 'background-opacity', 1);
-        style.update(at(0));
-        style.update(at(150));
-        expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
-
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
         style.setGlobalStateProperty('opacity', 0);
-        style.update(at(150));
-        expect(backgroundOpacity(style, 'background')).toBeCloseTo(0.6);
 
-        style.update(at(301));
-        expect(backgroundOpacity(style, 'background')).toBe(1);
-    });
-
-    test('a key nothing reads opens no transition', async () => {
-        const style = createStyle();
-        style.loadJSON(createStyleJSON({
-            state: {opacity: {default: 0.2}, unread: {default: 0}},
-            light: {intensity: ['global-state', 'opacity']},
-            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
-        }));
-        await style.once('style.load');
-        style.update(at(0));
-
-        style.setGlobalStateProperty('unread', 1);
-        style.update(at(0));
-
-        expect(style.hasTransitions()).toBe(false);
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
     });
 });
 

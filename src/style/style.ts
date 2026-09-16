@@ -364,10 +364,7 @@ export class Style extends Evented<MapEventType> {
         this._setGlobalStateValues(values);
     }
 
-    /**
-     * Sets the global state keys in `values` whose value differs from the one the state holds, keeping a copy of the
-     * state from before the change so that what reads those keys can transition from the value it had.
-     */
+    /** Sets the keys in `values` that differ, keeping a copy of the state from before so readers transition from it. */
     _setGlobalStateValues(values: Record<string, any>): void {
         const changedGlobalStateRefs: string[] = [];
         for (const ref in values) {
@@ -390,9 +387,7 @@ export class Style extends Evented<MapEventType> {
     /**
      * @internal
      * Find all sources that are affected by the global state changes and reload them.
-     * Find all paint properties that are affected by the global state changes and update them, and the same for
-     * the light and the sky; each transitions from the value it had under `priorGlobalState`, the state from
-     * before the change.
+     * Find all paint, light and sky properties that are affected and transition them from `priorGlobalState`, the state before the change.
      * For example, if a layer filter uses global-state expression, this function will find the source id of that layer.
      */
     _applyGlobalStateChanges(globalStateRefs: string[], priorGlobalState: Record<string, any>): void {
@@ -405,7 +400,7 @@ export class Style extends Evented<MapEventType> {
 
         for (const layerId in this._layers) {
             const layer = this._layers[layerId];
-            layer.retainGlobalState(globalStateRefs, priorGlobalState);
+            layer.retainPriorGlobalState(globalStateRefs, priorGlobalState);
 
             const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
             const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
@@ -428,8 +423,9 @@ export class Style extends Evented<MapEventType> {
         }
 
         const parameters = {now: now(), transition: this.getTransition()};
-        this.light?.updateGlobalState(globalStateRefs, priorGlobalState, parameters);
-        this.sky?.updateGlobalState(globalStateRefs, priorGlobalState, parameters);
+        // Loading applies the stylesheet's state before the light and the sky exist.
+        this.light?.applyGlobalStateChange(globalStateRefs, priorGlobalState, parameters);
+        this.sky?.applyGlobalStateChange(globalStateRefs, priorGlobalState, parameters);
 
         // Propagate global state changes to workers
         this.dispatcher.broadcast(MessageType.updateGlobalState, globalStateChange);
