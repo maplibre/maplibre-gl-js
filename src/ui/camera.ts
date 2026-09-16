@@ -101,6 +101,16 @@ export type JumpToOptions = CameraOptions & {
     padding?: PaddingOptions;
 };
 
+/** Options for calculating an anchored camera. */
+export type AnchoredCameraOptions = {
+    /** Geographic location to anchor. */
+    anchorLocation: LngLatLike;
+    /** Screen position for the anchor. */
+    anchorScreenPoint: PointLike;
+    /** Desired zoom level. */
+    zoom?: number;
+};
+
 /**
  * A options object for the {@link Map.cameraForBounds} method
  */
@@ -719,10 +729,10 @@ export class Camera extends Evented<MapEventType> {
      * Calculates camera options for moving a geographic anchor to a screen point without
      * changing this camera.
      */
-    calculateAnchoredCameraOptions(anchorLocation: LngLatLike, anchorScreenPoint: PointLike, options: Pick<CameraOptions, 'zoom'> = {}): CameraOptions {
+    calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions {
         const tr = this.transform.clone();
-        const anchor = LngLat.convert(anchorLocation);
-        const target = Point.convert(anchorScreenPoint);
+        const anchor = LngLat.convert(options.anchorLocation);
+        const target = Point.convert(options.anchorScreenPoint);
         const deltas: MapControlsDeltas = {
             panDelta: target.sub(this.transform.locationToScreenPoint(anchor, this.terrain)),
             zoomDelta: options.zoom === undefined ? 0 : options.zoom - tr.zoom,

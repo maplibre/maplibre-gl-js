@@ -19,8 +19,8 @@ describe('calculateAnchoredCameraOptions', () => {
         const anchorScreenPoint: [number, number] = [100, 150];
         const centerBefore = map.getCenter();
 
-        expect(map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint).zoom).toBe(3);
-        const cameraOptions = map.calculateAnchoredCameraOptions(anchorLocation, anchorScreenPoint, {zoom: 10});
+        expect(map.calculateAnchoredCameraOptions({anchorLocation, anchorScreenPoint}).zoom).toBe(3);
+        const cameraOptions = map.calculateAnchoredCameraOptions({anchorLocation, anchorScreenPoint, zoom: 10});
 
         expect(cameraOptions.zoom).toBe(5);
         expect(map.getCenter()).toEqual(centerBefore);
