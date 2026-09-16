@@ -18,6 +18,11 @@ export class Sky extends Evented {
     atmosphereMesh: Mesh | undefined;
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
+    /** The raw sky spec last accepted by {@link setSky}, kept separate from the
+     * transitionable's own filled-in defaults so `getSky()` can tell "no sky
+     * configured" from "sky configured with defaults", and never reflects a
+     * rejected value. */
+    _sky: SkySpecification | undefined;
 
     constructor(sky: SkySpecification | undefined, globalState: Record<string, any>) {
         super();
@@ -30,19 +35,19 @@ export class Sky extends Evented {
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): void {
         if (this._validate(validateStyle.sky, sky, options)) return;
 
-        sky ||= {
+        this._sky = sky;
+
+        this._transitionable.setValues(sky ?? {
             'sky-color': 'transparent',
             'horizon-color': 'transparent',
             'fog-color': 'transparent',
             'fog-ground-blend': 1,
             'atmosphere-blend': 0,
-        };
-
-        this._transitionable.setValues(sky);
+        });
     }
 
     getSky(): SkySpecification {
-        return this._transitionable.serialize();
+        return this._sky;
     }
 
     updateTransitions(parameters: TransitionParameters): void {
