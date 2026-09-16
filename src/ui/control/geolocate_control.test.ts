@@ -9,6 +9,7 @@ vi.mock(import('../../util/geolocation_support'), () => (
     }
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
+
 import type {LngLat} from '../../geo/lng_lat.ts';
 
 /**

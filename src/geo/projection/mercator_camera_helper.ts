@@ -1,4 +1,3 @@
-import type Point from '@mapbox/point-geometry';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper.ts';
 import {normalizeCenter} from '../transform_helper.ts';
@@ -6,6 +5,7 @@ import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util.ts';
 import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
+import type Point from '@mapbox/point-geometry';
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {PaddingOptions} from '../edge_insets.ts';

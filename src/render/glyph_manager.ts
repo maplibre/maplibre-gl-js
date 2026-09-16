@@ -1,5 +1,4 @@
 import {FontFaceManager} from './font_face_manager.ts';
-
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
 import {isCluster} from '../util/graphemes.ts';
@@ -8,13 +7,12 @@ import {ensureError, warnOnce} from '../util/util.ts';
 import {getArrayBuffer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
+import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 import type {StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
-
-import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
     /**

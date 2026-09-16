@@ -1,5 +1,6 @@
 import {TapRecognizer} from './tap_recognizer.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map.ts';
 import type {TransformProvider} from './transform-provider.ts';

@@ -1,5 +1,4 @@
 import {warnOnce} from '../util/util.ts';
-
 import {register} from '../util/web_worker_transfer.ts';
 
 import type {VertexArrayObject} from '../webgl/vertex_array_object.ts';

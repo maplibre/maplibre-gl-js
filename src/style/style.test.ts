@@ -4,7 +4,6 @@ import {TileManager} from '../tile/tile_manager.ts';
 import {StyleLayer} from './style_layer.ts';
 import {extend} from '../util/util.ts';
 import {ErrorEvent, Event} from '../util/evented.ts';
-import {type AJAXError} from '../util/ajax.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
@@ -12,21 +11,22 @@ import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from '../util/image_request.ts';
-
 import {EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {type Tile} from '../tile/tile.ts';
+
+import type {PossiblyEvaluated} from './properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
+import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {AJAXError} from '../util/ajax.ts';
 import type Point from '@mapbox/point-geometry';
-import {type PossiblyEvaluated} from './properties.ts';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
-import {type BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({

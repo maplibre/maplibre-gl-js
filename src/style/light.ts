@@ -2,13 +2,12 @@ import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
+import {Transitionable, type Transitioning, type PossiblyEvaluated} from './properties.ts';
 
 import type {vec3} from 'gl-matrix';
 import type {LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {StyleSetterOptions} from '../style/style.ts';
-import {Transitionable, type Transitioning, type PossiblyEvaluated} from './properties.ts';
-
 import type {TransitionParameters} from './properties.ts';
 
 /*

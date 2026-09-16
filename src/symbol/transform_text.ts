@@ -1,9 +1,9 @@
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 import {applyArabicShaping} from './arabic_shaping.ts';
 
+import type {Formatted} from '@maplibre/maplibre-gl-style-spec';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
-import {type Formatted} from '@maplibre/maplibre-gl-style-spec';
 
 function transformTextInternal(text: string, layer: SymbolStyleLayer, feature: Feature) {
     const transform = layer.layout.get('text-transform').evaluate(feature, {});

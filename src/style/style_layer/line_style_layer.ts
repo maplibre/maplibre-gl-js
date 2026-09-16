@@ -6,8 +6,8 @@ import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPo
 import {extend} from '../../util/util.ts';
 import {EvaluationParameters} from '../evaluation_parameters.ts';
 import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty, type PossiblyEvaluatedPropertyValue} from '../properties.ts';
-
 import {isZoomExpression, Step, type Feature, type FeatureState, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket.ts';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g.ts';
