@@ -2698,18 +2698,36 @@ describe('TileManager / etag', () => {
 });
 
 describe('TileManager content elevation', () => {
-    test('scans loaded tiles only for data-driven symbol-height-offset', () => {
-        const tileManager = createTileManager();
-        const getBucket = vi.fn().mockReturnValue({maxHeightOffset: 0});
-        const constantLayer = {type: 'symbol', source: tileManager.id, isHidden: () => false, layout: {get: () => ({constantOr: () => 100, isConstant: () => true})}};
-        const dataDrivenLayer = {type: 'symbol', source: tileManager.id, isHidden: () => false, layout: {get: () => ({constantOr: () => 0, isConstant: () => false})}};
-        tileManager.map = {style: {_layers: {constantLayer, dataDrivenLayer}}} as any;
-        tileManager.transform = new MercatorTransform();
-        tileManager._inViewTiles.getAllTiles = () => [{getBucket}] as any;
+    test('scans loaded tiles only for data-driven symbol-height-offset', async () => {
+        const map = globalCreateMap({
+            style: {
+                version: 8,
+                sources: {id: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                layers: [
+                    {id: 'constant', type: 'symbol', source: 'id', layout: {'symbol-height-offset': 100}},
+                    {id: 'dataDriven', type: 'symbol', source: 'id', layout: {'symbol-height-offset': ['get', 'height']}}
+                ]
+            }
+        });
+        onTestFinished(() => map.remove());
+        await map.once('load');
 
-        expect(tileManager._updateMaxContentElevation()).toBe(100);
+        const tileManager = createTileManager({
+            async loadTile(tile: Tile) {
+                tile.state = 'loaded';
+            }
+        });
+        tileManager.onAdd(map);
+        onTestFinished(() => tileManager.onRemove(map));
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        tileManager.update(transform);
+        await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
+
+        const getBucket = vi.spyOn(tileManager.getLoadedTile(new OverscaledTileID(0, 0, 0, 0, 0)), 'getBucket');
+        tileManager.update(transform);
         expect(getBucket).toHaveBeenCalledTimes(1);
-        expect(getBucket).toHaveBeenCalledWith(dataDrivenLayer);
+        expect(getBucket).toHaveBeenCalledWith(map.getLayer('dataDriven'));
     });
 
     test.each(['resetMaxContentElevation', 'clearTiles'] as const)(
