@@ -120,7 +120,7 @@ export class BlockableMapEventHandler {
         clickTolerance: number;
     }) {
         this._map = map;
-        this._clickTolerance = options.clickTolerance || 1;
+        this._clickTolerance = options.clickTolerance;
     }
 
     reset(): void {

@@ -319,8 +319,6 @@ export class HandlerManager {
             map.touchZoomRotate.enable(options.touchZoomRotate);
         }
 
-        // touchPan is allowed to stay active so that a long press which produces
-        // small finger movement still results in a contextmenu event on touch devices.
         this._add('blockableMapEvent', new BlockableMapEventHandler(map, options), ['touchPan']);
 
         const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame(), this._transformProvider);

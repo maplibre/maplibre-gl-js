@@ -173,7 +173,7 @@ describe('map events', () => {
             const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
 
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
-            expect(contextmenu).toHaveBeenCalledTimes(0); // still holding
+            expect(contextmenu).not.toHaveBeenCalled(); // still holding
             vi.advanceTimersByTime(500);
             expect(contextmenu).toHaveBeenCalledTimes(1); // long press elapsed
             expect(contextmenu.mock.calls[0][0].point).toBeTruthy();
@@ -204,7 +204,7 @@ describe('map events', () => {
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches}); // lifts before the delay
             vi.advanceTimersByTime(500);
-            expect(contextmenu).toHaveBeenCalledTimes(0);
+            expect(contextmenu).not.toHaveBeenCalled();
         });
 
         test('MapEvent handler cancels the long press when the finger moves further than the click tolerance (a pan)', () => {
@@ -217,7 +217,7 @@ describe('map events', () => {
             simulate.touchstart(map.getCanvas(), {touches: start, targetTouches: start});
             simulate.touchmove(map.getCanvas(), {touches: moved, targetTouches: moved});
             vi.advanceTimersByTime(500);
-            expect(contextmenu).toHaveBeenCalledTimes(0);
+            expect(contextmenu).not.toHaveBeenCalled();
         });
 
         test('MapEvent handler keeps the long press alive when the finger drifts within the click tolerance', () => {
@@ -259,12 +259,12 @@ describe('map events', () => {
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             simulate.touchcancel(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
             vi.advanceTimersByTime(500);
-            expect(contextmenu).toHaveBeenCalledTimes(0);
+            expect(contextmenu).not.toHaveBeenCalled();
             // a following quick tap must not fire anything either
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
             vi.advanceTimersByTime(500);
-            expect(contextmenu).toHaveBeenCalledTimes(0);
+            expect(contextmenu).not.toHaveBeenCalled();
         });
 
         test('MapEvent handler does not start a long press for a two-finger touch (pinch)', () => {
@@ -275,7 +275,7 @@ describe('map events', () => {
 
             simulate.touchstart(map.getCanvas(), {touches: two, targetTouches: two});
             vi.advanceTimersByTime(500);
-            expect(contextmenu).toHaveBeenCalledTimes(0);
+            expect(contextmenu).not.toHaveBeenCalled();
         });
     });
 
