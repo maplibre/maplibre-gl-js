@@ -1921,8 +1921,11 @@ export class Style extends Evented<MapEventType> {
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
-            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.center.lng, reindexedBuckets);
-            symbolBucketsChanged ||= layerBucketsChanged;
+            const layerResult = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.center.lng);
+            symbolBucketsChanged ||= layerResult.bucketsChanged;
+            for (const bucketInstanceId of layerResult.reindexedBuckets) {
+                reindexedBuckets.add(bucketInstanceId);
+            }
         }
         this.crossTileSymbolIndex.pruneUnusedLayers(this._order);
 
