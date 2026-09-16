@@ -205,11 +205,13 @@ export class BlockableMapEventHandler {
         this._longPressStart = undefined;
     }
 
+    /**
+     * Handles a contextmenu event. A native one during a touch is suppressed, because the
+     * long press timer already fires the event and the browser menu would double up.
+     * @param e - the mouse event
+     */
     contextmenu(e: MouseEvent): void {
         if (this._touchActive) {
-            // A native contextmenu during a touch (Android's long press, or an iOS
-            // callout) is suppressed: the long-press timer owns touch, so letting
-            // this through would double-fire or pop the browser's own menu.
             e.preventDefault();
             return;
         }
