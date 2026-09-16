@@ -173,6 +173,8 @@ export class HandlerManager {
      * same lifetime as the elevation freeze. Null when that terrain was not available.
      */
     _terrainGestureAnchorElevation: number | null = null;
+    /** Whether the gesture's first drag or zoom frame has sampled its terrain anchor yet. */
+    _terrainGestureAnchorSampled: boolean = false;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -616,7 +618,8 @@ export class HandlerManager {
         if (!aroundOnSurface) {
             return undefined;
         }
-        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+        if (!this._terrainGestureAnchorSampled && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            this._terrainGestureAnchorSampled = true;
             const anchor = tr.screenTerrainPointToMercatorCoordinate(around, terrain);
             this._terrainGestureAnchorElevation = anchor ? anchor.z : null;
         }
@@ -667,24 +670,21 @@ export class HandlerManager {
             return;
         }
 
-        if (cameraHelper.useGlobeControls) {
-            if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-                this._terrainMovement = true;
-                this._camera.elevationFreeze = true;
-            }
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
-            return;
-        }
-
-        if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+        // every gesture over terrain holds the center elevation until it ends, or a DEM tile landing mid-gesture lifts the camera under the fingers
+        if (!this._terrainMovement) {
             this._terrainMovement = true;
             this._camera.elevationFreeze = true;
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
 
+        if (cameraHelper.useGlobeControls) {
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            return;
+        }
+
         if (deltasForHelper.aroundElevation === undefined &&
-            combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
+            combinedEventsInProgress.drag && panDelta) {
             // no usable anchor: drag by pixel-delta on the center-elevation plane
             tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
             return;
@@ -748,6 +748,7 @@ export class HandlerManager {
             this._camera.elevationFreeze = false;
             this._terrainMovement = false;
             this._terrainGestureAnchorElevation = null;
+            this._terrainGestureAnchorSampled = false;
             const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);

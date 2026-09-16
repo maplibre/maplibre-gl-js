@@ -5,6 +5,9 @@ import {Event as MapEvent} from '../util/evented.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap, createTerrain} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
+import {browser} from '../util/browser.ts';
+import {MapSourceDataEvent} from './events.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
 
 import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
 import type {Map} from './map.ts';
@@ -22,6 +25,7 @@ beforeEach(() => {
 afterEach(() => {
     map.remove();
     vi.restoreAllMocks();
+    browser.prefersReducedMotion = false;
 });
 
 describe('HandlerManager terrain scenarios', () => {
@@ -288,6 +292,48 @@ describe('HandlerManager terrain scenarios', () => {
 
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
+
+    test('_handleMapControls holds the elevation for a pitch-only gesture over mercator terrain', () => {
+        const handlePan = vi.fn();
+        map._camera.cameraHelper = {
+            handleMapControlsRollPitchBearingZoom: vi.fn(),
+            handleMapControlsPan: handlePan,
+            useGlobeControls: false,
+        } as unknown as ICameraHelper;
+
+        const setCenterMock = vi.fn();
+        const transform = {
+            centerPoint: new Point(0, 0),
+            center: new LngLat(0, 0),
+            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
+            setCenter: setCenterMock,
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+        const options: MapControlsScenarioOptions = {
+            terrain: {} as Terrain,
+            tr: transform as unknown as ITransform,
+            deltasForHelper: {
+                panDelta: new Point(0, 0),
+                zoomDelta: 0,
+                rollDelta: 0,
+                pitchDelta: 5,
+                bearingDelta: 0,
+                around: new Point(0, 0),
+            },
+            preZoomAroundLoc: new LngLat(0, 0),
+            combinedEventsInProgress: {pitch: createEventInProgress('pitch')},
+            panDelta: undefined,
+        };
+
+        manager._terrainMovement = false;
+        map._camera.elevationFreeze = false;
+
+        manager._handleMapControls(options);
+
+        expect(manager._terrainMovement).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        expect(setCenterMock).not.toHaveBeenCalled();
+    });
 });
 
 function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
@@ -517,5 +563,44 @@ describe('terrain gesture anchoring', () => {
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
+    });
+
+    test('a pitch-only gesture holds the center elevation while DEM lands, then re-solves the camera onto the terrain', async () => {
+        map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch: 0, bearing: 0});
+        map.touchZoomRotate.disable();
+        map.dragPan.disable();
+        map._handlers._handlersById.tapZoom.disable();
+        // no inertia: it would hold the elevation again until its ease ends
+        browser.prefersReducedMotion = true;
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        const demStillLoading = 0;
+        const demLanded = 1000;
+        const elevationAtCenter = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(demStillLoading);
+        const target = map.getCanvas();
+        const tr = () => map._camera.transform;
+        expect(map.getCameraTargetElevation()).toBe(demStillLoading);
+
+        const pitchFingers = (y: number) => [new Point(70, y), new Point(130, y)];
+        gestureStep('touchstart', target, pitchFingers(150));
+        gestureStep('touchmove', target, pitchFingers(140));
+        gestureStep('touchmove', target, pitchFingers(130));
+        expect(map.getPitch()).toBeGreaterThan(0);
+        expect(map._camera.elevationFreeze).toBe(true);
+
+        elevationAtCenter.mockReturnValue(demLanded);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        map._terrainDataCallback(new MapSourceDataEvent('data', {sourceId: 'dem', tile: {tileID} as any, coord: tileID}));
+        gestureStep('touchmove', target, pitchFingers(120));
+        expect(map.getCameraTargetElevation()).toBe(demStillLoading);
+
+        const cameraBeforeRelease = {altitude: tr().getCameraAltitude(), lngLat: tr().getCameraLngLat()};
+        endGesture(target);
+        expect(map._camera.elevationFreeze).toBe(false);
+        expect(map.getCameraTargetElevation()).toBe(demLanded);
+        expect(tr().getCameraAltitude()).toBeCloseTo(cameraBeforeRelease.altitude, 2);
+        expect(tr().getCameraLngLat().lng).toBeCloseTo(cameraBeforeRelease.lngLat.lng, 5);
+        expect(tr().getCameraLngLat().lat).toBeCloseTo(cameraBeforeRelease.lngLat.lat, 5);
     });
 });
