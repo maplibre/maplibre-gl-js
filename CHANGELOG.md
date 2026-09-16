@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Only rewrite and re-upload the symbol opacity buffers of buckets whose labels can actually have changed, instead of every bucket of every symbol layer whenever a tile arrives, which removes most of the frame time spikes seen while rotating the camera as tiles load (by [@cherenkov](https://github.com/cherenkov))
+- Only rewrite the symbol opacity buffers of buckets whose labels can have changed, rather than every bucket of every symbol layer whenever a tile arrives ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

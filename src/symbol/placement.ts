@@ -210,8 +210,9 @@ export class Placement {
         icon: number[];
     }>>;
     /**
-     * What each bucket's opacity buffers were last written from. `crossTileIDs`
-     * duplicates the symbol instances, but avoids `SymbolInstanceArray.get` structs.
+     * Each symbol's cross tile ID and whether it was hidden as a duplicate, as of the last time a
+     * bucket's opacity buffers were written. Held apart from `symbolInstances` so that reading them
+     * back does not go through `SymbolInstanceArray.get`, which builds a struct per symbol.
      */
     opacityInputs: Map<number, {crossTileIDs: Uint32Array; duplicates: Uint8Array}>;
 
@@ -1055,11 +1056,13 @@ export class Placement {
     }
 
     /**
-     * Leaves a bucket's opacity buffers alone and claims its cross tile IDs,
-     * unless duplicate resolution changed: a label shared across tiles is owned
-     * by whichever bucket comes first, so one arriving or leaving flips
-     * ownership for the others. Cross tile IDs are unique within a bucket, so
-     * each symbol's answer depends only on the buckets walked before this one.
+     * Keeps a bucket's opacity buffers and marks its cross tile IDs seen, where rewriting them would
+     * write the same bytes. Answers `false` where it cannot tell, leaving the bucket to a rebuild.
+     *
+     * The one thing a rebuild reads from outside the bucket is `seenCrossTileIDs`: a label carried by
+     * several tiles is drawn by whichever bucket is walked first, and hidden as a duplicate in the
+     * rest. So the buffers still stand if every symbol is a duplicate exactly where it was when they
+     * were written, which is what `opacityInputs` recorded.
      */
     _reuseBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}, reindexedBuckets: Set<number> | null): boolean {
         if (!reindexedBuckets || reindexedBuckets.has(bucket.bucketInstanceId)) return false;
@@ -1071,8 +1074,11 @@ export class Placement {
 
         const {crossTileIDs, duplicates} = written;
         for (let i = 0; i < crossTileIDs.length; i++) {
-            if (!!seenCrossTileIDs[crossTileIDs[i]] !== !!duplicates[i]) return false;
+            const wasDuplicate = duplicates[i] === 1;
+            const isDuplicate = seenCrossTileIDs[crossTileIDs[i]] === true;
+            if (isDuplicate !== wasDuplicate) return false;
         }
+
         for (const crossTileID of crossTileIDs) {
             seenCrossTileIDs[crossTileID] = true;
         }

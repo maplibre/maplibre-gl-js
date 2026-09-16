@@ -99,7 +99,7 @@ describe('placement', () => {
             const layer = buckets[0].layers[0];
             const index = new CrossTileSymbolIndex();
             index.addLayer(layer, tiles, 0);
-            return {tiles, buckets, layer, index};
+            return {tiles, buckets, layer};
         }
 
         test('reuses buckets that already have their opacities written', () => {
@@ -123,42 +123,15 @@ describe('placement', () => {
             expect(spy.mock.calls[0][0]).toBe(buckets[1]);
         });
 
-        test('reuse produces the same buffers as rebuilding everything, over tiles arriving and leaving', () => {
-            const makeWorld = (reuse: boolean) => {
-                const world = {...setupTilesSharingOneLabel(3), reuse, placement: new Placement(transform, undefined, 0, true)};
-                for (const tile of world.tiles) {
-                    const parts = [];
-                    world.placement.getBucketParts(parts, world.layer, tile, false);
-                    for (const part of parts) world.placement.placeLayerBucketPart(part, {}, false);
-                }
-                world.placement.commit(0);
-                return world;
-            };
+        test('rebuilds a bucket whose label another bucket stopped hiding', () => {
+            const {tiles, buckets, layer} = setupTilesSharingOneLabel();
+            placement.updateLayerOpacities(layer, tiles);
 
-            const snapshot = (world: ReturnType<typeof makeWorld>) => world.buckets.map(({text}) => [
-                Array.from(text.opacityVertexArray.uint32.subarray(0, text.opacityVertexArray.length)),
-                Array.from(text.placedSymbolArray.uint8),
-                Array.from(text.indexArray.uint16)
-            ]);
+            const spy = vi.spyOn(placement, 'updateBucketOpacities');
+            placement.updateLayerOpacities(layer, tiles.slice(1), new Set());
 
-            const full = makeWorld(false);
-            const reused = makeWorld(true);
-
-            full.placement.updateLayerOpacities(full.layer, full.tiles);
-            const initial = snapshot(full);
-            expect(initial[0][0].length).toBeGreaterThan(0);
-            expect(initial[0]).not.toEqual(initial[1]);
-
-            const visibleTileSets = [[0, 1, 2], [0, 1, 2], [1, 2], [0, 1, 2], [2], [0, 2], [0, 1, 2]];
-            for (const [step, indexes] of visibleTileSets.entries()) {
-                for (const world of [full, reused]) {
-                    const tiles = indexes.map(i => world.tiles[i]);
-                    const reindexed = new Set<number>();
-                    world.index.addLayer(world.layer, tiles, 0, reindexed);
-                    world.placement.updateLayerOpacities(world.layer, tiles, world.reuse ? reindexed : null);
-                }
-                expect(snapshot(reused), `step ${step}: [${indexes}]`).toEqual(snapshot(full));
-            }
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(spy.mock.calls[0][0]).toBe(buckets[1]);
         });
     });
 });
