@@ -22,7 +22,8 @@ bench('performSymbolLayout', () => {
                     imagePositions: tileResult.imageAtlas.iconPositions,
                     showCollisionBoxes: false,
                     canonical: tileResult.featureIndex.tileID.canonical,
-                    subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+                    subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+                    hasPromoteId: false
                 });
             }
         }
