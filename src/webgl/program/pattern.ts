@@ -1,11 +1,11 @@
-import {
-    type Uniform1i,
-    type Uniform1f,
-    type Uniform2f,
-    type Uniform3f
-} from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 
+import type {
+    Uniform1i,
+    Uniform1f,
+    Uniform2f,
+    Uniform3f
+} from '../uniform_binding.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {CrossFaded} from '../../style/properties.ts';
@@ -71,9 +71,9 @@ function bgPatternUniformValues(
         tileSize: number;
     }
 ): UniformValues<BackgroundPatternUniformsType> {
-    const imagePosA = painter.imageManager.getPattern(image.from.toString());
-    const imagePosB = painter.imageManager.getPattern(image.to.toString());
-    const {width, height} = painter.imageManager.getPixelSize();
+    const imagePosA = painter.patternAtlas.getPattern(image.from.toString());
+    const imagePosB = painter.patternAtlas.getPattern(image.to.toString());
+    const {width, height} = painter.patternAtlas.getPixelSize();
 
     const numTiles = Math.pow(2, tile.tileID.overscaledZ);
     const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, painter.transform.tileZoom) / numTiles;

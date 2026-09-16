@@ -1,0 +1,61 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 360,
+      "height": 360
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 2,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "labels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": { "name": "خیابان ولیعصر در شهر تهران" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 22 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "شاہراہِ فیصل کراچی پاکستان" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 0 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "پلاک 123 گچپژ" },
+            "geometry": { "type": "Point", "coordinates": [ 0, -22 ] }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "white" }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "labels",
+      "layout": {
+        "text-allow-overlap": true,
+        "text-max-width": 9,
+        "text-line-height": 1.3,
+        "text-size": 16,
+        "text-field": ["get", "name"],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": { "text-color": "black" }
+    }
+  ]
+}

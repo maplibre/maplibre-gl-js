@@ -1,10 +1,10 @@
 import {filterObject} from '../util/util.ts';
-
 import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
-import {Evented, ErrorEvent} from '../util/evented.ts';
+import {Evented, ErrorEvent, type ErrorEventType} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
+import type {mat4} from 'gl-matrix';
 import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
@@ -18,14 +18,12 @@ import type {
     AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {CrossfadeParameters} from './evaluation_parameters.ts';
-
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Map} from '../ui/map.ts';
 import type {StyleSetterOptions} from './style.ts';
-import {type mat4} from 'gl-matrix';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
@@ -74,7 +72,7 @@ export type QueryIntersectsFeatureParams = {
     /**
      * A function to get the elevation of a point in tile coordinates.
      */
-    getElevation: undefined | ((x: number, y: number) => number);
+    getElevation: GetElevation | undefined;
 };
 
 const ERROR_PAINT_NOT_LAYOUT = ' is a PAINT property not a LAYOUT property. Use get/setPaintProperty instead?';
@@ -83,7 +81,7 @@ const ERROR_LAYOUT_NOT_PAINT = ' is a LAYOUT property not a PAINT property. Use 
 /**
  * A base class for style layers
  */
-export abstract class StyleLayer extends Evented {
+export abstract class StyleLayer extends Evented<ErrorEventType> {
     id: string;
     metadata: unknown;
     type: LayerSpecification['type'] | CustomLayerInterface['type'];
@@ -328,6 +326,11 @@ export abstract class StyleLayer extends Evented {
 
     updateTransitions(parameters: TransitionParameters): void {
         this._transitioningPaint = this._transitionablePaint.transitioned(parameters, this._transitioningPaint);
+    }
+
+    /** The re-read itself goes through `setPaintProperty`, which also rebuilds colour ramps and relayouts. */
+    retainPriorGlobalState(refs: string[], priorGlobalState: Record<string, any>): void {
+        this._transitionablePaint?.retainPriorGlobalState(refs, priorGlobalState, this._transitioningPaint);
     }
 
     hasTransition(): boolean {

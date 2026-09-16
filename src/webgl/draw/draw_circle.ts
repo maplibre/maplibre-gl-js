@@ -1,12 +1,14 @@
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type Program} from '../program.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {translatePosition} from '../../util/util.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Program} from '../program.ts';
+import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
 import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
@@ -16,7 +18,6 @@ import type {IndexBuffer} from '../index_buffer.ts';
 import type {UniformValues} from '../uniform_binding.ts';
 import type {CircleUniformsType} from '../program/circle_program.ts';
 import type {TerrainData} from '../../render/terrain.ts';
-import {translatePosition} from '../../util/util.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 type TileRenderState = {
@@ -35,10 +36,9 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'translucent') return;
+export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
+    if (renderContext.currentPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderOptions;
     const opacity = layer.paint.get('circle-opacity');
     const strokeWidth = layer.paint.get('circle-stroke-width');
     const strokeOpacity = layer.paint.get('circle-stroke-opacity');
@@ -77,10 +77,10 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const projectionData = getProjectionDataForTile(renderContext, coord);
 
         const state: TileRenderState = {
             programConfiguration,

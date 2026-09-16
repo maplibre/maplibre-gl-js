@@ -9,7 +9,7 @@
  - [ ] Include before/after visuals or gifs if this PR includes visual changes.
  - [ ] Write tests for all new functionality.
  - [ ] Document any changes to public APIs.
- - [ ] Post benchmark scores.
+ - [ ] If you changed code in a file that has a benchmark file next to it (`*.bench.ts`), post before/after results of `npm run bench` (the compare workflow is in `test/bench/README.md`).
  - [ ] Add an entry to `CHANGELOG.md` under the `## main` section.
  - [ ] Confirm you have read our AI policy [here](https://github.com/maplibre/maplibre/blob/main/AI_POLICY.md).
 <!--

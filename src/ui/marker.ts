@@ -1,4 +1,5 @@
 import {DOM} from '../util/dom.ts';
+import {throttle} from '../util/throttle.ts';
 import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
@@ -12,11 +13,91 @@ import type {Popup, Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {MapMouseEvent, MapTouchEvent} from './events.ts';
 import type {PointLike} from './camera.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 /**
  * Alignment options of rotation and pitch
  */
 export type Alignment = 'map' | 'viewport' | 'auto';
+
+/**
+ * Screen-pixel deltas applied when a focused draggable marker is moved with the arrow keys.
+ */
+const ARROW_KEY_DELTAS: Partial<Record<KeyboardEvent['key'], [number, number]>> = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1]
+};
+
+const KEYBOARD_DRAG_SMALL_STEP = 1;
+const KEYBOARD_DRAG_LARGE_STEP = 10;
+
+/** Fill color of the default marker when {@link MarkerOptions.color} is not given. */
+const DEFAULT_MARKER_COLOR = '#3FB1CE';
+/** Height in CSS pixels of the default marker SVG at scale 1. */
+const DEFAULT_MARKER_HEIGHT = 41;
+/** Width in CSS pixels of the default marker SVG at scale 1. */
+const DEFAULT_MARKER_WIDTH = 27;
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Creates an SVG element with the given attributes, set in the order given, and children. */
+function svgElement(tag: string, attributes: Record<string, string>, children: Element[] = []): Element {
+    const element = DOM.createNS(SVG_NS, tag);
+    for (const name in attributes) element.setAttributeNS(null, name, attributes[name]);
+    for (const child of children) element.appendChild(child);
+    return element;
+}
+
+/** The default marker SVG at scale 1 in the default color, built on first use and cloned per marker. */
+let defaultMarkerTemplate: Element;
+
+/**
+ * Returns the shared default marker SVG, building it the first time it is asked for. Assembling
+ * the pin takes about fifty DOM calls, so each default {@link Marker} deep-clones this template
+ * and overrides only its size and its fill, see {@link defaultMarkerFillGroup}.
+ */
+function getDefaultMarkerTemplate(): Element {
+    if (defaultMarkerTemplate) return defaultMarkerTemplate;
+
+    const shadowRadii = [
+        ['10.5', '5.25002273'],
+        ['10.5', '5.25002273'],
+        ['9.5', '4.77275007'],
+        ['8.5', '4.29549936'],
+        ['7.5', '3.81822308'],
+        ['6.5', '3.34094679'],
+        ['5.5', '2.86367051'],
+        ['4.5', '2.38636864']
+    ];
+    const shadow = svgElement('g', {transform: 'translate(3.0, 29.0)', fill: '#000000'},
+        shadowRadii.map(([rx, ry]) => svgElement('ellipse', {opacity: '0.04', cx: '10.5', cy: '5.80029008', rx, ry})));
+    const background = svgElement('g', {fill: DEFAULT_MARKER_COLOR}, [
+        svgElement('path', {d: 'M27,13.5 C27,19.074644 20.250001,27.000002 14.75,34.500002 C14.016665,35.500004 12.983335,35.500004 12.25,34.500002 C6.7499993,27.000002 0,19.222562 0,13.5 C0,6.0441559 6.0441559,0 13.5,0 C20.955844,0 27,6.0441559 27,13.5 Z'})
+    ]);
+    const border = svgElement('g', {opacity: '0.25', fill: '#000000'}, [
+        svgElement('path', {d: 'M13.5,0 C6.0441559,0 0,6.0441559 0,13.5 C0,19.222562 6.7499993,27 12.25,34.5 C13,35.522727 14.016664,35.500004 14.75,34.5 C20.250001,27 27,19.074644 27,13.5 C27,6.0441559 20.955844,0 13.5,0 Z M13.5,1 C20.415404,1 26,6.584596 26,13.5 C26,15.898657 24.495584,19.181431 22.220703,22.738281 C19.945823,26.295132 16.705119,30.142167 13.943359,33.908203 C13.743445,34.180814 13.612715,34.322738 13.5,34.441406 C13.387285,34.322738 13.256555,34.180814 13.056641,33.908203 C10.284481,30.127985 7.4148684,26.314159 5.015625,22.773438 C2.6163816,19.232715 1,15.953538 1,13.5 C1,6.584596 6.584596,1 13.5,1 Z'})
+    ]);
+    const maki = svgElement('g', {transform: 'translate(6.0, 7.0)', fill: '#FFFFFF'});
+    const circles = svgElement('g', {transform: 'translate(8.0, 8.0)'}, [
+        svgElement('circle', {fill: '#000000', opacity: '0.25', cx: '5.5', cy: '5.5', r: '5.4999962'}),
+        svgElement('circle', {fill: '#FFFFFF', cx: '5.5', cy: '5.5', r: '5.4999962'})
+    ]);
+
+    defaultMarkerTemplate = svgElement('svg', {
+        display: 'block',
+        height: `${DEFAULT_MARKER_HEIGHT}px`,
+        width: `${DEFAULT_MARKER_WIDTH}px`,
+        viewBox: `0 0 ${DEFAULT_MARKER_WIDTH} ${DEFAULT_MARKER_HEIGHT}`
+    }, [svgElement('g', {'fill-rule': 'nonzero'}, [shadow, background, border, maki, circles])]);
+    return defaultMarkerTemplate;
+}
+
+/** The group of a default marker SVG that carries the pin's fill color: the second child of its single top-level group. */
+function defaultMarkerFillGroup(svg: Element): Element {
+    return svg.firstElementChild.children[1];
+}
 
 /**
  * The {@link Marker} options object
@@ -52,6 +133,10 @@ export type MarkerOptions = {
     scale?: number;
     /**
      * A boolean indicating whether or not a marker is able to be dragged to a new position on the map.
+     * A draggable default marker also becomes keyboard focusable and, while focused, moves by
+     * 1 screen pixel per arrow-key press (10 with Shift), firing the same `dragstart`/`drag`/`dragend`
+     * events as pointer dragging. Markers with a custom `element` keep their focusability and
+     * keyboard behavior application-owned.
      * @defaultValue false
      */
     draggable?: boolean;
@@ -222,12 +307,12 @@ export class Marker extends Evented<MarkerEventType> {
     _rotation: number;
     _pitchAlignment: Alignment;
     _rotationAlignment: Alignment;
-    _originalTabIndex: string; // original tabindex of _element
     _opacity: string;
     _opacityWhenCovered: string;
-    _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
     _roleManaged: boolean;
+    _tabIndexManaged: boolean;
+    _keyboardDragActive: boolean;
 
     /**
      * @param options - the options
@@ -236,13 +321,15 @@ export class Marker extends Evented<MarkerEventType> {
         super();
 
         this._anchor = options?.anchor || 'center';
-        this._color = options?.color || '#3FB1CE';
+        this._color = options?.color || DEFAULT_MARKER_COLOR;
         this._scale = options?.scale || 1;
         this._draggable = options?.draggable || false;
         this._clickTolerance = options?.clickTolerance || 0;
         this._subpixelPositioning = options?.subpixelPositioning || false;
         this._isDragging = false;
         this._roleManaged = false;
+        this._tabIndexManaged = false;
+        this._keyboardDragActive = false;
         this._state = 'inactive';
         this._rotation = options?.rotation || 0;
         this._rotationAlignment = options?.rotationAlignment || 'auto';
@@ -253,99 +340,10 @@ export class Marker extends Evented<MarkerEventType> {
             this._defaultMarker = true;
             this._element = DOM.create('div');
 
-            // create default map marker SVG
-            const svg = DOM.createNS('http://www.w3.org/2000/svg', 'svg');
-            const defaultHeight = 41;
-            const defaultWidth = 27;
-            svg.setAttributeNS(null, 'display', 'block');
-            svg.setAttributeNS(null, 'height', `${defaultHeight}px`);
-            svg.setAttributeNS(null, 'width', `${defaultWidth}px`);
-            svg.setAttributeNS(null, 'viewBox', `0 0 ${defaultWidth} ${defaultHeight}`);
-
-            const markerLarge = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            markerLarge.setAttributeNS(null, 'stroke', 'none');
-            markerLarge.setAttributeNS(null, 'stroke-width', '1');
-            markerLarge.setAttributeNS(null, 'fill', 'none');
-            markerLarge.setAttributeNS(null, 'fill-rule', 'evenodd');
-
-            const page1 = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            page1.setAttributeNS(null, 'fill-rule', 'nonzero');
-
-            const shadow = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            shadow.setAttributeNS(null, 'transform', 'translate(3.0, 29.0)');
-            shadow.setAttributeNS(null, 'fill', '#000000');
-
-            const ellipses = [
-                {'rx': '10.5', 'ry': '5.25002273'},
-                {'rx': '10.5', 'ry': '5.25002273'},
-                {'rx': '9.5', 'ry': '4.77275007'},
-                {'rx': '8.5', 'ry': '4.29549936'},
-                {'rx': '7.5', 'ry': '3.81822308'},
-                {'rx': '6.5', 'ry': '3.34094679'},
-                {'rx': '5.5', 'ry': '2.86367051'},
-                {'rx': '4.5', 'ry': '2.38636864'}
-            ];
-
-            for (const data of ellipses) {
-                const ellipse = DOM.createNS('http://www.w3.org/2000/svg', 'ellipse');
-                ellipse.setAttributeNS(null, 'opacity', '0.04');
-                ellipse.setAttributeNS(null, 'cx', '10.5');
-                ellipse.setAttributeNS(null, 'cy', '5.80029008');
-                ellipse.setAttributeNS(null, 'rx', data['rx']);
-                ellipse.setAttributeNS(null, 'ry', data['ry']);
-                shadow.appendChild(ellipse);
-            }
-
-            const background = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            background.setAttributeNS(null, 'fill', this._color);
-
-            const bgPath = DOM.createNS('http://www.w3.org/2000/svg', 'path');
-            bgPath.setAttributeNS(null, 'd', 'M27,13.5 C27,19.074644 20.250001,27.000002 14.75,34.500002 C14.016665,35.500004 12.983335,35.500004 12.25,34.500002 C6.7499993,27.000002 0,19.222562 0,13.5 C0,6.0441559 6.0441559,0 13.5,0 C20.955844,0 27,6.0441559 27,13.5 Z');
-
-            background.appendChild(bgPath);
-
-            const border = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            border.setAttributeNS(null, 'opacity', '0.25');
-            border.setAttributeNS(null, 'fill', '#000000');
-
-            const borderPath = DOM.createNS('http://www.w3.org/2000/svg', 'path');
-            borderPath.setAttributeNS(null, 'd', 'M13.5,0 C6.0441559,0 0,6.0441559 0,13.5 C0,19.222562 6.7499993,27 12.25,34.5 C13,35.522727 14.016664,35.500004 14.75,34.5 C20.250001,27 27,19.074644 27,13.5 C27,6.0441559 20.955844,0 13.5,0 Z M13.5,1 C20.415404,1 26,6.584596 26,13.5 C26,15.898657 24.495584,19.181431 22.220703,22.738281 C19.945823,26.295132 16.705119,30.142167 13.943359,33.908203 C13.743445,34.180814 13.612715,34.322738 13.5,34.441406 C13.387285,34.322738 13.256555,34.180814 13.056641,33.908203 C10.284481,30.127985 7.4148684,26.314159 5.015625,22.773438 C2.6163816,19.232715 1,15.953538 1,13.5 C1,6.584596 6.584596,1 13.5,1 Z');
-
-            border.appendChild(borderPath);
-
-            const maki = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            maki.setAttributeNS(null, 'transform', 'translate(6.0, 7.0)');
-            maki.setAttributeNS(null, 'fill', '#FFFFFF');
-
-            const circleContainer = DOM.createNS('http://www.w3.org/2000/svg', 'g');
-            circleContainer.setAttributeNS(null, 'transform', 'translate(8.0, 8.0)');
-
-            const circle1 = DOM.createNS('http://www.w3.org/2000/svg', 'circle');
-            circle1.setAttributeNS(null, 'fill', '#000000');
-            circle1.setAttributeNS(null, 'opacity', '0.25');
-            circle1.setAttributeNS(null, 'cx', '5.5');
-            circle1.setAttributeNS(null, 'cy', '5.5');
-            circle1.setAttributeNS(null, 'r', '5.4999962');
-
-            const circle2 = DOM.createNS('http://www.w3.org/2000/svg', 'circle');
-            circle2.setAttributeNS(null, 'fill', '#FFFFFF');
-            circle2.setAttributeNS(null, 'cx', '5.5');
-            circle2.setAttributeNS(null, 'cy', '5.5');
-            circle2.setAttributeNS(null, 'r', '5.4999962');
-
-            circleContainer.appendChild(circle1);
-            circleContainer.appendChild(circle2);
-
-            page1.appendChild(shadow);
-            page1.appendChild(background);
-            page1.appendChild(border);
-            page1.appendChild(maki);
-            page1.appendChild(circleContainer);
-
-            svg.appendChild(page1);
-
-            svg.setAttributeNS(null, 'height', `${defaultHeight * this._scale}px`);
-            svg.setAttributeNS(null, 'width', `${defaultWidth * this._scale}px`);
+            const svg = getDefaultMarkerTemplate().cloneNode(true) as Element;
+            svg.setAttributeNS(null, 'height', `${DEFAULT_MARKER_HEIGHT * this._scale}px`);
+            svg.setAttributeNS(null, 'width', `${DEFAULT_MARKER_WIDTH * this._scale}px`);
+            defaultMarkerFillGroup(svg).setAttributeNS(null, 'fill', this._color);
 
             this._element.appendChild(svg);
 
@@ -428,10 +426,6 @@ export class Marker extends Evented<MarkerEventType> {
      * ```
      */
     remove(): this {
-        if (this._opacityTimeout) {
-            clearTimeout(this._opacityTimeout);
-            delete this._opacityTimeout;
-        }
         if (this._map) {
             this._map.off('click', this._onMapClick);
             this._map.off('move', this._update);
@@ -447,6 +441,12 @@ export class Marker extends Evented<MarkerEventType> {
             delete this._map;
         }
         this._element.removeEventListener('click', this._onClick);
+        this._element.removeEventListener('keydown', this._onKeyDown);
+        this._element.removeEventListener('keyup', this._onKeyUp);
+        this._element.removeEventListener('blur', this._onBlur);
+        this._element.removeEventListener('keypress', this._onKeyPress);
+        // Drop any in-flight keyboard drag silently, like a pointer drag interrupted by remove().
+        this._keyboardDragActive = false;
         this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
@@ -489,8 +489,8 @@ export class Marker extends Evented<MarkerEventType> {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
-        if (this._popup) this._popup.setLngLat(this._lngLat);
         this._update();
+        if (this._popup) this._popup.setLngLat(this._lngLat);
         return this;
     }
 
@@ -520,10 +520,6 @@ export class Marker extends Evented<MarkerEventType> {
             this._popup.remove();
             this._popup = null;
             this._element.removeEventListener('keypress', this._onKeyPress);
-
-            if (!this._originalTabIndex) {
-                this._element.removeAttribute('tabindex');
-            }
         }
 
         if (popup) {
@@ -544,13 +540,10 @@ export class Marker extends Evented<MarkerEventType> {
             }
             this._popup = popup;
 
-            this._originalTabIndex = this._element.getAttribute('tabindex');
-            if (!this._originalTabIndex) {
-                this._element.setAttribute('tabindex', '0');
-            }
             this._element.addEventListener('keypress', this._onKeyPress);
         }
 
+        this._updateTabIndex();
         this._updateAccessibilityRole();
         return this;
     }
@@ -580,6 +573,57 @@ export class Marker extends Evented<MarkerEventType> {
             this.togglePopup();
         }
     };
+
+    /**
+     * Move a focused draggable default marker with the arrow keys
+     * (1 screen pixel per keydown; 10 with Shift).
+     * Mirrors the pointer drag gesture: the position updates before `dragstart`
+     * fires on the first movement, every movement fires `drag`, and releasing
+     * the arrow key (or losing focus) fires `dragend`. Holding a key down
+     * produces repeated `drag` events within a single gesture.
+     */
+    _onKeyDown = (e: KeyboardEvent): void => {
+        // Custom marker elements own their keyboard behavior (#7790).
+        if (!this._defaultMarker || !this._draggable || !this._map || !this._lngLat) return;
+        // Leave keys originating from elements nested inside the marker to the application.
+        if (e.composedPath()[0] !== this._element) return;
+        // Leave Alt/Ctrl/Meta shortcuts to the browser and the application.
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+        const delta = ARROW_KEY_DELTAS[e.key];
+        if (!delta) return;
+
+        e.preventDefault();
+        // The marker element lives in the canvas container, so without this the
+        // map's KeyboardHandler would also pan (or rotate/pitch with Shift) the camera.
+        e.stopPropagation();
+
+        const step = e.shiftKey ? KEYBOARD_DRAG_LARGE_STEP : KEYBOARD_DRAG_SMALL_STEP;
+        const pos = this._map.project(this._lngLat);
+        this.setLngLat(this._map.unproject(new Point(pos.x + delta[0] * step, pos.y + delta[1] * step)));
+
+        if (!this._keyboardDragActive) {
+            this._keyboardDragActive = true;
+            this.fire(new MarkerDragEvent('dragstart'));
+        }
+        this.fire(new MarkerDragEvent('drag'));
+    };
+
+    _onKeyUp = (e: KeyboardEvent): void => {
+        if (!ARROW_KEY_DELTAS[e.key]) return;
+        this._endKeyboardDrag();
+    };
+
+    _onBlur = (): void => {
+        this._endKeyboardDrag();
+    };
+
+    _endKeyboardDrag(): void {
+        if (this._keyboardDragActive) {
+            this._keyboardDragActive = false;
+            this.fire(new MarkerDragEvent('dragend'));
+        }
+    }
 
     _onMapClick = (e: MapMouseEvent): void => {
         const targetElement = e.originalEvent.target;
@@ -633,7 +677,9 @@ export class Marker extends Evented<MarkerEventType> {
         return this;
     }
 
-    _updateOpacity(force: boolean = false): void {
+    _updateOpacity(): void {
+        if (!this._isInViewport()) return;
+
         const terrain = this._map?.terrain;
         const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
@@ -644,39 +690,50 @@ export class Marker extends Evented<MarkerEventType> {
             }
             return;
         }
-        if (force) {
-            this._opacityTimeout = null;
-        } else {
-            if (this._opacityTimeout) { return; }
-            this._opacityTimeout = setTimeout(() => {
-                this._opacityTimeout = null;
-            }, 100);
-        }
+        this._updateCovered();
+    }
 
-        const map = this._map;
+    /**
+     * @internal
+     * Whether the viewport shows the marker's position. There is nothing to compute for one it does not.
+     */
+    _isInViewport(): boolean {
+        const {width, height} = this._map._camera.transform;
+        return !!this._pos && this._pos.x >= 0 && this._pos.y >= 0 && this._pos.x <= width && this._pos.y <= height;
+    }
 
-        // Read depth framebuffer, getting position of terrain in line of sight to marker
-        const terrainDistance = map.terrain.depthAtPoint(this._pos);
-        // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map._camera.transform);
-        const markerDistance = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation);
-        const forgiveness = .006;
-        if (markerDistance - terrainDistance < forgiveness) {
-            this._element.style.opacity = this._opacity;
-            this._element.classList.remove('maplibregl-marker-covered');
-            return;
-        }
-        // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map._camera.transform.pixelsPerMeter;
-        const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
-        const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
-        const markerDistanceCenter = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
-        // Display at full opacity if center is visible.
-        const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
+    /**
+     * @internal
+     * Applies `opacityWhenCovered` and the covered class while the terrain covers the marker, closing its popup;
+     * `_updateCovered` runs it at most once per 100 ms. Nothing to do once the marker, the terrain or the viewport's
+     * view of the marker is gone.
+     */
+    _updateCoveredUnthrottled = (): void => {
+        const terrain = this._map?.terrain;
+        if (!terrain || !this._isInViewport()) return;
+        const covered = this._isCovered(terrain);
+        if (covered && this._popup?.isOpen()) this._popup.remove();
+        this._element.style.opacity = covered ? this._opacityWhenCovered : this._opacity;
+        this._element.classList.toggle('maplibregl-marker-covered', covered);
+    };
 
-        if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
-        this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
-        this._element.classList.toggle('maplibregl-marker-covered', centerIsInvisible);
+    /**
+     * @internal
+     * The terrain check, at most once per 100 ms while the map moves; the last call in a window runs when the window closes.
+     */
+    _updateCovered: () => ReturnType<typeof setTimeout> = throttle(this._updateCoveredUnthrottled, 100);
+
+    /**
+     * @internal
+     * Whether the terrain covers the marker's center: the location raised by the height `offset` lifts the element
+     * above it on screen, or the location itself when the offset lowers the element.
+     */
+    _isCovered(terrain: Terrain): boolean {
+        const transform = this._map._camera.transform;
+        const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
+        const metersToCenter = Math.max(0, -this._offset.y) / transform.pixelsPerMeter;
+        const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
+        return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }): void => {
@@ -718,8 +775,8 @@ export class Marker extends Evented<MarkerEventType> {
 
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
-        browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            this._updateOpacity(e?.type === 'moveend');
+        browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render
+            this._updateOpacity();
         }).catch(() => {});
     };
 
@@ -851,7 +908,10 @@ export class Marker extends Evented<MarkerEventType> {
     };
 
     /**
-     * Sets the `draggable` property and functionality of the marker
+     * Sets the `draggable` property and functionality of the marker.
+     * A draggable default marker is also keyboard focusable and movable with the
+     * arrow keys (see {@link MarkerOptions.draggable}); custom marker elements keep
+     * their focusability and keyboard behavior application-owned.
      * @param shouldBeDraggable - Turns drag functionality on/off
      */
     setDraggable(shouldBeDraggable?: boolean): this {
@@ -870,6 +930,20 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
+        if (this._defaultMarker) {
+            if (this._draggable) {
+                this._element.addEventListener('keydown', this._onKeyDown);
+                this._element.addEventListener('keyup', this._onKeyUp);
+                this._element.addEventListener('blur', this._onBlur);
+            } else {
+                this._element.removeEventListener('keydown', this._onKeyDown);
+                this._element.removeEventListener('keyup', this._onKeyUp);
+                this._element.removeEventListener('blur', this._onBlur);
+                this._endKeyboardDrag();
+            }
+        }
+
+        this._updateTabIndex();
         this._updateAccessibilityRole();
         return this;
     }
@@ -880,6 +954,29 @@ export class Marker extends Evented<MarkerEventType> {
      */
     isDraggable(): boolean {
         return this._draggable;
+    }
+
+    /**
+     * Keep the marker element focusable while it has built-in keyboard behavior.
+     * A popup makes any marker element interactive; dragging only manages
+     * focusability for the default marker so custom elements stay
+     * application-owned (#7790). A tabindex supplied by the application is
+     * never added, changed, or removed here.
+     */
+    _updateTabIndex(): void {
+        const needsTabIndex = !!this._popup || (this._defaultMarker && this._draggable);
+        if (needsTabIndex) {
+            if (!this._element.hasAttribute('tabindex')) {
+                this._element.setAttribute('tabindex', '0');
+                this._tabIndexManaged = true;
+            }
+        } else if (this._tabIndexManaged) {
+            // Only remove the value we set; the application may have overridden it since.
+            if (this._element.getAttribute('tabindex') === '0') {
+                this._element.removeAttribute('tabindex');
+            }
+            this._tabIndexManaged = false;
+        }
     }
 
     /**
@@ -980,7 +1077,7 @@ export class Marker extends Evented<MarkerEventType> {
         }
 
         if (this._map) {
-            this._updateOpacity(true);
+            this._updateOpacity();
         }
         return this;
     }

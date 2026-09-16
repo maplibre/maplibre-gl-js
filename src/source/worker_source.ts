@@ -85,11 +85,7 @@ export type WorkerTileWithData = ExpiryData & {
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
-    glyphMap?: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    } | null;
+    glyphMap?: Record<string, Record<string, StyleGlyph>> | null;
     iconMap?: {
         [_: string]: StyleImage;
     } | null;

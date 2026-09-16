@@ -19,7 +19,7 @@ export type PrepareDrawLayerOpacityResult = {
  * render the whole layer to a scratch FBO, then composite with `layerOpacity`.
  * Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
  */
-export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): PrepareDrawLayerOpacityResult {
+export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[]): PrepareDrawLayerOpacityResult {
     const context = painter.context;
     const compositeTarget = context.bindFramebuffer.get();
     const compositeViewport = context.viewport.get();
@@ -31,7 +31,7 @@ export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer 
     context.clear({color: Color.transparent, depth: 1, stencil: 0});
 
     painter.currentStencilSource = undefined;
-    painter.renderTileClippingMasks(layer, coords, terrain);
+    painter.renderTileClippingMasks(layer, coords);
 
     return {
         compositeTarget,

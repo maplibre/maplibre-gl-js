@@ -20,16 +20,27 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    const map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [-74.5, 40],
-        zoom: 2
-    });
-    map.on('error', (e) => {
-        if (e.error instanceof maplibregl.GPUInitializationError) {
+    let map;
+    try {
+        map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [-74.5, 40],
+            zoom: 2
+        });
+    } catch (error) {
+        if (error instanceof maplibregl.GPUInitializationError) {
             // You can also display the error message in the UI
             // This does not have to be an alert..
+            alert(error.message);
+        } else {
+            throw error;
+        }
+    }
+    // Recreating the context after it was lost and restored can also fail;
+    // that failure arrives through the error event since the map already exists.
+    map?.on('error', (e) => {
+        if (e.error instanceof maplibregl.GPUInitializationError) {
             alert(e.error.message);
             return;
         }

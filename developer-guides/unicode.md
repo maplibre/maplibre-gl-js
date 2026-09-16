@@ -6,6 +6,8 @@ MapLibre GL&nbsp;JS supports rendering Unicode text with the following caveats:
 * Complex text shaping is not yet implemented.
 * Right-to-left writing systems, such as Arabic and Hebrew, require a separate [mapbox-gl-rtl-text](https://github.com/mapbox/mapbox-gl-rtl-text/) plugin.
 
+A style can widen the set of scripts it covers with the [`font-faces`](https://maplibre.org/maplibre-style-spec/root/#font-faces) property, which names the font files to draw each `text-font` name with and, optionally, the `unicode-range` each file covers. The files are handed to the browser's CSS Font Loading API, so any format the browser can render text with will do. Note that this widens coverage only: glyphs are still rasterized a codepoint at a time, so it does not make up for the missing complex text shaping, and the same is true of the `localIdeographFontFamily` map option.
+
 ### Updating compliance with the Unicode Standard
 
 We use various properties from the Unicode Character Database to determine the behavior of a character in a label, such as whether it stays upright in vertical text. When a new major version of the Unicode Standard is released, follow these steps to ensure up-to-date text layout behavior:

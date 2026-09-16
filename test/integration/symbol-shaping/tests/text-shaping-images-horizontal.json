@@ -4,6 +4,7 @@
       "positionedGlyphs": [
         {
           "glyph": 70,
+          "grapheme": "F",
           "imageName": null,
           "x": -53,
           "y": -34.5,
@@ -27,6 +28,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": -41,
           "y": -34.5,
@@ -50,6 +52,7 @@
         },
         {
           "glyph": 111,
+          "grapheme": "o",
           "imageName": null,
           "x": -27,
           "y": -34.5,
@@ -73,6 +76,7 @@
         },
         {
           "glyph": 57344,
+          "grapheme": "",
           "imageName": "square",
           "x": -13,
           "y": -31.5,
@@ -96,6 +100,7 @@
         },
         {
           "glyph": 57345,
+          "grapheme": "",
           "imageName": "wide",
           "x": 8,
           "y": -31.5,
@@ -124,6 +129,7 @@
       "positionedGlyphs": [
         {
           "glyph": 57346,
+          "grapheme": "",
           "imageName": "tall",
           "x": -42,
           "y": -10.5,
@@ -147,6 +153,7 @@
         },
         {
           "glyph": 57347,
+          "grapheme": "",
           "imageName": "square",
           "x": -21,
           "y": 13.5,
@@ -170,6 +177,7 @@
         },
         {
           "glyph": 32,
+          "grapheme": " ",
           "imageName": null,
           "x": 0,
           "y": 10.5,
@@ -193,6 +201,7 @@
         },
         {
           "glyph": 98,
+          "grapheme": "b",
           "imageName": null,
           "x": 6,
           "y": 10.5,
@@ -216,6 +225,7 @@
         },
         {
           "glyph": 97,
+          "grapheme": "a",
           "imageName": null,
           "x": 20,
           "y": 10.5,
@@ -239,6 +249,7 @@
         },
         {
           "glyph": 114,
+          "grapheme": "r",
           "imageName": null,
           "x": 33,
           "y": 10.5,

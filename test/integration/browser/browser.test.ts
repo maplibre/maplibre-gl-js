@@ -1,11 +1,11 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
-import {type Page, type Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
-import type {AddressInfo} from 'net';
-
 import {sleep} from '../../../src/util/test/util.ts';
 import {launchPuppeteer} from '../lib/puppeteer_config.ts';
+
+import type {Page, Browser} from 'puppeteer';
+import type {AddressInfo} from 'net';
 import type {Map} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
@@ -101,7 +101,7 @@ describe('Browser tests', () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map',
-                style: 'https://demotiles.maplibre.org/style.json',
+                style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background', paint: {'background-color': '#72d0f2'}}]},
                 center: [10, 10],
                 zoom: 10
             });
@@ -112,6 +112,43 @@ describe('Browser tests', () => {
             });
         });
         expect(firstFiredEvent).toBe('load');
+    });
+
+    test('Map created in a hidden container resizes when shown, see #8277', {retry: 3, timeout: 20000}, async () => {
+        const dimensions = await page.evaluate(async () => {
+            const host = document.createElement('div');
+            host.style.display = 'none';
+
+            const container = document.createElement('div');
+            container.style.cssText = 'width: 640px; height: 480px';
+            host.append(container);
+            document.body.append(host);
+
+            const hiddenMap = new maplibregl.Map({
+                container,
+                style: {version: 8, sources: {}, layers: []}
+            });
+            const canvas = hiddenMap.getCanvas();
+
+            host.style.display = 'block';
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            const result = {
+                containerWidth: container.clientWidth,
+                containerHeight: container.clientHeight,
+                canvasWidth: canvas.clientWidth,
+                canvasHeight: canvas.clientHeight
+            };
+
+            hiddenMap.remove();
+            host.remove();
+            return result;
+        });
+
+        expect(dimensions.containerWidth).toBe(640);
+        expect(dimensions.containerHeight).toBe(480);
+        expect(dimensions.canvasWidth).toBe(640);
+        expect(dimensions.canvasHeight).toBe(480);
     });
 
     test('Should continue zooming from last mouse position after scroll and flyto, see #2709', {retry: 3, timeout: 20000}, async () => {
@@ -258,39 +295,14 @@ describe('Browser tests', () => {
             map.setStyle({
                 version: 8,
                 sources: {
-                    osm: {
-                        type: 'raster',
-                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                        tileSize: 256,
-                        attribution: '&copy; OpenStreetMap Contributors',
-                        maxzoom: 19
-                    },
-                    // Use a different source for terrain and hillshade layers, to improve render quality
                     terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
-                        tileSize: 256
-                    },
-                    hillshadeSource: {
-                        type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
+                        maxzoom: 10,
                         tileSize: 256
                     }
                 },
-                layers: [
-                    {
-                        id: 'osm',
-                        type: 'raster',
-                        source: 'osm'
-                    },
-                    {
-                        id: 'hills',
-                        type: 'hillshade',
-                        source: 'hillshadeSource',
-                        layout: {visibility: 'visible'},
-                        paint: {'hillshade-shadow-color': '#473B24'}
-                    }
-                ],
+                layers: [],
                 terrain: {
                     source: 'terrainSource',
                     exaggeration: 1
@@ -312,7 +324,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
-        expect(markerScreenPosition.y).toBeCloseTo(378.1);
+        expect(markerScreenPosition.y).toBeCloseTo(377.135);
     });
 
     test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {
@@ -343,10 +355,9 @@ describe('Browser tests', () => {
                             version: 8,
                             sources: {
                                 osm: {
-                                    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
                                     type: 'raster',
                                     tileSize: 256,
-                                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
+                                    tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`]
                                 }
                             },
                             layers: [{
@@ -385,14 +396,13 @@ describe('Browser tests', () => {
                 sources: {
                     osm: {
                         type: 'raster',
-                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`],
                         tileSize: 256,
-                        attribution: '&copy; OpenStreetMap Contributors',
                         maxzoom: 19
                     },
                     terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tiles: [`${location.origin}/test/integration/assets/tiles/zero-elevation-terrain-tile.png`],
                         tileSize: 256
                     }
                 },
@@ -448,7 +458,8 @@ describe('Browser tests', () => {
                     sources: {
                         terrainSource: {
                             type: 'raster-dem',
-                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
+                            maxzoom: 10,
                             tileSize: 256
                         },
                     },
@@ -591,5 +602,42 @@ describe('Browser tests', () => {
         expect(pixel[1]).toBeGreaterThan(0);
         expect(pixel[2]).toBeGreaterThan(0);
         expect(pixel[3]).toBeGreaterThan(0);
+    });
+
+    test('An icon that renders itself with WebGL paints its atlas slot', {retry: 3, timeout: 20000}, async () => {
+        const pixel = await page.evaluate(async () => {
+            const image = {
+                width: 64,
+                height: 64,
+                data: {
+                    renderWithWebGL({gl, texture, x, y, width, height}) {
+                        const framebuffer = gl.createFramebuffer();
+                        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+                        gl.enable(gl.SCISSOR_TEST);
+                        gl.scissor(x, y, width, height);
+                        gl.clearColor(1, 0, 0, 1);
+                        gl.clear(gl.COLOR_BUFFER_BIT);
+                        gl.disable(gl.SCISSOR_TEST);
+                        gl.deleteFramebuffer(framebuffer);
+                    }
+                }
+            };
+
+            map.addImage('square', image);
+            map.addSource('point', {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]} as any});
+            map.addLayer({id: 'point', type: 'symbol', source: 'point', layout: {'icon-image': 'square'}});
+            await map.once('idle');
+
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2');
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.finish();
+            const rgba = new Uint8Array(4);
+            gl.readPixels(canvas.width / 2, canvas.height / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+            return Array.from(rgba);
+        });
+
+        expect(pixel).toEqual([255, 0, 0, 255]);
     });
 });

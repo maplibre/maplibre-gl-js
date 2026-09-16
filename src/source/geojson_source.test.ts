@@ -10,6 +10,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
+
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -102,10 +103,11 @@ describe('GeoJSONSource.setData', () => {
         const source = createSource();
         const loadPromise = source.once('data');
         source.load();
-        await loadPromise;
+        await expect(loadPromise).resolves.toBeDefined();
+
         const setDataPromise = source.once('data');
         source.setData({} as GeoJSON.GeoJSON);
-        await setDataPromise;
+        await expect(setDataPromise).resolves.toBeDefined();
     });
 
     test('fires "dataloading" event', async () => {
@@ -545,8 +547,8 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(false);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(diff);
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
-        expect(spy.mock.calls[1][0].data.data).not.toBeDefined();
-        expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
+        expect(spy.mock.calls[1][0].data.data).toBeUndefined();
+        expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {

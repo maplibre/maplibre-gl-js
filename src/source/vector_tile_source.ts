@@ -1,6 +1,5 @@
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
-
 import {ensureError, extend, pick} from '../util/util.ts';
 import {loadTileJson} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
@@ -171,6 +170,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
      */
     setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
+            this.tiles = tiles;
             this._options.tiles = tiles;
         });
 

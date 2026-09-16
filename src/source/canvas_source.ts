@@ -1,5 +1,4 @@
 import {ImageSource} from './image_source.ts';
-
 import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
@@ -154,7 +153,8 @@ export class CanvasSource extends ImageSource {
     }
 
     onRemove(): void {
-        this.pause();
+        this._playing = false;
+        super.onRemove();
     }
 
     prepare(): void {

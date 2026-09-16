@@ -1,34 +1,36 @@
-import {describe, test, expect, vi, type Mock} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
-import {Painter, type RenderOptions} from '../../render/painter.ts';
+import {Painter} from '../../render/painter.ts';
+import {createRenderContext} from '../../render/render_context.ts';
 import {Program} from '../program.ts';
-import type {ZoomHistory} from '../../style/zoom_history.ts';
-import type {Map} from '../../ui/map.ts';
-import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
-import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
-import {type Style} from '../../style/style.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
-import {type ProgramConfiguration, type ProgramConfigurationSet} from '../../data/program_configuration.ts';
-import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
 
-vi.mock('../../render/painter');
-vi.mock('../program');
-vi.mock('../../tile/tile_manager');
-vi.mock('../../tile/tile');
+import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
+import type {Style} from '../../style/style.ts';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
+import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {Map} from '../../ui/map.ts';
+import type {ZoomHistory} from '../../style/zoom_history.ts';
 
-vi.mock('../../data/bucket/symbol_bucket', () => {
+vi.mock(import('../../render/painter'));
+vi.mock(import('../program'));
+vi.mock(import('../../tile/tile_manager'));
+vi.mock(import('../../tile/tile'));
+
+vi.mock(import('../../data/bucket/symbol_bucket'), () => {
     return {
         SymbolBucket: vi.fn()
     };
 });
-vi.mock('../../symbol/projection');
+vi.mock(import('../../symbol/projection'));
 
 describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
@@ -37,16 +39,15 @@ describe('drawFill', () => {
         const layer: FillStyleLayer = constructMockLayer();
 
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (painterMock.useProgram as Mock).mockReturnValue(programMock);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
 
         const tileManagerMock = new TileManager(null, null, null);
-        (tileManagerMock.getTile as Mock).mockReturnValue(mockTile);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderContext);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);
@@ -91,7 +92,6 @@ describe('drawFill', () => {
                 set: () => {}
             }
         } as any;
-        painterMock.renderPass = 'translucent';
         painterMock.transform = {
             pitch: 0,
             labelPlaneMatrix: mat4.create(),
@@ -108,6 +108,8 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
+        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
             map: {
@@ -140,8 +142,8 @@ describe('drawFill', () => {
 
         const bucketMock = constructMockBucket(layer);
 
-        (tile.getBucket as Mock).mockReturnValue(bucketMock);
-        (tile.patternsLoaded as Mock).mockReturnValue(true);
+        (vi.mocked(tile.getBucket)).mockReturnValue(bucketMock);
+        (vi.mocked(tile.patternsLoaded)).mockReturnValue(true);
         return tile;
     }
 

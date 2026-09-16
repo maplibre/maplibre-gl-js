@@ -3,14 +3,15 @@ import {projectTileCoordinatesToSphere} from './globe_utils.ts';
 import {BoundingVolumeCache} from '../../util/primitives/bounding_volume_cache.ts';
 import {coveringZoomLevel, type CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import {vec3, type vec4} from 'gl-matrix';
-import type {IReadonlyTransform} from '../transform_interface.ts';
-import type {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
-import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 import {threePlaneIntersection} from '../../util/util.ts';
+
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -109,6 +110,11 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 
+    /**
+     * Computes the bounding volume of a tile for culling. The volume reaches up to `elevation`,
+     * which carries the content elevation allowance (e.g. elevated symbols); terrain elevations
+     * widen the volume but never shrink that allowance.
+     */
     private _computeTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
         let minElevation = Math.min(0, elevation);
         let maxElevation = Math.max(0, elevation);
@@ -116,7 +122,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
             const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
             minElevation = minMax.minElevation ?? minElevation;
-            maxElevation = minMax.maxElevation ?? maxElevation;
+            maxElevation = Math.max(minMax.maxElevation ?? maxElevation, maxElevation);
         }
         // Convert elevation to distances from center of a unit sphere planet (so that 1 is surface)
         minElevation /= earthRadius;

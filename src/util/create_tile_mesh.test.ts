@@ -12,8 +12,8 @@ describe('create_tile_mesh', () => {
         const options: CreateTileMeshOptions = {};
         createTileMeshWithBuffers(contextMock, options);
 
-        expect(createVertexBufferSpy.mock.calls[0][0].length).toBe(4);
-        expect(createIndexBufferSpy.mock.calls[0][0].length).toBe(2);
+        expect(createVertexBufferSpy.mock.calls[0][0]).toHaveLength(4);
+        expect(createIndexBufferSpy.mock.calls[0][0]).toHaveLength(2);
     });
 
     test('createTileMesh 32bit', () => {

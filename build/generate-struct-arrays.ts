@@ -11,8 +11,6 @@
 import * as fs from 'fs';
 import {extend} from '../src/util/util.ts';
 import {createLayout, viewTypes} from '../src/util/struct_array.ts';
-import type {ViewType, StructArrayLayout} from '../src/util/struct_array.ts';
-
 import posAttributes from '../src/data/pos_attributes.ts';
 import pos3dAttributes from '../src/data/pos3d_attributes.ts';
 import rasterBoundsAttributes from '../src/data/raster_bounds_attributes.ts';
@@ -39,6 +37,8 @@ import {
     lineVertex,
     textAnchorOffset
 } from '../src/data/bucket/symbol_attributes.ts';
+
+import type {ViewType, StructArrayLayout} from '../src/util/struct_array.ts';
 
 const typeAbbreviations = {
     'Int8': 'b',

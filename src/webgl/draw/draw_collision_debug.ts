@@ -1,17 +1,18 @@
-import type {Painter} from '../../render/painter.ts';
-import type {TileManager} from '../../tile/tile_manager.ts';
-import type {StyleLayer} from '../../style/style_layer.ts';
-import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {collisionUniformValues, collisionCircleUniformValues} from '../program/collision_program.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {type VertexBuffer} from '../vertex_buffer.ts';
-import {type IndexBuffer} from '../index_buffer.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+
+import type {VertexBuffer} from '../vertex_buffer.ts';
+import type {IndexBuffer} from '../index_buffer.ts';
+import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {Painter} from '../../render/painter.ts';
 
 type TileBatch = {
     circleArray: number[];
@@ -21,9 +22,8 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean): void {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, renderContext: RenderContext): void {
     const context = painter.context;
-    const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
     const tileBatches: TileBatch[] = [];
@@ -59,9 +59,9 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(painter.transform),
-            painter.style.map.terrain?.getTerrainData(coord),
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            null,
+            getTerrainDataForTile(renderContext, coord),
+            getProjectionDataForTile(renderContext, coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -105,7 +105,6 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
 
     // Render batches
     for (const batch of tileBatches) {
-        const uniforms = collisionCircleUniformValues(painter.transform);
 
         circleProgram.draw(
             context,
@@ -114,8 +113,8 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            uniforms,
-            painter.style.map.terrain?.getTerrainData(batch.coord),
+            null,
+            getTerrainDataForTile(renderContext, batch.coord),
             null,
             layer.id,
             vertexBuffer,

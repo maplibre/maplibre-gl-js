@@ -5,7 +5,6 @@ import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
 import {setMatchMedia} from '../util/test/util.ts';
-import {mercatorZfromAltitude} from '../geo/mercator_coordinate.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
@@ -61,75 +60,6 @@ async function simulateAllAnimationFrames(stub: ReturnType<typeof vi.spyOn>, cam
     }
 }
 
-describe('calculateCameraOptionsFromTo', () => {
-    // Choose initial zoom to avoid center being constrained by mercator latitude limits.
-    const {camera} = createCamera(null, false, {zoom: 1});
-
-    test('look at north', () => {
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 1, lat: 1});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.center).toBeDefined();
-        expect(cameraOptions.bearing).toBeCloseTo(0);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('look at west', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.bearing).toBeCloseTo(-90);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 45', () => {
-        // altitude same as grounddistance => 45°
-        // distance between lng x and lng x+1 is 111.2km at same lat
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(45);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 90', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(90);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 153.435', () => {
-
-        // distance between lng x and lng x+1 is 111.2km at same lat
-        // (elevation difference of cam and center) / 2 = grounddistance =>
-        // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 (looking up) = 153.435
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(153.435);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('zoom distance 1000', () => {
-        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / camera.transform.tileSize);
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
-
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
-        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(Math.hypot(111200, 111200), 0) / camera.transform.tileSize);
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
-
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('same To as From error', () => {
-        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow();
-    });
-});
-
 describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const {camera} = createCamera({maxPitch: 180}, false, {zoom: 1});
@@ -162,6 +92,15 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         expect(cameraOptions.bearing).toBeCloseTo(0);
         expect(cameraOptions.pitch).toBeCloseTo(180);
         expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('a fresh camera can be jumped to the result when no roll was given', () => {
+        const {camera: own} = createCamera({maxPitch: 180}, false, {zoom: 1});
+        const cameraOptions: CameraOptions = own.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 1000, 30, 60);
+        expect(() => own.jumpTo(cameraOptions)).not.toThrow();
+        expect(own.getRoll()).toBe(0);
+        expect(own.getBearing()).toBeCloseTo(30);
+        expect(own.getPitch()).toBeCloseTo(60);
     });
 
     test('look level', () => {
@@ -1046,14 +985,14 @@ describe('easeTo', () => {
         const {camera, queue} = createCamera();
         const stub = vi.spyOn(timeControl, 'now');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({center: [100, 0], duration: 10});
 
         let promise = camera.once('moveend');
 
         // setTimeout to avoid a synchronous callback
         setTimeout(() => {
-            stub.mockImplementation(() => 10);
+            stub.mockReturnValue(10);
             queue.run();
         }, 0);
 
@@ -1063,7 +1002,7 @@ describe('easeTo', () => {
 
         // setTimeout to avoid a synchronous callback
         setTimeout(() => {
-            stub.mockImplementation(() => 20);
+            stub.mockReturnValue(20);
             queue.run();
         }, 0);
 
@@ -1072,11 +1011,12 @@ describe('easeTo', () => {
         promise = camera.once('moveend');
 
         setTimeout(() => {
-            stub.mockImplementation(() => 30);
+            stub.mockReturnValue(30);
             queue.run();
         }, 0);
 
         await promise;
+        expect(camera.getCenter().lng).toBeCloseTo(-60);
     });
 
     test('pans eastward across the antimeridian', async () => {
@@ -1094,15 +1034,15 @@ describe('easeTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({center: [-170, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1137,15 +1077,15 @@ describe('easeTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({center: [170, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1180,13 +1120,13 @@ describe('easeTo', () => {
         const promise = camera.once('moveend');
 
         setTimeout(() => {
-            stubNow.mockImplementation(() => 0);
+            stubNow.mockReturnValue(0);
             queue.run();
 
             camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 200, essential: true});
 
             setTimeout(() => {
-                stubNow.mockImplementation(() => 200);
+                stubNow.mockReturnValue(200);
                 queue.run();
             }, 0);
         }, 0);
@@ -1286,22 +1226,23 @@ describe('easeTo', () => {
         const {camera, queue} = createCamera({terrain});
         const stubNow = vi.spyOn(timeControl, 'now');
 
-        stubNow.mockImplementation(() => 0);
+        stubNow.mockReturnValue(0);
 
         camera.easeTo({bearing: 97, duration: 500});
 
-        stubNow.mockImplementation(() => 100);
+        stubNow.mockReturnValue(100);
         queue.run();
 
         terrain = {
             getMinTileElevationForLngLatZoom: () => 0,
-            getElevationForLngLatZoom: () => 0
+            getElevationForLngLatZoom: () => 0,
+            getElevationForLngLat: () => 0
         } as any as Terrain;
 
-        stubNow.mockImplementation(() => 500);
+        stubNow.mockReturnValue(500);
         queue.run();
 
-        expect(camera.getBearing()).toEqual(97);
+        expect(camera.getBearing()).toBe(97);
     });
 
     test('respects zoomSnap', () => {
@@ -1361,10 +1302,10 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({zoom: 19, center: pos, duration: 2});
 
-        stub.mockImplementation(() => 3);
+        stub.mockReturnValue(3);
         queue.run();
 
         await promise;
@@ -1552,16 +1493,16 @@ describe('flyTo', () => {
         const promise = camera.once('moveend');
 
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
 
         camera.flyTo({center: [100, 0], duration: 10}, eventData);
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1595,9 +1536,9 @@ describe('flyTo', () => {
         const stub = vi.spyOn(timeControl, 'now');
 
         const {camera, queue} = createCamera();
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
-        stub.mockImplementation(() => 100);
+        stub.mockReturnValue(100);
         queue.run();
         camera.easeTo({elevation: 1, duration: 0});
         expect(camera.getRoll()).toBe(0);
@@ -1607,9 +1548,9 @@ describe('flyTo', () => {
         const stub = vi.spyOn(timeControl, 'now');
 
         const {camera, queue} = createCamera(null, true);
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
-        stub.mockImplementation(() => 100);
+        stub.mockReturnValue(100);
         queue.run();
         camera.easeTo({elevation: 1, duration: 0});
         expect(camera.getRoll()).toBe(0);
@@ -1619,9 +1560,9 @@ describe('flyTo', () => {
         const stub = vi.spyOn(timeControl, 'now');
 
         const {camera, queue} = createCamera();
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
-        stub.mockImplementation(() => 500);
+        stub.mockReturnValue(500);
         queue.run();
         camera.easeTo({elevation: 1, duration: 0});
         expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
@@ -1633,9 +1574,9 @@ describe('flyTo', () => {
         const stub = vi.spyOn(timeControl, 'now');
 
         const {camera, queue} = createCamera(null, true);
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
-        stub.mockImplementation(() => 500);
+        stub.mockReturnValue(500);
         queue.run();
         camera.easeTo({elevation: 1, duration: 0});
         expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
@@ -1646,21 +1587,21 @@ describe('flyTo', () => {
     test('can be called from within a moveend event handler', async () => {
         const {camera, queue} = createCamera();
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
 
         camera.flyTo({center: [100, 0], duration: 10});
         let promise = camera.once('moveend');
 
         setTimeout(() => {
-            stub.mockImplementation(() => 10);
+            stub.mockReturnValue(10);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 20);
+                stub.mockReturnValue(20);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 30);
+                    stub.mockReturnValue(30);
                     queue.run();
                 }, 0);
             }, 0);
@@ -1671,6 +1612,8 @@ describe('flyTo', () => {
         await promise;
         camera.flyTo({center: [300, 0], duration: 10});
         await camera.once('moveend');
+
+        expect(camera.getCenter().lng).toBeCloseTo(-60);
     });
 
     test('ascends', async () => {
@@ -1687,16 +1630,16 @@ describe('flyTo', () => {
         const promise = camera.once('moveend');
 
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
 
         camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1719,15 +1662,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [10, 0], duration: 20});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 20);
+                stub.mockReturnValue(20);
                 queue.run();
             }, 0);
         }, 0);
@@ -1751,15 +1694,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [-10, 0], duration: 20});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 20);
+                stub.mockReturnValue(20);
                 queue.run();
             }, 0);
         }, 0);
@@ -1783,15 +1726,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [-170, 0], duration: 20});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 20);
+                stub.mockReturnValue(20);
                 queue.run();
             }, 0);
         }, 0);
@@ -1814,15 +1757,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [170, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1845,15 +1788,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [-170, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1877,15 +1820,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [170, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1908,15 +1851,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [170, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -1937,7 +1880,7 @@ describe('flyTo', () => {
         const promise = camera.once('moveend');
 
         const duration = 10;
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration});
 
         await simulateAllAnimationFrames(stub, camera, queue, duration);
@@ -1960,7 +1903,7 @@ describe('flyTo', () => {
         const promise = camera.once('moveend');
 
         const duration = 10;
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [1, 0], zoom: 20, duration});
 
         await simulateAllAnimationFrames(stub, camera, queue, duration);
@@ -1977,11 +1920,11 @@ describe('flyTo', () => {
         const promise = camera.once('moveend');
 
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 10);
+            stub.mockReturnValue(10);
             queue.run();
         }, 0);
 
@@ -1999,11 +1942,11 @@ describe('flyTo', () => {
         const promise = camera.once('moveend');
 
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [12, 34], zoom: 1, duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 10);
+            stub.mockReturnValue(10);
             queue.run();
         }, 0);
 
@@ -2026,15 +1969,15 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [40, 0], zoom: 10, duration: 10});
 
         await new Promise(resolve => setTimeout(resolve, 0));
-        stub.mockImplementation(() => 5);
+        stub.mockReturnValue(5);
         queue.run();
 
         await new Promise(resolve => setTimeout(resolve, 0));
-        stub.mockImplementation(() => 10);
+        stub.mockReturnValue(10);
         queue.run();
 
         await promise;
@@ -2086,7 +2029,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain; 
+        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2097,11 +2040,11 @@ describe('flyTo', () => {
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: false});
-        stub.mockImplementation(() => 1);
+        stub.mockReturnValue(1);
         queue.run();
-        stub.mockImplementation(() => 20);
+        stub.mockReturnValue(20);
         queue.run();
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
@@ -2110,7 +2053,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
+        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2121,11 +2064,11 @@ describe('flyTo', () => {
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: true});
-        stub.mockImplementation(() => 1);
+        stub.mockReturnValue(1);
         queue.run();
-        stub.mockImplementation(() => 20);
+        stub.mockReturnValue(20);
         queue.run();
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
@@ -2135,7 +2078,7 @@ describe('flyTo', () => {
 
     test('check elevation callbacks', () => {
         const terrain = {
-            getElevationForLngLatZoom: () => 100,
+            getElevationForLngLat: () => 100,
             getMinTileElevationForLngLatZoom: () => 200
         } as any;
         const {camera} = createCamera({terrain});
@@ -2153,7 +2096,7 @@ describe('flyTo', () => {
         expect(camera._elevationTarget).toBe(100);
         expect(camera.elevationFreeze).toBeTruthy();
 
-        terrain.getElevationForLngLatZoom = () => 200;
+        terrain.getElevationForLngLat = () => 200;
         camera._updateElevation(0.5);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
@@ -2191,10 +2134,10 @@ describe('isEasing', () => {
         const {camera, queue} = createCamera();
         const promise = camera.once('moveend');
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.panTo([100, 0], {duration: 1});
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
         }, 0);
 
@@ -2213,10 +2156,10 @@ describe('isEasing', () => {
         const {camera, queue} = createCamera();
         const promise = camera.once('moveend');
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.zoomTo(3.2, {duration: 1});
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
         }, 0);
 
@@ -2234,10 +2177,10 @@ describe('isEasing', () => {
         const {camera, queue} = createCamera();
         const promise = camera.once('moveend');
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.rotateTo(90, {duration: 1});
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
         }, 0);
 
@@ -2309,11 +2252,11 @@ describe('stop', () => {
         camera.on('moveend', spy);
 
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
         camera.panTo([100, 0], {duration: 1}, eventData);
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
         }, 0);
 
@@ -2605,7 +2548,7 @@ describe('transformCameraUpdate', () => {
     test('invoke transformCameraUpdate callback during easeTo', async () => {
         const {camera, queue} = createCamera();
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
 
         let callbackCount = 0;
         let eventCount = 0;
@@ -2624,11 +2567,11 @@ describe('transformCameraUpdate', () => {
         camera.easeTo({center: [100, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -2639,7 +2582,7 @@ describe('transformCameraUpdate', () => {
     test('invoke transformCameraUpdate callback during flyTo', async () => {
         const {camera, queue} = createCamera();
         const stub = vi.spyOn(timeControl, 'now');
-        stub.mockImplementation(() => 0);
+        stub.mockReturnValue(0);
 
         let callbackCount = 0;
         let eventCount = 0;
@@ -2658,11 +2601,11 @@ describe('transformCameraUpdate', () => {
         camera.flyTo({center: [100, 0], duration: 10});
 
         setTimeout(() => {
-            stub.mockImplementation(() => 1);
+            stub.mockReturnValue(1);
             queue.run();
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
         }, 0);
@@ -2689,6 +2632,24 @@ describe('transformCameraUpdate', () => {
 test('create camera with globe returns make globe controls true', () => {
     const {camera} = createCamera(null, true);
     expect(camera.cameraHelper.useGlobeControls).toBeTruthy();
+});
+
+describe('migrateProjection', () => {
+    test('moves the requested camera state to the new projection', () => {
+        const {camera} = createCamera({transformCameraUpdate: ({center, zoom}) => ({center, zoom})});
+        const stateBeforeMigration = camera.getTransformForUpdate();
+        stateBeforeMigration.setZoom(5);
+        stateBeforeMigration.setCenter(new LngLat(10, 20));
+
+        const projectionObjects = createProjectionFromName('globe', undefined, {});
+        camera.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+
+        const requestedState = camera.getTransformForUpdate();
+        expect(requestedState.center.lng).toBeCloseTo(10);
+        expect(requestedState.center.lat).toBeCloseTo(20);
+        expect(requestedState.zoom).toBeCloseTo(5);
+        expect(() => requestedState.getRayDirectionFromPixel(new Point(256, 256))).not.toThrow();
+    });
 });
 
 describe('jumpTo globe projection', () => {
@@ -2951,11 +2912,11 @@ describe('easeTo globe projection', () => {
             const stub = vi.spyOn(timeControl, 'now');
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
 
             camera.easeTo({center: [100, 0], duration: 100, padding: {left: 100}});
 
-            stub.mockImplementation(() => 50);
+            stub.mockReturnValue(50);
             queue.run();
 
             const padding = camera.getPadding();
@@ -2965,7 +2926,7 @@ describe('easeTo globe projection', () => {
             expect(padding.right).toBe(0);
             expect(padding.top).toBe(0);
 
-            stub.mockImplementation(() => 100);
+            stub.mockReturnValue(100);
             queue.run();
 
             await promise;
@@ -3123,15 +3084,15 @@ describe('easeTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.easeTo({center: [-170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3165,15 +3126,15 @@ describe('easeTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.easeTo({center: [170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3256,10 +3217,10 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('zoomend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({zoom: 19, center: pos, duration: 2});
 
-            stub.mockImplementation(() => 3);
+            stub.mockReturnValue(3);
             queue.run();
 
             await promise;
@@ -3334,11 +3295,11 @@ describe('flyTo globe projection', () => {
             const stub = vi.spyOn(timeControl, 'now');
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
 
             camera.flyTo({center: [100, 0], duration: 100, padding: {left: 100}});
 
-            stub.mockImplementation(() => 100);
+            stub.mockReturnValue(100);
             queue.run();
 
             const padding = camera.getPadding();
@@ -3348,7 +3309,7 @@ describe('flyTo globe projection', () => {
             expect(padding.right).toBe(0);
             expect(padding.top).toBe(0);
 
-            stub.mockImplementation(() => 100);
+            stub.mockReturnValue(100);
             queue.run();
 
             await promise;
@@ -3499,16 +3460,16 @@ describe('flyTo globe projection', () => {
             const promise = camera.once('moveend');
 
             const stub = vi.spyOn(timeControl, 'now');
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
 
             camera.flyTo({center: [100, 0], duration: 10}, eventData);
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3546,16 +3507,16 @@ describe('flyTo globe projection', () => {
             const promise = camera.once('moveend');
 
             const stub = vi.spyOn(timeControl, 'now');
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
 
             camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3579,15 +3540,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [10, 0], duration: 20});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 20);
+                    stub.mockReturnValue(20);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3611,15 +3572,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [-10, 0], duration: 20});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 20);
+                    stub.mockReturnValue(20);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3643,15 +3604,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [-170, 0], duration: 20});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 20);
+                    stub.mockReturnValue(20);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3675,15 +3636,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3707,15 +3668,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [-170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3739,15 +3700,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3770,15 +3731,15 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [170, 0], duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 1);
+                stub.mockReturnValue(1);
                 queue.run();
 
                 setTimeout(() => {
-                    stub.mockImplementation(() => 10);
+                    stub.mockReturnValue(10);
                     queue.run();
                 }, 0);
             }, 0);
@@ -3799,7 +3760,7 @@ describe('flyTo globe projection', () => {
             const promise = camera.once('moveend');
 
             const duration = 10;
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration});
 
             await simulateAllAnimationFrames(stub, camera, queue,duration);
@@ -3822,7 +3783,7 @@ describe('flyTo globe projection', () => {
             const promise = camera.once('moveend');
 
             const duration = 10;
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [1, 0], zoom: 20, duration});
 
             await simulateAllAnimationFrames(stub, camera, queue,duration);
@@ -3840,11 +3801,11 @@ describe('flyTo globe projection', () => {
             const promise = camera.once('moveend');
 
             const stub = vi.spyOn(timeControl, 'now');
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
 
@@ -3864,11 +3825,11 @@ describe('flyTo globe projection', () => {
             const promise = camera.once('moveend');
 
             const stub = vi.spyOn(timeControl, 'now');
-            stub.mockImplementation(() => 0);
+            stub.mockReturnValue(0);
             camera.flyTo({center: target, zoom: 1, duration: 10});
 
             setTimeout(() => {
-                stub.mockImplementation(() => 10);
+                stub.mockReturnValue(10);
                 queue.run();
             }, 0);
 
@@ -4014,5 +3975,47 @@ describe('zoomSnap', () => {
         camera.setZoom(9.1);
         camera.zoomIn({duration: 0});
         expect(camera.getZoom()).toBe(10.0);
+    });
+});
+
+describe('camera options given as undefined are treated as absent', () => {
+    const state = (camera: Camera) => ({
+        zoom: camera.getZoom(),
+        bearing: camera.getBearing(),
+        pitch: camera.getPitch(),
+        roll: camera.getRoll(),
+        elevation: camera.transform.elevation
+    });
+    const start = {zoom: 3, bearing: 30, pitch: 40, roll: 5, elevation: 100};
+    function cameraAtStart() {
+        const {camera} = createCamera({maxPitch: 60});
+        camera.jumpTo({center: [10, 20], ...start});
+        return camera;
+    }
+    const undefinedOptions = {zoom: undefined, bearing: undefined, pitch: undefined, roll: undefined, elevation: undefined, padding: undefined};
+
+    test('jumpTo', () => {
+        const camera = cameraAtStart();
+        camera.jumpTo(undefinedOptions);
+        expect(state(camera)).toEqual(start);
+    });
+
+    test('jumpTo with zoom snapping', () => {
+        const {camera} = createCamera({zoomSnap: 1});
+        camera.jumpTo({zoom: 3});
+        camera.jumpTo({zoom: undefined});
+        expect(camera.getZoom()).toBe(3);
+    });
+
+    test('easeTo', () => {
+        const camera = cameraAtStart();
+        camera.easeTo({...undefinedOptions, duration: 0});
+        expect(state(camera)).toEqual(start);
+    });
+
+    test('flyTo', () => {
+        const camera = cameraAtStart();
+        camera.flyTo({...undefinedOptions, center: [10, 20], animate: false});
+        expect(state(camera)).toEqual(start);
     });
 });

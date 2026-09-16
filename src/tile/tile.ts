@@ -23,7 +23,7 @@ import type {ImageManager} from '../render/image_manager.ts';
 import type {Context} from '../webgl/context.ts';
 import type {OverscaledTileID} from './tile_id.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {LayerFeatureStates} from '../source/source_state.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
@@ -32,6 +32,7 @@ import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {Painter, RTTObject} from '../render/painter.ts';
+import type {RTTFingerprint} from '../webgl/rtt_fingerprint.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -104,6 +105,7 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
+    needsColorReliefPrepare: boolean;
     abortController: AbortController;
     texture: any;
     fbo: Framebuffer;
@@ -129,7 +131,7 @@ export class Tile {
      * changes.
      */
     rttObjects: Array<RTTObject | undefined>;
-    rttFingerprint: {[sourceId:string]: string};
+    rttFingerprint: Record<string, RTTFingerprint>;
 
     featureStateRevision: number;
 
@@ -161,10 +163,14 @@ export class Tile {
         this.featureStateRevision = -1;
     }
 
+    /**
+     * Incoming and self-fading raster tiles must remain renderable at zero opacity because
+     * drawing advances their opacity. Only transparent departing tiles have finished fading.
+     */
     isRenderable(symbolLayer: boolean): boolean {
         return (
             this.hasData() &&
-            (!this.fadeEndTime || this.fadeOpacity > 0) &&  // raster fading
+            (!this.fadeEndTime || this.fadingDirection !== FadingDirections.Departing || this.fadeOpacity > 0) &&
             (symbolLayer || !this.holdingForSymbolFade())   // symbol fading
         );
     }
@@ -396,7 +402,7 @@ export class Tile {
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4,
-        getElevation: undefined | ((x: number, y: number) => number)
+        getElevation: GetElevation | undefined
     ): QueryResults {
         if (!this.latestFeatureIndex?.rawTileData)
             return {};

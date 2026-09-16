@@ -1,5 +1,4 @@
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, onTestFinished, test, vi} from 'vitest';
 import {TileManager} from './tile_manager.ts';
 import {addSourceType, type Source} from '../source/source.ts';
 import {FadingDirections, FadingRoles, Tile} from './tile.ts';
@@ -8,16 +7,18 @@ import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
 import {ErrorEvent, Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
-import {type Dispatcher} from '../util/dispatcher.ts';
 import {TileBounds} from './tile_bounds.ts';
 import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
-import {now} from '../util/time_control.ts';
-
-import {type Map} from '../ui/map.ts';
-import {type TileCache} from './tile_cache.ts';
+import {now, restoreNow, setNow} from '../util/time_control.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+
+import type {TileCache} from './tile_cache.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -118,6 +119,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.clearAllMocks();
+    restoreNow();
 });
 
 describe('TileManager.addTile', () => {
@@ -343,16 +345,24 @@ describe('TileManager.removeTile', () => {
 
     });
 
-    test('_tileLoaded after _removeTile skips tile.added', () => {
+    test('_tileLoaded after _removeTile skips tile.added', async () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
         const tileManager = createTileManager();
+        let releaseLoad: () => void;
+        const tileRegistered = new Promise<void>((resolve) => { releaseLoad = resolve; });
         tileManager._source.loadTile = async () => {
+            await tileRegistered;
             tileManager._removeTile(tileID.key);
         };
         tileManager.map = {painter: {crossTileSymbolIndex: '', tileExtentVAO: {}}} as any;
 
-        tileManager._addTile(tileID);
+        const abortPromise = tileManager.once('dataabort');
+        const tile = tileManager._addTile(tileID);
+        releaseLoad();
+        await abortPromise;
+
+        expect(tile.aborted).toBe(true);
     });
 
     test('fires dataabort event', async () => {
@@ -454,8 +464,11 @@ describe('TileManager / Source lifecycle', () => {
 
     test('suppress 404 errors', () => {
         const tileManager = createTileManager({status: 404, message: 'Not found'});
-        tileManager.on('error', () => { throw new Error('test failed: error event fired'); });
+        const errorListener = vi.fn();
+        tileManager.on('error', errorListener);
         tileManager.onAdd(undefined);
+
+        expect(errorListener).not.toHaveBeenCalled();
     });
 
     test('loaded() true after source error', async () => {
@@ -614,6 +627,73 @@ describe('TileManager / Source lifecycle', () => {
         const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
         expect(renderableZooms).toEqual([0]);
 
+    });
+
+    test('keeps the self fade timer when reloading a tile that has data', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+        tileManager.update(transform);
+        await loadPromise;
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        setNow(1010);
+        const reloadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        await reloadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1000);
+        expect(tile.fadeEndTime).toBe(1300);
+    });
+
+    test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager.setRasterFadeDuration(300);
+        let respond: () => void;
+        const responded = new Promise<void>(resolve => { respond = resolve; });
+        tileManager._source.loadTile = async (tile) => {
+            await responded;
+            tile.state = 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        setNow(1000);
+        tileManager.update(transform);
+        const tile = tileManager.getTile(tileID);
+        tile.setSelfFadeLogic(now() + 300);
+        const loadPromise = waitForEvent(tileManager, 'data', e => e.tile?.tileID.key === tileID.key);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+
+        expect(tile.state).toBe('loading');
+        setNow(1010);
+        respond();
+        await loadPromise;
+        expect(tile.selfFading).toBe(true);
+        expect(tile.timeAdded).toBe(1010);
+        expect(tile.fadeEndTime).toBe(1310);
     });
 
 });
@@ -801,7 +881,7 @@ describe('TileManager.update', () => {
         ]);
     });
 
-    test('retains children tiles for pending parents', () => {
+    test('retains children tiles for pending parents', async () => {
         const transform = new GlobeTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
@@ -812,29 +892,28 @@ describe('TileManager.update', () => {
             tile.state = (tile.tileID.key === new OverscaledTileID(0, 1, 0, 0, 0).key) ? 'loading' : 'loaded';
         };
 
-        tileManager.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                tileManager.update(transform);
-                expect(tileManager.getIds()).toEqual([
-                    new OverscaledTileID(1, 1, 1, 1, 1).key,
-                    new OverscaledTileID(1, 1, 1, 0, 1).key,
-                    new OverscaledTileID(1, 1, 1, 1, 0).key,
-                    new OverscaledTileID(1, 1, 1, 0, 0).key
-                ]);
-
-                transform.setZoom(0);
-                tileManager.update(transform);
-
-                expect(tileManager.getIds()).toEqual([
-                    new OverscaledTileID(0, 1, 0, 0, 0).key,
-                    new OverscaledTileID(1, 1, 1, 1, 1).key,
-                    new OverscaledTileID(1, 1, 1, 0, 1).key,
-                    new OverscaledTileID(1, 1, 1, 1, 0).key,
-                    new OverscaledTileID(1, 1, 1, 0, 0).key
-                ]);
-            }
-        });
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        tileManager.update(transform);
+        expect(tileManager.getIds()).toEqual([
+            new OverscaledTileID(1, 1, 1, 1, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 1, 0).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key
+        ]);
+
+        transform.setZoom(0);
+        tileManager.update(transform);
+
+        expect(tileManager.getIds()).toEqual([
+            new OverscaledTileID(0, 1, 0, 0, 0).key,
+            new OverscaledTileID(1, 1, 1, 1, 1).key,
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 1, 1, 1, 0).key,
+            new OverscaledTileID(1, 1, 1, 0, 0).key
+        ]);
     });
 
     test('retains overscaled loaded children', async () => {
@@ -1136,7 +1215,7 @@ describe('TileManager._updateRetainedTiles', () => {
         const secondGeneration = idealTile
             .children(10)
             .flatMap(child => child.children(10));
-        expect(secondGeneration.length).toEqual(16);
+        expect(secondGeneration).toHaveLength(16);
 
         for (const id of secondGeneration) {
             tileManager._inViewTiles.setTile(id.key, new Tile(id, undefined));
@@ -1774,7 +1853,7 @@ describe('TileManager.tilesIn', () => {
         expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
     });
 
-    test('reparsed overscaled tiles', () => {
+    test('reparsed overscaled tiles', async () => {
         const tileManager = createTileManager({
             reparseOverscaled: true,
             minzoom: 1,
@@ -1785,44 +1864,42 @@ describe('TileManager.tilesIn', () => {
             tile.state = 'loaded';
         };
 
-        tileManager.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                const transform = new MercatorTransform();
-                transform.resize(1024, 1024);
-                transform.setZoom(2);
-                transform.setCenter(new LngLat(0, 1));
-                tileManager.update(transform);
-
-                expect(tileManager.getIds()).toEqual([
-                    new OverscaledTileID(2, 0, 1, 1, 1).key,
-                    new OverscaledTileID(2, 0, 1, 0, 1).key,
-                    new OverscaledTileID(2, 0, 1, 1, 0).key,
-                    new OverscaledTileID(2, 0, 1, 0, 0).key
-                ]);
-
-                const tiles = tileManager.tilesIn([
-                    new Point(0, 0),
-                    new Point(1024, 512)
-                ], 1, true);
-
-                tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
-                for (const result of tiles) {
-                    delete result.tile.uid;
-                }
-
-                expect(tiles[0].tile.tileID.key).toBe('012');
-                expect(tiles[0].tile.tileSize).toBe(1024);
-                expect(tiles[0].scale).toBe(1);
-                expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x: 12288, y: 8146}]);
-
-                expect(tiles[1].tile.tileID.key).toBe('112');
-                expect(tiles[1].tile.tileSize).toBe(1024);
-                expect(tiles[1].scale).toBe(1);
-                expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
-
-            }
-        });
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        const transform = new MercatorTransform();
+        transform.resize(1024, 1024);
+        transform.setZoom(2);
+        transform.setCenter(new LngLat(0, 1));
+        tileManager.update(transform);
+
+        expect(tileManager.getIds()).toEqual([
+            new OverscaledTileID(2, 0, 1, 1, 1).key,
+            new OverscaledTileID(2, 0, 1, 0, 1).key,
+            new OverscaledTileID(2, 0, 1, 1, 0).key,
+            new OverscaledTileID(2, 0, 1, 0, 0).key
+        ]);
+
+        const tiles = tileManager.tilesIn([
+            new Point(0, 0),
+            new Point(1024, 512)
+        ], 1, true);
+
+        tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
+        for (const result of tiles) {
+            delete result.tile.uid;
+        }
+
+        expect(tiles[0].tile.tileID.key).toBe('012');
+        expect(tiles[0].tile.tileSize).toBe(1024);
+        expect(tiles[0].scale).toBe(1);
+        expect(round(tiles[0].queryGeometry)).toEqual([{x: 4096, y: 4050}, {x: 12288, y: 8146}]);
+
+        expect(tiles[1].tile.tileID.key).toBe('112');
+        expect(tiles[1].tile.tileSize).toBe(1024);
+        expect(tiles[1].scale).toBe(1);
+        expect(round(tiles[1].queryGeometry)).toEqual([{x: -4096, y: 4050}, {x: 4096, y: 8146}]);
     });
 
     test('overscaled tiles', async () => {
@@ -1843,6 +1920,13 @@ describe('TileManager.tilesIn', () => {
         transform.resize(512, 512);
         transform.setZoom(2.0);
         tileManager.update(transform);
+
+        expect(tileManager.getIds()).toEqual([
+            new OverscaledTileID(1, 0, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key
+        ]);
     });
 
     test('globe wrap', async () => {
@@ -2283,7 +2367,7 @@ describe('tile manager loaded', () => {
         tileManager.update(tr);
 
         await sourceLoadedPromise;
-        expect(spy.mock.calls.length).toBe(5); // 4 tiles + 1 source loaded
+        expect(spy).toHaveBeenCalledTimes(5); // 4 tiles + 1 source loaded
     });
 
     test('TileManager.loaded (tiles outside bounds, idle)', async () => {
@@ -2314,10 +2398,8 @@ describe('tile manager loaded', () => {
         const sourceLoadedPromise = waitForEvent(tileManager, 'data', () => tileManager.loaded());
 
         tileManager.on('data', (e) => {
-            if (e.sourceDataType !== 'idle') {
-                expect(tileManager.loaded()).toBeFalsy();
-                // 'idle' emission when source bounds are outside of viewport bounds
-            }
+            if (e.sourceDataType === 'idle') return;
+            expect(tileManager.loaded()).toBe(false);
         });
 
         tileManager.onAdd(undefined);
@@ -2518,7 +2600,7 @@ describe('TileManager::refreshTiles', () => {
 
         tileManager._addTile(coord);
         tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
-        expect(spy).toHaveBeenCalledOnce();
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
 
@@ -2549,7 +2631,7 @@ describe('TileManager::refreshTiles', () => {
 
         tileManager._addTile(coord);
         tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
-        expect(spy).toHaveBeenCalledOnce();
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
 
@@ -2565,7 +2647,7 @@ describe('TileManager::refreshTiles', () => {
 
         tileManager._addTile(coord);
         tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
-        expect(spy).toHaveBeenCalledOnce();
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
 
@@ -2613,4 +2695,72 @@ describe('TileManager / etag', () => {
         expect(dataEventSpy).not.toHaveBeenCalled();
         expect(tile.etag).toBe(tileEtag);
     });
+});
+
+describe('TileManager content elevation', () => {
+    test.each(['resetMaxContentElevation', 'clearTiles'] as const)(
+        'preserves expanded tile coverage after unloading until %s', async (reset) => {
+            const map = globalCreateMap({
+                maxTileCacheSize: 0,
+                fadeDuration: 0,
+                style: {
+                    version: 8,
+                    sources: {id: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                    layers: [{
+                        id: 'elevated', type: 'symbol', source: 'id',
+                        layout: {'symbol-height-offset': ['get', 'height']}
+                    }]
+                }
+            });
+            onTestFinished(() => map.remove());
+            await map.once('load');
+
+            const elevatedTileID = new OverscaledTileID(4, 0, 4, 0, 10);
+            const horizonTileID = new OverscaledTileID(4, 0, 4, 7, 3);
+            const tileManager = createTileManager({
+                minzoom: 4,
+                maxzoom: 4,
+                async loadTile(tile: Tile) {
+                    if (tile.tileID.key === elevatedTileID.key) {
+                        tile.buckets.elevated = {maxHeightOffset: 500000, destroy() {}} as SymbolBucket;
+                        tile.hasSymbolBuckets = true;
+                    }
+                    tile.state = 'loaded';
+                },
+                async unloadTile(tile: Tile) {
+                    tile.unloadVectorData();
+                }
+            });
+            tileManager.onAdd(map);
+            onTestFinished(() => tileManager.onRemove(map));
+
+            const transform = new GlobeTransform();
+            transform.resize(1400, 800);
+            transform.setZoom(4.3);
+            transform.setMaxPitch(85);
+            transform.setCenter(new LngLat(-170, -45));
+            await updateTiles();
+            const elevatedTile = tileManager.getLoadedTile(elevatedTileID);
+            expect(elevatedTile).toBeInstanceOf(Tile);
+
+            transform.setCenter(new LngLat(2.3522, 52.0566));
+            transform.setPitch(75);
+            transform.setBearing(180);
+            await updateTiles();
+            setNow(now() + 1);
+            await updateTiles();
+            expect(elevatedTile.state).toBe('unloaded');
+
+            await updateTiles();
+            expect(tileManager.getIds()).toContain(horizonTileID.key);
+
+            tileManager[reset]();
+            await updateTiles();
+            expect(tileManager.getIds()).not.toContain(horizonTileID.key);
+
+            async function updateTiles() {
+                tileManager.update(transform);
+                await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
+            }
+        });
 });

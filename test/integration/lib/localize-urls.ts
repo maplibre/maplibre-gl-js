@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export function localizeURLs(style: any, port: number, baseTestsDir: string): void {
     localizeStyleURLs(style, port);
@@ -73,4 +74,15 @@ function localizeStyleURLs(style: StyleSpecification, port: number) {
     }
 
     style.glyphs &&= localizeURL(style.glyphs, port);
+
+    for (const fontName in (style as any)['font-faces']) {
+        const declarations = (style as any)['font-faces'][fontName];
+        for (const face of Array.isArray(declarations) ? declarations : [declarations]) {
+            if (typeof face === 'string') {
+                (style as any)['font-faces'][fontName] = localizeURL(face, port);
+            } else if (face?.url) {
+                face.url = localizeURL(face.url, port);
+            }
+        }
+    }
 }

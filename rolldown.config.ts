@@ -1,6 +1,5 @@
 import {defineConfig, type RolldownOptions} from 'rolldown';
 import {dts} from 'rolldown-plugin-dts';
-import {plugins} from './build/rolldown_plugins';
 import banner from './build/banner';
 import packageJSON from './package.json' with {type: 'json'};
 
@@ -15,7 +14,7 @@ const dtsBundle: RolldownOptions = {
         format: 'es',
     },
     external: Object.keys(packageJSON.dependencies),
-    plugins: [dts({emitDtsOnly: true, oxc: true})],
+    plugins: [dts({emitDtsOnly: true, generator: 'oxc'})],
 };
 
 const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
@@ -35,7 +34,6 @@ const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
             entryFileNames: `[name]${outputPostfix}.mjs`,
             chunkFileNames: `maplibre-gl-shared${outputPostfix}.mjs`,
         },
-        plugins: plugins(production),
     },
     ...(production ? [dtsBundle] : []),
 ]);

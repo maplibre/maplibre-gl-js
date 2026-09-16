@@ -6,7 +6,6 @@ import {SegmentVector} from '../data/segment.ts';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g.ts';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
 import posAttributes from '../data/pos_attributes.ts';
-import {type ProgramConfiguration} from '../data/program_configuration.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {Program} from '../webgl/program.ts';
@@ -19,25 +18,10 @@ import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
-import {type OverscaledTileID} from '../tile/tile_id.ts';
 import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
-
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {Style} from '../style/style.ts';
-import type {StyleLayer} from '../style/style_layer.ts';
-import type {CrossFaded} from '../style/properties.ts';
-import type {LineAtlas} from './line_atlas.ts';
-import type {ImageManager} from './image_manager.ts';
-import type {GlyphManager} from './glyph_manager.ts';
-import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
-import type {IndexBuffer} from '../webgl/index_buffer.ts';
-import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
-import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {IRenderToTexture} from './render_to_texture_interface.ts';
-import type {TerrainData} from './terrain.ts';
-import type {ProjectionData} from '../geo/projection/projection_data.ts';
-import type {Framebuffer} from '../webgl/framebuffer.ts';
+import {createRenderContext, getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from './render_context.ts';
+import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -51,7 +35,23 @@ import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
-export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Style} from '../style/style.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CrossFaded} from '../style/properties.ts';
+import type {LineAtlas} from './line_atlas.ts';
+import type {ImageManager} from './image_manager.ts';
+import type {PatternAtlas} from './pattern_atlas.ts';
+import type {GlyphManager} from './glyph_manager.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {IndexBuffer} from '../webgl/index_buffer.ts';
+import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
+import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import type {IRenderToTexture} from './render_to_texture_interface.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
 
 type PainterOptions = {
     showOverdrawInspector: boolean;
@@ -62,11 +62,6 @@ type PainterOptions = {
     moving: boolean;
     fadeDuration: number;
     anisotropicFilterPitch: number;
-};
-
-export type RenderOptions = {
-    isRenderingToTexture: boolean;
-    isRenderingGlobe: boolean;
 };
 
 /**
@@ -140,11 +135,9 @@ export class Painter {
     options: PainterOptions;
     lineAtlas: LineAtlas;
     imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
-    depthRangeFor3D: DepthRangeType;
-    opaquePassCutoff: number;
-    renderPass: RenderPass;
-    currentLayer: number;
+    renderContext: RenderContext;
     currentStencilSource: string;
     nextStencilID: number;
     id: string;
@@ -155,9 +148,9 @@ export class Painter {
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
-    // of the terrain-facilitators. e.g. depth & coords framebuffers
-    // every time the camera-matrix changes the terrain-facilitators will be redrawn.
-    terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
+    // of the terrain depth framebuffer.
+    // every time the camera-matrix changes the depth framebuffer will be redrawn.
+    terrainFacilitator: {depthDirty: boolean; matrix: mat4; renderTime: number};
 
     constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
@@ -167,7 +160,7 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
-        this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
+        this.terrainFacilitator = {depthDirty: true, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
 
@@ -295,7 +288,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[]): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -322,44 +315,39 @@ export class Painter {
         // for more details. In non-subdivided projections the border flag does not change the mesh,
         // so one pass produces the same stencil mask.
         if (this.style.projection.useSubdivision) {
-            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+            this._renderTileMasks(stencilRefs, tileIDs, true);
         }
 
         // Final pass - draw borderless tiles with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+        this._renderTileMasks(stencilRefs, tileIDs, false);
 
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean): void {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], useBorders: boolean): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
-        const transform = this.transform;
+        const renderContext = this.renderContext;
 
         const program = this.useProgram('clippingMask');
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.getTerrainDataForTile(tileID, renderToTexture);
+            const terrainData = getTerrainDataForTile(renderContext, tileID);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: !renderToTexture, applyTerrainMatrix: true});
+            const projectionData = getProjectionDataForTile(renderContext, tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
-                ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
+                ColorMode.disabled, renderContext.isRenderingToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
-    }
-
-    getTerrainDataForTile(tileID: OverscaledTileID, isRenderingToTexture: boolean): TerrainData | null {
-        if (isRenderingToTexture && this.style.projection?.name === 'mercator') return null;
-        return this.style.map.terrain?.getTerrainData(tileID) || null;
     }
 
     /**
@@ -378,10 +366,10 @@ export class Painter {
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
+            const terrainData = getTerrainDataForTile(this.renderContext, tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
-            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
+            const projectionData = getProjectionDataForTile(this.renderContext, tileID);
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -484,7 +472,7 @@ export class Painter {
             const a = 1 / numOverdrawSteps;
 
             return new ColorMode([gl.CONSTANT_COLOR, gl.ONE], new Color(a, a, a, 0), [true, true, true, true]);
-        } else if (this.renderPass === 'opaque') {
+        } else if (this.renderContext.currentPass === 'opaque') {
             return ColorMode.unblended;
         } else {
             return ColorMode.alphaBlended;
@@ -493,12 +481,12 @@ export class Painter {
 
     getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
         if (!this.opaquePassEnabledForLayer()) return DepthMode.disabled;
-        const depth = 1 - ((1 + this.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
+        const depth = 1 - ((1 + this.renderContext.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
         return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
     }
 
     getDepthModeFor3D(): Readonly<DepthMode> {
-        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
+        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.renderContext.depthRangeFor3D);
     }
 
     /*
@@ -509,18 +497,21 @@ export class Painter {
      * opaque pass.
      */
     opaquePassEnabledForLayer(): boolean {
-        return this.currentLayer < this.opaquePassCutoff;
+        return this.renderContext.currentLayer < this.renderContext.opaquePassCutoff;
     }
 
     render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
+        const renderContext = this.renderContext = createRenderContext(this.transform, style.projection, style.map.terrain ?? null);
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
+        this.patternAtlas = style.patternAtlas;
         this.glyphManager = style.glyphManager;
 
         this.symbolFadeChange = style.placement.symbolFadeChange(now());
+        updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
 
         this.imageManager.beginFrame();
 
@@ -530,7 +521,6 @@ export class Painter {
         const coordsAscending: {[_: string]: OverscaledTileID[]} = {};
         const coordsDescending: {[_: string]: OverscaledTileID[]} = {};
         const coordsDescendingSymbol: {[_: string]: OverscaledTileID[]} = {};
-        const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in tileManagers) {
             const tileManager = tileManagers[id];
@@ -543,28 +533,28 @@ export class Painter {
             coordsDescendingSymbol[id] = tileManager.getVisibleCoordinates(true).reverse();
         }
 
-        this.opaquePassCutoff = Infinity;
+        renderContext.opaquePassCutoff = Infinity;
         for (let i = 0; i < layerIds.length; i++) {
             const layerId = layerIds[i];
             if (this.style._layers[layerId].is3D()) {
-                this.opaquePassCutoff = i;
+                renderContext.opaquePassCutoff = i;
                 break;
             }
         }
 
-        this.maybeDrawDepth(false);
+        this.maybeDrawDepth();
 
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
-            this.opaquePassCutoff = 0;
+            renderContext.opaquePassCutoff = 0;
         }
 
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate
         // framebuffer, and then save those for rendering back to the map
         // later: in doing this we avoid doing expensive framebuffer restores.
-        this.renderPass = 'offscreen';
+        renderContext.currentPass = 'offscreen';
 
         for (const layerId of layerIds) {
             const layer = this.style._layers[layerId];
@@ -573,7 +563,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
+            this.renderLayer(this, tileManagers[layer.source], layer, coords, renderContext);
         }
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
@@ -588,40 +578,42 @@ export class Painter {
         if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
-        this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
+        renderContext.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
         if (!this.renderToTexture) {
-            this.renderPass = 'opaque';
+            renderContext.currentPass = 'opaque';
 
-            for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
-                const layer = this.style._layers[layerIds[this.currentLayer]];
+            for (renderContext.currentLayer = layerIds.length - 1; renderContext.currentLayer >= 0; renderContext.currentLayer--) {
+                const layer = this.style._layers[layerIds[renderContext.currentLayer]];
+                if (layer.isHidden(this.transform.zoom)) continue;
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                this.renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, tileManager, layer, coords, renderOptions);
+                this.renderTileClippingMasks(layer, coords);
+                this.renderLayer(this, tileManager, layer, coords, renderContext);
             }
         }
 
         // Translucent pass ===============================================
         // Draw all other layers bottom-to-top.
-        this.renderPass = 'translucent';
+        renderContext.currentPass = 'translucent';
 
         let globeDepthRendered = false;
 
-        for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
-            const layer = this.style._layers[layerIds[this.currentLayer]];
+        for (renderContext.currentLayer = 0; renderContext.currentLayer < layerIds.length; renderContext.currentLayer++) {
+            const layer = this.style._layers[layerIds[renderContext.currentLayer]];
+            if (layer.isHidden(this.transform.zoom)) continue;
             const tileManager = tileManagers[layer.source];
 
-            if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
+            if (this.renderToTexture?.renderLayer(layer, renderContext)) continue;
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
+                if (renderContext.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -631,19 +623,19 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this.renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
-            this.renderLayer(this, tileManager, layer, coords, renderOptions);
+            this.renderTileClippingMasks(layer, coordsAscending[layer.source]);
+            this.renderLayer(this, tileManager, layer, coords, renderContext);
         }
 
         // Render atmosphere, only for Globe projection
-        if (renderOptions.isRenderingGlobe) {
+        if (renderContext.isRenderingGlobe) {
             this.drawFunctions.atmosphere(this, this.style.sky, this.style.light);
         }
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates(), renderContext);
             }
         }
 
@@ -651,17 +643,28 @@ export class Painter {
             this.drawFunctions.debugPadding(this);
         }
 
+        // a frame at rest has reused every pooled drape it needs; the rest stay resident until freed here
+        if (this.renderToTexture && !this.options.moving) this.clearRTTPool();
+
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.
         this.context.setDefault();
     }
 
     /**
-     * Update the depth framebuffer if the camera has moved or tiles have reloaded.
-     * Marks coords as depthDirty so they are re-rendered on next demand.
+     * Invalidates cached terrain depth so the next eligible depth pass redraws it.
+     * DEM data can change the rendered surface while the camera and terrain tile set stay unchanged.
+     * Repeated calls coalesce without rendering or scheduling a frame, even if terrain is not yet present.
      */
-    maybeDrawDepth(requireExact: boolean): void {
-        if (!this.style?.map?.terrain) {
+    markTerrainDepthDirty(): void {
+        this.terrainFacilitator.depthDirty = true;
+    }
+
+    /**
+     * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
+     */
+    maybeDrawDepth(): void {
+        if (!this.style?.projection || !this.style.map?.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
@@ -669,7 +672,7 @@ export class Painter {
 
         // Update depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.depthDirty;
-        doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
+        doUpdate ||= !mat4.equals(prevMatrix, currMatrix);
         doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
@@ -679,49 +682,37 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = now();
         this.terrainFacilitator.depthDirty = false;
-        this.terrainFacilitator.coordsDirty = true;
         this.drawFunctions.terrainDepth(this, this.style.map.terrain);
     }
 
-    /**
-     * Render the coords framebuffer if it is coordsDirty
-     */
-    maybeDrawCoords(): void {
-        if (!this.style?.map?.terrain || !this.terrainFacilitator.coordsDirty) {
-            return;
-        }
-        this.terrainFacilitator.coordsDirty = false;
-        this.drawFunctions.terrainCoords(this, this.style.map.terrain);
-    }
-
-    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
         const draw = this.drawFunctions;
         if (isSymbolStyleLayer(layer)) {
-            draw.symbol(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
+            draw.symbol(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderContext);
         } else if (isCircleStyleLayer(layer)) {
-            draw.circle(painter, tileManager, layer, coords, renderOptions);
+            draw.circle(painter, tileManager, layer, coords, renderContext);
         } else if (isHeatmapStyleLayer(layer)) {
-            draw.heatmap(painter, tileManager, layer, coords, renderOptions);
+            draw.heatmap(painter, tileManager, layer, coords, renderContext);
         } else if (isLineStyleLayer(layer)) {
-            draw.line(painter, tileManager, layer, coords, renderOptions);
+            draw.line(painter, tileManager, layer, coords, renderContext);
         } else if (isFillStyleLayer(layer)) {
-            draw.fill(painter, tileManager, layer, coords, renderOptions);
+            draw.fill(painter, tileManager, layer, coords, renderContext);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            draw.fillExtrusion(painter, tileManager, layer, coords, renderOptions);
+            draw.fillExtrusion(painter, tileManager, layer, coords, renderContext);
         } else if (isHillshadeStyleLayer(layer)) {
-            draw.hillshade(painter, tileManager, layer, coords, renderOptions);
+            draw.hillshade(painter, tileManager, layer, coords, renderContext);
         } else if (isColorReliefStyleLayer(layer)) {
-            draw.colorRelief(painter, tileManager, layer, coords, renderOptions);
+            draw.colorRelief(painter, tileManager, layer, coords, renderContext);
         } else if (isRasterStyleLayer(layer)) {
-            draw.raster(painter, tileManager, layer, coords, renderOptions);
+            draw.raster(painter, tileManager, layer, coords, renderContext);
         } else if (isBackgroundStyleLayer(layer)) {
-            draw.background(painter, tileManager, layer, coords, renderOptions);
+            draw.background(painter, tileManager, layer, coords, renderContext);
         } else if (isCustomStyleLayer(layer)) {
-            draw.custom(painter, tileManager, layer, renderOptions);
+            draw.custom(painter, tileManager, layer, renderContext);
         }
     }
 
@@ -748,15 +739,17 @@ export class Painter {
         const obj = this._rttObjectRecyclePool.pop();
         if (obj) {
             if (obj.size !== size) {
-                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-                obj.texture.size = [size, size];
+                obj.texture.update({width: size, height: size, data: null}, {premultiply: false, useMipmap: true});
+                obj.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+                if (this.context.extTextureFilterAnisotropic) {
+                    gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+                }
                 obj.size = size;
             }
             return obj;
         }
-        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
-        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA, {premultiply: false, useMipmap: true});
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
         if (this.context.extTextureFilterAnisotropic) {
             gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
         }
@@ -800,6 +793,34 @@ export class Painter {
     }
 
     /**
+     * Destroys the pooled {@link RTTObject}s, the drapes no tile holds. Called at the end of a frame at rest,
+     * when they would otherwise stay resident until the next gesture reuses them.
+     */
+    clearRTTPool(): void {
+        for (const obj of this._rttObjectRecyclePool) {
+            obj.texture.destroy();
+        }
+        this._rttObjectRecyclePool.length = 0;
+    }
+
+    /**
+     * Frees the pooled drapes and the shared render-to-texture FBO. Called when terrain is removed, after its tiles
+     * released their drapes.
+     */
+    destroyRTTResources(): void {
+        this.clearRTTPool();
+        if (!this._rttSharedFbo) return;
+        // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
+        // that we already manage separately.
+        this._rttSharedFbo.fbo.colorAttachment.set(null);
+        this._rttSharedFbo.fbo.depthAttachment.set(null);
+        const gl = this.context.gl;
+        gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+        gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+        this._rttSharedFbo = null;
+    }
+
+    /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
@@ -807,8 +828,8 @@ export class Painter {
     isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean {
         if (!image) return false;
         if (!image.from || !image.to) return true;
-        const imagePosA = this.imageManager.getPattern(image.from.toString());
-        const imagePosB = this.imageManager.getPattern(image.to.toString());
+        const imagePosA = this.patternAtlas.getPattern(image.from.toString());
+        const imagePosB = this.patternAtlas.getPattern(image.to.toString());
         return !imagePosA || !imagePosB;
     }
 
@@ -857,18 +878,7 @@ export class Painter {
      * in custom layers.
      */
     setCustomLayerDefaults(): void {
-        // Prevent custom layers from unintentionally modify the last VAO used.
-        // All other state is state is restored on it's own, but for VAOs it's
-        // simpler to unbind so that we don't have to track the state of VAOs.
-        this.context.unbindVAO();
-
-        // The default values for this state is meaningful and often expected.
-        // Leaving this state dirty could cause a lot of confusion for users.
-        this.context.cullFace.setDefault();
-        this.context.activeTexture.setDefault();
-        this.context.pixelStoreUnpack.setDefault();
-        this.context.pixelStoreUnpackPremultiplyAlpha.setDefault();
-        this.context.pixelStoreUnpackFlipY.setDefault();
+        this.context.setCustomLayerDefaults();
     }
 
     /*
@@ -904,21 +914,7 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        for (const obj of this._rttObjectRecyclePool) {
-            obj.texture.destroy();
-        }
-        this._rttObjectRecyclePool = [];
-
-        if (this._rttSharedFbo) {
-            // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
-            // that we already manage separately.
-            this._rttSharedFbo.fbo.colorAttachment.set(null);
-            this._rttSharedFbo.fbo.depthAttachment.set(null);
-            const gl = this.context.gl;
-            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
-            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
-            this._rttSharedFbo = null;
-        }
+        this.destroyRTTResources();
 
         this.layerOpacityFbo?.destroy();
         this.layerOpacityFbo = null;
@@ -936,6 +932,10 @@ export class Painter {
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();
         }
+
+        this.context.projectionUniformBuffer.destroy();
+        this.context.terrainUniformBuffer.destroy();
+        this.context.frameUniformBuffer.destroy();
 
         if (this.cache) {
             for (const key in this.cache) {

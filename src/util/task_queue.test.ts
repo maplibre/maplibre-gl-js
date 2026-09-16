@@ -85,7 +85,7 @@ describe('TaskQueue', () => {
     test('TaskQueue.run() throws on attempted re-entrance', () => {
         const q = new TaskQueue();
         q.add(() => q.run());
-        expect(() => q.run()).toThrow();
+        expect(() => q.run()).toThrow('Attempting to run(), but is already running.');
     });
 
     test('TaskQueue.clear() prevents queued task from being executed', () => {
@@ -111,5 +111,25 @@ describe('TaskQueue', () => {
         expect(before).not.toHaveBeenCalled();
         q.run();
         expect(after).not.toHaveBeenCalled();
+    });
+
+    test('Resets _currentlyRunning when a task throws an error', () => {
+        const q = new TaskQueue();
+        q.add(() => { throw new Error('Task error'); });
+        expect(() => q.run()).toThrow('Task error');
+        // Should be able to run again - _currentlyRunning should be false
+        const afterError = vi.fn();
+        q.add(afterError);
+        q.run();
+        expect(afterError).toHaveBeenCalledTimes(1);
+    });
+
+    test('Runs the tasks queued after a task that throws, and rethrows the error afterwards', () => {
+        const q = new TaskQueue();
+        const second = vi.fn();
+        q.add(() => { throw new Error('Task error'); });
+        q.add(second);
+        expect(() => q.run()).toThrow('Task error');
+        expect(second).toHaveBeenCalledTimes(1);
     });
 });

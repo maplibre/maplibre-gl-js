@@ -3,7 +3,8 @@ import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
 import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
 import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('PropertyValue', () => {
     test('set global state', () => {
@@ -101,6 +102,22 @@ describe('Transitionable', () => {
 
         expect(warn.mock.calls[0][0]).toBe('layers[0].paint.text-color: Could not parse color from value \'oops blue\' Falling back to rgba(0,0,0,1).');
     });
+
+    test('setting another property does not extend a running transition past its original end, issue #8376', () => {
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', {});
+        transitionable.setValue('hillshade-exaggeration', 0.5);
+        const untransitioned = transitionable.untransitioned();
+
+        transitionable.setValue('hillshade-exaggeration', 1);
+        let transitioning = transitionable.transitioned({now: 0, transition: {duration: 300, delay: 0}}, untransitioned);
+
+        transitionable.setValue('hillshade-illumination-direction', 300);
+        transitioning = transitionable.transitioned({now: 150, transition: {duration: 300, delay: 0}}, transitioning);
+
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.75);
+        expect(transitioning.possiblyEvaluate({zoom: 0, now: 301} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
+        expect(transitioning.hasTransition()).toBe(false);
+    });
 });
 
 describe('paint property transitions between arrays of different length, issue #6606', () => {
@@ -190,5 +207,40 @@ describe('DataDrivenProperty.interpolate between arrays of different length, iss
         const result = property.interpolate(constant(a), constant(b), 0.5);
 
         expect(result.value).toEqual({kind: 'constant', value: ColorArray.interpolate(a, b, 0.5)});
+    });
+});
+
+describe('a global state change transitions from the value the state had, issue #8395', () => {
+    test('a running transition keeps reading the state it started from', () => {
+        const globalState = {exaggeration: 0.2};
+        const transitionable = new Transitionable(hillshadeProperties.paint, 'layers[0].paint', globalState);
+        transitionable.setValue('hillshade-exaggeration', ['global-state', 'exaggeration']);
+        const transitioning = transitionable.untransitioned();
+        const priorGlobalState = {...globalState};
+        globalState.exaggeration = 1;
+
+        const transitioned = transitionable.applyGlobalStateChange(['exaggeration'], priorGlobalState, transitioning, {now: 0, transition: {duration: 300, delay: 0}});
+
+        expect(transitioned.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters).get('hillshade-exaggeration')).toBeCloseTo(0.6);
+        expect(transitioned.possiblyEvaluate({zoom: 0, now: 301} as EvaluationParameters).get('hillshade-exaggeration')).toBe(1);
+        expect(transitioned.hasTransition()).toBe(false);
+    });
+
+    test('a property that never transitions and a data-driven one snap to the new state', () => {
+        const globalState = {direction: 90, opacity: 0.2};
+        const transitionable = new Transitionable(symbolProperties.paint, 'layers[0].paint', globalState);
+        transitionable.setValue('text-translate-anchor', ['case', ['>', ['global-state', 'direction'], 180], 'map', 'viewport']);
+        transitionable.setValue('text-opacity', ['case', ['has', 'name'], ['global-state', 'opacity'], 1]);
+        const transitioning = transitionable.untransitioned();
+        const priorGlobalState = {...globalState};
+        globalState.direction = 270;
+        globalState.opacity = 1;
+
+        const transitioned = transitionable.applyGlobalStateChange(['direction', 'opacity'], priorGlobalState, transitioning, {now: 0, transition: {duration: 300, delay: 0}});
+
+        const evaluated = transitioned.possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters);
+        expect(evaluated.get('text-translate-anchor')).toBe('map');
+        expect(evaluated.get('text-opacity').evaluate({properties: {name: 'x'}} as any, {})).toBe(1);
+        expect(transitioned.hasTransition()).toBe(false);
     });
 });

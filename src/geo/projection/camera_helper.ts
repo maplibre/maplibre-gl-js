@@ -1,13 +1,14 @@
 import Point from '@mapbox/point-geometry';
-import {type IReadonlyTransform, type ITransform} from '../transform_interface.ts';
-import {type LngLat, type LngLatLike} from '../lng_lat.ts';
-import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera.ts';
-import {type PaddingOptions} from '../edge_insets.ts';
-import {type LngLatBounds} from '../lng_lat_bounds.ts';
 import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
+
+import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
+import type {LngLat, LngLatLike} from '../lng_lat.ts';
+import type {CameraForBoundsOptions, PointLike} from '../../ui/camera.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {LngLatBounds} from '../lng_lat_bounds.ts';
 
 export type MapControlsDeltas = {
     panDelta: Point;
@@ -16,6 +17,11 @@ export type MapControlsDeltas = {
     pitchDelta: number;
     rollDelta: number;
     around: Point;
+    /**
+     * Elevation in meters of the terrain under `around` at gesture start; when set,
+     * pan and zoom keep the terrain at this elevation under `around`.
+     */
+    aroundElevation?: number;
 };
 
 export type CameraForBoxAndBearingHandlerResult = {

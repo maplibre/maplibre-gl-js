@@ -1,11 +1,14 @@
 import Point from '@mapbox/point-geometry';
-
 import {mat2, mat4, vec2, vec4} from 'gl-matrix';
+import {getSymbolElevation} from './symbol_elevation.ts';
 import * as symbolSize from './symbol_size.ts';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
+import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import {WritingMode} from '../symbol/shaping.ts';
+import {findLineIntersection} from '../util/util.ts';
 
 import type {Painter} from '../render/painter.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -13,11 +16,8 @@ import type {
     SymbolDynamicLayoutArray,
     PlacedSymbol,
 } from '../data/array_types.g.ts';
-import {WritingMode} from '../symbol/shaping.ts';
-import {findLineIntersection} from '../util/util.ts';
-import {type UnwrappedTileID} from '../tile/tile_id.ts';
-import {type StructArray} from '../util/struct_array.ts';
-import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
+import type {StructArray} from '../util/struct_array.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation
@@ -175,13 +175,20 @@ export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec
 }
 
 /**
- * Projects a point using a specified matrix, including the perspective divide.
- * Uses a fast path if `getElevation` is undefined.
+ * Resolves the elevation of the symbol described by `projectionContext` at a tile coordinate.
  */
-export function projectWithMatrix(x: number, y: number, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
+export function elevationAt(projectionContext: SymbolProjectionContext, x: number, y: number): number | undefined {
+    return getSymbolElevation(projectionContext.getElevation, x, y, projectionContext.heightOffset ?? 0, projectionContext.heightAnchorGround ?? true);
+}
+
+/**
+ * Projects a point using a specified matrix, including the perspective divide.
+ * Uses a fast path if `elevation` is undefined.
+ */
+export function projectWithMatrix(x: number, y: number, matrix: mat4, elevation?: number): PointProjection {
     let pos;
-    if (getElevation) { // slow because of handle z-index
-        pos = [x, y, getElevation(x, y), 1] as vec4;
+    if (elevation != null) { // slow because of handle z-index
+        pos = [x, y, elevation, 1] as vec4;
         vec4.transformMat4(pos, pos, matrix);
     } else { // fast because of ignore z-index
         pos = [x, y, 0, 1] as vec4;
@@ -225,7 +232,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     viewportWidth: number,
     viewportHeight: number,
     translation: [number, number],
-    getElevation: (x: number, y: number) => number): void {
+    getElevation: GetElevation | undefined): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
     const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
@@ -588,11 +595,20 @@ export type SymbolProjectionContext = {
      */
     pitchedLabelPlaneMatrix: mat4;
     /**
-     * Function to get elevation at a point
+     * Function to get elevation at a point, absent when the map has no terrain
      * @param x - the x coordinate
      * @param y - the y coordinate
     */
-    getElevation: (x: number, y: number) => number;
+    getElevation: GetElevation | undefined;
+    /**
+     * The evaluated `symbol-height-offset` of the symbol being projected, in meters. Defaults to 0.
+     */
+    heightOffset?: number;
+    /**
+     * Whether `symbol-height-anchor` is `ground`, so that `heightOffset` is measured from the
+     * terrain surface rather than from the zero elevation datum. Defaults to true.
+     */
+    heightAnchorGround?: boolean;
     /**
      * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera,
      * but still convenient to pass it inside this type.
@@ -674,10 +690,10 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
     const translatedY = y + projectionContext.translation[1];
     let projection;
     if (projectionContext.pitchWithMap) {
-        projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
+        projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, elevationAt(projectionContext, translatedX, translatedY));
         projection.isOccluded = false;
     } else {
-        projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, projectionContext.getElevation);
+        projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, elevationAt(projectionContext, translatedX, translatedY));
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     }
@@ -688,7 +704,9 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
     if (projectionContext.pitchWithMap) {
         const pos = [x, y, 0, 1] as vec4;
         vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
-        return projectionContext.transform.projectTileCoordinates(pos[0] / pos[3], pos[1] / pos[3], projectionContext.unwrappedTileID, projectionContext.getElevation).point;
+        const tileX = pos[0] / pos[3];
+        const tileY = pos[1] / pos[3];
+        return projectionContext.transform.projectTileCoordinates(tileX, tileY, projectionContext.unwrappedTileID, elevationAt(projectionContext, tileX, tileY)).point;
     } else {
         return {
             x: (x / projectionContext.width) * 2.0 - 1.0,
@@ -701,7 +719,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
  * Projects the given point in tile coordinates to the GL clip space (-1..1).
  */
 export function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
-    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
+    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, elevationAt(projectionContext, x, y));
     return projection;
 }
 
@@ -939,12 +957,12 @@ export function projectPathSpecialProjection(projectedPath: Point[], projectionC
     const inverseLabelPlaneMatrix = tmpMat4;
     fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
-        const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, projectionContext.getElevation);
+        const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, elevationAt(projectionContext, p.x, p.y));
         const projected = projectionContext.transform.projectTileCoordinates(
             backProjected.point.x,
             backProjected.point.y,
             projectionContext.unwrappedTileID,
-            projectionContext.getElevation
+            elevationAt(projectionContext, backProjected.point.x, backProjected.point.y)
         );
         projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;

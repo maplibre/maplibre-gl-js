@@ -2,6 +2,9 @@ import {describe, expect, test} from 'vitest';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
+import {GlobeTransform} from './globe_transform.ts';
+import {coveringTiles} from './covering_tiles.ts';
+import {LngLat, earthRadius} from '../lng_lat.ts';
 
 describe('bounding volume creation', () => {
     test('z=0', () => {
@@ -101,5 +104,51 @@ describe('bounding volume creation', () => {
         for (let i = 0; i < convex.planes.length; i++) {
             expectToBeCloseToArray([...convex.planes[i]], expectedPlanes[i], precision);
         }
+    });
+});
+
+describe('elevated content above terrain', () => {
+    test('terrain elevations do not shrink the content elevation allowance', () => {
+        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+        const terrain = {getMinMaxElevation: () => ({minElevation: 0, maxElevation: 100})};
+        const contentElevation = 500000;
+        const volume = detailsProvider.getTileBoundingVolume({x: 8, y: 5, z: 4}, 0, contentElevation, {tileSize: 512, terrain} as any);
+        const shellRadius = 1 + contentElevation / earthRadius;
+        const reach = Math.max(...volume.points.map((p) => Math.hypot(p[0], p[1], p[2])));
+        expect(reach).toBeGreaterThanOrEqual(shellRadius * 0.999);
+    });
+});
+
+describe('elevated content tile retention', () => {
+    test('far corner translation keeps ground tiles retained at moderate pitch', () => {
+        const transform = new GlobeTransform();
+        transform.resize(1400, 800);
+        transform.setCenter(new LngLat(2.3522, 52.0566));
+        transform.setZoom(4.3);
+        transform.setBearing(315);
+        transform.setMaxPitch(179);
+        transform.setPitch(75);
+        const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
+        const without = coveringTiles(transform, {tileSize: 512}).map(key);
+        const withElevated = coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key);
+        expect(without).toContain('4/9/4');
+        expect(withElevated).toContain('4/9/4');
+    });
+
+    test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
+        const transform = new GlobeTransform();
+        transform.resize(1400, 800);
+        transform.setCenter(new LngLat(2.35, 48.85));
+        transform.setZoom(4.3);
+        transform.setMaxPitch(179);
+        transform.setPitch(95);
+        const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
+        const without = coveringTiles(transform, {tileSize: 512}).map(key);
+        const withElevated = new Set(coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key));
+        for (const tile of without) {
+            expect(withElevated, `visible ground tile ${tile} must stay retained`).toContain(tile);
+        }
+        expect(withElevated.size).toBeGreaterThan(without.length);
+        expect(withElevated, 'a tile well beyond the surface horizon is retained').toContain('4/8/3');
     });
 });
