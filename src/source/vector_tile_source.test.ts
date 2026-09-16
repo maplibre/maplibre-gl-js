@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
@@ -25,7 +25,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
-        _camera: {transform: new MercatorTransform()},
+        worldCoordinateHelper: mercatorWorldCoordinateHelper,
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {
@@ -389,9 +389,7 @@ describe('VectorTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [0, 45, 45, 80]
         });
-        const simpleTransform = new MercatorTransform();
-        simpleTransform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
-        (source.map as any)._camera = {transform: simpleTransform};
+        (source.map as any).worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
 
         await waitForMetadataEvent(source);
         const lastRowInsideLat45To80InTheSimpleCrs = 1;

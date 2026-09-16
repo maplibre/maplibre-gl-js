@@ -7,6 +7,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
@@ -245,7 +246,7 @@ describe('GeoJSONSource.loadTile', () => {
     const mapStub = {
         getPixelRatio() { return 1; },
         showCollisionBoxes: false,
-        _camera: {transform: new MercatorTransform()},
+        worldCoordinateHelper: mercatorWorldCoordinateHelper,
         style: {
             projection: {
                 get subdivisionGranularity() {
@@ -707,7 +708,7 @@ describe('GeoJSONSource.update', () => {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
             transform: {} as IReadonlyTransform,
-            _camera: {transform: new MercatorTransform()},
+            worldCoordinateHelper: mercatorWorldCoordinateHelper,
             getPixelRatio() { return 1; },
             getGlobalState: () => ({}),
             style: {
@@ -1134,7 +1135,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 
     beforeEach(() => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        source.map = {_camera: {transform: new MercatorTransform()}} as any as Map;
+        source.map = {worldCoordinateHelper: mercatorWorldCoordinateHelper} as any as Map;
         tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
         tile.state = 'loaded';
     });
@@ -1228,9 +1229,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('reloads a tile that contains an added feature in the map projection', async () => {
-        const simpleTransform = new MercatorTransform();
-        simpleTransform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
-        source.map = {_camera: {transform: simpleTransform}} as any as Map;
+        source.map = {worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)} as any as Map;
         const tileOfLng0To90Lat0To90InTheSimpleCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
         tileOfLng0To90Lat0To90InTheSimpleCrs.state = 'loaded';
         const diff: GeoJSONSourceDiff = {add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]};
@@ -1246,9 +1245,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('does not reload a tile for an added feature that only mercator would place inside it', async () => {
-        const simpleTransform = new MercatorTransform();
-        simpleTransform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
-        source.map = {_camera: {transform: simpleTransform}} as any as Map;
+        source.map = {worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)} as any as Map;
         const tileOfLng0To90Lat0To90InTheSimpleCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
         tileOfLng0To90Lat0To90InTheSimpleCrs.state = 'loaded';
         const insideTheMercatorTileOfLng0To180 = [125, 15];

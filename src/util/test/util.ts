@@ -15,7 +15,7 @@ import {RGBAImage} from '../image.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
-import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface.ts';
+import type {IReadonlyTransform, ITransform, WorldCoordinateHelper} from '../../geo/transform_interface.ts';
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
@@ -53,8 +53,8 @@ export class StubMap extends Evented {
         this.transform = newTransform;
     }
 
-    get _camera(): {transform: IReadonlyTransform} {
-        return {transform: this.transform};
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this.transform.worldCoordinateHelper;
     }
 }
 
@@ -377,10 +377,6 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
 }
 
 /**
- * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
- * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
- */
-/**
  * A transform over the built-in simple CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
  * axes), sized to the given viewport.
  */
@@ -397,6 +393,10 @@ export function createSimpleCrsTransform(width: number, height: number): Mercato
     return transform;
 }
 
+/**
+ * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
+ * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
+ */
 export function createRotatedCrs(): CrsDefinition {
     const cos = Math.cos(Math.PI / 6);
     const sin = Math.sin(Math.PI / 6);
