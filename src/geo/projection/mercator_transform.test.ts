@@ -1148,6 +1148,18 @@ describe('MercatorTransform over the simple CRS', () => {
             expect(point.y).toBeCloseTo(0.25 * worldSizeAtZoom0, 6);
         });
 
+        test('bounds of a pitched view that reaches past the world square stop at the poles instead of throwing', () => {
+            const transform = createSimpleTransform(512, 512);
+            transform.setZoom(0);
+            transform.setCenter(new LngLat(0, 0));
+            transform.setPitch(60);
+
+            const bounds = transform.getBounds();
+
+            expect(bounds.getNorth()).toBe(90);
+            expect(bounds.getSouth()).toBe(-90);
+        });
+
         test('puts the camera above the center when unpitched', () => {
             const transform = createSimpleTransform(512, 512);
             transform.setZoom(3);

@@ -72,6 +72,15 @@ describe('CrsWorldCoordinateHelper', () => {
             expect(worldCoordinateHelper.worldFromLngLat(0, 0, 90).z).toBe(0.5);
         });
 
+        test('clamps a latitude past the poles to the range LngLat accepts, for a position outside the world square', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const aTenthOfTheSquareNorthOfIt = -0.1;
+            const aTenthOfTheSquareSouthOfIt = 1.1;
+
+            expect(worldCoordinateHelper.lngLatFromWorld(0.5, aTenthOfTheSquareNorthOfIt).lat).toBe(90);
+            expect(worldCoordinateHelper.lngLatFromWorld(0.5, aTenthOfTheSquareSouthOfIt).lat).toBe(-90);
+        });
+
         test('does not wrap', () => {
             expect(new CrsWorldCoordinateHelper(simpleCrs).wraps).toBe(false);
         });
