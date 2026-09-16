@@ -5,6 +5,7 @@ import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Frustum} from '../primitives/frustum.ts';
@@ -20,7 +21,6 @@ import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
 import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
-import type {CrsDefinition} from '../../geo/projection/crs.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -51,6 +51,10 @@ export class StubMap extends Evented {
     migrateProjection(newTransform: ITransform): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
+    }
+
+    get _camera(): {transform: IReadonlyTransform} {
+        return {transform: this.transform};
     }
 }
 
@@ -376,6 +380,23 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
  * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
  * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
  */
+/**
+ * A transform over the built-in simple CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
+ * axes), sized to the given viewport.
+ */
+export function createSimpleCrsTransform(width: number, height: number): MercatorTransform {
+    const transform = new MercatorTransform({
+        minZoom: -5,
+        maxZoom: 22,
+        minPitch: 0,
+        maxPitch: 85,
+        renderWorldCopies: true,
+    });
+    transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
+    transform.resize(width, height);
+    return transform;
+}
+
 export function createRotatedCrs(): CrsDefinition {
     const cos = Math.cos(Math.PI / 6);
     const sin = Math.sin(Math.PI / 6);

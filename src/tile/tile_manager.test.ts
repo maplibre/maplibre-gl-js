@@ -8,6 +8,7 @@ import Point from '@mapbox/point-geometry';
 import {ErrorEvent, Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {TileBounds} from './tile_bounds.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {now, restoreNow, setNow} from '../util/time_control.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
@@ -2371,7 +2372,7 @@ describe('tile manager loaded', () => {
     });
 
     test('TileManager.loaded (tiles outside bounds, idle)', async () => {
-        const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
+        const japan = new TileBounds([122.74, 19.33, 149.0, 45.67], null, null, mercatorWorldCoordinateHelper);
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loading';

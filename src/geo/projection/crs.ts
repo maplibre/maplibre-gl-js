@@ -1,5 +1,6 @@
 import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {clamp} from '../../util/util.ts';
 
 import type {WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TileMatrix} from './tile_matrix.ts';
@@ -59,9 +60,15 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
         const [crsX, crsY] = this._definition.project(lng, lat);
         return new MercatorCoordinate((crsX - this._originX) / this._extent, (this._originY - crsY) / this._extent, altitude === undefined ? 0 : altitude / this._extent);
     }
+    /**
+     * World square coordinates to lng/lat. The definition's `unproject` has a finite domain, and a position
+     * outside the world square (the far edge of a pitched view, the buffer of a tile at the square's edge) can
+     * come back with a latitude past the poles; it is clamped to the range {@link LngLat} accepts, so the
+     * mapping is total the way the mercator inverse is.
+     */
     lngLatFromWorld(x: number, y: number): LngLat {
         const [lng, lat] = this._definition.unproject(this._originX + x * this._extent, this._originY - y * this._extent);
-        return new LngLat(lng, lat);
+        return new LngLat(lng, clamp(lat, -90, 90));
     }
     metersPerWorldUnit(_x: number, _y: number): number {
         return this._extent;

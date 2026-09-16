@@ -1,0 +1,35 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "A raster source with bounds lng 0..90 / lat 45..90 in the built-in simple projection. A 512px canvas at zoom 1 centered on 45,45 shows lng 0..90 and lat 0..90, which the 256px raster tiles cover as 2/2/0, 2/3/0, 2/2/1 and 2/3/1 of the simple grid; every tile draws the fixture's world image. The bounds cover the top row only, so the top half of the canvas draws two copies of the image and the bottom half, lat 0..45, stays white. In mercator lat 45 lies inside row 1 of zoom 2 (0 to 66.5), so the same bounds would draw all four tiles.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "center": [45, 45],
+  "zoom": 1,
+  "projection": {"type": "simple"},
+  "sources": {
+    "maplibre": {
+      "type": "raster",
+      "tiles": ["local://tiles/0-0-0.png"],
+      "maxzoom": 2,
+      "tileSize": 256,
+      "bounds": [0, 45, 90, 90]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "maplibre",
+      "paint": {"raster-fade-duration": 0}
+    }
+  ]
+}
