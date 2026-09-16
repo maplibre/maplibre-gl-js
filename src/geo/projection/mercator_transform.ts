@@ -979,7 +979,7 @@ export class MercatorTransform implements ITransform {
     isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         if (!terrain?.getCoverageIndex()) return false;
 
-        const location = MercatorCoordinate.fromLngLat(lngLat);
+        const location = this.worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
         elevation ??= terrain.getElevationForLngLat(lngLat, this);
         const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
         const w = clip[3];
