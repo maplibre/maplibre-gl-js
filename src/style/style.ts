@@ -1533,7 +1533,7 @@ export class Style extends Evented<MapEventType> {
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
-            sky: this.getSky(),
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1765,7 +1765,7 @@ export class Style extends Evented<MapEventType> {
     }
 
     getSky(): SkySpecification {
-        return this.sky?.getSky();
+        return this.stylesheet?.sky;
     }
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}): void {
@@ -1798,7 +1798,8 @@ export class Style extends Evented<MapEventType> {
             }, this.stylesheet.transition)
         };
 
-        this.sky.setSky(skyOptions, options);
+        if (!this.sky.setSky(skyOptions, options)) return;
+        this.stylesheet.sky = skyOptions;
         this.sky.updateTransitions(parameters);
     }
 
