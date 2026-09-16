@@ -1,9 +1,10 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} from '../../util/util.ts';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 
+import type {WorldCoordinateHelper} from '../transform_interface.ts';
 import type {UnwrappedTileIDType} from '../transform_helper.ts';
 import type {LngLat} from '../lng_lat.ts';
 
@@ -41,26 +42,27 @@ export function tileCoordinatesToLocation(inTileX: number, inTileY: number, cano
 }
 
 /**
- * Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
- * @param worldSize - Mercator world size computed from zoom level and tile size.
+ * Convert from LngLat to world coordinates (the projection's 0..1 world square scaled by world size).
+ * @param worldSize - World size computed from zoom level and tile size.
  * @param lnglat - The location to convert.
+ * @param helper - The lng/lat to world mapping; latitude is clamped to the valid mercator range only for a wrapping (mercator) helper.
  * @returns Point
  */
-export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat): Point {
-    const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-    return new Point(
-        mercatorXfromLng(lnglat.lng) * worldSize,
-        mercatorYfromLat(lat) * worldSize);
+export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat, helper: WorldCoordinateHelper): Point {
+    const lat = helper.wraps ? clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE) : lnglat.lat;
+    const {x, y} = helper.worldFromLngLat(lnglat.lng, lat);
+    return new Point(x * worldSize, y * worldSize);
 }
 
 /**
- * Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
- * @param worldSize - Mercator world size computed from zoom level and tile size.
+ * Convert from world coordinates (the projection's 0..1 world square scaled by world size) to LngLat.
+ * @param worldSize - World size computed from zoom level and tile size.
  * @param point - World coordinate.
+ * @param helper - The lng/lat to world mapping.
  * @returns LngLat
  */
-export function unprojectFromWorldCoordinates(worldSize: number, point: Point): LngLat {
-    return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
+export function unprojectFromWorldCoordinates(worldSize: number, point: Point, helper: WorldCoordinateHelper): LngLat {
+    return helper.lngLatFromWorld(point.x / worldSize, point.y / worldSize);
 }
 
 /**
@@ -86,10 +88,14 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
     return worldMatrix;
 }
 
-export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, elevation: number, pitch: number, bearing: number, distance: number): MercatorCoordinate {
-    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
-    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
-    const dMercator = distance * mercUnitsPerMeter;
+/**
+ * Returns the camera position for a center already mapped to world coordinates.
+ * Callers resolve the center through the transform's `WorldCoordinateHelper`; keeping the helper
+ * out of this function lets the engine inline it on the per-frame camera path.
+ * @param centerMercator - the center in world coordinates, with its elevation in `z`
+ * @param dMercator - camera to center distance in world units
+ */
+export function cameraMercatorCoordinateFromCenterAndRotation(centerMercator: MercatorCoordinate, pitch: number, bearing: number, dMercator: number): MercatorCoordinate {
     const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
     const dxMercator = dMercator * -x;
     const dyMercator = dMercator * -y;
@@ -109,11 +115,15 @@ export function cameraMercatorCoordinate(transform: {
     bearing: number;
     cameraToCenterDistance: number;
     worldSize: number;
+    worldCoordinateHelper: WorldCoordinateHelper;
 }): MercatorCoordinate {
-    const pixelPerMeter = mercatorZfromAltitude(1, transform.center.lat) * transform.worldSize;
-    return cameraMercatorCoordinateFromCenterAndRotation(
-        transform.center, transform.elevation, transform.pitch, transform.bearing,
-        transform.cameraToCenterDistance / pixelPerMeter);
+    const worldCoordinateHelper = transform.worldCoordinateHelper;
+    const center = transform.center;
+    const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
+    const pixelPerMeter = mercUnitsPerMeter * transform.worldSize;
+    const distance = transform.cameraToCenterDistance / pixelPerMeter;
+    const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, transform.elevation);
+    return cameraMercatorCoordinateFromCenterAndRotation(centerMercator, transform.pitch, transform.bearing, distance * mercUnitsPerMeter);
 }
 
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {
@@ -124,4 +134,45 @@ export function cameraDirectionFromPitchBearing(pitch: number, bearing: number):
     const x = h * Math.sin(bearingRadians);
     const y = -h * Math.cos(bearingRadians);
     return {x, y, z};
+}
+
+/**
+ * Projects the four corners of a lng/lat box and returns the world rectangle that contains them.
+ * For a cylindrical mapping like mercator this is exactly the projected box; for a mapping where
+ * `x` and `y` both depend on `lng` and `lat` it is the axis-aligned hull of the corners, which is
+ * correct for axis-aligned lng/lat boxes up to the curvature of the box edges.
+ */
+export function lngLatBoxToWorldBox(worldCoordinateHelper: WorldCoordinateHelper, west: number, south: number, east: number, north: number): {minX: number; minY: number; maxX: number; maxY: number} {
+    const corners = [
+        worldCoordinateHelper.worldFromLngLat(west, north),
+        worldCoordinateHelper.worldFromLngLat(east, north),
+        worldCoordinateHelper.worldFromLngLat(east, south),
+        worldCoordinateHelper.worldFromLngLat(west, south),
+    ];
+    return {
+        minX: Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+        minY: Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+        maxX: Math.max(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+        maxY: Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+    };
+}
+
+/**
+ * Maps the four corners of a world rectangle back to lng/lat and returns the box that contains them:
+ * the inverse of {@link lngLatBoxToWorldBox}, with the same axis-aligned hull where `x` and `y` both
+ * depend on `lng` and `lat`.
+ */
+export function worldBoxToLngLatBox(worldCoordinateHelper: WorldCoordinateHelper, minX: number, minY: number, maxX: number, maxY: number): {west: number; south: number; east: number; north: number} {
+    const corners = [
+        worldCoordinateHelper.lngLatFromWorld(minX, minY),
+        worldCoordinateHelper.lngLatFromWorld(maxX, minY),
+        worldCoordinateHelper.lngLatFromWorld(maxX, maxY),
+        worldCoordinateHelper.lngLatFromWorld(minX, maxY),
+    ];
+    return {
+        west: Math.min(corners[0].lng, corners[1].lng, corners[2].lng, corners[3].lng),
+        south: Math.min(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
+        east: Math.max(corners[0].lng, corners[1].lng, corners[2].lng, corners[3].lng),
+        north: Math.max(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
+    };
 }

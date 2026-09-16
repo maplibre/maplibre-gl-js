@@ -1,5 +1,5 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createMat4f64, degreesToRadians, radiansToDegrees, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
@@ -7,7 +7,7 @@ import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKe
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils.ts';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
@@ -15,7 +15,7 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -289,8 +289,22 @@ export class MercatorTransform implements ITransform {
 
     public clone(): ITransform {
         const clone = new MercatorTransform();
+        clone.setWorldCoordinateHelper(this.worldCoordinateHelper);
         clone.apply(this, false);
         return clone;
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._helper.worldCoordinateHelper;
+    }
+
+    /**
+     * Replaces the lng/lat to world coordinate mapping the transform positions the camera in, mercator by default.
+     * The projection factory calls this on a transform built for a registered CRS; `apply` never copies the mapping,
+     * since migrating a map to a new projection applies the old transform onto the new one.
+     */
+    setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
+        this._helper.setWorldCoordinateHelper(worldCoordinateHelper);
     }
 
     public apply(that: IReadonlyTransform, constrain: boolean): void {
@@ -305,7 +319,7 @@ export class MercatorTransform implements ITransform {
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         const result = [new UnwrappedTileID(0, tileID)];
-        if (this._helper._renderWorldCopies) {
+        if (this._helper.renderWorldCopies && this.worldCoordinateHelper.wraps) {
             const utl = this.screenPointToMercatorCoordinate(new Point(0, 0));
             const utr = this.screenPointToMercatorCoordinate(new Point(this._helper._width, 0));
             const ubl = this.screenPointToMercatorCoordinate(new Point(this._helper._width, this._helper._height));
@@ -355,28 +369,37 @@ export class MercatorTransform implements ITransform {
         const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
-        const loc = MercatorCoordinate.fromLngLat(lnglat);
-        const newCenter = new MercatorCoordinate(
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const loc = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
+        this.setCenter(worldCoordinateHelper.lngLatFromWorld(
             loc.x - (a.x - b.x),
-            loc.y - (a.y - b.y));
-        this.setCenter(newCenter?.toLngLat());
-        if (this._helper._renderWorldCopies) {
+            loc.y - (a.y - b.y)));
+        if (this._helper.renderWorldCopies && this.worldCoordinateHelper.wraps) {
             this.setCenter(this.center.wrap());
         }
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+        const coord = this.worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
         return terrain ?
-            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat), terrain.getElevationForLngLat(lnglat, this), this._pixelMatrix3D) :
-            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat));
+            this.coordinatePoint(coord, terrain.getElevationForLngLat(lnglat, this), this._pixelMatrix3D) :
+            this.coordinatePoint(coord);
     }
 
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+        return this._worldToLngLat(this.screenPointToMercatorCoordinate(p, terrain));
     }
 
     screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
-        return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
+        return this._worldToLngLat(this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation));
+    }
+
+    /**
+     * Maps a world position back to lng/lat through the projection, or `undefined` when the point missed
+     * the world (a screen point above the horizon or off the terrain).
+     */
+    private _worldToLngLat(coord: MercatorCoordinate | null | undefined): LngLat | undefined {
+        return coord ? this.worldCoordinateHelper.lngLatFromWorld(coord.x, coord.y) : undefined;
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
@@ -596,9 +619,11 @@ export class MercatorTransform implements ITransform {
      * 2) a given lngLat is as near the center as possible
      *
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+     * A non-wrapping world (a registered planar CRS) is constrained to its world square instead.
      */
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
+        if (!this.worldCoordinateHelper.wraps) return this._constrainToWorldSquare(lngLat, zoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
             zoom
@@ -646,7 +671,7 @@ export class MercatorTransform implements ITransform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat);
+        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat, this.worldCoordinateHelper);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
@@ -656,7 +681,7 @@ export class MercatorTransform implements ITransform {
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this.worldCoordinateHelper).wrap();
             result.zoom += scaleZoom(scale);
             return result;
         }
@@ -682,11 +707,47 @@ export class MercatorTransform implements ITransform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this.worldCoordinateHelper).wrap();
         }
 
         return result;
     };
+
+    /**
+     * The constrain for a projection whose world does not wrap: the view may not leave the 0..1 world square
+     * (or the max bounds inside it, projected as a box since both world axes may depend on lng and lat),
+     * and the map zooms in until the constrained square fills the screen.
+     */
+    private _constrainToWorldSquare(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const lngRange = this._helper._lngRange;
+        const latRange = this._helper._latRange;
+        const box = lngRange && latRange ?
+            lngLatBoxToWorldBox(worldCoordinateHelper, lngRange[0], latRange[0], lngRange[1], latRange[1]) :
+            {minX: 0, minY: 0, maxX: 1, maxY: 1};
+        const worldSize = this.tileSize * zoomScale(zoom);
+        const minX = Math.max(box.minX, 0) * worldSize;
+        const maxX = Math.min(box.maxX, 1) * worldSize;
+        const minY = Math.max(box.minY, 0) * worldSize;
+        const maxY = Math.min(box.maxY, 1) * worldSize;
+        const {x: screenWidth, y: screenHeight} = this.size;
+        const scaleX = maxX - minX < screenWidth ? screenWidth / (maxX - minX) : 0;
+        const scaleY = maxY - minY < screenHeight ? screenHeight / (maxY - minY) : 0;
+        const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
+
+        const scale = Math.max(scaleX, scaleY);
+        if (scale) {
+            const newPoint = new Point(scaleX ? (maxX + minX) / 2 : x, scaleY ? (maxY + minY) / 2 : y);
+            return {center: unprojectFromWorldCoordinates(worldSize, newPoint, worldCoordinateHelper), zoom: zoom + scaleZoom(scale)};
+        }
+
+        const constrainedX = clamp(x, minX + screenWidth / 2, maxX - screenWidth / 2);
+        const constrainedY = clamp(y, minY + screenHeight / 2, maxY - screenHeight / 2);
+        if (constrainedX !== x || constrainedY !== y) {
+            return {center: unprojectFromWorldCoordinates(worldSize, new Point(constrainedX, constrainedY), worldCoordinateHelper), zoom};
+        }
+        return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
+    }
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         return this._helper.applyConstrain(lngLat, zoom);
@@ -762,7 +823,8 @@ export class MercatorTransform implements ITransform {
      */
     _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
         const offset = this.centerOffset;
-        const point = projectToWorldCoordinates(this.worldSize, this.center);
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const point = projectToWorldCoordinates(this.worldSize, this.center, worldCoordinateHelper);
         const x = point.x, y = point.y;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
@@ -880,10 +942,14 @@ export class MercatorTransform implements ITransform {
     }
 
     getCameraLngLat(): LngLat {
-        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const center = this.center;
+        const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
+        const pixelPerMeter = mercUnitsPerMeter * this.worldSize;
         const cameraToCenterDistanceMeters = this._helper.cameraToCenterDistance / pixelPerMeter;
-        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
-        return camMercator.toLngLat();
+        const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, this.elevation);
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, this.pitch, this.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
+        return worldCoordinateHelper.lngLatFromWorld(camMercator.x, camMercator.y);
     }
 
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
@@ -913,7 +979,7 @@ export class MercatorTransform implements ITransform {
     isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         if (!terrain?.getCoverageIndex()) return false;
 
-        const location = MercatorCoordinate.fromLngLat(lngLat);
+        const location = this.worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
         elevation ??= terrain.getElevationForLngLat(lngLat, this);
         const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
         const w = clip[3];
