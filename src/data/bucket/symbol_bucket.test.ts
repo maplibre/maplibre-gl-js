@@ -6,15 +6,17 @@ import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {Tile} from '../../tile/tile.ts';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index.ts';
 import {FeatureIndex} from '../../data/feature_index.ts';
-import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
+import {createSymbolBucket, createSymbolIconBucket, createSymbolStyleLayer} from '../../../test/unit/lib/create_symbol_layer.ts';
 import {RGBAImage} from '../../util/image.ts';
 import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import {SymbolBucket} from './symbol_bucket.ts';
 import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 
-import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
+import type {BucketParameters, IndexedFeature, PopulateParameters} from '../bucket.ts';
+import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {StyleImage} from '../../style/style_image.ts';
 import type {StyleGlyph} from '../../style/style_glyph.ts';
 
@@ -270,36 +272,32 @@ describe('SymbolBucket', () => {
 });
 
 describe('SymbolBucket.addFeatures cross-tile key', () => {
+    const symbolLayer = createSymbolStyleLayer('test', 'Test', 'abcde');
+    const promoteId = 'name';
     const parentTileID = new OverscaledTileID(6, 0, 6, 8, 8);
-    const childTileID = new OverscaledTileID(7, 0, 7, 16, 16);
-    const parentAnchor = {x: 1000, y: 1000};
-    const childAnchorOverParentAnchor = {x: 2000, y: 2000};
+    const northWestChildTileID = new OverscaledTileID(7, 0, 7, 16, 16);
+    const anchorInParentTile = {x: 1000, y: 1000};
+    const sameSpotInNorthWestChildTile = {x: anchorInParentTile.x * 2, y: anchorInParentTile.y * 2};
 
-    function createPointFeature(id: number | string, anchor: {x: number; y: number}, index: number, properties: Record<string, unknown> = {}): IndexedFeature {
-        return {
-            feature: {
-                extent: 8192,
-                type: 1,
-                id,
-                properties,
-                loadGeometry() {
-                    return [[anchor]];
-                }
-            },
+    type Label = {id: number | string; anchor: {x: number; y: number}; properties: Record<string, unknown>};
+
+    /**
+     * Lays out one point label per entry, in order, with the feature id the worker would have resolved through
+     * `featureIndex`.
+     */
+    function createTileWithLabels(featureIndex: FeatureIndex, labels: Label[]): Tile {
+        const features = labels.map(({id, anchor, properties}, index) => ({
+            feature: {extent: 8192, type: 1, id, properties, loadGeometry: () => [[anchor]]},
             id,
             index,
             sourceLayerIndex: 0
-        } as any as IndexedFeature;
-    }
-
-    function layoutTile(tileID: OverscaledTileID, features: IndexedFeature[], promoteId?: string) {
-        const bucket = createSymbolBucket('test', 'Test', 'abcde', collisionBoxArray);
-        const options = createPopulateOptions([]);
-        options.featureIndex = new FeatureIndex(tileID, promoteId);
-        bucket.populate(features, options, tileID.canonical);
+        }) as any as IndexedFeature);
+        const bucket = new SymbolBucket({overscaling: 1, zoom: 0, collisionBoxArray, layers: [symbolLayer]} as BucketParameters<SymbolStyleLayer>);
+        const options = {...createPopulateOptions([]), featureIndex};
+        bucket.populate(features, options, featureIndex.tileID.canonical);
         bucket.addFeatures({
             options,
-            canonical: tileID.canonical,
+            canonical: featureIndex.tileID.canonical,
             glyphMap: glyphsByCluster,
             glyphPositions: {},
             iconMap: {},
@@ -309,43 +307,60 @@ describe('SymbolBucket.addFeatures cross-tile key', () => {
             dashPositions: {},
             showCollisionBoxes: false
         });
-        const tile = new Tile(tileID, 512);
-        tile.buckets = {test: bucket};
-        tile.collisionBoxArray = collisionBoxArray;
-        return {tile, bucket};
+        const tile = new Tile(featureIndex.tileID, 512);
+        tile.buckets = {[symbolLayer.id]: bucket};
+        return tile;
     }
 
-    test('with promoteId, a label only matches the same feature\'s label at another zoom, not another feature\'s label at the same spot', () => {
-        const parent = layoutTile(parentTileID, [createPointFeature('a', parentAnchor, 0)], 'name');
-        const child = layoutTile(childTileID, [
-            createPointFeature('b', childAnchorOverParentAnchor, 0),
-            createPointFeature('a', childAnchorOverParentAnchor, 1)
-        ], 'name');
+    function crossTileIDOfLabel(tile: Tile, featureId: number | string): number {
+        const bucket = tile.getBucket(symbolLayer) as SymbolBucket;
+        for (let i = 0; i < bucket.symbolInstances.length; i++) {
+            const symbolInstance = bucket.symbolInstances.get(i);
+            if (bucket.features[symbolInstance.featureIndex].id === featureId) {
+                return symbolInstance.crossTileID;
+            }
+        }
+        throw new Error(`No label for feature ${featureId}`);
+    }
 
-        new CrossTileSymbolIndex().addLayer(parent.bucket.layers[0], [parent.tile, child.tile], 0);
+    test('with promoteId, a label matches the same feature\'s label in the parent tile, not another feature\'s label laid out first at the same spot', () => {
+        const parentTile = createTileWithLabels(new FeatureIndex(parentTileID, promoteId), [
+            {id: 'a', anchor: anchorInParentTile, properties: {}}
+        ]);
+        const childTile = createTileWithLabels(new FeatureIndex(northWestChildTileID, promoteId), [
+            {id: 'b', anchor: sameSpotInNorthWestChildTile, properties: {}},
+            {id: 'a', anchor: sameSpotInNorthWestChildTile, properties: {}}
+        ]);
 
-        const parentCrossTileID = parent.bucket.symbolInstances.get(0).crossTileID;
-        expect(child.bucket.symbolInstances.get(1).crossTileID).toBe(parentCrossTileID);
-        expect(child.bucket.symbolInstances.get(0).crossTileID).not.toBe(parentCrossTileID);
+        new CrossTileSymbolIndex().addLayer(symbolLayer, [parentTile, childTile], 0);
+
+        expect(crossTileIDOfLabel(childTile, 'a')).toBe(crossTileIDOfLabel(parentTile, 'a'));
+        expect(crossTileIDOfLabel(childTile, 'b')).not.toBe(crossTileIDOfLabel(parentTile, 'a'));
     });
 
-    test('without promoteId, labels with the same text at the same spot match across zooms whatever their feature ids', () => {
-        const parent = layoutTile(parentTileID, [createPointFeature(1, parentAnchor, 0)]);
-        const child = layoutTile(childTileID, [createPointFeature(2, childAnchorOverParentAnchor, 0)]);
+    test('without promoteId, a label matches the label at the same spot in the parent tile whatever the two feature ids are', () => {
+        const parentTile = createTileWithLabels(new FeatureIndex(parentTileID), [
+            {id: 1, anchor: anchorInParentTile, properties: {}}
+        ]);
+        const childTile = createTileWithLabels(new FeatureIndex(northWestChildTileID), [
+            {id: 2, anchor: sameSpotInNorthWestChildTile, properties: {}}
+        ]);
 
-        new CrossTileSymbolIndex().addLayer(parent.bucket.layers[0], [parent.tile, child.tile], 0);
+        new CrossTileSymbolIndex().addLayer(symbolLayer, [parentTile, childTile], 0);
 
-        expect(child.bucket.symbolInstances.get(0).crossTileID).toBe(parent.bucket.symbolInstances.get(0).crossTileID);
+        expect(crossTileIDOfLabel(childTile, 2)).toBe(crossTileIDOfLabel(parentTile, 1));
     });
 
-    test('with promoteId, cluster labels still match across zooms although a cluster has a different id at every zoom', () => {
-        const parentCluster = {cluster: true, cluster_id: 100, point_count: 5};
-        const childCluster = {cluster: true, cluster_id: 200, point_count: 5};
-        const parent = layoutTile(parentTileID, [createPointFeature(parentCluster.cluster_id, parentAnchor, 0, parentCluster)], 'name');
-        const child = layoutTile(childTileID, [createPointFeature(childCluster.cluster_id, childAnchorOverParentAnchor, 0, childCluster)], 'name');
+    test('with promoteId, a cluster label matches the cluster label at the same spot in the parent tile although a cluster has a different id at every zoom', () => {
+        const parentTile = createTileWithLabels(new FeatureIndex(parentTileID, promoteId), [
+            {id: 100, anchor: anchorInParentTile, properties: {cluster: true, cluster_id: 100}}
+        ]);
+        const childTile = createTileWithLabels(new FeatureIndex(northWestChildTileID, promoteId), [
+            {id: 200, anchor: sameSpotInNorthWestChildTile, properties: {cluster: true, cluster_id: 200}}
+        ]);
 
-        new CrossTileSymbolIndex().addLayer(parent.bucket.layers[0], [parent.tile, child.tile], 0);
+        new CrossTileSymbolIndex().addLayer(symbolLayer, [parentTile, childTile], 0);
 
-        expect(child.bucket.symbolInstances.get(0).crossTileID).toBe(parent.bucket.symbolInstances.get(0).crossTileID);
+        expect(crossTileIDOfLabel(childTile, 200)).toBe(crossTileIDOfLabel(parentTile, 100));
     });
 });
