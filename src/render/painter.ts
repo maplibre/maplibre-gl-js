@@ -20,7 +20,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
 import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
-import {createRenderContext, getProjectionDataForTile, type RenderContext} from './render_context.ts';
+import {createRenderContext, getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from './render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
@@ -49,7 +49,6 @@ import type {IndexBuffer} from '../webgl/index_buffer.ts';
 import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
-import type {TerrainData} from './terrain.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {ProgramConfiguration} from '../data/program_configuration.ts';
@@ -336,7 +335,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.getTerrainDataForTile(tileID, renderContext.isRenderingToTexture);
+            const terrainData = getTerrainDataForTile(renderContext, tileID);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -349,11 +348,6 @@ export class Painter {
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
-    }
-
-    getTerrainDataForTile(tileID: OverscaledTileID, isRenderingToTexture: boolean): TerrainData | null {
-        if (isRenderingToTexture && this.style.projection?.name === 'mercator') return null;
-        return this.style.map.terrain?.getTerrainData(tileID) || null;
     }
 
     /**
@@ -372,7 +366,7 @@ export class Painter {
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
+            const terrainData = getTerrainDataForTile(this.renderContext, tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
             const projectionData = getProjectionDataForTile(this.renderContext, tileID);

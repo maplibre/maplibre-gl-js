@@ -5,7 +5,7 @@ import {
     backgroundUniformValues,
     backgroundPatternUniformValues
 } from '../program/background_program.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -50,7 +50,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
-        const terrainData = painter.getTerrainDataForTile(tileID, renderContext.isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, tileID);
 
         // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
         // This works assuming the tileIDs list contains only tiles of the same zoom level.

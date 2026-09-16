@@ -10,7 +10,7 @@ import {
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -141,7 +141,7 @@ function drawFillTiles(
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.getTerrainDataForTile(coord, renderContext.isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
