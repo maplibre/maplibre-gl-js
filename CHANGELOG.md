@@ -5,7 +5,7 @@
 ### 🐞 Bug fixes
 - Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
 - Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
-- Hold the center elevation for every gesture over terrain, so a DEM tile landing during a pitch or rotation no longer lifts the camera under the fingers ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Hold the center elevation for every gesture over terrain, so a DEM tile landing during a pitch or rotation no longer lifts the camera under the fingers ([#8471](https://github.com/maplibre/maplibre-gl-js/pull/8471)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ## 6.10.0
