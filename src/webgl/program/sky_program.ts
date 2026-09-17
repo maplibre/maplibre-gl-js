@@ -1,10 +1,12 @@
 import {UniformColor, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding.ts';
-import type {Context} from '../../webgl/context.ts';
-import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
-import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
-import {type Sky} from '../../style/sky.ts';
 import {getMercatorHorizon} from '../../geo/projection/mercator_utils.ts';
-import {getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
+import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
+import {vec3} from 'gl-matrix';
+
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {Sky} from '../../style/sky.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;
@@ -16,6 +18,7 @@ export type SkyUniformsType = {
     'u_inv_proj_matrix': UniformMatrix4f;
     'u_globe_position': Uniform3f;
     'u_globe_radius': Uniform1f;
+    'u_atmosphere_blend': Uniform1f;
 };
 
 const skyUniforms = (context: Context, locations: UniformLocations): SkyUniformsType => ({
@@ -28,6 +31,7 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
     'u_inv_proj_matrix': new UniformMatrix4f(context, locations.u_inv_proj_matrix),
     'u_globe_position': new Uniform3f(context, locations.u_globe_position),
     'u_globe_radius': new Uniform1f(context, locations.u_globe_radius),
+    'u_atmosphere_blend': new Uniform1f(context, locations.u_atmosphere_blend),
 });
 
 const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
@@ -36,6 +40,8 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     const mercatorHorizon  = getMercatorHorizon(transform);
     const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
+    const globePosition = getGlobeCenterInViewSpace(transform);
+    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
     return {
         'u_sky_color': sky.properties.get('sky-color'),
         'u_horizon_color': sky.properties.get('horizon-color'),
@@ -45,8 +51,9 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
         'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
         'u_sky_blend': skyBlend,
         'u_inv_proj_matrix': transform.inverseProjectionMatrix,
-        'u_globe_position': getGlobeCenterInViewSpace(transform),
-        'u_globe_radius': getGlobeRadiusPixels(transform.worldSize, transform.center.lat),
+        'u_globe_position': globePosition,
+        'u_globe_radius': globeRadius,
+        'u_atmosphere_blend': sky.properties.get('atmosphere-blend') * getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius),
     };
 };
 

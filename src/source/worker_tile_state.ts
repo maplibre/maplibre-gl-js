@@ -1,5 +1,5 @@
+import type {ExpiryData} from '../util/ajax.ts';
 import type {WorkerTile} from './worker_tile.ts';
-import {type ExpiryData} from '../util/ajax.ts';
 
 export type ParsingState = {
     rawData: ArrayBufferLike;

@@ -16,6 +16,7 @@ import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_st
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
 import {type VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
 import {subdivideVertexLine} from '../render/subdivision.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {CanonicalTileID} from '../tile/tile_id.ts';
@@ -74,6 +75,12 @@ export function performSymbolLayout(args: {
     showCollisionBoxes: boolean;
     canonical: CanonicalTileID;
     subdivisionGranularity: SubdivisionGranularitySetting;
+    /**
+     * Whether the source promotes a feature property to the feature id. A promoted id names the same feature in every
+     * tile, so the cross-tile symbol key can carry it and a label is only ever matched against the same feature's label at
+     * other zoom levels, see {@link keyWithFeatureId}.
+     */
+    hasPromoteId: boolean;
 }): void {
     args.bucket.createArrays();
 
@@ -248,7 +255,7 @@ export function performSymbolLayout(args: {
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         args.bucket.iconsInText ||= shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
+            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity, args.hasPromoteId);
         }
     }
 
@@ -289,7 +296,8 @@ function addFeature(bucket: SymbolBucket,
     textOffset: [number, number],
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
-    subdivisionGranularity: SubdivisionGranularitySetting) {
+    subdivisionGranularity: SubdivisionGranularitySetting,
+    hasPromoteId: boolean) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -342,7 +350,7 @@ function addFeature(bucket: SymbolBucket,
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
             iconBoxScale, iconPadding, iconAlongLine, iconOffset,
-            feature, sizes, isSDFIcon, canonical, layoutTextSize);
+            feature, sizes, isSDFIcon, canonical, layoutTextSize, hasPromoteId);
     };
 
     if (symbolPlacement === 'line') {
@@ -526,7 +534,8 @@ function addSymbol(bucket: SymbolBucket,
     sizes: Sizes,
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
-    layoutTextSize: number) {
+    layoutTextSize: number,
+    hasPromoteId: boolean) {
 
     const lineArray = bucket.addToLineVertexArray(anchor, line);
     const elevation = layer.layout.get('symbol-height-offset').evaluate(feature, {}, canonical);
@@ -704,6 +713,10 @@ function addSymbol(bucket: SymbolBucket,
     const variableAnchorOffset = getTextVariableAnchorOffset(layer, feature, canonical);
     const [textAnchorOffsetStartIndex, textAnchorOffsetEndIndex] = addTextVariableAnchorOffsets(bucket.textAnchorOffsets, variableAnchorOffset);
 
+    if (hasPromoteId) {
+        key = keyWithFeatureId(key, feature);
+    }
+
     bucket.symbolInstances.emplaceBack(
         anchor.x,
         anchor.y,
@@ -752,4 +765,17 @@ function anchorIsTooClose(bucket: SymbolBucket, text: string, repeatDistance: nu
     // If anchor is not within repeatDistance of any other anchor, add to array
     compareText[text].push(anchor);
     return false;
+}
+
+/**
+ * Hashes a promoted feature id into a symbol's cross-tile key, so that labels of different features never compete for
+ * a match in the `CrossTileSymbolIndex` even when their text and anchors coincide. Clusters keep the text-only
+ * key: supercluster gives a cluster an id that encodes the zoom it formed at, so the same cluster has a different id in
+ * every zoom level's tile.
+ */
+function keyWithFeatureId(key: number, feature: SymbolFeature): number {
+    if (feature.id == null || feature.properties?.cluster) {
+        return key;
+    }
+    return murmur3(String(feature.id), key);
 }

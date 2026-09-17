@@ -6,7 +6,7 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import {skyUniformValues} from '../program/sky_program.ts';
 import {atmosphereUniformValues} from '../program/atmosphere_program.ts';
-import {getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
+import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {Mesh} from '../../render/mesh.ts';
 import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
@@ -87,15 +87,15 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     const sunPos = getSunPos(light, painter.transform);
 
     const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
-    const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.projectionTransition;
+    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+    const globePosition = getGlobeCenterInViewSpace(transform);
+    const altitudeBlend = getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius);
+    const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.projectionTransition * altitudeBlend;
 
     if (atmosphereBlend === 0) {
         // Don't draw anything if atmosphere is fully transparent
         return;
     }
-
-    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
-    const globePosition = getGlobeCenterInViewSpace(transform);
 
     const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, transform.inverseProjectionMatrix);
 

@@ -4,7 +4,6 @@ import {TileManager} from '../tile/tile_manager.ts';
 import {StyleLayer} from './style_layer.ts';
 import {extend} from '../util/util.ts';
 import {ErrorEvent, Event} from '../util/evented.ts';
-import {type AJAXError} from '../util/ajax.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
@@ -12,19 +11,22 @@ import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from '../util/image_request.ts';
-
 import {EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
+import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {type Tile} from '../tile/tile.ts';
+
+import type {PossiblyEvaluated} from './properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
+import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {AJAXError} from '../util/ajax.ts';
 import type Point from '@mapbox/point-geometry';
-import {type PossiblyEvaluated} from './properties.ts';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
+import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -597,9 +599,8 @@ describe('Style.loadJSON', () => {
         // was used when evaluating the layer
         const globalState = {color: {default: 'red'}, radius: {default: 12}};
         style.setGlobalState(globalState);
-        const layer = style.getLayer('layer-id');
-        layer.recalculate({} as EvaluationParameters, []);
-        const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+        style.update({} as EvaluationParameters);
+        const paint = style.getLayer('layer-id').paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
         expect(paint.get('circle-radius').evaluate({} as Feature, {})).toBe(12);
     });
@@ -1484,6 +1485,28 @@ describe('Style.setSky', () => {
         expect(inputJson.sky).toBe(inputSky);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
+
+    test('fires an error on the style when given an invalid property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky: {'sky-color': 'red'}}));
+        await style.once('style.load');
+
+        const promise = style.once('error');
+        style.setSky({'sky-color': 'blue', 'not-a-sky-property': 1} as any);
+        const event = await promise;
+        expect(event.error.message).toContain('not-a-sky-property');
+    });
+
+    test('keeps the previous value from getSky() after a rejected setSky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky: {'sky-color': 'red'}}));
+        await style.once('style.load');
+
+        style.on('error', () => {});
+        style.setSky({'sky-color': 'blue', 'not-a-sky-property': 1} as any);
+
+        expect(style.getSky()).toEqual({'sky-color': 'red'});
+    });
 });
 
 describe('Style.setGlyphs', () => {
@@ -2072,6 +2095,99 @@ describe('Style.setGlobalState', () => {
 
         expect(style.tileManagers['line-source-id'].resume).not.toHaveBeenCalled();
         expect(style.tileManagers['line-source-id'].reload).not.toHaveBeenCalled();
+    });
+});
+
+describe('a global state change transitions what reads it, issue #8395', () => {
+    test('a paint property runs from the value the state had to the new one', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setGlobalStateProperty('opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(0.2);
+
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
+        expect(style.hasTransitions()).toBe(true);
+
+        style.update(new EvaluationParameters(0, {now: 301, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(1);
+        expect(style.hasTransitions()).toBe(false);
+    });
+
+    test('a state change mid-transition continues exactly as setting the value would', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [
+                {id: 'state', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}},
+                {id: 'plain', type: 'background', paint: {'background-opacity': 0.2}}
+            ]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setGlobalStateProperty('opacity', 1);
+        style.setPaintProperty('plain', 'background-opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        style.setGlobalStateProperty('opacity', 0.4);
+        style.setPaintProperty('plain', 'background-opacity', 0.4);
+
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity'))
+            .toBe((style.getLayer('plain') as BackgroundStyleLayer).paint.get('background-opacity'));
+        style.update(new EvaluationParameters(0, {now: 300, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity'))
+            .toBe((style.getLayer('plain') as BackgroundStyleLayer).paint.get('background-opacity'));
+
+        style.update(new EvaluationParameters(0, {now: 451, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(0.4);
+        expect(style.hasTransitions()).toBe(false);
+    });
+
+    test('changes made before a frame run from the value on screen', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setGlobalStateProperty('opacity', 0.5);
+        style.setGlobalStateProperty('opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
+    });
+
+    test('a running transition keeps its start when the state its prior value reads changes', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setPaintProperty('background', 'background-opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.setGlobalStateProperty('opacity', 0);
+
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
     });
 });
 
@@ -3775,20 +3891,25 @@ describe('Style.hasTransitions', () => {
         expect(style.light.hasTransition()).toBe(true);
     });
 
-    test('applies a global state change to the sky without opening a transition', async () => {
+    test('transitions the sky and the light from the value they had when the global state they read changes', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
             state: {c: {default: '#ff0000'}},
-            sky: {'sky-color': ['global-state', 'c']}
+            sky: {'sky-color': ['global-state', 'c']},
+            light: {color: ['global-state', 'c']}
         }));
 
         await style.once('style.load');
+        setNow(0);
         style.setGlobalStateProperty('c', '#0000ff');
-        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
-        style.sky.recalculate(new EvaluationParameters(0));
+        restoreNow();
+        style.sky.recalculate(new EvaluationParameters(0, {now: 150}));
+        style.light.recalculate(new EvaluationParameters(0, {now: 150}));
 
-        expect(style.sky.hasTransition()).toBe(false);
-        expect(style.sky.properties.get('sky-color')).toEqual(Color.parse('#0000ff'));
+        expect(style.sky.hasTransition()).toBe(true);
+        expect(style.light.hasTransition()).toBe(true);
+        expect(style.sky.properties.get('sky-color')).toEqual(new Color(0.5, 0, 0.5, 1));
+        expect(style.light.properties.get('color')).toEqual(new Color(0.5, 0, 0.5, 1));
     });
 });
 

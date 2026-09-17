@@ -8,7 +8,6 @@ import {StubMap} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
 
 describe('render', () => {
     let painter: Painter;
@@ -36,20 +35,10 @@ describe('render', () => {
         style._updatePlacement(transform, false, 0, false);
     });
 
-    function mockTerrainData() {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const terrainData = {tile: null};
-        const getTerrainData = vi.fn(() => terrainData);
-        map.terrain = {getTerrainData};
-        painter.style = style;
-
-        return {tileID, terrainData, getTerrainData};
-    }
-
     test('must not fail with incompletely loaded style', () => {
         painter.render(style, renderOptions);
 
-        expect(painter.renderOptions.currentPass).toBe('translucent');
+        expect(painter.renderContext.currentPass).toBe('translucent');
     });
 
     test('calls terrainDepth', () => {
@@ -61,29 +50,27 @@ describe('render', () => {
         expect(terrainDepth).toHaveBeenCalled();
     });
 
-    test('uses terrain data for regular Mercator draws', () => {
-        const {tileID, terrainData, getTerrainData} = mockTerrainData();
+    test('redraws cached terrain depth once after deferred invalidations', ({onTestFinished}) => {
+        const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {}).mockClear();
+        onTestFinished(() => terrainDepth.mockRestore());
+        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        expect(painter.getTerrainDataForTile(tileID, false)).toBe(terrainData);
-        expect(getTerrainData).toHaveBeenCalledWith(tileID);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.markTerrainDepthDirty();
+        painter.markTerrainDepthDirty();
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
+        painter.render(style, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
-    test('skips terrain data for Mercator render-to-texture draws', () => {
-        const {tileID, getTerrainData} = mockTerrainData();
-
-        expect(painter.getTerrainDataForTile(tileID, true)).toBeNull();
-        expect(getTerrainData).not.toHaveBeenCalled();
-    });
-
-    test('keeps terrain data for non-Mercator render-to-texture draws', () => {
-        const {tileID, terrainData, getTerrainData} = mockTerrainData();
-        style._setProjectionInternal('globe');
-
-        expect(painter.getTerrainDataForTile(tileID, true)).toBe(terrainData);
-        expect(getTerrainData).toHaveBeenCalledWith(tileID);
-    });
-
-    test('builds render options from the transform, globe projection and terrain', () => {
+    test('builds render context from the transform, globe projection and terrain', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
@@ -92,16 +79,16 @@ describe('render', () => {
 
         painter.render(style, renderOptions);
 
-        expect(painter.renderOptions.transform).toBe(painter.transform);
-        expect(painter.renderOptions.terrain).toBe(terrain);
-        expect(painter.renderOptions.projectionTransition).toBe(1);
-        expect(painter.renderOptions.isRenderingGlobe).toBe(true);
+        expect(painter.renderContext.transform).toBe(painter.transform);
+        expect(painter.renderContext.terrain).toBe(terrain);
+        expect(painter.renderContext.projectionTransition).toBe(1);
+        expect(painter.renderContext.isRenderingGlobe).toBe(true);
     });
 
-    test('uses render options for depth and blending when drawing a custom layer', () => {
+    test('uses render context for depth and blending when drawing a custom layer', () => {
         painter.render(style, renderOptions);
-        const options = painter.renderOptions;
-        options.depthRangeFor3D = [0.1, 0.8];
+        const renderContext = painter.renderContext;
+        renderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
             expect(painter.context.blend.get()).toBe(true);
@@ -109,7 +96,7 @@ describe('render', () => {
         });
         const layer = new CustomStyleLayer({id: 'custom', type: 'custom', renderingMode: '3d', render}, {});
 
-        painter.renderLayer(painter, null, layer, [], options);
+        painter.renderLayer(painter, null, layer, [], renderContext);
 
         expect(render).toHaveBeenCalledTimes(1);
     });
@@ -218,6 +205,37 @@ describe('RTT pool', () => {
         const b = painter.acquireRTT(512);
         painter.bindRTT(b);
         expect(painter._rttSharedFbo.size).toBe(512);
+    });
+
+    test('clearRTTPool destroys the pooled textures and leaves the ones tiles hold', () => {
+        const pooled = painter.acquireRTT(256);
+        const held = painter.acquireRTT(256);
+        vi.spyOn(pooled.texture, 'destroy');
+        vi.spyOn(held.texture, 'destroy');
+        painter.releaseRTT(pooled);
+
+        painter.clearRTTPool();
+
+        expect(pooled.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(held.texture.destroy).not.toHaveBeenCalled();
+        expect(painter.acquireRTT(256)).not.toBe(pooled);
+    });
+
+    test('destroyRTTResources frees the pool and the shared FBO, and both come back on the next acquire', () => {
+        const gl = painter.context.gl;
+        const obj = painter.acquireRTT(256);
+        vi.spyOn(obj.texture, 'destroy');
+        painter.bindRTT(obj);
+        painter.releaseRTT(obj);
+
+        painter.destroyRTTResources();
+
+        expect(obj.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(gl.deleteFramebuffer).toHaveBeenCalledTimes(1);
+        expect(gl.deleteRenderbuffer).toHaveBeenCalledTimes(1);
+
+        painter.bindRTT(painter.acquireRTT(256));
+        expect(gl.createFramebuffer).toHaveBeenCalledTimes(2);
     });
 
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {

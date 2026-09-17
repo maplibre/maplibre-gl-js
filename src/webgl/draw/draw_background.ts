@@ -5,21 +5,20 @@ import {
     backgroundUniformValues,
     backgroundPatternUniformValues
 } from '../program/background_program.ts';
-
-import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
-import type {TileManager} from '../../tile/tile_manager.ts';
-import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
-export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
+
+export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 
     if (opacity === 0) return;
 
-    const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
     const gl = context.gl;
     const projection = painter.style.projection;
@@ -30,7 +29,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     if (painter.isPatternMissing(image)) return;
 
     const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
-    if (renderOptions.currentPass !== pass) return;
+    if (renderContext.currentPass !== pass) return;
 
     const stencilMode = StencilMode.disabled;
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
@@ -46,16 +45,12 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const crossfade = layer.getCrossfadeParameters();
     
     for (const tileID of tileIDs) {
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: tileID,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
+        const projectionData = getProjectionDataForTile(renderContext, tileID);
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
-        const terrainData = painter.getTerrainDataForTile(tileID, isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, tileID);
 
         // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
         // This works assuming the tileIDs list contains only tiles of the same zoom level.
