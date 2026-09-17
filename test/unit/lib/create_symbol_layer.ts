@@ -1,6 +1,6 @@
 import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket.ts';
 import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_layer.ts';
-import {featureFilter, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {featureFilter, type LayerSpecification, type SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import glyphs from '../assets/fontstack-glyphs.json' with {type: 'json'};
 
 import type {EvaluationParameters} from '../../../src/style/evaluation_parameters.ts';
@@ -15,7 +15,7 @@ export function createGlyphMap(): Record<string, Record<string, StyleGlyph>> {
     )} as unknown as Record<string, Record<string, StyleGlyph>>;
 }
 
-export function createSymbolStyleLayer(layerId: string, font: string, text: string, extraLayout?: Record<string, unknown>): SymbolStyleLayer {
+export function createSymbolStyleLayer(layerId: string, font: string, text: string, extraLayout?: SymbolLayerSpecification['layout']): SymbolStyleLayer {
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
@@ -26,7 +26,7 @@ export function createSymbolStyleLayer(layerId: string, font: string, text: stri
     return layer;
 }
 
-export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray, extraLayout?: Record<string, unknown>): SymbolBucket {
+export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray, extraLayout?: SymbolLayerSpecification['layout']): SymbolBucket {
     return new SymbolBucket({
         overscaling: 1,
         zoom: 0,
