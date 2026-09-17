@@ -1,7 +1,7 @@
 import {IndexBuffer} from './index_buffer.ts';
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
-import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {ProjectionUniformBufferPool} from './projection_uniform_buffer.ts';
 import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
 import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import {ColorMode} from './color_mode.ts';
@@ -66,7 +66,7 @@ export class Context {
     pixelStoreUnpack: PixelStoreUnpack;
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
-    projectionUniformBuffer: UniformBuffer;
+    projectionUniformBufferPool: ProjectionUniformBufferPool;
     terrainUniformBuffer: UniformBuffer;
     frameUniformBuffer: UniformBuffer;
 
@@ -118,7 +118,7 @@ export class Context {
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
 
-        this.projectionUniformBuffer = createProjectionUniformBuffer(this);
+        this.projectionUniformBufferPool = new ProjectionUniformBufferPool(this);
         this.terrainUniformBuffer = createTerrainUniformBuffer(this);
         this.frameUniformBuffer = createFrameUniformBuffer(this);
     }
@@ -185,7 +185,6 @@ export class Context {
         this.pixelStoreUnpack.dirty = true;
         this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
         this.pixelStoreUnpackFlipY.dirty = true;
-        this.projectionUniformBuffer.bindingDirty = true;
         this.terrainUniformBuffer.bindingDirty = true;
         this.frameUniformBuffer.bindingDirty = true;
     }

@@ -17,12 +17,21 @@ describe('getProjectionDataForTile', () => {
 
         const projectionData = getProjectionDataForTile(renderContext, tileID);
         renderContext.isRenderingToTexture = true;
-        getProjectionDataForTile(renderContext, tileID, {aligned: true, applyTerrainMatrix: false});
+        const toTexture = getProjectionDataForTile(renderContext, tileID, {aligned: true, applyTerrainMatrix: false});
+
+        const rttTileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        rttTileID.terrainRttPosMatrix32f = new Float32Array(16);
+        const rtt = getProjectionDataForTile(renderContext, rttTileID);
 
         expect(projectionData).toEqual(projectionDataSpy.mock.results[0].value);
-        expect(projectionDataSpy).toHaveBeenCalledTimes(2);
+        expect(projectionDataSpy).toHaveBeenCalledTimes(3);
         expect(projectionDataSpy).toHaveBeenNthCalledWith(1, {overscaledTileID: tileID, aligned: undefined, applyGlobeMatrix: true, applyTerrainMatrix: true});
         expect(projectionDataSpy).toHaveBeenNthCalledWith(2, {overscaledTileID: tileID, aligned: true, applyGlobeMatrix: false, applyTerrainMatrix: false});
+
+        expect(projectionData.uniformBufferKey).toBe(`${tileID.key}|011`);
+        expect(toTexture.uniformBufferKey).toBe(`${tileID.key}|100`);
+        // Clones sharing a key carry a matrix per terrain tile, so they must not share a buffer.
+        expect(rtt.uniformBufferKey).toBeUndefined();
     });
 });
 
