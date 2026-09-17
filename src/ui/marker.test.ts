@@ -1232,7 +1232,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Follows the terrain that loads after a move', async () => {
+    test('Follows the terrain that loads after a move once the map is idle', async () => {
         const map = createMap({width: 1024, center: [40, 30], zoom: 13, pitch: 60, centerClampedToGround: false});
         await map.once('load');
         map.terrain = createTerrain();
