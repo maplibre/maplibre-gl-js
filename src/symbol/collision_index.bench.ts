@@ -1,4 +1,4 @@
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {CollisionIndex} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
@@ -105,12 +105,13 @@ const mercatorSymbols = createSymbols(mercatorTransform, (tileID) => mercatorTra
 const globeTransform = new GlobeTransform();
 const globeSymbols = createSymbols(globeTransform, () => undefined);
 
-describe('placeCollisionBox', () => {
-    bench('mercator', () => {
-        placeAll(mercatorTransform, mercatorSymbols);
-    });
-
-    bench('globe', () => {
-        placeAll(globeTransform, globeSymbols);
-    });
+test('placeCollisionBox', async ({bench}) => {
+    await bench.compare(
+        bench('mercator', () => {
+            placeAll(mercatorTransform, mercatorSymbols);
+        }),
+        bench('globe', () => {
+            placeAll(globeTransform, globeSymbols);
+        }),
+    );
 });
