@@ -13,7 +13,7 @@ beforeEach(() => {
 });
 
 describe('calculateAnchoredCameraOptions', () => {
-    test('calculates an anchored constrained camera update without changing the map', () => {
+    test('applies maxZoom without changing the map', () => {
         const map = createMap({center: [0, 0], zoom: 3, maxZoom: 5});
         const anchorLocation = new LngLat(5, 3);
         const anchorScreenPoint: [number, number] = [100, 150];

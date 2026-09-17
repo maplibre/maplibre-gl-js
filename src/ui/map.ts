@@ -1429,6 +1429,7 @@ export class Map extends Evented<MapEventType> {
      *   anchorScreenPoint: currentPointerPosition,
      *   zoom: map.getZoom() + 1,
      * });
+     * map.jumpTo(cameraOptions);
      * ```
      */
     calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions {
