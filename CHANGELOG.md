@@ -3,6 +3,7 @@
 - Fire a `contextmenu` map event on long press for touch devices ([#373](https://github.com/maplibre/maplibre-gl-js/issues/373)) (by [@kirthi-b](https://github.com/kirthi-b))
 - Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
 - Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
+- Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
