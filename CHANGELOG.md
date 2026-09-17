@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- ⚠️ Glyph requests, responses, and `GlyphPositions` now group each font stack's data by variant. Existing data must be placed under `default`.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
