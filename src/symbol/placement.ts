@@ -175,6 +175,17 @@ export type BucketPart = {
 
 export type CrossTileID = string | number;
 
+/**
+ * Parallel arrays holding one entry per symbol of a bucket. Typed arrays rather than a field on
+ * `symbolInstances`, so that reading them back does not go through `SymbolInstanceArray.get`, which
+ * builds a struct per symbol.
+ */
+type OpacityInputs = {
+    crossTileIDs: Uint32Array;
+    /** 1 where the symbol was hidden because an earlier bucket already drew the same label. */
+    duplicates: Uint8Array;
+};
+
 export class Placement {
     transform: IReadonlyTransform;
     terrain: Terrain;
@@ -210,11 +221,11 @@ export class Placement {
         icon: number[];
     }>>;
     /**
-     * Each symbol's cross tile ID and whether it was hidden as a duplicate, as of the last time a
-     * bucket's opacity buffers were written. Held apart from `symbolInstances` so that reading them
-     * back does not go through `SymbolInstanceArray.get`, which builds a struct per symbol.
+     * What {@link updateBucketOpacities} read when it last wrote a bucket's opacity buffers, keyed
+     * by bucket instance id: the cross tile ID of every symbol, and whether it came out a duplicate.
+     * {@link _reuseBucketOpacities} compares against it to decide whether those buffers still stand.
      */
-    opacityInputs: Map<number, {crossTileIDs: Uint32Array; duplicates: Uint8Array}>;
+    lastOpacityInputs: Map<number, OpacityInputs>;
 
     constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
@@ -233,7 +244,7 @@ export class Placement {
             text: number[];
             icon: number[];
         }>>();
-        this.opacityInputs = new Map();
+        this.lastOpacityInputs = new Map();
 
         this.prevPlacement = prevPlacement;
         if (prevPlacement) {
@@ -1034,42 +1045,53 @@ export class Placement {
     }
 
     /**
-     * @param reindexedBuckets - Buckets that cannot be reused because
-     * {@link CrossTileSymbolIndex.addLayer} just (re)assigned their cross tile
-     * IDs. `null` rebuilds every bucket, as a commit requires.
+     * Writes the opacity buffers of every symbol bucket of `styleLayer`, skipping the buckets whose
+     * buffers a rewrite would leave byte for byte the same.
+     *
+     * Opacities are fixed at {@link commit} time, and a commit installs a *new* `Placement` whose
+     * {@link lastOpacityInputs} is empty, so the frame after a commit rewrites everything. On the
+     * frames in between, the only input that can still move is duplicate resolution, which is what
+     * {@link _reuseBucketOpacities} checks.
+     *
+     * @param reindexedBucketIds - Buckets {@link CrossTileSymbolIndex.addLayer} just (re)assigned
+     * cross tile IDs to. Their recorded inputs are stale, so they are always rewritten.
      */
-    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[], reindexedBuckets: Set<number> | null = null): void {
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[], reindexedBucketIds: Set<number> = new Set()): void {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
-            const bucket = tile.getBucket(styleLayer) as SymbolBucket;
-            if (!bucket || !tile.latestFeatureIndex || styleLayer.id !== bucket.layerIds[0]) continue;
+            const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
+            if (!symbolBucket || !tile.latestFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0]) continue;
 
-            if (!this._reuseBucketOpacities(bucket, seenCrossTileIDs, reindexedBuckets)) {
-                this.updateBucketOpacities(bucket, tile.tileID, seenCrossTileIDs, tile.collisionBoxArray);
+            if (!this._reuseBucketOpacities(symbolBucket, seenCrossTileIDs, reindexedBucketIds)) {
+                this.updateBucketOpacities(symbolBucket, tile.tileID, seenCrossTileIDs, tile.collisionBoxArray);
             }
 
-            bucket.sortFeatures(-this.transform.bearingInRadians);
-            if (this.retainedQueryData[bucket.bucketInstanceId]) {
-                this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
+            // Sorting is by bearing, not by opacity, so it runs whether or not the buffers were reused.
+            symbolBucket.sortFeatures(-this.transform.bearingInRadians);
+            if (this.retainedQueryData[symbolBucket.bucketInstanceId]) {
+                this.retainedQueryData[symbolBucket.bucketInstanceId].featureSortOrder = symbolBucket.featureSortOrder;
             }
         }
     }
 
     /**
-     * Keeps a bucket's opacity buffers and marks its cross tile IDs seen, where rewriting them would
-     * write the same bytes. Answers `false` where it cannot tell, leaving the bucket to a rebuild.
+     * Claims a bucket's cross tile IDs and keeps its opacity buffers, where a rewrite would produce
+     * what they already hold. Answers `false` where that cannot be established.
      *
-     * The one thing a rebuild reads from outside the bucket is `seenCrossTileIDs`: a label carried by
-     * several tiles is drawn by whichever bucket is walked first, and hidden as a duplicate in the
-     * rest. So the buffers still stand if every symbol is a duplicate exactly where it was when they
-     * were written, which is what `opacityInputs` recorded.
+     * The only input a rewrite takes from outside the bucket is `seenCrossTileIDs`: a label carried
+     * by several tiles is drawn by whichever bucket is walked first and hidden in the rest. So the
+     * buffers still stand if every symbol comes out a duplicate exactly where it did when they were
+     * written, which is what {@link lastOpacityInputs} recorded.
+     *
+     * Two kinds of bucket are held back regardless: ones with collision circles pending, which only
+     * a rewrite hands over to the bucket, and ones carrying collision debug geometry, where the
+     * saving does not matter and the extra surface is not worth it.
      */
-    _reuseBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}, reindexedBuckets: Set<number> | null): boolean {
-        if (!reindexedBuckets || reindexedBuckets.has(bucket.bucketInstanceId)) return false;
-        // Debug geometry follows the bearing, and updateBucketOpacities is what hands over pending circles.
+    _reuseBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}, reindexedBucketIds: Set<number>): boolean {
+        if (reindexedBucketIds.has(bucket.bucketInstanceId)) return false;
         if (bucket.hasDebugData() || bucket.bucketInstanceId in this.collisionCircleArrays) return false;
 
-        const written = this.opacityInputs.get(bucket.bucketInstanceId);
+        const written = this.lastOpacityInputs.get(bucket.bucketInstanceId);
         if (!written) return false;
 
         const {crossTileIDs, duplicates} = written;
@@ -1286,7 +1308,7 @@ export class Placement {
             }
         }
 
-        this.opacityInputs.set(bucket.bucketInstanceId, {crossTileIDs, duplicates});
+        this.lastOpacityInputs.set(bucket.bucketInstanceId, {crossTileIDs, duplicates});
 
         if (bucket.hasTextData() && bucket.text.opacityVertexBuffer) {
             bucket.text.opacityVertexBuffer.updateData(bucket.text.opacityVertexArray);

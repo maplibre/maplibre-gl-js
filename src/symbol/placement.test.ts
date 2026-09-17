@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test, vi} from 'vitest';
+import {beforeEach, describe, expect, test} from 'vitest';
 import {Placement, RetainedQueryData} from './placement.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
@@ -14,6 +14,11 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 
 import type {IndexedFeature} from '../data/bucket.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+
+/** What `packOpacity` writes for a symbol that is fully shown, and for one that is fully hidden. */
+const PACKED_VISIBLE_OPACITY = 4294967295;
+const PACKED_HIDDEN_OPACITY = 0;
 
 describe('placement', () => {
     let placement: Placement;
@@ -102,36 +107,45 @@ describe('placement', () => {
             return {tiles, buckets, layer};
         }
 
-        test('reuses buckets that already have their opacities written', () => {
+        const packedOpacityOf = (bucket: SymbolBucket) => bucket.text.opacityVertexArray.uint32[0];
+        const SENTINEL = 12345;
+
+        test('the first bucket draws a shared label and the rest hide it', () => {
             const {tiles, buckets, layer} = setupTilesSharingOneLabel();
             placement.updateLayerOpacities(layer, tiles);
-            const opacities = buckets[0].text.opacityVertexArray.uint32.slice();
 
-            const spy = vi.spyOn(placement, 'updateBucketOpacities');
-            placement.updateLayerOpacities(layer, tiles, new Set());
-            expect(spy).not.toHaveBeenCalled();
-            expect(buckets[0].text.opacityVertexArray.uint32).toEqual(opacities);
+            expect(packedOpacityOf(buckets[0])).toBe(PACKED_VISIBLE_OPACITY);
+            expect(packedOpacityOf(buckets[1])).toBe(PACKED_HIDDEN_OPACITY);
         });
 
-        test('rebuilds a bucket the index just reindexed', () => {
+        test('leaves the opacity buffers alone when nothing changed', () => {
             const {tiles, buckets, layer} = setupTilesSharingOneLabel();
             placement.updateLayerOpacities(layer, tiles);
 
-            const spy = vi.spyOn(placement, 'updateBucketOpacities');
+            for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
+            placement.updateLayerOpacities(layer, tiles);
+
+            for (const bucket of buckets) expect(packedOpacityOf(bucket)).toBe(SENTINEL);
+        });
+
+        test('rewrites only the bucket the index reindexed', () => {
+            const {tiles, buckets, layer} = setupTilesSharingOneLabel();
+            placement.updateLayerOpacities(layer, tiles);
+
+            for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
             placement.updateLayerOpacities(layer, tiles, new Set([buckets[1].bucketInstanceId]));
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy.mock.calls[0][0]).toBe(buckets[1]);
+
+            expect(packedOpacityOf(buckets[0])).toBe(SENTINEL);
+            expect(packedOpacityOf(buckets[1])).toBe(PACKED_HIDDEN_OPACITY);
         });
 
-        test('rebuilds a bucket whose label another bucket stopped hiding', () => {
+        test('rewrites a bucket whose label another bucket stopped hiding', () => {
             const {tiles, buckets, layer} = setupTilesSharingOneLabel();
             placement.updateLayerOpacities(layer, tiles);
 
-            const spy = vi.spyOn(placement, 'updateBucketOpacities');
-            placement.updateLayerOpacities(layer, tiles.slice(1), new Set());
+            placement.updateLayerOpacities(layer, tiles.slice(1));
 
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(spy.mock.calls[0][0]).toBe(buckets[1]);
+            expect(packedOpacityOf(buckets[1])).toBe(PACKED_VISIBLE_OPACITY);
         });
     });
 });
