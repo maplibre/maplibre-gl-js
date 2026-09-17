@@ -594,7 +594,8 @@ export class SymbolBucket implements Bucket {
             imagePositions: iconPositions,
             showCollisionBoxes,
             canonical,
-            subdivisionGranularity: options.subdivisionGranularity
+            subdivisionGranularity: options.subdivisionGranularity,
+            hasPromoteId: options.featureIndex.promoteId != null
         });
     }
 

@@ -1,4 +1,4 @@
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 import {readFileSync} from 'fs';
 import {VectorTile} from '@mapbox/vector-tile';
 import {PbfReader} from 'pbf';
@@ -44,22 +44,23 @@ function readLayers(): FilteredLayer[] {
 
 const layers = readLayers();
 
-describe('featureFilter', () => {
-    bench('create', () => {
-        for (const filter of filters) {
-            featureFilter(filter.filter as FilterSpecification, 'filter');
-        }
-    });
-
-    bench('evaluate', () => {
-        for (const layer of layers) {
-            for (const filter of layer.filters) {
-                for (const feature of layer.features) {
-                    if (typeof filter.filter({zoom: 0}, feature) !== 'boolean') {
-                        throw new Error('Expected boolean result from filter');
+test('featureFilter', async ({bench}) => {
+    await bench.compare(
+        bench('create', () => {
+            for (const filter of filters) {
+                featureFilter(filter.filter as FilterSpecification, 'filter');
+            }
+        }),
+        bench('evaluate', () => {
+            for (const layer of layers) {
+                for (const filter of layer.filters) {
+                    for (const feature of layer.features) {
+                        if (typeof filter.filter({zoom: 0}, feature) !== 'boolean') {
+                            throw new Error('Expected boolean result from filter');
+                        }
                     }
                 }
             }
-        }
-    });
+        }),
+    );
 });
