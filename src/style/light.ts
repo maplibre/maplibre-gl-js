@@ -52,6 +52,10 @@ export class Light extends Evented {
         return this._transitioning.hasTransition();
     }
 
+    applyGlobalStateChange(refs: string[], priorGlobalState: Record<string, any>, parameters: TransitionParameters): void {
+        this._transitioning = this._transitionable.applyGlobalStateChange(refs, priorGlobalState, this._transitioning, parameters);
+    }
+
     recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
