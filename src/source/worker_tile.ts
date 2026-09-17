@@ -125,7 +125,7 @@ export class WorkerTile {
             }
         }
 
-        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
+        const stacks = mapObject(options.glyphDependencies, variants => mapObject(variants, glyphs => Object.keys(glyphs)));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();
