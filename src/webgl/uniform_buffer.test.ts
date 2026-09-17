@@ -48,14 +48,14 @@ describe('UniformBuffer', () => {
     });
 
     test('restores a dirty binding once without uploading unchanged data', () => {
-        const projection = context.projectionUniformBuffer;
-        projection.upload();
+        const frame = context.frameUniformBuffer;
+        frame.upload();
         vi.mocked(gl.bindBufferBase).mockClear();
         context.setDirty();
-        projection.bind();
-        projection.bind();
+        frame.bind();
+        frame.bind();
         expect(gl.bindBufferBase).toHaveBeenCalledTimes(1);
-        expect(gl.bindBufferBase).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, UBO_BINDINGS.ProjectionUBO, projection.buffer);
+        expect(gl.bindBufferBase).toHaveBeenCalledWith(gl.UNIFORM_BUFFER, UBO_BINDINGS.FrameUBO, frame.buffer);
         expect(gl.bufferData).toHaveBeenCalledTimes(1);
     });
 

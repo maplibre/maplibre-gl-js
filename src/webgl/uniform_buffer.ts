@@ -91,9 +91,21 @@ export class UniformBuffer {
         this.hasData = true;
     }
 
+    uploadUnconditionally(): void {
+        const gl = this.context.gl;
+        this.bindNow();
+        gl.bufferData(gl.UNIFORM_BUFFER, this.pending, gl.DYNAMIC_DRAW);
+        this.uploaded.set(this.pending);
+        this.hasData = true;
+    }
+
     /** Restores the indexed binding after external rendering without uploading unchanged data. */
     bind(): void {
         if (!this.bindingDirty) return;
+        this.bindNow();
+    }
+
+    bindNow(): void {
         const gl = this.context.gl;
         gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
         this.bindingDirty = false;

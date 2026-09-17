@@ -2,7 +2,6 @@ import {type PreparedShader, shaders} from '../shaders/shaders.ts';
 import {VertexArrayObject} from './vertex_array_object.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import {applyUBOBindings} from './uniform_buffer.ts';
-import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
 import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 
 import type {ProgramConfiguration} from '../data/program_configuration.ts';
@@ -205,7 +204,6 @@ export class Program<Us extends UniformBindings> {
         if (this.failedToCreate) return;
 
         context.program.set(this.program);
-        context.projectionUniformBuffer.bind();
         context.terrainUniformBuffer.bind();
         context.frameUniformBuffer.bind();
         context.setDepthMode(depthMode);
@@ -226,7 +224,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (projectionData) {
-            updateProjectionUniformBuffer(context.projectionUniformBuffer, projectionData);
+            context.projectionUniformBufferPool.use(projectionData);
         }
 
         if (uniformValues) {

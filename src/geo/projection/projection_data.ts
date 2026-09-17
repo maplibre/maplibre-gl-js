@@ -8,7 +8,7 @@ export type ProjectionMatrix = Mat4f32 | Mat4f64;
  * Projection data used by renderer shader uniforms. Renderer matrices are stored
  * as 32-bit floats so WebGL can consume them directly without per-upload copies.
  */
-export type RendererProjectionData = ProjectionData<Mat4f32>;
+export type RendererProjectionData = ProjectionData<Mat4f32> & {uniformBufferKey?: string};
 
 /**
  * Projection data exposed to custom layers. Some matrices are stored as 64-bit

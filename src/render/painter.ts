@@ -514,6 +514,7 @@ export class Painter {
         updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
 
         this.imageManager.beginFrame();
+        this.context.projectionUniformBufferPool.beginFrame();
 
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
@@ -933,7 +934,7 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
 
-        this.context.projectionUniformBuffer.destroy();
+        this.context.projectionUniformBufferPool.destroy();
         this.context.terrainUniformBuffer.destroy();
         this.context.frameUniformBuffer.destroy();
 
