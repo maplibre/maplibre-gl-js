@@ -12,6 +12,7 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
@@ -207,10 +208,7 @@ function drawLineTiles(
         const constantDasharray = dasharrayProperty?.constantOr(null);
 
         if (constantPattern && tile.imageAtlas) {
-            const atlas = tile.imageAtlas;
-            const posTo = atlas.patternPositions[constantPattern.to.toString()];
-            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
-            if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
+            updatePatternPositionsInProgram(programConfiguration, 'line-pattern', constantPattern, tile, layer);
         } else if (constantDasharray) {
             const round = layer.layout.get('line-cap').constantOr(null) === 'round';
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
