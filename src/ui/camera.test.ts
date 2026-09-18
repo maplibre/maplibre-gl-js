@@ -2371,6 +2371,142 @@ describe('cameraForBounds', () => {
     });
 });
 
+describe('mapPadding', () => {
+    const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+    const mapPadding = {top: 20, right: 150, bottom: 40, left: 60};
+
+    test('cameraForBounds fits for the given padding instead of the map\'s current padding', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        const expected = paddedCamera.cameraForBounds(bb, {padding: 15});
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        expect(camera.cameraForBounds(bb, {padding: 15, mapPadding})).toEqual(expected);
+        expect(camera.getPadding()).toEqual({top: 300, right: 300, bottom: 300, left: 300});
+        // defaults to the map's current padding
+        expect(paddedCamera.cameraForBounds(bb, {padding: 15, mapPadding})).toEqual(expected);
+        // missing sides are 0, not taken from the map or the bounds padding
+        paddedCamera.setPadding({top: 0, right: 0, bottom: 0, left: 60});
+        expect(camera.cameraForBounds(bb, {padding: 15, mapPadding: {left: 60}})).toEqual(paddedCamera.cameraForBounds(bb, {padding: 15}));
+    });
+
+    test('fitBounds transitions to the given padding', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        const expected = paddedCamera.cameraForBounds(bb);
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        camera.fitBounds(bb, {mapPadding, duration: 0});
+        expect(camera.getPadding()).toEqual(mapPadding);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual(fixedLngLat(expected.center, 4));
+        expect(fixedNum(camera.getZoom(), 3)).toBe(fixedNum(expected.zoom, 3));
+    });
+});
+
+describe('cameraForBounds pitch', () => {
+    const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+
+    // Projects the corners of the bounds through a fresh camera at the calculated result and returns how far
+    // each edge of their screen box is inside the padded viewport, in pixels. Negative means outside.
+    function slack(result: CameraOptions, mapPadding = {top: 0, right: 0, bottom: 0, left: 0}, padding = mapPadding, offset = [0, 0]) {
+        const {camera} = createCamera();
+        camera.setPadding(mapPadding);
+        camera.jumpTo(result);
+        const bounds = LngLatBounds.convert(bb);
+        const corners = [bounds.getNorthWest(), bounds.getNorthEast(), bounds.getSouthEast(), bounds.getSouthWest()]
+            .map(c => camera.transform.locationToScreenPoint(c));
+        const xs = corners.map(p => p.x);
+        const ys = corners.map(p => p.y);
+        return {
+            left: Math.min(...xs) - mapPadding.left - padding.left - offset[0],
+            right: 512 - mapPadding.right - padding.right - Math.max(...xs) + offset[0],
+            top: Math.min(...ys) - mapPadding.top - padding.top - offset[1],
+            bottom: 512 - mapPadding.bottom - padding.bottom - Math.max(...ys) + offset[1]
+        };
+    }
+
+    function expectInside(s: ReturnType<typeof slack>) {
+        for (const edge of Object.values(s)) expect(edge).toBeGreaterThanOrEqual(-0.5);
+    }
+
+    test('defaults to the map\'s current pitch and is returned', () => {
+        const {camera} = createCamera();
+        camera.setPitch(45);
+        const result = camera.cameraForBounds(bb);
+
+        expect(result.pitch).toBe(45);
+        expect(result).toEqual(createCamera().camera.cameraForBounds(bb, {pitch: 45}));
+    });
+
+    test('keeps the bounds in view when pitched', () => {
+        const {camera} = createCamera();
+        const flat = camera.cameraForBounds(bb);
+        const pitched = camera.cameraForBounds(bb, {pitch: 60});
+
+        expect(pitched.pitch).toBe(60);
+        expect(pitched.zoom).toBeLessThan(flat.zoom);
+        // The flat fit spills out of the sides once pitched, as the near edge of the box widens.
+        expect(slack({...flat, pitch: 60}).left).toBeLessThan(-50);
+        expectInside(slack(pitched));
+    });
+
+    test('keeps the bounds in view when pitched with bearing and padding', () => {
+        const {camera} = createCamera();
+        const mapPadding = {top: 20, right: 0, bottom: 0, left: 100};
+        const padding = {top: 10, right: 75, bottom: 50, left: 25};
+        const result = camera.cameraForBounds(bb, {pitch: 60, bearing: 35, padding, mapPadding});
+
+        expect(result.pitch).toBe(60);
+        expect(result.bearing).toBe(35);
+        expectInside(slack(result, mapPadding, padding));
+    });
+
+    test('keeps the bounds in view when pitched with offset', () => {
+        const {camera} = createCamera();
+        const result = camera.cameraForBounds(bb, {pitch: 60, offset: [0, 30]});
+
+        expectInside(slack(result, undefined, undefined, [0, 30]));
+    });
+
+    test('returns undefined when a corner is behind the camera', () => {
+        const {camera} = createCamera({maxPitch: 180});
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const result = camera.cameraForBounds(bb, {pitch: 95});
+
+        expect(result).toBeUndefined();
+        spy.mockRestore();
+    });
+
+    test('fitBounds transitions to the given pitch', () => {
+        const {camera} = createCamera();
+        camera.fitBounds(bb, {pitch: 60, duration: 0});
+
+        expect(camera.getPitch()).toBe(60);
+        expectInside(slack({center: camera.getCenter(), zoom: camera.getZoom(), bearing: 0, pitch: 60}));
+    });
+
+    test('fitBounds keeps the map\'s pitch when not given and fits for it', () => {
+        const {camera} = createCamera();
+        camera.setPitch(45);
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(camera.getPitch()).toBe(45);
+        expectInside(slack({center: camera.getCenter(), zoom: camera.getZoom(), bearing: 0, pitch: 45}));
+    });
+
+    test('globe fits at pitch 0 but returns the given pitch', () => {
+        const {camera} = createCamera({}, true);
+        const flat = camera.cameraForBounds(bb);
+        const pitched = camera.cameraForBounds(bb, {pitch: 60});
+
+        expect(pitched.pitch).toBe(60);
+        expect(pitched.zoom).toBe(flat.zoom);
+        expect(pitched.center).toEqual(flat.center);
+    });
+});
+
 describe('fitBounds', () => {
     test('no padding passed', () => {
         const {camera} = createCamera();
