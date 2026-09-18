@@ -1,4 +1,4 @@
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 import {latest as spec, convertFunction, isFunction, createFunction, createPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import brightV9 from '../../test/integration/assets/styles/bright-v9.json' with {type: 'json'};
 
@@ -54,28 +54,27 @@ function collect(style: StyleSpecification): Sample[] {
 
 const samples = collect(brightV9 as unknown as StyleSpecification);
 
-describe('style property functions', () => {
-    bench('createFunction', () => {
-        for (const {rawValue, propertySpec} of samples) {
-            createFunction(rawValue, propertySpec);
-        }
-    });
-
-    bench('evaluate function', () => {
-        for (const {compiledFunction} of samples) {
-            compiledFunction.evaluate({zoom: 0});
-        }
-    });
-
-    bench('createPropertyExpression', () => {
-        for (const {rawExpression, propertySpec} of samples) {
-            createPropertyExpression(rawExpression, 'expression', propertySpec);
-        }
-    });
-
-    bench('evaluate expression', () => {
-        for (const {compiledExpression} of samples) {
-            compiledExpression.evaluate({zoom: 0});
-        }
-    });
+test('style property functions', async ({bench}) => {
+    await bench.compare(
+        bench('createFunction', () => {
+            for (const {rawValue, propertySpec} of samples) {
+                createFunction(rawValue, propertySpec);
+            }
+        }),
+        bench('evaluate function', () => {
+            for (const {compiledFunction} of samples) {
+                compiledFunction.evaluate({zoom: 0});
+            }
+        }),
+        bench('createPropertyExpression', () => {
+            for (const {rawExpression, propertySpec} of samples) {
+                createPropertyExpression(rawExpression, 'expression', propertySpec);
+            }
+        }),
+        bench('evaluate expression', () => {
+            for (const {compiledExpression} of samples) {
+                compiledExpression.evaluate({zoom: 0});
+            }
+        }),
+    );
 });
