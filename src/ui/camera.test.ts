@@ -2371,6 +2371,64 @@ describe('cameraForBounds', () => {
     });
 });
 
+describe('cameraForBounds mapPadding', () => {
+    const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+    const mapPadding = {top: 20, right: 150, bottom: 40, left: 60};
+
+    test('defaults to the map\'s current padding', () => {
+        const {camera} = createCamera();
+        camera.setPadding(mapPadding);
+        const withLivePadding = camera.cameraForBounds(bb);
+        const withExplicitPadding = camera.cameraForBounds(bb, {mapPadding});
+
+        expect(withExplicitPadding).toEqual(withLivePadding);
+        expect(withLivePadding).not.toEqual(createCamera().camera.cameraForBounds(bb));
+    });
+
+    test('fits against the given padding instead of the map\'s current padding', () => {
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        const result = camera.cameraForBounds(bb, {mapPadding});
+
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        expect(result).toEqual(paddedCamera.cameraForBounds(bb));
+        expect(camera.getPadding()).toEqual({top: 300, right: 300, bottom: 300, left: 300});
+    });
+
+    test('treats missing sides as 0', () => {
+        const {camera} = createCamera();
+        camera.setPadding(mapPadding);
+        const result = camera.cameraForBounds(bb, {padding: 15, mapPadding: {left: 60}});
+
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding({top: 0, right: 0, bottom: 0, left: 60});
+        expect(result).toEqual(paddedCamera.cameraForBounds(bb, {padding: 15}));
+    });
+
+    test('combines with the bounds padding', () => {
+        const {camera} = createCamera();
+        const result = camera.cameraForBounds(bb, {padding: 15, mapPadding});
+
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        expect(result).toEqual(paddedCamera.cameraForBounds(bb, {padding: 15}));
+    });
+
+    test('fitBounds transitions to the given map padding', () => {
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        camera.fitBounds(bb, {mapPadding, duration: 0});
+
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        const expected = paddedCamera.cameraForBounds(bb);
+        expect(camera.getPadding()).toEqual(mapPadding);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual(fixedLngLat(expected.center, 4));
+        expect(fixedNum(camera.getZoom(), 3)).toBe(fixedNum(expected.zoom, 3));
+    });
+});
+
 describe('fitBounds', () => {
     test('no padding passed', () => {
         const {camera} = createCamera();

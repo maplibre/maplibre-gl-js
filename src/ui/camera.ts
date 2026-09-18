@@ -120,6 +120,10 @@ export type CameraForBoundsOptions = CameraOptions & {
      */
     padding?: number | PaddingOptions;
     /**
+     * The map's persistent padding to fit the bounds against, instead of the map's current padding.
+     */
+    mapPadding?: PaddingOptions;
+    /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
      */
@@ -200,6 +204,10 @@ export type FitBoundsOptions = FlyToOptions & {
      * @defaultValue false
      */
     linear?: boolean;
+    /**
+     * The map's persistent padding to fit the bounds against and transition to, instead of the map's current padding.
+     */
+    mapPadding?: PaddingOptions;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -611,9 +619,10 @@ export class Camera extends Evented<MapEventType> {
         const padding = extend(defaultPadding, options.padding) as PaddingOptions;
         options.padding = padding;
         const tr = this.transform;
+        const mapPadding = extend({top: 0, bottom: 0, right: 0, left: 0}, options.mapPadding ?? tr.padding) as PaddingOptions;
         const bounds = new LngLatBounds(p0, p1);
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
         if (result && this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
         }
@@ -645,6 +654,11 @@ export class Camera extends Evented<MapEventType> {
         options = extend(calculatedOptions, options);
         // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
         delete options.padding;
+        // The fit was calculated against mapPadding, so the map has to end up with that padding for the bounds to be in view.
+        if (options.mapPadding) {
+            options.padding = options.mapPadding;
+            delete options.mapPadding;
+        }
 
         return options.linear ?
             this.easeTo(options, eventData) :
