@@ -2976,6 +2976,7 @@ export class Map extends Evented<MapEventType> {
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
 
+        const keepCamera = this._camera._terrainChangeKeepsCamera;
         this._camera._terrainChangeKeepsCamera = false;
         if (!options) {
             // remove terrain
@@ -2988,7 +2989,13 @@ export class Map extends Evented<MapEventType> {
             this._camera.terrain = null;
             this._camera.transform.setMinElevationForCurrentTile(0);
             if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(0);
+                if (keepCamera) {
+                    const tr = this._camera.getTransformForUpdate();
+                    tr.recalculateZoomAndCenter();
+                    this._camera.applyUpdatedTransform(tr);
+                } else {
+                    this._camera.transform.setElevation(0);
+                }
             }
         } else {
             // add terrain

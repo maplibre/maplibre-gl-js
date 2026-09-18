@@ -367,6 +367,25 @@ describe('Terrain loading under a gesture', () => {
         expect(map.getZoom()).toBeCloseTo(11.131812, 5);
     });
 
+    test('removing the terrain after a rotate drag ends re-solves the zoom around the camera', async () => {
+        const map = createMap({interactive: true, zoom: 11});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+        map.redraw();
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        map.setTerrain(null);
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(map.getZoom()).toBeCloseTo(10.879229, 5);
+    });
+
     test('a DEM tile landing after jumpTo keeps the zoom and moves the camera with the center', async () => {
         const map = createMap({interactive: true, zoom: 11});
         await map.once('load');
