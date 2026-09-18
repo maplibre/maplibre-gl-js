@@ -330,7 +330,7 @@ export class HandlerManager {
             map.touchZoomRotate.enable(options.touchZoomRotate);
         }
 
-        this._add('blockableMapEvent', new BlockableMapEventHandler(map));
+        this._add('blockableMapEvent', new BlockableMapEventHandler(map, options), ['touchPan']);
 
         const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame(), this._transformProvider);
         this._add('scrollZoom', scrollZoom, ['mousePan']);
