@@ -1,6 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {Actor} from './actor';
-import {Dispatcher} from './dispatcher';
+import {Dispatcher, getGlobalDispatcher, releaseGlobalDispatcherIfIdle} from './dispatcher';
+import {getGlobalWorkerPool} from './global_worker_pool';
 import {workerFactory} from './web_worker';
 import {WorkerPool} from './worker_pool';
 
@@ -58,6 +59,31 @@ describe('Dispatcher', () => {
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);
 
+    });
+
+    test('releaseGlobalDispatcherIfIdle terminates workers and lets a fresh dispatcher be created', () => {
+        const first = getGlobalDispatcher();
+        const pool = getGlobalWorkerPool();
+        expect(pool.numActive()).toBe(1);
+
+        releaseGlobalDispatcherIfIdle();
+        expect(pool.numActive()).toBe(0);
+
+        const second = getGlobalDispatcher();
+        expect(second).not.toBe(first);
+        releaseGlobalDispatcherIfIdle();
+    });
+
+    test('releaseGlobalDispatcherIfIdle keeps the dispatcher while a map holds workers', () => {
+        const first = getGlobalDispatcher();
+        const pool = getGlobalWorkerPool();
+        pool.acquire(1);
+
+        releaseGlobalDispatcherIfIdle();
+        expect(getGlobalDispatcher()).toBe(first);
+
+        pool.release(1);
+        releaseGlobalDispatcherIfIdle();
     });
 
     test('remove destroys actors', () => {
