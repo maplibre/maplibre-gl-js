@@ -120,7 +120,10 @@ export type CameraForBoundsOptions = CameraOptions & {
      */
     padding?: number | PaddingOptions;
     /**
-     * The map's persistent padding to fit the bounds against, instead of the map's current padding.
+     * The persistent padding of the map to calculate the fit for, as returned by {@link Map.getPadding}.
+     * Unlike `padding`, which only leaves space around the bounds for this calculation,
+     * this is the padding the map will have when the result is applied.
+     * @defaultValue the map's current padding
      */
     mapPadding?: PaddingOptions;
     /**
@@ -205,7 +208,10 @@ export type FitBoundsOptions = FlyToOptions & {
      */
     linear?: boolean;
     /**
-     * The map's persistent padding to fit the bounds against and transition to, instead of the map's current padding.
+     * The persistent padding of the map to calculate the fit for and to set on the map, as returned by {@link Map.getPadding}.
+     * Unlike `padding`, which only leaves space around the bounds for this fit and is not kept,
+     * this is the padding the map will have after the transition.
+     * @defaultValue the map's current padding
      */
     mapPadding?: PaddingOptions;
     /**
