@@ -45,10 +45,13 @@ type TerrainGesture = {
     /** Whether a gesture over terrain is in flight, and the center elevation frozen with it. */
     inFlight: boolean;
     /**
-     * Elevation in meters of the terrain point grabbed on the gesture's first drag or zoom
-     * frame, the plane the gesture is solved on. Null until that frame. Undefined when the
-     * terrain under the pointer was not loaded on that frame: the gesture then stays on the
-     * center's elevation to its end, instead of grabbing another point on a later frame.
+     * Elevation in meters of the plane a drag or zoom is solved on, sampled once per gesture from
+     * the terrain under the pointer, on the gesture's first drag or zoom frame:
+     * - `null`: not sampled yet, the gesture has had no drag or zoom frame.
+     * - a number: sampled, the elevation of the terrain point that frame grabbed.
+     * - `undefined`: sampled, and the terrain under the pointer was not loaded. The gesture is
+     *   solved on the center's elevation to its end. Sampling again on a later frame would change
+     *   the drag's speed mid-gesture once that terrain loads.
      */
     anchorElevation: number | null | undefined;
 };
@@ -634,7 +637,8 @@ export class HandlerManager {
             return undefined;
         }
         if (this._terrainGesture.anchorElevation === null && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            this._terrainGesture.anchorElevation = tr.screenTerrainPointToMercatorCoordinate(around, terrain)?.z;
+            const anchor = tr.screenTerrainPointToMercatorCoordinate(around, terrain);
+            this._terrainGesture.anchorElevation = anchor ? anchor.z : undefined;
         }
         const elevation = this._terrainGesture.anchorElevation;
         if (elevation === null || elevation === undefined) {
