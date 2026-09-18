@@ -66,7 +66,7 @@ describe('HandlerManager terrain scenarios', () => {
             panDelta: deltas.panDelta,
         };
 
-        manager._terrainMovement = false;
+        manager._terrainGesture.inFlight = false;
         map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
@@ -74,7 +74,7 @@ describe('HandlerManager terrain scenarios', () => {
         expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
         expect(map._camera.elevationFreeze).toBe(false);
-        expect(manager._terrainMovement).toBe(false);
+        expect(manager._terrainGesture.inFlight).toBe(false);
         expect(setCenterMock).not.toHaveBeenCalled();
     });
 
@@ -109,12 +109,12 @@ describe('HandlerManager terrain scenarios', () => {
             panDelta: new Point(1, 1),
         };
 
-        manager._terrainMovement = false;
+        manager._terrainGesture.inFlight = false;
         map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
-        expect(manager._terrainMovement).toBe(true);
+        expect(manager._terrainGesture.inFlight).toBe(true);
         expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
@@ -150,12 +150,12 @@ describe('HandlerManager terrain scenarios', () => {
             panDelta: undefined,
         };
 
-        manager._terrainMovement = true;
+        manager._terrainGesture.inFlight = true;
         map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 
-        expect(manager._terrainMovement).toBe(true);
+        expect(manager._terrainGesture.inFlight).toBe(true);
         expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
@@ -193,12 +193,12 @@ describe('HandlerManager terrain scenarios', () => {
             panDelta: deltas.panDelta,
         };
 
-        manager._terrainMovement = false;
+        manager._terrainGesture.inFlight = false;
         map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
-        expect(manager._terrainMovement).toBe(true);
+        expect(manager._terrainGesture.inFlight).toBe(true);
         expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledTimes(1);
         expect(setCenterMock).not.toHaveBeenCalled();
@@ -237,7 +237,7 @@ describe('HandlerManager terrain scenarios', () => {
             panDelta: new Point(4, 6),
         };
 
-        manager._terrainMovement = true;
+        manager._terrainGesture.inFlight = true;
         map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
@@ -281,7 +281,7 @@ describe('HandlerManager terrain scenarios', () => {
             panDelta: undefined,
         };
 
-        manager._terrainMovement = true;
+        manager._terrainGesture.inFlight = true;
         map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
@@ -356,12 +356,12 @@ describe('terrain gesture anchoring', () => {
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
-        expect(map._handlers._terrainGestureAnchorElevation).toBe(1000);
+        expect(map._handlers._terrainGesture.anchorElevation).toBe(1000);
 
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
-        expect(map._handlers._terrainGestureAnchorElevation).toBeNull();
+        expect(map._handlers._terrainGesture.anchorElevation).toBeNull();
     });
 
     test('pitched moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
@@ -472,6 +472,24 @@ describe('terrain gesture anchoring', () => {
         expect(Math.abs(map.getCenter().lng - startCenter.lng)).toBeLessThan(0.5);
         expect(Math.abs(map.getCenter().lat - startCenter.lat)).toBeLessThan(0.5);
         endGesture(target);
+    });
+
+    test('a drag that starts over terrain that is not loaded keeps its speed when that terrain loads mid-drag', async () => {
+        const target = await setupGestureMap(45);
+        map.terrain = createTerrain();
+        const grabbedTerrain = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(null);
+
+        gestureStep('touchstart', target, [new Point(100, 150)]);
+        gestureStep('touchmove', target, [new Point(100, 140)]);
+        const latitudeAfterFirstMove = map.getCenter().lat;
+        gestureStep('touchmove', target, [new Point(100, 130)]);
+        const latitudeAfterSecondMove = map.getCenter().lat;
+        grabbedTerrain.mockReturnValue(new MercatorCoordinate(0.5, 0.35, 3000));
+        gestureStep('touchmove', target, [new Point(100, 120)]);
+        const latitudeAfterThirdMove = map.getCenter().lat;
+        endGesture(target);
+
+        expect(latitudeAfterThirdMove - latitudeAfterSecondMove).toBeCloseTo(latitudeAfterSecondMove - latitudeAfterFirstMove, 5);
     });
 
     test('falls back to the center-elevation behavior when the grabbed terrain point is above the camera altitude', async () => {

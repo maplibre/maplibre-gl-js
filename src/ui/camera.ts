@@ -351,6 +351,15 @@ export class Camera extends Evented<MapEventType> {
     elevationFreeze: boolean;
     /**
      * @internal
+     * Whether a change of the terrain under the center, a DEM tile landing with the map at rest or
+     * the terrain being removed, keeps the camera in place and re-solves zoom and center around it,
+     * instead of keeping the center in place and moving the camera with its elevation. True from the
+     * end of a gesture over terrain, which re-solves the same way on the terrain loaded by then,
+     * until `jumpTo` or `setTerrain` places the center again.
+     */
+    _terrainChangeKeepsCamera: boolean;
+    /**
+     * @internal
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
@@ -653,6 +662,7 @@ export class Camera extends Evented<MapEventType> {
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
+        this._terrainChangeKeepsCamera = false;
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
