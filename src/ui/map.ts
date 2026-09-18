@@ -2976,6 +2976,7 @@ export class Map extends Evented<MapEventType> {
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
 
+        this._camera._terrainChangeKeepsCamera = false;
         if (!options) {
             // remove terrain
             if (this.terrain) {
@@ -3039,7 +3040,13 @@ export class Map extends Evented<MapEventType> {
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+                if (this._camera._terrainChangeKeepsCamera) {
+                    const tr = this._camera.getTransformForUpdate();
+                    tr.recalculateZoomAndCenter(this.terrain);
+                    this._camera.applyUpdatedTransform(tr);
+                } else {
+                    this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+                }
             }
         }
 

@@ -757,6 +757,7 @@ export class HandlerManager {
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainGesture.inFlight) {
             this._camera.elevationFreeze = false;
+            this._camera._terrainChangeKeepsCamera = true;
             this._terrainGesture = {inFlight: false, anchorElevation: null};
             const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
