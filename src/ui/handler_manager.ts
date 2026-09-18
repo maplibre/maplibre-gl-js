@@ -44,18 +44,14 @@ const TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION = 0.9;
 type TerrainGesture = {
     /** Whether a gesture over terrain is in flight, and the center elevation frozen with it. */
     inFlight: boolean;
-    /** Whether the gesture's first drag or zoom frame has sampled `anchorElevation` yet. */
-    anchorSampled: boolean;
     /**
-     * Elevation in meters of the terrain point grabbed on that frame, the plane the
-     * gesture is solved on. Null until sampled, and when that terrain was not available.
+     * Elevation in meters of the terrain point grabbed on the gesture's first drag or zoom
+     * frame, the plane the gesture is solved on. Null until that frame. Undefined when the
+     * terrain under the pointer was not loaded on that frame: the gesture then stays on the
+     * center's elevation to its end, instead of grabbing another point on a later frame.
      */
-    anchorElevation: number | null;
+    anchorElevation: number | null | undefined;
 };
-
-function idleTerrainGesture(): TerrainGesture {
-    return {inFlight: false, anchorSampled: false, anchorElevation: null};
-}
 
 class RenderFrameEvent extends Event {
     type: 'renderFrame';
@@ -193,7 +189,7 @@ export class HandlerManager {
      * elevation is frozen, so a DEM tile landing mid-gesture cannot move the camera
      * under the fingers; the gesture's end re-solves the camera onto the terrain.
      */
-    _terrainGesture: TerrainGesture = idleTerrainGesture();
+    _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null};
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -321,8 +317,6 @@ export class HandlerManager {
         if (options.interactive && options.touchPitch) {
             map.touchPitch.enable(options.touchPitch);
         }
-        // the screen center the rotate and roll handlers measure the pointer against; the transform's own point, not the
-        // projected center, so a terrain elevation the gesture holds off the transform cannot move it
         const getCenter = () => this._camera.transform.centerPoint;
         const mouseRotate = generateMouseRotationHandler(options, getCenter);
         const mousePitch = generateMousePitchHandler(options);
@@ -639,15 +633,13 @@ export class HandlerManager {
         if (!aroundOnSurface) {
             return undefined;
         }
-        if (!this._terrainGesture.anchorSampled && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            this._terrainGesture.anchorSampled = true;
-            const anchor = tr.screenTerrainPointToMercatorCoordinate(around, terrain);
-            this._terrainGesture.anchorElevation = anchor ? anchor.z : null;
-        }
-        if (this._terrainGesture.anchorElevation === null) {
-            return undefined;
+        if (this._terrainGesture.anchorElevation === null && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            this._terrainGesture.anchorElevation = tr.screenTerrainPointToMercatorCoordinate(around, terrain)?.z;
         }
         const elevation = this._terrainGesture.anchorElevation;
+        if (elevation === null || elevation === undefined) {
+            return undefined;
+        }
         if (around.distSqr(tr.centerPoint) < 1.0e-2) {
             return undefined;
         }
@@ -761,7 +753,7 @@ export class HandlerManager {
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainGesture.inFlight) {
             this._camera.elevationFreeze = false;
-            this._terrainGesture = idleTerrainGesture();
+            this._terrainGesture = {inFlight: false, anchorElevation: null};
             const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);

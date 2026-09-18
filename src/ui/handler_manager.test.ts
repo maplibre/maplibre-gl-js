@@ -478,6 +478,24 @@ describe('terrain gesture anchoring', () => {
         endGesture(target);
     });
 
+    test('a drag that starts over terrain that is not loaded keeps its speed when that terrain loads mid-drag', async () => {
+        const target = await setupGestureMap(45);
+        map.terrain = createTerrain();
+        const grabbedTerrain = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(null);
+
+        gestureStep('touchstart', target, [new Point(100, 150)]);
+        gestureStep('touchmove', target, [new Point(100, 140)]);
+        const latitudeAfterFirstMove = map.getCenter().lat;
+        gestureStep('touchmove', target, [new Point(100, 130)]);
+        const latitudeAfterSecondMove = map.getCenter().lat;
+        grabbedTerrain.mockReturnValue(new MercatorCoordinate(0.5, 0.35, 3000));
+        gestureStep('touchmove', target, [new Point(100, 120)]);
+        const latitudeAfterThirdMove = map.getCenter().lat;
+        endGesture(target);
+
+        expect(latitudeAfterThirdMove - latitudeAfterSecondMove).toBeCloseTo(latitudeAfterSecondMove - latitudeAfterFirstMove, 5);
+    });
+
     test('falls back to the center-elevation behavior when the grabbed terrain point is above the camera altitude', async () => {
         const target = await setupGestureMap();
         map.terrain = createTerrain();
