@@ -75,14 +75,17 @@ export class Dispatcher {
 let globalDispatcher: Dispatcher;
 
 /**
- * Releases the global dispatcher when its claim is the only one keeping the
- * worker pool alive, so removing the last map terminates the workers instead
- * of caching them. Workers terminated by the browser (e.g. iOS memory
- * pressure) would otherwise be reused, dead, by the next map. The dispatcher
- * is recreated on demand.
+ * Releases the global dispatcher once no map holds a claim on the worker pool,
+ * so its claim never keeps the pool alive on its own. Without this, removing
+ * the last map would cache the workers forever, and workers terminated by the
+ * browser (e.g. iOS memory pressure) would be reused, dead, by the next map.
+ * It also kept `clearPrewarmedResources()` from ever releasing a prewarmed
+ * pool. The dispatcher is recreated on demand with the pool's current workers.
  */
 function releaseGlobalDispatcherIfIdle(): void {
-    if (!globalDispatcher || globalDispatcher.workerPool.numActive() !== 1) return;
+    if (!globalDispatcher) return;
+    const pool = globalDispatcher.workerPool;
+    if (pool.numActive() > (pool.isPreloaded() ? 2 : 1)) return;
     const dispatcher = globalDispatcher;
     globalDispatcher = null;
     dispatcher.remove();

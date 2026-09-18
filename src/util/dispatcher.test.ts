@@ -1,7 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {Actor} from './actor';
 import {Dispatcher, getGlobalDispatcher} from './dispatcher';
-import {getGlobalWorkerPool} from './global_worker_pool';
+import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool';
 import {workerFactory} from './web_worker';
 import {WorkerPool} from './worker_pool';
 
@@ -83,6 +83,17 @@ describe('Dispatcher', () => {
 
         expect(getGlobalDispatcher()).toBe(first);
         otherMapDispatcher.remove();
+    });
+
+    test('clearPrewarmedResources releases the workers once the last map is removed', () => {
+        prewarm();
+        const pool = getGlobalWorkerPool();
+        getGlobalDispatcher();
+        new Dispatcher(pool, 1).remove();
+
+        clearPrewarmedResources();
+
+        expect(pool.numActive()).toBe(0);
     });
 
     test('remove destroys actors', () => {
