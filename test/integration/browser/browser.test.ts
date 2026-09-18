@@ -283,7 +283,6 @@ describe('Browser tests', () => {
                 .setLngLat(markerMapPosition)
                 .addTo(map);
 
-            map.setPitch(52);
             map.fitBounds(
                 [
                     [markerMapPosition[0], markerMapPosition[1] + 0.02],
@@ -291,6 +290,7 @@ describe('Browser tests', () => {
                 ]
                 , {duration: 0}
             );
+            map.setPitch(52);
 
             map.setStyle({
                 version: 8,
