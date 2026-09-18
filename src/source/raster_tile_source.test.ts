@@ -18,7 +18,7 @@ function createSource(options, transformCallback?) {
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         getPixelRatio() { return 1; },
-        worldCoordinateHelper: mercatorWorldCoordinateHelper
+        _worldCoordinateHelper: mercatorWorldCoordinateHelper
     } as any);
 
     source.on('error', () => { }); // to prevent console log of errors

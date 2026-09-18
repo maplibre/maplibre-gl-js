@@ -53,7 +53,7 @@ export class StubMap extends Evented {
         this.transform = newTransform;
     }
 
-    get worldCoordinateHelper(): WorldCoordinateHelper {
+    get _worldCoordinateHelper(): WorldCoordinateHelper {
         return this.transform.worldCoordinateHelper;
     }
 }

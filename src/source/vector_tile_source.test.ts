@@ -8,10 +8,9 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {StubMap, createSimpleCrsTransform, getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
 
 import type {Map} from '../ui/map.ts';
 import type {WorkerTileParameters} from './worker_source.ts';
@@ -25,7 +24,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
-        worldCoordinateHelper: mercatorWorldCoordinateHelper,
+        _worldCoordinateHelper: mercatorWorldCoordinateHelper,
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {
@@ -383,13 +382,16 @@ describe('VectorTileSource', () => {
     });
 
     test('builds tile bounds with the map projection', async () => {
-        const source = createSource({
+        const mapInTheSimpleCrs = new StubMap();
+        mapInTheSimpleCrs.transform = createSimpleCrsTransform(512, 512);
+        const source = new VectorTileSource('id', {
+            type: 'vector',
             minzoom: 0,
             maxzoom: 22,
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [0, 45, 45, 80]
-        });
-        (source.map as any).worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+        }, getMockDispatcher(), undefined);
+        source.onAdd(mapInTheSimpleCrs as any as Map);
 
         await waitForMetadataEvent(source);
         const lastRowInsideLat45To80InTheSimpleCrs = 1;

@@ -663,7 +663,7 @@ export class Map extends Evented<MapEventType> {
      * The mapping between geographic coordinates and the world plane of the current projection.
      * Sources and the style read it here instead of reaching into the camera's transform.
      */
-    get worldCoordinateHelper(): WorldCoordinateHelper {
+    get _worldCoordinateHelper(): WorldCoordinateHelper {
         return this._camera.transform.worldCoordinateHelper;
     }
 

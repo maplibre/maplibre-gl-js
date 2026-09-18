@@ -1699,7 +1699,7 @@ export class Style extends Evented<MapEventType> {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const tileManager = this.tileManagers[sourceID];
-        const paramsStrict = {...params, globalState: this._globalState, worldCoordinateHelper: this.map.worldCoordinateHelper};
+        const paramsStrict = {...params, globalState: this._globalState, worldCoordinateHelper: this.map._worldCoordinateHelper};
         return tileManager ? querySourceFeatures(tileManager, paramsStrict) : [];
     }
 
