@@ -28,6 +28,7 @@ export type CameraForBoxAndBearingHandlerResult = {
     center: LngLat;
     zoom: number;
     bearing: number;
+    pitch: number;
 };
 
 export type EaseToHandlerOptions = {
@@ -121,7 +122,7 @@ export interface ICameraHelper {
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, pitch: number, tr: ITransform): CameraForBoxAndBearingHandlerResult;
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void;
 
@@ -159,7 +160,7 @@ export function updateRotation(args: UpdateRotationArgs): void {
     }
 }
 
-export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
+export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, pitch: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
     const edgePadding = mapPadding;
 
     // Consider all corners of the rotated bounding box derived from the given points
@@ -200,7 +201,7 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
         return undefined;
     }
 
-    const zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+    let zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
 
     // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
     const offset = Point.convert(options.offset);
@@ -211,15 +212,50 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
     const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
     const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / zoomScale(zoom));
 
-    const center = unprojectFromWorldCoordinates(
+    const boxCenter = unprojectFromWorldCoordinates(tr.worldSize, nwWorld.add(seWorld).div(2));
+    let center = unprojectFromWorldCoordinates(
         tr.worldSize,
         // either world diagonal can be used (NW-SE or NE-SW)
         nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
     );
 
-    return {
-        center,
-        zoom,
-        bearing
-    };
+    if (pitch === 0) {
+        return {center, zoom, bearing, pitch};
+    }
+
+    // The zoom and center above fit the box when looking straight down. When pitched, perspective shrinks the far
+    // side of the box and widens the near side, so measure the box on screen from that camera and correct the zoom
+    // and center to fit what is actually drawn. Same as MapLibre Native's cameraForLatLngs, this is a single pass.
+    const fitted = tr.clone();
+    fitted.setPadding(mapPadding);
+    fitted.setBearing(bearing);
+    fitted.setPitch(0);
+    fitted.setRoll(0);
+    fitted.setZoom(zoom);
+    fitted.setCenter(center);
+    // Where the box center lands on screen when looking straight down, which already accounts for the offset and the padding.
+    const targetPoint = fitted.locationToScreenPoint(boxCenter);
+    fitted.setPitch(pitch);
+
+    const screenCorners = [
+        fitted.locationToScreenPoint(bounds.getNorthWest()),
+        fitted.locationToScreenPoint(bounds.getNorthEast()),
+        fitted.locationToScreenPoint(bounds.getSouthEast()),
+        fitted.locationToScreenPoint(bounds.getSouthWest())
+    ];
+    if (screenCorners.some(p => !fitted.isPointOnMapSurface(p))) {
+        cameraBoundsWarning();
+        return undefined;
+    }
+    const screenMin = new Point(Math.min(...screenCorners.map(p => p.x)), Math.min(...screenCorners.map(p => p.y)));
+    const screenMax = new Point(Math.max(...screenCorners.map(p => p.x)), Math.max(...screenCorners.map(p => p.y)));
+    const screenSize = screenMax.sub(screenMin);
+    const screenCenter = fitted.screenPointToLocation(screenMin.add(screenMax).div(2));
+
+    zoom = Math.min(zoom + scaleZoom(Math.min(availableWidth / screenSize.x, availableHeight / screenSize.y)), options.maxZoom);
+    fitted.setZoom(zoom);
+    fitted.setLocationAtPoint(screenCenter, targetPoint);
+    center = fitted.center;
+
+    return {center, zoom, bearing, pitch};
 }

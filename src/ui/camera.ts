@@ -73,6 +73,16 @@ export type CameraOptions = CenterZoomBearing & {
 };
 
 /**
+ * Holds center, zoom, bearing and pitch properties
+ */
+export type CenterZoomBearingPitch = CenterZoomBearing & {
+    /**
+     * The desired pitch in degrees.
+     */
+    pitch?: number;
+};
+
+/**
  * Holds center, zoom and bearing properties
  */
 export type CenterZoomBearing = {
@@ -571,7 +581,7 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearingPitch | undefined {
         bounds = LngLatBounds.convert(bounds).adjustAntiMeridian();
         const bearing = options?.bearing || 0;
 
@@ -587,7 +597,7 @@ export class Camera extends Evented<MapEventType> {
      * @param p1 - Second point
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - the camera options
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, `bearing`, and `pitch`.
      *      If map is unable to fit, method will warn and return undefined.
      * @example
      * ```ts
@@ -599,7 +609,7 @@ export class Camera extends Evented<MapEventType> {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearingPitch | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -627,8 +637,9 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         const mapPadding = extend({top: 0, bottom: 0, right: 0, left: 0}, options.mapPadding ?? tr.padding) as PaddingOptions;
         const bounds = new LngLatBounds(p0, p1);
+        const pitch = options.pitch || 0;
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, pitch, tr);
         if (result && this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
         }
@@ -653,7 +664,7 @@ export class Camera extends Evented<MapEventType> {
             eventData);
     }
 
-    _fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any): this {
+    _fitInternal(calculatedOptions?: CenterZoomBearingPitch, options?: FitBoundsOptions, eventData?: any): this {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
