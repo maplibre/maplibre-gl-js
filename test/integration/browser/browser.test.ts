@@ -283,6 +283,7 @@ describe('Browser tests', () => {
                 .setLngLat(markerMapPosition)
                 .addTo(map);
 
+            map.setPitch(52);
             map.fitBounds(
                 [
                     [markerMapPosition[0], markerMapPosition[1] + 0.02],
@@ -290,7 +291,6 @@ describe('Browser tests', () => {
                 ]
                 , {duration: 0}
             );
-            map.setPitch(52);
 
             map.setStyle({
                 version: 8,
@@ -324,7 +324,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
-        expect(markerScreenPosition.y).toBeCloseTo(377.5);
+        expect(markerScreenPosition.y).toBeCloseTo(296.5);
     });
 
     test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {

@@ -637,7 +637,7 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         const mapPadding = extend({top: 0, bottom: 0, right: 0, left: 0}, options.mapPadding ?? tr.padding) as PaddingOptions;
         const bounds = new LngLatBounds(p0, p1);
-        const pitch = options.pitch || 0;
+        const pitch = options.pitch ?? tr.pitch;
 
         const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, pitch, tr);
         if (result && this._zoomSnap) {

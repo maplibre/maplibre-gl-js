@@ -2431,14 +2431,13 @@ describe('cameraForBounds pitch', () => {
         for (const edge of Object.values(s)) expect(edge).toBeGreaterThanOrEqual(-0.5);
     }
 
-    test('defaults to 0 and is returned', () => {
+    test('defaults to the map\'s current pitch and is returned', () => {
         const {camera} = createCamera();
         camera.setPitch(45);
         const result = camera.cameraForBounds(bb);
 
-        expect(result.pitch).toBe(0);
-        expect(fixedLngLat(result.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(result.zoom, 3)).toBe(2.469);
+        expect(result.pitch).toBe(45);
+        expect(result).toEqual(createCamera().camera.cameraForBounds(bb, {pitch: 45}));
     });
 
     test('keeps the bounds in view when pitched', () => {
@@ -2488,13 +2487,13 @@ describe('cameraForBounds pitch', () => {
         expectInside(slack({center: camera.getCenter(), zoom: camera.getZoom(), bearing: 0, pitch: 60}));
     });
 
-    test('fitBounds resets the pitch when not given, like bearing', () => {
+    test('fitBounds keeps the map\'s pitch when not given and fits for it', () => {
         const {camera} = createCamera();
-        camera.jumpTo({pitch: 45, bearing: 90});
+        camera.setPitch(45);
         camera.fitBounds(bb, {duration: 0});
 
-        expect(camera.getPitch()).toBe(0);
-        expect(camera.getBearing()).toBe(0);
+        expect(camera.getPitch()).toBe(45);
+        expectInside(slack({center: camera.getCenter(), zoom: camera.getZoom(), bearing: 0, pitch: 45}));
     });
 
     test('globe fits at pitch 0 but returns the given pitch', () => {
