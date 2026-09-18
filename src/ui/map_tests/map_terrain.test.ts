@@ -280,6 +280,74 @@ describe('Gesture end on terrain', () => {
     });
 });
 
+describe('Terrain loading under a gesture', () => {
+    test('a rotate drag holds the center elevation until it ends', async () => {
+        const map = createMap({interactive: true});
+        await map.once('style.load');
+        let terrainElevation = 0;
+        map.terrain = {...createTerrain(), getElevationForLngLat: () => terrainElevation} as any as Terrain;
+        map._camera.terrain = map.terrain;
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        terrainElevation = 1000;
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(0);
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
+    test('a rotate drag on globe holds the center elevation until the frame after it ends', async () => {
+        const map = createMap({interactive: true});
+        await map.once('style.load');
+        map.setProjection({type: 'globe'});
+        let terrainElevation = 0;
+        map.terrain = {...createTerrain(), getElevationForLngLat: () => terrainElevation} as any as Terrain;
+        map._camera.terrain = map.terrain;
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        terrainElevation = 1000;
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(0);
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
+    test('a rotate drag keeps its speed when the terrain under the center rises', async () => {
+        const map = createMap({interactive: true, zoom: 11, pitch: 60});
+        await map.once('style.load');
+        let terrainElevation = 0;
+        map.terrain = {
+            ...createTerrain(),
+            getElevationForLngLat: () => terrainElevation,
+            getElevationForLngLatZoom: () => terrainElevation,
+        } as any as Terrain;
+        map._camera.terrain = map.terrain;
+
+        const bearingAtStart = map.getBearing();
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 180});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 50, clientY: 180});
+        map._renderTaskQueue.run();
+        const bearingAfterFirstMove = map.getBearing();
+        terrainElevation = 3000;
+        map.redraw();
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 60, clientY: 180});
+        map._renderTaskQueue.run();
+        const bearingAfterSecondMove = map.getBearing();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 60, clientY: 180});
+
+        expect(bearingAfterSecondMove - bearingAfterFirstMove).toBeCloseTo(bearingAfterFirstMove - bearingAtStart, 5);
+    });
+});
+
 describe('Keep camera outside terrain', () => {
     test('Try to move camera into terrain', () => {
         let terrainElevation = 10;

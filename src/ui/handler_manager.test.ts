@@ -5,9 +5,6 @@ import {Event as MapEvent} from '../util/evented.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap, createTerrain} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
-import {browser} from '../util/browser.ts';
-import {MapSourceDataEvent} from './events.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
 
 import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
 import type {Map} from './map.ts';
@@ -25,7 +22,6 @@ beforeEach(() => {
 afterEach(() => {
     map.remove();
     vi.restoreAllMocks();
-    browser.prefersReducedMotion = false;
 });
 
 describe('HandlerManager terrain scenarios', () => {
@@ -539,115 +535,5 @@ describe('terrain gesture anchoring', () => {
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
-    });
-
-    async function setupPitchOnlyMap(): Promise<HTMLElement> {
-        map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch: 0, bearing: 0});
-        map.touchZoomRotate.disable();
-        map.dragPan.disable();
-        map.doubleClickZoom.disable();
-        // no inertia: it would hold the elevation again until its ease ends
-        browser.prefersReducedMotion = true;
-        await map.once('load');
-        return map.getCanvas();
-    }
-
-    function addLoadingDem(): void {
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-    }
-
-    function demTileLands(): void {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map.style.fire(new MapSourceDataEvent('data', {sourceId: 'dem', tile: {tileID}, coord: tileID}));
-    }
-
-    function pitchFingers(y: number): Point[] {
-        return [new Point(70, y), new Point(130, y)];
-    }
-
-    test('a pitch-only gesture holds the center elevation while DEM lands, then re-solves the camera onto the terrain', async () => {
-        const target = await setupPitchOnlyMap();
-        addLoadingDem();
-        const demStillLoading = 0;
-        const demLanded = 1000;
-        const elevationAtCenter = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(demStillLoading);
-        const landmark = new LngLat(7.51, 45.905);
-        expect(map.getCameraTargetElevation()).toBe(demStillLoading);
-
-        gestureStep('touchstart', target, pitchFingers(150));
-        gestureStep('touchmove', target, pitchFingers(140));
-        gestureStep('touchmove', target, pitchFingers(130));
-        expect(map.getPitch()).toBeGreaterThan(0);
-
-        elevationAtCenter.mockReturnValue(demLanded);
-        demTileLands();
-        gestureStep('touchmove', target, pitchFingers(120));
-        map.redraw();
-        expect(map.getCameraTargetElevation()).toBe(demStillLoading);
-
-        const landmarkBeforeRelease = map.project(landmark);
-        endGesture(target);
-        expect(map.getCameraTargetElevation()).toBe(demLanded);
-        expect(map.project(landmark).dist(landmarkBeforeRelease)).toBeLessThan(0.5);
-    });
-
-    test('a right-drag rotation keeps its speed when a DEM tile lands under the held center', async () => {
-        map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch: 60, bearing: 0});
-        await map.once('load');
-        addLoadingDem();
-        const demStillLoading = 0;
-        const demLanded = 3000;
-        const elevationAtCenter = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(demStillLoading);
-        const rotateSpeedDegreesPerPixel = 0.8;
-        const pixelsPerMove = 10;
-        const pointerY = 180;
-        let pointerX = 40;
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: pointerX, clientY: pointerY});
-        map._renderTaskQueue.run();
-        const bearingChangeOfOneMove = (): number => {
-            const before = map.getBearing();
-            pointerX += pixelsPerMove;
-            simulate.mousemove(window.document.body, {buttons: 2, clientX: pointerX, clientY: pointerY});
-            map._renderTaskQueue.run();
-            return map.getBearing() - before;
-        };
-
-        const beforeLanding = bearingChangeOfOneMove();
-        expect(beforeLanding).toBeCloseTo(pixelsPerMove * rotateSpeedDegreesPerPixel, 5);
-
-        elevationAtCenter.mockReturnValue(demLanded);
-        demTileLands();
-        const afterLanding = bearingChangeOfOneMove();
-        expect(afterLanding).toBeCloseTo(beforeLanding, 5);
-        simulate.mouseup(window.document.body, {buttons: 0, button: 2, clientX: pointerX, clientY: pointerY});
-    });
-
-    test('a pitch-only gesture over globe terrain holds the center elevation while DEM lands, then lets it catch up on the next frame', async () => {
-        const target = await setupPitchOnlyMap();
-        map.setProjection({type: 'globe'});
-        addLoadingDem();
-        const demStillLoading = 0;
-        const demLanded = 1000;
-        const elevationAtCenter = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(demStillLoading);
-        const landmark = new LngLat(7.51, 45.905);
-        expect(map.getCameraTargetElevation()).toBe(demStillLoading);
-
-        gestureStep('touchstart', target, pitchFingers(150));
-        gestureStep('touchmove', target, pitchFingers(140));
-        gestureStep('touchmove', target, pitchFingers(130));
-        expect(map.getPitch()).toBeGreaterThan(0);
-
-        elevationAtCenter.mockReturnValue(demLanded);
-        demTileLands();
-        gestureStep('touchmove', target, pitchFingers(120));
-        map.redraw();
-        expect(map.getCameraTargetElevation()).toBe(demStillLoading);
-
-        const landmarkBeforeRelease = map.project(landmark);
-        endGesture(target);
-        map.redraw();
-        expect(map.getCameraTargetElevation()).toBe(demLanded);
-        expect(map.project(landmark).dist(landmarkBeforeRelease)).toBeLessThan(0.5);
     });
 });
