@@ -758,11 +758,14 @@ export class MercatorTransform implements ITransform {
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
-        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMercator.x - fromMercator.x;
-        const dy = toMercator.y - fromMercator.y;
-        const dz = toMercator.z - fromMercator.z;
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const fromLngLat = LngLat.convert(from);
+        const toLngLat = LngLat.convert(to);
+        const fromWorld = worldCoordinateHelper.worldFromLngLat(fromLngLat.lng, fromLngLat.lat, altitudeFrom);
+        const toWorld = worldCoordinateHelper.worldFromLngLat(toLngLat.lng, toLngLat.lat, altitudeTo);
+        const dx = toWorld.x - fromWorld.x;
+        const dy = toWorld.y - fromWorld.y;
+        const dz = toWorld.z - fromWorld.z;
 
         const distance3D = Math.hypot(dx, dy, dz);
         if (distance3D === 0) throw new Error('Can\'t calculate camera options with same From and To');
@@ -774,7 +777,7 @@ export class MercatorTransform implements ITransform {
         let pitch = radiansToDegrees(Math.acos(groundDistance / distance3D));
         pitch = dz < 0 ? 90 - pitch : 90 + pitch;
 
-        return {center: toMercator.toLngLat(), elevation: altitudeTo, zoom, pitch, bearing};
+        return {center: worldCoordinateHelper.lngLatFromWorld(toWorld.x, toWorld.y), elevation: altitudeTo, zoom, pitch, bearing};
     }
 
     _calculateNearFarZ(cameraToSeaLevelDistance: number, limitedPitchRadians: number, offset: Point): void {
