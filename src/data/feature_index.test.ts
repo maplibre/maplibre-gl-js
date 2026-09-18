@@ -8,6 +8,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
 import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {createSimpleCrsTransform} from '../util/test/util.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -117,9 +118,7 @@ describe('FeatureIndex in a planar projection', () => {
 
     test('query returns geometry through the transform projection', () => {
         const {featureIndex, layer} = createIndexWithFeature();
-        const transform = new MercatorTransform();
-        transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
-        transform.resize(500, 500);
+        const transform = createSimpleCrsTransform(500, 500);
 
         const result = featureIndex.query({
             queryPadding: 0,

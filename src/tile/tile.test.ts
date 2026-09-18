@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
 import {FadingDirections, FadingRoles, Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
@@ -383,22 +383,32 @@ function createPainter(styleStub = {}): Painter {
     return {style: styleStub} as unknown as Painter;
 }
 
-describe('querySourceFeatures in a planar projection', () => {
-    test('returns geometry in the map projection lng/lat', () => {
-        const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
+describe('querySourceFeatures geometry of the top-left point of tile 2/1/2', () => {
+    let tile: Tile;
+
+    beforeEach(() => {
+        tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
         const geojsonWrapper = new GeoJSONWrapper([{type: 1, geometry: [0, 0], tags: {}} as any as Feature]);
         geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
         tile.loadVectorData(
             createVectorData({rawTileData: fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}})}),
             createPainter()
         );
+    });
 
-        const mercator = [];
-        tile.querySourceFeatures(mercator, {worldCoordinateHelper: mercatorWorldCoordinateHelper});
-        expect(mercator[0].geometry.coordinates[0]).toEqual([-90, 0]);
+    test('is mercator lng/lat on a mercator map', () => {
+        const result = [];
 
-        const simple = [];
-        tile.querySourceFeatures(simple, {worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)});
-        expect(simple[0].geometry.coordinates[0]).toEqual([-45, 0]);
+        tile.querySourceFeatures(result, {worldCoordinateHelper: mercatorWorldCoordinateHelper});
+
+        expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
+    });
+
+    test('is lng/lat in the map projection on a planar map', () => {
+        const result = [];
+
+        tile.querySourceFeatures(result, {worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)});
+
+        expect(result[0].geometry.coordinates[0]).toEqual([-45, 0]);
     });
 });
