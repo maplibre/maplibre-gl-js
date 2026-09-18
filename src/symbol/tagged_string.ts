@@ -6,7 +6,7 @@ import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
 
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
 import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
@@ -78,13 +78,13 @@ const breakableBefore: Record<number, boolean> = {
 function getGlyphAdvance(
     grapheme: string,
     section: SectionOptions,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphMap: GlyphMap,
     imagePositions: Record<string, ImagePosition>,
     spacing: number,
     layoutTextSize: number
 ): number {
     if ('fontStack' in section) {
-        const positions = glyphMap[section.fontStack];
+        const positions = glyphMap[section.fontStack]?.default;
         const glyph = positions?.[grapheme];
         if (glyph) return glyph.metrics.advance * section.scale + spacing;
 
@@ -392,7 +392,7 @@ export class TaggedString {
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
@@ -453,7 +453,7 @@ export class TaggedString {
     determineAverageLineWidth(
         spacing: number,
         maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number): number {
         let totalWidth = 0;
