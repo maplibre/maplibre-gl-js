@@ -5,6 +5,7 @@ import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
+import {hasVerticalForm} from '../style/style_glyph.ts';
 
 import type {GlyphMap} from '../style/style_glyph.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
@@ -246,9 +247,22 @@ export class TaggedString {
         return this.sectionIndex[index];
     }
 
-    verticalizePunctuation(): void {
-        this.text = verticalizePunctuation(this.text);
-        this._graphemes = null;
+    /**
+     * Uses compatibility punctuation where a font's vertical form is unavailable or unused, preserving
+     * UTF-16 length, keeping whole-text context, cluster boundaries and section indices intact.
+     * @param verticals - resolved orientations, if available; only upright glyphs use font alternates
+     */
+    verticalizePunctuation(glyphMap: GlyphMap = {}, verticals?: boolean[]): void {
+        const replacements = verticalizePunctuation(this.text);
+        let offset = 0;
+        this._graphemes = this.graphemes().map((grapheme, index) => {
+            const replacement = replacements.slice(offset, offset + grapheme.length);
+            offset += grapheme.length;
+            const section = this.getSection(index);
+            return verticals?.[index] !== false && 'fontStack' in section && hasVerticalForm(glyphMap, section.fontStack, grapheme) ?
+                grapheme : replacement;
+        });
+        this.text = this._graphemes.join('');
     }
 
     /**

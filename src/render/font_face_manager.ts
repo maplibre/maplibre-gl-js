@@ -39,10 +39,14 @@ type DeclaredFontFace = {
      */
     family: string;
     /**
-     * Resolves to whether the file loaded and can be drawn with. Started the first time a codepoint
+     * Resolves to the loaded CSS family, or `null` if unavailable. Started the first time a codepoint
      * needs this file, so that a style may declare more fonts than any one map ever draws with.
      */
-    loaded?: Promise<boolean>;
+    loaded?: Promise<string | null>;
+    /** The same font with OpenType vertical alternates enabled, loaded only when requested. */
+    verticalLoaded?: Promise<string | null>;
+    /** Downloaded bytes shared by concurrent loads, released when loading finishes. */
+    data?: Promise<ArrayBuffer>;
 };
 
 /**
@@ -145,15 +149,23 @@ export class FontFaceManager {
      * within a name each declared file, until one covers it. A file that fails to load is skipped,
      * the specification asking for unsupported fonts to be ignored.
      *
-     * @returns the CSS family to draw with, or `null` to leave the codepoint to the `glyphs` URL
+     * Vertical requests use that file's `vert` face and return `null` if it fails to load.
+     *
+     * @param vertical - required: `true` for `vert`, `false` for normal feature settings
+     * @returns the CSS family to draw with, or `null` to use normal glyph fallbacks; for vertical
+     * requests, `null` means to retain the existing rotation or compatibility punctuation
      */
-    async getFontFamily(fontStack: string, codePoint: number): Promise<string | null> {
+    async getFontFamily(fontStack: string, codePoint: number, vertical: boolean): Promise<string | null> {
         for (const fontName of fontStack.split(',')) {
             for (const face of this._faces[fontName.trim()] ?? []) {
                 if (!covers(face, codePoint)) continue;
 
-                face.loaded ??= this._loadFontFace(face);
-                if (await face.loaded) return face.family;
+                face.loaded ??= this._loadFontFace(face, false);
+                const data = face.data;
+                const family = await face.loaded;
+                if (!family) continue;
+
+                return vertical ? face.verticalLoaded ??= this._loadFontFace(face, true, data) : family;
             }
         }
         return null;
@@ -193,27 +205,38 @@ export class FontFaceManager {
     }
 
     /**
-     * Downloads a declared file and hands it to the browser, reporting whether it can be drawn with.
-     * A failure is not an error: its codepoints fall through to the next file, then to `glyphs`.
+     * Downloads a declared file and hands it to the browser.
+     * A failure is not an error: the caller chooses a fallback.
+     *
+     * @param vertical - `true` to enable `vert`, `false` for normal feature settings
+     * @param data - a download retained by a concurrent request while the normal face loads
+     * @returns the registered CSS family, or `null` on failure, ignored feature settings or disposal
      */
-    async _loadFontFace(face: DeclaredFontFace): Promise<boolean> {
+    async _loadFontFace(face: DeclaredFontFace, vertical: boolean, data?: Promise<ArrayBuffer>): Promise<string | null> {
+        const description = vertical ? 'vertical font face' : 'font face';
         if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {
-            warnOnce(`Ignoring the font face at ${face.url}: this environment has no CSS Font Loading API.`);
-            return false;
+            warnOnce(`Ignoring the ${description} at ${face.url}: this environment has no CSS Font Loading API.`);
+            return null;
         }
 
         let fontFace: FontFace;
         try {
-            fontFace = new FontFace(face.family, await this._downloadFontFile(face.url));
-            if (!Object.values(this._faces).some(faces => faces.includes(face))) return false;
+            data ??= face.data ??= this._downloadFontFile(face.url);
+            const family = vertical ? `${face.family}-vertical` : face.family;
+            fontFace = new FontFace(family, await data,
+                {featureSettings: vertical ? '"vert" 1' : 'normal'});
+            if (!Object.values(this._faces).some(faces => faces.includes(face))) return null;
+            if (vertical && (!fontFace.featureSettings || fontFace.featureSettings === 'normal')) return null;
             document.fonts.add(fontFace);
             this._registered.add(fontFace);
             await fontFace.load();
-            return true;
+            return this._registered.has(fontFace) ? family : null;
         } catch (e) {
             if (fontFace) this._unregister(fontFace);
-            warnOnce(`Ignoring the font face at ${face.url}: ${ensureError(e).message}`);
-            return false;
+            warnOnce(`Ignoring the ${description} at ${face.url}: ${ensureError(e).message}`);
+            return null;
+        } finally {
+            if (face.data === data) delete face.data;
         }
     }
 
@@ -236,6 +259,9 @@ export class FontFaceManager {
     }
 
     _unregisterAll(): void {
+        for (const faces of Object.values(this._faces)) {
+            for (const face of faces) delete face.data;
+        }
         for (const fontFace of this._registered) {
             document.fonts?.delete(fontFace);
         }
