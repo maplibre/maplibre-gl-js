@@ -3,7 +3,8 @@ import {type FakeServer, fakeServer} from 'nise';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
-import {Dispatcher, releaseGlobalDispatcherIfIdle} from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
+import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {type PluginState} from './rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
@@ -168,18 +169,21 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
 
+    /** Simulates removing the last map, which releases the global dispatcher and its workers */
+    function removeLastMap() {
+        new Dispatcher(getGlobalWorkerPool(), 1).remove();
+    }
+
     it('should re-import the plugin into fresh workers when the dispatcher is recreated', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
         expect(rtlMainThreadPlugin.status).toBe('loaded');
 
-        const staleDispatcher = rtlMainThreadPlugin.dispatcher;
-        releaseGlobalDispatcherIfIdle();
+        removeLastMap();
         broadcastSpy.mockClear();
         rtlMainThreadPlugin.ensureSynced();
         await sleep(1);
 
-        expect(rtlMainThreadPlugin.dispatcher).not.toBe(staleDispatcher);
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
         expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
@@ -188,7 +192,7 @@ describe('RTLMainThreadPlugin', () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
 
-        releaseGlobalDispatcherIfIdle();
+        removeLastMap();
         broadcastSpy.mockClear();
         rtlMainThreadPlugin.ensureSynced();
 

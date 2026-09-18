@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Terminate the pooled web workers when the last map is removed, so a new map recovers after the browser silently kills the workers (e.g. iOS memory pressure). Use `prewarm()` to keep workers alive across maps. ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj))
 - _...Add new stuff here..._
 
 ## 5.13.0

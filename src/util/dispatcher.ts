@@ -53,7 +53,10 @@ export class Dispatcher {
     remove(mapRemoved: boolean = true) {
         this.actors.forEach((actor) => { actor.remove(); });
         this.actors = [];
-        if (mapRemoved) this.workerPool.release(this.id);
+        if (mapRemoved) {
+            this.workerPool.release(this.id);
+            releaseGlobalDispatcherIfIdle();
+        }
     }
 
     public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
@@ -72,17 +75,17 @@ export class Dispatcher {
 let globalDispatcher: Dispatcher;
 
 /**
- * Releases the global dispatcher when only it is keeping the worker pool alive,
- * so removing the last map terminates the workers instead of caching them.
- * Workers terminated by the browser (e.g. iOS memory pressure) would otherwise
- * be reused, dead, by the next map. The dispatcher is recreated on demand.
+ * Releases the global dispatcher when its claim is the only one keeping the
+ * worker pool alive, so removing the last map terminates the workers instead
+ * of caching them. Workers terminated by the browser (e.g. iOS memory
+ * pressure) would otherwise be reused, dead, by the next map. The dispatcher
+ * is recreated on demand.
  */
-export function releaseGlobalDispatcherIfIdle() {
-    const pool = getGlobalWorkerPool();
-    if (globalDispatcher && !pool.isPreloaded() && pool.numActive() === 1) {
-        globalDispatcher.remove();
-        globalDispatcher = null;
-    }
+function releaseGlobalDispatcherIfIdle(): void {
+    if (!globalDispatcher || globalDispatcher.workerPool.numActive() !== 1) return;
+    const dispatcher = globalDispatcher;
+    globalDispatcher = null;
+    dispatcher.remove();
 }
 
 export function getGlobalDispatcher(): Dispatcher {

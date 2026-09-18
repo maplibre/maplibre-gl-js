@@ -5,7 +5,6 @@ import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
-import {releaseGlobalDispatcherIfIdle} from '../util/dispatcher';
 import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, type StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -3576,7 +3575,6 @@ export class Map extends Camera {
         this.handlers.destroy();
         delete this.handlers;
         this.setStyle(null);
-        releaseGlobalDispatcherIfIdle();
         if (typeof window !== 'undefined') {
             removeEventListener('online', this._onWindowOnline, false);
         }
