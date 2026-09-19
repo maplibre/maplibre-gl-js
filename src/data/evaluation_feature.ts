@@ -1,4 +1,5 @@
 import {loadGeometry} from './load_geometry.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';

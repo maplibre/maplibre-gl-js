@@ -3,6 +3,7 @@ import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
+
 import type {Map} from '../map.ts';
 
 let server: FakeServer;

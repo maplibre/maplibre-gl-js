@@ -9,7 +9,7 @@ import {interpolates, type Color, type StylePropertySpecification, normalizeProp
 import {register} from '../util/web_worker_transfer.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
 
-import {type CanonicalTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 
 type TimePoint = number;
 
@@ -87,6 +87,12 @@ export class PropertyValue<T, R> {
 
     getGlobalStateRefs(): Set<string> {
         return this.expression.globalStateRefs || new Set<string>();
+    }
+
+    /** Whether the expression reads one of the global state keys in `refs`. */
+    readsGlobalState(refs: string[]): boolean {
+        const globalStateRefs = this.getGlobalStateRefs();
+        return refs.some(ref => globalStateRefs.has(ref));
     }
 
     possiblyEvaluate(
@@ -198,6 +204,33 @@ export class Transitionable<Props> {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._propertyRootKey(name), this._globalState);
         }
         this._values[name].transition = clone(value) || undefined;
+    }
+
+    /** Keeps the transitions running in `transitioning` on `priorGlobalState` where they read one of `refs` live. */
+    retainPriorGlobalState(refs: string[], priorGlobalState: Record<string, any>, transitioning: Transitioning<Props>): void {
+        for (const name of Object.keys(transitioning._values)) {
+            for (let step: TransitioningPropertyValue<any, unknown> = transitioning._values[name]; step; step = step.prior) {
+                const {value} = step;
+                if (!value.property.specification.transition || value.isDataDriven() ||
+                    value.expression._globalState !== this._globalState || !value.readsGlobalState(refs)) continue;
+
+                step.value = new PropertyValue(value.property, value.value, this._propertyRootKey(name as keyof Props), priorGlobalState);
+            }
+        }
+    }
+
+    /** Reads every value that reads one of `refs` again and transitions it from what `transitioning` shows. */
+    applyGlobalStateChange(refs: string[], priorGlobalState: Record<string, any>, transitioning: Transitioning<Props>, parameters: TransitionParameters): Transitioning<Props> {
+        this.retainPriorGlobalState(refs, priorGlobalState, transitioning);
+        let changed = false;
+        for (const name of Object.keys(this._values)) {
+            const {value} = this._values[name];
+            if (!value.readsGlobalState(refs)) continue;
+
+            this.setValue(name as keyof Props, value.value);
+            changed = true;
+        }
+        return changed ? this.transitioned(parameters, transitioning) : transitioning;
     }
 
     serialize(): any {

@@ -2,10 +2,11 @@ import {beforeEach, describe, expect, test} from 'vitest';
 import {Placement, RetainedQueryData} from './placement.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
-import {type EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {FeatureIndex} from '../data/feature_index.ts';
+
+import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
 describe('placement', () => {
     let placement: Placement;

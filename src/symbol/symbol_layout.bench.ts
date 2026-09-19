@@ -1,4 +1,4 @@
-import {bench} from 'vitest';
+import {test} from 'vitest';
 import {performSymbolLayout} from './symbol_layout.ts';
 import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
@@ -10,21 +10,24 @@ const parsedTiles = await Promise.all(fixtureTiles.map(async (tile): Promise<Wor
     return await parseTile(tile, true) as WorkerTileWithData;
 }));
 
-bench('performSymbolLayout', () => {
-    for (const tileResult of parsedTiles) {
-        for (const bucket of tileResult.buckets) {
-            if (bucket instanceof SymbolBucket) {
-                performSymbolLayout({
-                    bucket,
-                    glyphMap: tileResult.glyphMap,
-                    glyphPositions: tileResult.glyphPositions,
-                    imageMap: tileResult.iconMap,
-                    imagePositions: tileResult.imageAtlas.iconPositions,
-                    showCollisionBoxes: false,
-                    canonical: tileResult.featureIndex.tileID.canonical,
-                    subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
-                });
+test('performSymbolLayout', async ({bench}) => {
+    await bench('performSymbolLayout', () => {
+        for (const tileResult of parsedTiles) {
+            for (const bucket of tileResult.buckets) {
+                if (bucket instanceof SymbolBucket) {
+                    performSymbolLayout({
+                        bucket,
+                        glyphMap: tileResult.glyphMap,
+                        glyphPositions: tileResult.glyphPositions,
+                        imageMap: tileResult.iconMap,
+                        imagePositions: tileResult.imageAtlas.iconPositions,
+                        showCollisionBoxes: false,
+                        canonical: tileResult.featureIndex.tileID.canonical,
+                        subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+                        hasPromoteId: false
+                    });
+                }
             }
         }
-    }
+    }).run();
 });

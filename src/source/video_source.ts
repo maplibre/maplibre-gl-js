@@ -1,6 +1,5 @@
 import {getVideo} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
-
 import {ImageSource} from './image_source.ts';
 import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';

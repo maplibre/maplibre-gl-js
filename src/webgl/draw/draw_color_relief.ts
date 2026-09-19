@@ -1,23 +1,22 @@
 import {Texture} from '../texture.ts';
-import type {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {type ColorMode} from '../color_mode.ts';
 import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {ColorMode} from '../color_mode.ts';
+import type {StencilMode} from '../stencil_mode.ts';
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (renderOptions.currentPass !== 'translucent') return;
+export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderContext: RenderContext): void {
+    if (renderContext.currentPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
-    const {isRenderingToTexture} = renderOptions;
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
 
@@ -29,12 +28,12 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
     if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        renderColorRelief(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, isRenderingToTexture); // draw without borders
-        renderColorRelief(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
+        renderColorRelief(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, renderContext); // draw without borders
+        renderColorRelief(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, renderContext); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        renderColorRelief(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
+        renderColorRelief(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, renderContext);
     }
 }
 
@@ -54,11 +53,10 @@ function renderColorRelief(
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
-    isRenderingToTexture: boolean
+    renderContext: RenderContext
 ) {
     const projection = painter.style.projection;
     const context = painter.context;
-    const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('colorRelief');
     const align = !painter.options.moving;
@@ -102,14 +100,9 @@ function renderColorRelief(
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
+        const terrainData = getTerrainDataForTile(renderContext, coord);
 
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: coord,
-            aligned: align,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
+        const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

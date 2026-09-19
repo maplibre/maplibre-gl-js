@@ -8,6 +8,7 @@ import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style.ts';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
+
 import type {GeoJSONSourceSpecification, LayerSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
