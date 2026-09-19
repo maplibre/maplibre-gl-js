@@ -13,7 +13,7 @@
 - Keep source-specific tile LOD settings from changing internal terrain render-to-texture tile selection ([#8048](https://github.com/maplibre/maplibre-gl-js/pull/8048)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `map.setSky()` silently keeping the old sky and firing no `error` event when the value included a `-transition` key ([#8375](https://github.com/maplibre/maplibre-gl-js/issues/8375)) (by [@Yasser-Ameur](https://github.com/Yasser-Ameur))
 - Fix markers and popups misplaced after a projection change or by terrain that loads after the map settled. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
-- Fix `coveringTiles` ordering tiles of mixed zoom levels (pitched and terrain views) by a distance measured in the wrong zoom's tile grid, which made the load order depend on the location on Earth ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX)) (by [@Jua004](https://github.com/Jua004))
+- Fix `coveringTiles` ordering tiles of mixed zoom levels (pitched and terrain views) by a distance measured in the wrong zoom's tile grid, which made the load order depend on the location on Earth ([#8494](https://github.com/maplibre/maplibre-gl-js/pull/8494)) (by [@Jua004](https://github.com/Jua004))
 - _...Add new stuff here..._
 
 ## 6.10.0
