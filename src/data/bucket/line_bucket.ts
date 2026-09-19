@@ -54,10 +54,43 @@ const EXTRUDE_SCALE = 63;
  * COS_HALF_SHARP_CORNER controls how sharp a corner has to be for us to add an
  * extra vertex. The default is 75 degrees.
  *
- * The newly created vertices are placed SHARP_CORNER_OFFSET pixels from the corner.
+ * The newly created vertices are placed SHARP_CORNER_OFFSET pixels from the
+ * corner, plus the along-side slide of a `line-offset` miter so the helpers
+ * stay past the offset join.
  */
 const COS_HALF_SHARP_CORNER = Math.cos(75 / 2 * (Math.PI / 180));
 const SHARP_CORNER_OFFSET = 15;
+
+/**
+ * How far a parallel `line-offset` slides a miter along each side.
+ */
+function offsetMiterSlide(lineOffset: number, miterLength: number): number {
+    return Math.abs(lineOffset) * Math.sqrt(Math.max(miterLength * miterLength - 1, 0));
+}
+
+/**
+ * Returns `current` after a parallel offset of `offsetTile` tile units, using
+ * the same miter as `offsetLine` / the line shader.
+ */
+function offsetLineVertex(prev: Point | undefined, current: Point, next: Point | undefined, offsetTile: number): Point {
+    if (!offsetTile) return current;
+
+    const incoming = prev ? current.sub(prev)._unit()._perp() : undefined;
+    const outgoing = next ? next.sub(current)._unit()._perp() : undefined;
+    const first = incoming || outgoing;
+    const second = outgoing || incoming;
+    if (!first || !second) return current;
+
+    const join = first.add(second);
+    if (join.x !== 0 || join.y !== 0) {
+        join._unit();
+    }
+    const cosHalfAngle = join.x * second.x + join.y * second.y;
+    if (cosHalfAngle !== 0) {
+        join._mult(1 / cosHalfAngle);
+    }
+    return current.add(join.mult(offsetTile));
+}
 
 // Angle per triangle for approximating round line joins.
 const DEG_PER_TRIANGLE = 20;
@@ -307,9 +340,19 @@ export class LineBucket implements Bucket {
 
         if (join === 'bevel') miterLimit = 1.05;
 
-        const sharpCornerOffset = this.overscaling <= 16 ?
-            SHARP_CORNER_OFFSET * EXTENT / (512 * this.overscaling) :
-            0;
+        const hasTileScale = Number.isFinite(this.overscaling) && this.overscaling > 0;
+        const pixelToTile = hasTileScale ? EXTENT / (512 * this.overscaling) : 0;
+        const lineOffsetTile = hasTileScale ?
+            this.layers[0].paint.get('line-offset').evaluate(feature, {}) * pixelToTile : 0;
+        const baseSharpCornerOffset = this.overscaling <= 16 && hasTileScale ?
+            SHARP_CORNER_OFFSET * pixelToTile : 0;
+
+        let lastOffsetPos: Point | undefined;
+        let prevOriginalVertex: Point | undefined = isPolygon ? vertices[len - 2] : undefined;
+        if (isPolygon && lineOffsetTile !== 0) {
+            const ringPrev = len >= 3 ? vertices[len - 3] : undefined;
+            lastOffsetPos = offsetLineVertex(ringPrev, vertices[len - 2], vertices[first], lineOffsetTile);
+        }
 
         // we could be more precise, but it would only save a negligible amount of space
         const segment = this.segments.prepareSegment(len * 10, this.layoutVertexArray, this.indexArray);
@@ -384,12 +427,14 @@ export class LineBucket implements Bucket {
 
             const isSharpCorner = cosHalfAngle < COS_HALF_SHARP_CORNER && prevVertex && nextVertex;
             const lineTurnsLeft = prevNormal.x * nextNormal.y - prevNormal.y * nextNormal.x > 0;
+            const cornerInset = baseSharpCornerOffset + offsetMiterSlide(lineOffsetTile, miterLength);
 
             if (isSharpCorner && i > first) {
                 const prevSegmentLength = currentVertex.dist(prevVertex);
-                if (prevSegmentLength > 2 * sharpCornerOffset) {
-                    const newPrevVertex = currentVertex.sub(currentVertex.sub(prevVertex)._mult(sharpCornerOffset / prevSegmentLength)._round());
-                    this.updateDistance(prevVertex, newPrevVertex);
+                if (prevSegmentLength > 2 * cornerInset) {
+                    const newPrevVertex = currentVertex.sub(currentVertex.sub(prevVertex)._mult(cornerInset / prevSegmentLength)._round());
+                    this.addPathDistance(prevVertex, newPrevVertex, lastOffsetPos, prevOriginalVertex, currentVertex, lineOffsetTile);
+                    lastOffsetPos = offsetLineVertex(prevOriginalVertex, newPrevVertex, currentVertex, lineOffsetTile);
                     this.addCurrentVertex(newPrevVertex, prevNormal, 0, 0, segment);
                     prevVertex = newPrevVertex;
                 }
@@ -422,7 +467,12 @@ export class LineBucket implements Bucket {
             }
 
             // Calculate how far along the line the currentVertex is
-            if (prevVertex) this.updateDistance(prevVertex, currentVertex);
+            if (prevVertex) {
+                this.addPathDistance(prevVertex, currentVertex, lastOffsetPos, prevOriginalVertex, nextVertex, lineOffsetTile);
+                lastOffsetPos = offsetLineVertex(prevOriginalVertex, currentVertex, nextVertex, lineOffsetTile);
+            } else {
+                lastOffsetPos = offsetLineVertex(undefined, currentVertex, nextVertex, lineOffsetTile);
+            }
 
             if (currentJoin === 'miter') {
 
@@ -506,16 +556,41 @@ export class LineBucket implements Bucket {
                 }
             }
 
+            prevOriginalVertex = vertices[i];
+
             if (isSharpCorner && i < len - 1) {
                 const nextSegmentLength = currentVertex.dist(nextVertex);
-                if (nextSegmentLength > 2 * sharpCornerOffset) {
-                    const newCurrentVertex = currentVertex.add(nextVertex.sub(currentVertex)._mult(sharpCornerOffset / nextSegmentLength)._round());
-                    this.updateDistance(currentVertex, newCurrentVertex);
+                if (nextSegmentLength > 2 * cornerInset) {
+                    const newCurrentVertex = currentVertex.add(nextVertex.sub(currentVertex)._mult(cornerInset / nextSegmentLength)._round());
+                    this.addPathDistance(currentVertex, newCurrentVertex, lastOffsetPos, currentVertex, nextVertex, lineOffsetTile);
+                    lastOffsetPos = offsetLineVertex(currentVertex, newCurrentVertex, nextVertex, lineOffsetTile);
                     this.addCurrentVertex(newCurrentVertex, nextNormal, 0, 0, segment);
                     currentVertex = newCurrentVertex;
                 }
             }
         }
+    }
+
+    /**
+     * Adds the distance from the previous vertex to `to`, along the offset path
+     * when `line-offset` is non-zero and along the centerline otherwise.
+     */
+    private addPathDistance(
+        from: Point,
+        to: Point,
+        lastOffsetPos: Point | undefined,
+        toPrev: Point | undefined,
+        toNext: Point | undefined,
+        offsetTile: number
+    ): void {
+        if (offsetTile === 0) {
+            this.updateDistance(from, to);
+            return;
+        }
+        const end = offsetLineVertex(toPrev, to, toNext, offsetTile);
+        const start = lastOffsetPos ?? offsetLineVertex(undefined, from, to, offsetTile);
+        this.distance += start.dist(end);
+        this.updateScaledDistance();
     }
 
     /**

@@ -95,6 +95,11 @@ void main() {
     mediump vec2 offset2 = offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);
 
     float adjustedThickness = projectLineThickness(pos.y);
+    // Join vertices with an along-line extrude move further when line-offset
+    // is applied; keep dash distance in step with that shift.
+    float extrudeLength = length(a_extrude * scale);
+    float alongJoin = a_direction * sqrt(max(extrudeLength * extrudeLength - 1.0, 0.0));
+    float linesofar = a_linesofar + offset * alongJoin / u_ratio * adjustedThickness;
     vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);
     vec4 projected_with_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation + dist / u_ratio * adjustedThickness);
     gl_Position = projected_with_extrude;
@@ -116,7 +121,7 @@ void main() {
     float u_patternscale_b_x = u_tileratio / dasharray_to.w / u_crossfade_to;
     float u_patternscale_b_y = -dasharray_to.z / 2.0 / u_lineatlas_height;
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
+    v_tex_a = vec2(linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
+    v_tex_b = vec2(linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
     v_width2 = vec2(outset, inset);
 }

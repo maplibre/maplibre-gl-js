@@ -225,4 +225,84 @@ describe('LineBucket', () => {
 
         expect(bucket.isEmpty()).toBe(true);
     });
+
+    test('line-offset leaves centerline distance unchanged when offset is zero', () => {
+        const bucket = createAngledLineBucket(0);
+        addRightAngle(bucket);
+        expect(bucket.distance).toBe(8000);
+    });
+
+    test('line-offset does not change linesofar on a straight segment', () => {
+        const line = {type: 2, properties: {}} as BucketFeature;
+        const noOffset = createAngledLineBucket(0);
+        noOffset.addLine([
+            new Point(0, 0),
+            new Point(4000, 0)
+        ], line, 'miter', 'butt', 2, 1.05, undefined, noSubdivision);
+        const withOffset = createAngledLineBucket(-32);
+        withOffset.addLine([
+            new Point(0, 0),
+            new Point(4000, 0)
+        ], line, 'miter', 'butt', 2, 1.05, undefined, noSubdivision);
+        expect(withOffset.distance).toBe(noOffset.distance);
+    });
+
+    test('line-offset follows the offset path around a corner', () => {
+        const inward = createAngledLineBucket(32);
+        addRightAngle(inward);
+        expect(inward.distance).toBeLessThan(8000);
+
+        const outward = createAngledLineBucket(-32);
+        addRightAngle(outward);
+        expect(outward.distance).toBeGreaterThan(8000);
+    });
+
+    test('sharp-corner helpers sit farther from the corner when line-offset is set', () => {
+        const noOffset = createAngledLineBucket(0);
+        addRightAngle(noOffset);
+        const withOffset = createAngledLineBucket(-32);
+        addRightAngle(withOffset);
+
+        const corner = new Point(4000, 0);
+        expect(nearestOnIncoming(withOffset, corner)).toBeGreaterThan(nearestOnIncoming(noOffset, corner));
+    });
 });
+
+function createAngledLineBucket(lineOffset: number): LineBucket {
+    const layer = new LineStyleLayer({
+        id: 'test',
+        type: 'line',
+        paint: {'line-offset': lineOffset}
+    } as LayerSpecification, {});
+    layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+    return new LineBucket({layers: [layer], overscaling: 1, zoom: 0} as BucketParameters<LineStyleLayer>);
+}
+
+function addRightAngle(bucket: LineBucket) {
+    const line = {
+        type: 2,
+        properties: {}
+    } as BucketFeature;
+    bucket.addLine([
+        new Point(0, 0),
+        new Point(4000, 0),
+        new Point(4000, 4000)
+    ], line, 'miter', 'butt', 2, 1.05, undefined, noSubdivision);
+}
+
+function layoutPositions(bucket: LineBucket): Point[] {
+    const view = new Int16Array(bucket.layoutVertexArray.arrayBuffer);
+    const seen = new Map<string, Point>();
+    for (let i = 0; i < bucket.layoutVertexArray.length; i++) {
+        const x = view[i * 4] >> 1;
+        const y = view[i * 4 + 1] >> 1;
+        seen.set(`${x},${y}`, new Point(x, y));
+    }
+    return [...seen.values()];
+}
+
+function nearestOnIncoming(bucket: LineBucket, corner: Point): number {
+    return Math.min(...layoutPositions(bucket)
+        .filter((p) => p.y === 0 && p.x < corner.x)
+        .map((p) => corner.dist(p)));
+}
