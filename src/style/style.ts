@@ -367,7 +367,7 @@ export class Style extends Evented<MapEventType> {
 
         const values: Record<string, any> = {};
         const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(this._initialGlobalState)]);
-        for (const propertyName in newStylesheetState) {
+        for (const propertyName of propertyNames) {
             // Initial global state has priority over global state defaults defined in the map style
             values[propertyName] = this._initialGlobalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
         }
