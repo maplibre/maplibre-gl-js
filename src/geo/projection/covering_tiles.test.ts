@@ -4,6 +4,17 @@ import {LngLat} from '../lng_lat.ts';
 import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+
+/**
+ * The covering set must equal `expected` as a SET. Its ORDER is pinned separately, by
+ * "coveringTiles order" below. (Before the mixed-zoom sort fix these tests pinned an exact
+ * order that sorted coarser tiles by a distance computed in the wrong zoom's grid.)
+ */
+function expectSameTiles(tiles: OverscaledTileID[], expected: OverscaledTileID[]): void {
+    const byKey = (a: OverscaledTileID, b: OverscaledTileID) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+    expect([...tiles].sort(byKey)).toEqual([...expected].sort(byKey));
+}
 
 describe('coveringTiles', () => {
     describe('globe', () => {
@@ -75,7 +86,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
             });
     
-            expect(tiles).toEqual([
+            expectSameTiles(tiles, [
                 new OverscaledTileID(6, 0, 6, 32, 31),
                 new OverscaledTileID(6, 0, 6, 31, 31),
                 new OverscaledTileID(10, 0, 10, 511, 512),
@@ -98,7 +109,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
             });
     
-            expect(tiles).toEqual([
+            expectSameTiles(tiles, [
                 new OverscaledTileID(7, 0, 7, 64, 64),
                 new OverscaledTileID(7, 0, 7, 64, 63),
                 new OverscaledTileID(7, 0, 7, 63, 63),
@@ -332,7 +343,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expectSameTiles(coveringTiles(transform, options), [
                         new OverscaledTileID(11, 0, 11, 1023, 1023),
                         new OverscaledTileID(11, 0, 11, 1024, 1022),
                         new OverscaledTileID(11, 0, 11, 1023, 1022),
@@ -357,7 +368,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expectSameTiles(coveringTiles(transform, options), [
                         new OverscaledTileID(11, 0, 11, 1024, 1023),
                         new OverscaledTileID(9, 0, 9, 256, 256),
                         new OverscaledTileID(12, 0, 12, 2047, 2046),
@@ -381,7 +392,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expectSameTiles(coveringTiles(transform, options), [
                         new OverscaledTileID(11, 0, 11, 1023, 1023),
                         new OverscaledTileID(8, 0, 8, 128, 128),
                         new OverscaledTileID(8, 0, 8, 127, 128),
@@ -406,7 +417,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expectSameTiles(coveringTiles(transform, options), [
                         new OverscaledTileID(10, 0, 10, 511, 511),
                         new OverscaledTileID(9, 0, 9, 255, 256),
                         new OverscaledTileID(12, 0, 12, 2048, 2046),
@@ -433,31 +444,31 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-0.01, 0.01));
     
             transform.setZoom(0);
-            expect(coveringTiles(transform, options)).toEqual([]);
+            expectSameTiles(coveringTiles(transform, options), []);
     
             transform.setZoom(1);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
     
             transform.setZoom(2.4);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(2, 0, 2, 1, 1),
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
     
             transform.setZoom(10);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
     
             transform.setZoom(11);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
@@ -466,7 +477,7 @@ describe('coveringTiles', () => {
             transform.resize(2048, 128);
             transform.setZoom(9);
             transform.setPadding({top: 16});
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(9, 0, 9, 255, 255),
                 new OverscaledTileID(9, 0, 9, 256, 255),
                 new OverscaledTileID(9, 0, 9, 255, 256),
@@ -484,7 +495,7 @@ describe('coveringTiles', () => {
             transform.setBearing(32.0);
             transform.setCenter(new LngLat(56.90, 48.20));
             transform.resize(1024, 768);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(5, 0, 5, 21, 11),
                 new OverscaledTileID(5, 0, 5, 20, 11),
                 new OverscaledTileID(5, 0, 5, 21, 10),
@@ -513,7 +524,7 @@ describe('coveringTiles', () => {
             transform.setBearing(0.0);
             transform.setCenter(new LngLat(20.918, 39.232));
             transform.resize(50, 1000);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(8, 0, 8, 142, 98),
                 new OverscaledTileID(7, 0, 7, 71, 48),
                 new OverscaledTileID(5, 0, 5, 17, 11),
@@ -527,14 +538,14 @@ describe('coveringTiles', () => {
             transform.setBearing(45.0);
             transform.setCenter(new LngLat(25.02, 60.15));
             transform.resize(300, 50);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
     
             transform.resize(50, 300);
-            expect(coveringTiles(transform, options)).toEqual([
+            expectSameTiles(coveringTiles(transform, options), [
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74),
@@ -553,7 +564,7 @@ describe('coveringTiles', () => {
             };
             transform.resize(50, 300);
             transform.setPitch(70);
-            expect(coveringTiles(transform, optionsWithCustomTileLoading)).toEqual([
+            expectSameTiles(coveringTiles(transform, optionsWithCustomTileLoading), [
                 new OverscaledTileID(7, 0, 7, 74, 36),
                 new OverscaledTileID(7, 0, 7, 73, 37),
                 new OverscaledTileID(7, 0, 7, 74, 35),
@@ -572,7 +583,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 calculateTileZoom: createCalculateTileZoomFunction(1.0, 1.0)
             };
-            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+            expectSameTiles(coveringTiles(transform, optionsWithTileLodParams), [
                 new OverscaledTileID(5, 0, 5, 18, 9),
                 new OverscaledTileID(5, 0, 5, 18, 8)
             ]);
@@ -586,7 +597,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 calculateTileZoom: createCalculateTileZoomFunction(1.0, 10.0)
             };
-            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+            expectSameTiles(coveringTiles(transform, optionsWithTileLodParams), [
                 new OverscaledTileID(6, 0, 6, 37, 18),
                 new OverscaledTileID(6, 0, 6, 37, 17),
                 new OverscaledTileID(6, 0, 6, 36, 18),
@@ -602,7 +613,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 calculateTileZoom: createCalculateTileZoomFunction(10.0, 1.0)
             };
-            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+            expectSameTiles(coveringTiles(transform, optionsWithTileLodParams), [
                 new OverscaledTileID(7, 0, 7, 73, 37),
                 new OverscaledTileID(7, 0, 7, 73, 36),
                 new OverscaledTileID(7, 0, 7, 72, 36),
@@ -806,6 +817,31 @@ describe('coveringTiles', () => {
             ]);
         });
     
+    });
+});
+
+describe('coveringTiles order', () => {
+    // Distance from the map centre to the centre of a tile, in world units (mercator 0..1),
+    // computed independently of coveringTiles' own bookkeeping.
+    const centreDistance = (transform: MercatorTransform, id: OverscaledTileID): number => {
+        const n = 2 ** id.canonical.z;
+        const c = MercatorCoordinate.fromLngLat(transform.center);
+        return Math.hypot((id.canonical.x + 0.5) / n + id.wrap - c.x, (id.canonical.y + 0.5) / n - c.y);
+    };
+
+    test('mixed zoom levels are sorted by true distance from the centre', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(1280, 800);
+        transform.setCenter(new LngLat(-25.1138, 72.87232));
+        transform.setZoom(13.59);
+        transform.setPitch(70);
+        const tiles = coveringTiles(transform, {tileSize: 256, minzoom: 4, maxzoom: 15});
+        expect(new Set(tiles.map(t => t.canonical.z)).size).toBeGreaterThan(2);
+        const d = tiles.map(t => centreDistance(transform, t));
+        for (let i = 1; i < d.length; i++) {
+            // tile centres and the true centre differ by at most half a tile of the nominal zoom
+            expect(d[i] + 0.5 / 2 ** 13).toBeGreaterThanOrEqual(d[i - 1] - 0.5 / 2 ** 13);
+        }
     });
 });
 
