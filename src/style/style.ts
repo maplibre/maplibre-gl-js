@@ -267,7 +267,9 @@ export class Style extends Evented<MapEventType> {
         this._resetUpdates();
 
         this.dispatcher.broadcast(MessageType.setReferrer, getReferrer());
-        rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
+        const rtlPlugin = rtlMainThreadPluginFactory();
+        rtlPlugin.ensureSynced();
+        rtlPlugin.on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
 
         this.on('data', (event) => {
             if (event.dataType !== 'source' || event.sourceDataType !== 'metadata') {

@@ -4,6 +4,7 @@ import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread.ts';
 import {sleep} from '../util/test/util.ts';
 import {browser} from '../util/browser.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
+import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 import type {PluginState} from './rtl_text_plugin_status.ts';
@@ -167,5 +168,46 @@ describe('RTLMainThreadPlugin', () => {
         await expect(rtlMainThreadPlugin._requestImport()).rejects.toBe(failedToLoadMessage);
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('error');
+    });
+
+    /** Simulates removing the last map, which releases the global dispatcher and its workers */
+    function removeLastMap() {
+        new Dispatcher(getGlobalWorkerPool(), 1).remove();
+    }
+
+    test('should re-import the plugin into fresh workers when the dispatcher is recreated', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
+
+        removeLastMap();
+        broadcastSpy.mockClear();
+        rtlMainThreadPlugin.ensureSynced();
+        await sleep(1);
+
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
+    });
+
+    test('should re-sync deferred state when the dispatcher is recreated', async () => {
+        await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
+        expect(rtlMainThreadPlugin.status).toBe('deferred');
+
+        removeLastMap();
+        broadcastSpy.mockClear();
+        rtlMainThreadPlugin.ensureSynced();
+
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
+        expect(rtlMainThreadPlugin.status).toBe('deferred');
+    });
+
+    test('ensureSynced should do nothing while the dispatcher is unchanged', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        broadcastSpy.mockClear();
+
+        rtlMainThreadPlugin.ensureSynced();
+        await sleep(1);
+        expect(broadcastSpy).not.toHaveBeenCalled();
     });
 });
