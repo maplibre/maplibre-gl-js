@@ -259,12 +259,42 @@ class SourceExpressionBinder implements AttributeBinder {
     }
 }
 
+/**
+ * Zoom levels a composite paint expression is evaluated at for a tile.
+ *
+ * The two results are stored in the vertex buffer and blended with
+ * `interpolationFactor(currentZoom, minZoom, maxZoom)`. The stops that cover
+ * `[tileZoom, tileZoom + 1]` are used so a ramp that finishes inside one
+ * integer zoom is not stretched across that whole zoom: a composite interpolate
+ * has no other way to represent a pair such as 15 and 15.05 if it is sampled
+ * only at `tileZoom` and `tileZoom + 1`.
+ */
+export function compositePaintSampleZooms(
+    tileZoom: number,
+    zoomStops: readonly number[] | undefined,
+    useIntegerZoom: boolean
+): {minZoom: number; maxZoom: number} {
+    if (useIntegerZoom || !zoomStops?.length) {
+        return {minZoom: tileZoom, maxZoom: tileZoom + 1};
+    }
+
+    let lower = 0;
+    while (lower < zoomStops.length && zoomStops[lower] <= tileZoom) lower++;
+    lower = Math.max(0, lower - 1);
+    let upper = lower;
+    while (upper < zoomStops.length && zoomStops[upper] < tileZoom + 1) upper++;
+    upper = Math.min(zoomStops.length - 1, upper);
+    return {minZoom: zoomStops[lower], maxZoom: zoomStops[upper]};
+}
+
 class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     expression: CompositeExpression;
     uniformNames: string[];
     type: string;
     useIntegerZoom: boolean;
     zoom: number;
+    minZoom: number;
+    maxZoom: number;
     maxValue: number;
 
     paintVertexArray: StructArray;
@@ -279,6 +309,9 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
         this.type = type;
         this.useIntegerZoom = useIntegerZoom;
         this.zoom = zoom;
+        const range = compositePaintSampleZooms(zoom, expression.zoomStops, useIntegerZoom);
+        this.minZoom = range.minZoom;
+        this.maxZoom = range.maxZoom;
         this.maxValue = 0;
         this.paintVertexAttributes = names.map((name) => ({
             name: `a_${name}`,
@@ -290,16 +323,16 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     }
 
     populatePaintArray(newLength: number, feature: Feature, options: PaintOptions) {
-        const min = this.expression.evaluate(new EvaluationParameters(this.zoom, options), feature, {}, options.canonical, [], options.formattedSection);
-        const max = this.expression.evaluate(new EvaluationParameters(this.zoom + 1, options), feature, {}, options.canonical, [], options.formattedSection);
+        const min = this.expression.evaluate(new EvaluationParameters(this.minZoom, options), feature, {}, options.canonical, [], options.formattedSection);
+        const max = this.expression.evaluate(new EvaluationParameters(this.maxZoom, options), feature, {}, options.canonical, [], options.formattedSection);
         const start = this.paintVertexArray.length;
         this.paintVertexArray.resize(newLength);
         this._setPaintValue(start, newLength, min, max);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        const min = this.expression.evaluate(new EvaluationParameters(this.zoom, options), feature, featureState);
-        const max = this.expression.evaluate(new EvaluationParameters(this.zoom + 1, options), feature, featureState);
+        const min = this.expression.evaluate(new EvaluationParameters(this.minZoom, options), feature, featureState);
+        const max = this.expression.evaluate(new EvaluationParameters(this.maxZoom, options), feature, featureState);
         this._setPaintValue(start, end, min, max);
     }
 
@@ -336,7 +369,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
 
     setUniform(uniform: Uniform<any>, globals: GlobalProperties): void {
         const currentZoom = this.useIntegerZoom ? Math.floor(globals.zoom) : globals.zoom;
-        const factor = clamp(this.expression.interpolationFactor(currentZoom, this.zoom, this.zoom + 1), 0, 1);
+        const factor = clamp(this.expression.interpolationFactor(currentZoom, this.minZoom, this.maxZoom), 0, 1);
         uniform.set(factor);
     }
 
