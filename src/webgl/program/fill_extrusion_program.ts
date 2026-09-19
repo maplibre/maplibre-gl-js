@@ -5,7 +5,6 @@ import {
     Uniform2f,
     Uniform3f
 } from '../uniform_binding.ts';
-
 import {mat3, vec3} from 'gl-matrix';
 import {extend} from '../../util/util.ts';
 

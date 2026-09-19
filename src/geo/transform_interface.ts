@@ -482,16 +482,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     getCameraQueryGeometry(queryGeometry: Point[]): Point[];
 
     /**
-     * Return the distance to the camera in clip space from a LngLat.
-     * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
-     * to determine whether a point is occluded.
-     * @param lngLat - the point
-     * @param elevation - the point's elevation
-     * @returns depth value in clip space (between 0 and 1)
-     */
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
-
-    /**
      * @internal
      * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
      * Currently only supported in mercator projection.
@@ -508,10 +498,18 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Returns whether the supplied location is occluded in this projection.
-     * For example during globe rendering a location on the backfacing side of the globe is occluded.
+     * Whether the camera cannot see a location. The planet hides it when the location, at its elevation, lies beyond
+     * the globe's horizon plane, the plane the globe shaders clip an elevated vertex with. With `terrain`, the terrain
+     * hides it when the ray from the camera to the location meets the rendered terrain surface
+     * (see {@link screenTerrainPointToMercatorCoordinate}) before it reaches the location, and a location behind the
+     * camera or beyond the far plane is hidden too.
+     * @param lngLat - the location
+     * @param terrain - the terrain that can hide the location; without it only the planet can
+     * @param elevation - the location's elevation in meters; the terrain's elevation there when omitted, zero without terrain. `Marker` raises its center with it
+     * @returns true when the planet or the terrain lies between the camera and the location, false when the location is
+     * in view. Terrain with no renderable tiles hides nothing.
      */
-    isLocationOccluded(lngLat: LngLat): boolean;
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean;
 
     /**
      * @internal
