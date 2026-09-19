@@ -2,24 +2,44 @@
   "version": 8,
   "metadata": {
     "test": {
-      "width": 128,
-      "height": 128
+      "width": 256,
+      "height": 256
     }
   },
-  "center": [0, 0],
-  "zoom": 2,
+  "center": [
+    13.418056,
+    52.499167
+  ],
+  "zoom": 14,
   "sources": {
     "geojson": {
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[
-          [-50, -40],
-          [50, -40],
-          [50, 40],
-          [-50, 40],
-          [-50, -40]
-        ]]
+        "coordinates": [
+          [
+            [
+              13.4144,
+              52.4973
+            ],
+            [
+              13.4217,
+              52.4973
+            ],
+            [
+              13.4217,
+              52.501
+            ],
+            [
+              13.4144,
+              52.501
+            ],
+            [
+              13.4144,
+              52.4973
+            ]
+          ]
+        ]
       }
     }
   },
@@ -41,7 +61,10 @@
       "paint": {
         "line-color": "#000",
         "line-width": 2,
-        "line-dasharray": [2, 2],
+        "line-dasharray": [
+          2,
+          2
+        ],
         "line-offset": -32
       }
     }
