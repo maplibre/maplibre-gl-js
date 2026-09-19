@@ -272,7 +272,7 @@ export class Style extends Evented<MapEventType> {
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         this._setInitialValues();
-        this._initialGlobalState = options.globalState;
+        this._initialGlobalState = options.globalState ?? {};
 
         this._resetUpdates();
 
