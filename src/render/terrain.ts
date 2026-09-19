@@ -15,6 +15,7 @@ import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 
 import type {Tile} from '../tile/tile.ts';
+import type {DEMData} from '../data/dem_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -51,6 +52,13 @@ export const TERRAIN_OCCLUSION_MARGIN = 0.01;
 const BRACKET_PADDING_M = 10;
 /** Tile coordinates run from 0 up to but not including `EXTENT`; a point on the far edge is clamped back into the tile. */
 const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
+/**
+ * Headroom over a tile's highest DEM pixel for {@link skipAboveTerrain}: bilinear sampling
+ * near a tile edge blends in the neighbour's border pixels, which DEMData's min/max do not
+ * include. The per-tile bound below already takes those borders in; this only absorbs
+ * rounding in the unpacking.
+ */
+const SKIP_MARGIN_M = 1;
 
 /**
  * Offset, in DEM pixels, from a tile coordinate scaled by `dim` to the pixel index `DEMData.sampleBilinear` expects.
@@ -74,7 +82,7 @@ export type TerrainCoverageIndex = {
      * Numeric keys, because {@link sampleAt} runs once per step of every terrain raycast
      * (up to 512 steps per `unproject`) and a string key per zoom per step dominated its cost.
      */
-    tiles: Array<Map<number, Map<number, TerrainElevationSampler | null>>>;
+    tiles: Array<Map<number, Map<number, CoverageTile>>>;
     /** Per entry of `zooms`, same keys as `tiles`: the tiles that have a finer tile of the index inside them. */
     shadowed: Array<Map<number, Set<number>>>;
     /**
@@ -87,12 +95,20 @@ export type TerrainCoverageIndex = {
     maxElevation: number;
 };
 
-type CoverageHit = {
+type CoverageTile = {
+    sampler: TerrainElevationSampler | null;
+    /**
+     * No sample of this tile is higher than this (meters, exaggerated). Lets a raycast skip the
+     * whole tile while the ray is above it — see {@link skipAboveTerrain}.
+     */
+    maxElevation: number;
+};
+
+type CoverageHit = CoverageTile & {
     wrap: number;
     z: number;
     tileX: number;
     tileY: number;
-    sampler: TerrainElevationSampler | null;
 };
 
 /**
@@ -103,18 +119,19 @@ type CoverageHit = {
  * @returns the index, or null when there is no tile
  */
 export function createTerrainCoverageIndex(
-    tiles: Array<{wrap: number; z: number; x: number; y: number; sampler: TerrainElevationSampler | null}>,
+    tiles: Array<{wrap: number; z: number; x: number; y: number; sampler: TerrainElevationSampler | null; maxElevation?: number}>,
     minElevation: number,
     maxElevation: number
 ): TerrainCoverageIndex | null {
     if (tiles.length === 0) return null;
     const zooms = [...new Set(tiles.map(t => t.z))].sort((a, b) => b - a);
-    const perZoom = zooms.map(() => new Map<number, Map<number, TerrainElevationSampler | null>>());
-    for (const {wrap, z, x, y, sampler} of tiles) {
+    const perZoom = zooms.map(() => new Map<number, Map<number, CoverageTile>>());
+    for (const {wrap, z, x, y, sampler, maxElevation} of tiles) {
         const byWrap = perZoom[zooms.indexOf(z)];
         let m = byWrap.get(wrap);
         if (!m) byWrap.set(wrap, m = new Map());
-        m.set(y * 2 ** z + x, sampler);
+        // a tile whose DEM is loading is flat at 0; an unknown bound disables skipping
+        m.set(y * 2 ** z + x, {sampler, maxElevation: sampler ? (maxElevation ?? Infinity) : 0});
     }
     // A tile with a finer tile inside it answers some of its points with the finer tile, so it
     // must not serve sampleAt's same-tile fast path.
@@ -354,14 +371,17 @@ export class Terrain {
     }
 
     private _buildCoverageIndex(): TerrainCoverageIndex | null {
-        const tiles: Array<{wrap: number; z: number; x: number; y: number; sampler: TerrainElevationSampler | null}> = [];
+        const tiles: Parameters<typeof createTerrainCoverageIndex>[0] = [];
         let minElevation = 0;
         let maxElevation = 0;
 
         for (const tile of this.tileManager.getRenderableTiles()) {
             if (!tile) continue;
             const {canonical, wrap} = tile.tileID;
-            tiles.push({wrap, z: canonical.z, x: canonical.x, y: canonical.y, sampler: this.getElevationSampler(tile.tileID)});
+            const sampler = this.getElevationSampler(tile.tileID);
+            const dem = sampler ? this.tileManager.getSourceTile(tile.tileID, true)?.dem : null;
+            tiles.push({wrap, z: canonical.z, x: canonical.x, y: canonical.y, sampler,
+                maxElevation: dem ? demMaxWithBorder(dem) : undefined});
             const {minElevation: tileMin, maxElevation: tileMax} = this.getMinMaxElevation(tile.tileID);
             minElevation = Math.min(minElevation, tileMin ?? 0);
             maxElevation = Math.max(maxElevation, tileMax ?? 0);
@@ -652,12 +672,12 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
         const tileX = Math.floor(scaledX);
         const tileY = Math.floor(scaledY);
         const key = tileY * scale + tileX;
-        const sampler = tilesOfWrap.get(key);
-        if (sampler === undefined) continue;
+        const tile = tilesOfWrap.get(key);
+        if (tile === undefined) continue;
         // Only a tile with no finer tile inside it answers every point within its bounds the same
         // way the full search would, so only such a tile may serve the fast path.
-        index.last = index.shadowed[i].get(wrap)?.has(key) ? null : {wrap, z, tileX, tileY, sampler};
-        return sampleTile(sampler, exaggeration, scaledX, scaledY, tileX, tileY);
+        index.last = index.shadowed[i].get(wrap)?.has(key) ? null : {...tile, wrap, z, tileX, tileY};
+        return sampleTile(tile.sampler, exaggeration, scaledX, scaledY, tileX, tileY);
     }
     return NOT_COVERED;
 }
@@ -667,6 +687,59 @@ function sampleTile(sampler: TerrainElevationSampler | null, exaggeration: numbe
     const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
     const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
     return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
+}
+
+/**
+ * Highest elevation a bilinear sample of this DEM can return, raw (without exaggeration):
+ * `dem.max` covers the tile's own pixels, but samples within half a pixel of an edge also
+ * read the 1-pixel border, which holds the neighbouring tile's values once backfilled.
+ */
+function demMaxWithBorder(dem: DEMData): number {
+    let max = dem.max;
+    for (let i = -1; i <= dem.dim; i++) {
+        max = Math.max(max, dem.get(i, -1), dem.get(i, dem.dim), dem.get(-1, i), dem.get(dem.dim, i));
+    }
+    return max;
+}
+
+/**
+ * Empty-space skipping for a terrain raycast. Given a ray (world pixels horizontally, meters
+ * vertically) at parameter `t`, where the previous {@link sampleAt} was taken, returns how far
+ * along the ray it certainly stays above the terrain: up to where it leaves the tile that
+ * sample came from, or descends to that tile's highest point, whichever comes first. Returns
+ * `t` itself when nothing can be skipped (the sample was not from a skippable tile, or the ray
+ * is not above its highest point).
+ *
+ * A raycast over a pitched view spends most of its steps high above the ground, in the far
+ * field; skipping a tile at a time there replaces hundreds of steps with a handful.
+ * @param index - the coverage index the previous sample was taken from
+ * @param near - ray origin: world pixels x, y and meters z
+ * @param dx - ray direction x, world pixels per unit of t
+ * @param dy - ray direction y, world pixels per unit of t
+ * @param dz - ray direction z, meters per unit of t
+ * @param worldSize - world size in pixels
+ * @param t - the ray parameter of the previous sample
+ * @param exaggeration - terrain exaggeration of the samples
+ * @returns the largest `t` up to which the ray is known to be above the terrain
+ */
+export function skipAboveTerrain(index: TerrainCoverageIndex, near: ArrayLike<number>, dx: number, dy: number, dz: number, worldSize: number, t: number, exaggeration: number): number {
+    const hit = index.last;
+    if (!hit || !(hit.maxElevation < Infinity)) return t;
+    const top = hit.maxElevation * (exaggeration || 1) + SKIP_MARGIN_M;
+    const z = near[2] + t * dz;
+    if (z <= top) return t;
+    // the tile's bounds, world pixels
+    const size = worldSize / 2 ** hit.z;
+    const x0 = (hit.wrap * 2 ** hit.z + hit.tileX) * size, y0 = hit.tileY * size;
+    const x = near[0] + t * dx, y = near[1] + t * dy;
+    if (x < x0 || x >= x0 + size || y < y0 || y >= y0 + size) return t;
+    let tEnd = Infinity;
+    if (dx > 0) tEnd = Math.min(tEnd, (x0 + size - near[0]) / dx);
+    else if (dx < 0) tEnd = Math.min(tEnd, (x0 - near[0]) / dx);
+    if (dy > 0) tEnd = Math.min(tEnd, (y0 + size - near[1]) / dy);
+    else if (dy < 0) tEnd = Math.min(tEnd, (y0 - near[1]) / dy);
+    if (dz < 0) tEnd = Math.min(tEnd, (top - near[2]) / dz);
+    return tEnd > t ? tEnd : t;
 }
 
 /**

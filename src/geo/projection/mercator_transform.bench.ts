@@ -8,6 +8,7 @@ import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
 import {coveringTiles} from './covering_tiles.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
+import type {Tile} from '../../tile/tile.ts';
 
 const DEM_DIM = 256;
 
@@ -61,8 +62,16 @@ const sweeps = [45, 70].map(pitch => {
     transform.setPitch(pitch);
     const tiles = coveringTiles(transform, {tileSize: 256, minzoom: 4, maxzoom: 15});
     const terrain = createDEMTerrain(tiles, createDEM((x, y) => 400 + 300 * Math.sin(x / 20) * Math.cos(y / 30), DEM_DIM));
-    return {name: `16x12 grid, pitch ${pitch} (${tiles.length} tiles)`, transform, terrain};
-});
+    // coastal relief: most tiles flat sea, one in four mountains — rays spend most of their
+    // length far above the tiles they cross (what empty-space skipping is for)
+    const sea = createDEM(() => 0, DEM_DIM);
+    const peak = createDEM((x, y) => 900 + 600 * Math.sin(x / 20) * Math.cos(y / 30), DEM_DIM);
+    const coast = createDEMTerrain(tiles, sea);
+    coast.tileManager.getSourceTile = (tileID) =>
+        ({tileID, dem: (tileID.canonical.x * 7 + tileID.canonical.y * 3) % 4 === 0 ? peak : sea}) as Tile;
+    return [{name: `16x12 grid, pitch ${pitch} (${tiles.length} tiles)`, transform, terrain},
+        {name: `16x12 grid, pitch ${pitch}, coast`, transform, terrain: coast}];
+}).flat();
 
 test('terrain raycast, pitched screen sweep', async ({bench}) => {
     await bench.compare(...sweeps.map(({name, transform, terrain}) => bench(name, () => {

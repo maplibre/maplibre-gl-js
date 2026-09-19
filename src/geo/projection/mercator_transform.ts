@@ -13,7 +13,7 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, skipAboveTerrain, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -438,6 +438,19 @@ export class MercatorTransform implements ITransform {
             }
 
             previousT = t;
+
+            // Empty-space skipping: jump over the rest of a tile the ray is above.
+            if (aboveTerrain) {
+                const tSkip = skipAboveTerrain(index, near, dx, dy, dz, worldSize, t, terrain.exaggeration);
+                if (tSkip > t) {
+                    const j = Math.floor((tSkip - tStart) / (tEnd - tStart) * samples);
+                    // the loop's i++ lands on sample j. previousT stays at t, the last point
+                    // actually sampled above the terrain: if sample j is already below (it can
+                    // sit exactly on the tile's far edge, i.e. in the next tile), the bisection
+                    // brackets [t, t_j], all of which up to the edge is known to be above.
+                    if (j > i) i = j - 1;
+                }
+            }
         }
 
         return null;
