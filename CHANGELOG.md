@@ -5,6 +5,7 @@
 - Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
 - Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
 - Speed up terrain raycasts (`unproject`, `queryTerrainElevation`) by keying the terrain coverage index by number instead of string and reusing the previous sample's tile ([#8495](https://github.com/maplibre/maplibre-gl-js/pull/8495)) (by [@Jua004](https://github.com/Jua004))
+- Skip terrain tiles a raycast passes above, using a per-tile elevation ceiling ([#8496](https://github.com/maplibre/maplibre-gl-js/pull/8496)) (by [@Jua004](https://github.com/Jua004))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
