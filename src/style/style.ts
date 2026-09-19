@@ -362,33 +362,14 @@ export class Style extends Evented<MapEventType> {
         return this._globalState;
     }
 
-    // TODO, merge
-    // setGlobalState(newStylesheetState: StateSpecification): void {
-    //     this._checkLoaded();
-    //
-    //     const changedGlobalStateRefs = [];
-    //     const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(this._initialGlobalState)]);
-    //
-    //     for (const propertyName of propertyNames) {
-    //         // Initial global state has priority over global state defaults defined in the map style
-    //         const propertyValue = this._initialGlobalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
-    //         const didChange = !deepEqual(this._globalState[propertyName], propertyValue);
-    //
-    //         if (didChange) {
-    //             changedGlobalStateRefs.push(propertyName);
-    //             this._globalState[propertyName] = propertyValue;
-    //         }
-    //     }
-    //
-    //     this._applyGlobalStateChanges(changedGlobalStateRefs);
-    // }
-
     setGlobalState(newStylesheetState: StateSpecification): void {
         this._checkLoaded();
 
         const values: Record<string, any> = {};
+        const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(this._initialGlobalState)]);
         for (const propertyName in newStylesheetState) {
-            values[propertyName] = newStylesheetState[propertyName].default;
+            // Initial global state has priority over global state defaults defined in the map style
+            values[propertyName] = this._initialGlobalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
         }
 
         this._setGlobalStateValues(values);
