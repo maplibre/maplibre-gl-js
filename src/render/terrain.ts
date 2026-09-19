@@ -67,11 +67,71 @@ export type TerrainSample = {
 };
 
 export type TerrainCoverageIndex = {
+    /** Zoom levels that have at least one tile, finest first. */
     zooms: number[];
-    samplerPerTile: Map<string, TerrainElevationSampler | null>;
+    /**
+     * Per entry of `zooms`: wrap to (`tileY * 2^z + tileX` to sampler, or null while its DEM loads).
+     * Numeric keys, because {@link sampleAt} runs once per step of every terrain raycast
+     * (up to 512 steps per `unproject`) and a string key per zoom per step dominated its cost.
+     */
+    tiles: Array<Map<number, Map<number, TerrainElevationSampler | null>>>;
+    /** Per entry of `zooms`, same keys as `tiles`: the tiles that have a finer tile of the index inside them. */
+    shadowed: Array<Map<number, Set<number>>>;
+    /**
+     * The tile the previous {@link sampleAt} hit, when no finer tile of the index overlaps it —
+     * consecutive raycast steps almost always land in the same tile, and then the answer is known
+     * without any lookup. Mutable cache, owned by the index.
+     */
+    last: CoverageHit | null;
     minElevation: number;
     maxElevation: number;
 };
+
+type CoverageHit = {
+    wrap: number;
+    z: number;
+    tileX: number;
+    tileY: number;
+    sampler: TerrainElevationSampler | null;
+};
+
+/**
+ * Builds a {@link TerrainCoverageIndex} over the given tiles.
+ * @param tiles - every tile the terrain renders, with its CPU elevation sampler (null while its DEM loads)
+ * @param minElevation - lowest elevation of those tiles, in meters
+ * @param maxElevation - highest elevation of those tiles, in meters
+ * @returns the index, or null when there is no tile
+ */
+export function createTerrainCoverageIndex(
+    tiles: Array<{wrap: number; z: number; x: number; y: number; sampler: TerrainElevationSampler | null}>,
+    minElevation: number,
+    maxElevation: number
+): TerrainCoverageIndex | null {
+    if (tiles.length === 0) return null;
+    const zooms = [...new Set(tiles.map(t => t.z))].sort((a, b) => b - a);
+    const perZoom = zooms.map(() => new Map<number, Map<number, TerrainElevationSampler | null>>());
+    for (const {wrap, z, x, y, sampler} of tiles) {
+        const byWrap = perZoom[zooms.indexOf(z)];
+        let m = byWrap.get(wrap);
+        if (!m) byWrap.set(wrap, m = new Map());
+        m.set(y * 2 ** z + x, sampler);
+    }
+    // A tile with a finer tile inside it answers some of its points with the finer tile, so it
+    // must not serve sampleAt's same-tile fast path.
+    const shadowed = zooms.map(() => new Map<number, Set<number>>());
+    for (const {wrap, z, x, y} of tiles) {
+        for (let i = zooms.indexOf(z) + 1; i < zooms.length; i++) {
+            const pz = zooms[i], d = z - pz;
+            const key = (y >> d) * 2 ** pz + (x >> d);
+            if (!perZoom[i].get(wrap)?.has(key)) continue;
+            let set = shadowed[i].get(wrap);
+            if (!set) shadowed[i].set(wrap, set = new Set());
+            set.add(key);
+        }
+    }
+    return {zooms, tiles: perZoom, shadowed, last: null,
+        minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
+}
 
 /**
  * @internal
@@ -294,25 +354,20 @@ export class Terrain {
     }
 
     private _buildCoverageIndex(): TerrainCoverageIndex | null {
-        const zooms: number[] = [];
-        const samplerPerTile = new Map<string, TerrainElevationSampler | null>();
+        const tiles: Array<{wrap: number; z: number; x: number; y: number; sampler: TerrainElevationSampler | null}> = [];
         let minElevation = 0;
         let maxElevation = 0;
 
         for (const tile of this.tileManager.getRenderableTiles()) {
             if (!tile) continue;
             const {canonical, wrap} = tile.tileID;
-            if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
-            const sampler = this.getElevationSampler(tile.tileID);
-            samplerPerTile.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
+            tiles.push({wrap, z: canonical.z, x: canonical.x, y: canonical.y, sampler: this.getElevationSampler(tile.tileID)});
             const {minElevation: tileMin, maxElevation: tileMax} = this.getMinMaxElevation(tile.tileID);
             minElevation = Math.min(minElevation, tileMin ?? 0);
             maxElevation = Math.max(maxElevation, tileMax ?? 0);
         }
 
-        if (samplerPerTile.size === 0) return null;
-        zooms.sort((a, b) => b - a);
-        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
+        return createTerrainCoverageIndex(tiles, minElevation, maxElevation);
     }
 
     /**
@@ -576,21 +631,42 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
     const wrap = Math.floor(mercatorX);
     const wrappedX = mercatorX - wrap;
 
-    for (const z of index.zooms) {
-        const scale = 1 << z;
+    // Fast path: same tile as the previous sample (a raycast walks through a tile in many steps).
+    const last = index.last;
+    if (last?.wrap === wrap) {
+        const scale = 2 ** last.z;
+        const scaledX = wrappedX * scale;
+        const scaledY = mercatorY * scale;
+        if (Math.floor(scaledX) === last.tileX && Math.floor(scaledY) === last.tileY) {
+            return sampleTile(last.sampler, exaggeration, scaledX, scaledY, last.tileX, last.tileY);
+        }
+    }
+
+    for (let i = 0; i < index.zooms.length; i++) {
+        const tilesOfWrap = index.tiles[i].get(wrap);
+        if (!tilesOfWrap) continue;
+        const z = index.zooms[i];
+        const scale = 2 ** z;
         const scaledX = wrappedX * scale;
         const scaledY = mercatorY * scale;
         const tileX = Math.floor(scaledX);
         const tileY = Math.floor(scaledY);
-        const key = `${wrap}/${z}/${tileX}/${tileY}`;
-        if (!index.samplerPerTile.has(key)) continue;
-        const sampler = index.samplerPerTile.get(key);
-        if (!sampler) return {covered: true, demLoaded: false, elevation: 0};
-        const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
-        const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
-        return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
+        const key = tileY * scale + tileX;
+        const sampler = tilesOfWrap.get(key);
+        if (sampler === undefined) continue;
+        // Only a tile with no finer tile inside it answers every point within its bounds the same
+        // way the full search would, so only such a tile may serve the fast path.
+        index.last = index.shadowed[i].get(wrap)?.has(key) ? null : {wrap, z, tileX, tileY, sampler};
+        return sampleTile(sampler, exaggeration, scaledX, scaledY, tileX, tileY);
     }
     return NOT_COVERED;
+}
+
+function sampleTile(sampler: TerrainElevationSampler | null, exaggeration: number, scaledX: number, scaledY: number, tileX: number, tileY: number): TerrainSample {
+    if (!sampler) return {covered: true, demLoaded: false, elevation: 0};
+    const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
+    const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
+    return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
 }
 
 /**

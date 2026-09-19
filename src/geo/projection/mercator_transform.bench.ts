@@ -5,6 +5,7 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
+import {coveringTiles} from './covering_tiles.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 
@@ -45,5 +46,28 @@ const scenes = [2, 10, 16].flatMap(zoom => [
 test('terrain raycast', async ({bench}) => {
     await bench.compare(...scenes.map(({name, point, transform, terrain}) => bench(name, () => {
         transform.screenTerrainPointToMercatorCoordinate(point, terrain);
+    })));
+});
+
+// A whole-screen sweep of a steeply pitched terrain view, the way an application samples what is
+// on screen (e.g. to decide which tiles to load first): the renderable terrain tiles are the
+// real covering set of the view — fine near the camera, coarse towards the horizon — so the
+// raycasts cross many tiles and zoom levels, which is what the coverage index lookup costs.
+const sweeps = [45, 70].map(pitch => {
+    const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+    transform.resize(1280, 800);
+    transform.setCenter(new LngLat(-25.1138, 72.87232));
+    transform.setZoom(13.59);
+    transform.setPitch(pitch);
+    const tiles = coveringTiles(transform, {tileSize: 256, minzoom: 4, maxzoom: 15});
+    const terrain = createDEMTerrain(tiles, createDEM((x, y) => 400 + 300 * Math.sin(x / 20) * Math.cos(y / 30), DEM_DIM));
+    return {name: `16x12 grid, pitch ${pitch} (${tiles.length} tiles)`, transform, terrain};
+});
+
+test('terrain raycast, pitched screen sweep', async ({bench}) => {
+    await bench.compare(...sweeps.map(({name, transform, terrain}) => bench(name, () => {
+        for (let iy = 0; iy <= 12; iy++) for (let ix = 0; ix <= 16; ix++) {
+            transform.screenTerrainPointToMercatorCoordinate(new Point(1280 * ix / 16, 800 * iy / 12), terrain);
+        }
     })));
 });
