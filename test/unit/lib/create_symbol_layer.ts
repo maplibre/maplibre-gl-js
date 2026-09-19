@@ -1,11 +1,12 @@
 import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket.ts';
 import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_layer.ts';
 import {featureFilter, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../../../src/style/evaluation_parameters.ts';
-import {type BucketParameters} from '../../../src/data/bucket.ts';
-import {type CollisionBoxArray} from '../../../src/data/array_types.g.ts';
 
-export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray): SymbolBucket {
+import type {EvaluationParameters} from '../../../src/style/evaluation_parameters.ts';
+import type {BucketParameters} from '../../../src/data/bucket.ts';
+import type {CollisionBoxArray} from '../../../src/data/array_types.g.ts';
+
+export function createSymbolStyleLayer(layerId: string, font: string, text: string): SymbolStyleLayer {
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
@@ -13,12 +14,15 @@ export function createSymbolBucket(layerId: string, font: string, text: string, 
         filter: featureFilter(undefined, 'filter')
     } as any as LayerSpecification, {});
     layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
+    return layer;
+}
 
+export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray): SymbolBucket {
     return new SymbolBucket({
         overscaling: 1,
         zoom: 0,
         collisionBoxArray,
-        layers: [layer]
+        layers: [createSymbolStyleLayer(layerId, font, text)]
     } as BucketParameters<SymbolStyleLayer>);
 }
 

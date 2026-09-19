@@ -2,23 +2,24 @@ import {vi, expect, onTestFinished, type Mock} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
-import {type Dispatcher} from '../../util/dispatcher.ts';
-import {type IActor} from '../actor.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {type SourceEventType} from '../../ui/events.ts';
-import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
-import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
-import {type Style} from '../../style/style.ts';
 import {Terrain} from '../../render/terrain.ts';
-import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
+
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Style} from '../../style/style.ts';
+import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface.ts';
+import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SourceEventType} from '../../ui/events.ts';
+import type {IActor} from '../actor.ts';
+import type {Dispatcher} from '../../util/dispatcher.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -252,7 +253,6 @@ export function createTerrain(): Terrain {
         getMinTileElevationForLngLatZoom: () => 0,
         resetElevationCache: () => {},
         getFramebuffer: () => ({}),
-        depthAtPoint: () => .9,
         tileManager: {
             update: () => {},
             getRenderableTiles: () => [],

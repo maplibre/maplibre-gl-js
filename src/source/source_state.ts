@@ -1,4 +1,5 @@
 import {extend} from '../util/util.ts';
+
 import type {Tile} from '../tile/tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';

@@ -3,6 +3,7 @@ import {Evented} from '../util/evented.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type SkyProps, type SkyPropsPossiblyEvaluated} from './sky_properties.g.ts';
+
 import type {Mesh} from '../render/mesh.ts';
 import type {SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleSetterOptions} from './style.ts';
@@ -26,8 +27,12 @@ export class Sky extends Evented {
         this.recalculate(new EvaluationParameters(0));
     }
 
-    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): void {
-        if (this._validate(validateStyle.sky, sky, options)) return;
+    /**
+     * Validates and applies the sky. Returns false, after firing `error`, when
+     * the value was rejected and nothing changed.
+     */
+    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): boolean {
+        if (this._validate(validateStyle.sky, sky, options)) return false;
 
         sky ||= {
             'sky-color': 'transparent',
@@ -38,6 +43,7 @@ export class Sky extends Evented {
         };
 
         this._transitionable.setValues(sky);
+        return true;
     }
 
     getSky(): SkySpecification {
@@ -50,6 +56,10 @@ export class Sky extends Evented {
 
     hasTransition(): boolean {
         return this._transitioning.hasTransition();
+    }
+
+    applyGlobalStateChange(refs: string[], priorGlobalState: Record<string, any>, parameters: TransitionParameters): void {
+        this._transitioning = this._transitionable.applyGlobalStateChange(refs, priorGlobalState, this._transitioning, parameters);
     }
 
     recalculate(parameters: EvaluationParameters): void {

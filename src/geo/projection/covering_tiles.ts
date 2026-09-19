@@ -4,12 +4,12 @@ import {Frustum} from '../../util/primitives/frustum.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
-
-import type {IReadonlyTransform} from '../transform_interface.ts';
-import type {Terrain} from '../../render/terrain.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
+
+import type {Terrain} from '../../render/terrain.ts';
+import type {IReadonlyTransform} from '../transform_interface.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;

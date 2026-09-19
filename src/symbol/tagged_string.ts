@@ -1,13 +1,14 @@
-import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 import ONE_EM from './one_em.ts';
-import type {ImagePosition} from '../render/image_atlas.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
 import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
 import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
+
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 export type TextSectionOptions = {
     scale: number;

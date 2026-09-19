@@ -1,10 +1,11 @@
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
+
 import type {Terrain} from '../../render/terrain.ts';
 
 const DEM_DIM = 256;
@@ -35,21 +36,14 @@ function createScene(zoom: number, heightFn: (x: number, y: number) => number, p
     return {terrain, transform};
 }
 
-describe('terrain raycast', () => {
-    for (const zoom of [2, 10, 16]) {
-        const flatScene = createScene(zoom, () => 800, 50);
-        bench(`flat hit z${zoom}`, () => {
-            flatScene.transform.screenTerrainPointToMercatorCoordinate(new Point(512, 600), flatScene.terrain);
-        });
+const scenes = [2, 10, 16].flatMap(zoom => [
+    {name: `flat hit z${zoom}`, point: new Point(512, 600), ...createScene(zoom, () => 800, 50)},
+    {name: `sloped hit z${zoom}`, point: new Point(512, 600), ...createScene(zoom, (x, y) => 400 + 8 * x + 6 * y, 50)},
+    {name: `sky miss z${zoom}`, point: new Point(512, 20), ...createScene(zoom, () => 0, 80)},
+]);
 
-        const slopedScene = createScene(zoom, (x, y) => 400 + 8 * x + 6 * y, 50);
-        bench(`sloped hit z${zoom}`, () => {
-            slopedScene.transform.screenTerrainPointToMercatorCoordinate(new Point(512, 600), slopedScene.terrain);
-        });
-
-        const skyScene = createScene(zoom, () => 0, 80);
-        bench(`sky miss z${zoom}`, () => {
-            skyScene.transform.screenTerrainPointToMercatorCoordinate(new Point(512, 20), skyScene.terrain);
-        });
-    }
+test('terrain raycast', async ({bench}) => {
+    await bench.compare(...scenes.map(({name, point, transform, terrain}) => bench(name, () => {
+        transform.screenTerrainPointToMercatorCoordinate(point, terrain);
+    })));
 });

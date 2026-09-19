@@ -1,7 +1,7 @@
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
-import type {RenderOptions} from './render_options.ts';
+import type {RenderContext} from './render_context.ts';
 
 /**
  * Interface for render-to-texture implementations.
@@ -14,6 +14,6 @@ export interface IRenderToTexture {
      */
     needsFollowUpFrame: boolean;
     prepareForRender(style: Style, zoom: number): void;
-    renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean;
+    renderLayer(layer: StyleLayer, renderContext: RenderContext): boolean;
     getTexture(tile: Tile): any;
 }
