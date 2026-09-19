@@ -1,0 +1,38 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "Make sure buildings are shown at high pitch near the camera",
+            "maxPitch": 90
+        }
+    },
+    "center": [0, 0],
+    "zoom": 14,
+    "pitch": 80,
+    "sources": {
+        "maplibre": {
+            "type": "vector",
+            "maxzoom": 14,
+            "tiles": ["local://tiles/14-8802-5374.mvt"]
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#e8f4f8"
+            }
+        },
+        {
+            "id": "buildings",
+            "type": "fill-extrusion",
+            "source": "maplibre",
+            "source-layer": "building",
+            "paint": {
+                "fill-extrusion-height": 500,
+                "fill-extrusion-color": "#888"
+            }
+        }
+    ]
+}

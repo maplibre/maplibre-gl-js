@@ -1,11 +1,11 @@
 import {describe, test, expect} from 'vitest';
-import {LngLat} from './lng_lat';
-import {MercatorCoordinate, mercatorScale} from './mercator_coordinate';
+import {LngLat} from './lng_lat.ts';
+import {MercatorCoordinate, mercatorScale} from './mercator_coordinate.ts';
 
 describe('LngLat', () => {
     test('constructor', () => {
-        expect(new MercatorCoordinate(0, 0) instanceof MercatorCoordinate).toBeTruthy();
-        expect(new MercatorCoordinate(0, 0, 0) instanceof MercatorCoordinate).toBeTruthy();
+        expect(new MercatorCoordinate(0, 0)).toBeInstanceOf(MercatorCoordinate);
+        expect(new MercatorCoordinate(0, 0, 0)).toBeInstanceOf(MercatorCoordinate);
     });
 
     test('fromLngLat', () => {

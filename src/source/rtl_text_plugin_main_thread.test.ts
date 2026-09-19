@@ -1,12 +1,13 @@
-import {describe, beforeEach, it, afterEach, expect, vi, type MockInstance} from 'vitest';
+import {describe, beforeEach, afterEach, expect, vi, type MockInstance, test} from 'vitest';
 import {type FakeServer, fakeServer} from 'nise';
-import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
-import {sleep} from '../util/test/util';
-import {browser} from '../util/browser';
-import {Dispatcher} from '../util/dispatcher';
-import {getGlobalWorkerPool} from '../util/global_worker_pool';
-import {type PluginState} from './rtl_text_plugin_status';
-import {MessageType} from '../util/actor_messages';
+import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread.ts';
+import {sleep} from '../util/test/util.ts';
+import {browser} from '../util/browser.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
+import {MessageType} from '../util/actor_messages.ts';
+
+import type {PluginState} from './rtl_text_plugin_status.ts';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {
@@ -21,7 +22,7 @@ describe('RTLMainThreadPlugin', () => {
         global.fetch = null;
         // Reset the singleton instance before each test
         rtlMainThreadPlugin.clearRTLTextPlugin();
-        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue({} as any);
     });
 
     function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
@@ -63,36 +64,36 @@ describe('RTLMainThreadPlugin', () => {
         broadcastSpy.mockRestore();
     });
 
-    it('should get the RTL text plugin status', () => {
+    test('should get the RTL text plugin status', () => {
         const status = rtlMainThreadPlugin.getRTLTextPluginStatus();
         expect(status).toBe('unavailable');
     });
 
-    it('should set the RTL text plugin and download it', async () => {
+    test('should set the RTL text plugin and download it', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 
-    it('should set the RTL text plugin but deffer downloading', async () => {
+    test('should set the RTL text plugin but defer downloading', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
     });
 
-    it('should throw if the plugin is already set', async () => {
+    test('should throw if the plugin is already set', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         await expect(rtlMainThreadPlugin.setRTLTextPlugin(url)).rejects.toThrow('setRTLTextPlugin cannot be called multiple times.');
     });
 
-    it('should throw if the plugin url is not set', async () => {
-        const spy = vi.spyOn(browser, 'resolveURL').mockImplementation(() => { return ''; });
+    test('should throw if the plugin url is not set', async () => {
+        const spy = vi.spyOn(browser, 'resolveURL').mockReturnValue('');
         await expect(rtlMainThreadPlugin.setRTLTextPlugin(null)).rejects.toThrow('requested url null is invalid');
         spy.mockRestore();
     });
 
-    it('should be in error state if download fails', async () => {
+    test('should be in error state if download fails', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
         const resultPromise = rtlMainThreadPlugin.setRTLTextPlugin(url);
         await expect(resultPromise).rejects.toBe(failedToLoadMessage);
@@ -100,7 +101,7 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
 
-    it('should lazy load the plugin if deferred', async () => {
+    test('should lazy load the plugin if deferred', async () => {
         // use success spy to make sure test case does not throw exception
         const deferredSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccessDefer as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
@@ -130,12 +131,12 @@ describe('RTLMainThreadPlugin', () => {
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should set status to requested if RTL plugin was not set', async () => {
+    test('should set status to requested if RTL plugin was not set', async () => {
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
     });
 
-    it('should immediately download if RTL plugin was already requested, ignoring deferred:true', async () => {
+    test('should immediately download if RTL plugin was already requested, ignoring deferred:true', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
@@ -147,14 +148,14 @@ describe('RTLMainThreadPlugin', () => {
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
     });
 
-    it('should allow multiple calls to lazyLoad', async () => {
+    test('should allow multiple calls to lazyLoad', async () => {
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
     });
 
-    it('should be in error state if lazyLoad fails', async () => {
+    test('should be in error state if lazyLoad fails', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccessDefer);
         const resultPromise = rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         await expect(resultPromise).resolves.toBeUndefined();
@@ -174,7 +175,7 @@ describe('RTLMainThreadPlugin', () => {
         new Dispatcher(getGlobalWorkerPool(), 1).remove();
     }
 
-    it('should re-import the plugin into fresh workers when the dispatcher is recreated', async () => {
+    test('should re-import the plugin into fresh workers when the dispatcher is recreated', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
         expect(rtlMainThreadPlugin.status).toBe('loaded');
@@ -188,7 +189,7 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 
-    it('should re-sync deferred state when the dispatcher is recreated', async () => {
+    test('should re-sync deferred state when the dispatcher is recreated', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
 
@@ -200,7 +201,7 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('deferred');
     });
 
-    it('ensureSynced should do nothing while the dispatcher is unchanged', async () => {
+    test('ensureSynced should do nothing while the dispatcher is unchanged', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
         broadcastSpy.mockClear();

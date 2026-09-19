@@ -1,8 +1,8 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {ControlPosition, IControl} from './control';
-import type {MapDataEvent} from '../events';
+import type {Map} from '../map.ts';
+import type {ControlPosition, IControl} from './control.ts';
+import type {MapSourceDataEvent, MapStyleDataEvent, MapTerrainEvent} from '../events.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * The {@link AttributionControl} options object
@@ -17,7 +17,7 @@ export type AttributionControlOptions = {
     /**
      * Attributions to show in addition to any other attributions.
      */
-    customAttribution?: string | Array<string>;
+    customAttribution?: string | string[];
 };
 
 export const defaultAttributionControlOptions: AttributionControlOptions = {
@@ -35,6 +35,7 @@ export const defaultAttributionControlOptions: AttributionControlOptions = {
  *         compact: true
  *     }));
  * ```
+ * @see [Change the default position for attribution](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-default-position-for-attribution/)
  */
 export class AttributionControl implements IControl {
     options: AttributionControlOptions;
@@ -60,7 +61,7 @@ export class AttributionControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._compact = this.options.compact;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib');
@@ -82,8 +83,8 @@ export class AttributionControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
-        DOM.remove(this._container);
+    onRemove(): void {
+        this._container.remove();
 
         this._map.off('styledata', this._updateData);
         this._map.off('sourcedata', this._updateData);
@@ -96,13 +97,13 @@ export class AttributionControl implements IControl {
         this._attribHTML = undefined;
     }
 
-    _setElementTitle(element: HTMLElement, title: 'ToggleAttribution' | 'MapFeedback') {
+    _setElementTitle(element: HTMLElement, title: 'ToggleAttribution' | 'MapFeedback'): void {
         const str = this._map._getUIString(`AttributionControl.${title}`);
         element.title = str;
         element.setAttribute('aria-label', str);
     }
 
-    _toggleAttribution = () => {
+    _toggleAttribution = (): void => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.setAttribute('open', '');
@@ -114,15 +115,15 @@ export class AttributionControl implements IControl {
         }
     };
 
-    _updateData = (e: MapDataEvent) => {
-        if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style' || e.type === 'terrain')) {
+    _updateData = (e: MapSourceDataEvent | MapStyleDataEvent | MapTerrainEvent): void => {
+        if (e && (e.type === 'terrain' || e.dataType === 'style' || (e.dataType === 'source' && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility')))) {
             this._updateAttributions();
         }
     };
 
-    _updateAttributions() {
+    _updateAttributions(): void {
         if (!this._map.style) return;
-        let attributions: Array<string> = [];
+        let attributions: string[] = [];
         if (this.options.customAttribution) {
             if (Array.isArray(this.options.customAttribution)) {
                 attributions = attributions.concat(
@@ -147,7 +148,7 @@ export class AttributionControl implements IControl {
             const tileManager = tileManagers[id];
             if (tileManager.used || tileManager.usedForTerrain) {
                 const source = tileManager.getSource();
-                if (source.attribution && attributions.indexOf(source.attribution) < 0) {
+                if (source.attribution && !attributions.includes(source.attribution)) {
                     attributions.push(source.attribution);
                 }
             }
@@ -161,7 +162,7 @@ export class AttributionControl implements IControl {
         attributions.sort((a, b) => a.length - b.length);
         attributions = attributions.filter((attrib, i) => {
             for (let j = i + 1; j < attributions.length; j++) {
-                if (attributions[j].indexOf(attrib) >= 0) { return false; }
+                if (attributions[j].includes(attrib)) { return false; }
             }
             return true;
         });
@@ -183,7 +184,7 @@ export class AttributionControl implements IControl {
         this._editLink = null;
     }
 
-    _updateCompact = () => {
+    _updateCompact = (): void => {
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
             if (this._compact === false) {
                 this._container.setAttribute('open', '');
@@ -199,7 +200,7 @@ export class AttributionControl implements IControl {
         }
     };
 
-    _updateCompactMinimize = () => {
+    _updateCompactMinimize = (): void => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.classList.remove('maplibregl-compact-show');

@@ -1,8 +1,8 @@
-import {describe, expect, it} from 'vitest';
-import {LngLat} from '../../dist/maplibre-gl';
+import {describe, expect, test} from 'vitest';
+import {LngLat} from '../../dist/maplibre-gl.mjs';
 
 describe('Importing a class', () => {
-    it('should allow import and contruct', () => {
+    test('should allow import and contruct', () => {
         const ll = new LngLat(1, 2);
         expect(ll.lng).toBe(1);
         expect(ll.lat).toBe(2);

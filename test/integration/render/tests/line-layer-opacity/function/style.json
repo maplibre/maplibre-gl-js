@@ -1,0 +1,70 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 128
+    }
+  },
+  "center": [0, 0],
+  "zoom": 1,
+  "sources": {
+    "left": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[-20, -15], [-5, 15]] } },
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[-5, -15], [-20, 15]] } }
+        ]
+      }
+    },
+    "right": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[5, -15], [20, 15]] } },
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[20, -15], [5, 15]] } }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "white" }
+    },
+    {
+      "id": "low-opacity-at-this-zoom",
+      "type": "line",
+      "source": "left",
+      "paint": {
+        "line-width": 12,
+        "line-color": "#0000ff",
+        "line-layer-opacity": {
+          "stops": [
+            [0, 0.0],
+            [3, 1.0]
+          ]
+        }
+      }
+    },
+    {
+      "id": "high-opacity-at-this-zoom",
+      "type": "line",
+      "source": "right",
+      "paint": {
+        "line-width": 12,
+        "line-color": "#0000ff",
+        "line-layer-opacity": {
+          "stops": [
+            [0, 1.0],
+            [3, 0.0]
+          ]
+        }
+      }
+    }
+  ]
+}

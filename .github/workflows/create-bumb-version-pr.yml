@@ -3,38 +3,20 @@ name: Create bump version PR
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: Version to change to (semver).
-        required: true
-        type: string
+      release_type:
+        type: choice
+        description: 'Type of version bump'
+        options:
+          - major
+          - minor
+          - patch
+          - premajor
+          - preminor
+          - prepatch
+          - prerelease
 
 jobs:
   bump-version-pr:
-    name: Bump version PR
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-          ref: main
-
-      - name: Use Node.js from nvmrc
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Bump version
-        run: |
-          npm version --commit-hooks false --git-tag-version false ${{ inputs.version }}
-          ./build/bump-version-changelog.js ${{ inputs.version }}
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
-        with:
-          commit-message: Bump version to ${{ inputs.version }}
-          branch: bump-version-to-${{ inputs.version }}
-          title: Bump version to ${{ inputs.version }}
+    uses: maplibre/reusable-workflows/.github/workflows/create-bump-version-pr.yml@main
+    with:
+      version: ${{ github.event.inputs.release_type }}

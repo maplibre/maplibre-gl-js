@@ -3,10 +3,12 @@
 <head>
     <title>Display HTML clusters with custom properties</title>
     <meta property="og:description" content="Extend clustering with HTML markers and custom property expressions. " />
+    <meta property="og:category" content="Heatmaps & Clusters" />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -15,7 +17,9 @@
 <body>
 <div id="map"></div>
 
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
     const map = new maplibregl.Map({
         container: 'map',
         zoom: 0.3,
@@ -127,7 +131,7 @@
                 if (!markersOnScreen[id]) marker.addTo(map);
             }
             // for every marker we've added previously, remove those that are no longer visible
-            for (id in markersOnScreen) {
+            for (const id in markersOnScreen) {
                 if (!newMarkers[id]) markersOnScreen[id].remove();
             }
             markersOnScreen = newMarkers;
@@ -177,7 +181,7 @@
                 fontSize
             }px sans-serif; display: block">`;
 
-        for (i = 0; i < counts.length; i++) {
+        for (let i = 0; i < counts.length; i++) {
             html += donutSegment(
                 offsets[i] / total,
                 (offsets[i] + counts[i]) / total,

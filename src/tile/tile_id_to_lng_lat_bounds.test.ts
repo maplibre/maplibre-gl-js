@@ -1,6 +1,6 @@
 import {test, expect, describe} from 'vitest';
-import {CanonicalTileID} from './tile_id';
-import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds';
+import {CanonicalTileID} from './tile_id.ts';
+import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds.ts';
 
 describe('tileIdToLngLatBounds', () => {
     test('tile 0/0/0 covers the full world', () => {

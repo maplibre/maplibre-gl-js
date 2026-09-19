@@ -1,17 +1,18 @@
 import {describe, test, expect, vi} from 'vitest';
-import {WorkerTile} from '../source/worker_tile';
-import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {OverscaledTileID} from '../tile/tile_id';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {type WorkerTileParameters} from './worker_source';
-import {type VectorTile} from '@mapbox/vector-tile';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type EvaluationParameters} from '../style/evaluation_parameters';
-import {type PossiblyEvaluated} from '../style/properties';
+import {WorkerTile} from '../source/worker_tile.ts';
+import {type Feature, GeoJSONWrapper, type VectorTileLike} from '@maplibre/vt-pbf';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {createFakeActor} from '../util/test/util.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {MessageType} from '../util/actor_messages';
+
+import type {WorkerTileParameters, WorkerTileWithData} from './worker_source.ts';
+import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import type {PossiblyEvaluated} from '../style/properties.ts';
+import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
 
 function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
     return new WorkerTile({
@@ -53,7 +54,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result.buckets[0]).toBeTruthy();
         console.warn = originalWarn;
     });
@@ -69,7 +70,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result.buckets[0]).toBeTruthy();
         expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
     });
@@ -87,7 +88,7 @@ describe('worker tile', () => {
         const tile = createWorkerTile({
             globalState: {test: 'bevel'}
         });
-        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result.buckets[0]).toBeTruthy();
         expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
     });
@@ -105,7 +106,7 @@ describe('worker tile', () => {
         const tile = createWorkerTile({
             globalState: {test: 1}
         });
-        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result.buckets[0]).toBeTruthy();
         expect(result.buckets[0].layers[0].paint._values['fill-extrusion-height'].value.value).toBe(1);
     });
@@ -119,7 +120,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result.buckets).toHaveLength(0);
     });
 
@@ -132,7 +133,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result.buckets).toHaveLength(0);
     });
 
@@ -150,7 +151,7 @@ describe('worker tile', () => {
                     version: 1
                 }
             }
-        } as any as VectorTile;
+        } as any as VectorTileLike;
 
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -209,13 +210,13 @@ describe('worker tile', () => {
                     })
                 }
             }
-        } as any as VectorTile;
+        } as any as VectorTileLike;
 
         const sendAsync = vi.fn().mockImplementation((message: {type: string; data: any}) => {
             if (message.type === MessageType.getImages) {
                 return Promise.resolve({'hello': {width: 1, height: 1, data: new Uint8Array([0])}});
             } else if (message.type === MessageType.getGlyphs) {
-                return Promise.resolve({'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}});
+                return Promise.resolve({'StandardFont-Bold': {'e': {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}}});
             } else if (message.type === MessageType.getDashes) {
                 return Promise.resolve({
                     '2,1,false': {y: 0, height: 16, width: 256},
@@ -227,12 +228,13 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
+        const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect(result).toBeDefined();
+        expect(result.buckets.some((bucket) => bucket.layerIds.includes('test'))).toBe(true);
         expect(sendAsync).toHaveBeenCalledTimes(4); // icons, patterns, glyphs, dashes
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GI', data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GG', data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': ['t', 'e', 's']}})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: 'GDA', data: expect.objectContaining({'dashes': expect.any(Object)})}), expect.any(Object));
     });
 
@@ -278,37 +280,22 @@ describe('worker tile', () => {
                     })
                 }
             }
-        } as any as VectorTile;
+        } as any as VectorTileLike;
 
         let cancelCount = 0;
-        const sendAsync = vi.fn().mockImplementation((message: {type: string; data: unknown}, abortController: AbortController) => {
-            return new Promise((resolve, _reject) => {
-                const res = setTimeout(() => {
-                    const response = message.type === 'getImages' ?
-                        {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                        {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
-                    resolve(response);
-                }
-                );
-                abortController.signal.addEventListener('abort', () => {
-                    cancelCount += 1;
-                    clearTimeout(res);
-                });
-            });
-        });
-
-        const actorMock = {
-            sendAsync
-        };
-        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(() => expect(false).toBeTruthy());
-        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(() => expect(false).toBeTruthy());
+        const actorMock = createFakeActor(undefined, () => { cancelCount += 1; });
+        const sendAsync = actorMock.sendAsync;
+        const onSettled = vi.fn();
+        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
+        tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision).then(onSettled, onSettled);
         const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
+        expect(onSettled).not.toHaveBeenCalled();
         expect(result).toBeDefined();
         expect(cancelCount).toBe(6);
         expect(sendAsync).toHaveBeenCalledTimes(9);
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': ['t', 'e', 's']}})}), expect.any(Object));
     });
 
     test('WorkerTile.parse passes global-state to layout properties', async () => {

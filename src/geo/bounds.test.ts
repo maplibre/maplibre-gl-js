@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {Bounds} from './bounds';
+import {Bounds} from './bounds.ts';
 import Point from '@mapbox/point-geometry';
 
 function bounds(minX: number, minY: number, maxX: number, maxY: number): Bounds {
@@ -21,8 +21,8 @@ describe('Bounds', () => {
         const bounds = new Bounds();
         bounds.extend(new Point(1, 2));
         expect(bounds.empty()).toBeFalsy();
-        expect(bounds.height()).toEqual(0);
-        expect(bounds.width()).toEqual(0);
+        expect(bounds.height()).toBe(0);
+        expect(bounds.width()).toBe(0);
 
         expect(bounds.contains(new Point(1, 2))).toBeTruthy();
         expect(bounds.contains(new Point(2, 2))).toBeFalsy();
@@ -36,8 +36,8 @@ describe('Bounds', () => {
         bounds.extend(new Point(1, 2));
         bounds.extend(new Point(3, 5));
         expect(bounds.empty()).toBeFalsy();
-        expect(bounds.width()).toEqual(2);
-        expect(bounds.height()).toEqual(3);
+        expect(bounds.width()).toBe(2);
+        expect(bounds.height()).toBe(3);
 
         expect(bounds.contains(new Point(1, 2))).toBeTruthy();
         expect(bounds.contains(new Point(3, 2))).toBeTruthy();

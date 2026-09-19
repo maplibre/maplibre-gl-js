@@ -4,13 +4,12 @@
 export function throttle<T extends (...args: any) => void>(fn: T, time: number): (...args: Parameters<T>) => ReturnType<typeof setTimeout> {
     let pending = false;
     let timerId: ReturnType<typeof setTimeout> = null;
-    let lastCallContext = null;
     let lastCallArgs: Parameters<T>;
 
     const later = () => {
         timerId = null;
         if (pending) {
-            fn.apply(lastCallContext, lastCallArgs);
+            fn(...lastCallArgs);
             timerId = setTimeout(later, time);
             pending = false;
         }
@@ -18,7 +17,6 @@ export function throttle<T extends (...args: any) => void>(fn: T, time: number):
 
     return (...args: Parameters<T>) => {
         pending = true;
-        lastCallContext = this;
         lastCallArgs = args;
         if (!timerId) {
             later();

@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {checkGeolocationSupport} from './geolocation_support';
+import {checkGeolocationSupport} from './geolocation_support.ts';
 
 describe('checkGeolocationSupport', () => {
     beforeEach(() => {

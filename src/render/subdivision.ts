@@ -1,22 +1,23 @@
 import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
-import {type CanonicalTileID} from '../tile/tile_id';
+import {EXTENT} from '../data/extent.ts';
 import earcut from 'earcut';
-import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from './subdivision_granularity_settings';
-import {register} from '../util/web_worker_transfer';
+import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from './subdivision_granularity_settings.ts';
+import {register} from '../util/web_worker_transfer.ts';
+
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 
 register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
 register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
 
 type SubdivisionResult = {
-    verticesFlattened: Array<number>;
-    indicesTriangles: Array<number>;
+    verticesFlattened: number[];
+    indicesTriangles: number[];
 
     /**
      * An array of arrays of indices of subdivided lines for polygon outlines.
      * Each array of lines corresponds to one ring of the original polygon.
      */
-    indicesLineList: Array<Array<number>>;
+    indicesLineList: number[][];
 };
 
 // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
@@ -28,7 +29,7 @@ class Subdivider {
     /**
      * Flattened vertex positions (xyxyxy).
      */
-    private _vertexBuffer: Array<number> = [];
+    private _vertexBuffer: number[] = [];
 
     /**
      * Map of "vertex x and y coordinate" to "index of such vertex".
@@ -65,8 +66,9 @@ class Subdivider {
         const xInt = Math.round(x) | 0;
         const yInt = Math.round(y) | 0;
         const key = this._getKey(xInt, yInt);
-        if (this._vertexDictionary.has(key)) {
-            return this._vertexDictionary.get(key);
+        const existing = this._vertexDictionary.get(key);
+        if (existing !== undefined) {
+            return existing;
         }
         const index = this._vertexBuffer.length / 2;
         this._vertexDictionary.set(key, index);
@@ -76,10 +78,11 @@ class Subdivider {
 
     /**
      * Subdivides a polygon by iterating over rows of granularity subdivision cells and splitting each row along vertical subdivision axes.
-     * @param inputIndices - Indices into the internal vertex buffer of the triangulated polygon (after running `earcut`).
+     * @param inputIndices - Indices into the flattened input vertices of the triangulated polygon (the output of `earcut`).
+     * @param inputRemap - Index into the internal vertex buffer for each flattened input vertex.
      * @returns Indices into the internal vertex buffer for triangles that are a subdivision of the input geometry.
      */
-    private _subdivideTrianglesScanline(inputIndices: Array<number>): Array<number> {
+    private _subdivideTrianglesScanline(inputIndices: number[], inputRemap: number[]): number[] {
         // A granularity cell is the square space between axes that subdivide geometry.
         // For granularity 8, cells would be 1024 by 1024 units.
         // For each triangle, we iterate over all cell rows it intersects, and generate subdivided geometry
@@ -92,7 +95,7 @@ class Subdivider {
         if (this._granularity < 2) {
             // The actual subdivision code always produces triangles with the correct winding order.
             // Also apply winding order correction when skipping subdivision altogether to maintain consistency.
-            return fixWindingOrder(this._vertexBuffer, inputIndices);
+            return fixWindingOrder(this._vertexBuffer, remapIndices(inputIndices, inputRemap));
         }
 
         const finalIndices = [];
@@ -101,18 +104,18 @@ class Subdivider {
         const numIndices = inputIndices.length;
         for (let primitiveIndex = 0; primitiveIndex < numIndices; primitiveIndex += 3) {
             const triangleIndices: [number, number, number] = [
-                inputIndices[primitiveIndex + 0], // v0
-                inputIndices[primitiveIndex + 1], // v1
-                inputIndices[primitiveIndex + 2], // v2
+                inputRemap[inputIndices[primitiveIndex + 0]], // v0
+                inputRemap[inputIndices[primitiveIndex + 1]], // v1
+                inputRemap[inputIndices[primitiveIndex + 2]], // v2
             ];
 
             const triangleVertices: [number, number, number, number, number, number] = [
-                this._vertexBuffer[inputIndices[primitiveIndex + 0] * 2 + 0], // v0.x
-                this._vertexBuffer[inputIndices[primitiveIndex + 0] * 2 + 1], // v0.y
-                this._vertexBuffer[inputIndices[primitiveIndex + 1] * 2 + 0], // v1.x
-                this._vertexBuffer[inputIndices[primitiveIndex + 1] * 2 + 1], // v1.y
-                this._vertexBuffer[inputIndices[primitiveIndex + 2] * 2 + 0], // v2.x
-                this._vertexBuffer[inputIndices[primitiveIndex + 2] * 2 + 1], // v2.y
+                this._vertexBuffer[triangleIndices[0] * 2 + 0], // v0.x
+                this._vertexBuffer[triangleIndices[0] * 2 + 1], // v0.y
+                this._vertexBuffer[triangleIndices[1] * 2 + 0], // v1.x
+                this._vertexBuffer[triangleIndices[1] * 2 + 1], // v1.y
+                this._vertexBuffer[triangleIndices[2] * 2 + 0], // v2.x
+                this._vertexBuffer[triangleIndices[2] * 2 + 1], // v2.y
             ];
 
             let minX = Infinity;
@@ -157,7 +160,7 @@ class Subdivider {
 
     /**
      * Takes a triangle and a cell row index, returns a subdivided vertex ring of the intersection of the triangle and the cell row.
-     * @param cellRow - Index of the cell row. A cell row of index `i` covert range from `i * granularityCellSize` to `(i + 1) * granularityCellSize`.
+     * @param cellRow - Index of the cell row. A cell row of index `i` convert range from `i * granularityCellSize` to `(i + 1) * granularityCellSize`.
      * @param triangleVertices - An array of 6 elements, contains flattened positions of the triangle's vertices: `[v0x, v0y, v1x, v1y, v2x, v2y]`.
      * @param triangleIndices - An array of 3 elements, contains the original indices of the triangle's vertices: `[index0, index1, index2]`.
      * @returns The resulting ring of vertex indices and the index (to the returned ring array) of the leftmost vertex in the ring.
@@ -203,7 +206,7 @@ class Subdivider {
                 // Skip this edge
                 // But make sure to add its endpoint vertex if needed.
                 if (bY >= cellRowYTop && bY <= cellRowYBottom) {
-                    // The edge endpoint is withing this row, add it to the ring
+                    // The edge endpoint is within this row, add it to the ring
                     ring.push(triangleIndices[(edgeIndex + 1) % 3]);
                 }
                 continue;
@@ -284,7 +287,7 @@ class Subdivider {
      * @param exitX - The X coordinate of the point where edge A-\>B exits the current cell row.
      */
     private _generateIntraEdgeVertices(
-        ring: Array<number>,
+        ring: number[],
         aX: number,
         aY: number,
         bX: number,
@@ -332,7 +335,7 @@ class Subdivider {
      * @param cellRowYBottom - The current cell row bottom Y coordinate.
      */
     private _generateInterEdgeVertices(
-        ring: Array<number>,
+        ring: number[],
         aX: number,
         aY: number,
         bX: number,
@@ -418,16 +421,19 @@ class Subdivider {
     /**
      * Generates an outline for a given polygon, returns a list of arrays of line indices.
      */
-    private _generateOutline(polygon: Array<Array<Point>>): Array<Array<number>> {
-        const subdividedLines: Array<Array<number>> = [];
+    private _generateOutline(polygon: Point[][], inputRemap: number[]): number[][] {
+        const subdividedLines: number[][] = [];
+        let ringStart = 0;
         for (const ring of polygon) {
-            const line = subdivideVertexLine(ring, this._granularity, true);
-            const pathIndices = this._pointArrayToIndices(line);
+            const pathIndices = this._granularity < 2 ?
+                this._ringPathIndices(ring, ringStart, inputRemap) :
+                this._pointArrayToIndices(subdivideVertexLine(ring, this._granularity, true));
+            ringStart += ring.length;
             // Points returned by subdivideVertexLine are "path" waypoints,
             // for example with indices 0 1 2 3 0.
             // We need list of individual line segments for rendering,
             // for example 0, 1, 1, 2, 2, 3, 3, 0.
-            const lineIndices: Array<number> = [];
+            const lineIndices: number[] = [];
             for (let i = 1; i < pathIndices.length; i++) {
                 lineIndices.push(pathIndices[i - 1]);
                 lineIndices.push(pathIndices[i]);
@@ -438,10 +444,22 @@ class Subdivider {
     }
 
     /**
+     * The outline path `subdivideVertexLine(ring, granularity, true)` returns when the granularity is too low to
+     * subdivide, as vertex buffer indices rather than points, read from `inputRemap` instead of looked up per point.
+     */
+    private _ringPathIndices(ring: Point[], start: number, inputRemap: number[]): number[] {
+        const indices = inputRemap.slice(start, start + ring.length);
+        if (indices.length >= 2 && ringIsOpen(ring)) {
+            indices.push(indices[0]);
+        }
+        return indices;
+    }
+
+    /**
      * Adds pole geometry if needed.
      * @param subdividedTriangles - Array of generated triangle indices, new pole geometry is appended here.
      */
-    private _handlePoles(subdividedTriangles: Array<number>) {
+    private _handlePoles(subdividedTriangles: number[]) {
         // Add pole vertices if the tile is at north/south mercator edge
         let north = false;
         let south = false;
@@ -520,7 +538,7 @@ class Subdivider {
      * @param north - Whether to generate geometry for the north pole.
      * @param south - Whether to generate geometry for the south pole.
      */
-    private _fillPoles(indices: Array<number>, north: boolean, south: boolean): void {
+    private _fillPoles(indices: number[], north: boolean, south: boolean): void {
         const flattened = this._vertexBuffer;
 
         const northEdge = 0;
@@ -565,11 +583,14 @@ class Subdivider {
 
     /**
      * Adds all vertices in the supplied flattened vertex buffer into the internal vertex buffer.
+     * @returns The index into the internal vertex buffer for each input vertex, in the order `flatten` produced them.
      */
-    private _initializeVertices(flattened: Array<number>) {
+    private _initializeVertices(flattened: number[]): number[] {
+        const inputRemap: number[] = [];
         for (let i = 0; i < flattened.length; i += 2) {
-            this._vertexToIndex(flattened[i], flattened[i + 1]);
+            inputRemap.push(this._vertexToIndex(flattened[i], flattened[i + 1]));
         }
+        return inputRemap;
     }
 
     /**
@@ -579,7 +600,7 @@ class Subdivider {
      * @param generateOutlineLines - When true, also generates line indices for outline of the supplied polygon.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdividePolygonInternal(polygon: Array<Array<Point>>, generateOutlineLines: boolean): SubdivisionResult {
+    public subdividePolygonInternal(polygon: Point[][], generateOutlineLines: boolean): SubdivisionResult {
         if (this._used) {
             throw new Error('Subdivision: multiple use not allowed.');
         }
@@ -587,23 +608,21 @@ class Subdivider {
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         const {flattened, holeIndices} = flatten(polygon);
-        this._initializeVertices(flattened);
+        const inputRemap = this._initializeVertices(flattened);
 
         // Subdivide triangles
-        let subdividedTriangles: Array<number>;
+        let subdividedTriangles: number[];
         try {
-            // At this point this._finalVertices is just flattened polygon points
             const earcutResult = earcut(flattened, holeIndices);
-            const cut = this._convertIndices(flattened, earcutResult);
-            subdividedTriangles = this._subdivideTrianglesScanline(cut);
+            subdividedTriangles = this._subdivideTrianglesScanline(earcutResult, inputRemap);
         } catch (e) {
             console.error(e);
         }
 
         // Subdivide lines
-        let subdividedLines: Array<Array<number>> = [];
+        let subdividedLines: number[][] = [];
         if (generateOutlineLines) {
-            subdividedLines = this._generateOutline(polygon);
+            subdividedLines = this._generateOutline(polygon, inputRemap);
         }
 
         // Ensure no vertex has the special value used for pole vertices
@@ -612,6 +631,11 @@ class Subdivider {
         // Add pole geometry if needed
         this._handlePoles(subdividedTriangles);
 
+        if (this._granularity >= 2 && this._canonical?.z === 0) {
+            subdividedTriangles = this._removeTrianglesOutsideTileX(subdividedTriangles);
+            subdividedLines = subdividedLines.map(lines => this._removeLinesOutsideTileX(lines));
+        }
+
         return {
             verticesFlattened: this._vertexBuffer,
             indicesTriangles: subdividedTriangles,
@@ -619,32 +643,53 @@ class Subdivider {
         };
     }
 
+    private _vertexOutsideTileX(index: number): boolean {
+        const x = this._vertexBuffer[index * 2];
+        return x < 0 || x > EXTENT;
+    }
+
     /**
-     * Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
-     * That is not allowed for purposes of subdivision, duplicates are removed in `this.initializeVertices`.
-     * This function converts the original index array that indexes into the original vertex array with duplicates
-     * into an index array that indexes into `this._finalVertices`.
-     * @param vertices - Flattened vertex array used by the old indices. This may contain duplicate vertices.
-     * @param oldIndices - Indices into the old vertex array.
-     * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
+     * Drops all triangles that reach beyond the tile's X extent.
+     *
+     * On globe the z0 tile's buffer wraps around the planet onto the tile itself, drawing buffered geometry twice.
+     * Only globe uses subdivision (`granularity >= 2`), so mercator is never affected.
+     * @param indices - Triangle indices into `this._vertexBuffer`.
+     * @returns The indices with every triangle that has a vertex outside the tile's X extent removed.
      */
-    private _convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
-        const newIndices = [];
-        for (let i = 0; i < oldIndices.length; i++) {
-            const x = vertices[oldIndices[i] * 2];
-            const y = vertices[oldIndices[i] * 2 + 1];
-            newIndices.push(this._vertexToIndex(x, y));
+    private _removeTrianglesOutsideTileX(indices: number[]): number[] {
+        const filtered: number[] = [];
+        for (let i = 0; i < indices.length; i += 3) {
+            if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1]) || this._vertexOutsideTileX(indices[i + 2])) {
+                continue;
+            }
+            filtered.push(indices[i], indices[i + 1], indices[i + 2]);
         }
-        return newIndices;
+        return filtered;
+    }
+
+    /**
+     * Drops all outline line segments that reach beyond the tile's X extent,
+     * for the same reason as {@link Subdivider._removeTrianglesOutsideTileX}.
+     * @param indices - Line segment indices into `this._vertexBuffer`.
+     * @returns The indices with every segment that has a vertex outside the tile's X extent removed.
+     */
+    private _removeLinesOutsideTileX(indices: number[]): number[] {
+        const filtered: number[] = [];
+        for (let i = 0; i < indices.length; i += 2) {
+            if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1])) {
+                continue;
+            }
+            filtered.push(indices[i], indices[i + 1]);
+        }
+        return filtered;
     }
 
     /**
      * Converts an array of points into an array of indices into the internal vertex buffer (`_finalVertices`).
      */
-    private _pointArrayToIndices(array: Array<Point>): Array<number> {
+    private _pointArrayToIndices(array: Point[]): number[] {
         const indices = [];
-        for (let i = 0; i < array.length; i++) {
-            const p = array[i];
+        for (const p of array) {
             indices.push(this._vertexToIndex(p.x, p.y));
         }
         return indices;
@@ -662,7 +707,7 @@ class Subdivider {
  * @param generateOutlineLines - When true, also generates index arrays for subdivided lines that form the outline of the supplied polygon. True by default.
  * @returns An object that contains the generated vertex array, triangle index array and, if specified, line index arrays.
  */
-export function subdividePolygon(polygon: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number, generateOutlineLines: boolean = true): SubdivisionResult {
+export function subdividePolygon(polygon: Point[][], canonical: CanonicalTileID, granularity: number, generateOutlineLines: boolean = true): SubdivisionResult {
     const subdivider = new Subdivider(granularity, canonical);
     return subdivider.subdividePolygonInternal(polygon, generateOutlineLines);
 }
@@ -709,7 +754,7 @@ export function subdividePolygon(polygon: Array<Array<Point>>, canonical: Canoni
  * //   0, 0
  * ```
  */
-export function subdivideVertexLine(linePoints: Array<Point>, granularity: number, isRing: boolean = false): Array<Point> {
+export function subdivideVertexLine(linePoints: Point[], granularity: number, isRing: boolean = false): Point[] {
     if (!linePoints || linePoints.length < 1) {
         return [];
     }
@@ -720,9 +765,7 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
 
     // Generate an extra line segment between the input array's first and last points,
     // but only if isRing=true AND the first and last points actually differ.
-    const first = linePoints[0];
-    const last = linePoints[linePoints.length - 1];
-    const addLastToFirstSegment = isRing && (first.x !== last.x || first.y !== last.y);
+    const addLastToFirstSegment = isRing && ringIsOpen(linePoints);
 
     if (granularity < 2) {
         if (addLastToFirstSegment) {
@@ -733,7 +776,7 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
     }
 
     const cellSize = Math.floor(EXTENT / granularity);
-    const finalLineVertices: Array<Point> = [];
+    const finalLineVertices: Point[] = [];
 
     finalLineVertices.push(new Point(linePoints[0].x, linePoints[0].y));
 
@@ -825,12 +868,19 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
 }
 
 /**
+ * Whether a ring's last vertex differs from its first, so that drawing it needs a closing segment.
+ */
+function ringIsOpen(ring: Point[]): boolean {
+    return !ring[0].equals(ring[ring.length - 1]);
+}
+
+/**
  * Takes a polygon as an array of point rings, returns a flattened array of the X,Y coordinates of these points.
  * Also creates an array of hole indices. Both returned arrays are required for `earcut`.
  */
-function flatten(polygon: Array<Array<Point>>): {
-    flattened: Array<number>;
-    holeIndices: Array<number>;
+function flatten(polygon: Point[][]): {
+    flattened: number[];
+    holeIndices: number[];
 } {
     const holeIndices = [];
     const flattened = [];
@@ -844,9 +894,9 @@ function flatten(polygon: Array<Array<Point>>): {
             holeIndices.push(flattened.length / 2);
         }
 
-        for (let i = 0; i < ring.length; i++) {
-            flattened.push(ring[i].x);
-            flattened.push(ring[i].y);
+        for (const vertex of ring) {
+            flattened.push(vertex.x);
+            flattened.push(vertex.y);
         }
     }
 
@@ -857,11 +907,24 @@ function flatten(polygon: Array<Array<Point>>): {
 }
 
 /**
+ * Returns a copy of `indices` where every index is replaced by `remap[index]`.
+ * @param indices - Indices into the array `remap` was built for.
+ * @param remap - The replacement for each index.
+ */
+function remapIndices(indices: number[], remap: number[]): number[] {
+    const remapped = new Array(indices.length);
+    for (let i = 0; i < indices.length; i++) {
+        remapped[i] = remap[indices[i]];
+    }
+    return remapped;
+}
+
+/**
  * Returns a new array of indices where all triangles have the counter-clockwise winding order.
  * @param flattened - Flattened vertex buffer.
  * @param indices - Triangle indices.
  */
-export function fixWindingOrder(flattened: Array<number>, indices: Array<number>): Array<number> {
+export function fixWindingOrder(flattened: number[], indices: number[]): number[] {
     const corrected = [];
 
     for (let i = 0; i < indices.length; i += 3) {
@@ -906,7 +969,7 @@ export function fixWindingOrder(flattened: Array<number>, indices: Array<number>
  * @param leftmostIndex - The index of the leftmost vertex in the supplied ring.
  * @param finalIndices - Array of final triangle indices, into where the resulting triangles are appended.
  */
-export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring: Array<number>, finalIndices: Array<number>): void {
+export function scanlineTriangulateVertexRing(vertexBuffer: number[], ring: number[], finalIndices: number[]): void {
     // Triangulate the ring
     // It is guaranteed to be convex and ordered
     if (ring.length === 0) {
@@ -952,10 +1015,8 @@ export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring:
             pickA = false;
         } else {
             // Pick the candidate that is more "right" of the last edge's line
-            const ex = lastEdgeBx - lastEdgeAx;
-            const ey = lastEdgeBy - lastEdgeAy;
-            const nx = ey;
-            const ny = -ex;
+            const nx = lastEdgeBy - lastEdgeAy;
+            const ny = -(lastEdgeBx - lastEdgeAx);
             const sign = (lastEdgeAy < lastEdgeBy) ? 1 : -1;
             // dot( (candidateA <-- lastEdgeA), normal )
             const aRight = ((candidateAx - lastEdgeAx) * nx + (candidateAy - lastEdgeAy) * ny) * sign;

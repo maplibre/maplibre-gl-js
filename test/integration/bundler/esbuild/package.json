@@ -1,0 +1,18 @@
+{
+  "name": "maplibre-gl-esbuild-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "esbuild app exercising maplibre-gl's ESM build, package subpaths, and worker setup.",
+  "scripts": {
+    "build": "node build.js",
+    "serve": "http-server -p 3000 -c-1 ."
+  },
+  "dependencies": {
+    "maplibre-gl": "file:../../../.."
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "http-server": "^14.1.1"
+  }
+}

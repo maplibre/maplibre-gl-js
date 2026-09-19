@@ -1,5 +1,5 @@
 import {test, expect} from 'vitest';
-import {resolveTokens} from './resolve_tokens';
+import {resolveTokens} from './resolve_tokens.ts';
 
 test('resolveToken', () => {
     expect('3 Fine Fields').toBe(resolveTokens({a: 3, b: 'Fine', c: 'Fields'}, '{a} {b} {c}'));
@@ -43,7 +43,7 @@ test('resolveToken', () => {
     expect(resolveTokens({'dashed-property': 'dashed'}, '{dashed-property}')).toBe('dashed');
     expect(resolveTokens({'HØYDE': 150}, '{HØYDE} m')).toBe('150 m');
     expect(
-        resolveTokens({'$special:characters;': 'mapbox'}, '{$special:characters;}')
-    ).toBe('mapbox');
+        resolveTokens({'$special:characters;': 'maplibre'}, '{$special:characters;}')
+    ).toBe('maplibre');
 
 });

@@ -1,0 +1,69 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Same lines as antimeridian-overdraw/line-gradient, but dashed. Dashes must be uniform 50% blue, never double-blended, and cross the seam without gaps, notches or a phase jump.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": { "atmosphere-blend": 0.0 },
+  "center": [180, 5],
+  "zoom": 1.8,
+  "projection": { "type": "globe" },
+  "sources": {
+    "lines": {
+      "type": "geojson",
+      "maxzoom": 0,
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[150, 25], [210, 25]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[180, -25], [180, 45]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[150, -20], [210, 15]]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "lines",
+      "paint": {
+        "line-width": 10,
+        "line-color": "#0000ff",
+        "line-opacity": 0.5,
+        "line-dasharray": [2, 2]
+      }
+    }
+  ]
+}

@@ -1,5 +1,3 @@
-import {DOM} from '../../util/dom';
-
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
@@ -48,20 +46,19 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
         this._correctEvent = options.checkCorrectEvent;
     }
 
-    startMove(e: MouseEvent) {
-        const eventButton = DOM.mouseButton(e);
-        this._eventButton = eventButton;
+    startMove(e: MouseEvent): void {
+        this._eventButton = e.button;
     }
 
-    endMove(_e?: MouseEvent) {
+    endMove(_e?: MouseEvent): void {
         delete this._eventButton;
     }
 
-    isValidStartEvent(e: MouseEvent) {
+    isValidStartEvent(e: MouseEvent): boolean {
         return this._correctEvent(e);
     }
 
-    isValidMoveEvent(e: MouseEvent) {
+    isValidMoveEvent(e: MouseEvent): boolean {
         // Some browsers don't fire a `mouseup` when the mouseup occurs outside
         // the window or iframe:
         // https://github.com/mapbox/mapbox-gl-js/issues/4622
@@ -71,8 +68,8 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
         return !buttonNoLongerPressed(e, this._eventButton);
     }
 
-    isValidEndEvent(e: MouseEvent) {
-        const eventButton = DOM.mouseButton(e);
+    isValidEndEvent(e: MouseEvent): boolean {
+        const eventButton = e.button;
         return eventButton === this._eventButton;
     }
 }
@@ -84,73 +81,72 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
         this._firstTouch = undefined;
     }
 
-    _isOneFingerTouch(e: TouchEvent) {
+    _isOneFingerTouch(e: TouchEvent): boolean {
         return e.targetTouches.length === 1;
     }
 
-    _isSameTouchEvent(e: TouchEvent) {
+    _isSameTouchEvent(e: TouchEvent): boolean {
         return e.targetTouches[0].identifier === this._firstTouch;
     }
 
-    startMove(e: TouchEvent) {
-        const firstTouch = e.targetTouches[0].identifier;
-        this._firstTouch = firstTouch;
+    startMove(e: TouchEvent): void {
+        this._firstTouch = e.targetTouches[0].identifier;
     }
 
-    endMove(_e?: TouchEvent) {
+    endMove(_e?: TouchEvent): void {
         delete this._firstTouch;
     }
 
-    isValidStartEvent(e: TouchEvent) {
+    isValidStartEvent(e: TouchEvent): boolean {
         return this._isOneFingerTouch(e);
     }
 
-    isValidMoveEvent(e: TouchEvent) {
+    isValidMoveEvent(e: TouchEvent): boolean {
         return this._isOneFingerTouch(e) && this._isSameTouchEvent(e);
     }
 
-    isValidEndEvent(e: TouchEvent) {
+    isValidEndEvent(e: TouchEvent): boolean {
         return this._isOneFingerTouch(e) && this._isSameTouchEvent(e);
     }
 }
 
 export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseEvent | TouchEvent> {
     constructor(
-        private mouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}), 
-        private oneFingerTouchMoveStateManager = new OneFingerTouchMoveStateManager()
+        private mouseMoveStateManager: MouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}),
+        private oneFingerTouchMoveStateManager: OneFingerTouchMoveStateManager = new OneFingerTouchMoveStateManager()
     ) {}
 
-    _executeRelevantHandler(e: MouseEvent | TouchEvent, onMouseEvent: (MouseEvent) => any, onTouchEvent: (TouchEvent) => any) {
+    _executeRelevantHandler(e: MouseEvent | TouchEvent, onMouseEvent: (e: MouseEvent) => boolean | void, onTouchEvent: (e: TouchEvent) => boolean | void): boolean | void {
         if (e instanceof MouseEvent) return onMouseEvent(e);
         if (typeof TouchEvent !== 'undefined' && e instanceof TouchEvent) return onTouchEvent(e);
     }
 
-    startMove(e: MouseEvent | TouchEvent) {
+    startMove(e: MouseEvent | TouchEvent): void {
         this._executeRelevantHandler(e,
-            e => this.mouseMoveStateManager.startMove(e),
-            e => this.oneFingerTouchMoveStateManager.startMove(e));
+            e => { this.mouseMoveStateManager.startMove(e); },
+            e => { this.oneFingerTouchMoveStateManager.startMove(e); });
     }
 
-    endMove(e?: MouseEvent | TouchEvent) {
+    endMove(e?: MouseEvent | TouchEvent): void {
         this._executeRelevantHandler(e,
-            e => this.mouseMoveStateManager.endMove(e),
-            e => this.oneFingerTouchMoveStateManager.endMove(e));
+            e => { this.mouseMoveStateManager.endMove(e); },
+            e => { this.oneFingerTouchMoveStateManager.endMove(e); });
     }
 
-    isValidStartEvent(e: MouseEvent | TouchEvent) {
-        return this._executeRelevantHandler(e,
+    isValidStartEvent(e: MouseEvent | TouchEvent): boolean {
+        return !!this._executeRelevantHandler(e,
             e => this.mouseMoveStateManager.isValidStartEvent(e),
             e => this.oneFingerTouchMoveStateManager.isValidStartEvent(e));
     }
 
-    isValidMoveEvent(e: MouseEvent | TouchEvent) {
-        return this._executeRelevantHandler(e,
+    isValidMoveEvent(e: MouseEvent | TouchEvent): boolean {
+        return !!this._executeRelevantHandler(e,
             e => this.mouseMoveStateManager.isValidMoveEvent(e),
             e => this.oneFingerTouchMoveStateManager.isValidMoveEvent(e));
     }
 
-    isValidEndEvent(e?: MouseEvent | TouchEvent) {
-        return this._executeRelevantHandler(e,
+    isValidEndEvent(e?: MouseEvent | TouchEvent): boolean {
+        return !!this._executeRelevantHandler(e,
             e => this.mouseMoveStateManager.isValidEndEvent(e),
             e => this.oneFingerTouchMoveStateManager.isValidEndEvent(e));
     }

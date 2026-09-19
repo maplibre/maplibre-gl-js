@@ -1,0 +1,26 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "zoom": 1,
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "red",
+        "background-opacity": {
+          "stops": [
+            [0, 0],
+            [2, 1]
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-
-import {offsetLine} from './query_utils';
+import {offsetLine} from './query_utils.ts';
 
 const defaultPrecision = 10;
 
@@ -53,6 +52,42 @@ describe('offsetLine', () => {
         const line = [
             new Point(0, 1),
             new Point(0, 0),
+            new Point(0, -1)
+        ];
+        const offset = 1;
+
+        expect(offsetLine([line], offset)).toEqual([[
+            new Point(1, 1),
+            new Point(1, 0),
+            new Point(1, -1)
+        ]]);
+    });
+
+    test('line with duplicate points', () => {
+        const line = [
+            new Point(0, 1),
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, -1),
+            new Point(0, -1)
+        ];
+        const offset = 1;
+
+        expect(offsetLine([line], offset)).toEqual([[
+            new Point(1, 1),
+            new Point(1, 0),
+            new Point(1, -1)
+        ]]);
+    });
+
+    test('line with more than two consecutive duplicate points', () => {
+        const line = [
+            new Point(0, 1),
+            new Point(0, 1),
+            new Point(0, 1),
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, -1),
             new Point(0, -1)
         ];
         const offset = 1;

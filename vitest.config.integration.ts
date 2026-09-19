@@ -1,20 +1,25 @@
-import {defineConfig} from 'vitest/config';
+import {defineConfig, type ViteUserConfig} from 'vitest/config';
 
-export default defineConfig({
+const config: ViteUserConfig = defineConfig({
     test: {
         globals: true,
         name: 'integration',
         environment: 'node',
         include: [
-            'test/integration/**/*.test.{ts,js}',
+            'test/integration/**/*.test.ts',
+        ],
+        exclude: [
+            '**/node_modules/**',
+            'test/integration/render/*.*', // Render tests are run separately
         ],
         coverage: {
             provider: 'v8',
             reporter: ['json', 'html'],
-            exclude: ['node_modules/', 'dist/', '**/*.test.ts'],
-            all: true,
-            include: ['src'],
+            exclude: ['**/*.test.ts', '**/*.bench.ts'],
+            include: ['src/**/*.{ts,js}'],
             reportsDirectory: './coverage/vitest/integration',
         },
     },
 });
+
+export default config;

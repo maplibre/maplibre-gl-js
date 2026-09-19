@@ -10,7 +10,7 @@
         }
     },
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "geojson",
             "data": {
                 "type": "FeatureCollection",
@@ -37,7 +37,7 @@
         {
             "id": "original-fill",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "fill-color": "red"
             }
@@ -45,7 +45,7 @@
         {
             "id": "offset-fill",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "fill-color": "white",
                 "fill-translate": [-15, 15]

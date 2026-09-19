@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest';
-import {createStyleLayer} from '../create_style_layer';
-import {extend} from '../../util/util';
-import {type LineStyleLayer} from './line_style_layer';
+import {createStyleLayer} from '../create_style_layer.ts';
+import {extend} from '../../util/util.ts';
+
+import type {LineStyleLayer} from './line_style_layer.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {
@@ -48,4 +49,5 @@ describe('LineStyleLayer', () => {
         lineLayer.setPaintProperty('line-gradient', null);
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
+
 });

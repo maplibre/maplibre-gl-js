@@ -1,0 +1,41 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "height": 256
+        }
+    },
+    "center": [
+        11.525101,
+        48.144716
+    ],
+    "zoom": 14.92,
+    "pitch": 55,
+    "bearing": -20,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"]
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#ffffff"
+            }
+        },
+        {
+            "id": "building",
+            "type": "fill-extrusion",
+            "source": "openmaptiles",
+            "source-layer": "building",
+            "paint": {
+                "fill-extrusion-color": "#c86432",
+                "fill-extrusion-height": 20
+            }
+        }
+    ]
+}

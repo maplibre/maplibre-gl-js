@@ -1,9 +1,9 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
-import * as timeControl from '../../util/time_control';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import * as timeControl from '../../util/time_control.ts';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap() {
     return new Map({style: '', container: DOM.create('div', '', window.document.body)});
@@ -43,9 +43,9 @@ describe('Map.isZooming', () => {
         const zoomEndPromise = map.once('zoomend');
 
         let now = 0;
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;
@@ -65,7 +65,7 @@ describe('Map.isZooming', () => {
         const zoomEndPromise = map.once('zoomend');
 
         let now = 0;
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();

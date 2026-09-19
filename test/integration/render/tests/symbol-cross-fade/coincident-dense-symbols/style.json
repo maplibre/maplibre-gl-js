@@ -1,0 +1,3451 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "fadeDuration": 1000,
+      "width": 512,
+      "height": 512,
+      "description": "Cross-tile symbol matching on a dense layer of coincident points sharing one text key (260 symbols for the key, above the KDBush indexing threshold). The map crosses a zoom level and renders 300ms into a 1000ms fade window after the z3 placement: the two labels placed at z2 must keep their crossTileIDs across the zoom (staying fully opaque instead of re-fading in) and the coincident duplicates must stay hidden. Guards the findMatches lowest-index claim against label-fade regressions. 'wait' logic: 1st 'wait 1000' completes the initial fade-in at z2, 'wait' after 'setZoom' runs until the z3 tiles load, the next 'wait 1000' gets past the placement throttle (stillRecent) so a placement including the z3 buckets is committed, and the final 'wait 300' renders mid-fade: any symbol that failed to match its z2 counterpart would render at ~30% opacity here.",
+      "operations": [
+        [
+          "idle"
+        ],
+        [
+          "wait",
+          1000
+        ],
+        [
+          "setZoom",
+          3
+        ],
+        [
+          "wait"
+        ],
+        [
+          "wait",
+          1000
+        ],
+        [
+          "wait",
+          300
+        ]
+      ]
+    }
+  },
+  "zoom": 2,
+  "center": [
+    0,
+    25
+  ],
+  "sources": {
+    "maplibre": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -15.0,
+                30.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.99,
+                30.007
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.98,
+                30.014
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.97,
+                30.021
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.96,
+                30.028
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.95,
+                30.035
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.94,
+                30.042
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.93,
+                30.049
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.92,
+                30.056
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.91,
+                30.063
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.9,
+                30.07
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.89,
+                30.077
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.88,
+                30.084
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.87,
+                30.091
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.86,
+                30.098
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.85,
+                30.105
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.84,
+                30.112
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.83,
+                30.119
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.82,
+                30.126
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.81,
+                30.133
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.8,
+                30.14
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.79,
+                30.147
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.78,
+                30.154
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.77,
+                30.161
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.76,
+                30.168
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.75,
+                30.175
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.74,
+                30.182
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.73,
+                30.189
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.72,
+                30.196
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.71,
+                30.203
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -14.7,
+                30.21
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.0,
+                20.0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.01,
+                20.007
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.02,
+                20.014
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.03,
+                20.021
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.04,
+                20.028
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.05,
+                20.035
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.06,
+                20.042
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.07,
+                20.049
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.08,
+                20.056
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.09,
+                20.063
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.1,
+                20.07
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.11,
+                20.077
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.12,
+                20.084
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.13,
+                20.091
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.14,
+                20.098
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.15,
+                20.105
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.16,
+                20.112
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.17,
+                20.119
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.18,
+                20.126
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.19,
+                20.133
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.2,
+                20.14
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.21,
+                20.147
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.22,
+                20.154
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.23,
+                20.161
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.24,
+                20.168
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.25,
+                20.175
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.26,
+                20.182
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.27,
+                20.189
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.28,
+                20.196
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.29,
+                20.203
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Dense"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                15.3,
+                20.21
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "dense-points",
+      "type": "symbol",
+      "source": "maplibre",
+      "layout": {
+        "text-field": "{name}",
+        "text-font": [
+          "Open Sans Semibold,Arial Unicode MS Bold"
+        ]
+      }
+    }
+  ]
+}

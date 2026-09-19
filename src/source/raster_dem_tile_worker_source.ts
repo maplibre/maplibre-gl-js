@@ -1,11 +1,12 @@
-import {DEMData} from '../data/dem_data';
-import {RGBAImage} from '../util/image';
-import type {Actor} from '../util/actor';
+import {DEMData} from '../data/dem_data.ts';
+import {RGBAImage} from '../util/image.ts';
+import {getImageData, isImageBitmap} from '../util/util.ts';
+
+import type {Actor} from '../util/actor.ts';
 import type {
     WorkerDEMTileParameters,
     TileParameters
-} from './worker_source';
-import {getImageData, isImageBitmap} from '../util/util';
+} from './worker_source.ts';
 
 export class RasterDEMTileWorkerSource {
     actor: Actor;
@@ -17,21 +18,21 @@ export class RasterDEMTileWorkerSource {
 
     async loadTile(params: WorkerDEMTileParameters): Promise<DEMData | null> {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
-        const width = rawImageData.width + 2;
-        const height = rawImageData.height + 2;
+        const width = rawImageData.width + 4;
+        const height = rawImageData.height + 4;
         const imagePixels: RGBAImage | ImageData = isImageBitmap(rawImageData) ?
-            new RGBAImage({width, height}, await getImageData(rawImageData, -1, -1, width, height)) :
+            new RGBAImage({width, height}, await getImageData(rawImageData, -2, -2, width, height)) :
             rawImageData;
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
-        this.loaded = this.loaded || {};
+        this.loaded ||= {};
         this.loaded[uid] = dem;
         return dem;
     }
 
-    removeTile(params: TileParameters) {
+    removeTile(params: TileParameters): void {
         const loaded = this.loaded,
             uid = params.uid;
-        if (loaded && loaded[uid]) {
+        if (loaded?.[uid]) {
             delete loaded[uid];
         }
     }

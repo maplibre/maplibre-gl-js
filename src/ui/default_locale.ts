@@ -8,7 +8,7 @@ export const defaultLocale = {
     'LogoControl.Title': 'MapLibre logo',
     'Map.Title': 'Map',
     'Marker.Title': 'Map marker',
-    'NavigationControl.ResetBearing': 'Reset bearing to north',
+    'NavigationControl.ResetBearing': 'Drag to rotate map, click to reset north',
     'NavigationControl.ZoomIn': 'Zoom in',
     'NavigationControl.ZoomOut': 'Zoom out',
     'Popup.Close': 'Close popup',

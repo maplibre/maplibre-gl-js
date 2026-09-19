@@ -1,0 +1,75 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 128,
+            "height": 64
+        }
+    },
+    "zoom": 0,
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "cap": "butt"
+                        },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [-40, 12],
+                                [40, 12]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "cap": "round"
+                        },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [-40, 0],
+                                [40, 0]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "cap": "square"
+                        },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [-40, -12],
+                                [40, -12]
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "line",
+            "type": "line",
+            "source": "geojson",
+            "layout": {
+                "line-cap": {
+                    "type": "identity",
+                    "property": "cap"
+                }
+            },
+            "paint": {
+                "line-width": 10
+            }
+        }
+    ]
+}

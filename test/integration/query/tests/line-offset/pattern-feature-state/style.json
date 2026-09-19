@@ -10,7 +10,7 @@
                 ],
                 [
                   "setFeatureState",
-                  { "source": "mapbox", "id": 1},
+                  { "source": "maplibre", "id": 1},
                   { "big": true }
                 ],
                 [
@@ -25,7 +25,7 @@
     },
     "sprite": "local://sprites/emerald",
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "geojson",
             "data": {
                 "type": "FeatureCollection",
@@ -49,7 +49,7 @@
         {
             "id": "line",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "line-width": 12,
                 "line-pattern": "cemetery_icon",

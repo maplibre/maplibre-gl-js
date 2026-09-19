@@ -1,10 +1,10 @@
 import {describe, expect, test} from 'vitest';
-import {LngLat} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
-import {TransformHelper} from './transform_helper';
-import {OverscaledTileID} from '../tile/tile_id';
-import {expectToBeCloseToArray} from '../util/test/util';
-import {EXTENT} from '../data/extent';
+import {LngLat} from './lng_lat.ts';
+import {LngLatBounds} from './lng_lat_bounds.ts';
+import {TransformHelper} from './transform_helper.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {expectToBeCloseToArray} from '../util/test/util.ts';
+import {EXTENT} from '../data/extent.ts';
 
 const emptyCallbacks = {
     calcMatrices: () => {},
@@ -12,6 +12,17 @@ const emptyCallbacks = {
 };
 
 describe('TransformHelper', () => {
+    test('does not calculate the projection matrices while the width or height is zero', () => {
+        let calls = 0;
+        const helper = new TransformHelper({...emptyCallbacks, calcMatrices: () => { calls++; }});
+        helper.resize(0, 480, false);
+        helper.resize(640, 0, false);
+        helper.resize(0, 0, false);
+        expect(calls).toBe(0);
+        helper.resize(640, 480, false);
+        expect(calls).toBe(1);
+    });
+
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
         original.setConstrainOverride((lngLat, zoom) => {
@@ -39,7 +50,7 @@ describe('TransformHelper', () => {
         original.setZoom(2.3);
 
         const cloned = new TransformHelper(emptyCallbacks);
-        cloned.apply(original);
+        cloned.apply(original, false);
 
         // Check all getters from the ITransformGetters interface
         expect(cloned.constrainOverride).toEqual(original.constrainOverride);

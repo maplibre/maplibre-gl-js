@@ -1,15 +1,15 @@
 import path from 'path';
 import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index';
-import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {OverscaledTileID} from '../tile/tile_id';
-import {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index.ts';
+import {type Feature, fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
+
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from '../style/evaluation_parameters';
+import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
 describe('FeatureIndex', () => {
     describe('getId', () => {
@@ -17,22 +17,18 @@ describe('FeatureIndex', () => {
 
         test('uses cluster_id when cluster is true and id is undefined', () => {
             const featureIndex = new FeatureIndex(tileID, 'someProperty');
-            const feature = {
+            const feature: VectorTileFeatureLike = {
+                id: 0,
                 properties: {
                     cluster: true,
                     cluster_id: '123',
                     promoteId: 'someProperty',
                     someProperty: undefined
                 },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [0, 0]
-                },
                 extent: 4096,
                 type: 1,
                 loadGeometry: () => [],
-                toGeoJSON: () => ({})
-            } as unknown as VectorTileFeature;
+            };
 
             expect(featureIndex.getId(feature, 'sourceLayer')).toBe(123); // cluster_id converted to number
         });
@@ -74,7 +70,7 @@ describe('FeatureIndex', () => {
                 },
                 transform
             } as any, {
-                layer: layer,
+                layer,
             }, [], undefined);
             expect(result.layer[0].feature.properties).toEqual(features[0].tags);
         });
@@ -83,8 +79,7 @@ describe('FeatureIndex', () => {
             const layer = new CircleStyleLayer({source: 'source', paint: {}} as LayerSpecification, {});
             layer.recalculate({} as EvaluationParameters, []);
             const featureIndex = new FeatureIndex(tileID);
-            const mltRawData = readFileSync(path.join(__dirname, '../../test/integration/assets/tiles/mlt/5/17/10.mlt')).buffer.slice(0) as ArrayBuffer;
-            featureIndex.rawTileData = mltRawData;
+            featureIndex.rawTileData = readFileSync(path.join(__dirname, '../../test/integration/assets/tiles/mlt/5/17/10.mlt')).buffer.slice(0);
             featureIndex.encoding = 'mlt';
             featureIndex.bucketLayerIDs = [['layer']];
             featureIndex.insert({} as any, [[new Point(1, 1)]], 0, 0, 0);
@@ -97,7 +92,7 @@ describe('FeatureIndex', () => {
                 params: {},
                 transform
             } as any, {
-                layer: layer,
+                layer,
             }, [], undefined);
             expect(result.layer[0].feature.properties.admin_level).toBeDefined();
             expect(result.layer[0].feature.geometry.type).toBe('LineString');

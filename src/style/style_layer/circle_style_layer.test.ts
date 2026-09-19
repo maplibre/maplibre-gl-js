@@ -1,15 +1,16 @@
 import {describe, test, expect} from 'vitest';
-import {CircleStyleLayer} from './circle_style_layer';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../evaluation_parameters';
-import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id';
+import {CircleStyleLayer} from './circle_style_layer.ts';
+import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {type VectorTileFeature} from '@mapbox/vector-tile';
-import {GlobeTransform} from '../../geo/projection/globe_transform';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {GlobeTransform} from '../../geo/projection/globe_transform.ts';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+
+import type {EvaluationParameters} from '../evaluation_parameters.ts';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 describe('CircleStyleLayer.queryIntersectsFeature', () => {
-    const feature = {} as VectorTileFeature;
+    const feature = {} as VectorTileFeatureLike;
     const featureState = {};
     const geometry = [[new Point(4645, 3729)]];
     const pixelsToTileUnits = 16;

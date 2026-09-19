@@ -1,16 +1,17 @@
-import {type OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {EXTENT} from '../data/extent';
+import {Tile} from './tile.ts';
+import {EXTENT} from '../data/extent.ts';
 import {mat4} from 'gl-matrix';
-import {Evented} from '../util/evented';
-import type {ITransform} from '../geo/transform_interface';
-import type {TileManager} from './tile_manager';
-import type {Source} from '../source/source';
-import {type Terrain} from '../render/terrain';
-import {now} from '../util/time_control';
-import {coveringTiles} from '../geo/projection/covering_tiles';
-import {createMat4f64} from '../util/util';
-import {type CanonicalTileRange} from '../source/image_source';
+import {Evented} from '../util/evented.ts';
+import {now} from '../util/time_control.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {createMat4f64} from '../util/util.ts';
+
+import type {Terrain} from '../render/terrain.ts';
+import type {CanonicalTileRange} from '../source/image_source.ts';
+import type {Source} from '../source/source.ts';
+import type {TileManager} from './tile_manager.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
 
 /**
  * @internal
@@ -34,7 +35,7 @@ export class TerrainTileManager extends Evented {
     /**
      * contains a list of tileID-keys for the current scene. (only for performance)
      */
-    _renderableTilesKeys: Array<string>;
+    _renderableTilesKeys: string[];
     /**
      * raster-dem-tile for a TileID cache.
      */
@@ -56,7 +57,7 @@ export class TerrainTileManager extends Evented {
      */
     deltaZoom: number;
     /**
-     * used to determine whether depth & coord framebuffers need updating
+     * used to determine whether the depth framebuffer needs updating
      */
     _lastTilesetChange: number = now();
 
@@ -74,9 +75,10 @@ export class TerrainTileManager extends Evented {
         tileManager.tileSize = this.tileSize;
     }
 
-    destruct() {
+    destruct(): void {
         this.tileManager.usedForTerrain = false;
         this.tileManager.tileSize = null;
+        this.releaseAllRTT();
     }
 
     getSource(): Source {
@@ -87,45 +89,61 @@ export class TerrainTileManager extends Evented {
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param transform - the operation to do
      * @param terrain - the terrain
+     * @returns true when the set of renderable tiles changed
      */
-    update(transform: ITransform, terrain: Terrain): void {
+    update(transform: ITransform, terrain: Terrain): boolean {
         // load raster-dem tiles for the current scene.
         this.tileManager.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
+        let changed = false;
         for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
-            terrain,
-            calculateTileZoom: this.tileManager._source.calculateTileZoom
+            terrain
         })) {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
-                tileID.terrainRttPosMatrix32f = new Float64Array(16) as any;
+                tileID.terrainRttPosMatrix32f = new Float32Array(16);
                 mat4.ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
                 this._lastTilesetChange = now();
+                changed = true;
             }
         }
         // free unused tiles
         for (const key in this._tiles) {
-            if (!keys[key]) delete this._tiles[key];
+            if (!keys[key]) {
+                this._tiles[key].releaseRTT(this.tileManager.map.painter);
+                delete this._tiles[key];
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    /**
+     * Release the RTT objects for `tileID` (and its ancestors/descendants),
+     */
+    releaseRTT(tileID: OverscaledTileID): void {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+            if (tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+                tile.releaseRTT(this.tileManager.map.painter);
         }
     }
 
     /**
-     * Free render to texture cache
-     * @param tileID - optional, free only corresponding to tileID.
+     * Release the A RTT objects for all tiles.
      */
-    freeRtt(tileID?: OverscaledTileID) {
+    releaseAllRTT(): void {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
-            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
-                tile.rtt = [];
+            tile.releaseRTT(this.tileManager.map.painter);
         }
     }
 
@@ -133,7 +151,7 @@ export class TerrainTileManager extends Evented {
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns the renderable tiles
      */
-    getRenderableTiles(): Array<Tile> {
+    getRenderableTiles(): Tile[] {
         return this._renderableTilesKeys.map(key => this.getTileByID(key));
     }
 
@@ -223,14 +241,16 @@ export class TerrainTileManager extends Evented {
             const coord = tileID.clone();
             const mat = createMat4f64();
             if (terrainTileID.canonical.z === tileID.canonical.z) {
-                const dx = tileID.canonical.x - terrainTileID.canonical.x;
+                const dx = tileID.canonical.x - terrainTileID.canonical.x
+                    + tileID.wrap * (1 << tileID.canonical.z); // include wrap shift
                 const dy = tileID.canonical.y - terrainTileID.canonical.y;
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
                 mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
             } else if (terrainTileID.canonical.z > tileID.canonical.z) {
                 const dz = terrainTileID.canonical.z - tileID.canonical.z;
                 // this translation is needed to project tileID to terrainTileID zoom level
-                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz)
+                    + tileID.wrap * (1 << terrainTileID.canonical.z); // include wrap shift
                 const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
                 // this translation is needed if terrainTileID is not a parent of tileID
                 const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
@@ -242,7 +262,8 @@ export class TerrainTileManager extends Evented {
             } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 // this translation is needed to project tileID to terrainTileID zoom level
-                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz)
+                    + tileID.wrap * (1 << tileID.canonical.z); // include wrap shift
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 // this translation is needed if terrainTileID is not a parent of tileID
                 const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
@@ -264,28 +285,37 @@ export class TerrainTileManager extends Evented {
      * @param searchForDEM - Optional parameter to search for (parent) source tiles with loaded dem.
      * @returns the tile
      */
-    getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
+    getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile | undefined {
         const source = this.tileManager._source;
         let z = tileID.overscaledZ - this.deltaZoom;
         if (z > source.maxzoom) z = source.maxzoom;
-        if (z < source.minzoom) return null;
+        if (z < source.minzoom) return undefined;
         // cache for tileID to terrain-tileID
-        if (!this._sourceTileCache[tileID.key])
-            this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
-        let tile = this.tileManager.getTileByID(this._sourceTileCache[tileID.key]);
+        this._sourceTileCache[tileID.key] ||= tileID.scaledTo(z).key;
+        let tile = this.findTileInCaches(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
-        if (!(tile && tile.dem) && searchForDEM)
-            while (z >= source.minzoom && !(tile && tile.dem))
-                tile = this.tileManager.getTileByID(tileID.scaledTo(z--).key);
+        if (!tile?.dem && searchForDEM) {
+            while (z >= source.minzoom && !tile?.dem)
+                tile = this.findTileInCaches(tileID.scaledTo(z--).key);
+        }
+        return tile;
+    }
+
+    findTileInCaches(key: string): Tile | undefined {
+        let tile = this.tileManager.getTileByID(key);
+        if (tile) {
+            return tile;
+        }
+        tile = this.tileManager._outOfViewCache.getByKey(key);
         return tile;
     }
 
     /**
-     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update the depth framebuffer.
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */
-    anyTilesAfterTime(time = Date.now()): boolean {
+    anyTilesAfterTime(time: number = now()): boolean {
         return this._lastTilesetChange >= time;
     }
 
@@ -299,10 +329,14 @@ export class TerrainTileManager extends Evented {
         tileID: OverscaledTileID,
         canonicalTileRanges: {[zoom: string]: CanonicalTileRange}
     ): boolean {
-        return canonicalTileRanges[tileID.canonical.z] &&
-            tileID.canonical.x >= canonicalTileRanges[tileID.canonical.z].minTileX &&
-            tileID.canonical.x <= canonicalTileRanges[tileID.canonical.z].maxTileX &&
-            tileID.canonical.y >= canonicalTileRanges[tileID.canonical.z].minTileY &&
-            tileID.canonical.y <= canonicalTileRanges[tileID.canonical.z].maxTileY;
+        const range = canonicalTileRanges[tileID.canonical.z];
+
+        return !!range && (
+            tileID.wrap > range.minWrap || tileID.wrap < range.maxWrap ||
+            tileID.canonical.x >= range.minTileXWrapped &&
+            tileID.canonical.x <= range.maxTileXWrapped &&
+            tileID.canonical.y >= range.minTileY &&
+            tileID.canonical.y <= range.maxTileY
+        );
     }
 }

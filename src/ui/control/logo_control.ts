@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {ControlPosition, IControl} from './control';
+import type {Map} from '../map.ts';
+import type {ControlPosition, IControl} from './control.ts';
 
 /**
  * The {@link LogoControl} options object
@@ -42,9 +42,9 @@ export class LogoControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
-        this._compact = this.options && this.options.compact;
+        this._compact = this.options?.compact;
         this._container = DOM.create('div', 'maplibregl-ctrl');
         const anchor = DOM.create('a', 'maplibregl-ctrl-logo');
         anchor.target = '_blank';
@@ -62,14 +62,14 @@ export class LogoControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
-        DOM.remove(this._container);
+    onRemove(): void {
+        this._container.remove();
         this._map.off('resize', this._updateCompact);
         this._map = undefined;
         this._compact = undefined;
     }
 
-    _updateCompact = () => {
+    _updateCompact = (): void => {
         const containerChildren = this._container.children;
         if (containerChildren.length) {
             const anchor = containerChildren[0];

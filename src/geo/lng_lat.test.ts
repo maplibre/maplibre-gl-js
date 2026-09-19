@@ -1,9 +1,9 @@
 import {describe, test, expect} from 'vitest';
-import {LngLat} from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat.ts';
 
 describe('LngLat', () => {
     test('constructor', () => {
-        expect(new LngLat(0, 0) instanceof LngLat).toBeTruthy();
+        expect(new LngLat(0, 0)).toBeInstanceOf(LngLat);
 
         expect(() => {
             new LngLat(0, -91);
@@ -15,12 +15,12 @@ describe('LngLat', () => {
     });
 
     test('convert', () => {
-        expect(LngLat.convert([0, 10]) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert({lng: 0, lat: 10}) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert({lng: 0, lat: 0}) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert({lon: 0, lat: 10}) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert({lon: 0, lat: 0}) instanceof LngLat).toBeTruthy();
-        expect(LngLat.convert(new LngLat(0, 0)) instanceof LngLat).toBeTruthy();
+        expect(LngLat.convert([0, 10])).toBeInstanceOf(LngLat);
+        expect(LngLat.convert({lng: 0, lat: 10})).toBeInstanceOf(LngLat);
+        expect(LngLat.convert({lng: 0, lat: 0})).toBeInstanceOf(LngLat);
+        expect(LngLat.convert({lon: 0, lat: 10})).toBeInstanceOf(LngLat);
+        expect(LngLat.convert({lon: 0, lat: 0})).toBeInstanceOf(LngLat);
+        expect(LngLat.convert(new LngLat(0, 0))).toBeInstanceOf(LngLat);
     });
 
     test('wrap', () => {

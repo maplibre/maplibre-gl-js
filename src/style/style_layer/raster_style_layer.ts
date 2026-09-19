@@ -1,9 +1,8 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer} from '../style_layer.ts';
+import properties, {type RasterPaintPropsPossiblyEvaluated} from './raster_style_layer_properties.g.ts';
 
-import properties, {type RasterPaintPropsPossiblyEvaluated} from './raster_style_layer_properties.g';
-import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
-
-import type {RasterPaintProps} from './raster_style_layer_properties.g';
+import type {Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
+import type {RasterPaintProps} from './raster_style_layer_properties.g.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export const isRasterStyleLayer = (layer: StyleLayer): layer is RasterStyleLayer => layer.type === 'raster';

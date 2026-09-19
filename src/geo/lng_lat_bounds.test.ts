@@ -1,6 +1,9 @@
 import {describe, test, expect} from 'vitest';
-import {LngLat} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
+import {LngLat} from './lng_lat.ts';
+import {LngLatBounds} from './lng_lat_bounds.ts';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
+import {CanonicalTileID} from '../tile/tile_id.ts';
+import {EXTENT} from '../data/extent.ts';
 
 describe('LngLatBounds', () => {
     test('constructor', () => {
@@ -38,7 +41,7 @@ describe('LngLatBounds', () => {
         const t1 = () => {
             bounds.getCenter();
         };
-        expect(t1).toThrow();
+        expect(t1).toThrow(TypeError);
     });
 
     test('extend with coordinate', () => {
@@ -333,25 +336,25 @@ describe('LngLatBounds', () => {
             test('point is in bounds', () => {
                 const llb = new LngLatBounds([-1, -1], [1, 1]);
                 const ll = {lng: 0, lat: 0};
-                expect(llb.contains(ll)).toBeTruthy();
+                expect(llb.contains(ll)).toBe(true);
             });
 
             test('point is not in bounds', () => {
                 const llb = new LngLatBounds([-1, -1], [1, 1]);
                 const ll = {lng: 3, lat: 3};
-                expect(llb.contains(ll)).toBeFalsy();
+                expect(llb.contains(ll)).toBe(false);
             });
 
             test('point is in bounds that spans dateline', () => {
                 const llb = new LngLatBounds([190, -10], [170, 10]);
                 const ll = {lng: 180, lat: 0};
-                expect(llb.contains(ll)).toBeTruthy();
+                expect(llb.contains(ll)).toBe(true);
             });
 
             test('point is not in bounds that spans dateline', () => {
                 const llb = new LngLatBounds([190, -10], [170, 10]);
                 const ll = {lng: 0, lat: 0};
-                expect(llb.contains(ll)).toBeFalsy();
+                expect(llb.contains(ll)).toBe(false);
             });
         });
     });
@@ -423,6 +426,19 @@ describe('LngLatBounds', () => {
                 const bounds = new LngLatBounds([-180, 5], [-175, 10]);
                 expect(tileBounds.intersects(bounds)).toBe(true);
             });
+
+            test('entire worlds tile should return true', () => {
+                const tileBounds = tileIdToLngLatBounds(new CanonicalTileID(0, 0, 0), 2048 / EXTENT);
+                const bounds = new LngLatBounds([[-8.290589217651302, 44.47966524518165], [20.566067150212803, 50.98693819014929]]);
+                expect(tileBounds.intersects(bounds)).toBe(true);
+            });
+
+            test('point feature outside bounds does not intersect', () => {
+                const bounds = new LngLatBounds([0, 0], [10, 10]);
+                const point = new LngLatBounds([20, 5], [20, 5]);
+                expect(bounds.intersects(point)).toBe(false);
+            });
         });
     });
 });
+

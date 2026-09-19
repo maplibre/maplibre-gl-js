@@ -27,3 +27,10 @@ See also: https://en.wikipedia.org/wiki/User_story#Common_templates
 <!--
  - What if we do nothing? What is the impact to end-users if we don't implement this feature?
 -->
+
+## AI Assistance
+
+<!--
+If an AI tool helped you draft this request, note it briefly. This helps maintainers understand which parts to probe further and ask better follow-up questions.
+-->
+```

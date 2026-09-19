@@ -1,6 +1,7 @@
-import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
-import {type Handler} from '../handler_manager';
-import type {Map} from '../map';
+import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events.ts';
+
+import type {Handler, HandlerResult} from '../handler_manager.ts';
+import type {Map} from '../map.ts';
 import type Point from '@mapbox/point-geometry';
 
 export class MapEventHandler implements Handler {
@@ -16,17 +17,17 @@ export class MapEventHandler implements Handler {
         this._clickTolerance = options.clickTolerance;
     }
 
-    reset() {
+    reset(): void {
         delete this._mousedownPos;
     }
 
-    wheel(e: WheelEvent) {
+    wheel(e: WheelEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - ScrollZoom
-        return this._firePreventable(new MapWheelEvent(e.type, this._map, e));
+        return this._firePreventable(new MapWheelEvent(this._map, e));
     }
 
-    mousedown(e: MouseEvent, point: Point) {
+    mousedown(e: MouseEvent, point: Point): HandlerResult | void {
         this._mousedownPos = point;
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - MousePan
@@ -36,30 +37,30 @@ export class MapEventHandler implements Handler {
         return this._firePreventable(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mouseup(e: MouseEvent) {
+    mouseup(e: MouseEvent): void {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    click(e: MouseEvent, point: Point) {
+    click(e: MouseEvent, point: Point): void {
         if (this._mousedownPos && this._mousedownPos.dist(point) >= this._clickTolerance) return;
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    dblclick(e: MouseEvent) {
+    dblclick(e: MouseEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - DblClickZoom
         return this._firePreventable(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mouseover(e: MouseEvent) {
+    mouseover(e: MouseEvent): void {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mouseout(e: MouseEvent) {
+    mouseout(e: MouseEvent): void {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    touchstart(e: TouchEvent) {
+    touchstart(e: TouchEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - TouchPan
         // - TouchZoom
@@ -70,19 +71,19 @@ export class MapEventHandler implements Handler {
         return this._firePreventable(new MapTouchEvent(e.type, this._map, e));
     }
 
-    touchmove(e: TouchEvent) {
+    touchmove(e: TouchEvent): void {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    touchend(e: TouchEvent) {
+    touchend(e: TouchEvent): void {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    touchcancel(e: TouchEvent) {
+    touchcancel(e: TouchEvent): void {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent) {
+    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent): HandlerResult | void {
         this._map.fire(mapEvent);
         if (mapEvent.defaultPrevented) {
             // returning an object marks the handler as active and resets other handlers
@@ -90,51 +91,130 @@ export class MapEventHandler implements Handler {
         }
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return true;
     }
 
-    isActive() {
+    isActive(): boolean {
         return false;
     }
-    enable() {}
-    disable() {}
+    enable(): void {}
+    disable(): void {}
 }
+
+/**
+ * A single finger held in place this long fires a long-press contextmenu.
+ */
+const LONG_PRESS_DELAY = 500;
 
 export class BlockableMapEventHandler {
     _map: Map;
+    _clickTolerance: number;
     _delayContextMenu: boolean;
     _ignoreContextMenu: boolean;
     _contextMenuEvent: MouseEvent;
+    _touchActive: boolean;
+    _longPressTimer: ReturnType<typeof setTimeout>;
+    _longPressStart: Point;
 
-    constructor(map: Map) {
+    constructor(map: Map, options: {
+        clickTolerance: number;
+    }) {
         this._map = map;
+        this._clickTolerance = options.clickTolerance;
     }
 
-    reset() {
+    reset(): void {
         this._delayContextMenu = false;
         this._ignoreContextMenu = true;
         delete this._contextMenuEvent;
+        this._clearLongPress();
+        this._touchActive = false;
     }
 
-    mousemove(e: MouseEvent) {
+    mousemove(e: MouseEvent): void {
         // mousemove map events should not be fired when interaction handlers (pan, rotate, etc) are active
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mousedown() {
+    mousedown(): void {
         this._delayContextMenu = true;
         this._ignoreContextMenu = false;
     }
 
-    mouseup() {
+    mouseup(): void {
         this._delayContextMenu = false;
         if (this._contextMenuEvent) {
             this._map.fire(new MapMouseEvent('contextmenu', this._map, this._contextMenuEvent));
             delete this._contextMenuEvent;
         }
     }
-    contextmenu(e: MouseEvent) {
+
+    /**
+     * Starts the touch long press. Touch devices have no right click, so a long press opens
+     * the context menu. It is detected with a timer rather than by relying on a native
+     * contextmenu event, because Android Chrome fires one on a long press but iOS
+     * Safari does not. A single finger held past the delay without moving fires a
+     * contextmenu at that point; a pan or a lift cancels it.
+     * @param e - the touch event
+     * @param points - the touch points, in map coordinates
+     * @param mapTouches - the touches that are on the map
+     */
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
+        this._clearLongPress();
+        this._touchActive = mapTouches.length > 0;
+        if (mapTouches.length !== 1) return; // single finger only, never during a pinch
+        this._longPressStart = points[0];
+        const touch = mapTouches[0];
+        this._longPressTimer = setTimeout(() => {
+            this._longPressTimer = undefined;
+            const originalEvent = new MouseEvent('contextmenu', {clientX: touch.clientX, clientY: touch.clientY, button: 2, bubbles: true, cancelable: true});
+            this._map.fire(new MapMouseEvent('contextmenu', this._map, originalEvent));
+        }, LONG_PRESS_DELAY);
+    }
+
+    /**
+     * Cancels a pending long press once the finger has moved further than the map's
+     * click tolerance, or once a second finger lands.
+     * @param e - the touch event
+     * @param points - the touch points, in map coordinates
+     * @param mapTouches - the touches that are on the map
+     */
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
+        if (!this._longPressTimer) return;
+        if (mapTouches.length !== 1 || !this._longPressStart || points[0].dist(this._longPressStart) > this._clickTolerance) {
+            this._clearLongPress();
+        }
+    }
+
+    touchend(): void {
+        this._touchActive = false;
+        this._clearLongPress();
+    }
+
+    touchcancel(): void {
+        this._touchActive = false;
+        this._clearLongPress();
+    }
+
+    _clearLongPress(): void {
+        if (this._longPressTimer) {
+            clearTimeout(this._longPressTimer);
+            this._longPressTimer = undefined;
+        }
+        this._longPressStart = undefined;
+    }
+
+    /**
+     * Handles a contextmenu event. A native one during a touch is suppressed, because the
+     * long press timer already fires the event and the browser menu would double up.
+     * @param e - the mouse event
+     */
+    contextmenu(e: MouseEvent): void {
+        if (this._touchActive) {
+            e.preventDefault();
+            return;
+        }
         if (this._delayContextMenu) {
             // Mac: contextmenu fired on mousedown; we save it until mouseup for consistency's sake
             this._contextMenuEvent = e;
@@ -149,13 +229,13 @@ export class BlockableMapEventHandler {
         }
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return true;
     }
 
-    isActive() {
+    isActive(): boolean {
         return false;
     }
-    enable() {}
-    disable() {}
+    enable(): void {}
+    disable(): void {}
 }

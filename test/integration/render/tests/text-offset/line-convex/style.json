@@ -14,7 +14,7 @@
     "maplibre": {
       "type": "vector",
       "maxzoom": 14,
-      "tiles": ["local://tiles/mapbox.mapbox-streets-v7/{z}-{x}-{y}.mvt"]
+      "tiles": ["local://tiles/streets-v7/{z}-{x}-{y}.mvt"]
     }
   },
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",

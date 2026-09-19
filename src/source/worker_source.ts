@@ -1,20 +1,22 @@
-import type {ExpiryData, RequestParameters} from '../util/ajax';
-import type {RGBAImage, AlphaImage} from '../util/image';
-import type {GlyphPositions} from '../render/glyph_atlas';
-import type {ImageAtlas} from '../render/image_atlas';
-import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id';
-import type {Bucket} from '../data/bucket';
-import type {FeatureIndex} from '../data/feature_index';
-import type {CollisionBoxArray} from '../data/array_types.g';
-import type {DEMEncoding} from '../data/dem_data';
-import type {StyleGlyph} from '../style/style_glyph';
-import type {StyleImage} from '../style/style_image';
+import type {ExpiryData, RequestParameters} from '../util/ajax.ts';
+import type {RGBAImage, AlphaImage} from '../util/image.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
+import type {ImageAtlas} from '../render/image_atlas.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
+import type {Bucket} from '../data/bucket.ts';
+import type {FeatureIndex} from '../data/feature_index.ts';
+import type {CollisionBoxArray} from '../data/array_types.g.ts';
+import type {DEMEncoding} from '../data/dem_data.ts';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {StyleImage} from '../style/style_image.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {RemoveSourceParams} from '../util/actor_messages';
-import type {IActor} from '../util/actor';
-import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import type {DashEntry} from '../render/line_atlas';
+import type {RemoveSourceParams} from '../util/actor_messages.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import type {DashEntry} from '../render/line_atlas.ts';
+
+export type TileEncoding = 'mlt' | 'mvt';
 
 /**
  * Parameters to identify a tile
@@ -40,12 +42,13 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    encoding?: string;
+    encoding?: TileEncoding;
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
      * This allows the worker to know that it needs to overzoom from a source tile.
      */
     overzoomParameters?: OverzoomParameters;
+    etag?: string;
 };
 
 /**
@@ -71,33 +74,37 @@ export type WorkerDEMTileParameters = TileParameters & {
 /**
  * The worker tile's result type
  */
-export type WorkerTileResult = ExpiryData & {
-    buckets: Array<Bucket>;
+export type WorkerTileWithData = ExpiryData & {
+    buckets: Bucket[];
     imageAtlas: ImageAtlas;
     dashPositions: Record<string, DashEntry>;
     glyphAtlasImage: AlphaImage;
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
-    encoding?: string;
-    resourceTiming?: Array<PerformanceResourceTiming>;
+    encoding?: TileEncoding;
+    resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
-    glyphMap?: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    } | null;
+    glyphMap?: Record<string, Record<string, StyleGlyph>> | null;
     iconMap?: {
         [_: string]: StyleImage;
     } | null;
     glyphPositions?: GlyphPositions | null;
+    etagUnmodified?: false;
 };
+
+export type WorkerTileWithoutData = ExpiryData & {
+    etagUnmodified: true;  // Strict for type narrowing
+    resourceTiming?: PerformanceResourceTiming[];
+};
+
+export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.
  */
 export interface WorkerSourceConstructor {
-    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>): WorkerSource;
+    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]): WorkerSource;
 }
 
 /**
@@ -106,7 +113,7 @@ export interface WorkerSourceConstructor {
  * @see {@link Map.addSourceType}
  */
 export interface WorkerSource {
-    availableImages: Array<string>;
+    availableImages: string[];
 
     /**
      * Loads a tile from the given params and parse it into buckets ready to send

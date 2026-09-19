@@ -1,0 +1,7 @@
+[
+    {"title": "Map Basics", "categories": ["Getting Started", "Camera & Animation", "Controls & Gestures"]},
+    {"title": "Sources", "categories": ["Vector & GeoJSON", "Raster & Imagery", "Live & Realtime Data"]},
+    {"title": "Layers", "categories": ["Icons & Symbols", "Layer Styling", "Expressions", "Filtering", "Heatmaps & Clusters", "Data Visualization", "Terrain & Hillshade", "3D Models & Buildings", "Globe"]},
+    {"title": "Annotations & Labels", "categories": ["Markers", "Popups", "Labels & Fonts", "Internationalization"]},
+    {"title": "Interactivity & Extensions", "categories": ["Events & Queries", "Plugins & Integrations"]}
+]

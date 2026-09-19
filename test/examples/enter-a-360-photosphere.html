@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Enter a 360° photosphere</title>
+    <meta property="og:description" content="Click a marker to smoothly enter an immersive 360° photosphere at a fixed point, blended with the live map; exit to return to normal navigation." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:created" content="2026-07-14" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <link rel='icon' href='data:,' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #hint {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            background: rgba(0, 0, 0, .6);
+            color: #fff;
+            padding: 8px 12px;
+            font: 13px/1.4 system-ui, sans-serif;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        #exit-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            padding: 8px 14px;
+            font: 13px system-ui, sans-serif;
+            border: none;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, .7);
+            color: #fff;
+            cursor: pointer;
+            display: none;
+        }
+        .photosphere-marker {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: #2266ff;
+            box-shadow: 0 0 6px rgba(0, 0, 0, .6);
+            cursor: pointer;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
+                "maplibre-gl-photosphere": "https://unpkg.com/maplibre-gl-photosphere@0.1.0/src/index.js"
+            }
+        }
+    </script>
+</head>
+<body>
+<div id="map"></div>
+<div id="hint">Click the blue marker to step inside the photosphere.</div>
+<button id="exit-button" type="button">Exit photosphere</button>
+
+<script type="module">
+    import * as maplibregl from 'maplibre-gl';
+    import {Photosphere} from 'maplibre-gl-photosphere';
+
+    // A bridge over the Seine, Paris - the real position this panorama was
+    // taken at. Photo by Alexandre Duret-Lutz, CC BY-SA 2.0,
+    // https://commons.wikimedia.org/w/index.php?curid=36707488
+    const PHOTOSPHERE_LNGLAT = [2.286828, 48.856625];
+    const OUTSIDE_VIEW = {center: PHOTOSPHERE_LNGLAT, zoom: 17, pitch: 60, bearing: -30};
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    maxzoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }
+            },
+            layers: [{id: 'osm', type: 'raster', source: 'osm'}]
+        },
+        center: OUTSIDE_VIEW.center,
+        zoom: OUTSIDE_VIEW.zoom,
+        pitch: OUTSIDE_VIEW.pitch,
+        bearing: OUTSIDE_VIEW.bearing,
+        minPitch: 5,
+        maxPitch: 175,
+        // Lets the plugin place the eye at its eye height instead of
+        // re-clamping the elevation to the ground.
+        centerClampedToGround: false
+    });
+
+    const hint = document.getElementById('hint');
+    const exitButton = document.getElementById('exit-button');
+
+    const photosphere = new Photosphere(map, {
+        lngLat: PHOTOSPHERE_LNGLAT,
+        imageUrl: 'https://maplibre.org/maplibre-gl-js/docs/assets/enter-a-360-photosphere-panorama.jpg',
+        exitView: OUTSIDE_VIEW,
+        onEnter: () => {
+            hint.textContent = 'Drag to look around.';
+            exitButton.style.display = 'block';
+        },
+        onExit: () => {
+            hint.textContent = 'Click the blue marker to step inside the photosphere.';
+            marker.getElement().style.display = '';
+        }
+    });
+
+    const marker = new maplibregl.Marker({
+        element: Object.assign(document.createElement('div'), {className: 'photosphere-marker'})
+    })
+        .setLngLat(PHOTOSPHERE_LNGLAT)
+        .addTo(map);
+
+    marker.getElement().addEventListener('click', () => {
+        marker.getElement().style.display = 'none';
+        photosphere.enter();
+    });
+
+    exitButton.addEventListener('click', () => {
+        exitButton.style.display = 'none';
+        photosphere.exit();
+    });
+</script>
+</body>
+</html>

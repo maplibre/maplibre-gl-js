@@ -1,12 +1,12 @@
 import {describe, test, expect, afterEach} from 'vitest';
-import {now, setNow, restoreNow, isTimeFrozen} from './time_control';
+import {now, setNow, restoreNow, isTimeFrozen} from './time_control.ts';
 
 /**
  * Helper to wait for real time to advance by at least the specified duration.
  * Uses busy-wait to ensure real time passes even when test time is frozen.
  */
 function waitForRealTime(ms: number): void {
-    const realPerformanceNow = typeof performance !== 'undefined' && performance && performance.now ?
+    const realPerformanceNow = typeof performance !== 'undefined' && performance?.now ?
         performance.now.bind(performance) :
         Date.now.bind(Date);
 
@@ -26,7 +26,7 @@ describe('time_control', () => {
     describe('now()', () => {
         test('returns a valid number when not frozen', () => {
             const currentTime = now();
-            expect(typeof currentTime).toBe('number');
+            expect(currentTime).toBeTypeOf('number');
             expect(currentTime).toBeGreaterThanOrEqual(0);
         });
 
@@ -133,7 +133,7 @@ describe('time_control', () => {
             expect(isTimeFrozen()).toBe(false);
 
             const time = now();
-            expect(typeof time).toBe('number');
+            expect(time).toBeTypeOf('number');
             expect(time).toBeGreaterThanOrEqual(0);
         });
     });

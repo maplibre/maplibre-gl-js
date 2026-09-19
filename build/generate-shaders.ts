@@ -25,11 +25,11 @@ function glslToTs(code: string): string {
 export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`;
 }
 
-const shaderFiles = globSync('./src/shaders/*.glsl');
+const shaderFiles = globSync('./src/shaders/glsl/*.glsl');
 for (const file of shaderFiles) {
     const glslFile = fs.readFileSync(file, 'utf8');
     const tsSource = glslToTs(glslFile);
-    const fileName = path.join('.', 'src', 'shaders', `${file.split(path.sep).splice(-1)}.g.ts`);
+    const fileName = path.join('.', 'src', 'shaders', 'glsl', `${file.split(path.sep).splice(-1)}.g.ts`);
     fs.writeFileSync(fileName, tsSource);
 }
 

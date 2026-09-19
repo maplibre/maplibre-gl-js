@@ -1,16 +1,23 @@
-import {type VectorTile, VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
-import Protobuf from 'pbf';
 import Point from '@mapbox/point-geometry';
-import {fromVectorTileJs} from '@maplibre/vt-pbf';
-import {clipGeometry} from '../symbol/clip_line';
-import type {LoadVectorTileResult} from './vector_tile_worker_source';
-import type {CanonicalTileID} from '../tile/tile_id';
+import {clipGeometry} from '../symbol/clip_line.ts';
 
-class VectorTileFeatureOverzoomed extends VectorTileFeature {
+import type {CanonicalTileID} from '../tile/tile_id.ts';
+import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
+
+class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
     pointsArray: Point[][];
+    type: VectorTileFeatureLike['type'];
+    properties: VectorTileFeatureLike['properties'];
+    id: VectorTileFeatureLike['id'];
+    extent: VectorTileFeatureLike['extent'];
 
-    constructor(type: 0 | 1 | 2 | 3, geometry: Point[][], properties: any, id: number, extent: number) {
-        super(new Protobuf(), 0, extent, [], []);
+    constructor(
+        type: VectorTileFeatureLike['type'],
+        geometry: Point[][],
+        properties: VectorTileFeatureLike['properties'],
+        id: VectorTileFeatureLike['id'],
+        extent: VectorTileFeatureLike['extent']
+    ) {
         this.type = type;
         this.properties = properties ? properties : {};
         this.extent = extent;
@@ -18,15 +25,15 @@ class VectorTileFeatureOverzoomed extends VectorTileFeature {
         this.id = id;
     }
 
-    loadGeometry() {
+    loadGeometry(): Point[][] {
         // Clone the geometry and ensure all points are Point instances
-        return this.pointsArray.map(ring => 
+        return this.pointsArray.map(ring =>
             ring.map(point => new Point(point.x, point.y))
         );
     }
 }
 
-class VectorTileLayerOverzoomed extends VectorTileLayer {
+class VectorTileLayerOverzoomed implements VectorTileLayerLike {
     private _myFeatures: VectorTileFeatureOverzoomed[];
     name: string;
     extent: number;
@@ -34,41 +41,23 @@ class VectorTileLayerOverzoomed extends VectorTileLayer {
     length: number;
 
     constructor(features: VectorTileFeatureOverzoomed[], layerName: string, extent: number) {
-        super(new Protobuf());
         this._myFeatures = features;
         this.name = layerName;
         this.length = features.length;
         this.extent = extent;
     }
 
-    feature(i: number): VectorTileFeature {
+    feature(i: number): VectorTileFeatureLike {
         return this._myFeatures[i];
     }
 }
 
-export class VectorTileOverzoomed implements VectorTile {
-    layers: Record<string, VectorTileLayer> = {};
+export class VectorTileOverzoomed implements VectorTileLike {
+    layers: Record<string, VectorTileLayerLike> = {};
 
-    addLayer(layer: VectorTileLayerOverzoomed) {
+    addLayer(layer: VectorTileLayerOverzoomed): void {
         this.layers[layer.name] = layer;
     }
-}
-
-/**
- * Encodes the virtual tile into binary vector tile form.
- * This is a convenience that allows `FeatureIndex` to operate the same way across `VectorTileSource` and `GeoJSONSource` data.
- * @param virtualVectorTile - a syntetically created vector tile, this tile should have the relevant layer and features already added to it.
- * @returns - the encoded vector tile along with the original virtual tile binary data.
- */
-export function toVirtualVectorTile(virtualVectorTile: VectorTile): LoadVectorTileResult {
-    let pbf: Uint8Array = fromVectorTileJs(virtualVectorTile);
-    if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
-        pbf = new Uint8Array(pbf);  // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
-    }
-    return {
-        vectorTile: virtualVectorTile,
-        rawData: pbf.buffer
-    };
 }
 
 /**
@@ -78,7 +67,7 @@ export function toVirtualVectorTile(virtualVectorTile: VectorTile): LoadVectorTi
  * @param targetTileID - the target tile ID
  * @returns - the overzoomed tile layer
  */
-export function sliceVectorTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, targetTileID: CanonicalTileID): VectorTileLayerOverzoomed {
+export function sliceVectorTileLayer(sourceLayer: VectorTileLayerLike, maxZoomTileID: CanonicalTileID, targetTileID: CanonicalTileID): VectorTileLayerOverzoomed {
     const {extent} = sourceLayer;
     const dz = targetTileID.z - maxZoomTileID.z;
     const scale = Math.pow(2, dz);
@@ -90,7 +79,7 @@ export function sliceVectorTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID
 
     const featureWrappers: VectorTileFeatureOverzoomed[] = [];
     for (let index = 0; index < sourceLayer.length; index++) {
-        const feature: VectorTileFeature = sourceLayer.feature(index);
+        const feature: VectorTileFeatureLike = sourceLayer.feature(index);
         let geometry = feature.loadGeometry();
         
         // Transform all coordinates to target tile space

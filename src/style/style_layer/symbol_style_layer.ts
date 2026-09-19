@@ -1,9 +1,7 @@
-import {StyleLayer} from '../style_layer';
-
-import {SymbolBucket, type SymbolFeature} from '../../data/bucket/symbol_bucket';
-import {resolveTokens} from '../../util/resolve_tokens';
-import properties, {type SymbolLayoutPropsPossiblyEvaluated, type SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
-
+import {StyleLayer} from '../style_layer.ts';
+import {SymbolBucket, type SymbolFeature} from '../../data/bucket/symbol_bucket.ts';
+import {resolveTokens} from '../../util/resolve_tokens.ts';
+import properties, {type SymbolLayoutPropsPossiblyEvaluated, type SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g.ts';
 import {
     type Transitionable,
     type Transitioning,
@@ -11,8 +9,7 @@ import {
     type PossiblyEvaluated,
     PossiblyEvaluatedPropertyValue,
     type PropertyValue
-} from '../properties';
-
+} from '../properties.ts';
 import {
     isExpression,
     StyleExpression,
@@ -23,13 +20,13 @@ import {
     Formatted,
     FormatExpression,
     Literal} from '@maplibre/maplibre-gl-style-spec';
+import {FormatSectionOverride} from '../format_section_override.ts';
 
-import type {BucketParameters} from '../../data/bucket';
-import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
-import type {EvaluationParameters} from '../evaluation_parameters';
+import type {BucketParameters} from '../../data/bucket.ts';
+import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g.ts';
+import type {EvaluationParameters} from '../evaluation_parameters.ts';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {CanonicalTileID} from '../../tile/tile_id';
-import {FormatSectionOverride} from '../format_section_override';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
 export const isSymbolStyleLayer = (layer: StyleLayer): layer is SymbolStyleLayer => layer.type === 'symbol';
 
@@ -45,15 +42,15 @@ export class SymbolStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
 
-        if (this.layout.get('icon-rotation-alignment') === 'auto') {
-            if (this.layout.get('symbol-placement') !== 'point') {
-                this.layout._values['icon-rotation-alignment'] = 'map';
-            } else {
-                this.layout._values['icon-rotation-alignment'] = 'viewport';
-            }
+        const iconRotationAlignment = this.layout.get('icon-rotation-alignment');
+        if (iconRotationAlignment.value.kind !== 'constant' || iconRotationAlignment.value.value === 'auto') {
+            this.layout._values['icon-rotation-alignment'] = new PossiblyEvaluatedPropertyValue(
+                iconRotationAlignment.property,
+                {kind: 'constant', value: this.layout.get('symbol-placement') !== 'point' ? 'map' : 'viewport'},
+                iconRotationAlignment.parameters);
         }
 
         if (this.layout.get('text-rotation-alignment') === 'auto') {
@@ -69,7 +66,7 @@ export class SymbolStyleLayer extends StyleLayer {
             this.layout._values['text-pitch-alignment'] = this.layout.get('text-rotation-alignment') === 'map' ? 'map' : 'viewport';
         }
         if (this.layout.get('icon-pitch-alignment') === 'auto') {
-            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment');
+            this.layout._values['icon-pitch-alignment'] = this.layout.get('icon-rotation-alignment').constantOr('viewport');
         }
 
         if (this.layout.get('symbol-placement') === 'point') {
@@ -78,7 +75,7 @@ export class SymbolStyleLayer extends StyleLayer {
                 // remove duplicates, preserving order
                 const deduped = [];
                 for (const m of writingModes) {
-                    if (deduped.indexOf(m) < 0) deduped.push(m);
+                    if (!deduped.includes(m)) deduped.push(m);
                 }
                 this.layout._values['text-writing-mode'] = deduped;
             } else {
@@ -89,7 +86,7 @@ export class SymbolStyleLayer extends StyleLayer {
         this._setPaintOverrides();
     }
 
-    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: Array<string>) {
+    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]): any {
         const value = this.layout.get(name).evaluate(feature, {}, canonical, availableImages);
         const unevaluated = this._unevaluatedLayout._values[name];
         if (!unevaluated.isDataDriven() && !isExpression(unevaluated.value) && value) {
@@ -99,7 +96,7 @@ export class SymbolStyleLayer extends StyleLayer {
         return value;
     }
 
-    createBucket(parameters: BucketParameters<any>) {
+    createBucket(parameters: BucketParameters<any>): SymbolBucket {
         return new SymbolBucket(parameters);
     }
 
@@ -111,14 +108,14 @@ export class SymbolStyleLayer extends StyleLayer {
         throw new Error('Should take a different path in FeatureIndex');
     }
 
-    _setPaintOverrides() {
+    _setPaintOverrides(): void {
         for (const overridable of properties.paint.overridableProperties) {
             if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) {
                 continue;
             }
             const overridden = this.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
             const override = new FormatSectionOverride(overridden);
-            const styleExpression = new StyleExpression(override, overridden.property.specification);
+            const styleExpression = new StyleExpression(override, `layers[${this.id}].paint.${overridden.property.name}`, overridden.property.specification);
             let expression = null;
             if (overridden.value.kind === 'constant' || overridden.value.kind === 'source') {
                 expression = new ZoomConstantExpression('source', styleExpression) as SourceExpression;
@@ -147,7 +144,7 @@ export class SymbolStyleLayer extends StyleLayer {
 
         const checkSections = (sections) => {
             for (const section of sections) {
-                if (property.overrides && property.overrides.hasOverride(section)) {
+                if (property.overrides?.hasOverride(section)) {
                     hasOverrides = true;
                     return;
                 }
@@ -186,7 +183,7 @@ export type SymbolPadding = [number, number, number, number];
 export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolPadding {
     // Support text-padding in addition to icon-padding? Unclear how to apply asymmetric text-padding to the radius for collision circles.
     const result = layout.get('icon-padding').evaluate(feature, {}, canonical);
-    const values = result && result.values;
+    const values = result?.values;
 
     return [
         values[0] * pixelRatio,

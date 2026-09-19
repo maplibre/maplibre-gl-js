@@ -1,9 +1,9 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import * as timeControl from '../../util/time_control';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest, sleep} from '../../util/test/util';
+import * as timeControl from '../../util/time_control.ts';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest, sleep} from '../../util/test/util.ts';
 
 function createMap(cooperativeGestures) {
     return new Map({
@@ -36,7 +36,7 @@ describe('CoopGesturesHandler', () => {
 
         const startZoom = map.getZoom();
         // simulate a single 'wheel' event
-        const wheelEvent = {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta};
+        const wheelEvent = {deltaY: -simulate.magicWheelZoomDelta};
         simulate.wheel(map.getCanvas(), wheelEvent);
         map._renderTaskQueue.run();
         expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeInstanceOf(HTMLDivElement);
@@ -73,7 +73,7 @@ describe('CoopGesturesHandler', () => {
 
         const startZoom = map.getZoom();
         // simulate a single 'wheel' event
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;
@@ -97,7 +97,7 @@ describe('CoopGesturesHandler', () => {
 
         const startZoom = map.getZoom();
         // simulate a single 'wheel' event
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, ctrlKey: true});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta, ctrlKey: true});
         map._renderTaskQueue.run();
 
         now += 400;
@@ -125,7 +125,6 @@ describe('CoopGesturesHandler', () => {
         const startZoom = map.getZoom();
         // simulate a single 'wheel' trackpad pinch event
         simulate.wheel(map.getCanvas(), {
-            type: 'wheel',
             deltaY: -simulate.magicWheelZoomDelta,
 
             // this is how a browser identifies a trackpad pinch
@@ -158,7 +157,7 @@ describe('CoopGesturesHandler', () => {
         map._renderTaskQueue.run();
 
         // simulate a single 'wheel' event
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
         expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
 
@@ -309,7 +308,7 @@ describe('CoopGesturesHandler', () => {
 
         const startZoom = map.getZoom();
         // simulate a single 'wheel' event
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;
@@ -323,7 +322,7 @@ describe('CoopGesturesHandler', () => {
         map.cooperativeGestures.enable();
 
         // This 'wheel' event should not zoom
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;

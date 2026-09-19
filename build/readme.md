@@ -3,7 +3,7 @@
 This folder holds common build scripts accessed via the various `npm run` commands.
 Codegen is executed when calling `npm install` in order to generate all artifacts needed for the build to pass
 
-## Bundeling all the code
+## Bundling all the code
 
 The bundling process can be split into several steps:
 
@@ -11,25 +11,14 @@ The bundling process can be split into several steps:
 This command will compile the css code and create the css file.
 
 `npm run build-prod` and `npm run build-dev`
-These commands will use rollup to bundle the code. This is where the magic happens and uses some files in this folder.
+These commands will use [rolldown](https://rolldown.rs/) to bundle the code as ES modules. The output is two files:
 
-`banner.ts` is used to create a banner at the beginning of the output file
+- `dist/maplibre-gl.mjs` (main bundle, entry: `src/index.ts`)
+- `dist/maplibre-gl-worker.mjs` (worker bundle, entry: `src/source/worker.ts`)
 
-`rollup_plugins.ts` is used to define common plugins for rollup configurations
+The main bundle creates the worker via `new Worker(url, {type: 'module'})`. The URL defaults to a sibling of the loaded module (resolved via `import.meta.url`) and can be overridden by calling `setWorkerUrl()`. Cross-origin URLs are fetched via CORS and laundered through a same-origin Blob URL, since the `Worker` constructor rejects cross-origin URLs even when CORS allows the fetch.
 
-`rollup_plugin_minify_style_spec.ts` is used to specify the plugin used in style spec bundeling
-
-In the `rollup` folder there are some files that are used as linking files as they link to other files for rollup to pick when bundling.
-
-Rollup is generating 3 files throughout the process of bundling:
-
-`index.ts` a file containing all the code that will run in the main thread.
-
-`shared.ts` a file containing all the code shared between the main and worker code.
-
-`worker.ts` a file containing all the code the will run in the worker threads.
-
-These 3 files are then referenced and used by the `bundle_prelude.js` file. It allows loading the web worker code automatically in web workers without any extra effort from someone who would like to use the library, i.e. it simply works.
+`banner.ts` is used to create a banner at the beginning of the output file.
 
 <hr>
 
@@ -50,7 +39,3 @@ Generates `data/array_types.ts`, which consists of:
 Generates the various `style/style_layer/[layer type]_style_layer_properties.ts` code files based on the content of `v8.json`. These files provide the type signatures for the paint and layout properties for each type of style layer.
 
 <hr>
-
-### Generate Release Nodes
-
-`release-notes.js` Used to generate release notes when releasing a new version

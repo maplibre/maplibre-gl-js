@@ -21,7 +21,7 @@
         ]
       }
     },
-    "mapbox": {
+    "maplibre": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
@@ -60,7 +60,7 @@
     {
       "id": "circle",
       "type": "circle",
-      "source": "mapbox",
+      "source": "maplibre",
       "paint": {
         "circle-radius": {
           "type": "identity",

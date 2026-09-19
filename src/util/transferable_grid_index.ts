@@ -80,7 +80,7 @@ export class TransferableGridIndex {
         this.max = extent + p;
     }
 
-    insert(key: number, x1: number, y1: number, x2: number, y2: number) {
+    insert(key: number, x1: number, y1: number, x2: number, y2: number): void {
         this._forEachCell(x1, y1, x2, y2, this._insertCell, this.uid++, undefined, undefined);
         this.keys.push(key);
         this.bboxes.push(x1);
@@ -89,22 +89,19 @@ export class TransferableGridIndex {
         this.bboxes.push(y2);
     }
 
-    _insertReadonly() {
+    _insertReadonly(): void {
         throw new Error('Cannot insert into a GridIndex created from an ArrayBuffer.');
     }
 
-    _insertCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, uid: number) {
+    _insertCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, uid: number): void {
         this.cells[cellIndex].push(uid);
     }
 
-    query(x1: number, y1: number, x2: number, y2: number, intersectionTest?: Function): number[] {
+    query(x1: number, y1: number, x2: number, y2: number, intersectionTest?: (x1: number, y1: number, x2: number, y2: number) => boolean): number[] {
         const min = this.min;
         const max = this.max;
         if (x1 <= min && y1 <= min && max <= x2 && max <= y2 && !intersectionTest) {
-            // We use `Array.slice` because `this.keys` may be a `Int32Array` and
-            // some browsers (Safari and IE) do not support `TypedArray.slice`
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/slice#Browser_compatibility
-            return Array.prototype.slice.call(this.keys);
+            return [...this.keys];
 
         } else {
             const result = [];
@@ -114,13 +111,12 @@ export class TransferableGridIndex {
         }
     }
 
-    _queryCell(x1: number, y1: number, x2: number, y2:number, cellIndex:number, result, seenUids, intersectionTest: Function) {
+    _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: number[], seenUids: Record<number, boolean>, intersectionTest: (x1: number, y1: number, x2: number, y2: number) => boolean): void {
         const cell = this.cells[cellIndex];
         if (cell !== null) {
             const keys = this.keys;
             const bboxes = this.bboxes;
-            for (let u = 0; u < cell.length; u++) {
-                const uid = cell[u];
+            for (const uid of cell) {
                 if (seenUids[uid] === undefined) {
                     const offset = uid * 4;
                     if (intersectionTest ?
@@ -139,7 +135,7 @@ export class TransferableGridIndex {
         }
     }
 
-    _forEachCell(x1: number, y1: number, x2:number, y2:number, fn: Function, arg1, arg2, intersectionTest) {
+    _forEachCell(x1: number, y1: number, x2: number, y2: number, fn: Function, arg1: unknown, arg2: unknown, intersectionTest?: (x1: number, y1: number, x2: number, y2: number) => boolean): void {
         const cx1 = this._convertToCellCoord(x1);
         const cy1 = this._convertToCellCoord(y1);
         const cx2 = this._convertToCellCoord(x2);
@@ -157,11 +153,11 @@ export class TransferableGridIndex {
         }
     }
 
-    _convertFromCellCoord (x) {
+    _convertFromCellCoord(x: number): number {
         return (x - this.padding) / this.scale;
     }
 
-    _convertToCellCoord(x) {
+    _convertToCellCoord(x: number): number {
         return Math.max(0, Math.min(this.d - 1, Math.floor(x * this.scale) + this.padding));
     }
 
@@ -172,8 +168,8 @@ export class TransferableGridIndex {
 
         const metadataLength = NUM_PARAMS + this.cells.length + 1 + 1;
         let totalCellLength = 0;
-        for (let i = 0; i < this.cells.length; i++) {
-            totalCellLength += this.cells[i].length;
+        for (const cell of this.cells) {
+            totalCellLength += cell.length;
         }
 
         const array = new Int32Array(metadataLength + totalCellLength + this.keys.length + this.bboxes.length);
@@ -200,7 +196,7 @@ export class TransferableGridIndex {
         return array.buffer;
     }
 
-    public static serialize(grid: TransferableGridIndex, transferables?: Array<Transferable>): SerializedGrid {
+    public static serialize(grid: TransferableGridIndex, transferables?: Transferable[]): SerializedGrid {
         const buffer = grid.toArrayBuffer();
         if (transferables) {
             transferables.push(buffer);

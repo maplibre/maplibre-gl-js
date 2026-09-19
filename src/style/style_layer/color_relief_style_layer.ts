@@ -1,19 +1,18 @@
-import {StyleLayer} from '../style_layer';
-
-import properties, {type ColorReliefPaintPropsPossiblyEvaluated} from './color_relief_style_layer_properties.g';
-import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
-
-import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g';
+import {StyleLayer} from '../style_layer.ts';
+import properties, {type ColorReliefPaintPropsPossiblyEvaluated} from './color_relief_style_layer_properties.g.ts';
 import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {warnOnce} from '../../util/util';
-import {Texture} from '../../render/texture';
-import {RGBAImage} from '../../util/image';
-import {type Context} from '../../gl/context';
-import {packDEMData} from '../../data/dem_data';
+import {warnOnce} from '../../util/util.ts';
+import {Texture} from '../../webgl/texture.ts';
+import {RGBAImage} from '../../util/image.ts';
+import {packDEMData} from '../../data/dem_data.ts';
+
+import type {Context} from '../../webgl/context.ts';
+import type {Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
+import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g.ts';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
 
-export type ColorRamp = {elevationStops: Array<number>; colorStops: Array<Color>};
+export type ColorRamp = {elevationStops: number[]; colorStops: Color[]};
 export type ColorRampTextures = {elevationTexture: Texture; colorTexture: Texture};
 
 export class ColorReliefStyleLayer extends StyleLayer {
@@ -97,7 +96,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
         return this.colorRampTextures;
     }
 
-    hasOffscreenPass() {
-        return this.visibility !== 'none' && !!this.colorRampTextures;
+    hasOffscreenPass(): boolean {
+        return !this.isHidden() && !!this.colorRampTextures;
     }
 }

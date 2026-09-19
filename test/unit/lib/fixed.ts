@@ -1,4 +1,4 @@
-export function fixedNum(n:number, precision = 10) {
+export function fixedNum(n:number, precision = 10): number {
 
     const fixedNum = parseFloat(n.toFixed(precision));
 
@@ -10,7 +10,10 @@ export function fixedNum(n:number, precision = 10) {
     }
 }
 
-export function fixedLngLat(l, precision = 9) {
+export function fixedLngLat(l: any, precision = 9): {
+    lng: number;
+    lat: number;
+} {
 
     return {
         lng: fixedNum(l.lng, precision),
@@ -18,7 +21,11 @@ export function fixedLngLat(l, precision = 9) {
     };
 }
 
-export function fixedCoord(coord, precision = 10) {
+export function fixedCoord(coord: any, precision = 10): {
+    x: number;
+    y: number;
+    z: number;
+} {
 
     return {
         x: fixedNum(coord.x, precision),

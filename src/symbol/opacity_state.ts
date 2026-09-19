@@ -1,4 +1,4 @@
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.ts';
 
 export class OpacityState {
     opacity: number;
@@ -11,7 +11,7 @@ export class OpacityState {
         this.time = 0;
     }
 
-    clone() {
+    clone(): OpacityState {
         const clone = new OpacityState();
         clone.opacity = this.opacity;
         clone.targetOpacity = this.targetOpacity;

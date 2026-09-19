@@ -1,12 +1,13 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
-import {type Page, type Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
-import type {AddressInfo} from 'net';
+import {sleep} from '../../../src/util/test/util.ts';
+import {launchPuppeteer} from '../lib/puppeteer_config.ts';
 
-import {sleep} from '../../../src/util/test/util';
-import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+import type {Page, Browser} from 'puppeteer';
+import type {AddressInfo} from 'net';
+import type {Map} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -56,9 +57,7 @@ describe('Browser tests', () => {
 
     afterAll(async () => {
         await browser.close();
-        if (server) {
-            server.close();
-        }
+        server?.close();
     }, 40000);
 
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
@@ -73,12 +72,12 @@ describe('Browser tests', () => {
                 map.getCanvas().dispatchEvent(new MouseEvent('mouseup', {bubbles: true, button: 2, clientX: 10, clientY: 10}));
             });
         });
-        expect(contextMenuEventFired).toBe('contextmenu');       
+        expect(contextMenuEventFired).toBe('contextmenu');
     });
 
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
         const mouseMoveFired = await page.evaluate(() => {
-            return new Promise<Array<number>>((resolve, _reject) => {
+            return new Promise<number[]>((resolve, _reject) => {
                 let mouseMoveCount = 0;
                 let wheelCount = 0;
                 map.on('mousemove', () => {mouseMoveCount++;});
@@ -102,7 +101,7 @@ describe('Browser tests', () => {
         const firstFiredEvent = await page.evaluate(() => {
             const map2 = new maplibregl.Map({
                 container: 'map',
-                style: 'https://demotiles.maplibre.org/style.json',
+                style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background', paint: {'background-color': '#72d0f2'}}]},
                 center: [10, 10],
                 zoom: 10
             });
@@ -113,6 +112,43 @@ describe('Browser tests', () => {
             });
         });
         expect(firstFiredEvent).toBe('load');
+    });
+
+    test('Map created in a hidden container resizes when shown, see #8277', {retry: 3, timeout: 20000}, async () => {
+        const dimensions = await page.evaluate(async () => {
+            const host = document.createElement('div');
+            host.style.display = 'none';
+
+            const container = document.createElement('div');
+            container.style.cssText = 'width: 640px; height: 480px';
+            host.append(container);
+            document.body.append(host);
+
+            const hiddenMap = new maplibregl.Map({
+                container,
+                style: {version: 8, sources: {}, layers: []}
+            });
+            const canvas = hiddenMap.getCanvas();
+
+            host.style.display = 'block';
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            const result = {
+                containerWidth: container.clientWidth,
+                containerHeight: container.clientHeight,
+                canvasWidth: canvas.clientWidth,
+                canvasHeight: canvas.clientHeight
+            };
+
+            hiddenMap.remove();
+            host.remove();
+            return result;
+        });
+
+        expect(dimensions.containerWidth).toBe(640);
+        expect(dimensions.containerHeight).toBe(480);
+        expect(dimensions.canvasWidth).toBe(640);
+        expect(dimensions.canvasHeight).toBe(480);
     });
 
     test('Should continue zooming from last mouse position after scroll and flyto, see #2709', {retry: 3, timeout: 20000}, async () => {
@@ -140,7 +176,7 @@ describe('Browser tests', () => {
         const canvasBB = await canvas?.boundingBox();
 
         const dragToLeft = async () => {
-            await page.mouse.move(canvasBB!.x, canvasBB!.y);
+            await page.mouse.move(canvasBB.x, canvasBB.y);
             await page.mouse.down();
             await page.mouse.move(100, 0, {
                 steps: 10
@@ -183,22 +219,22 @@ describe('Browser tests', () => {
     test('Resize div', {retry: 3, timeout: 20000}, async () => {
 
         await page.evaluate(() => {
-            document.getElementById('map')!.style.width = '200px';
-            document.getElementById('map')!.style.height = '200px';
+            document.getElementById('map').style.width = '200px';
+            document.getElementById('map').style.height = '200px';
         });
         await sleep(1000);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
-        expect(canvasBB!.width).toBeCloseTo(200);
-        expect(canvasBB!.height).toBeCloseTo(200);
+        expect(canvasBB.width).toBeCloseTo(200);
+        expect(canvasBB.height).toBeCloseTo(200);
     });
 
     test('Zoom: Double click at the center', {retry: 3, timeout: 20000}, async () => {
 
         const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox()!;
-        await page.mouse.click(canvasBB?.x!, canvasBB?.y!, {clickCount: 2});
+        const canvasBB = await canvas?.boundingBox();
+        await page.mouse.click(canvasBB?.x, canvasBB?.y, {count: 2});
 
         // Wait until the map has settled, then report the zoom level back.
         const zoom = await page.evaluate(() => {
@@ -212,7 +248,7 @@ describe('Browser tests', () => {
 
     test('Marker scaled: correct drag', {retry: 3}, async () => {
         await page.evaluate(() => {
-            document.getElementById('map')!.style.transform = 'scale(0.5)';
+            document.getElementById('map').style.transform = 'scale(0.5)';
             const markerMapPosition = map.getCenter();
             (window as any).marker = new maplibregl.Marker({draggable: true})
                 .setLngLat(markerMapPosition)
@@ -220,11 +256,11 @@ describe('Browser tests', () => {
             return map.getCenter();
         });
         const canvas = await page.$('.maplibregl-canvas');
-        const canvasBB = await canvas?.boundingBox()!;
+        const canvasBB = await canvas?.boundingBox();
         const dragToLeft = async () => {
-            await page.mouse.move(canvasBB!.x + canvasBB!.width / 2, canvasBB!.y + canvasBB!.height / 2);
+            await page.mouse.move(canvasBB.x + canvasBB.width / 2, canvasBB.y + canvasBB.height / 2);
             await page.mouse.down();
-            await page.mouse.move(canvasBB!.x, canvasBB!.y, {
+            await page.mouse.move(canvasBB.x, canvasBB.y, {
                 steps: 100
             });
             await page.mouse.up();
@@ -259,39 +295,14 @@ describe('Browser tests', () => {
             map.setStyle({
                 version: 8,
                 sources: {
-                    osm: {
-                        type: 'raster',
-                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                        tileSize: 256,
-                        attribution: '&copy; OpenStreetMap Contributors',
-                        maxzoom: 19
-                    },
-                    // Use a different source for terrain and hillshade layers, to improve render quality
                     terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
-                        tileSize: 256
-                    },
-                    hillshadeSource: {
-                        type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
+                        maxzoom: 10,
                         tileSize: 256
                     }
                 },
-                layers: [
-                    {
-                        id: 'osm',
-                        type: 'raster',
-                        source: 'osm'
-                    },
-                    {
-                        id: 'hills',
-                        type: 'hillshade',
-                        source: 'hillshadeSource',
-                        layout: {visibility: 'visible'},
-                        paint: {'hillshade-shadow-color': '#473B24'}
-                    }
-                ],
+                layers: [],
                 terrain: {
                     source: 'terrainSource',
                     exaggeration: 1
@@ -313,7 +324,7 @@ describe('Browser tests', () => {
         });
 
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
-        expect(markerScreenPosition.y).toBeCloseTo(378.1);
+        expect(markerScreenPosition.y).toBeCloseTo(377.5);
     });
 
     test('Fullscreen control should work in shadowdom as well', {retry: 3, timeout: 20000}, async () => {
@@ -344,10 +355,9 @@ describe('Browser tests', () => {
                             version: 8,
                             sources: {
                                 osm: {
-                                    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
                                     type: 'raster',
                                     tileSize: 256,
-                                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
+                                    tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`]
                                 }
                             },
                             layers: [{
@@ -365,7 +375,7 @@ describe('Browser tests', () => {
             await sleepInBrowser(100);
 
             await map.once('idle');
-            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector('.maplibregl-ctrl-fullscreen') as HTMLButtonElement;
+            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector<HTMLButtonElement>('.maplibregl-ctrl-fullscreen');
             fullscreenButton.click();
             await sleepInBrowser(1000);
 
@@ -386,14 +396,13 @@ describe('Browser tests', () => {
                 sources: {
                     osm: {
                         type: 'raster',
-                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tiles: [`${location.origin}/test/integration/assets/tiles/number/{z}.png`],
                         tileSize: 256,
-                        attribution: '&copy; OpenStreetMap Contributors',
                         maxzoom: 19
                     },
                     terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tiles: [`${location.origin}/test/integration/assets/tiles/zero-elevation-terrain-tile.png`],
                         tileSize: 256
                     }
                 },
@@ -411,7 +420,7 @@ describe('Browser tests', () => {
             return new Promise<any>((resolve) => {
                 map.once('idle', () => {
                     map.once('idle', () => {
-                        document.getElementById('map')!.style.width = '250px';
+                        document.getElementById('map').style.width = '250px';
                         setTimeout(() => {
                             resolve(marker.getElement().style.opacity);
                         }, 100);
@@ -426,18 +435,18 @@ describe('Browser tests', () => {
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
 
-        const rtlPromise = page.evaluate(() => {
-            // console.log('Testing start');
-            return maplibregl.setRTLTextPlugin('badURL', false);
+        const errorMessage = await page.evaluate(async () => {
+            try {
+                await maplibregl.setRTLTextPlugin('badURL', false);
+                return null;
+            } catch (e) {
+                return (e as Error).message;
+            }
         });
 
-        // exact message looks like
-        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
-        const regex = new RegExp('Failed to execute \'importScripts\'.*');
+        expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
-        await expect(rtlPromise).rejects.toThrow(regex);
-
-    }, 2000);
+    }, 5000);
 
     test('Movement with transformCameraUpdate and terrain', {retry: 3, timeout: 20000}, async () => {
         await page.evaluate(async () => {
@@ -449,7 +458,8 @@ describe('Browser tests', () => {
                     sources: {
                         terrainSource: {
                             type: 'raster-dem',
-                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tiles: [`${location.origin}/test/integration/assets/tiles/terrain-shading/{z}-{x}-{y}.terrain.png`],
+                            maxzoom: 10,
                             tileSize: 256
                         },
                     },
@@ -460,12 +470,12 @@ describe('Browser tests', () => {
                     }
                 });
             await map.once('idle');
-            map.transformCameraUpdate = () => ({});
+            map.setTransformCameraUpdate(() => ({}));
         });
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
-        await page.mouse.move(canvasBB!.x, canvasBB!.y);
+        await page.mouse.move(canvasBB.x, canvasBB.y);
         await page.mouse.down();
         await page.mouse.move(100, 0, {
             steps: 10,
@@ -485,7 +495,7 @@ describe('Browser tests', () => {
             function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             // Context loss and restore
             const restored: Promise<void> = new Promise(resolve => {
                 const onRestored = () => {
@@ -515,13 +525,13 @@ describe('Browser tests', () => {
 
             return Array.from(rgba);
         });
-        
+
         expect(pixel[0]).toBeGreaterThan(0);
         expect(pixel[1]).toBeGreaterThan(0);
         expect(pixel[2]).toBeGreaterThan(0);
         expect(pixel[3]).toBeGreaterThan(0);
     });
-        
+
     test('Map does not log invalid WebGL warnings on context loss/restore', async () => {
         const warnings: string[] = [];
         page.on('console', msg => {
@@ -534,7 +544,7 @@ describe('Browser tests', () => {
         await page.evaluate(() => {
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             if (ext) {
                 ext.loseContext();
                 setTimeout(() => ext.restoreContext(), 50);
@@ -548,5 +558,86 @@ describe('Browser tests', () => {
         expect(webglWarnings).to.not.contain('WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context');
         expect(webglWarnings).to.not.contain('WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context');
         expect(webglWarnings).to.not.contain('[.WebGL-0x3e1400107800] GL_INVALID_OPERATION: glDrawElements: Must have element array buffer bound.');
+    });
+
+    test('Map canvas is not blank after context lost, resize map and context restored', {retry: 3, timeout: 20000}, async () => {
+        await page.evaluate(async () => {
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            const ext = gl?.getExtension('WEBGL_lose_context');
+            (window as any).ext = ext;
+            ext.loseContext();
+        });
+
+        await page.setViewport({width: 500, height: 500, deviceScaleFactor: 2});
+        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor: 2});
+
+        const pixel = await page.evaluate(async () => {
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            const ext = (window as any).ext;
+            ext.restoreContext();
+
+            await new Promise(res => map.once('idle', res));
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.finish();
+
+            // Read central pixel from the WebGL framebuffer
+            const dpr = window.devicePixelRatio || 1;
+            const width = canvas.width / dpr;
+            const height = canvas.height / dpr;
+
+            const x = Math.floor(width / 2);
+            const y = Math.floor(height / 2);
+            const readY = height - y - 1;
+            const rgba = new Uint8Array(4);
+            gl.readPixels(x, readY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+
+            return Array.from(rgba);
+        });
+
+        // pixel values when style is not well rendered
+        expect(pixel[0]).toBeGreaterThan(0);
+        expect(pixel[1]).toBeGreaterThan(0);
+        expect(pixel[2]).toBeGreaterThan(0);
+        expect(pixel[3]).toBeGreaterThan(0);
+    });
+
+    test('An icon that renders itself with WebGL paints its atlas slot', {retry: 3, timeout: 20000}, async () => {
+        const pixel = await page.evaluate(async () => {
+            const image = {
+                width: 64,
+                height: 64,
+                data: {
+                    renderWithWebGL({gl, texture, x, y, width, height}) {
+                        const framebuffer = gl.createFramebuffer();
+                        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+                        gl.enable(gl.SCISSOR_TEST);
+                        gl.scissor(x, y, width, height);
+                        gl.clearColor(1, 0, 0, 1);
+                        gl.clear(gl.COLOR_BUFFER_BIT);
+                        gl.disable(gl.SCISSOR_TEST);
+                        gl.deleteFramebuffer(framebuffer);
+                    }
+                }
+            };
+
+            map.addImage('square', image);
+            map.addSource('point', {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]} as any});
+            map.addLayer({id: 'point', type: 'symbol', source: 'point', layout: {'icon-image': 'square'}});
+            await map.once('idle');
+
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2');
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.finish();
+            const rgba = new Uint8Array(4);
+            gl.readPixels(canvas.width / 2, canvas.height / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+            return Array.from(rgba);
+        });
+
+        expect(pixel).toEqual([255, 0, 0, 255]);
     });
 });

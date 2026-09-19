@@ -1,5 +1,5 @@
 import {describe, expect, test, vi} from 'vitest';
-import {createTileMesh, createTileMeshWithBuffers, type CreateTileMeshOptions} from './create_tile_mesh';
+import {createTileMesh, createTileMeshWithBuffers, type CreateTileMeshOptions} from './create_tile_mesh.ts';
 
 describe('create_tile_mesh', () => {
     test('createTileMeshWithBuffers should create buffer in the right size', () => {
@@ -12,8 +12,8 @@ describe('create_tile_mesh', () => {
         const options: CreateTileMeshOptions = {};
         createTileMeshWithBuffers(contextMock, options);
 
-        expect(createVertexBufferSpy.mock.calls[0][0].length).toBe(4);
-        expect(createIndexBufferSpy.mock.calls[0][0].length).toBe(2);
+        expect(createVertexBufferSpy.mock.calls[0][0]).toHaveLength(4);
+        expect(createIndexBufferSpy.mock.calls[0][0]).toHaveLength(2);
     });
 
     test('createTileMesh 32bit', () => {

@@ -1,13 +1,15 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
 
-function createMap(logoPosition, maplibreLogo) {
+import type {ControlPosition} from './control.ts';
+
+function createMap(logoPosition?: ControlPosition, maplibreLogo?: boolean) {
 
     const mapobj = {
         logoPosition,
         maplibreLogo,
         style: {
-            version: 8,
+            version: 8 as const,
             sources: {},
             layers: []
         }

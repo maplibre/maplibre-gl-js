@@ -2,7 +2,6 @@
 /types/
 /dist/
 /dist_type/
-/test/bench/results/
 /docs/assets/examples/*.webp
 /docs/API
 /docs/examples
@@ -17,8 +16,7 @@ node_modules
 coverage
 .DS_Store
 .nyc_output
-*_generated.js
-*_generated.js.map
+bench-baseline.json
 test/integration/**/results*.html
 test/integration/**/actual.png
 test/integration/**/actual.json
@@ -40,4 +38,3 @@ npm-debug.log
 *.iml
 /.vs/
 .*.swp
-junit.xml

@@ -1,6 +1,7 @@
 import {describe, expect, test} from 'vitest';
-import {LngLat} from '../lng_lat';
-import {getGlobeCircumferencePixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils';
+import {LngLat} from '../lng_lat.ts';
+import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
+import {GlobeTransform} from './globe_transform.ts';
 
 describe('globe utils', () => {
     const digitsPrecision = 10;
@@ -46,5 +47,40 @@ describe('globe utils', () => {
     test('getZoomAdjustment', () => {
         expect(getZoomAdjustment(0, 60)).toBeCloseTo(-1, digitsPrecision);
         expect(getZoomAdjustment(60, 0)).toBeCloseTo(1, digitsPrecision);
+    });
+
+    test('getGlobeCenterInViewSpace', () => {
+        const transform = new GlobeTransform();
+        transform.resize(256, 512);
+        transform.setMaxPitch(85);
+        transform.setCenter(new LngLat(11.64, 47.55));
+        transform.setZoom(11);
+        const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+
+        transform.setPitch(0);
+        const straightDown = getGlobeCenterInViewSpace(transform);
+        expect(straightDown[0]).toBeCloseTo(0, 6);
+        expect(straightDown[1]).toBeCloseTo(0, 6);
+        expect(straightDown[2]).toBeCloseTo(-(transform.cameraToCenterDistance + radius), 2);
+
+        transform.setPitch(85);
+        const pitched = getGlobeCenterInViewSpace(transform);
+        expect(Math.hypot(...pitched) / radius).toBeCloseTo(Math.hypot(...transform.cameraPosition), 8);
+    });
+});
+
+describe('getAtmosphereAltitudeBlend', () => {
+    const earthRadius = 6371000;
+
+    test('is 0 inside the atmosphere and 1 from ten times its height', () => {
+        expect(getAtmosphereAltitudeBlend(0, earthRadius)).toBe(0);
+        expect(getAtmosphereAltitudeBlend(100000, earthRadius)).toBe(0);
+        expect(getAtmosphereAltitudeBlend(1000000, earthRadius)).toBe(1);
+        expect(getAtmosphereAltitudeBlend(100 * earthRadius, earthRadius)).toBe(1);
+    });
+
+    test('follows a smoothstep between', () => {
+        expect(getAtmosphereAltitudeBlend(325000, earthRadius)).toBeCloseTo(0.15625, 6);
+        expect(getAtmosphereAltitudeBlend(775000, earthRadius)).toBeCloseTo(0.84375, 6);
     });
 });

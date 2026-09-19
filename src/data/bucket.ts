@@ -1,20 +1,22 @@
-import type {CollisionBoxArray} from './array_types.g';
-import type {Style} from '../style/style';
-import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
-import type {FeatureIndex} from './feature_index';
-import type {Context} from '../gl/context';
-import type {FeatureStates} from '../source/source_state';
-import type {ImagePosition} from '../render/image_atlas';
-import type {CanonicalTileID} from '../tile/tile_id';
-import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
+import type {CollisionBoxArray} from './array_types.g.ts';
+import type {Style} from '../style/style.ts';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';
+import type {FeatureIndex} from './feature_index.ts';
+import type {Context} from '../webgl/context.ts';
+import type {FeatureStates} from '../source/source_state.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
-import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import type {DashEntry} from '../render/line_atlas';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
-    layers: Array<Layer>;
+    layers: Layer[];
     zoom: number;
     pixelRatio: number;
     overscaling: number;
@@ -25,16 +27,44 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
 
 export type PopulateParameters = {
     featureIndex: FeatureIndex;
-    iconDependencies: {};
-    patternDependencies: {};
-    glyphDependencies: {};
-    dashDependencies: Record<string, {round: boolean; dasharray: Array<number>}>;
-    availableImages: Array<string>;
+    iconDependencies: Record<string, boolean>;
+    patternDependencies: Record<string, boolean>;
+    /**
+     * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
+     * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     * @example
+     * ```json
+     * {"SomeFontName": {"a": true, " ": true, "\u05e9\u05b0\u05c1": true}}
+     * ```
+     */
+    glyphDependencies: Record<string, Record<string, boolean>>;
+    dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
+    availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
+/**
+ * The asynchronously loaded tile content a bucket may need to finalize its
+ * features. Every image, glyph, and dash entry referenced by the bucket's
+ * layers arrives here after the worker has fetched it; pattern maps belong to
+ * fill, fill-extrusion, and line buckets, icon maps and glyph maps to symbol
+ * buckets.
+ */
+export type BucketDependencyParameters = {
+    options: PopulateParameters;
+    canonical: CanonicalTileID;
+    glyphMap: GetGlyphsResponse;
+    glyphPositions: GlyphPositions;
+    iconMap: GetImagesResponse;
+    iconPositions: Record<string, ImagePosition>;
+    patternMap: GetImagesResponse;
+    patternPositions: Record<string, ImagePosition>;
+    dashPositions: Record<string, DashEntry>;
+    showCollisionBoxes: boolean;
+};
+
 export type IndexedFeature = {
-    feature: VectorTileFeature;
+    feature: VectorTileFeatureLike;
     id: number | string;
     index: number;
     sourceLayerIndex: number;
@@ -43,7 +73,7 @@ export type IndexedFeature = {
 export type BucketFeature = {
     index: number;
     sourceLayerIndex: number;
-    geometry: Array<Array<Point>>;
+    geometry: Point[][];
     properties: any;
     type: 0 | 1 | 2 | 3;
     id?: any;
@@ -81,13 +111,14 @@ export type BucketFeature = {
  * hold the same data as ArrayGroups, but are tuned for consumption by WebGL.
  */
 export interface Bucket {
-    layerIds: Array<string>;
+    layerIds: string[];
     hasDependencies: boolean;
-    readonly layers: Array<any>;
-    readonly stateDependentLayers: Array<any>;
-    readonly stateDependentLayerIds: Array<string>;
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
+    readonly layers: any[];
+    readonly stateDependentLayers: any[];
+    readonly stateDependentLayerIds: string[];
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    addFeatures(parameters: BucketDependencyParameters): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;
     uploadPending(): boolean;
@@ -99,7 +130,7 @@ export interface Bucket {
     destroy(): void;
 }
 
-export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: Bucket} {
+export function deserialize(input: Bucket[], style: Style): {[_: string]: Bucket} {
     const output = {};
 
     // Guard against the case where the map's style has been set to null while

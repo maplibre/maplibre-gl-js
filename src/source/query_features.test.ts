@@ -2,10 +2,11 @@ import {describe, test, expect} from 'vitest';
 import {
     queryRenderedFeatures,
     querySourceFeatures
-} from './query_features';
-import {TileManager} from '../tile/tile_manager';
+} from './query_features.ts';
+import {TileManager} from '../tile/tile_manager.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+
 import type Point from '@mapbox/point-geometry';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {

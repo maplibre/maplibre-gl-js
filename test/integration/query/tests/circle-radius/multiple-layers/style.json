@@ -11,7 +11,7 @@
         }
     },
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "geojson",
             "data": {
                 "type": "FeatureCollection",
@@ -32,7 +32,7 @@
         {
             "id": "circle",
             "type": "circle",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "circle-color": "red"
             }
@@ -40,7 +40,7 @@
         {
             "id": "circle2",
             "type": "circle",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "circle-color": "yellow",
                 "circle-radius": 50,
