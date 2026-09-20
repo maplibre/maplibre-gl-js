@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- ⚠️ Glyph requests, responses, and `GlyphPositions` now group each font stack's data by variant. Existing data must be placed under `default`.
+- ⚠️ Add a variant level to `GlyphPositions` and the `getGlyphs` request/response types in `RequestResponseMessageMap`, requiring existing data to be nested under `default` ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
