@@ -184,16 +184,16 @@ export class GlyphManager {
             return this._drawGlyph(entry, stack, id);
         }
 
-        return (await this._downloadAndCacheRangePromise(stack, id)).glyph;
+        return (await this._getGlyphFromRange(stack, id)).glyph;
     }
 
     /**
-     * Gets a glyph from the server-side cache, downloading the PBF range it falls in if need be.
+     * Gets a glyph from its PBF range, falling back to local rendering if the range fails to load.
      *
-     * Only reached for a single codepoint. What comes back is keyed by codepoint, as the file is,
-     * and kept in the range cache so unrequested PBF glyphs cannot override declared fonts.
+     * Only reached for a single codepoint. Range requests are cached separately from selected
+     * glyphs so unrequested PBF glyphs cannot override declared fonts.
      */
-    async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
+    async _getGlyphFromRange(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         const codePoint = id.codePointAt(0);
         const entry = this.entries[stack];
         const range = Math.floor(codePoint / 256);
@@ -203,7 +203,6 @@ export class GlyphManager {
             const response = await entry.rangeRequests[range];
             return {stack, id, glyph: response[codePoint] || null};
         } catch (e) {
-            // Fall back to drawing the glyph locally and caching it.
             const glyph = await this._drawGlyph(entry, stack, id);
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
