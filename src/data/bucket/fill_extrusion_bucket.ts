@@ -271,11 +271,21 @@ export class FillExtrusionBucket implements Bucket {
     private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}): void {
         let edgeDistance = 0;
 
+        // Edge normals, indexed by the edge's end vertex. Boundary and zero-length edges get none and are skipped.
+        const edgeNormals: Point[] = [null];
+        for (let p = 1; p < geometry.length; p++) {
+            const edge = geometry[p].sub(geometry[p - 1]);
+            edgeNormals.push(isBoundaryEdge(geometry[p], geometry[p - 1]) || edge.mag() === 0 ? null : edge._perp()._unit());
+        }
+        const isRing = geometry.length > 2 && geometry[0].equals(geometry[geometry.length - 1]);
+        const lastEdge = geometry.length - 1;
+
         for (let p = 1; p < geometry.length; p++) {
             const p1 = geometry[p];
             const p2 = geometry[p - 1];
+            const perp = edgeNormals[p];
 
-            if (isBoundaryEdge(p1, p2)) {
+            if (!perp) {
                 continue;
             }
 
@@ -283,17 +293,20 @@ export class FillExtrusionBucket implements Bucket {
                 segmentReference.segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
             }
 
-            const perp = p1.sub(p2)._perp()._unit();
+            const next = edgeNormals[p + 1] || (isRing && p === lastEdge ? edgeNormals[1] : null);
+            const previous = edgeNormals[p - 1] || (isRing && p === 1 ? edgeNormals[lastEdge] : null);
+            const normal1 = smoothNormal(perp, next);
+            const normal2 = smoothNormal(perp, previous);
             const dist = p2.dist(p1);
             if (edgeDistance + dist > 32768) edgeDistance = 0;
 
-            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
-            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+            addVertex(this.layoutVertexArray, p1.x, p1.y, normal1.x, normal1.y, 0, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p1.x, p1.y, normal1.x, normal1.y, 0, 1, edgeDistance);
 
             edgeDistance += dist;
 
-            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
-            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, normal2.x, normal2.y, 0, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, normal2.x, normal2.y, 0, 1, edgeDistance);
 
             const bottomRight = segmentReference.segment.vertexLength;
 
@@ -309,6 +322,21 @@ export class FillExtrusionBucket implements Bucket {
             segmentReference.segment.primitiveLength += 2;
         }
     }
+}
+
+// Turns of at most this angle between two neighbouring walls are shaded as one curved surface.
+// Rounded corners split their arc into steps of 30 degrees or less.
+const SMOOTH_NORMAL_MIN_DOT = Math.cos(35 * Math.PI / 180);
+
+/**
+ * Normal at the vertex shared by two walls: the average of both walls' normals when the turn between
+ * them is shallow, so the lighting blends across the seam, and the wall's own normal otherwise.
+ */
+function smoothNormal(perp: Point, neighbour: Point | null): Point {
+    if (!neighbour || perp.x * neighbour.x + perp.y * neighbour.y < SMOOTH_NORMAL_MIN_DOT) {
+        return perp;
+    }
+    return perp.add(neighbour)._unit();
 }
 
 /**
