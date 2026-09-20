@@ -1,4 +1,4 @@
-import {afterEach, describe, test, expect} from 'vitest';
+import {afterEach, beforeEach, describe, test, expect} from 'vitest';
 import {createProjectionFromName} from './projection_factory.ts';
 import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
@@ -23,17 +23,27 @@ describe('createProjectionFromName', () => {
         expect(cameraHelper).toBeInstanceOf(MercatorCameraHelper);
     });
 
-    test('resolves a registered name to a mercator projection under that name over its definition', () => {
-        addProjection({
-            name: 'factory-test-crs',
-            project: (lng, lat) => [lng * 2, lat * 2],
-            unproject: (x, y) => [x / 2, y / 2],
-            tileMatrix: {origin: [-180, 180], extentAtZoom0: 360},
+    describe('for a registered CRS', () => {
+        beforeEach(() => {
+            addProjection({
+                name: 'factory-test-crs',
+                project: (lng, lat) => [lng * 2, lat * 2],
+                unproject: (x, y) => [x / 2, y / 2],
+                tileMatrix: {origin: [-180, 180], extentAtZoom0: 360},
+            });
         });
-        const {projection, transform} = createProjectionFromName('factory-test-crs', undefined, {});
-        expect(projection).toBeInstanceOf(MercatorProjection);
-        expect(projection.name).toBe('factory-test-crs');
-        const world = transform.worldCoordinateHelper.worldFromLngLat(90, 90);
-        expect([world.x, world.y]).toEqual([1, 0]);
+
+        test('resolves its name to a mercator projection under that name over its definition', () => {
+            const {projection} = createProjectionFromName('factory-test-crs', undefined, {});
+            expect(projection).toBeInstanceOf(MercatorProjection);
+            expect(projection.name).toBe('factory-test-crs');
+            const world = projection.worldCoordinateHelper.worldFromLngLat(90, 90);
+            expect([world.x, world.y]).toEqual([1, 0]);
+        });
+
+        test('runs its transform on the projection\'s own mapping', () => {
+            const {projection, transform} = createProjectionFromName('factory-test-crs', undefined, {});
+            expect(transform.worldCoordinateHelper).toBe(projection.worldCoordinateHelper);
+        });
     });
 });

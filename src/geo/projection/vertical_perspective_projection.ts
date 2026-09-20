@@ -1,12 +1,14 @@
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {type PreparedShader, shaders} from '../../shaders/shaders.ts';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh.ts';
+import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {Mesh} from '../../render/mesh.ts';
 import type {Projection, TileMeshUsage} from './projection.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {Context} from '../../webgl/context.ts';
+import type {WorldCoordinateHelper} from '../transform_interface.ts';
 
 export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
@@ -31,6 +33,10 @@ export class VerticalPerspectiveProjection implements Projection {
 
     get name(): 'vertical-perspective' {
         return 'vertical-perspective';
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return mercatorWorldCoordinateHelper;
     }
 
     get transitionState(): number {

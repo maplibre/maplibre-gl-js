@@ -5,13 +5,12 @@ import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSo
 import {EXTENT} from '../data/extent.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {simpleCrs} from '../geo/projection/crs.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
@@ -246,14 +245,7 @@ describe('GeoJSONSource.loadTile', () => {
     const mapStub = {
         getPixelRatio() { return 1; },
         showCollisionBoxes: false,
-        _worldCoordinateHelper: mercatorWorldCoordinateHelper,
-        style: {
-            projection: {
-                get subdivisionGranularity() {
-                    return SubdivisionGranularitySetting.noSubdivision;
-                }
-            }
-        }
+        style: {projection: new MercatorProjection()}
     } as any;
 
     test('swallows an AbortError from the worker request', async () => {
@@ -708,16 +700,9 @@ describe('GeoJSONSource.update', () => {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
             transform: {} as IReadonlyTransform,
-            _worldCoordinateHelper: mercatorWorldCoordinateHelper,
             getPixelRatio() { return 1; },
             getGlobalState: () => ({}),
-            style: {
-                projection: {
-                    get subdivisionGranularity() {
-                        return SubdivisionGranularitySetting.noSubdivision;
-                    }
-                }
-            }
+            style: {projection: new MercatorProjection()}
         } as any;
 
         source.on('data', (e) => {
@@ -1135,7 +1120,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 
     beforeEach(() => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        source.map = {_worldCoordinateHelper: mercatorWorldCoordinateHelper} as any as Map;
+        source.map = {style: {projection: new MercatorProjection()}} as any as Map;
         tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
         tile.state = 'loaded';
     });
@@ -1229,7 +1214,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('reloads a tile that contains an added feature in the map projection', async () => {
-        source.map = {_worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)} as any as Map;
+        source.map = {style: {projection: new MercatorProjection(simpleCrs)}} as any as Map;
         const tileOfLng0To90Lat0To90InTheSimpleCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
         tileOfLng0To90Lat0To90InTheSimpleCrs.state = 'loaded';
         const diff: GeoJSONSourceDiff = {add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]};
@@ -1245,7 +1230,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('does not reload a tile for an added feature that only mercator would place inside it', async () => {
-        source.map = {_worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)} as any as Map;
+        source.map = {style: {projection: new MercatorProjection(simpleCrs)}} as any as Map;
         const tileOfLng0To90Lat0To90InTheSimpleCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
         tileOfLng0To90Lat0To90InTheSimpleCrs.state = 'loaded';
         const insideTheMercatorTileOfLng0To180 = [125, 15];

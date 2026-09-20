@@ -1,5 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
+import {simpleCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
@@ -8,8 +9,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {StubMap, createSimpleCrsTransform, getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
 
 import type {Map} from '../ui/map.ts';
@@ -24,16 +24,11 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
-        _worldCoordinateHelper: mercatorWorldCoordinateHelper,
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {
             tileManagers: {id: {clearTiles}},
-            projection: {
-                get subdivisionGranularity() {
-                    return SubdivisionGranularitySetting.noSubdivision;
-                }
-            }
+            projection: new MercatorProjection()
         },
         getGlobalState: () => ({}),
         getPixelRatio() { return 1; },
@@ -382,8 +377,6 @@ describe('VectorTileSource', () => {
     });
 
     test('builds tile bounds with the map projection', async () => {
-        const mapInTheSimpleCrs = new StubMap();
-        mapInTheSimpleCrs.transform = createSimpleCrsTransform(512, 512);
         const source = new VectorTileSource('id', {
             type: 'vector',
             minzoom: 0,
@@ -391,7 +384,11 @@ describe('VectorTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [0, 45, 45, 80]
         }, getMockDispatcher(), undefined);
-        source.onAdd(mapInTheSimpleCrs as any as Map);
+        source.onAdd({
+            _getMapId: () => 1,
+            _requestManager: new RequestManager(),
+            style: {projection: new MercatorProjection(simpleCrs)}
+        } as any as Map);
 
         await waitForMetadataEvent(source);
         const lastRowInsideLat45To80InTheSimpleCrs = 1;

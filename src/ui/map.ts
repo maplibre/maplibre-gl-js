@@ -69,7 +69,7 @@ import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {ControlPosition, IControl} from './control/control.ts';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features.ts';
-import type {ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
 import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
 
 const version = packageJSON.version;
@@ -656,15 +656,6 @@ export class Map extends Evented<MapEventType> {
      */
     get _ownerWindow(): typeof window {
         return this._container?.ownerDocument?.defaultView || window;
-    }
-
-    /**
-     * @internal
-     * The mapping between geographic coordinates and the world plane of the current projection.
-     * Sources and the style read it here instead of reaching into the camera's transform.
-     */
-    get _worldCoordinateHelper(): WorldCoordinateHelper {
-        return this._camera.transform.worldCoordinateHelper;
     }
 
     /**

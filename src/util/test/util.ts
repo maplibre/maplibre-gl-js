@@ -15,7 +15,7 @@ import {RGBAImage} from '../image.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
-import type {IReadonlyTransform, ITransform, WorldCoordinateHelper} from '../../geo/transform_interface.ts';
+import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface.ts';
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
@@ -51,10 +51,6 @@ export class StubMap extends Evented {
     migrateProjection(newTransform: ITransform): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
-    }
-
-    get _worldCoordinateHelper(): WorldCoordinateHelper {
-        return this.transform.worldCoordinateHelper;
     }
 }
 
