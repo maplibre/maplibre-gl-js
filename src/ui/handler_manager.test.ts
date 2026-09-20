@@ -474,7 +474,7 @@ describe('terrain gesture anchoring', () => {
         endGesture(target);
     });
 
-    test('a drag that starts over terrain that is not loaded keeps its speed when that terrain loads mid-drag', async () => {
+    test('a drag that starts over terrain that is not loaded moves the map the same distance per pixel when that terrain loads mid-drag', async () => {
         const target = await setupGestureMap(45);
         map.terrain = createTerrain();
         const grabbedTerrain = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(null);

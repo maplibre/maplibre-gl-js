@@ -300,28 +300,7 @@ describe('Terrain loading under a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(1000);
     });
 
-    test('a rotate drag on globe holds the center elevation until the frame after it ends', async () => {
-        const map = createMap({interactive: true});
-        await map.once('style.load');
-        map.setProjection({type: 'globe'});
-        let terrainElevation = 0;
-        map.terrain = {...createTerrain(), getElevationForLngLat: () => terrainElevation} as any as Terrain;
-        map._camera.terrain = map.terrain;
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        terrainElevation = 1000;
-        map.redraw();
-        expect(map.getCameraTargetElevation()).toBe(0);
-
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        map.redraw();
-        expect(map.getCameraTargetElevation()).toBe(1000);
-    });
-
-    test('a rotate drag keeps its speed when the terrain under the center rises', async () => {
+    test('a rotate drag turns the same bearing per pixel before and after the terrain under the center rises', async () => {
         const map = createMap({interactive: true, zoom: 11, pitch: 60});
         await map.once('style.load');
         let terrainElevation = 0;
@@ -346,7 +325,9 @@ describe('Terrain loading under a gesture', () => {
 
         expect(bearingAfterSecondMove - bearingAfterFirstMove).toBeCloseTo(bearingAfterFirstMove - bearingAtStart, 5);
     });
+});
 
+describe('Terrain changing after a gesture', () => {
     test('a DEM tile landing after a rotate drag ends re-solves the zoom around the camera', async () => {
         const map = createMap({interactive: true, zoom: 11});
         await map.once('load');

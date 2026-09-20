@@ -51,7 +51,7 @@ type TerrainGesture = {
      * - a number: sampled, the elevation of the terrain point that frame grabbed.
      * - `undefined`: sampled, and the terrain under the pointer was not loaded. The gesture is
      *   solved on the center's elevation to its end. Sampling again on a later frame would change
-     *   the drag's speed mid-gesture once that terrain loads.
+     *   how far the map moves per pixel of drag, mid-gesture, once that terrain loads.
      */
     anchorElevation: number | null | undefined;
 };
