@@ -566,7 +566,7 @@ export class HandlerManager {
         const tr = this._camera.getTransformForUpdate();
         const terrain = map.terrain;
 
-        if (!hasChange(combinedResult) && !(terrain && this._terrainGesture.inFlight)) {
+        if (!hasChange(combinedResult)) {
             this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
         }
 
