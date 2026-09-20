@@ -2976,8 +2976,6 @@ export class Map extends Evented<MapEventType> {
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
 
-        const keepCamera = this._camera._terrainChangeKeepsCamera;
-        this._camera._terrainChangeKeepsCamera = false;
         if (!options) {
             // remove terrain
             if (this.terrain) {
@@ -2987,16 +2985,6 @@ export class Map extends Evented<MapEventType> {
             this.painter.renderToTexture = null;
             this.painter.destroyRTTResources();
             this._camera.terrain = null;
-            this._camera.transform.setMinElevationForCurrentTile(0);
-            if (this.getCenterClampedToGround()) {
-                if (keepCamera) {
-                    const tr = this._camera.getTransformForUpdate();
-                    tr.recalculateZoomAndCenter();
-                    this._camera.applyUpdatedTransform(tr);
-                } else {
-                    this._camera.transform.setElevation(0);
-                }
-            }
         } else {
             // add terrain
             const tileManager = this.style.tileManagers[options.source];
@@ -3019,8 +3007,6 @@ export class Map extends Evented<MapEventType> {
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.terrain = this.terrain;
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -3045,16 +3031,7 @@ export class Map extends Evented<MapEventType> {
             this.painter.markTerrainDepthDirty();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            if (this.getCenterClampedToGround()) {
-                if (this._camera._terrainChangeKeepsCamera) {
-                    const tr = this._camera.getTransformForUpdate();
-                    tr.recalculateZoomAndCenter(this.terrain);
-                    this._camera.applyUpdatedTransform(tr);
-                } else {
-                    this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
-                }
-            }
+            this._camera._applyTerrainChange();
         }
 
         if (!event.tile) return;

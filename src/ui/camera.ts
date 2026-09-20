@@ -294,10 +294,10 @@ export class Camera extends Evented<MapEventType> {
     transform: ITransform;
     /**
      * @internal
-     * Copy of the map's `terrain` (which the `Map` owns).
+     * Copy of the map's `terrain` (which the `Map` owns), behind the {@link Camera.terrain} accessors.
      * The camera reads terrain for elevation handling but does not own it.
      */
-    terrain: Terrain;
+    _terrain: Terrain;
     cameraHelper: ICameraHelper;
     /**
      * @internal
@@ -351,11 +351,15 @@ export class Camera extends Evented<MapEventType> {
     elevationFreeze: boolean;
     /**
      * @internal
-     * Whether a change of the terrain under the center, a DEM tile landing with the map at rest or
-     * the terrain being removed, keeps the camera in place and re-solves zoom and center around it,
-     * instead of keeping the center in place and moving the camera with its elevation. True from the
-     * end of a gesture over terrain, which re-solves the same way on the terrain loaded by then,
-     * until `jumpTo` or `setTerrain` places the center again.
+     * Which of the two stays in place when the terrain under the center changes with the map at rest
+     * (a DEM tile lands, or the terrain is set or removed): the camera or the center.
+     * - `true`: a gesture has moved the view since the center was last placed. The camera stays, and
+     *   zoom and center are re-solved around it.
+     * - `false`: `jumpTo` or the map options placed the center. The center stays, and the camera moves
+     *   with its elevation.
+     *
+     * {@link Camera.elevationFreeze} covers the gesture itself, where terrain changes are ignored until
+     * the gesture's end re-solves the camera onto the terrain. This covers the time after that end.
      */
     _terrainChangeKeepsCamera: boolean;
     /**
@@ -412,7 +416,7 @@ export class Camera extends Evented<MapEventType> {
         this._zoomSnap = options.zoomSnap;
         this._requestRenderFrame = options.requestRenderFrame;
         this._cancelRenderFrame = options.cancelRenderFrame;
-        this.terrain = options.terrain;
+        this._terrain = options.terrain;
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
         this._stopHandlers = options.stopHandlers ?? (() => {});
@@ -420,6 +424,17 @@ export class Camera extends Evented<MapEventType> {
         this.on('moveend', () => {
             delete this._requestedCameraState;
         });
+    }
+
+    /**
+     * @internal
+     * The map's terrain, or null when it has none. Setting it brings the center elevation up to date
+     * with the new terrain, see {@link Camera._applyTerrainChange}.
+     */
+    get terrain(): Terrain { return this._terrain; }
+    set terrain(terrain: Terrain) {
+        this._terrain = terrain;
+        this._applyTerrainChange();
     }
 
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
@@ -905,6 +920,33 @@ export class Camera extends Evented<MapEventType> {
         if (this.getCenterClampedToGround()) {
             this.transform.recalculateZoomAndCenter(this.terrain);
         }
+    }
+
+    /**
+     * @internal
+     * Applies a change of the terrain under the center to the transform: the terrain was set or
+     * removed, or a DEM tile landed with the map at rest. Leaves the center elevation alone when the
+     * terrain under the center has not changed or `centerClampedToGround` is off.
+     * {@link Camera._terrainChangeKeepsCamera} decides whether the camera or the center stays in place.
+     */
+    _applyTerrainChange(): void {
+        const terrain = this.terrain;
+        const tr = this.transform;
+        tr.setMinElevationForCurrentTile(terrain ? terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
+        if (!this.getCenterClampedToGround()) {
+            return;
+        }
+        const elevation = terrain ? terrain.getElevationForLngLat(tr.center, tr) : 0;
+        if (elevation === tr.elevation) {
+            return;
+        }
+        if (!this._terrainChangeKeepsCamera) {
+            tr.setElevation(elevation);
+            return;
+        }
+        const requestedTransform = this.getTransformForUpdate();
+        requestedTransform.recalculateZoomAndCenter(terrain);
+        this.applyUpdatedTransform(requestedTransform);
     }
 
     /**
