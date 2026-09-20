@@ -1045,16 +1045,12 @@ export class Placement {
     }
 
     /**
-     * Writes the opacity buffers of every symbol bucket of `styleLayer`, skipping the buckets whose
-     * buffers a rewrite would leave byte for byte the same.
-     *
-     * Opacities are fixed at {@link commit} time, and a commit installs a *new* `Placement` whose
-     * {@link lastOpacityInputs} is empty, so the frame after a commit rewrites everything. On the
-     * frames in between, the only input that can still move is duplicate resolution, which is what
-     * {@link _reuseBucketOpacities} checks.
+     * Writes the opacity buffers of every symbol bucket of `styleLayer`, skipping the buckets where
+     * a rewrite would produce what they already hold. A commit installs a new `Placement` with an
+     * empty {@link lastOpacityInputs}, so the frame after one rewrites every bucket.
      *
      * @param reindexedBucketIds - Buckets {@link CrossTileSymbolIndex.addLayer} just (re)assigned
-     * cross tile IDs to. Their recorded inputs are stale, so they are always rewritten.
+     * cross tile IDs to, whose recorded inputs are therefore stale.
      */
     updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[], reindexedBucketIds: Set<number> = new Set()): void {
         const seenCrossTileIDs = {};
@@ -1075,20 +1071,14 @@ export class Placement {
     }
 
     /**
-     * Claims a bucket's cross tile IDs and keeps its opacity buffers, where a rewrite would produce
-     * what they already hold. Answers `false` where that cannot be established.
-     *
-     * The only input a rewrite takes from outside the bucket is `seenCrossTileIDs`: a label carried
-     * by several tiles is drawn by whichever bucket is walked first and hidden in the rest. So the
-     * buffers still stand if every symbol comes out a duplicate exactly where it did when they were
-     * written, which is what {@link lastOpacityInputs} recorded.
-     *
-     * Two kinds of bucket are held back regardless: ones with collision circles pending, which only
-     * a rewrite hands over to the bucket, and ones carrying collision debug geometry, where the
-     * saving does not matter and the extra surface is not worth it.
+     * Whether `bucket` can keep the opacity buffers it has, claiming its cross tile IDs on the way.
+     * A rewrite reads nothing outside the bucket but `seenCrossTileIDs`, which hides a label an
+     * earlier bucket already drew, so the buffers stand while every symbol resolves as a duplicate
+     * exactly where {@link lastOpacityInputs} recorded.
      */
     _reuseBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}, reindexedBucketIds: Set<number>): boolean {
         if (reindexedBucketIds.has(bucket.bucketInstanceId)) return false;
+        // Debug geometry and pending collision circles only ever reach the bucket through a rewrite.
         if (bucket.hasDebugData() || bucket.bucketInstanceId in this.collisionCircleArrays) return false;
 
         const written = this.lastOpacityInputs.get(bucket.bucketInstanceId);

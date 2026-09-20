@@ -1,4 +1,4 @@
-import {bench} from 'vitest';
+import {test} from 'vitest';
 import {Placement} from './placement.ts';
 import {CrossTileSymbolIndex} from './cross_tile_symbol_index.ts';
 import {performSymbolLayout} from './symbol_layout.ts';
@@ -42,11 +42,14 @@ transform.resize(1280, 900);
 const placement = new Placement(transform, undefined, 0, true);
 placement.updateLayerOpacities(layer, tiles);
 
-bench('Placement.updateLayerOpacities, buffers reused', () => {
-    placement.updateLayerOpacities(layer, tiles);
-});
-
-bench('Placement.updateLayerOpacities, buffers rewritten', () => {
-    placement.lastOpacityInputs.clear();
-    placement.updateLayerOpacities(layer, tiles);
+test('Placement.updateLayerOpacities', async ({bench}) => {
+    await bench.compare(
+        bench('buffers reused', () => {
+            placement.updateLayerOpacities(layer, tiles);
+        }),
+        bench('buffers rewritten', () => {
+            placement.lastOpacityInputs.clear();
+            placement.updateLayerOpacities(layer, tiles);
+        })
+    );
 });
