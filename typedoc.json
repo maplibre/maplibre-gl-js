@@ -15,6 +15,7 @@
     "excludeNotDocumented": true,
     "treatWarningsAsErrors": true,
     "entryPoints": ["./src/index.ts"],
+    "tsconfig": "./tsconfig.typedoc.json",
     "navigation": {
         "includeCategories": false,
         "includeGroups": true
