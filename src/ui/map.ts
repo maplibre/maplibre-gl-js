@@ -2181,7 +2181,7 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
-     * Stores the registration and subscribes its delegates; `_removeDelegatedListener` undoes both.
+     * Stores the registration and subscribes its delegates; `_removeSavedDelegatedListener` undoes both.
      * @internal
      */
     _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
@@ -2193,26 +2193,34 @@ export class Map extends Evented<MapEventType> {
         }
     }
 
+    /** Removes the first registration matching the `off()` arguments. */
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener): void {
-        if (!this._delegatedListeners?.[type]) {
+        const saved = this._delegatedListeners?.[type]?.find((candidate) =>
+            candidate.listener === listener &&
+            candidate.layers.length === layerIds.length &&
+            candidate.layers.every((layerId: string) => layerIds.includes(layerId)));
+
+        if (saved) {
+            this._removeSavedDelegatedListener(type, saved);
+        }
+    }
+
+    /**
+     * Removes one exact registration, which the `off()` arguments cannot single out when the same
+     * listener is registered twice for the same type and layers.
+     * @internal
+     */
+    _removeSavedDelegatedListener(type: string, saved: DelegatedListener): void {
+        const listeners = this._delegatedListeners?.[type];
+        const index = listeners?.indexOf(saved) ?? -1;
+        if (index === -1) {
             return;
         }
 
-        const listeners = this._delegatedListeners[type];
-        for (let i = 0; i < listeners.length; i++) {
-            const delegatedListener = listeners[i];
-            if (
-                delegatedListener.listener === listener &&
-                delegatedListener.layers.length === layerIds.length &&
-                delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
-            ) {
-                for (const event in delegatedListener.delegates) {
-                    this.off(event as keyof MapEventType, delegatedListener.delegates[event]);
-                }
-                listeners.splice(i, 1);
-                return;
-            }
+        for (const event in saved.delegates) {
+            this.off(event as keyof MapEventType, saved.delegates[event]);
         }
+        listeners.splice(index, 1);
     }
 
     /**
@@ -2450,11 +2458,11 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const invokeOnce: Listener = (e) => {
-            this._removeDelegatedListener(type, layerIds, listener);
+        const delegatedListener = this._createDelegatedListener(type, layerIds, listener, (e) => {
+            this._removeSavedDelegatedListener(type, delegatedListener);
             listener.call(this, e);
-        };
-        this._saveDelegatedListener(type, this._createDelegatedListener(type, layerIds, listener, invokeOnce));
+        });
+        this._saveDelegatedListener(type, delegatedListener);
 
         return this;
     }

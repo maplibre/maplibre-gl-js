@@ -474,7 +474,7 @@ describe('map events', () => {
         const map = createMap();
         vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
         const hit = [{} as MapGeoJSONFeature];
-        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValueOnce([]).mockReturnValueOnce(hit).mockReturnValueOnce([]).mockReturnValue(hit);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValueOnce([]).mockReturnValue(hit);
         const spy = vi.fn();
 
         map.once(type, 'layer', spy);
@@ -483,6 +483,24 @@ describe('map events', () => {
 
         for (let i = 0; i < 3; i++) simulate[rawEvent](map.getCanvas());
         expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map.once with layerId keeps a Map.on listener registered with the same function', () => {
+        const map = createMap();
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+        const spy = vi.fn();
+
+        map.on('click', 'layer', spy);
+        map.once('click', 'layer', spy);
+
+        simulate.click(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(2);
+
+        // only the `on` listener is left, and it keeps firing
+        simulate.click(map.getCanvas());
+        simulate.click(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(4);
     });
 
     const mouseInteractionEvents = ['mouseenter', 'mouseover'] as const;
