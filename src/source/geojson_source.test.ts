@@ -7,7 +7,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
+import {getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 
@@ -800,6 +800,28 @@ describe('GeoJSONSource.getData', () => {
 });
 
 describe('GeoJSONSource.updateData', () => {
+    /** A feature carrying its id in a property instead of `id`. */
+    function promotedFeature(name: string): GeoJSON.Feature {
+        return {type: 'Feature', properties: {name}, geometry: {type: 'LineString', coordinates: []}};
+    }
+
+    /** A promoteId source with a setData in flight, so that a second updateData merges into the pending diff. */
+    function loadingPromoteIdSource() {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({}), 0);
+                });
+            }
+        });
+
+        const source = new GeoJSONSource('id', {data: {}, promoteId: 'name'} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.setData({type: 'FeatureCollection', features: []});
+        return {source, spy};
+    }
+
     test('queues a second call to updateData', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
@@ -880,6 +902,29 @@ describe('GeoJSONSource.updateData', () => {
             add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
             update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
         });
+    });
+
+    test('combines multiple diffs of a promoteId source when data is loading', async () => {
+        const {source, spy} = loadingPromoteIdSource();
+
+        source.updateData({add: [promotedFeature('b')]});
+        source.updateData({add: [promotedFeature('c')]});
+        await waitForMetadataEvent(source);
+        await waitForMetadataEvent(source);
+
+        expect(spy.mock.calls[1][0].data.dataDiff.add).toEqual([promotedFeature('b'), promotedFeature('c')]);
+    });
+
+    test('squashes an add and a remove of the same promoted id when data is loading', async () => {
+        const {source, spy} = loadingPromoteIdSource();
+
+        source.updateData({add: [promotedFeature('b')]});
+        source.updateData({remove: ['b']});
+        await waitForMetadataEvent(source);
+        await waitForMetadataEvent(source);
+
+        expect(spy.mock.calls[1][0].data.dataDiff.add).toEqual([]);
+        expect(spy.mock.calls[1][0].data.dataDiff.remove).toEqual(['b']);
     });
 
     test('is overwritten by a subsequent call to setData when data is loading', async () => {

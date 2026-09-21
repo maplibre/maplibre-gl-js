@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `updateData` on a source with `promoteId` collapsing queued diffs into a single added feature, because the merge could not tell the features apart ([#8500](https://github.com/maplibre/maplibre-gl-js/pull/8500)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ## 6.11.0
