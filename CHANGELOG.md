@@ -1,10 +1,36 @@
 ## main
 ### ✨ Features and improvements
+- Fire a `contextmenu` map event on long press for touch devices ([#373](https://github.com/maplibre/maplibre-gl-js/issues/373)) (by [@kirthi-b](https://github.com/kirthi-b))
+- Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
+- Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
+- Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
+- Skip the loaded-tile scan for constant `symbol-height-offset` layers when computing tile coverage ([#8424](https://github.com/maplibre/maplibre-gl-js/pull/8424)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
+- Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix slow panning and zooming in Firefox on macOS since 6.8.0 ([#8468](https://github.com/maplibre/maplibre-gl-js/issues/8468)) (by [@timsluis](https://github.com/timsluis) and [@birkskyum](https://github.com/birkskyum))
+- Keep source-specific tile LOD settings from changing internal terrain render-to-texture tile selection ([#8048](https://github.com/maplibre/maplibre-gl-js/pull/8048)) (by [@DoFabien](https://github.com/DoFabien))
+- Fix `map.setSky()` silently keeping the old sky and firing no `error` event when the value included a `-transition` key ([#8375](https://github.com/maplibre/maplibre-gl-js/issues/8375)) (by [@Yasser-Ameur](https://github.com/Yasser-Ameur))
+- Fix markers and popups misplaced after a projection change or by terrain that loads after the map settled. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
 - Fix `MapEventType` no longer being extensible, which left no way to type events MapLibre does not ship itself - such as the `draw.create` / `draw.update` / `draw.delete` events fired by `mapbox-gl-draw` ([#8432](https://github.com/maplibre/maplibre-gl-js/pull/8432)) (by [@add-le](https://github.com/add-le))
 - _...Add new stuff here..._
+
+## 6.10.0
+
+### ✨ Features and improvements
+
+- Show the sky in globe view, fading out with altitude instead of with the globe to mercator transition ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
+- Speed up fill and fill-extrusion triangulation by looking up each vertex's deduplicated index once instead of hashing every triangle corner, and every outline point of a ring that is not subdivided, again ([#8425](https://github.com/maplibre/maplibre-gl-js/pull/8425)) (by [@cherenkov](https://github.com/cherenkov))
+- Test whether a `Marker` is behind terrain with a CPU ray walk over the DEM instead of a depth-buffer readback, removing a GPU stall per marker while a map with terrain moves ([#8387](https://github.com/maplibre/maplibre-gl-js/pull/8387)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+
+### 🐞 Bug fixes
+
+- Fix partially blank maps in older Safari versions ([#8427](https://github.com/maplibre/maplibre-gl-js/issues/8427)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `setStyle` calling `Map.setTerrain` with the wrong `this`, which made a terrain change in a style diff throw ([#8451](https://github.com/maplibre/maplibre-gl-js/pull/8451)) (by [@HarelM](https://github.com/HarelM))
+- Fix hillshade rendering artifacts on mobile GPUs at high zoom levels ([#8431](https://github.com/maplibre/maplibre-gl-js/pull/8431)) (by [@Turbo87](https://github.com/Turbo87))
+- Free the pooled terrain drape textures once the map is at rest and when terrain is removed, instead of keeping every drape allocated during a pan resident for the life of the map ([#8400](https://github.com/maplibre/maplibre-gl-js/pull/8400)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ## 6.9.1
 
@@ -25,7 +51,6 @@
 - Fix setting one paint, light or sky property transitioning every property alongside it, which delayed `idle` even when nothing could animate and restarted transitions that were still running ([#8376](https://github.com/maplibre/maplibre-gl-js/issues/8376)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix `fill-extrusion-rounded-corner-distance` rounding every feature twice, which over-rounded the corners and inflated the vertex count ([#8429](https://github.com/maplibre/maplibre-gl-js/pull/8429)) (by [@cherenkov](https://github.com/cherenkov))
 - Fix `Map#project` returning an incorrect on-screen point for a location behind the camera. It now returns a point outside the viewport, on the side through which the location left the screen, so DOM markers and popups are moved off-screen as expected. ([#8292](https://github.com/maplibre/maplibre-gl-js/issues/8292)) (by [@schickm](https://github.com/schickm))
-- Fix `MapEventType` no longer being extensible, which left no way to type events MapLibre does not ship itself - such as the `draw.create` / `draw.update` / `draw.delete` events fired by `mapbox-gl-draw` ([#8419](https://github.com/maplibre/maplibre-gl-js/issues/8419)) (by [@add-le](https://github.com/add-le))
 
 ## 6.9.0
 

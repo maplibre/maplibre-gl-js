@@ -1,7 +1,5 @@
 import {ensureError, extend, pick} from '../util/util.ts';
-
 import {ImageRequest} from '../util/image_request.ts';
-
 import {ResourceType} from '../util/request_manager.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';

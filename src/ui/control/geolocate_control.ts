@@ -4,11 +4,11 @@ import {extend, warnOnce} from '../../util/util.ts';
 import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {Marker} from '../marker.ts';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
 
 import type {Map} from '../map.ts';
 import type {FitBoundsOptions} from '../camera.ts';
 import type {IControl} from './control.ts';
-import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
 
 /**
  * The {@link GeolocateControl} options object

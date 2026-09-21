@@ -11,12 +11,13 @@ import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
+import {createDEM} from '../util/test/util.ts';
+
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data.ts';
 import type {Painter} from './painter.ts';
-import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
 
 describe('Terrain', () => {
     let gl: WebGL2RenderingContext;
@@ -90,16 +91,6 @@ describe('Terrain', () => {
         expect(coordinate.x).toBeCloseTo(expected.x, 12);
         expect(coordinate.y).toBeCloseTo(expected.y, 12);
         expect(coordinate.z).toBeCloseTo(expected.z, 12);
-    });
-
-    test('depthAtPoint decodes the depth framebuffer readback', () => {
-        const terrain = createFlatTerrain(0);
-        vi.spyOn(terrain, 'getFramebuffer').mockReturnValue({framebuffer: null} as any);
-        vi.spyOn(terrain.painter.context.gl, 'readPixels').mockImplementation((_x, _y, _w, _h, _f, _t, rgba) => {
-            (rgba as Uint8Array).set([0, 0, 0, 128]);
-        });
-
-        expect(terrain.depthAtPoint(new Point(10, 20))).toBeCloseTo(0.5, 10);
     });
 
     test('getCoverageIndex sees newly renderable tiles after resetElevationCache', () => {

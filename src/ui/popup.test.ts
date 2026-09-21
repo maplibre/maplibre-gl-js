@@ -1,10 +1,11 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util.ts';
+import {createMap as globalCreateMap, beforeMapTest, createTerrain} from '../util/test/util.ts';
 import {Popup, type Offset} from './popup.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
-import {type PositionAnchor} from './anchor.ts';
+
+import type {PositionAnchor} from './anchor.ts';
 
 const containerWidth = 512;
 const containerHeight = 512;
@@ -1122,6 +1123,27 @@ describe('popup', () => {
         map.setTerrain({source: 'terrain'});
 
         expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.remove();
+    });
+
+    test('Popup follows the terrain that loads after a move', async () => {
+        const map = createMap({width: 1024, center: [40, 30], zoom: 13, pitch: 60, centerClampedToGround: false});
+        await map.once('load');
+        map.terrain = createTerrain();
+        let elevation = 0;
+        map.terrain.getElevationForLngLat = () => elevation;
+        const popup = new Popup()
+            .setLngLat([40.01, 30.01])
+            .setText('Test')
+            .addTo(map);
+
+        map.jumpTo({center: [40.001, 30.001]});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(604px,203px)');
+
+        elevation = 1000; // the terrain tiles under the popup arrive, then the map settles
+        map.fire('idle');
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(611px,100px)');
 
         map.remove();
     });

@@ -1,12 +1,11 @@
+import type {PossiblyEvaluated} from '../../style/properties.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
-
 import type {
     BucketFeature,
     PopulateParameters
 } from '../bucket.ts';
-import {type PossiblyEvaluated} from '../../style/properties.ts';
 
 type PatternStyleLayers = LineStyleLayer[] | FillStyleLayer[] | FillExtrusionStyleLayer[];
 

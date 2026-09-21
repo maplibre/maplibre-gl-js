@@ -13,7 +13,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
-import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -1416,6 +1416,25 @@ export class Map extends Evented<MapEventType> {
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this { this._camera.jumpTo(options, eventData); return this; }
+    /**
+     * Calculates constrained camera options that place a geographic anchor at a screen point
+     * without changing the map, using the same logic as MapLibre's interaction handlers.
+     *
+     * @param options - Anchor and optional zoom.
+     * @returns Camera options that can be passed to {@link Map.jumpTo}.
+     * @example
+     * ```ts
+     * const cameraOptions = map.calculateAnchoredCameraOptions({
+     *   anchorLocation: map.unproject(pointerDownPosition),
+     *   anchorScreenPoint: currentPointerPosition,
+     *   zoom: map.getZoom() + 1,
+     * });
+     * map.jumpTo(cameraOptions);
+     * ```
+     */
+    calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions {
+        return this._camera.calculateAnchoredCameraOptions(options);
+    }
     /**
      * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
      * @param cameraLngLat - The lng, lat of the camera to look from
@@ -2964,6 +2983,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = null;
             this.painter.renderToTexture = null;
+            this.painter.destroyRTTResources();
             this._camera.terrain = null;
             this._camera.transform.setMinElevationForCurrentTile(0);
             if (this.getCenterClampedToGround()) {

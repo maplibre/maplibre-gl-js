@@ -2,6 +2,7 @@ import {EXTENT} from '../extent.ts';
 import {isBoundaryEdge} from '../extent_bounds.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from '../../geo/projection/mercator_utils.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
