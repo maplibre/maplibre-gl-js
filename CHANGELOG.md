@@ -8,6 +8,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a `line-pattern` driven by a zoom expression rendering as an unpatterned line at some zoom levels ([#4787](https://github.com/maplibre/maplibre-gl-js/issues/4787)) (by [@SomSamantray](https://github.com/SomSamantray))
 - Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
 - Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
 - Fix slow panning and zooming in Firefox on macOS since 6.8.0 ([#8468](https://github.com/maplibre/maplibre-gl-js/issues/8468)) (by [@timsluis](https://github.com/timsluis) and [@birkskyum](https://github.com/birkskyum))
