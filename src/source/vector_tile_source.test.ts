@@ -515,6 +515,38 @@ describe('VectorTileSource', () => {
         expect(clearTiles).not.toHaveBeenCalled();
     });
 
+    test('returns early before the worker request if tile was aborted', async () => {
+        let releaseTransform: () => void;
+        const transformPending = new Promise<void>((resolve) => { releaseTransform = resolve; });
+        const source = createSource(
+            {tiles: ['http://example.com/{z}/{x}/{y}.png']},
+            (url: string) => transformPending.then(() => ({url}))
+        );
+
+        const sentMessages: MessageType[] = [];
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                sentMessages.push(message.type);
+                return Promise.resolve({});
+            }
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {tileID: new OverscaledTileID(10, 0, 10, 5, 5), unloadVectorData() {}} as any as Tile;
+        const loadPromise = source.loadTile(tile);
+
+        // What TileManager._removeTile does to a tile with no data yet. It has no actor, so
+        // neither call reaches the worker.
+        tile.aborted = true;
+        await source.abortTile(tile);
+        await source.unloadTile(tile);
+
+        releaseTransform();
+        await loadPromise;
+
+        expect(sentMessages).toEqual([]);
+    });
+
     test('returns early after worker response if tile was aborted', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
