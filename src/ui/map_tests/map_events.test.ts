@@ -470,6 +470,21 @@ describe('map events', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
+    test.each([['click', 'click'], ['mouseenter', 'mousemove']] as const)('Map.once %s with layerId fires on the first hit, not the first event', (type, rawEvent) => {
+        const map = createMap();
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        const hit = [{} as MapGeoJSONFeature];
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValueOnce([]).mockReturnValueOnce(hit).mockReturnValueOnce([]).mockReturnValue(hit);
+        const spy = vi.fn();
+
+        map.once(type, 'layer', spy);
+        simulate[rawEvent](map.getCanvas());
+        expect(spy).not.toHaveBeenCalled();
+
+        for (let i = 0; i < 3; i++) simulate[rawEvent](map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
     const mouseInteractionEvents = ['mouseenter', 'mouseover'] as const;
     test.each(mouseInteractionEvents)('Map.on %s does not fire if the specified layer does not exist', (event) => {
         const map = createMap();

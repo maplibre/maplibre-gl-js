@@ -2124,7 +2124,12 @@ export class Map extends Evented<MapEventType> {
         return this._camera.isRotating() || this._handlers?.isRotating() || false;
     }
 
-    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener {
+    /**
+     * Delegates that fire only on a hit in `layerIds`.
+     * @param invoke - called on a hit instead of `listener`, which `off()` matches on
+     * @internal
+     */
+    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener, invoke: Listener = listener): DelegatedListener {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
@@ -2134,7 +2139,7 @@ export class Map extends Evented<MapEventType> {
                     mousein = false;
                 } else if (!mousein) {
                     mousein = true;
-                    listener.call(this, new MapMouseEvent(type, this, e.originalEvent, {features}));
+                    invoke.call(this, new MapMouseEvent(type, this, e.originalEvent, {features}));
                 }
             };
             const mouseout = () => {
@@ -2150,13 +2155,13 @@ export class Map extends Evented<MapEventType> {
                     mousein = true;
                 } else if (mousein) {
                     mousein = false;
-                    listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
+                    invoke.call(this, new MapMouseEvent(type, this, e.originalEvent));
                 }
             };
             const mouseout = (e) => {
                 if (mousein) {
                     mousein = false;
-                    listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
+                    invoke.call(this, new MapMouseEvent(type, this, e.originalEvent));
                 }
             };
             return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
@@ -2167,7 +2172,7 @@ export class Map extends Evented<MapEventType> {
                 if (features.length) {
                     // Here we need to mutate the original event, so that preventDefault works as expected.
                     e.features = features;
-                    listener.call(this, e);
+                    invoke.call(this, e);
                     delete e.features;
                 }
             };
@@ -2175,10 +2180,17 @@ export class Map extends Evented<MapEventType> {
         }
     }
 
+    /**
+     * Stores the registration and subscribes its delegates; `_removeDelegatedListener` undoes both.
+     * @internal
+     */
     _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
         this._delegatedListeners ||= {} as Record<keyof MapEventType, DelegatedListener[]>;
         this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
+        for (const event in delegatedListener.delegates) {
+            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
+        }
     }
 
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener): void {
@@ -2346,13 +2358,7 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
-
-        this._saveDelegatedListener(type, delegatedListener);
-
-        for (const event in delegatedListener.delegates) {
-            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
-        }
+        this._saveDelegatedListener(type, this._createDelegatedListener(type, layerIds, listener));
 
         return {
             unsubscribe: () => {
@@ -2444,21 +2450,11 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
-
-        for (const key in delegatedListener.delegates) {
-            const delegate: Delegate = delegatedListener.delegates[key];
-            delegatedListener.delegates[key] = (...args: Parameters<Delegate>) => {
-                this._removeDelegatedListener(type, layerIds, listener);
-                delegate(...args);
-            };
-        }
-
-        this._saveDelegatedListener(type, delegatedListener);
-
-        for (const event in delegatedListener.delegates) {
-            this.once(event as keyof MapEventType, delegatedListener.delegates[event]);
-        }
+        const invokeOnce: Listener = (e) => {
+            this._removeDelegatedListener(type, layerIds, listener);
+            listener.call(this, e);
+        };
+        this._saveDelegatedListener(type, this._createDelegatedListener(type, layerIds, listener, invokeOnce));
 
         return this;
     }
