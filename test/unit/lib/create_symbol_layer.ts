@@ -1,12 +1,18 @@
 import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket.ts';
 import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_layer.ts';
+import {Tile} from '../../../src/tile/tile.ts';
+import {FeatureIndex} from '../../../src/data/feature_index.ts';
+import {performSymbolLayout} from '../../../src/symbol/symbol_layout.ts';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
+import {createPopulateOptions} from './tile.ts';
 import {featureFilter, type LayerSpecification, type SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import glyphs from '../assets/fontstack-glyphs.json' with {type: 'json'};
 
 import type {EvaluationParameters} from '../../../src/style/evaluation_parameters.ts';
-import type {BucketParameters} from '../../../src/data/bucket.ts';
+import type {BucketParameters, IndexedFeature} from '../../../src/data/bucket.ts';
 import type {CollisionBoxArray} from '../../../src/data/array_types.g.ts';
 import type {GlyphMap} from '../../../src/style/style_glyph.ts';
+import type {OverscaledTileID} from '../../../src/tile/tile_id.ts';
 
 /** The `Test` fontstack fixture, keyed by grapheme cluster and doubling as the atlas positions. */
 export function createGlyphMap(): GlyphMap {
@@ -33,6 +39,25 @@ export function createSymbolBucket(layerId: string, font: string, text: string, 
         collisionBoxArray,
         layers: [createSymbolStyleLayer(layerId, font, text, extraLayout)]
     } as BucketParameters<SymbolStyleLayer>);
+}
+
+/** A tile whose `test` bucket holds `features` laid out with the `Test` fontstack, ready for cross tile indexing and placement. */
+export function createSymbolTile(tileID: OverscaledTileID, features: IndexedFeature[], collisionBoxArray: CollisionBoxArray, extraLayout?: SymbolLayerSpecification['layout']): Tile {
+    const bucket = createSymbolBucket('test', 'Test', 'abcde', collisionBoxArray, extraLayout);
+    bucket.populate(features, createPopulateOptions([]), undefined);
+    const glyphMap = createGlyphMap();
+    performSymbolLayout({
+        bucket,
+        glyphMap,
+        glyphPositions: glyphMap,
+        subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+    } as any);
+
+    const tile = new Tile(tileID, 512);
+    tile.latestFeatureIndex = new FeatureIndex(tileID);
+    tile.buckets = {test: bucket};
+    tile.collisionBoxArray = collisionBoxArray;
+    return tile;
 }
 
 export function createSymbolIconBucket(layerId: string, iconProperty: string, collisionBoxArray: CollisionBoxArray): SymbolBucket {

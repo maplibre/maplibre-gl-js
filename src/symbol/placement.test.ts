@@ -1,23 +1,17 @@
 import {beforeEach, describe, expect, test} from 'vitest';
-import {Placement, RetainedQueryData} from './placement.ts';
+import {CROSS_TILE_ID_UINT32_OFFSET, PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {Tile} from '../tile/tile.ts';
 import {FeatureIndex} from '../data/feature_index.ts';
 import {CrossTileSymbolIndex} from './cross_tile_symbol_index.ts';
-import {performSymbolLayout} from './symbol_layout.ts';
-import {createGlyphMap, createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
-import {createPopulateOptions, loadVectorTile} from '../../test/unit/lib/tile.ts';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {createSymbolTile} from '../../test/unit/lib/create_symbol_layer.ts';
+import {loadVectorTile} from '../../test/unit/lib/tile.ts';
 
 import type {IndexedFeature} from '../data/bucket.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
-
-/** What `packOpacity` writes for a symbol that is fully shown, and for one that is fully hidden. */
-const PACKED_VISIBLE_OPACITY = 4294967295;
-const PACKED_HIDDEN_OPACITY = 0;
 
 describe('placement', () => {
     let placement: Placement;
@@ -72,46 +66,37 @@ describe('placement', () => {
 
     describe('updateLayerOpacities', () => {
         const collisionBoxArray = new CollisionBoxArray();
-        const glyphFixture = createGlyphMap();
 
         /**
          * Two tiles at the same tile ID, each with a symbol bucket holding the same one label, so
          * that the cross tile index gives both buckets the same cross tile ID for it.
          */
         function setupTwoTilesSharingOneLabel() {
-            const sourceLayer = loadVectorTile().layers.place_label;
-            const features = [{feature: sourceLayer.feature(10)} as unknown as IndexedFeature];
+            const features = [{feature: loadVectorTile().layers.place_label.feature(10)} as unknown as IndexedFeature];
             const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-
-            const buckets = Array.from({length: 2}, () => {
-                const bucket = createSymbolBucket('test', 'Test', 'abcde', collisionBoxArray,
-                    {'text-allow-overlap': true, 'text-ignore-placement': true});
-                bucket.populate(features, createPopulateOptions([]), undefined);
-                performSymbolLayout({
-                    bucket,
-                    glyphMap: glyphFixture,
-                    glyphPositions: glyphFixture,
-                    subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
-                } as any);
-                return bucket;
-            });
-
-            const tiles = buckets.map(bucket => {
-                const tile = new Tile(tileID, 512);
-                tile.latestFeatureIndex = new FeatureIndex(tileID);
-                tile.buckets = {test: bucket};
-                tile.collisionBoxArray = collisionBoxArray;
-                return tile;
-            });
+            const tiles = Array.from({length: 2}, () => createSymbolTile(tileID, features, collisionBoxArray,
+                {'text-allow-overlap': true, 'text-ignore-placement': true}));
+            const buckets = tiles.map(tile => tile.buckets.test as SymbolBucket);
 
             const layer = buckets[0].layers[0];
-            const index = new CrossTileSymbolIndex();
-            index.addLayer(layer, tiles, 0);
+            new CrossTileSymbolIndex().addLayer(layer, tiles, 0);
             return {tiles, buckets, layer};
         }
 
         /** Written over a packed opacity, so that finding it again means the buffer was not rewritten. */
         const SENTINEL = 12345;
+
+        test('reads crossTileID out of the symbolInstances buffer', () => {
+            const {buckets} = setupTwoTilesSharingOneLabel();
+            const {symbolInstances} = buckets[0];
+            const stride = symbolInstances.bytesPerElement / 4;
+
+            expect(symbolInstances.length).toBeGreaterThan(0);
+            for (let s = 0; s < symbolInstances.length; s++) {
+                expect(symbolInstances.uint32[s * stride + CROSS_TILE_ID_UINT32_OFFSET])
+                    .toBe(symbolInstances.get(s).crossTileID);
+            }
+        });
 
         test('the first bucket draws the shared label and the second hides it', () => {
             const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
@@ -133,14 +118,17 @@ describe('placement', () => {
             for (const bucket of buckets) expect(bucket.text.opacityVertexArray.uint32[0]).toBe(SENTINEL);
         });
 
-        test('rewrites only the bucket the cross tile index reindexed', () => {
+        test('rewrites a bucket whose cross tile IDs were reassigned', () => {
             const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
             placement.updateLayerOpacities(layer, tiles);
 
             for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
-            placement.updateLayerOpacities(layer, tiles, new Set([buckets[1].bucketInstanceId]));
+            // Reindexing hands out fresh IDs. The same bucket still draws the label, so only the
+            // cross tile IDs differ from what was recorded, not the duplicate flags.
+            for (const bucket of buckets) bucket.symbolInstances.get(0).crossTileID = 9999;
+            placement.updateLayerOpacities(layer, tiles);
 
-            expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(SENTINEL);
+            expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
             expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
         });
 
