@@ -4082,13 +4082,17 @@ export class Map extends Evented<MapEventType> {
         return this._canvas;
     }
 
+    /**
+     * @internal
+     * The viewport in whole CSS pixels, shared by the canvas, the painter and the transform.
+     */
     _containerDimensions(): number[] {
         let width = 0;
         let height = 0;
 
         if (this._container) {
-            width = this._container.clientWidth || 400;
-            height = this._container.clientHeight || 300;
+            width = Math.floor(this._container.clientWidth) || 400;
+            height = Math.floor(this._container.clientHeight) || 300;
         }
 
         return [width, height];
@@ -4200,14 +4204,21 @@ export class Map extends Evented<MapEventType> {
         this._container.classList.remove('maplibregl-map');
     }
 
+    /**
+     * @internal
+     * Sizes the backing store to whole device pixels and the CSS box to cover exactly that many, so
+     * the compositor never rescales the canvas. A pixel ratio can sit a fraction below a whole
+     * number, where truncating the count would cost a whole pixel per axis.
+     */
     _resizeCanvas(width: number, height: number, pixelRatio: number): void {
-        // Request the required canvas size taking the pixelratio into account.
-        this._canvas.width = Math.floor(pixelRatio * width);
-        this._canvas.height = Math.floor(pixelRatio * height);
+        const canvasWidth = Math.round(pixelRatio * width);
+        const canvasHeight = Math.round(pixelRatio * height);
 
-        // Maintain the same canvas size, potentially downscaling it for HiDPI displays
-        this._canvas.style.width = `${width}px`;
-        this._canvas.style.height = `${height}px`;
+        this._canvas.width = canvasWidth;
+        this._canvas.height = canvasHeight;
+
+        this._canvas.style.width = `${canvasWidth / pixelRatio}px`;
+        this._canvas.style.height = `${canvasHeight / pixelRatio}px`;
     }
 
     /**
