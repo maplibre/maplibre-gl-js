@@ -355,8 +355,8 @@ export class Camera extends Evented<MapEventType> {
      * (a DEM tile lands, or the terrain is set or removed): the camera or the center.
      * - `true`: a gesture has moved the view since the center was last placed. The camera stays, and
      *   zoom and center are re-solved around it.
-     * - `false`: `jumpTo` or the map options placed the center. The center stays, and the camera moves
-     *   with its elevation.
+     * - `false`: `jumpTo`, `easeTo`, `flyTo` or the map options placed the center. The center stays, and
+     *   the camera moves with its elevation.
      *
      * {@link Camera.elevationFreeze} covers the gesture itself, where terrain changes are ignored until
      * the gesture's end re-solves the camera onto the terrain. This covers the time after that end.
@@ -851,6 +851,7 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
+        if (!options.freezeElevation) this._terrainChangeKeepsCamera = false;
         if (this.terrain) {
             this._prepareElevation(easeHandler.elevationCenter);
         }
@@ -864,6 +865,7 @@ export class Camera extends Evented<MapEventType> {
 
         }, (interruptingEaseId?: string) => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            else this.elevationFreeze = false;
             this._afterEase(eventData, interruptingEaseId);
         }, options);
 
@@ -1218,6 +1220,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
+        if (!options.freezeElevation) this._terrainChangeKeepsCamera = false;
         if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
 
         this._ease((k) => {
@@ -1248,6 +1251,7 @@ export class Camera extends Evented<MapEventType> {
             this._fireMoveEvents(eventData);
         }, () => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            else this.elevationFreeze = false;
             this._afterEase(eventData);
         }, options);
 

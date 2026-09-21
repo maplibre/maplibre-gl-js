@@ -13,6 +13,7 @@
 - Keep source-specific tile LOD settings from changing internal terrain render-to-texture tile selection ([#8048](https://github.com/maplibre/maplibre-gl-js/pull/8048)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `map.setSky()` silently keeping the old sky and firing no `error` event when the value included a `-transition` key ([#8375](https://github.com/maplibre/maplibre-gl-js/issues/8375)) (by [@Yasser-Ameur](https://github.com/Yasser-Ameur))
 - Fix markers and popups misplaced after a projection change or by terrain that loads after the map settled. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
+- Apply a DEM tile that lands after an `easeTo` or `flyTo` over terrain instead of ignoring it until the next gesture ends ([#8514](https://github.com/maplibre/maplibre-gl-js/issues/8514)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Keep the camera in place when a DEM tile lands or the terrain is set or removed, during or after a gesture ([#8471](https://github.com/maplibre/maplibre-gl-js/pull/8471)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
