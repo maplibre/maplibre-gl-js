@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'vitest';
 import {Event, Evented} from '../util/evented.ts';
+
 import type {MapEventType} from './events.ts';
 
 class DrawCreateEvent extends Event<'draw.create'> {
