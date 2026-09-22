@@ -515,7 +515,7 @@ describe('VectorTileSource', () => {
         expect(clearTiles).not.toHaveBeenCalled();
     });
 
-    test('returns early before the worker request if tile was aborted', async () => {
+    test('does not send loadTile to the worker if the tile was aborted before getting an actor', async () => {
         let releaseTransform: () => void;
         const transformPending = new Promise<void>((resolve) => { releaseTransform = resolve; });
         const source = createSource(
@@ -523,20 +523,13 @@ describe('VectorTileSource', () => {
             (url: string) => transformPending.then(() => ({url}))
         );
 
-        const sentMessages: MessageType[] = [];
-        source.dispatcher = getWrapDispatcher()({
-            sendAsync(message) {
-                sentMessages.push(message.type);
-                return Promise.resolve({});
-            }
-        });
+        const sendAsync = vi.fn().mockResolvedValue({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
         await waitForMetadataEvent(source);
 
         const tile = {tileID: new OverscaledTileID(10, 0, 10, 5, 5), unloadVectorData() {}} as any as Tile;
         const loadPromise = source.loadTile(tile);
 
-        // What TileManager._removeTile does to a tile with no data yet. It has no actor, so
-        // neither call reaches the worker.
         tile.aborted = true;
         await source.abortTile(tile);
         await source.unloadTile(tile);
@@ -544,7 +537,7 @@ describe('VectorTileSource', () => {
         releaseTransform();
         await loadPromise;
 
-        expect(sentMessages).toEqual([]);
+        expect(sendAsync).not.toHaveBeenCalled();
     });
 
     test('returns early after worker response if tile was aborted', async () => {

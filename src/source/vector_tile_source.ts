@@ -222,8 +222,6 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         await this.dispatcher.waitForInitComplete();
-        // A tile dropped during the awaits above has no actor yet, so abortTile and unloadTile
-        // both no-op: loading it now would strand the WorkerTile in the worker forever.
         if (tile.aborted) {
             return;
         }
