@@ -7,7 +7,6 @@ import {Evented} from '../evented.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
 import {getGlobalWorkerPool} from '../global_worker_pool.ts';
-import {Dispatcher} from '../dispatcher.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
@@ -20,6 +19,7 @@ import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
+import type {Dispatcher} from '../dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -204,10 +204,11 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  */
 export function terminateGlobalWorkers(): void {
     const pool = getGlobalWorkerPool();
+    if (!pool.workersPromise) return;
+    pool.acquire('terminateGlobalWorkers');
     for (const mapId of Object.keys(pool.active)) {
         pool.release(mapId);
     }
-    new Dispatcher(pool, 'the last map').remove();
 }
 
 /**

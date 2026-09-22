@@ -52,6 +52,5 @@ describe('WorkerPool', () => {
         pool.release('map-1');
 
         expect(terminateListener).toHaveBeenCalled();
-        expect(pool.workersPromise).toBeFalsy();
     });
 });

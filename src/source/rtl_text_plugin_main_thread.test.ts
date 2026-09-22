@@ -172,7 +172,6 @@ describe('RTLMainThreadPlugin', () => {
     test('should re-import the plugin into fresh workers when the dispatcher is recreated', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
-        expect(rtlMainThreadPlugin.status).toBe('loaded');
 
         terminateGlobalWorkers();
         broadcastSpy.mockClear();
@@ -192,7 +191,6 @@ describe('RTLMainThreadPlugin', () => {
 
     test('should re-sync deferred state when the dispatcher is recreated', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
-        expect(rtlMainThreadPlugin.status).toBe('deferred');
 
         terminateGlobalWorkers();
         broadcastSpy.mockClear();

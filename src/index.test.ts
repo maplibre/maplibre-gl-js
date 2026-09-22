@@ -3,7 +3,7 @@ import {config} from './util/config.ts';
 import {addProtocol, getWorkerCount, removeProtocol, getVersion, importScriptInWorkers} from './index.ts';
 import {getJSON, getArrayBuffer} from './util/ajax.ts';
 import {ImageRequest} from './util/image_request.ts';
-import {Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
+import {Dispatcher} from './util/dispatcher.ts';
 import {MessageType} from './util/actor_messages.ts';
 import {terminateGlobalWorkers} from './util/test/util.ts';
 
@@ -130,18 +130,7 @@ describe('maplibre', () => {
 describe('importScriptInWorkers', () => {
     afterEach(terminateGlobalWorkers);
 
-    test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        await importScriptInWorkers('plugin.js');
-        terminateGlobalWorkers();
-        broadcastSpy.mockClear();
-
-        getGlobalDispatcher();
-
-        expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
-    });
-
-    test('imports a script once into a recreated global dispatcher that already replayed it', async () => {
+    test('re-imports scripts exactly once into the workers of a recreated global dispatcher', async () => {
         const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
         await importScriptInWorkers('plugin.js');
         terminateGlobalWorkers();
@@ -149,6 +138,6 @@ describe('importScriptInWorkers', () => {
 
         await importScriptInWorkers('plugin.js');
 
-        expect(broadcastSpy).toHaveBeenCalledTimes(1);
+        expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
     });
 });

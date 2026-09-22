@@ -1,6 +1,6 @@
-import {describe, afterEach, onTestFinished, test, expect, vi} from 'vitest';
+import {describe, afterEach, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
-import {Dispatcher, getGlobalDispatcher} from './dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher, onGlobalDispatcherCreated} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
@@ -105,31 +105,27 @@ describe('global dispatcher', () => {
     test('removing the last map dispatcher releases the global dispatcher and its workers', () => {
         const pool = getGlobalWorkerPool();
         const globalDispatcher = getGlobalDispatcher();
-        const mapDispatcher = new Dispatcher(pool, 1);
 
-        mapDispatcher.remove();
+        new Dispatcher(pool, 1).remove();
 
         expect(pool.numActive()).toBe(0);
         expect(getGlobalDispatcher()).not.toBe(globalDispatcher);
     });
 
     test('a new map dispatcher brings back the global dispatcher its workers report to', () => {
-        getGlobalDispatcher();
-        terminateGlobalWorkers();
-        const pool = getGlobalWorkerPool();
-        const borrow = vi.spyOn(pool, 'borrow');
+        const globalDispatcherCreated = vi.fn();
+        onGlobalDispatcherCreated(globalDispatcherCreated);
 
-        new Dispatcher(pool, 1);
+        new Dispatcher(getGlobalWorkerPool(), 1);
 
-        expect(borrow).toHaveBeenCalled();
+        expect(globalDispatcherCreated).toHaveBeenCalled();
     });
 
     test('keeps the global dispatcher while another map still holds workers', () => {
         const pool = getGlobalWorkerPool();
         const globalDispatcher = getGlobalDispatcher();
         const mapDispatcher = new Dispatcher(pool, 1);
-        const otherMapDispatcher = new Dispatcher(pool, 2);
-        onTestFinished(() => otherMapDispatcher.remove());
+        new Dispatcher(pool, 2);
 
         mapDispatcher.remove();
 
@@ -139,7 +135,6 @@ describe('global dispatcher', () => {
     test('clearPrewarmedResources releases the workers once the last map is removed', () => {
         prewarm();
         const pool = getGlobalWorkerPool();
-        getGlobalDispatcher();
         new Dispatcher(pool, 1).remove();
 
         clearPrewarmedResources();
