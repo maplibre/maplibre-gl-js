@@ -201,8 +201,8 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
 }
 
 /**
- * Simulates the last map being removed, which terminates the pooled workers and discards the
- * global dispatcher. Also releases claims left behind by earlier tests in the same file.
+ * Simulates the last map being removed, which terminates the pooled workers. The global dispatcher
+ * survives and builds new actors on its next use. Also releases claims earlier tests left behind.
  */
 export function terminateGlobalWorkers(): void {
     const pool = getGlobalWorkerPool();

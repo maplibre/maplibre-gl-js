@@ -22,8 +22,8 @@ export class Dispatcher extends Evented<ErrorEventType> {
     private workerErrorSubscriptions: Subscription[];
 
     /**
-     * The global dispatcher builds its actors from {@link getGlobalDispatcher} instead, once the
-     * instance is reachable, since replaying worker state can call back into it.
+     * The global dispatcher builds its actors from {@link getGlobalDispatcher} instead, since the
+     * listeners it runs can call back into it before the instance is reachable.
      */
     constructor(workerPool: WorkerPool, mapId: string | number) {
         super();
@@ -38,9 +38,8 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 
     /**
-     * Creates one actor per worker, carrying over the message handlers registered so far. The global
-     * dispatcher weakly acquires the workers rather than keeping them alive. Every other dispatcher
-     * revives it first, since workers answer `getResource` through it.
+     * The global dispatcher weakly acquires the workers rather than keeping them alive. Every other
+     * dispatcher revives it first, since workers answer `getResource` through it.
      */
     private async initActors(mapId: string | number): Promise<Actor[]> {
         let workers: ActorTarget[];
@@ -66,7 +65,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         return this.actors;
     }
 
-    /** Drops the actors whose workers are being terminated, leaving the dispatcher ready to build more. */
+    /** Leaves the dispatcher ready to build actors again once new workers exist. */
     private discardActors(): void {
         for (const actor of this.actors) {
             actor.remove();
@@ -152,19 +151,17 @@ export class Dispatcher extends Evented<ErrorEventType> {
 let globalDispatcher: Dispatcher;
 
 /**
- * Latest import attempt per script url sent by {@link importScriptInWorkers}, kept so the scripts
- * can be re-sent to new workers. A failed attempt leaves `undefined` so the next call retries.
- * Entries are refreshed by the listener below, which is why `getGlobalDispatcher()` has to run
- * its listeners synchronously before {@link importScriptInWorkers} reads this.
+ * Latest import attempt per script url, kept so the scripts can be re-sent to new workers. A failed
+ * attempt leaves `undefined` so the next call retries. The listener below refreshes these entries,
+ * which is why {@link getGlobalDispatcher} runs its listeners synchronously.
  */
 const scriptsImportedIntoWorkers: Map<string, Promise<unknown> | undefined> = new Map();
 const globalWorkersCreatedListeners: Array<() => void> = [];
 
 /**
- * Registers a callback that restores state living in the workers rather than in any one map.
- * It runs each time the global workers are created, including the first, since new workers start
- * out knowing nothing. Removing the last map terminates them, so anything a plugin configures in
- * the workers belongs here rather than in one-time setup code.
+ * Registers a callback that restores state living in the workers rather than in any one map. It
+ * runs each time the global workers are created, including the first. Removing the last map
+ * terminates them, so anything a plugin configures in the workers belongs here.
  *
  * Message handlers registered through {@link getGlobalDispatcher} and scripts loaded through
  * {@link importScriptInWorkers} come back on their own and do not need this.

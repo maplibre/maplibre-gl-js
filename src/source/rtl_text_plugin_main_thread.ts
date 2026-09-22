@@ -10,7 +10,6 @@ class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
 
-    /** Re-sends the plugin state to workers that have never seen it, after the previous ones were terminated. */
     async _syncStateToNewWorkers(): Promise<void> {
         try {
             if (this.status === 'deferred') {
