@@ -3,7 +3,7 @@ import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
 import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
-import {type Subscription, subscribe} from './util.ts';
+import {type Subscription, subscribe, warnOnce} from './util.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
@@ -39,7 +39,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         let workers: ActorTarget[];
         if (mapId === GLOBAL_DISPATCHER_ID) {
             workers = await this.workerPool.borrow(() => {
-                globalDispatcher.remove(false);
+                this.remove(false);
                 globalDispatcher = undefined;
             });
         } else {
@@ -119,13 +119,16 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
 let globalDispatcher: Dispatcher;
 
-/** Scripts sent to the workers by `importScriptInWorkers`, keyed by URL, so they can be re-sent to new workers. */
-export const scriptsImportedIntoWorkers: Map<string, Promise<unknown>> = new Map();
+/**
+ * Latest import attempt per script url sent by `importScriptInWorkers`, kept so the scripts can be
+ * re-sent to new workers. A failed attempt leaves `undefined` so the next call retries.
+ */
+export const scriptsImportedIntoWorkers: Map<string, Promise<unknown> | undefined> = new Map();
 const globalWorkerStateReplays: Array<() => void> = [];
 
 /**
- * Registers state that lives in the workers rather than in any one map, so it can be put back when
- * the pool terminates its workers and a fresh global dispatcher is built around new ones.
+ * Registers a callback that restores state living in the workers rather than in any one map.
+ * It runs each time a global dispatcher is created, including the first.
  */
 export function onGlobalDispatcherCreated(replay: () => void): void {
     globalWorkerStateReplays.push(replay);
@@ -153,8 +156,20 @@ export function getGlobalDispatcher(): Dispatcher {
     return globalDispatcher;
 }
 
+export function broadcastImportScript(url: string): Promise<unknown> {
+    const importPromise = getGlobalDispatcher().broadcast(MessageType.importScript, url);
+    scriptsImportedIntoWorkers.set(url, importPromise);
+    importPromise.catch((error) => {
+        warnOnce(`Failed to import script ${url} into the workers: ${error}`);
+        if (scriptsImportedIntoWorkers.get(url) === importPromise) {
+            scriptsImportedIntoWorkers.set(url, undefined);
+        }
+    });
+    return importPromise;
+}
+
 onGlobalDispatcherCreated(() => {
     for (const url of Array.from(scriptsImportedIntoWorkers.keys())) {
-        scriptsImportedIntoWorkers.set(url, getGlobalDispatcher().broadcast(MessageType.importScript, url));
+        broadcastImportScript(url);
     }
 });

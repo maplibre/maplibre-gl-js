@@ -189,6 +189,18 @@ describe('RTLMainThreadPlugin', () => {
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('should warn instead of rejecting when the re-import into fresh workers fails', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+
+        terminateGlobalWorkers();
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
+        getGlobalDispatcher();
+        await sleep(1);
+
+        expect(rtlMainThreadPlugin.status).toBe('error');
+    });
+
     test('should re-sync deferred state when the dispatcher is recreated', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
 

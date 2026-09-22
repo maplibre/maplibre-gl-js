@@ -1,6 +1,7 @@
 
 import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
+import {warnOnce} from '../util/util.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
 import {getGlobalDispatcher, onGlobalDispatcherCreated} from '../util/dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
@@ -10,11 +11,15 @@ class RTLMainThreadPlugin extends Evented {
     url: string = null;
 
     /** Re-sends the plugin state to workers that have never seen it, after the previous ones were terminated. */
-    _replayIntoNewWorkers(): void {
-        if (this.status === 'deferred') {
-            this._syncState('deferred');
-        } else if (this.status === 'loading' || this.status === 'loaded') {
-            this._requestImport();
+    async _replayIntoNewWorkers(): Promise<void> {
+        try {
+            if (this.status === 'deferred') {
+                await this._syncState('deferred');
+            } else if (this.status === 'loading' || this.status === 'loaded') {
+                await this._requestImport();
+            }
+        } catch (error) {
+            warnOnce(`Failed to load the RTL text plugin into the new workers: ${error}`);
         }
     }
 

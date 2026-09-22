@@ -140,4 +140,15 @@ describe('importScriptInWorkers', () => {
 
         expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
     });
+
+    test('retries a failed import on the next call', async () => {
+        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast')
+            .mockRejectedValueOnce(new Error('worker gone'))
+            .mockResolvedValue([]);
+
+        await expect(importScriptInWorkers('plugin.js')).rejects.toThrow('worker gone');
+        await importScriptInWorkers('plugin.js');
+
+        expect(broadcastSpy).toHaveBeenCalledTimes(2);
+    });
 });
