@@ -2,7 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vite
 import {ImageSource, type Coordinates} from './image_source.ts';
 import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, getMockDispatcher, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -21,7 +21,7 @@ function createSource(options) {
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
     }, options);
 
-    const source = new ImageSource('id', options, {} as any, options.eventedParent);
+    const source = new ImageSource('id', options, getMockDispatcher(), options.eventedParent);
     source.map = map;
     return source;
 }
@@ -837,28 +837,27 @@ describe('ImageSource', () => {
             });
         });
     });
-});
 
-describe('ImageSource corner placement', () => {
-    const coordinates: Coordinates = [[0, 60], [45, 60], [45, 30], [0, 30]];
-    let source: ImageSource;
+    describe('corner placement', () => {
+        const coordinates: Coordinates = [[0, 60], [45, 60], [45, 30], [0, 30]];
 
-    beforeEach(() => {
-        source = new ImageSource('id', {type: 'image', url: '/image.png', coordinates}, {} as any, undefined);
-    });
+        test('places the corners with mercator on a mercator map', () => {
+            const source = createSource({type: 'image', url: '/image.png', coordinates});
 
-    test('places the corners with mercator on a mercator map', () => {
-        source.map = {style: {projection: new MercatorProjection()}} as any as Map;
-        source.setCoordinates(coordinates);
-        expect(source.tileID).toEqual(expect.objectContaining({z: 3, x: 4, y: 2}));
-    });
+            source.setCoordinates(coordinates);
 
-    test('places the corners with the map projection on a planar map, a third of a tile above and below tile 2/2/1', () => {
-        source.map = {style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))}} as any as Map;
-        source.setCoordinates(coordinates);
-        const thirdOfATile = 2731;
+            expect(source.tileID).toEqual(expect.objectContaining({z: 3, x: 4, y: 2}));
+        });
 
-        expect(source.tileID).toEqual(expect.objectContaining({z: 2, x: 2, y: 1}));
-        expect(source.tileCoords.map(p => [p.x, p.y])).toEqual([[0, -thirdOfATile], [EXTENT, -thirdOfATile], [EXTENT, thirdOfATile], [0, thirdOfATile]]);
+        test('places the corners with the map projection on a planar map, a third of a tile above and below tile 2/2/1', () => {
+            map.style.projection = new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs));
+            const source = createSource({type: 'image', url: '/image.png', coordinates});
+            const thirdOfATile = 2731;
+
+            source.setCoordinates(coordinates);
+
+            expect(source.tileID).toEqual(expect.objectContaining({z: 2, x: 2, y: 1}));
+            expect(source.tileCoords.map(p => [p.x, p.y])).toEqual([[0, -thirdOfATile], [EXTENT, -thirdOfATile], [EXTENT, thirdOfATile], [0, thirdOfATile]]);
+        });
     });
 });
