@@ -777,7 +777,7 @@ export class HandlerManager {
                 inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
-                this._map.fire(new MapMovementEvent('moveend', {originalEvent: originalEndEvent}));
+                this._fireEvent('moveend', originalEndEvent);
                 if (shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
                 }
@@ -787,8 +787,13 @@ export class HandlerManager {
 
     }
 
+    /**
+     * Fires a movement event through the camera, whose evented parent is the map: the map's listeners
+     * see the event as before, and the camera's own `moveend` listener drops the requested camera state,
+     * so the next gesture starts from the rendered transform instead of the state this one ended in.
+     */
     _fireEvent(type: string, e?: Event): void {
-        this._map.fire(new MapMovementEvent(type, e ? {originalEvent: e} : {}));
+        this._camera.fire(new MapMovementEvent(type, e ? {originalEvent: e} : {}));
     }
 
     _requestFrame(): number {

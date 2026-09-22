@@ -352,6 +352,29 @@ describe('Terrain changing around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
         expect(map.getZoom()).toBe(13);
     });
+
+    test('the gesture after a terrain change at rest starts from the moved camera instead of snapping back', async () => {
+        const map = createMap({interactive: true, zoom: 11});
+        await map.once('style.load');
+        let terrainElevation = 0;
+        map.terrain = {...createTerrain(), getElevationForLngLat: () => terrainElevation} as any as Terrain;
+        map._camera.terrain = map.terrain;
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        terrainElevation = 1000;
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
 });
 
 describe('Keep camera outside terrain', () => {
