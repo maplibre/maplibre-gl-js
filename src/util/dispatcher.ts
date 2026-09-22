@@ -122,11 +122,11 @@ export class Dispatcher extends Evented<ErrorEventType> {
         return this.actors[this.currentActor];
     }
 
-    remove({releaseWorkers = true}: {releaseWorkers?: boolean} = {}): void {
+    remove(mapRemoved: boolean = true): void {
         this.removed = true;
         this.discardActors();
         this.setEventedParent(null);
-        if (releaseWorkers) this.workerPool.release(this.id);
+        if (mapRemoved) this.workerPool.release(this.id);
     }
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {

@@ -1851,7 +1851,7 @@ export class Style extends Evented<MapEventType> {
         if (mapRemoved) {
             this.dispatcher.broadcast(MessageType.removeMap, undefined);
         }
-        this.dispatcher.remove({releaseWorkers: mapRemoved});
+        this.dispatcher.remove(mapRemoved);
     }
 
     _clearSource(id: string): void {
@@ -2194,7 +2194,7 @@ export class Style extends Evented<MapEventType> {
         this.dispatcher.unregisterMessageHandler(MessageType.getGlyphs);
         this.dispatcher.unregisterMessageHandler(MessageType.getImages);
         this.dispatcher.unregisterMessageHandler(MessageType.getDashes);
-        this.dispatcher.remove();
+        this.dispatcher.remove(true);
         this._listeners = {};
         this._oneTimeListeners = {};
     }

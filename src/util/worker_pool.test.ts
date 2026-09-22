@@ -1,8 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
-import {workerFactory} from './web_worker.ts';
-
-vi.mock(import('./web_worker.ts'), {spy: true});
 
 describe('WorkerPool', () => {
     test('acquire', async () => {
@@ -55,16 +52,5 @@ describe('WorkerPool', () => {
         pool.release('map-1');
 
         expect(terminateListener).toHaveBeenCalled();
-    });
-
-    test('workers that fail to start are not cached, so the next acquirer tries again', async () => {
-        Object.defineProperty(WorkerPool, 'workerCount', {value: 1});
-        const workerFactorySpy = vi.mocked(workerFactory).mockRejectedValueOnce(new Error('worker url is invalid'));
-
-        const pool = new WorkerPool();
-        await expect(pool.acquire('map-1')).rejects.toThrow('worker url is invalid');
-        await pool.acquire('map-2');
-
-        expect(workerFactorySpy).toHaveBeenCalledTimes(2);
     });
 });

@@ -48,7 +48,7 @@ describe('Dispatcher', () => {
         await dispatcher.getActors();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
 
-        dispatcher.remove({releaseWorkers: false});
+        dispatcher.remove(false);
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toHaveLength(0);
 
@@ -161,19 +161,11 @@ describe('global dispatcher', () => {
         expect((await globalDispatcher.getActor()).messageHandlers[MessageType.importScript]).toBe(handler);
     });
 
-    test('prewarm keeps the workers alive once the last map is removed', () => {
+    test('prewarm keeps the workers alive once the last map is removed, until they are cleared', () => {
         prewarm();
         const pool = getGlobalWorkerPool();
-
         new Dispatcher(pool, 1).remove();
-
         expect(pool.workersPromise).toBeTruthy();
-    });
-
-    test('clearPrewarmedResources releases the workers once the last map is removed', () => {
-        prewarm();
-        const pool = getGlobalWorkerPool();
-        new Dispatcher(pool, 1).remove();
 
         clearPrewarmedResources();
 
