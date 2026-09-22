@@ -1,4 +1,5 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {createRenderContext} from '../render/render_context.ts';
@@ -75,7 +76,7 @@ describe('render to texture', () => {
     const painter = {
         layersDrawn: 0,
         context: new Context(gl),
-        transform: {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) {}, calculateFogMatrix: () => {}},
+        transform: {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) {}, calculateFogMatrix: () => {}, worldCoordinateHelper: mercatorWorldCoordinateHelper},
         options: {moving: false},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         getDepthModeFor3D: () => DepthMode.disabled,

@@ -1060,7 +1060,7 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
     const lngLat = sphereSurfacePointToCoordinates(surface);
     const projected = MercatorCoordinate.fromLngLat(lngLat);
     const mercator = new MercatorCoordinate(projected.x, clamp(projected.y, 0, MAX_MERCATOR_Y));
-    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y);
+    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y, false);
     // The globe mesh caps the poles at elevation zero, matching the GLOBE branch of get_elevation.
     const elevation = Math.abs(lngLat.lat) > MAX_VALID_LATITUDE ? 0 : sample.elevation;
     return {sample: {...sample, elevation}, radius, mercator};
