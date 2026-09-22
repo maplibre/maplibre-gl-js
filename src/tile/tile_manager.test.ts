@@ -974,12 +974,13 @@ describe('TileManager.update', () => {
         expect(tileManager.getTile(wrappedTileID)).toBe(tile);
     });
 
-    test('retains fading children and applies fading logic when zooming out', async () => {
+    // maxzoom 10 puts the children exactly at the source max zoom
+    test.each([14, 10])('retains fading children and applies fading logic when zooming out with source maxzoom %i', async (maxzoom) => {
         const transform = new MercatorTransform();
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true});
+        const tileManager = createTileManager({raster: true, maxzoom});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -1012,12 +1013,13 @@ describe('TileManager.update', () => {
         }
     });
 
-    test('retains fading grandchildren and applies fading logic when zooming out', async () => {
+    // maxzoom 10 puts the grandchildren exactly at the source max zoom
+    test.each([14, 10])('retains fading grandchildren and applies fading logic when zooming out with source maxzoom %i', async (maxzoom) => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true});
+        const tileManager = createTileManager({raster: true, maxzoom});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
