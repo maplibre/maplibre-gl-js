@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, afterEach, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
 import {Dispatcher, getGlobalDispatcher, importScriptInGlobalWorkers} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
@@ -59,41 +59,6 @@ describe('Dispatcher', () => {
         expect(releaseCalled).toEqual([mapId]);
     });
 
-    test('removing the last map dispatcher releases the global dispatcher and its workers', () => {
-        const first = getGlobalDispatcher();
-        const pool = getGlobalWorkerPool();
-        const mapDispatcher = new Dispatcher(pool, 1);
-
-        mapDispatcher.remove();
-
-        expect(pool.numActive()).toBe(0);
-        expect(getGlobalDispatcher()).not.toBe(first);
-        new Dispatcher(pool, 1).remove();
-    });
-
-    test('keeps the global dispatcher while another map still holds workers', () => {
-        const first = getGlobalDispatcher();
-        const pool = getGlobalWorkerPool();
-        const mapDispatcher = new Dispatcher(pool, 1);
-        const otherMapDispatcher = new Dispatcher(pool, 2);
-
-        mapDispatcher.remove();
-
-        expect(getGlobalDispatcher()).toBe(first);
-        otherMapDispatcher.remove();
-    });
-
-    test('clearPrewarmedResources releases the workers once the last map is removed', () => {
-        prewarm();
-        const pool = getGlobalWorkerPool();
-        getGlobalDispatcher();
-        new Dispatcher(pool, 1).remove();
-
-        clearPrewarmedResources();
-
-        expect(pool.numActive()).toBe(0);
-    });
-
     test('remove destroys actors', async () => {
         const actorsRemoved = [];
         const mapId = 1;
@@ -132,17 +97,55 @@ describe('Dispatcher', () => {
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(listener).toHaveBeenCalledTimes(1);
     });
+});
+
+describe('global dispatcher', () => {
+    afterEach(() => {
+        new Dispatcher(getGlobalWorkerPool(), 'cleanup').remove();
+    });
+
+    test('removing the last map dispatcher releases the global dispatcher and its workers', () => {
+        const pool = getGlobalWorkerPool();
+        const globalDispatcher = getGlobalDispatcher();
+        const mapDispatcher = new Dispatcher(pool, 1);
+
+        mapDispatcher.remove();
+
+        expect(pool.numActive()).toBe(0);
+        expect(getGlobalDispatcher()).not.toBe(globalDispatcher);
+    });
+
+    test('keeps the global dispatcher while another map still holds workers', () => {
+        const pool = getGlobalWorkerPool();
+        const globalDispatcher = getGlobalDispatcher();
+        const mapDispatcher = new Dispatcher(pool, 1);
+        const otherMapDispatcher = new Dispatcher(pool, 2);
+
+        mapDispatcher.remove();
+
+        expect(getGlobalDispatcher()).toBe(globalDispatcher);
+        otherMapDispatcher.remove();
+    });
+
+    test('clearPrewarmedResources releases the workers once the last map is removed', () => {
+        prewarm();
+        const pool = getGlobalWorkerPool();
+        getGlobalDispatcher();
+        new Dispatcher(pool, 1).remove();
+
+        clearPrewarmedResources();
+
+        expect(pool.numActive()).toBe(0);
+    });
 
     test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
         const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        const pool = getGlobalWorkerPool();
         await importScriptInGlobalWorkers('plugin.js');
-        new Dispatcher(pool, 1).remove();
-
+        new Dispatcher(getGlobalWorkerPool(), 1).remove();
         broadcastSpy.mockClear();
+
         getGlobalDispatcher();
 
         expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
-        new Dispatcher(pool, 1).remove();
     });
 });

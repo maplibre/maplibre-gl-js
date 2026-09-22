@@ -25,6 +25,11 @@ describe('RTLMainThreadPlugin', () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue({} as any);
     });
 
+    /** Simulates removing the last map, which releases the global dispatcher and its workers */
+    function removeLastMap(): void {
+        new Dispatcher(getGlobalWorkerPool(), 1).remove();
+    }
+
     function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
@@ -169,11 +174,6 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
-
-    /** Simulates removing the last map, which releases the global dispatcher and its workers */
-    function removeLastMap() {
-        new Dispatcher(getGlobalWorkerPool(), 1).remove();
-    }
 
     test('should re-import the plugin into fresh workers when the dispatcher is recreated', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);

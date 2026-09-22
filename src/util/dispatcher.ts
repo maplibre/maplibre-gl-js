@@ -114,12 +114,8 @@ const mapDispatchers = new Set<Dispatcher>();
 const importedScriptUrls: string[] = [];
 
 /**
- * Releases the global dispatcher once no map holds a claim on the worker pool,
- * so its claim never keeps the pool alive on its own. Without this, removing
- * the last map would cache the workers forever, and workers terminated by the
- * browser (e.g. iOS memory pressure) would be reused, dead, by the next map.
- * It also kept `clearPrewarmedResources()` from ever releasing a prewarmed
- * pool. The dispatcher is recreated on demand with the pool's current workers.
+ * Releases the global dispatcher once no map dispatcher is left, so its claim alone never keeps the worker pool alive.
+ * It is recreated on demand, around whatever workers the pool has by then.
  */
 function releaseGlobalDispatcherIfIdle(): void {
     if (!globalDispatcher || mapDispatchers.size > 0) return;
@@ -150,7 +146,6 @@ export function getGlobalDispatcher(): Dispatcher {
 
 /** Imports a script into every worker, and into any worker created later. */
 export async function importScriptInGlobalWorkers(url: string): Promise<void> {
-    const dispatcher = getGlobalDispatcher();
-    importedScriptUrls.push(url);
-    await dispatcher.broadcast(MessageType.importScript, url);
+    await getGlobalDispatcher().broadcast(MessageType.importScript, url);
+    if (!importedScriptUrls.includes(url)) importedScriptUrls.push(url);
 }

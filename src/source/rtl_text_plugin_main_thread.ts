@@ -10,19 +10,13 @@ class RTLMainThreadPlugin extends Evented {
     url: string = null;
     dispatcher: Dispatcher = getGlobalDispatcher();
 
-    /**
-     * Re-syncs plugin state into workers created after the last sync. When all
-     * maps are removed the workers and global dispatcher are torn down, so a
-     * later map gets fresh workers that have never seen the plugin.
-     */
+    /** Re-broadcasts the plugin state when the global dispatcher has been recreated, since its workers have never seen the plugin. */
     ensureSynced(): void {
         const dispatcher = getGlobalDispatcher();
-        if (dispatcher === this.dispatcher) {
-            return;
-        }
+        if (dispatcher === this.dispatcher) return;
         this.dispatcher = dispatcher;
         if (this.status === 'deferred') {
-            this._syncState(this.status);
+            this._syncState('deferred');
         } else if (this.status === 'loading' || this.status === 'loaded') {
             this._requestImport();
         }
