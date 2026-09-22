@@ -88,8 +88,10 @@ export class DOM {
      * Sanitize an HTML string - this might not be enough to prevent all XSS attacks
      * Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
      * (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
+     *
+     * Returns the sanitized nodes rather than a string, since re-parsing serialized HTML can produce a different tree.
      */
-    public static sanitize(str: string): string {
+    public static sanitize(str: string): DocumentFragment {
         const parser = new DOMParser();
         const doc = parser.parseFromString(str, 'text/html');
         const html = doc.body || document.createElement('body');
@@ -100,7 +102,9 @@ export class DOM {
 
         DOM.clean(html);
 
-        return html.innerHTML;
+        const fragment = document.createDocumentFragment();
+        fragment.append(...html.childNodes);
+        return fragment;
     }
 
     /**
