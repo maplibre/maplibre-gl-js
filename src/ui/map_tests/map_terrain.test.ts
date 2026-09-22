@@ -316,7 +316,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
-    test('a DEM tile landing while a pan drag is in flight moves the camera with the center at once, and the release keeps the zoom', async () => {
+    test('a DEM tile landing while a pan drag is in flight leaves the camera where the drag put it, and the release re-solves the zoom onto the new terrain without moving it', async () => {
         const map = await createMapOverTerrain(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
 
@@ -325,12 +325,13 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
         terrainElevation.mockReturnValue(1000);
         demTileLands(map);
-        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(map.getZoom()).toBe(11);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 110, clientY: 150});
         map._renderTaskQueue.run();
         expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBe(11);
+        expect(map.getZoom()).toBeCloseTo(11.131812, 5);
     });
 
     test('after easeTo or flyTo the center elevation follows the terrain again on the next frame', async () => {
@@ -350,7 +351,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getZoom()).toBe(13);
     });
 
-    test('the gesture after a terrain change at rest starts from the moved camera instead of snapping back', async () => {
+    test('the gesture after terrain changes at rest starts from the camera as rendered, after a DEM tile landing and after the per-frame clamp moved it further', async () => {
         const map = await createMapOverTerrain(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
 
@@ -360,14 +361,17 @@ describe('Terrain changing under and around a gesture', () => {
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
         map._renderTaskQueue.run();
         terrainElevation.mockReturnValue(1000);
-        map.redraw();
+        demTileLands(map);
         expect(map.getCameraTargetElevation()).toBe(1000);
+        terrainElevation.mockReturnValue(1500);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1500);
 
         simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 150});
         simulate.mousemove(window.document.body, {buttons: 1, clientX: 110, clientY: 150});
         map._renderTaskQueue.run();
 
-        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getCameraTargetElevation()).toBe(1500);
     });
 });
 
