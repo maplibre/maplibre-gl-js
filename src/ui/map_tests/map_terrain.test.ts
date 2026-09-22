@@ -281,26 +281,7 @@ describe('Gesture end on terrain', () => {
 });
 
 describe('Terrain loading under a gesture', () => {
-    test('a rotate drag holds the center elevation until it ends', async () => {
-        const map = createMap({interactive: true});
-        await map.once('style.load');
-        let terrainElevation = 0;
-        map.terrain = {...createTerrain(), getElevationForLngLat: () => terrainElevation} as any as Terrain;
-        map._camera.terrain = map.terrain;
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        terrainElevation = 1000;
-        map.redraw();
-        expect(map.getCameraTargetElevation()).toBe(0);
-
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        expect(map.getCameraTargetElevation()).toBe(1000);
-    });
-
-    test('a rotate drag turns the same bearing per pixel before and after the terrain under the center rises', async () => {
+    test('a rotate drag holds the center elevation until it ends and turns the same bearing per pixel while the terrain under the center rises', async () => {
         const map = createMap({interactive: true, zoom: 11, pitch: 60});
         await map.once('style.load');
         let terrainElevation = 0;
@@ -318,116 +299,50 @@ describe('Terrain loading under a gesture', () => {
         const bearingAfterFirstMove = map.getBearing();
         terrainElevation = 3000;
         map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(0);
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 60, clientY: 180});
         map._renderTaskQueue.run();
         const bearingAfterSecondMove = map.getBearing();
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 60, clientY: 180});
+        map._renderTaskQueue.run();
 
         expect(bearingAfterSecondMove - bearingAfterFirstMove).toBeCloseTo(bearingAfterFirstMove - bearingAtStart, 5);
+        expect(map.getCameraTargetElevation()).toBe(3000);
     });
 });
 
 describe('Terrain changing after a gesture', () => {
-    test('a DEM tile landing after a rotate drag ends re-solves the zoom around the camera', async () => {
+    function rotateDrag(map: Map) {
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+    }
+
+    function demTileLands(map: Map) {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
+    }
+
+    test('a DEM tile landing and then the removal of the terrain after a rotate drag both re-solve the zoom around the camera', async () => {
         const map = createMap({interactive: true, zoom: 11});
         await map.once('load');
         map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
         map.setTerrain({source: 'dem'});
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
 
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
+        rotateDrag(map);
         terrainElevation.mockReturnValue(1000);
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
+        demTileLands(map);
 
         expect(map.getCameraTargetElevation()).toBe(1000);
         expect(map.getZoom()).toBeCloseTo(11.131812, 5);
-    });
 
-    test('removing the terrain after a rotate drag ends re-solves the zoom around the camera', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
-        map.redraw();
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
         map.setTerrain(null);
 
         expect(map.getCameraTargetElevation()).toBe(0);
-        expect(map.getZoom()).toBeCloseTo(10.879229, 5);
-    });
-
-    test('a DEM tile landing after jumpTo keeps the zoom and moves the camera with the center', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        map.jumpTo({center: [1, 1]});
-        terrainElevation.mockReturnValue(1000);
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
-
-        expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBe(11);
-    });
-
-    test('a DEM tile landing after flyTo keeps the zoom and moves the camera with the center', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        map.flyTo({center: [1, 1], zoom: 12, animate: false});
-        terrainElevation.mockReturnValue(1000);
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
-
-        expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBe(12);
-    });
-
-    test('a DEM tile landing after easeTo keeps the zoom and moves the camera with the center', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        map.easeTo({center: [1, 1], zoom: 12, duration: 0});
-        terrainElevation.mockReturnValue(1000);
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
-
-        expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBe(12);
+        expect(map.getZoom()).toBeCloseTo(11, 5);
     });
 
     test('terrain set while a rotate drag is in flight re-solves the zoom around the camera', async () => {
@@ -444,6 +359,35 @@ describe('Terrain changing after a gesture', () => {
 
         expect(map.getCameraTargetElevation()).toBe(1000);
         expect(map.getZoom()).toBeCloseTo(11.131812, 5);
+    });
+
+    test('a DEM tile landing after jumpTo, easeTo or flyTo keeps the zoom and moves the camera with the center', async () => {
+        const map = createMap({interactive: true, zoom: 11});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        rotateDrag(map);
+        map.jumpTo({center: [1, 1]});
+        terrainElevation.mockReturnValue(1000);
+        demTileLands(map);
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getZoom()).toBe(11);
+
+        rotateDrag(map);
+        map.easeTo({center: [2, 2], zoom: 12, duration: 0});
+        terrainElevation.mockReturnValue(2000);
+        demTileLands(map);
+        expect(map.getCameraTargetElevation()).toBe(2000);
+        expect(map.getZoom()).toBe(12);
+
+        rotateDrag(map);
+        map.flyTo({center: [3, 3], zoom: 13, animate: false});
+        terrainElevation.mockReturnValue(3000);
+        demTileLands(map);
+        expect(map.getCameraTargetElevation()).toBe(3000);
+        expect(map.getZoom()).toBe(13);
     });
 });
 
