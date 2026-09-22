@@ -28,14 +28,38 @@ const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
  */
 const RELATIVE_URL_BASE = 'https://maplibre.invalid/';
 
+type ElementInternals = {
+    getAttribute: Element['getAttribute'];
+    getAttributeNames: Element['getAttributeNames'];
+    querySelectorAll: (this: Element, selectors: string) => NodeListOf<Element>;
+    remove: Element['remove'];
+    removeAttribute: Element['removeAttribute'];
+    localName: (this: Element) => string;
+    namespaceURI: (this: Element) => string;
+};
+
+let elementInternals: ElementInternals;
+
 /**
- * A form control named `children`, `attributes` or `remove` shadows the same-named property of its form element,
- * which would otherwise let untrusted markup hide a node from the sanitizer walking that tree. Reading these off
- * the prototype instead of off the element sidesteps the shadowing.
+ * The `Element` members the sanitizer uses, read off the prototype rather than off the element it is looking at.
+ * A form control named `children`, `remove` or `localName` shadows the same-named property of its own form element,
+ * which would otherwise let untrusted markup pick what the sanitizer walking that tree sees.
+ *
+ * They are read on first use rather than when this module is loaded, since the module is also imported where there
+ * is no DOM at all, such as during server side rendering.
  */
-const {getAttribute, getAttributeNames, querySelectorAll, remove, removeAttribute} = Element.prototype;
-const {get: localName} = Object.getOwnPropertyDescriptor(Element.prototype, 'localName');
-const {get: namespaceURI} = Object.getOwnPropertyDescriptor(Element.prototype, 'namespaceURI');
+function getElementInternals(): ElementInternals {
+    elementInternals ??= {
+        getAttribute: Element.prototype.getAttribute,
+        getAttributeNames: Element.prototype.getAttributeNames,
+        querySelectorAll: Element.prototype.querySelectorAll,
+        remove: Element.prototype.remove,
+        removeAttribute: Element.prototype.removeAttribute,
+        localName: Object.getOwnPropertyDescriptor(Element.prototype, 'localName').get as () => string,
+        namespaceURI: Object.getOwnPropertyDescriptor(Element.prototype, 'namespaceURI').get as () => string
+    };
+    return elementInternals;
+}
 
 export class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document?.documentElement.style;
@@ -131,7 +155,8 @@ export class DOM {
         const doc = parser.parseFromString(str, 'text/html');
         const body = doc.body || document.createElement('body');
 
-        for (const element of Array.from(querySelectorAll.call(body, '*') as NodeListOf<Element>)) {
+        const {querySelectorAll, remove} = getElementInternals();
+        for (const element of Array.from<Element>(querySelectorAll.call(body, '*'))) {
             if (DOM.isAllowedElement(element)) {
                 DOM.removeDisallowedAttributes(element);
             } else {
@@ -150,10 +175,12 @@ export class DOM {
      * parsing rules and is what makes most mutation attacks possible in the first place.
      */
     private static isAllowedElement(element: Element): boolean {
+        const {namespaceURI, localName} = getElementInternals();
         return namespaceURI.call(element) === HTML_NAMESPACE && ALLOWED_TAGS.has(localName.call(element));
     }
 
     private static removeDisallowedAttributes(element: Element) {
+        const {getAttributeNames, getAttribute, removeAttribute} = getElementInternals();
         for (const name of getAttributeNames.call(element)) {
             if (DOM.isAllowedAttribute(name, getAttribute.call(element, name) ?? '')) continue;
             removeAttribute.call(element, name);
