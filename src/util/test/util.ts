@@ -206,10 +206,8 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  */
 export function terminateGlobalWorkers(): void {
     const pool = getGlobalWorkerPool();
-    if (!pool.workersPromise) return;
-    pool.acquire('terminateGlobalWorkers');
     for (const mapId of Object.keys(pool.active)) {
-        if (mapId !== 'terminateGlobalWorkers') pool.release(mapId);
+        pool.release(mapId);
     }
     pool.release('terminateGlobalWorkers');
 }

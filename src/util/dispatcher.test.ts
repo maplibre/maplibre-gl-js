@@ -22,7 +22,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         const dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.getActors();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
@@ -45,7 +45,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         let dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.getActors();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
 
         dispatcher.remove({releaseWorkers: false});
@@ -53,7 +53,7 @@ describe('Dispatcher', () => {
         expect(releaseCalled).toHaveLength(0);
 
         dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.getActors();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
@@ -70,7 +70,7 @@ describe('Dispatcher', () => {
 
         const workerPool = new WorkerPool();
         const dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.getActors();
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
     });
@@ -87,7 +87,7 @@ describe('Dispatcher', () => {
         const dispatcher = new Dispatcher(workerPool, 1);
         const listener = vi.fn();
         dispatcher.on('error', listener);
-        await dispatcher.actorsPromise;
+        await dispatcher.getActors();
 
         worker.dispatchEvent(new ErrorEvent('error'));
 
