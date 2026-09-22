@@ -28,6 +28,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.id = mapId;
         this.removed = false;
         this.workerErrorSubscriptions = [];
+        if (mapId !== GLOBAL_DISPATCHER_ID) mapDispatchers.add(this);
         this.actorsPromise = this.initActors(mapId);
     }
 
@@ -86,6 +87,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.actors = [];
         this.workerErrorSubscriptions = [];
         this.setEventedParent(null);
+        mapDispatchers.delete(this);
         if (mapRemoved) {
             this.workerPool.release(this.id);
             releaseGlobalDispatcherIfIdle();
@@ -108,6 +110,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
 }
 
 let globalDispatcher: Dispatcher;
+const mapDispatchers = new Set<Dispatcher>();
 const importedScriptUrls: string[] = [];
 
 /**
@@ -119,11 +122,9 @@ const importedScriptUrls: string[] = [];
  * pool. The dispatcher is recreated on demand with the pool's current workers.
  */
 function releaseGlobalDispatcherIfIdle(): void {
-    if (!globalDispatcher) return;
-    const pool = globalDispatcher.workerPool;
-    if (pool.numActive() > (pool.isPreloaded() ? 2 : 1)) return;
+    if (!globalDispatcher || mapDispatchers.size > 0) return;
     const dispatcher = globalDispatcher;
-    globalDispatcher = null;
+    globalDispatcher = undefined;
     dispatcher.remove();
 }
 
