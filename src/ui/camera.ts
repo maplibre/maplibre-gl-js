@@ -351,19 +351,6 @@ export class Camera extends Evented<MapEventType> {
     elevationFreeze: boolean;
     /**
      * @internal
-     * Which of the two stays in place when the terrain under the center changes with the map at rest
-     * (a DEM tile lands, or the terrain is set or removed): the camera or the center.
-     * - `true`: a gesture has moved the view since the center was last placed. The camera stays, and
-     *   zoom and center are re-solved around it.
-     * - `false`: `jumpTo`, `easeTo`, `flyTo` or the map options placed the center. The center stays, and
-     *   the camera moves with its elevation.
-     *
-     * {@link Camera.elevationFreeze} covers the gesture itself, where terrain changes are ignored until
-     * the gesture's end re-solves the camera onto the terrain. This covers the time after that end.
-     */
-    terrainChangeKeepsCamera: boolean;
-    /**
-     * @internal
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
@@ -676,7 +663,6 @@ export class Camera extends Evented<MapEventType> {
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
-        this.terrainChangeKeepsCamera = false;
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
@@ -850,7 +836,6 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
-        if (!options.freezeElevation) this.terrainChangeKeepsCamera = false;
         if (this.terrain) {
             this._prepareElevation(easeHandler.elevationCenter);
         }
@@ -926,20 +911,16 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Applies a change of the terrain under the center to the transform: the terrain was set or
-     * removed, or a DEM tile landed with the map at rest. Leaves the center elevation alone when the
-     * terrain under the center has not changed or `centerClampedToGround` is off.
-     * {@link Camera.terrainChangeKeepsCamera} decides whether the camera or the center stays in place.
+     * removed, or a DEM tile landed. The center keeps its place and the camera moves with the
+     * center's elevation, as it does on every rendered frame while no gesture holds the elevation.
+     * Written through the requested camera state, so a gesture or ease in flight continues from
+     * the moved camera instead of snapping back to the state it started from.
      */
     applyTerrainChange(): void {
         const tr = this.getTransformForUpdate();
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
-        const elevation = this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0;
-        if (this.getCenterClampedToGround() && elevation !== tr.elevation) {
-            if (this.terrainChangeKeepsCamera) {
-                tr.recalculateZoomAndCenter(this.terrain);
-            } else {
-                tr.setElevation(elevation);
-            }
+        if (this.getCenterClampedToGround()) {
+            tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
         }
         this.applyUpdatedTransform(tr);
     }
@@ -1213,7 +1194,6 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (!options.freezeElevation) this.terrainChangeKeepsCamera = false;
         if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
 
         this._ease((k) => {

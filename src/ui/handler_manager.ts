@@ -721,7 +721,6 @@ export class HandlerManager {
 
         // fire start events only after this._eventsInProgress has been updated
         if (!wasMoving && nowMoving) {
-            this._camera.terrainChangeKeepsCamera = true;
             this._fireEvent('movestart', nowMoving.originalEvent);
         }
 

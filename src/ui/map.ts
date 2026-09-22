@@ -3029,8 +3029,6 @@ export class Map extends Evented<MapEventType> {
         }
         if (isTerrainSourceEvent && event.tile) {
             this.painter.markTerrainDepthDirty();
-        }
-        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
             this._camera.applyTerrainChange();
         }
 

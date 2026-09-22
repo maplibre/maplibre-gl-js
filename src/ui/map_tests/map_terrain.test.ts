@@ -311,81 +311,44 @@ describe('Terrain loading under a gesture', () => {
     });
 });
 
-describe('Terrain changing after a gesture', () => {
-    function rotateDrag(map: Map) {
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-    }
+describe('Terrain changing around a gesture', () => {
+    test('a DEM tile landing while a pan drag is in flight moves the camera with the center at once, and the release keeps the zoom', async () => {
+        const map = createMap({interactive: true, zoom: 11});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
 
-    function demTileLands(map: Map) {
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 110, clientY: 150});
+        map._renderTaskQueue.run();
+        terrainElevation.mockReturnValue(1000);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
-    }
-
-    test('a DEM tile landing and then the removal of the terrain after a rotate drag both re-solve the zoom around the camera', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
-
-        rotateDrag(map);
-        terrainElevation.mockReturnValue(1000);
-        demTileLands(map);
-
         expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBeCloseTo(11.131812, 5);
 
-        map.setTerrain(null);
-
-        expect(map.getCameraTargetElevation()).toBe(0);
-        expect(map.getZoom()).toBeCloseTo(11, 5);
-    });
-
-    test('terrain set while a rotate drag is in flight re-solves the zoom around the camera', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('style.load');
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 110, clientY: 150});
         map._renderTaskQueue.run();
-        map.terrain = createTerrain();
-        map._camera.setTerrain(map.terrain);
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
-        map._renderTaskQueue.run();
-
-        expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBeCloseTo(11.131812, 5);
-    });
-
-    test('a DEM tile landing after jumpTo, easeTo or flyTo keeps the zoom and moves the camera with the center', async () => {
-        const map = createMap({interactive: true, zoom: 11});
-        await map.once('load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        map.setTerrain({source: 'dem'});
-        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
-
-        rotateDrag(map);
-        map.jumpTo({center: [1, 1]});
-        terrainElevation.mockReturnValue(1000);
-        demTileLands(map);
         expect(map.getCameraTargetElevation()).toBe(1000);
         expect(map.getZoom()).toBe(11);
+    });
 
-        rotateDrag(map);
+    test('after easeTo or flyTo the center elevation follows the terrain again on the next frame', async () => {
+        const map = createMap({interactive: true, zoom: 11});
+        await map.once('style.load');
+        let terrainElevation = 0;
+        map.terrain = {...createTerrain(), getElevationForLngLat: () => terrainElevation} as any as Terrain;
+        map._camera.terrain = map.terrain;
+
         map.easeTo({center: [2, 2], zoom: 12, duration: 0});
-        terrainElevation.mockReturnValue(2000);
-        demTileLands(map);
+        terrainElevation = 2000;
+        map.redraw();
         expect(map.getCameraTargetElevation()).toBe(2000);
         expect(map.getZoom()).toBe(12);
 
-        rotateDrag(map);
         map.flyTo({center: [3, 3], zoom: 13, animate: false});
-        terrainElevation.mockReturnValue(3000);
-        demTileLands(map);
+        terrainElevation = 3000;
+        map.redraw();
         expect(map.getCameraTargetElevation()).toBe(3000);
         expect(map.getZoom()).toBe(13);
     });
