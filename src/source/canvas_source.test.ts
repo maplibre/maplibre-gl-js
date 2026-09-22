@@ -5,6 +5,7 @@ import {extend} from '../util/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {waitForEvent} from '../util/test/util.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -38,7 +39,7 @@ class StubMap extends Evented {
     constructor() {
         super();
         this.transform = new MercatorTransform();
-        this.style = {};
+        this.style = {projection: new MercatorProjection()};
         this.painter = {
             context: {
                 gl: {}

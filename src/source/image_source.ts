@@ -4,7 +4,7 @@ import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {Texture} from '../webgl/texture.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {isAbortError} from '../util/abort_error.ts';
@@ -16,6 +16,7 @@ import {mat2} from 'gl-matrix';
 import {createTileMeshWithBuffers} from '../util/create_tile_mesh.ts';
 
 import type {Source} from './source.ts';
+import type {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import type {CanvasSourceSpecification} from './canvas_source.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -423,8 +424,12 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         // and create a buffer with the corner coordinates. These coordinates
         // may be outside the tile, because raster tiles aren't clipped when rendering.
 
-        // transform the geo coordinates into (zoom 0) tile space coordinates
-        const cornerCoords = coordinates.map(MercatorCoordinate.fromLngLat);
+        // transform the geo coordinates into (zoom 0) tile space coordinates of the map's projection
+        const worldCoordinateHelper = this.map.style.projection.worldCoordinateHelper;
+        const cornerCoords = coordinates.map(coordinate => {
+            const lngLat = LngLat.convert(coordinate);
+            return worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
+        });
 
         // Compute the coordinates of the tile we'll use to hold this image's
         // render data

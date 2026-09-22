@@ -3,6 +3,7 @@ import {getMockDispatcher, waitForEvent} from '../util/test/util.ts';
 import {extend} from '../util/util.ts';
 import {VideoSource} from './video_source.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Evented} from '../util/evented.ts';
@@ -18,7 +19,7 @@ class StubMap extends Evented {
     constructor() {
         super();
         this.transform = new MercatorTransform();
-        this.style = {};
+        this.style = {projection: new MercatorProjection()};
         this.painter = {
             context: {
                 gl: {
@@ -37,6 +38,7 @@ function createSource(options) {
     const source = new VideoSource('id', options, getMockDispatcher(), options.eventedParent);
 
     source.video = c;
+    source.map = new StubMap() as any;
     return source;
 }
 

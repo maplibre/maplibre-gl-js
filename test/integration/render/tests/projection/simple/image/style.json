@@ -1,0 +1,33 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Renders an image source in the built-in simple (identity CRS) projection. At zoom 0 a 256px view centered on 0,0 shows lng/lat -45..45, so the image placed on lng 0..45 / lat 0..45 fills the top-right quadrant (x 128..256, y 0..128) exactly, with no mercator latitude stretch.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [0, 0],
+  "zoom": 0,
+  "projection": {"type": "simple"},
+  "sources": {
+    "image": {
+      "type": "image",
+      "url": "local://image/0.png",
+      "coordinates": [[0, 45], [45, 45], [45, 0], [0, 0]]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {"raster-fade-duration": 0}
+    }
+  ]
+}
