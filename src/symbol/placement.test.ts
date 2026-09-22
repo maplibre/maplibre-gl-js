@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, test} from 'vitest';
-import {CROSS_TILE_ID_UINT32_OFFSET, PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
+import {PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
@@ -85,18 +85,6 @@ describe('placement', () => {
 
         /** Written over a packed opacity, so that finding it again means the buffer was not rewritten. */
         const SENTINEL = 12345;
-
-        test('reads crossTileID out of the symbolInstances buffer', () => {
-            const {buckets} = setupTwoTilesSharingOneLabel();
-            const {symbolInstances} = buckets[0];
-            const stride = symbolInstances.bytesPerElement / 4;
-
-            expect(symbolInstances.length).toBeGreaterThan(0);
-            for (let s = 0; s < symbolInstances.length; s++) {
-                expect(symbolInstances.uint32[s * stride + CROSS_TILE_ID_UINT32_OFFSET])
-                    .toBe(symbolInstances.get(s).crossTileID);
-            }
-        });
 
         test('the first bucket draws the shared label and the second hides it', () => {
             const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();

@@ -177,7 +177,7 @@ export type BucketPart = {
 export type CrossTileID = string | number;
 
 /** Where `crossTileID` sits within one `SymbolInstanceArray` element, counted in uint32s. */
-export const CROSS_TILE_ID_UINT32_OFFSET: number =
+const CROSS_TILE_ID_UINT32_OFFSET: number =
     symbolInstanceLayout.members.find(member => member.name === 'crossTileID').offset / 4;
 
 /** What the last rewrite of a bucket's opacity buffers read, one entry per symbol. */
