@@ -319,7 +319,13 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddProtocolAction/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddProtocolResponseData/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/Alignment/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnchoredCameraOptions/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/</loc>
