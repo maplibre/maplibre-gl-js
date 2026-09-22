@@ -294,10 +294,10 @@ export class Camera extends Evented<MapEventType> {
     transform: ITransform;
     /**
      * @internal
-     * Copy of the map's `terrain` (which the `Map` owns), behind the {@link Camera.terrain} accessors.
+     * Copy of the map's `terrain` (which the `Map` owns).
      * The camera reads terrain for elevation handling but does not own it.
      */
-    _terrain: Terrain;
+    terrain: Terrain;
     cameraHelper: ICameraHelper;
     /**
      * @internal
@@ -361,7 +361,7 @@ export class Camera extends Evented<MapEventType> {
      * {@link Camera.elevationFreeze} covers the gesture itself, where terrain changes are ignored until
      * the gesture's end re-solves the camera onto the terrain. This covers the time after that end.
      */
-    _terrainChangeKeepsCamera: boolean;
+    terrainChangeKeepsCamera: boolean;
     /**
      * @internal
      * Used to track accumulated changes during continuous interaction
@@ -416,7 +416,7 @@ export class Camera extends Evented<MapEventType> {
         this._zoomSnap = options.zoomSnap;
         this._requestRenderFrame = options.requestRenderFrame;
         this._cancelRenderFrame = options.cancelRenderFrame;
-        this._terrain = options.terrain;
+        this.terrain = options.terrain;
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
         this._stopHandlers = options.stopHandlers ?? (() => {});
@@ -428,13 +428,12 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * The map's terrain, or null when it has none. Setting it brings the center elevation up to date
-     * with the new terrain, see {@link Camera._applyTerrainChange}.
+     * Hands the camera the map's terrain, or null when the map has none, and brings the center
+     * elevation up to date with it, see {@link Camera.applyTerrainChange}.
      */
-    get terrain(): Terrain { return this._terrain; }
-    set terrain(terrain: Terrain) {
-        this._terrain = terrain;
-        this._applyTerrainChange();
+    setTerrain(terrain: Terrain): void {
+        this.terrain = terrain;
+        this.applyTerrainChange();
     }
 
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
@@ -677,7 +676,7 @@ export class Camera extends Evented<MapEventType> {
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
-        this._terrainChangeKeepsCamera = false;
+        this.terrainChangeKeepsCamera = false;
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
@@ -851,7 +850,7 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
-        if (!options.freezeElevation) this._terrainChangeKeepsCamera = false;
+        if (!options.freezeElevation) this.terrainChangeKeepsCamera = false;
         if (this.terrain) {
             this._prepareElevation(easeHandler.elevationCenter);
         }
@@ -929,9 +928,9 @@ export class Camera extends Evented<MapEventType> {
      * Applies a change of the terrain under the center to the transform: the terrain was set or
      * removed, or a DEM tile landed with the map at rest. Leaves the center elevation alone when the
      * terrain under the center has not changed or `centerClampedToGround` is off.
-     * {@link Camera._terrainChangeKeepsCamera} decides whether the camera or the center stays in place.
+     * {@link Camera.terrainChangeKeepsCamera} decides whether the camera or the center stays in place.
      */
-    _applyTerrainChange(): void {
+    applyTerrainChange(): void {
         const terrain = this.terrain;
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(terrain ? terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
@@ -942,7 +941,7 @@ export class Camera extends Evented<MapEventType> {
         if (elevation === tr.elevation) {
             return;
         }
-        if (!this._terrainChangeKeepsCamera) {
+        if (!this.terrainChangeKeepsCamera) {
             tr.setElevation(elevation);
             return;
         }
@@ -1220,7 +1219,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (!options.freezeElevation) this._terrainChangeKeepsCamera = false;
+        if (!options.freezeElevation) this.terrainChangeKeepsCamera = false;
         if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
 
         this._ease((k) => {

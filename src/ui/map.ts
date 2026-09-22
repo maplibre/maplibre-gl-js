@@ -2984,7 +2984,7 @@ export class Map extends Evented<MapEventType> {
             this.terrain = null;
             this.painter.renderToTexture = null;
             this.painter.destroyRTTResources();
-            this._camera.terrain = null;
+            this._camera.setTerrain(null);
         } else {
             // add terrain
             const tileManager = this.style.tileManagers[options.source];
@@ -3006,7 +3006,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this._camera.terrain = this.terrain;
+            this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -3031,7 +3031,7 @@ export class Map extends Evented<MapEventType> {
             this.painter.markTerrainDepthDirty();
         }
         if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
-            this._camera._applyTerrainChange();
+            this._camera.applyTerrainChange();
         }
 
         if (!event.tile) return;

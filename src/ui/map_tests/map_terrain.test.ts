@@ -438,7 +438,7 @@ describe('Terrain changing after a gesture', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
-        map._camera.terrain = map.terrain;
+        map._camera.setTerrain(map.terrain);
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 110, clientY: 150});
         map._renderTaskQueue.run();
 
@@ -455,7 +455,6 @@ describe('Keep camera outside terrain', () => {
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
         terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
-        terrainStub.getMinTileElevationForLngLatZoom = vi.fn(() => 0);
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;
 
