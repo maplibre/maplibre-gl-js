@@ -1,5 +1,6 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
+import {MessageType} from './actor_messages.ts';
 import {Dispatcher, getGlobalDispatcher, onGlobalDispatcherCreated} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {workerFactory} from './web_worker.ts';
@@ -132,12 +133,23 @@ describe('global dispatcher', () => {
         expect(getGlobalDispatcher()).toBe(globalDispatcher);
     });
 
-    test('a dispatcher kept from before the workers were terminated fails loudly', async () => {
+    test('a dispatcher kept from before the workers were terminated warns instead of hanging', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const globalDispatcher = getGlobalDispatcher();
 
         terminateGlobalWorkers();
+        await globalDispatcher.broadcast(MessageType.setReferrer, 'https://example.com');
 
-        await expect(globalDispatcher.getActor()).rejects.toThrow('This global dispatcher was discarded');
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('the global dispatcher was discarded'));
+    });
+
+    test('warns as terminating the workers drops a message handler registered on the global dispatcher', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        await getGlobalDispatcher().registerMessageHandler(MessageType.importScript, async () => {});
+
+        terminateGlobalWorkers();
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining(MessageType.importScript));
     });
 
     test('prewarm keeps the workers alive once the last map is removed', () => {
