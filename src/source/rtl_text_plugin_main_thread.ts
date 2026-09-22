@@ -20,7 +20,6 @@ class RTLMainThreadPlugin extends Evented {
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
-        // Resolve the dispatcher before the status moves, so a replay triggered by creating it does not re-send this state.
         const dispatcher = getGlobalDispatcher();
         this.status = statusToSend;
         return dispatcher.broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})

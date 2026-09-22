@@ -206,7 +206,6 @@ function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
  * ```
  */
 async function importScriptInWorkers(workerUrl: string): Promise<void> {
-    // Resolve the dispatcher first: recreating it replays scripts already in the map, replacing their promises.
     const dispatcher = getGlobalDispatcher();
     if (!scriptsImportedIntoWorkers.has(workerUrl)) {
         scriptsImportedIntoWorkers.set(workerUrl, dispatcher.broadcast(MessageType.importScript, workerUrl));

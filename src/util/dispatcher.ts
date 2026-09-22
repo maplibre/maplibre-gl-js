@@ -32,20 +32,20 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 
     /**
-     * Creates one actor per worker in the pool.
-     * The global dispatcher is not a map, so it borrows the workers rather than keeping them alive.
-     * Every other dispatcher brings the global one back first, since its workers answer their own
-     * `getResource` requests through it.
+     * Creates one actor per worker. The global dispatcher borrows the workers rather than keeping
+     * them alive; every other dispatcher revives it first, since workers answer `getResource` through it.
      */
     private async initActors(mapId: string | number): Promise<Actor[]> {
-        let workersPromise: Promise<ActorTarget[]>;
+        let workers: ActorTarget[];
         if (mapId === GLOBAL_DISPATCHER_ID) {
-            workersPromise = this.workerPool.borrow(dropGlobalDispatcher);
+            workers = await this.workerPool.borrow(() => {
+                globalDispatcher.remove(false);
+                globalDispatcher = undefined;
+            });
         } else {
             getGlobalDispatcher();
-            workersPromise = this.workerPool.acquire(mapId);
+            workers = await this.workerPool.acquire(mapId);
         }
-        const workers = await workersPromise;
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
             this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
@@ -151,15 +151,6 @@ export function getGlobalDispatcher(): Dispatcher {
         }
     }
     return globalDispatcher;
-}
-
-/**
- * Discards the global dispatcher once the pool terminates its workers, since its actors now point at dead workers.
- * The next caller gets a fresh one built around whatever workers the pool creates next.
- */
-function dropGlobalDispatcher(): void {
-    globalDispatcher.remove(false);
-    globalDispatcher = undefined;
 }
 
 onGlobalDispatcherCreated(() => {
