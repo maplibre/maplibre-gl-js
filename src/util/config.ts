@@ -9,10 +9,8 @@ import type {RequestParameters, GetResourceResponse} from './ajax.ts';
  * - `'image'`: an `ImageBitmap` or `HTMLImageElement`, used as is, or an `ArrayBuffer` of encoded image
  *   bytes, which are decoded first. A handler that already holds decoded pixels should return them as an
  *   `ImageBitmap`, since encoding them only makes the library decode them again.
- *
- * `null` stands for a resource without content, such as an empty tile.
  */
-export type AddProtocolResponseData = ArrayBuffer | ImageBitmap | HTMLImageElement | string | object | null;
+export type AddProtocolResponseData = ArrayBuffer | ImageBitmap | HTMLImageElement | string | object;
 
 /**
  * This method type is used to register a protocol handler.
