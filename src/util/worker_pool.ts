@@ -39,13 +39,18 @@ export class WorkerPool {
         return this.ensureWorkers();
     }
 
+    /** Workers that failed to start are not cached, so the next acquirer tries again. */
     private async ensureWorkers(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {
             const promises: Array<Promise<Worker>> = [];
             while (promises.length < WorkerPool.workerCount) {
                 promises.push(workerFactory());
             }
-            this.workersPromise = Promise.all(promises);
+            const workersPromise = Promise.all(promises);
+            workersPromise.catch(() => {
+                if (this.workersPromise === workersPromise) this.workersPromise = null;
+            });
+            this.workersPromise = workersPromise;
         }
         return (await this.workersPromise).slice();
     }

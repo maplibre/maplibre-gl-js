@@ -21,6 +21,10 @@ export class Dispatcher extends Evented<ErrorEventType> {
     private removed: boolean;
     private workerErrorSubscriptions: Subscription[];
 
+    /**
+     * The global dispatcher builds its actors from {@link getGlobalDispatcher} instead, once the
+     * instance is reachable, since replaying worker state can call back into it.
+     */
     constructor(workerPool: WorkerPool, mapId: string | number) {
         super();
         this.workerPool = workerPool;
@@ -30,7 +34,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.messageHandlers = {};
         this.removed = false;
         this.workerErrorSubscriptions = [];
-        this.getActors();
+        if (mapId !== GLOBAL_DISPATCHER_ID) this.getActors();
     }
 
     /**
@@ -53,7 +57,9 @@ export class Dispatcher extends Evented<ErrorEventType> {
             }, false));
             const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
-            actor.messageHandlers = {...this.messageHandlers};
+            for (const [type, handler] of Object.entries(this.messageHandlers)) {
+                actor.registerMessageHandler(type as MessageType, handler);
+            }
             return actor;
         });
         if (!this.actors.length) throw new Error('No actors found');
@@ -82,8 +88,8 @@ export class Dispatcher extends Evented<ErrorEventType> {
         if (!this.actorsPromise) {
             this.actorsPromise = this.initActors(this.id);
             if (this.id === GLOBAL_DISPATCHER_ID) {
-                for (const replay of globalWorkerStateReplays) {
-                    replay();
+                for (const listener of globalWorkersCreatedListeners.slice()) {
+                    listener();
                 }
             }
         }
@@ -146,11 +152,13 @@ export class Dispatcher extends Evented<ErrorEventType> {
 let globalDispatcher: Dispatcher;
 
 /**
- * Latest import attempt per script url sent by `importScriptInWorkers`, kept so the scripts can be
- * re-sent to new workers. A failed attempt leaves `undefined` so the next call retries.
+ * Latest import attempt per script url sent by {@link importScriptInWorkers}, kept so the scripts
+ * can be re-sent to new workers. A failed attempt leaves `undefined` so the next call retries.
+ * Entries are refreshed by the listener below, which is why `getGlobalDispatcher()` has to run
+ * its listeners synchronously before {@link importScriptInWorkers} reads this.
  */
-export const scriptsImportedIntoWorkers: Map<string, Promise<unknown> | undefined> = new Map();
-const globalWorkerStateReplays: Array<() => void> = [];
+const scriptsImportedIntoWorkers: Map<string, Promise<unknown> | undefined> = new Map();
+const globalWorkersCreatedListeners: Array<() => void> = [];
 
 /**
  * Registers a callback that restores state living in the workers rather than in any one map.
@@ -160,7 +168,8 @@ const globalWorkerStateReplays: Array<() => void> = [];
  *
  * Message handlers registered through {@link getGlobalDispatcher} and scripts loaded through
  * {@link importScriptInWorkers} come back on their own and do not need this.
- * @param replay - sends the worker configuration again
+ * @param listener - sends the worker configuration again
+ * @returns a subscription object that can be used to stop sending it
  *
  * @example
  * ```ts
@@ -169,8 +178,14 @@ const globalWorkerStateReplays: Array<() => void> = [];
  * });
  * ```
  */
-export function onGlobalWorkersCreated(replay: () => void): void {
-    globalWorkerStateReplays.push(replay);
+export function onGlobalWorkersCreated(listener: () => void): Subscription {
+    globalWorkersCreatedListeners.push(listener);
+    return {
+        unsubscribe: () => {
+            const index = globalWorkersCreatedListeners.indexOf(listener);
+            if (index !== -1) globalWorkersCreatedListeners.splice(index, 1);
+        }
+    };
 }
 
 /**
@@ -195,7 +210,7 @@ export function getGlobalDispatcher(): Dispatcher {
     return globalDispatcher;
 }
 
-export function broadcastImportScript(url: string): Promise<unknown> {
+function broadcastImportScript(url: string): Promise<unknown> {
     const importPromise = getGlobalDispatcher().broadcast(MessageType.importScript, url);
     scriptsImportedIntoWorkers.set(url, importPromise);
     importPromise.catch((error) => {
@@ -205,6 +220,45 @@ export function broadcastImportScript(url: string): Promise<unknown> {
         }
     });
     return importPromise;
+}
+
+/**
+ * Allows loading javascript code in the worker thread.
+ * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
+ *
+ * It can be useful for the following examples:
+ * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
+ * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
+ * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
+ *
+ * Each url is imported once; calling this again with the same url waits for the first import.
+ * The scripts are imported again automatically whenever the pooled workers are recreated.
+ * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
+ * @returns
+ *
+ * @example
+ * ```ts
+ * // below is an example of sending a js file to the worker to load the method there
+ * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
+ * // add-protocol-worker.js
+ * async function loadFn(params, abortController) {
+ *     const t = await fetch(`https://${params.url.split("://")[1]}`);
+ *     if (t.status == 200) {
+ *         const buffer = await t.arrayBuffer();
+ *         return {data: buffer}
+ *     } else {
+ *         throw new Error(`Tile fetch error: ${t.statusText}`);
+ *     }
+ * }
+ * self.addProtocol('custom', loadFn);
+ *
+ * // main.js
+ * importScriptInWorkers('add-protocol-worker.js');
+ * ```
+ */
+export async function importScriptInWorkers(workerUrl: string): Promise<void> {
+    getGlobalDispatcher();
+    await (scriptsImportedIntoWorkers.get(workerUrl) ?? broadcastImportScript(workerUrl));
 }
 
 onGlobalWorkersCreated(() => {

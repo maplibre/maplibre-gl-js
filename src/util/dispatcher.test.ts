@@ -112,6 +112,16 @@ describe('global dispatcher', () => {
         expect(pool.numActive()).toBe(0);
     });
 
+    test('a replay that reaches for the global dispatcher does not recurse while it is being created', async () => {
+        vi.resetModules();
+        const dispatcherModule = await import('./dispatcher.ts');
+        dispatcherModule.onGlobalWorkersCreated(() => {
+            dispatcherModule.getGlobalDispatcher();
+        });
+
+        expect(() => dispatcherModule.getGlobalDispatcher()).not.toThrow();
+    });
+
     test('creating a map dispatcher replays the worker state onto the workers it reports to', async () => {
         const globalWorkersCreated = vi.fn();
         onGlobalWorkersCreated(globalWorkersCreated);

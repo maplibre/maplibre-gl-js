@@ -11,7 +11,7 @@ class RTLMainThreadPlugin extends Evented {
     url: string = null;
 
     /** Re-sends the plugin state to workers that have never seen it, after the previous ones were terminated. */
-    async _replayIntoNewWorkers(): Promise<void> {
+    async _syncStateToNewWorkers(): Promise<void> {
         try {
             if (this.status === 'deferred') {
                 await this._syncState('deferred');
@@ -95,7 +95,7 @@ class RTLMainThreadPlugin extends Evented {
 
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
 
-onGlobalWorkersCreated(() => rtlMainThreadPluginFactory()._replayIntoNewWorkers());
+onGlobalWorkersCreated(() => rtlMainThreadPluginFactory()._syncStateToNewWorkers());
 
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
     rtlMainThreadPlugin ||= new RTLMainThreadPlugin();
