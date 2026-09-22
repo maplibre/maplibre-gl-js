@@ -118,7 +118,9 @@ export class Dispatcher extends Evented<ErrorEventType> {
 }
 
 let globalDispatcher: Dispatcher;
-const importedScripts = new Map<string, Promise<unknown>>();
+
+/** Scripts sent to the workers by `importScriptInWorkers`, keyed by URL, so they can be re-sent to new workers. */
+export const scriptsImportedIntoWorkers: Map<string, Promise<unknown>> = new Map();
 const globalWorkerStateReplays: Array<() => void> = [];
 
 /**
@@ -161,46 +163,7 @@ function dropGlobalDispatcher(): void {
 }
 
 onGlobalDispatcherCreated(() => {
-    for (const url of Array.from(importedScripts.keys())) {
-        importedScripts.set(url, getGlobalDispatcher().broadcast(MessageType.importScript, url));
+    for (const url of Array.from(scriptsImportedIntoWorkers.keys())) {
+        scriptsImportedIntoWorkers.set(url, getGlobalDispatcher().broadcast(MessageType.importScript, url));
     }
 });
-
-/**
- * Allows loading javascript code in the worker thread.
- * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
- *
- * It can be useful for the following examples:
- * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
- * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
- * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
- * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
- * @returns
- *
- * @example
- * ```ts
- * // below is an example of sending a js file to the worker to load the method there
- * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
- * // add-protocol-worker.js
- * async function loadFn(params, abortController) {
- *     const t = await fetch(`https://${params.url.split("://")[1]}`);
- *     if (t.status == 200) {
- *         const buffer = await t.arrayBuffer();
- *         return {data: buffer}
- *     } else {
- *         throw new Error(`Tile fetch error: ${t.statusText}`);
- *     }
- * }
- * self.addProtocol('custom', loadFn);
- *
- * // main.js
- * importScriptInWorkers('add-protocol-worker.js');
- * ```
- */
-export async function importScriptInWorkers(workerUrl: string): Promise<void> {
-    const dispatcher = getGlobalDispatcher();
-    if (!importedScripts.has(workerUrl)) {
-        importedScripts.set(workerUrl, dispatcher.broadcast(MessageType.importScript, workerUrl));
-    }
-    await importedScripts.get(workerUrl);
-}

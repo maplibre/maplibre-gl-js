@@ -1,8 +1,7 @@
 import {describe, afterEach, onTestFinished, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
-import {Dispatcher, getGlobalDispatcher, importScriptInWorkers} from './dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
-import {MessageType} from './actor_messages.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
 import {terminateGlobalWorkers} from './test/util.ts';
@@ -146,27 +145,5 @@ describe('global dispatcher', () => {
         clearPrewarmedResources();
 
         expect(pool.numActive()).toBe(0);
-    });
-
-    test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        await importScriptInWorkers('plugin.js');
-        terminateGlobalWorkers();
-        broadcastSpy.mockClear();
-
-        getGlobalDispatcher();
-
-        expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
-    });
-
-    test('imports a script once into a recreated global dispatcher that already replayed it', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        await importScriptInWorkers('plugin.js');
-        terminateGlobalWorkers();
-        broadcastSpy.mockClear();
-
-        await importScriptInWorkers('plugin.js');
-
-        expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 });

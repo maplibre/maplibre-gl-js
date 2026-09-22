@@ -1,8 +1,11 @@
-import {describe, beforeEach, afterAll, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterAll, afterEach, test, expect, vi} from 'vitest';
 import {config} from './util/config.ts';
-import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index.ts';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion, importScriptInWorkers} from './index.ts';
 import {getJSON, getArrayBuffer} from './util/ajax.ts';
 import {ImageRequest} from './util/image_request.ts';
+import {Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
+import {MessageType} from './util/actor_messages.ts';
+import {terminateGlobalWorkers} from './util/test/util.ts';
 
 describe('maplibre', () => {
     beforeEach(() => {
@@ -121,5 +124,31 @@ describe('maplibre', () => {
         // Backslashes are doubled to escape them
         const regexp = new RegExp('^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$');
         expect(regexp.test(getVersion())).toBeTruthy();
+    });
+});
+
+describe('importScriptInWorkers', () => {
+    afterEach(terminateGlobalWorkers);
+
+    test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
+        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+        await importScriptInWorkers('plugin.js');
+        terminateGlobalWorkers();
+        broadcastSpy.mockClear();
+
+        getGlobalDispatcher();
+
+        expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
+    });
+
+    test('imports a script once into a recreated global dispatcher that already replayed it', async () => {
+        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+        await importScriptInWorkers('plugin.js');
+        terminateGlobalWorkers();
+        broadcastSpy.mockClear();
+
+        await importScriptInWorkers('plugin.js');
+
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 });

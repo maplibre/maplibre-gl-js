@@ -199,9 +199,8 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
 }
 
 /**
- * Simulates the last map being removed, which terminates the pooled workers and discards the global
- * dispatcher built on them. Vitest shares module state across the tests in one file, so this also
- * releases the claims that earlier tests in the same file left behind.
+ * Simulates the last map being removed, which terminates the pooled workers and discards the
+ * global dispatcher. Also releases claims left behind by earlier tests in the same file.
  */
 export function terminateGlobalWorkers(): void {
     const pool = getGlobalWorkerPool();

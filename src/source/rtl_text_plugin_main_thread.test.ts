@@ -183,6 +183,13 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 
+    test('should broadcast once when setRTLTextPlugin itself creates the dispatcher', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        terminateGlobalWorkers();
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
+    });
+
     test('should re-sync deferred state when the dispatcher is recreated', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
