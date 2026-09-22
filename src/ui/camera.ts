@@ -931,23 +931,17 @@ export class Camera extends Evented<MapEventType> {
      * {@link Camera.terrainChangeKeepsCamera} decides whether the camera or the center stays in place.
      */
     applyTerrainChange(): void {
-        const terrain = this.terrain;
-        const tr = this.transform;
-        tr.setMinElevationForCurrentTile(terrain ? terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
-        if (!this.getCenterClampedToGround()) {
-            return;
+        const tr = this.getTransformForUpdate();
+        tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
+        const elevation = this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0;
+        if (this.getCenterClampedToGround() && elevation !== tr.elevation) {
+            if (this.terrainChangeKeepsCamera) {
+                tr.recalculateZoomAndCenter(this.terrain);
+            } else {
+                tr.setElevation(elevation);
+            }
         }
-        const elevation = terrain ? terrain.getElevationForLngLat(tr.center, tr) : 0;
-        if (elevation === tr.elevation) {
-            return;
-        }
-        if (!this.terrainChangeKeepsCamera) {
-            tr.setElevation(elevation);
-            return;
-        }
-        const requestedTransform = this.getTransformForUpdate();
-        requestedTransform.recalculateZoomAndCenter(terrain);
-        this.applyUpdatedTransform(requestedTransform);
+        this.applyUpdatedTransform(tr);
     }
 
     /**
