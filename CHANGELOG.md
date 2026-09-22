@@ -5,6 +5,7 @@
 - Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
 - Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
 - Skip the loaded-tile scan for constant `symbol-height-offset` layers when computing tile coverage ([#8424](https://github.com/maplibre/maplibre-gl-js/pull/8424)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Type and document that an `addProtocol` handler may return an `ImageBitmap` or `HTMLImageElement` for an image resource, so decoded pixels are not encoded and decoded again ([#8515](https://github.com/maplibre/maplibre-gl-js/issues/8515)) (by [@MannXo](https://github.com/MannXo))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
