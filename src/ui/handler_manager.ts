@@ -559,16 +559,22 @@ export class HandlerManager {
         this._changes = [];
     }
 
+    /**
+     * Applies a frame's combined handler deltas to the requested camera state and fires the movement
+     * events. A frame without a change only fires the events and takes no requested camera state, so a
+     * trailing frame that merely ends a handler leaves none behind for the next gesture to start from.
+     */
     _updateMapTransform(combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}): void {
         const map = this._map;
-        const tr = this._camera.getTransformForUpdate();
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult)) {
             this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
         }
+
+        const tr = this._camera.getTransformForUpdate();
 
         // stop any ongoing camera animations (easeTo, flyTo)
         this._camera.stop(true);
