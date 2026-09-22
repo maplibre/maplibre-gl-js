@@ -15,12 +15,23 @@ import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
+import type {LoadGeoJSONParameters} from './geojson_worker_source.ts';
 
 const wrapDispatcher = getWrapDispatcher();
 
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
 });
+
+function createSource(opts?: Partial<GeoJSONSourceOptions>) {
+    return new GeoJSONSource('id', extend({}, opts, {data: {}}) as GeoJSONSourceOptions, wrapDispatcher({
+        sendAsync(_message) {
+            return new Promise((resolve) => {
+                setTimeout(() => resolve({}), 0);
+            });
+        }
+    }), undefined);
+}
 
 const hawkHill = {
     'type': 'FeatureCollection',
@@ -87,18 +98,6 @@ describe('GeoJSONSource.constructor', () => {
 });
 
 describe('GeoJSONSource.setData', () => {
-    function createSource(opts?) {
-        opts ||= {};
-        opts = extend(opts, {data: {}});
-        return new GeoJSONSource('id', opts, wrapDispatcher({
-            sendAsync(_message) {
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
-                });
-            }
-        }), undefined);
-    }
-
     test('fires "data" event', async () => {
         const source = createSource();
         const loadPromise = source.once('data');
@@ -800,28 +799,6 @@ describe('GeoJSONSource.getData', () => {
 });
 
 describe('GeoJSONSource.updateData', () => {
-    /** A feature carrying its id in a property instead of `id`. */
-    function promotedFeature(name: string): GeoJSON.Feature {
-        return {type: 'Feature', properties: {name}, geometry: {type: 'LineString', coordinates: []}};
-    }
-
-    /** A promoteId source with a setData in flight, so that a second updateData merges into the pending diff. */
-    function loadingPromoteIdSource() {
-        const spy = vi.fn();
-        const mockDispatcher = wrapDispatcher({
-            sendAsync(message) {
-                spy(message);
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
-                });
-            }
-        });
-
-        const source = new GeoJSONSource('id', {data: {}, promoteId: 'name'} as GeoJSONSourceOptions, mockDispatcher, undefined);
-        source.setData({type: 'FeatureCollection', features: []});
-        return {source, spy};
-    }
-
     test('queues a second call to updateData', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
@@ -904,27 +881,24 @@ describe('GeoJSONSource.updateData', () => {
         });
     });
 
-    test('combines multiple diffs of a promoteId source when data is loading', async () => {
-        const {source, spy} = loadingPromoteIdSource();
+    test('merges diffs of a promoteId source by the promoted id when data is loading', async () => {
+        const source = createSource({promoteId: 'id'});
+        const spy = vi.spyOn(await source.actorPromise, 'sendAsync');
 
-        source.updateData({add: [promotedFeature('b')]});
-        source.updateData({add: [promotedFeature('c')]});
-        await waitForMetadataEvent(source);
-        await waitForMetadataEvent(source);
-
-        expect(spy.mock.calls[1][0].data.dataDiff.add).toEqual([promotedFeature('b'), promotedFeature('c')]);
-    });
-
-    test('squashes an add and a remove of the same promoted id when data is loading', async () => {
-        const {source, spy} = loadingPromoteIdSource();
-
-        source.updateData({add: [promotedFeature('b')]});
+        source.setData({type: 'FeatureCollection', features: []});
+        source.updateData({add: [
+            {type: 'Feature', properties: {id: 'a'}, geometry: {type: 'LineString', coordinates: []}},
+            {type: 'Feature', properties: {id: 'b'}, geometry: {type: 'LineString', coordinates: []}}
+        ]});
         source.updateData({remove: ['b']});
         await waitForMetadataEvent(source);
         await waitForMetadataEvent(source);
 
-        expect(spy.mock.calls[1][0].data.dataDiff.add).toEqual([]);
-        expect(spy.mock.calls[1][0].data.dataDiff.remove).toEqual(['b']);
+        expect((spy.mock.calls[1][0].data as LoadGeoJSONParameters).dataDiff).toEqual({
+            remove: ['b'],
+            add: [{type: 'Feature', properties: {id: 'a'}, geometry: {type: 'LineString', coordinates: []}}],
+            update: []
+        });
     });
 
     test('is overwritten by a subsequent call to setData when data is loading', async () => {
