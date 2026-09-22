@@ -1,0 +1,33 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Hillshade in the built-in simple projection. One Grand Canyon DEM tile is served for every tile id, and the 256px view at zoom 11 sits inside tile 12/758/100 of the simple grid, lng -56.7 and lat 85.6, near the top of the world square. The shader applies no latitude correction to a planar CRS, so the relief shades as it does anywhere else. Under mercator's correction that tile row is 85N and every slope is divided by cos(85), eleven times steeper, so the same view saturates into near-black shadows and white highlights.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [-56.667, 85.583],
+  "zoom": 11,
+  "projection": {"type": "simple"},
+  "sources": {
+    "dem": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/12-758-1608.terrain.png"],
+      "maxzoom": 15,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "dem"
+    }
+  ]
+}
