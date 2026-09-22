@@ -1,7 +1,7 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
 import {MessageType} from './actor_messages.ts';
-import {Dispatcher, getGlobalDispatcher, onGlobalDispatcherCreated} from './dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher, onGlobalWorkersCreated} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
@@ -103,53 +103,52 @@ describe('Dispatcher', () => {
 describe('global dispatcher', () => {
     afterEach(terminateGlobalWorkers);
 
-    test('removing the last map dispatcher releases the global dispatcher and its workers', () => {
+    test('removing the last map dispatcher terminates the workers', () => {
         const pool = getGlobalWorkerPool();
-        const globalDispatcher = getGlobalDispatcher();
+        getGlobalDispatcher();
 
         new Dispatcher(pool, 1).remove();
 
         expect(pool.numActive()).toBe(0);
-        expect(getGlobalDispatcher()).not.toBe(globalDispatcher);
     });
 
-    test('a new map dispatcher brings back the global dispatcher its workers report to', () => {
-        const globalDispatcherCreated = vi.fn();
-        onGlobalDispatcherCreated(globalDispatcherCreated);
+    test('creating a map dispatcher replays the worker state onto the workers it reports to', async () => {
+        const globalWorkersCreated = vi.fn();
+        onGlobalWorkersCreated(globalWorkersCreated);
 
         new Dispatcher(getGlobalWorkerPool(), 1);
 
-        expect(globalDispatcherCreated).toHaveBeenCalled();
+        await getGlobalDispatcher().getActors();
+        expect(globalWorkersCreated).toHaveBeenCalled();
     });
 
-    test('keeps the global dispatcher while another map still holds workers', () => {
+    test('keeps the workers while another map still holds them', () => {
         const pool = getGlobalWorkerPool();
-        const globalDispatcher = getGlobalDispatcher();
         const mapDispatcher = new Dispatcher(pool, 1);
         new Dispatcher(pool, 2);
 
         mapDispatcher.remove();
 
-        expect(getGlobalDispatcher()).toBe(globalDispatcher);
+        expect(pool.workersPromise).toBeTruthy();
     });
 
-    test('a dispatcher kept from before the workers were terminated warns instead of hanging', async () => {
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    test('the global dispatcher works again on the workers that replace terminated ones', async () => {
         const globalDispatcher = getGlobalDispatcher();
+        const actor = await globalDispatcher.getActor();
 
         terminateGlobalWorkers();
-        await globalDispatcher.broadcast(MessageType.setReferrer, 'https://example.com');
 
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('the global dispatcher was discarded'));
+        await expect(globalDispatcher.getActor()).resolves.not.toBe(actor);
     });
 
-    test('warns as terminating the workers drops a message handler registered on the global dispatcher', async () => {
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        await getGlobalDispatcher().registerMessageHandler(MessageType.importScript, async () => {});
+    test('a message handler registered on the global dispatcher comes back with the new workers', async () => {
+        const handler = vi.fn();
+        const globalDispatcher = getGlobalDispatcher();
+        await globalDispatcher.registerMessageHandler(MessageType.importScript, handler);
 
         terminateGlobalWorkers();
 
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining(MessageType.importScript));
+        expect((await globalDispatcher.getActor()).messageHandlers[MessageType.importScript]).toBe(handler);
     });
 
     test('prewarm keeps the workers alive once the last map is removed', () => {

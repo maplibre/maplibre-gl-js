@@ -14,9 +14,10 @@ import type {RequestResponseMessageMap} from './actor_messages.ts';
 export class Dispatcher extends Evented<ErrorEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
-    actorsPromise: Promise<Actor[]>;
+    actorsPromise: Promise<Actor[]> | undefined;
     currentActor: number;
     id: string | number;
+    private messageHandlers: {[K in MessageType]?: MessageHandler<K>};
     private removed: boolean;
     private workerErrorSubscriptions: Subscription[];
 
@@ -26,24 +27,21 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
+        this.messageHandlers = {};
         this.removed = false;
         this.workerErrorSubscriptions = [];
-        this.actorsPromise = this.initActors(mapId);
+        this.getActors();
     }
 
     /**
-     * Creates one actor per worker. The global dispatcher weakly acquires the workers rather than
-     * keeping them alive. Every other dispatcher revives it first, since workers answer `getResource` through it.
+     * Creates one actor per worker, carrying over the message handlers registered so far. The global
+     * dispatcher weakly acquires the workers rather than keeping them alive. Every other dispatcher
+     * revives it first, since workers answer `getResource` through it.
      */
     private async initActors(mapId: string | number): Promise<Actor[]> {
         let workers: ActorTarget[];
         if (mapId === GLOBAL_DISPATCHER_ID) {
-            workers = await this.workerPool.weakAcquire(() => {
-                this.warnOnLostMessageHandlers();
-                this.remove({releaseWorkers: false});
-                this.actorsPromise = Promise.resolve([]);
-                globalDispatcher = undefined;
-            });
+            workers = await this.workerPool.weakAcquire(() => this.discardActors());
         } else {
             getGlobalDispatcher();
             workers = await this.workerPool.acquire(mapId);
@@ -55,32 +53,39 @@ export class Dispatcher extends Evented<ErrorEventType> {
             }, false));
             const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
+            actor.messageHandlers = {...this.messageHandlers};
             return actor;
         });
         if (!this.actors.length) throw new Error('No actors found');
         return this.actors;
     }
 
-    /**
-     * Warns as the workers take the global dispatcher's message handlers down with them. Only
-     * `getResource` comes back on its own, so anything else belongs to a plugin that will otherwise
-     * wait forever for a message no one answers.
-     */
-    private warnOnLostMessageHandlers(): void {
-        const lost = new Set(this.actors.flatMap(actor => Object.keys(actor.messageHandlers)));
-        lost.delete(MessageType.getResource);
-        if (lost.size === 0) return;
-        warnOnce(`Terminating the workers discarded the global dispatcher along with the message handlers registered on it (${Array.from(lost).join(', ')}). Register them from onGlobalDispatcherCreated() so they come back with the next workers.`);
+    /** Drops the actors whose workers are being terminated, leaving the dispatcher ready to build more. */
+    private discardActors(): void {
+        for (const actor of this.actors) {
+            actor.remove();
+        }
+        for (const subscription of this.workerErrorSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.actors = [];
+        this.workerErrorSubscriptions = [];
+        this.actorsPromise = undefined;
     }
 
     /**
-     * The actors to send through, or none once a discarded global dispatcher outlives its workers.
-     * Anything kept from before the workers were terminated warns and does nothing rather than
-     * hanging on workers that are gone.
+     * The actors to send through, built again if the workers behind the last ones were terminated.
+     * A removed dispatcher has none and never will, so messages sent to one go nowhere.
      */
-    private getActors(): Promise<Actor[]> {
-        if (this.removed && this.id === GLOBAL_DISPATCHER_ID) {
-            warnOnce('This call did nothing because the global dispatcher was discarded when its workers were terminated. Do not hold on to the result of getGlobalDispatcher(), call it again every time, and register message handlers from onGlobalDispatcherCreated().');
+    getActors(): Promise<Actor[]> {
+        if (this.removed) return Promise.resolve([]);
+        if (!this.actorsPromise) {
+            this.actorsPromise = this.initActors(this.id);
+            if (this.id === GLOBAL_DISPATCHER_ID) {
+                for (const replay of globalWorkerStateReplays) {
+                    replay();
+                }
+            }
         }
         return this.actorsPromise;
     }
@@ -105,7 +110,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     async waitForInitComplete(): Promise<void> {
         if (this.actors.length === 0) {
-            await this.actorsPromise;
+            await this.getActors();
         }
     }
 
@@ -116,19 +121,13 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     remove({releaseWorkers = true}: {releaseWorkers?: boolean} = {}): void {
         this.removed = true;
-        for (const actor of this.actors) {
-            actor.remove();
-        }
-        for (const subscription of this.workerErrorSubscriptions) {
-            subscription.unsubscribe();
-        }
-        this.actors = [];
-        this.workerErrorSubscriptions = [];
+        this.discardActors();
         this.setEventedParent(null);
         if (releaseWorkers) this.workerPool.release(this.id);
     }
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
+        (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
         const actors = await this.getActors();
         for (const actor of actors) {
             actor.registerMessageHandler(type, handler);
@@ -136,6 +135,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 
     public async unregisterMessageHandler<T extends MessageType>(type: T): Promise<void> {
+        delete this.messageHandlers[type];
         const actors = await this.getActors();
         for (const actor of actors) {
             actor.unregisterMessageHandler(type);
@@ -154,11 +154,22 @@ const globalWorkerStateReplays: Array<() => void> = [];
 
 /**
  * Registers a callback that restores state living in the workers rather than in any one map.
- * It runs each time a global dispatcher is created, including the first, so it is where to put
- * the message handlers and worker configuration that {@link getGlobalDispatcher} no longer carries
- * once its workers are terminated.
+ * It runs each time the global workers are created, including the first, since new workers start
+ * out knowing nothing. Removing the last map terminates them, so anything a plugin configures in
+ * the workers belongs here rather than in one-time setup code.
+ *
+ * Message handlers registered through {@link getGlobalDispatcher} and scripts loaded through
+ * {@link importScriptInWorkers} come back on their own and do not need this.
+ * @param replay - sends the worker configuration again
+ *
+ * @example
+ * ```ts
+ * onGlobalWorkersCreated(() => {
+ *     getGlobalDispatcher().broadcast('my-plugin-config', {tiles: 'https://example.com/{z}/{x}/{y}.png'});
+ * });
+ * ```
  */
-export function onGlobalDispatcherCreated(replay: () => void): void {
+export function onGlobalWorkersCreated(replay: () => void): void {
     globalWorkerStateReplays.push(replay);
 }
 
@@ -168,10 +179,9 @@ export function onGlobalDispatcherCreated(replay: () => void): void {
  * If you import a script into the worker and need to send a message to the workers to pass some parameters for example,
  * you can use this function to get the global dispatcher and send a message to the workers.
  *
- * Do not hold on to the returned dispatcher. Call this function again every time you need one. The
- * dispatcher is discarded whenever the workers are terminated, which happens when the last map is
- * removed, and a discarded one warns and does nothing. Message handlers do not survive that either,
- * so register them from {@link onGlobalDispatcherCreated} rather than once at startup.
+ * The same dispatcher is returned for the life of the page, so it is safe to keep, and the message
+ * handlers registered on it come back on the workers that replace terminated ones. Configuration
+ * you broadcast into the workers does not, so send that from {@link onGlobalWorkersCreated}.
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): Dispatcher {
@@ -180,10 +190,8 @@ export function getGlobalDispatcher(): Dispatcher {
         globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
-        for (const replay of globalWorkerStateReplays) {
-            replay();
-        }
     }
+    globalDispatcher.getActors();
     return globalDispatcher;
 }
 
@@ -199,7 +207,7 @@ export function broadcastImportScript(url: string): Promise<unknown> {
     return importPromise;
 }
 
-onGlobalDispatcherCreated(() => {
+onGlobalWorkersCreated(() => {
     for (const url of Array.from(scriptsImportedIntoWorkers.keys())) {
         broadcastImportScript(url);
     }
