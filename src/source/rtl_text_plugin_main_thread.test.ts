@@ -211,5 +211,4 @@ describe('RTLMainThreadPlugin', () => {
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
         expect(rtlMainThreadPlugin.status).toBe('deferred');
     });
-
 });

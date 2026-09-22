@@ -207,8 +207,9 @@ export function terminateGlobalWorkers(): void {
     if (!pool.workersPromise) return;
     pool.acquire('terminateGlobalWorkers');
     for (const mapId of Object.keys(pool.active)) {
-        pool.release(mapId);
+        if (mapId !== 'terminateGlobalWorkers') pool.release(mapId);
     }
+    pool.release('terminateGlobalWorkers');
 }
 
 /**

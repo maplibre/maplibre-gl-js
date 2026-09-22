@@ -47,14 +47,14 @@ describe('Dispatcher', () => {
         await dispatcher.actorsPromise;
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
 
-        dispatcher.remove(false);
+        dispatcher.remove({releaseWorkers: false});
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toHaveLength(0);
 
         dispatcher = new Dispatcher(workerPool, mapId);
         await dispatcher.actorsPromise;
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
-        dispatcher.remove(true);
+        dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);
     });
@@ -130,6 +130,23 @@ describe('global dispatcher', () => {
         mapDispatcher.remove();
 
         expect(getGlobalDispatcher()).toBe(globalDispatcher);
+    });
+
+    test('a dispatcher kept from before the workers were terminated fails loudly', async () => {
+        const globalDispatcher = getGlobalDispatcher();
+
+        terminateGlobalWorkers();
+
+        await expect(globalDispatcher.getActor()).rejects.toThrow('This global dispatcher was discarded');
+    });
+
+    test('prewarm keeps the workers alive once the last map is removed', () => {
+        prewarm();
+        const pool = getGlobalWorkerPool();
+
+        new Dispatcher(pool, 1).remove();
+
+        expect(pool.workersPromise).toBeTruthy();
     });
 
     test('clearPrewarmedResources releases the workers once the last map is removed', () => {

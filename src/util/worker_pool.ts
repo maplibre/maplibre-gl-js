@@ -16,12 +16,12 @@ export class WorkerPool {
         [_ in number | string]: boolean;
     };
     workersPromise: Promise<ActorTarget[]> | null;
-    private borrowers: Array<() => void>;
+    private onTerminateListeners: Array<() => void>;
 
     constructor() {
         this.active = {};
         this.workersPromise = null;
-        this.borrowers = [];
+        this.onTerminateListeners = [];
     }
 
     /** Claims the shared workers, creating them on the first claim. */
@@ -31,11 +31,11 @@ export class WorkerPool {
     }
 
     /**
-     * Uses the shared workers without claiming them, so they still terminate once the last claim is released.
-     * `onTerminate` fires at that point, since the borrowed workers are dead from then on.
+     * Uses the shared workers without claiming them, the way a `WeakRef` holds an object without keeping it alive.
+     * `onTerminate` fires once the last claim is released, since the workers are dead from then on.
      */
-    async borrow(onTerminate: () => void): Promise<ActorTarget[]> {
-        this.borrowers.push(onTerminate);
+    async weakAcquire(onTerminate: () => void): Promise<ActorTarget[]> {
+        this.onTerminateListeners.push(onTerminate);
         return this.ensureWorkers();
     }
 
@@ -55,7 +55,7 @@ export class WorkerPool {
         if (this.numActive() === 0 && this.workersPromise) {
             const promise = this.workersPromise;
             this.workersPromise = null;
-            for (const onTerminate of this.borrowers.splice(0)) {
+            for (const onTerminate of this.onTerminateListeners.splice(0)) {
                 onTerminate();
             }
             promise.then(workers => {

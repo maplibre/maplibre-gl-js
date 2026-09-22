@@ -32,14 +32,18 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 
     /**
-     * Creates one actor per worker. The global dispatcher borrows the workers rather than keeping
-     * them alive; every other dispatcher revives it first, since workers answer `getResource` through it.
+     * Creates one actor per worker. The global dispatcher weakly acquires the workers rather than
+     * keeping them alive. Every other dispatcher revives it first, since workers answer `getResource` through it.
+     * A discarded global dispatcher rejects every later call, so code holding one fails loudly instead of
+     * hanging on a worker that is gone.
      */
     private async initActors(mapId: string | number): Promise<Actor[]> {
         let workers: ActorTarget[];
         if (mapId === GLOBAL_DISPATCHER_ID) {
-            workers = await this.workerPool.borrow(() => {
-                this.remove(false);
+            workers = await this.workerPool.weakAcquire(() => {
+                this.remove({releaseWorkers: false});
+                this.actorsPromise = Promise.reject(new Error('This global dispatcher was discarded when its workers were terminated. Call getGlobalDispatcher() again instead of holding on to one.'));
+                this.actorsPromise.catch(() => {});
                 globalDispatcher = undefined;
             });
         } else {
@@ -88,7 +92,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         return this.actors[this.currentActor];
     }
 
-    remove(mapRemoved: boolean = true): void {
+    remove({releaseWorkers = true}: {releaseWorkers?: boolean} = {}): void {
         this.removed = true;
         for (const actor of this.actors) {
             actor.remove();
@@ -99,7 +103,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.actors = [];
         this.workerErrorSubscriptions = [];
         this.setEventedParent(null);
-        if (mapRemoved) this.workerPool.release(this.id);
+        if (releaseWorkers) this.workerPool.release(this.id);
     }
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
@@ -128,7 +132,8 @@ const globalWorkerStateReplays: Array<() => void> = [];
 
 /**
  * Registers a callback that restores state living in the workers rather than in any one map.
- * It runs each time a global dispatcher is created, including the first.
+ * It runs each time a global dispatcher is created, including the first, so it is the place to
+ * re-register anything you added to the previous one with {@link getGlobalDispatcher}.
  */
 export function onGlobalDispatcherCreated(replay: () => void): void {
     globalWorkerStateReplays.push(replay);
@@ -140,7 +145,9 @@ export function onGlobalDispatcherCreated(replay: () => void): void {
  * If you import a script into the worker and need to send a message to the workers to pass some parameters for example,
  * you can use this function to get the global dispatcher and send a message to the workers.
  *
- * Creating it also replays everything registered with `onGlobalDispatcherCreated`.
+ * Call it every time rather than keeping the result. The dispatcher is discarded when the last map is
+ * removed, and calls on a discarded one throw. Use {@link onGlobalDispatcherCreated} to re-register
+ * message handlers, which creating a dispatcher replays.
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): Dispatcher {
