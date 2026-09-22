@@ -373,13 +373,21 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
             if (it.zoom < minZoom) {
                 continue;
             }
-            const dz = nominalZ - it.zoom;
-            const dx = cameraPoint[0] - 0.5 - (x << dz);
-            const dy = cameraPoint[1] - 0.5 - (y << dz);
+            // Distances are measured in tiles of the NOMINAL zoom, from the tile's centre. With
+            // variable zoom (pitch, terrain) the result mixes zoom levels, so the tile's own
+            // x/y must be scaled to that grid first — comparing a z9 tile's x with a z13 centre
+            // sorted every coarser tile by a meaningless number. The scale is a float power of
+            // two because a tile can also be finer than the nominal zoom (dz < 0), where an
+            // integer shift is not defined.
+            const scale = 2 ** (nominalZ - it.zoom);
+            const tileCenterX = (x + 0.5) * scale;
+            const tileCenterY = (y + 0.5) * scale;
+            const dx = cameraPoint[0] - tileCenterX;
+            const dy = cameraPoint[1] - tileCenterY;
             const overscaledZ = options.reparseOverscaled ? Math.max(it.zoom, thisTileDesiredZ) : it.zoom;
             result.push({
                 tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
-                distanceSq: vec2.sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
+                distanceSq: vec2.sqrLen([centerPoint[0] - tileCenterX, centerPoint[1] - tileCenterY]),
                 // this variable is currently not used, but may be important to reduce the amount of loaded tiles
                 tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
             });
