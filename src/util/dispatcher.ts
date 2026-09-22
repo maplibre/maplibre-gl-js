@@ -147,11 +147,7 @@ export function getGlobalDispatcher(): Dispatcher {
     return globalDispatcher;
 }
 
-/**
- * Imports a script into every worker, and into any worker created later. Scripts live in the
- * worker's global scope, so the registrations they make (worker sources, protocols) are lost
- * when the workers are terminated after the last map is removed.
- */
+/** Imports a script into every worker, and into any worker created later. */
 export async function importScriptInGlobalWorkers(url: string): Promise<void> {
     const dispatcher = getGlobalDispatcher();
     importedScriptUrls.push(url);

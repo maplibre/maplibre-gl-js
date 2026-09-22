@@ -133,7 +133,6 @@ describe('Dispatcher', () => {
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    // Last in the file: the imported URL is remembered for the lifetime of the module.
     test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
         const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
         const pool = getGlobalWorkerPool();
