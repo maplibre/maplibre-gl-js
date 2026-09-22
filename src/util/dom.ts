@@ -6,6 +6,37 @@ type ScaleReturnValue = {
     boundingClientRect: DOMRect;
 };
 
+const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+
+const ALLOWED_TAGS = new Set([
+    'a', 'abbr', 'b', 'bdi', 'bdo', 'br', 'cite', 'code', 'del', 'div', 'em', 'i', 'img', 'ins', 'kbd', 'li',
+    'mark', 'ol', 'p', 'q', 's', 'samp', 'small', 'span', 'strong', 'sub', 'sup', 'time', 'u', 'ul', 'var', 'wbr'
+]);
+
+const ALLOWED_ATTRIBUTES = new Set([
+    'alt', 'class', 'datetime', 'dir', 'height', 'href', 'hreflang', 'lang', 'referrerpolicy', 'rel', 'role',
+    'src', 'target', 'title', 'translate', 'type', 'width'
+]);
+
+const URL_ATTRIBUTES = new Set(['href', 'src']);
+
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+
+/**
+ * Relative URLs have to resolve against something before their protocol can be read. Only the protocol of the
+ * result is used, so the base never leaks into the sanitized markup.
+ */
+const RELATIVE_URL_BASE = 'https://maplibre.invalid/';
+
+/**
+ * A form control named `children`, `attributes` or `remove` shadows the same-named property of its form element,
+ * which would otherwise let untrusted markup hide a node from the sanitizer walking that tree. Reading these off
+ * the prototype instead of off the element sidesteps the shadowing.
+ */
+const {getAttribute, getAttributeNames, querySelectorAll, remove, removeAttribute} = Element.prototype;
+const {get: localName} = Object.getOwnPropertyDescriptor(Element.prototype, 'localName');
+const {get: namespaceURI} = Object.getOwnPropertyDescriptor(Element.prototype, 'namespaceURI');
+
 export class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document?.documentElement.style;
 
@@ -85,60 +116,63 @@ export class DOM {
     }
 
     /**
-     * Sanitize an HTML string - this might not be enough to prevent all XSS attacks
-     * Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
-     * (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
+     * Sanitize an untrusted HTML string, such as the attribution a remote TileJSON asks the map to display.
      *
-     * Returns the sanitized nodes rather than a string, since re-parsing serialized HTML can produce a different tree.
+     * Only the elements in `ALLOWED_TAGS` and the attributes in `ALLOWED_ATTRIBUTES` survive; anything else is
+     * dropped along with its subtree. An allow list is used rather than a list of known-dangerous markup because
+     * the latter silently permits whatever it has not heard of yet, including markup added to HTML after it was
+     * written.
+     *
+     * The sanitized nodes are returned rather than a string: serializing and re-parsing is not a round trip, so
+     * a string result lets carefully nested markup mutate into a different - and no longer sanitized - tree.
      */
     public static sanitize(str: string): DocumentFragment {
         const parser = new DOMParser();
         const doc = parser.parseFromString(str, 'text/html');
-        const html = doc.body || document.createElement('body');
-        const dangerousElements = html.querySelectorAll('script, iframe');
-        for (const element of dangerousElements) {
-            element.remove();
+        const body = doc.body || document.createElement('body');
+
+        for (const element of Array.from(querySelectorAll.call(body, '*') as NodeListOf<Element>)) {
+            if (DOM.isAllowedElement(element)) {
+                DOM.removeDisallowedAttributes(element);
+            } else {
+                remove.call(element);
+            }
         }
 
-        DOM.clean(html);
-
         const fragment = document.createDocumentFragment();
-        fragment.append(...html.childNodes);
+        fragment.append(...body.childNodes);
         return fragment;
     }
 
     /**
-     * Check if the attribute is potentially dangerous
+     * An element is allowed only when it is plain HTML markup on the allow list. Elements in the SVG and MathML
+     * namespaces are rejected even when their local name is allowed, since foreign content follows different
+     * parsing rules and is what makes most mutation attacks possible in the first place.
      */
-    private static isPossiblyDangerous(name: string, value: string): boolean {
-        const val = value.replace(/\s+/g, '').toLowerCase();
-        if (['src', 'href', 'xlink:href'].includes(name)) {
-            if (val.includes('javascript:') || val.includes('data:')) return true;
-        }
-        if (name === 'srcdoc') return true;
-        if (name.startsWith('on')) return true;
+    private static isAllowedElement(element: Element): boolean {
+        return namespaceURI.call(element) === HTML_NAMESPACE && ALLOWED_TAGS.has(localName.call(element));
     }
 
-    /**
-	 * Remove dangerous stuff from the HTML document's nodes
-	 * @param html - The HTML document
-	 */
-    private static clean(html: Element) {
-        const nodes = html.children;
-        for (const node of nodes) {
-            DOM.removeAttributes(node);
-            DOM.clean(node);
+    private static removeDisallowedAttributes(element: Element) {
+        for (const name of getAttributeNames.call(element)) {
+            if (DOM.isAllowedAttribute(name, getAttribute.call(element, name) ?? '')) continue;
+            removeAttribute.call(element, name);
         }
     }
 
     /**
-	 * Remove potentially dangerous attributes from an element
-	 * @param elem - The element
-	 */
-    private static removeAttributes(elem: Element) {
-        for (const {name, value} of Array.from(elem.attributes)) {
-            if (!DOM.isPossiblyDangerous(name, value)) continue;
-            elem.removeAttribute(name);
+     * `href` and `src` are further restricted to the protocols in `ALLOWED_PROTOCOLS`, so that `javascript:` and
+     * `data:` URLs cannot turn an otherwise harmless link or image into a script. The protocol is taken from a
+     * parsed URL rather than matched against the raw string, since the URL parser is what the browser will apply
+     * and it ignores tabs, newlines and leading control characters that a string comparison would trip over.
+     */
+    private static isAllowedAttribute(name: string, value: string): boolean {
+        if (!ALLOWED_ATTRIBUTES.has(name) && !name.startsWith('aria-')) return false;
+        if (!URL_ATTRIBUTES.has(name)) return true;
+        try {
+            return ALLOWED_PROTOCOLS.has(new URL(value, RELATIVE_URL_BASE).protocol);
+        } catch {
+            return false;
         }
     }
 }

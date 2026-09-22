@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Sanitize attribution with an allow list of tags and attributes rather than a list of known-dangerous ones ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.11.0
