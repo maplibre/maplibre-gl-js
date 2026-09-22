@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
-import {simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
@@ -387,7 +387,7 @@ describe('VectorTileSource', () => {
         source.onAdd({
             _getMapId: () => 1,
             _requestManager: new RequestManager(),
-            style: {projection: new MercatorProjection(simpleCrs)}
+            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))}
         } as any as Map);
 
         await waitForMetadataEvent(source);

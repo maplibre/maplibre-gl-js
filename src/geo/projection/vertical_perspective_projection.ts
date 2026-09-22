@@ -35,6 +35,10 @@ export class VerticalPerspectiveProjection implements Projection {
         return 'vertical-perspective';
     }
 
+    /**
+     * The globe draws mercator tiles on a sphere, so the plane its tiles sit in is mercator's. A CRS registered
+     * with `addProjection` is flat only; the factory never builds this projection over one.
+     */
     get worldCoordinateHelper(): WorldCoordinateHelper {
         return mercatorWorldCoordinateHelper;
     }

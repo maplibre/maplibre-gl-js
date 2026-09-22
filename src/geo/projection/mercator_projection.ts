@@ -6,7 +6,6 @@ import {SegmentVector} from '../../data/segment.ts';
 import posAttributes from '../../data/pos_attributes.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
-import {CrsWorldCoordinateHelper, type CrsDefinition} from './crs.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Context} from '../../webgl/context.ts';
@@ -20,24 +19,22 @@ export const MercatorShaderVariantKey = 'mercator';
 /**
  * The flat projection. Mercator by default; the factory also builds one for a CRS registered with `addProjection`,
  * since such tiles already sit in their own quad grid and render exactly like mercator tiles do. The projection
- * owns the lng/lat mapping of that grid, and the transform built alongside it runs on the same mapping.
+ * takes its name from the lng/lat mapping of that grid, which the transform built alongside it runs on too.
  * Every planar projection shares one shader variant.
  */
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
-    private readonly _name: string;
     private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
     /**
-     * @param crs - the registered CRS this is the flat projection of; mercator when omitted
+     * @param worldCoordinateHelper - the lng/lat mapping of the grid this projection draws; mercator's when omitted
      */
-    constructor(crs?: CrsDefinition) {
-        this._name = crs ? crs.name : 'mercator';
-        this._worldCoordinateHelper = crs ? new CrsWorldCoordinateHelper(crs) : mercatorWorldCoordinateHelper;
+    constructor(worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper) {
+        this._worldCoordinateHelper = worldCoordinateHelper;
     }
 
     get name(): ProjectionSpecification['type'] {
-        return this._name;
+        return this._worldCoordinateHelper.name;
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {

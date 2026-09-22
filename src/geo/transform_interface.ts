@@ -23,6 +23,11 @@ import type {Frustum} from '../util/primitives/frustum.ts';
  */
 export interface WorldCoordinateHelper {
     /**
+     * The name of the flat projection whose plane this is: `mercator`, or the `name` of a CRS registered
+     * with `addProjection`.
+     */
+    name: string;
+    /**
      * lng/lat in degrees and an altitude in meters to a world square position. `z` is
      * `worldZFromAltitude` of the altitude, and stays `0` when no altitude is given.
      */

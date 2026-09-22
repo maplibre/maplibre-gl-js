@@ -67,7 +67,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
-        return this._mercatorProjection.worldCoordinateHelper;
+        return this.currentProjection.worldCoordinateHelper;
     }
 
     get useSubdivision(): boolean {
