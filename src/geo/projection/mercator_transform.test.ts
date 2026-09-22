@@ -734,13 +734,6 @@ function createMercatorTransform(center: LngLat, zoom: number, pitch: number = 0
     return transform;
 }
 
-function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
-    const transform = Object.create(MercatorTransform.prototype);
-    Object.defineProperty(transform, 'worldSize', {value: worldSize});
-    transform.getRaySegmentFromPixel = () => ({near, far});
-    return transform as MercatorTransform;
-}
-
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {
     expect(Math.abs(actual.x - expected.x) * worldSize).toBeLessThan(1e-3);
     expect(Math.abs(actual.y - expected.y) * worldSize).toBeLessThan(1e-3);
@@ -878,10 +871,10 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         const edgeTransform = createMercatorTransform(new LngLat(0, 0), 1, 0);
         expect(edgeTransform.screenTerrainPointToMercatorCoordinate(new Point(400, 400), edgeTerrain)).toBeNull();
 
-        // Staying below the terrain surface the whole way.
+        // Staying below the terrain surface the whole way: at zoom 22 the camera sits about 28 meters up, under a 100 meter plateau.
         const submergedTerrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
-        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
-        expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), submergedTerrain)).toBeNull();
+        const submergedTransform = createMercatorTransform(new LngLat(0, 0), 22, 0);
+        expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), submergedTerrain)).toBeNull();
     });
 
     test('returns null when the terrain has no renderable tiles', () => {
@@ -967,17 +960,6 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         expect(transform.screenTerrainPointToMercatorCoordinate(new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
     });
 
-    test('handles a ray with no vertical component', () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
-        const worldSize = 512;
-
-        const crossing = createRayTransform([0, 256, 500], [512, 256, 500], worldSize);
-        expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
-
-        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
-        expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
-    });
 });
 
 // Outputs captured from commit 407a8ce9e, before lng/lat math was routed through the world coordinate helper.
@@ -1230,5 +1212,21 @@ describe('MercatorTransform.isLocationOccluded', () => {
         const transform = createMercatorTransform(new LngLat(0, 0), 12, 75);
 
         expect(transform.isLocationOccluded(new LngLat(0, 0.01), terrain)).toBe(false);
+    });
+
+    test('a location behind a ridge on the simple CRS is hidden, where mercator math would place it in front of the ridge', () => {
+        const tileSpanAtZoom2 = 45;
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 14 : 0);
+        const terrain = createDEMTerrain([new OverscaledTileID(2, 0, 2, 2, 1)], ridgeAcrossTheTwoMiddleRows);
+        const transform = createSimpleCrsTransform(512, 512);
+        terrain.painter.transform = transform;
+        transform.setCenter(new LngLat(tileSpanAtZoom2 / 2, tileSpanAtZoom2 * 0.25));
+        transform.setZoom(2);
+        transform.setPitch(75);
+        const behindRidge = new LngLat(tileSpanAtZoom2 / 2, 30);
+        const inFrontOfRidge = new LngLat(tileSpanAtZoom2 / 2, tileSpanAtZoom2 * 0.3);
+
+        expect(transform.isLocationOccluded(behindRidge, terrain)).toBe(true);
+        expect(transform.isLocationOccluded(inFrontOfRidge, terrain)).toBe(false);
     });
 });

@@ -5,15 +5,15 @@ import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
 import pos3dAttributes from '../data/pos3d_attributes.ts';
 import {SegmentVector} from '../data/segment.ts';
 import {Texture} from '../webgl/texture.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
 import {EXTENT} from '../data/extent.ts';
-import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
 import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
@@ -230,9 +230,10 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
-        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 0;
+        const {tileID, worldX, worldY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getElevation(tileID, worldX % EXTENT, worldY % EXTENT, EXTENT);
     }
 
     /**
@@ -246,8 +247,9 @@ export class Terrain {
     getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
         const index = this.getCoverageIndex();
         if (index) {
-            const mercator = MercatorCoordinate.fromLngLat(lnglat);
-            const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
+            const worldCoordinateHelper = this._worldCoordinateHelper;
+            const {x, y} = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
+            const sample = sampleAt(index, this.exaggeration, x, y, worldCoordinateHelper.wraps);
             if (sample.demLoaded) return sample.elevation;
         }
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
@@ -478,18 +480,21 @@ export class Terrain {
     }
 
     /**
-     * Calculates the height of the tile skirts for the "auto" strategy.
+     * Calculates the height of the tile skirts for the "auto" strategy: a fifth of the tile width in meters, taking
+     * the meters per world unit at the center of the world square (the equator for mercator, where one world unit
+     * is the earth's circumference).
      * @see {@link MapOptions.terrainSkirtLength}
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
     getSkirtLength(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
-        return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
+        return this._worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5) / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }
@@ -512,17 +517,26 @@ export class Terrain {
         return minMax;
     }
 
-    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
-        const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
+    /**
+     * The lng/lat to world mapping of the map's projection.
+     */
+    private get _worldCoordinateHelper(): WorldCoordinateHelper {
+        return this.painter.transform.worldCoordinateHelper;
+    }
+
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; worldX: number; worldY: number} {
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        const location = worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat;
+        const worldCoordinate = worldCoordinateHelper.worldFromLngLat(location.lng, location.lat);
         const worldSize = (1 << zoom) * EXTENT;
-        const mercatorX = mercatorCoordinate.x * worldSize;
-        const mercatorY = mercatorCoordinate.y * worldSize;
-        const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
+        const worldX = worldCoordinate.x * worldSize;
+        const worldY = worldCoordinate.y * worldSize;
+        const tileX = Math.floor(worldX / EXTENT), tileY = Math.floor(worldY / EXTENT);
         const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
         return {
             tileID,
-            mercatorX,
-            mercatorY
+            worldX,
+            worldY
         };
     }
 
@@ -568,18 +582,20 @@ export class Terrain {
 const NOT_COVERED: TerrainSample = {covered: false, demLoaded: false, elevation: 0};
 
 /**
- * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
+ * Elevation of the rendered terrain surface at a world position, and whether it is covered at all.
  * A covered tile whose DEM has not loaded yet is flat at zero, which is what the terrain mesh renders.
+ * @param wraps - whether x wraps into world copies (mercator); a planar CRS has no terrain outside its world square
  */
-export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number): TerrainSample {
-    if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
-    const wrap = Math.floor(mercatorX);
-    const wrappedX = mercatorX - wrap;
+export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, worldX: number, worldY: number, wraps: boolean): TerrainSample {
+    if (worldY < 0 || worldY >= 1) return NOT_COVERED;
+    if (!wraps && (worldX < 0 || worldX >= 1)) return NOT_COVERED;
+    const wrap = wraps ? Math.floor(worldX) : 0;
+    const wrappedX = worldX - wrap;
 
     for (const z of index.zooms) {
         const scale = 1 << z;
         const scaledX = wrappedX * scale;
-        const scaledY = mercatorY * scale;
+        const scaledY = worldY * scale;
         const tileX = Math.floor(scaledX);
         const tileY = Math.floor(scaledY);
         const key = `${wrap}/${z}/${tileX}/${tileY}`;

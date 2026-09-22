@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+// The DEM terrain fixture builds a real painter over the null GL context, which needs a canvas.
 import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
