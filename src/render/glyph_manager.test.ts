@@ -62,33 +62,57 @@ describe('GlyphManager', () => {
         delete (document as any).fonts;
     });
 
-    test('GlyphManager requests 0-255 PBF', async () => {
+    test('GlyphManager shares a 0-255 PBF request between different glyphs', async () => {
         serveGlyphRanges();
         const transformRequest = vi.fn((url: string) => ({url}));
         const manager = new GlyphManager(new RequestManager(transformRequest));
         manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
 
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55), char(56)]});
 
         expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
+        expect(returnedGlyphs['Arial Unicode MS'][char(56)].metrics).toEqual(GLYPHS[56].metrics);
+        const cachedRange = await manager.getGlyphs({'Arial Unicode MS': ['A']});
+        expect(cachedRange['Arial Unicode MS'].A.metrics).toEqual(GLYPHS[65].metrics);
         expect(transformRequest).toHaveBeenCalledExactlyOnceWith(
             'https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
     });
 
     test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', async () => {
-        serveGlyphRanges();
+        server.respondWith(/\.pbf$/, [200, {}, new ArrayBuffer(0)]);
         const manager = createGlyphManager(true);
 
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
-        expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
+        const missing = await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
+        expect(missing['Arial Unicode MS'][char(0x01)]).toBeNull();
+        const next = await manager.getGlyphs({'Arial Unicode MS': [char(0x01), char(0x02), '7']});
+        expect(next['Arial Unicode MS'][char(0x02)]).toBeNull();
+        expect(next['Arial Unicode MS']['7']).toBeNull();
         expect(glyphRangeRequests()).toHaveLength(1);
+    });
 
-        // We remove all requests as in getGlyphs code.
-        delete manager.entries['Arial Unicode MS'].requests[0];
+    test('GlyphManager retries a failed glyph load shared by concurrent callers', async () => {
+        const draw = vi.fn(function (_text: string) {
+            return {
+                data: new Uint8ClampedArray(16).fill(100),
+                width: 4, height: 4, glyphWidth: 2, glyphHeight: 2,
+                glyphLeft: 0, glyphTop: 2, glyphAdvance: 48
+            };
+        }).mockImplementationOnce(() => { throw new Error('draw failed'); });
+        const manager = createGlyphManager(false, undefined, undefined, fakeRasterizer(draw));
+        const request = {Test: ['a']};
 
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
-        expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(glyphRangeRequests()).toHaveLength(1);
+        const first = manager.getGlyphs(request);
+        const concurrent = manager.getGlyphs(request);
+        await Promise.all([
+            expect(first).rejects.toThrow('draw failed'),
+            expect(concurrent).rejects.toThrow('draw failed')
+        ]);
+        expect(draw).toHaveBeenCalledTimes(1);
+
+        const glyphs = await manager.getGlyphs(request);
+        expect(glyphs.Test.a.bitmap.data[0]).toBe(100);
+        await expect(manager.getGlyphs(request)).resolves.toEqual(glyphs);
+        expect(draw).toHaveBeenCalledTimes(2);
     });
 
     test('GlyphManager requests remote CJK PBF', async () => {
@@ -327,6 +351,55 @@ describe('GlyphManager', () => {
 
         afterEach(() => {
             delete (globalThis as any).FontFace;
+        });
+
+        test.each([false, true])('keeps declared glyphs separate from cached PBF ranges (range requested first: %s)', async (rangeFirst) => {
+            stubFontFaces();
+            serveGlyphRanges();
+            const draw = vi.fn(function (_text: string) {
+                return {
+                    data: new Uint8ClampedArray(16).fill(100),
+                    width: 4, height: 4, glyphWidth: 2, glyphHeight: 2,
+                    glyphLeft: 0, glyphTop: 2, glyphAdvance: 48
+                };
+            });
+            const manager = createGlyphManager(true, undefined, undefined, fakeRasterizer(draw));
+            manager.setFontFaces({Noto: [{url: 'https://localhost/noto.ttf', 'unicode-range': ['U+0028']}]});
+            const request = {Noto: ['(']};
+
+            if (rangeFirst) await manager.getGlyphs({Noto: ['A']});
+            const glyphs = await manager.getGlyphs(request);
+            if (!rangeFirst) await manager.getGlyphs({Noto: ['A']});
+
+            expect(glyphs.Noto['('].metrics.isDoubleResolution).toBe(true);
+            await expect(manager.getGlyphs(request)).resolves.toEqual(glyphs);
+            expect(draw).toHaveBeenCalledTimes(1);
+            expect(glyphRangeRequests()).toHaveLength(1);
+        });
+
+        test('discards a declared glyph if the font faces change while its rasterizer loads', async () => {
+            stubFontFaces();
+            let finishLoad: () => void;
+            let notifyStarted: () => void;
+            const pendingLoad = new Promise<void>(resolve => { finishLoad = resolve; });
+            const started = new Promise<void>(resolve => { notifyStarted = resolve; });
+            const load = vi.spyOn(document.fonts, 'load').mockImplementationOnce(() => {
+                notifyStarted();
+                return pendingLoad.then(() => []);
+            });
+            const draw = vi.fn(() => GLYPHS[0]);
+            const manager = createGlyphManager(false, undefined, undefined, fakeRasterizer(draw));
+            manager.setFontFaces({Noto: 'https://localhost/old.ttf'});
+
+            const oldRequest = manager.getGlyphs({Noto: ['A']});
+            await started;
+            manager.setFontFaces({Noto: 'https://localhost/new.ttf'});
+            finishLoad();
+
+            expect((await oldRequest).Noto.A).toBeNull();
+            expect((await manager.getGlyphs({Noto: ['A']})).Noto.A).not.toBeNull();
+            expect(draw).toHaveBeenCalledTimes(1);
+            load.mockRestore();
         });
 
         test('draws a covered codepoint with the declared font file instead of downloading a range', async () => {
