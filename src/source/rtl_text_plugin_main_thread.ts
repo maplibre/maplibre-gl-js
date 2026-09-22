@@ -10,20 +10,20 @@ class RTLMainThreadPlugin extends Evented {
     url: string = null;
 
     /** Re-sends the plugin state to workers that have never seen it, after the previous ones were terminated. */
-    _replayIntoNewWorkers(): Promise<unknown> {
+    _replayIntoNewWorkers(): void {
         if (this.status === 'deferred') {
-            return this._syncState('deferred');
+            this._syncState('deferred');
         } else if (this.status === 'loading' || this.status === 'loaded') {
-            return this._requestImport();
-        } else {
-            return Promise.resolve();
+            this._requestImport();
         }
     }
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
+        // Resolve the dispatcher before the status moves, so a replay triggered by creating it does not re-send this state.
+        const dispatcher = getGlobalDispatcher();
         this.status = statusToSend;
-        return getGlobalDispatcher().broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
+        return dispatcher.broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
             .catch((e: any) => {
                 this.status = 'error';
                 throw e;
@@ -91,10 +91,9 @@ class RTLMainThreadPlugin extends Evented {
 
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
 
+onGlobalDispatcherCreated(() => rtlMainThreadPluginFactory()._replayIntoNewWorkers());
+
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
-    if (!rtlMainThreadPlugin) {
-        rtlMainThreadPlugin = new RTLMainThreadPlugin();
-        onGlobalDispatcherCreated(() => rtlMainThreadPlugin._replayIntoNewWorkers());
-    }
+    rtlMainThreadPlugin ||= new RTLMainThreadPlugin();
     return rtlMainThreadPlugin;
 }

@@ -1,10 +1,11 @@
 import {describe, afterEach, onTestFinished, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
-import {Dispatcher, getGlobalDispatcher, importScriptInGlobalWorkers} from './dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher, importScriptInWorkers} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {MessageType} from './actor_messages.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
+import {terminateGlobalWorkers} from './test/util.ts';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', async () => {
@@ -100,9 +101,7 @@ describe('Dispatcher', () => {
 });
 
 describe('global dispatcher', () => {
-    afterEach(() => {
-        new Dispatcher(getGlobalWorkerPool(), 'cleanup').remove();
-    });
+    afterEach(terminateGlobalWorkers);
 
     test('removing the last map dispatcher releases the global dispatcher and its workers', () => {
         const pool = getGlobalWorkerPool();
@@ -113,6 +112,17 @@ describe('global dispatcher', () => {
 
         expect(pool.numActive()).toBe(0);
         expect(getGlobalDispatcher()).not.toBe(globalDispatcher);
+    });
+
+    test('a new map dispatcher brings back the global dispatcher its workers report to', () => {
+        getGlobalDispatcher();
+        terminateGlobalWorkers();
+        const pool = getGlobalWorkerPool();
+        const borrow = vi.spyOn(pool, 'borrow');
+
+        new Dispatcher(pool, 1);
+
+        expect(borrow).toHaveBeenCalled();
     });
 
     test('keeps the global dispatcher while another map still holds workers', () => {
@@ -140,8 +150,8 @@ describe('global dispatcher', () => {
 
     test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
         const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        await importScriptInGlobalWorkers('plugin.js');
-        new Dispatcher(getGlobalWorkerPool(), 1).remove();
+        await importScriptInWorkers('plugin.js');
+        terminateGlobalWorkers();
         broadcastSpy.mockClear();
 
         getGlobalDispatcher();
@@ -151,11 +161,11 @@ describe('global dispatcher', () => {
 
     test('imports a script once into a recreated global dispatcher that already replayed it', async () => {
         const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        await importScriptInGlobalWorkers('plugin.js');
-        new Dispatcher(getGlobalWorkerPool(), 1).remove();
+        await importScriptInWorkers('plugin.js');
+        terminateGlobalWorkers();
         broadcastSpy.mockClear();
 
-        await importScriptInGlobalWorkers('plugin.js');
+        await importScriptInWorkers('plugin.js');
 
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });

@@ -17,7 +17,7 @@ import {getJSON, getReferrer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
-import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
 import {validateStyle, validateStyleAndEmit, validateAndEmit, emitValidationErrors, SPEC_SOURCE_TYPES} from './validate_style.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
@@ -268,7 +268,6 @@ export class Style extends Evented<MapEventType> {
 
         this.dispatcher.broadcast(MessageType.setReferrer, getReferrer());
         rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
-        getGlobalDispatcher();
 
         this.on('data', (event) => {
             if (event.dataType !== 'source' || event.sourceDataType !== 'metadata') {
