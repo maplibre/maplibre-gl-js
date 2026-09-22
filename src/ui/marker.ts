@@ -1,6 +1,5 @@
 import {DOM} from '../util/dom.ts';
 import {throttle} from '../util/throttle.ts';
-import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
@@ -404,6 +403,7 @@ export class Marker extends Evented<MarkerEventType> {
         map.on('moveend', this._update);
         map.on('terrain', this._update);
         map.on('projectiontransition', this._update);
+        map.on('idle', this._update);
 
         this._element.addEventListener('click', this._onClick);
         this.setDraggable(this._draggable);
@@ -432,6 +432,7 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.off('moveend', this._update);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
+            this._map.off('idle', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -736,13 +737,14 @@ export class Marker extends Evented<MarkerEventType> {
         return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
     }
 
-    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }): void => {
+    /**
+     * @internal
+     * Positions the marker and updates its opacity. As terrain tiles load, the map can adjust to the ground beneath
+     * its center without firing a `move` event. The `idle` event triggers a final marker update once the map has
+     * finished loading and rendering.
+     */
+    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'idle' }): void => {
         if (!this._map) return;
-
-        const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
-        if (e?.type === 'terrain' || (e?.type === 'render' && !isFullyLoaded)) {
-            this._map.once('render', this._update);
-        }
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
@@ -766,18 +768,15 @@ export class Marker extends Evented<MarkerEventType> {
             pitch = `rotateX(${this._map.getPitch()}deg)`;
         }
 
-        // because rounding the coordinates at every `move` event causes stuttered zooming
-        // we only round them when _update is called with `moveend` or when its called with
-        // no arguments (when the Marker is initialized or Marker.setLngLat is invoked).
-        if (!this._subpixelPositioning && (!e || e.type === 'moveend')) {
+        // rounding the coordinates at every `move` event causes stuttered zooming,
+        // so the position is rounded only once the movement has stopped
+        if (!this._subpixelPositioning && e?.type !== 'move') {
             this._pos = this._pos.round();
         }
 
         this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
-        browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render
-            this._updateOpacity();
-        }).catch(() => {});
+        this._updateOpacity();
     };
 
     /**
