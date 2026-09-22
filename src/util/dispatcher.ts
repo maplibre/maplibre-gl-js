@@ -108,6 +108,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
 }
 
 let globalDispatcher: Dispatcher;
+const importedScriptUrls: string[] = [];
 
 /**
  * Releases the global dispatcher once no map holds a claim on the worker pool,
@@ -139,6 +140,20 @@ export function getGlobalDispatcher(): Dispatcher {
         globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
+        for (const url of importedScriptUrls) {
+            globalDispatcher.broadcast(MessageType.importScript, url);
+        }
     }
     return globalDispatcher;
+}
+
+/**
+ * Imports a script into every worker, and into any worker created later. Scripts live in the
+ * worker's global scope, so the registrations they make (worker sources, protocols) are lost
+ * when the workers are terminated after the last map is removed.
+ */
+export async function importScriptInGlobalWorkers(url: string): Promise<void> {
+    const dispatcher = getGlobalDispatcher();
+    importedScriptUrls.push(url);
+    await dispatcher.broadcast(MessageType.importScript, url);
 }

@@ -31,7 +31,7 @@ import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source
 import {VideoSource} from './source/video_source.ts';
 import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
-import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
+import {type Dispatcher, getGlobalDispatcher, importScriptInGlobalWorkers} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
@@ -44,11 +44,11 @@ import {CooperativeGesturesHandler, type GestureOptions} from './ui/handler/coop
 import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom.ts';
 import {KeyboardHandler} from './ui/handler/keyboard.ts';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch.ts';
-import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages.ts';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh.ts';
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
+import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
 import type {AnchoredCameraOptions, AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
@@ -205,7 +205,7 @@ function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-async function importScriptInWorkers(workerUrl: string): Promise<void> { await getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
+async function importScriptInWorkers(workerUrl: string): Promise<void> { await importScriptInGlobalWorkers(workerUrl); }
 
 export {
     Map,

@@ -1,7 +1,8 @@
 import {describe, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
-import {Dispatcher, getGlobalDispatcher} from './dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher, importScriptInGlobalWorkers} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
+import {MessageType} from './actor_messages.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
 
@@ -130,5 +131,19 @@ describe('Dispatcher', () => {
         dispatcher.remove();
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    // Last in the file: the imported URL is remembered for the lifetime of the module.
+    test('re-imports scripts into the workers of a recreated global dispatcher', async () => {
+        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+        const pool = getGlobalWorkerPool();
+        await importScriptInGlobalWorkers('plugin.js');
+        new Dispatcher(pool, 1).remove();
+
+        broadcastSpy.mockClear();
+        getGlobalDispatcher();
+
+        expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
+        new Dispatcher(pool, 1).remove();
     });
 });
