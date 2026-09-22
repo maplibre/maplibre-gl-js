@@ -17,6 +17,8 @@ import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
+import {getGlobalDispatcher} from '../util/dispatcher.ts';
+import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 import type {PossiblyEvaluated} from './properties.ts';
@@ -117,6 +119,18 @@ describe('Style', () => {
 
         expect(style.tileManagers['raster'].reload).not.toHaveBeenCalled();
         expect(style.tileManagers['vector'].reload).toHaveBeenCalled();
+    });
+
+    test('recreates the global dispatcher after the last map terminated the workers', () => {
+        const pool = getGlobalWorkerPool();
+        getGlobalDispatcher();
+        for (const mapId of Object.keys(pool.active)) pool.release(mapId);
+        const borrow = vi.spyOn(pool, 'borrow');
+
+        const style = createStyle();
+
+        expect(borrow).toHaveBeenCalled();
+        style._remove();
     });
 });
 

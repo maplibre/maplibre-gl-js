@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
 
 describe('WorkerPool', () => {
@@ -38,6 +38,20 @@ describe('WorkerPool', () => {
         pool.release('map-1');
         await Promise.resolve();
         expect(workersTerminated).toBe(4);
+        expect(pool.workersPromise).toBeFalsy();
+    });
+
+    test('a borrower does not keep the workers alive', async () => {
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
+        const terminateListener = vi.fn();
+
+        const pool = new WorkerPool();
+        await pool.borrow(terminateListener);
+        await pool.acquire('map-1');
+
+        pool.release('map-1');
+
+        expect(terminateListener).toHaveBeenCalled();
         expect(pool.workersPromise).toBeFalsy();
     });
 });

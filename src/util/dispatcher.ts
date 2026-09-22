@@ -28,12 +28,15 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.id = mapId;
         this.removed = false;
         this.workerErrorSubscriptions = [];
-        if (mapId !== GLOBAL_DISPATCHER_ID) mapDispatchers.add(this);
         this.actorsPromise = this.initActors(mapId);
     }
 
+    /**
+     * Creates one actor per worker in the pool.
+     * The global dispatcher is not a map, so it borrows the workers rather than keeping them alive.
+     */
     private async initActors(mapId: string | number): Promise<Actor[]> {
-        const workers = await this.workerPool.acquire(mapId);
+        const workers = await (mapId === GLOBAL_DISPATCHER_ID ? this.workerPool.borrow(dropGlobalDispatcher) : this.workerPool.acquire(mapId));
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
             this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
@@ -87,11 +90,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.actors = [];
         this.workerErrorSubscriptions = [];
         this.setEventedParent(null);
-        mapDispatchers.delete(this);
-        if (mapRemoved) {
-            this.workerPool.release(this.id);
-            releaseGlobalDispatcherIfIdle();
-        }
+        if (mapRemoved) this.workerPool.release(this.id);
     }
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
@@ -110,18 +109,16 @@ export class Dispatcher extends Evented<ErrorEventType> {
 }
 
 let globalDispatcher: Dispatcher;
-const mapDispatchers = new Set<Dispatcher>();
 const importedScriptUrls: string[] = [];
+const globalWorkerStateReplays: Array<(dispatcher: Dispatcher) => Promise<unknown>> = [];
+let globalWorkerStateReplayed: Promise<unknown> = Promise.resolve();
 
 /**
- * Releases the global dispatcher once no map dispatcher is left, so its claim alone never keeps the worker pool alive.
- * It is recreated on demand, around whatever workers the pool has by then.
+ * Registers state that lives in the workers rather than in any one map, so it can be put back when
+ * the pool terminates its workers and a fresh global dispatcher is built around new ones.
  */
-function releaseGlobalDispatcherIfIdle(): void {
-    if (!globalDispatcher || mapDispatchers.size > 0) return;
-    const dispatcher = globalDispatcher;
-    globalDispatcher = undefined;
-    dispatcher.remove();
+export function onGlobalDispatcherCreated(replay: (dispatcher: Dispatcher) => Promise<unknown>): void {
+    globalWorkerStateReplays.push(replay);
 }
 
 /**
@@ -129,6 +126,9 @@ function releaseGlobalDispatcherIfIdle(): void {
  * It is used by the main thread to send messages to the workers, and by the workers to send messages back to the main thread.
  * If you import a script into the worker and need to send a message to the workers to pass some parameters for example,
  * you can use this function to get the global dispatcher and send a message to the workers.
+ *
+ * Creating it also replays everything registered with `onGlobalDispatcherCreated`, so a map must call this
+ * before its workers run: they answer their own `getResource` requests through the global dispatcher.
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): Dispatcher {
@@ -137,15 +137,29 @@ export function getGlobalDispatcher(): Dispatcher {
         globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
-        for (const url of importedScriptUrls) {
-            globalDispatcher.broadcast(MessageType.importScript, url);
-        }
+        globalWorkerStateReplayed = Promise.all(globalWorkerStateReplays.map(replay => replay(globalDispatcher)));
     }
     return globalDispatcher;
 }
 
+/**
+ * Discards the global dispatcher once the pool terminates its workers, since its actors now point at dead workers.
+ * The next caller gets a fresh one built around whatever workers the pool creates next.
+ */
+function dropGlobalDispatcher(): void {
+    globalDispatcher.remove(false);
+    globalDispatcher = undefined;
+}
+
+onGlobalDispatcherCreated(dispatcher => Promise.all(importedScriptUrls.map(url => dispatcher.broadcast(MessageType.importScript, url))));
+
 /** Imports a script into every worker, and into any worker created later. */
 export async function importScriptInGlobalWorkers(url: string): Promise<void> {
-    await getGlobalDispatcher().broadcast(MessageType.importScript, url);
-    if (!importedScriptUrls.includes(url)) importedScriptUrls.push(url);
+    const dispatcher = getGlobalDispatcher();
+    if (importedScriptUrls.includes(url)) {
+        await globalWorkerStateReplayed;
+        return;
+    }
+    importedScriptUrls.push(url);
+    await dispatcher.broadcast(MessageType.importScript, url);
 }

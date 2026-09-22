@@ -2,30 +2,28 @@
 import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
-import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {getGlobalDispatcher, onGlobalDispatcherCreated} from '../util/dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
-    dispatcher: Dispatcher = getGlobalDispatcher();
 
-    /** Re-broadcasts the plugin state when the global dispatcher has been recreated, since its workers have never seen the plugin. */
-    ensureSynced(): void {
-        const dispatcher = getGlobalDispatcher();
-        if (dispatcher === this.dispatcher) return;
-        this.dispatcher = dispatcher;
+    /** Re-sends the plugin state to workers that have never seen it, after the previous ones were terminated. */
+    _replayIntoNewWorkers(): Promise<unknown> {
         if (this.status === 'deferred') {
-            this._syncState('deferred');
+            return this._syncState('deferred');
         } else if (this.status === 'loading' || this.status === 'loaded') {
-            this._requestImport();
+            return this._requestImport();
+        } else {
+            return Promise.resolve();
         }
     }
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
         this.status = statusToSend;
-        return this.dispatcher.broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
+        return getGlobalDispatcher().broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
             .catch((e: any) => {
                 this.status = 'error';
                 throw e;
@@ -94,6 +92,9 @@ class RTLMainThreadPlugin extends Evented {
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
 
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
-    rtlMainThreadPlugin ||= new RTLMainThreadPlugin();
+    if (!rtlMainThreadPlugin) {
+        rtlMainThreadPlugin = new RTLMainThreadPlugin();
+        onGlobalDispatcherCreated(() => rtlMainThreadPlugin._replayIntoNewWorkers());
+    }
     return rtlMainThreadPlugin;
 }

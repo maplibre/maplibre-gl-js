@@ -3,7 +3,7 @@ import {type FakeServer, fakeServer} from 'nise';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread.ts';
 import {sleep} from '../util/test/util.ts';
 import {browser} from '../util/browser.ts';
-import {Dispatcher} from '../util/dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
@@ -182,7 +182,7 @@ describe('RTLMainThreadPlugin', () => {
 
         removeLastMap();
         broadcastSpy.mockClear();
-        rtlMainThreadPlugin.ensureSynced();
+        getGlobalDispatcher();
         await sleep(1);
 
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
@@ -195,18 +195,18 @@ describe('RTLMainThreadPlugin', () => {
 
         removeLastMap();
         broadcastSpy.mockClear();
-        rtlMainThreadPlugin.ensureSynced();
+        getGlobalDispatcher();
 
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
         expect(rtlMainThreadPlugin.status).toBe('deferred');
     });
 
-    test('ensureSynced should do nothing while the dispatcher is unchanged', async () => {
+    test('should not re-send the plugin state while the dispatcher is unchanged', async () => {
         broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
         broadcastSpy.mockClear();
 
-        rtlMainThreadPlugin.ensureSynced();
+        getGlobalDispatcher();
         await sleep(1);
         expect(broadcastSpy).not.toHaveBeenCalled();
     });

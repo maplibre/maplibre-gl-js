@@ -1,4 +1,4 @@
-import {describe, afterEach, test, expect, vi} from 'vitest';
+import {describe, afterEach, onTestFinished, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
 import {Dispatcher, getGlobalDispatcher, importScriptInGlobalWorkers} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
@@ -120,11 +120,11 @@ describe('global dispatcher', () => {
         const globalDispatcher = getGlobalDispatcher();
         const mapDispatcher = new Dispatcher(pool, 1);
         const otherMapDispatcher = new Dispatcher(pool, 2);
+        onTestFinished(() => otherMapDispatcher.remove());
 
         mapDispatcher.remove();
 
         expect(getGlobalDispatcher()).toBe(globalDispatcher);
-        otherMapDispatcher.remove();
     });
 
     test('clearPrewarmedResources releases the workers once the last map is removed', () => {
@@ -147,5 +147,16 @@ describe('global dispatcher', () => {
         getGlobalDispatcher();
 
         expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
+    });
+
+    test('imports a script once into a recreated global dispatcher that already replayed it', async () => {
+        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+        await importScriptInGlobalWorkers('plugin.js');
+        new Dispatcher(getGlobalWorkerPool(), 1).remove();
+        broadcastSpy.mockClear();
+
+        await importScriptInGlobalWorkers('plugin.js');
+
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 });
