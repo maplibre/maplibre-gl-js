@@ -91,6 +91,8 @@ export type GetClusterOptions = {
  * A source containing GeoJSON.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
+ * GeoJSON is tiled internally for rendering. Features exposed from rendered tiles and related events come from vector-tile data, so GeoJSON foreign members that cannot be represented by the vector-tile format are not preserved there. Keep that data separately, or map it to supported feature properties, if you need it after tiling.
+ *
  * @group Sources
  *
  * @example
