@@ -420,18 +420,18 @@ export class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict): void {
+    querySourceFeatures(result: GeoJSONFeature[], params: QuerySourceFeatureOptionsStrict): void {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex?.rawTileData) return;
 
         const vtLayers = featureIndex.loadVTLayers();
 
-        const sourceLayer = params?.sourceLayer ? params.sourceLayer : '';
+        const sourceLayer = params.sourceLayer ? params.sourceLayer : '';
         const layer = vtLayers[GEOJSON_TILE_LAYER_NAME] || vtLayers[sourceLayer];
 
         if (!layer) return;
 
-        const filter = featureFilter(params?.filter, `querySourceFeatures[${sourceLayer}].filter`, params?.globalState);
+        const filter = featureFilter(params.filter, `querySourceFeatures[${sourceLayer}].filter`, params.globalState);
         const {z, x, y} = this.tileID.canonical;
         const coord = {z, x, y};
 
@@ -444,7 +444,7 @@ export class Tile {
                 continue;
             }
             const id = featureIndex.getId(feature, sourceLayer);
-            const geojsonFeature = new GeoJSONFeature(feature, z, x, y, id);
+            const geojsonFeature = new GeoJSONFeature(feature, z, x, y, id, params.worldCoordinateHelper);
             (geojsonFeature as any).tile = coord;
             result.push(geojsonFeature);
         }

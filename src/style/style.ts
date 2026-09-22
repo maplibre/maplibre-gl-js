@@ -1699,7 +1699,9 @@ export class Style extends Evented<MapEventType> {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const tileManager = this.tileManagers[sourceID];
-        return tileManager ? querySourceFeatures(tileManager, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
+        if (!tileManager) return [];
+        const paramsStrict = {...params, globalState: this._globalState, worldCoordinateHelper: this.projection.worldCoordinateHelper};
+        return querySourceFeatures(tileManager, paramsStrict);
     }
 
     getLight(): LightSpecification {

@@ -167,6 +167,7 @@ export class MercatorCoordinate implements IMercatorCoordinate {
  * Lives next to the mercator functions it calls so they stay module-local on the camera paths.
  */
 class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
+    readonly name = 'mercator';
     worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
         return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat), altitude === undefined ? 0 : mercatorZfromAltitude(altitude, lat));
     }

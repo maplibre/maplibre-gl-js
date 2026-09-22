@@ -1,5 +1,6 @@
 import {bench} from 'vitest';
 import {FeatureIndex} from './feature_index.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 
 import type {FeatureFilter} from '@maplibre/maplibre-gl-style-spec';
@@ -17,5 +18,5 @@ featureIndex.vtLayers = {
 const layerIdsToTest = new Set(Array.from({length: layerCount}, (_, i) => `non-existing-layer-${i}`));
 
 bench('FeatureIndex.loadMatchingFeature', () => {
-    featureIndex.loadMatchingFeature({}, 0, 0, 0, filter, layerIdsToTest, [], {}, {});
+    featureIndex.loadMatchingFeature({}, 0, 0, 0, filter, layerIdsToTest, [], {}, {}, mercatorWorldCoordinateHelper);
 });

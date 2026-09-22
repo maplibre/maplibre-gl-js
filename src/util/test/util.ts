@@ -52,10 +52,6 @@ export class StubMap extends Evented {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
     }
-
-    get _camera(): {transform: IReadonlyTransform} {
-        return {transform: this.transform};
-    }
 }
 
 export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean}): Map {
@@ -377,10 +373,6 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
 }
 
 /**
- * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
- * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
- */
-/**
  * A transform over the built-in simple CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
  * axes), sized to the given viewport.
  */
@@ -397,6 +389,10 @@ export function createSimpleCrsTransform(width: number, height: number): Mercato
     return transform;
 }
 
+/**
+ * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
+ * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
+ */
 export function createRotatedCrs(): CrsDefinition {
     const cos = Math.cos(Math.PI / 6);
     const sin = Math.sin(Math.PI / 6);
