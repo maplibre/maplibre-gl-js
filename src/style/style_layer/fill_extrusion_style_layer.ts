@@ -1,13 +1,13 @@
 import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
-import type {Painter} from '../../render/painter.ts';
-import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Painter} from '../../render/painter.ts';
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
