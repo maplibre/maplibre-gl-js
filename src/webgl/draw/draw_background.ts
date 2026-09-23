@@ -1,69 +1,98 @@
-import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
+import {DrawableCollection} from '../drawable.ts';
 import {
     backgroundUniformValues,
     backgroundPatternUniformValues
 } from '../program/background_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
+import {isBackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
+import type {BackgroundUniformsType, BackgroundPatternUniformsType} from '../program/background_program.ts';
 
-export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
-    const color = layer.paint.get('background-color');
-    const opacity = layer.paint.get('background-opacity');
+export type BackgroundDrawables = {
+    layer: BackgroundStyleLayer;
+    tiles: OverscaledTileID[];
+    drawables: DrawableCollection<BackgroundUniformsType | BackgroundPatternUniformsType>;
+};
 
-    if (opacity === 0) return;
+/**
+ * Keeps one drawable per tile for every visible background layer, including terrain tiles whose texture is cached.
+ * Background meshes have no borders or stencil clipping, so tiles within each target must not overlap.
+ * Meshes with borders would hide tiny holes at tile boundaries, but they need a tile clipping mask in stencil first.
+ */
+export function prepareBackgroundDrawables(painter: Painter): void {
+    const {context, transform, style, renderContext, backgroundDrawables} = painter;
+    let tiles: OverscaledTileID[];
 
-    const context = painter.context;
-    const gl = context.gl;
-    const projection = painter.style.projection;
-    const transform = painter.transform;
-    const tileSize = transform.tileSize;
-    const image = layer.paint.get('background-pattern');
+    for (let i = 0; i < style._order.length; i++) {
+        const layer = style._layers[style._order[i]];
+        if (!isBackgroundStyleLayer(layer) || layer.isHidden(transform.zoom)) continue;
 
-    if (painter.isPatternMissing(image)) return;
+        const color = layer.paint.get('background-color');
+        const opacity = layer.paint.get('background-opacity');
+        const image = layer.paint.get('background-pattern');
+        if (opacity === 0 || painter.isPatternMissing(image)) continue;
 
-    const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
-    if (renderContext.currentPass !== pass) return;
+        tiles ??= painter.renderToTexture ?
+            renderContext.terrain.tileManager.getRenderableTiles().map(tile => tile.tileID) :
+            coveringTiles(transform, {tileSize: transform.tileSize, terrain: renderContext.terrain});
 
-    const stencilMode = StencilMode.disabled;
-    const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-    const colorMode = painter.colorModeForRenderPass();
-    const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
+        const drawables = backgroundDrawables.get(layer.id)?.drawables ?? new DrawableCollection();
+        backgroundDrawables.set(layer.id, {layer, tiles, drawables});
+        const renderPass = !image && color.a === 1 && opacity === 1 && i < renderContext.opaquePassCutoff ? 'opaque' : 'translucent';
+        const depthMask = renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly;
+        const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
 
-    if (image) {
-        context.activeTexture.set(gl.TEXTURE0);
-        painter.patternAtlas.bind(painter.context);
+        for (const tileID of tiles) {
+            const mesh = style.projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
+            const drawable = drawables.request(tileID.key, program, mesh, layer.id, context.gl.TRIANGLES);
+            drawable.renderPass = renderPass;
+            drawable.depthMask = depthMask;
+            drawable.cullFaceMode = CullFaceMode.backCCW;
+        }
     }
 
+    for (const [layerID, group] of backgroundDrawables) {
+        group.drawables.removeUnrequested();
+        if (group.drawables.entries.size === 0) {
+            backgroundDrawables.delete(layerID);
+            continue;
+        }
+        updateUniformValues(group, painter, renderContext);
+    }
+}
+
+export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
+    const group = painter.backgroundDrawables.get(layer.id);
+    if (!group) return;
+
+    for (const tileID of coords ?? group.tiles) {
+        group.drawables.entries.get(tileID.key).draw(painter, renderContext, tileID);
+    }
+}
+
+/** Must run after all background patterns are packed into the atlas, since packing moves them. */
+function updateUniformValues(group: BackgroundDrawables, painter: Painter, renderContext: RenderContext): void {
+    const {layer, tiles, drawables} = group;
+    const color = layer.paint.get('background-color');
+    const opacity = layer.paint.get('background-opacity');
+    const image = layer.paint.get('background-pattern');
     const crossfade = layer.getCrossfadeParameters();
-    
-    for (const tileID of tileIDs) {
-        const projectionData = getProjectionDataForTile(renderContext, tileID);
+    const tileSize = renderContext.transform.tileSize;
+    const uniformValues = image ? null : backgroundUniformValues(opacity, color);
+    const textures = image ? [{unit: 0, texture: painter.patternAtlas}] : [];
 
-        const uniformValues = image ?
+    for (const tileID of tiles) {
+        const drawable = drawables.entries.get(tileID.key);
+        drawable.uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
-            backgroundUniformValues(opacity, color);
-        const terrainData = getTerrainDataForTile(renderContext, tileID);
-
-        // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
-        // This works assuming the tileIDs list contains only tiles of the same zoom level.
-        // This seems to always be the case for background layers, but I'm leaving this comment
-        // here in case this assumption is false in the future.
-
-        // In case background starts having tiny holes at tile boundaries, switch to meshes with borders
-        // and also enable stencil clipping. Make sure to render a proper tile clipping mask into stencil
-        // first though, as that doesn't seem to happen for background layers as of writing this.
-
-        const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
-        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id,
-            mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            uniformValues;
+        drawable.textures = textures;
     }
 }
