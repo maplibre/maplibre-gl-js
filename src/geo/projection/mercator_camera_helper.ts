@@ -133,10 +133,17 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
         };
 
+        const endTransform = this._transformAtAnimationEnd(tr, endZoom, endEulerAngles, options.padding);
+        if (options.around) {
+            endTransform.setLocationAtPoint(options.around, options.aroundPoint);
+        } else {
+            endTransform.setLocationAtPoint(center, endTransform.centerPoint.add(options.offsetAsPoint));
+        }
+
         return {
             easeFunc,
             isZooming,
-            elevationCenter: center,
+            elevationCenter: endTransform.center,
         };
     }
 
@@ -150,15 +157,15 @@ export class MercatorCameraHelper implements ICameraHelper {
             LngLat.convert(options.center || options.locationAtOffset),
             optionsZoom ? +options.zoom : startZoom
         );
-        const targetCenter = constrained.center;
+        const constrainedCenter = constrained.center;
         const targetZoom = constrained.zoom;
 
-        normalizeCenter(tr, targetCenter);
+        normalizeCenter(tr, constrainedCenter);
 
         const worldCoordinateHelper = tr.worldCoordinateHelper;
         const startWorldSize = tr.worldSize;
         const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset, worldCoordinateHelper);
-        const delta = projectToWorldCoordinates(startWorldSize, targetCenter, worldCoordinateHelper).sub(from);
+        const delta = projectToWorldCoordinates(startWorldSize, constrainedCenter, worldCoordinateHelper).sub(from);
 
         const pixelPathLength = delta.mag();
 
@@ -167,23 +174,40 @@ export class MercatorCameraHelper implements ICameraHelper {
         const requestedMinZoom = typeof options.minZoom !== 'undefined' ? +options.minZoom : tr.minZoom;
         const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
         const minZoomPreConstrain = Math.min(effectiveMinZoom, startZoom, targetZoom);
-        const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+        const minZoom = tr.applyConstrain(constrainedCenter, minZoomPreConstrain).zoom;
         const scaleOfMinZoom = zoomScale(minZoom - startZoom);
 
         const easeFunc = (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
             const newCenter = k === 1
-                ? targetCenter
+                ? constrainedCenter
                 : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)), worldCoordinateHelper);
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 
+        const endTransform = this._transformAtAnimationEnd(tr, targetZoom, {roll: options.roll, pitch: options.pitch, bearing: options.bearing}, options.padding);
+        endTransform.setLocationAtPoint(constrainedCenter, endTransform.centerPoint.add(options.offsetAsPoint));
+
         return {
             easeFunc,
             scaleOfZoom,
-            targetCenter,
+            targetCenter: endTransform.center,
             scaleOfMinZoom,
             pixelPathLength,
         };
+    }
+
+    /**
+     * A copy of the transform at the animation's end zoom, angles and padding, for reading where the map center
+     * ends up once a location is placed at its screen point.
+     */
+    private _transformAtAnimationEnd(tr: ITransform, zoom: number, angles: {roll: number; pitch: number; bearing: number}, padding: PaddingOptions): ITransform {
+        const endTransform = tr.clone();
+        endTransform.setZoom(zoom);
+        endTransform.setRoll(angles.roll);
+        endTransform.setPitch(angles.pitch);
+        endTransform.setBearing(angles.bearing);
+        endTransform.setPadding(padding);
+        return endTransform;
     }
 }
