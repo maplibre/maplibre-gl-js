@@ -30,7 +30,6 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.messageHandlers = {};
         this.removed = false;
         this.workerErrorSubscriptions = [];
-        if (mapId !== GLOBAL_DISPATCHER_ID) this.getActors();
     }
 
     private async initActors(mapId: string | number): Promise<Actor[]> {
@@ -111,22 +110,23 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
         (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
-        const actors = await this.getActors();
-        for (const actor of actors) {
+        for (const actor of await (this._actorsPromise ?? [])) {
             actor.registerMessageHandler(type, handler);
         }
     }
 
     public async unregisterMessageHandler<T extends MessageType>(type: T): Promise<void> {
         delete this.messageHandlers[type];
-        const actors = await this.getActors();
-        for (const actor of actors) {
+        for (const actor of await (this._actorsPromise ?? [])) {
             actor.unregisterMessageHandler(type);
         }
     }
 }
 
-let globalDispatcher: Dispatcher;
+const globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
+globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
+    return makeRequest(params, abortController);
+});
 
 /** Every script url {@link importScriptInWorkers} has sent, so they can be sent again to new workers. */
 const scriptsImportedIntoWorkers: Set<string> = new Set();
@@ -164,12 +164,6 @@ export function onGlobalWorkersCreated(listener: () => void): Subscription {
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): Dispatcher {
-    if (!globalDispatcher) {
-        globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
-        globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
-            return makeRequest(params, abortController);
-        });
-    }
     globalDispatcher.getActors();
     return globalDispatcher;
 }

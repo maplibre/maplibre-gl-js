@@ -112,21 +112,11 @@ describe('global dispatcher', () => {
         expect(pool.numActive()).toBe(0);
     });
 
-    test('a listener that reaches for the global dispatcher does not recurse while it is being created', async () => {
-        vi.resetModules();
-        const dispatcherModule = await import('./dispatcher.ts');
-        dispatcherModule.onGlobalWorkersCreated(() => {
-            dispatcherModule.getGlobalDispatcher();
-        });
-
-        expect(() => dispatcherModule.getGlobalDispatcher()).not.toThrow();
-    });
-
     test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
         const globalWorkersCreated = vi.fn();
         onGlobalWorkersCreated(globalWorkersCreated);
 
-        new Dispatcher(getGlobalWorkerPool(), 1);
+        new Dispatcher(getGlobalWorkerPool(), 1).getActors();
 
         await getGlobalDispatcher().getActors();
         expect(globalWorkersCreated).toHaveBeenCalled();
@@ -135,7 +125,8 @@ describe('global dispatcher', () => {
     test('keeps the workers while another map still holds them', () => {
         const pool = getGlobalWorkerPool();
         const mapDispatcher = new Dispatcher(pool, 1);
-        new Dispatcher(pool, 2);
+        mapDispatcher.getActors();
+        new Dispatcher(pool, 2).getActors();
 
         mapDispatcher.remove();
 

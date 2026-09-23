@@ -60,6 +60,8 @@ export class WorkerPool {
             promises.push(workerFactory());
         }
         this.workersPromise = Promise.all(promises);
+        // Fires before the await so listeners replay state the caller has not recorded yet.
+        // Waiting until the workers boot makes the first importScriptInWorkers send twice.
         for (const onCreate of this.onCreateListeners.slice()) {
             onCreate();
         }
