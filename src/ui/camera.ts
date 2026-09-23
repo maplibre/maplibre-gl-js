@@ -328,7 +328,7 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * The location under the screen center point when the animation ends; the animation eases the center elevation to the terrain there.
+     * The map center when the animation ends; the animation eases the center elevation to the terrain there.
      */
     _elevationCenter: LngLat;
     /**
