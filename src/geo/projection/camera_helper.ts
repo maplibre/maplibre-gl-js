@@ -45,6 +45,9 @@ export type EaseToHandlerOptions = {
 
 export type EaseToHandlerResult = {
     easeFunc: (k: number) => void;
+    /**
+     * The location under the screen center point when the animation ends.
+     */
     elevationCenter: LngLat;
     isZooming: boolean;
 };
@@ -65,6 +68,9 @@ export type FlyToHandlerResult = {
     easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
     scaleOfZoom: number;
     scaleOfMinZoom: number;
+    /**
+     * The location under the screen center point when the animation ends.
+     */
     targetCenter: LngLat;
     pixelPathLength: number;
 };

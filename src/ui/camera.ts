@@ -328,7 +328,7 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * holds the geographical coordinate of the target
+     * The location under the screen center point when the animation ends; the animation eases the center elevation to the terrain there.
      */
     _elevationCenter: LngLat;
     /**
@@ -843,7 +843,7 @@ export class Camera extends Evented<MapEventType> {
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -883,14 +883,20 @@ export class Camera extends Evented<MapEventType> {
         this.elevationFreeze = true;
     }
 
-    _updateElevation(k: number): void {
-
+    /**
+     * @internal
+     * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
+     * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform.
+     * @param k - the animation's progress, 0 to 1
+     * @param tr - the transform the animation edits
+     */
+    _updateElevation(k: number, tr: ITransform): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
-            this._prepareElevation(this.transform.center);
+            this._prepareElevation(tr.center);
         }
 
-        this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, this.transform);
+        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
+        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -898,7 +904,7 @@ export class Camera extends Evented<MapEventType> {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
+        tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
     }
 
     _finalizeElevation(): void {
@@ -1224,7 +1230,7 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {

@@ -9,6 +9,7 @@ import {AttributionControl, defaultAttributionControlOptions} from '../control/a
 import {ImageRequest} from '../../util/image_request.ts';
 import {Painter, type RTTObject} from '../../render/painter.ts';
 import {MapSourceDataEvent} from '../events.ts';
+import * as timeControl from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
 import type {Terrain} from '../../render/terrain.ts';
@@ -375,6 +376,65 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
 
         expect(map.getCameraTargetElevation()).toBe(1500);
+    });
+
+    function linearEasing(k: number): number {
+        return k;
+    }
+
+    test('easeTo and flyTo ease the center elevation to the terrain under the destination, and the frame after the animation leaves it there', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lnglat: LngLat) => lnglat.lat > 2.5 ? 3000 : lnglat.lat > 0.5 ? 1000 : 0);
+
+        map.easeTo({center: [1, 1], zoom: 12, duration: 1000, easing: linearEasing});
+        now.mockReturnValue(500);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(500);
+        now.mockReturnValue(1000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+
+        map.flyTo({center: [3, 3], zoom: 13, duration: 1000, easing: linearEasing});
+        now.mockReturnValue(1500);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(2000);
+        now.mockReturnValue(2000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(3000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('easeTo and flyTo with an offset ease the center elevation to the terrain under the center, not under the offset point', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat');
+        const offsetBelowCenter: [number, number] = [0, 100];
+
+        terrainElevation.mockImplementation((lnglat: LngLat) => lnglat.lat > 1.005 ? 1000 : lnglat.lat > 0.5 ? 500 : 0);
+        map.easeTo({center: [1, 1], zoom: 12, offset: offsetBelowCenter, duration: 1000, easing: linearEasing});
+        now.mockReturnValue(900);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(900);
+        now.mockReturnValue(1000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+
+        terrainElevation.mockImplementation((lnglat: LngLat) => lnglat.lat > 3.003 ? 3000 : lnglat.lat > 2.5 ? 2000 : 1000);
+        map.flyTo({center: [3, 3], zoom: 13, offset: offsetBelowCenter, duration: 1000, easing: linearEasing});
+        now.mockReturnValue(1900);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(2800);
+        now.mockReturnValue(2000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(3000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(3000);
     });
 });
 

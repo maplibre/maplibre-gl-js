@@ -2097,7 +2097,7 @@ describe('flyTo', () => {
         expect(camera.elevationFreeze).toBeTruthy();
 
         terrain.getElevationForLngLat = () => 200;
-        camera._updateElevation(0.5);
+        camera._updateElevation(0.5, camera.transform);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 
