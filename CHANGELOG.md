@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Skip point labels in the tile buffer before requesting their glyphs and icons, since the neighbouring tile draws them (by [@cherenkov](https://github.com/cherenkov))
+- Skip point labels in the tile buffer before requesting their glyphs and icons, since the neighbouring tile draws them ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
