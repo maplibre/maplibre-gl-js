@@ -30,7 +30,7 @@ describe('HandlerManager terrain scenarios', () => {
         manager = map._handlers;
     });
 
-    test('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
+    test('_handleMapControls pans through the camera helper when terrain is not enabled and the pointer is on the map', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
