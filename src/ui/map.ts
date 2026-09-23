@@ -2299,7 +2299,7 @@ export class Map extends Evented<MapEventType> {
      * map.on('click', 'countries', (e) => {
      *   new Popup()
      *     .setLngLat(e.lngLat)
-     *     .setHTML(`Country name: ${e.features[0].properties.name}`)
+     *     .setText(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
      * });
      * ```
@@ -2984,11 +2984,7 @@ export class Map extends Evented<MapEventType> {
             this.terrain = null;
             this.painter.renderToTexture = null;
             this.painter.destroyRTTResources();
-            this._camera.terrain = null;
-            this._camera.transform.setMinElevationForCurrentTile(0);
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(0);
-            }
+            this._camera.setTerrain(null);
         } else {
             // add terrain
             const tileManager = this.style.tileManagers[options.source];
@@ -3010,9 +3006,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this._camera.terrain = this.terrain;
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+            this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -3035,12 +3029,7 @@ export class Map extends Evented<MapEventType> {
         }
         if (isTerrainSourceEvent && event.tile) {
             this.painter.markTerrainDepthDirty();
-        }
-        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
-            }
+            this._camera.applyTerrainChange();
         }
 
         if (!event.tile) return;
