@@ -14,7 +14,7 @@ import type {RequestResponseMessageMap} from './actor_messages.ts';
 export class Dispatcher extends Evented<ErrorEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
-    private actorsPromise: Promise<Actor[]> | undefined;
+    private _actorsPromise: Promise<Actor[]> | undefined;
     currentActor: number;
     id: string | number;
     private messageHandlers: {[K in MessageType]?: MessageHandler<K>};
@@ -75,7 +75,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         }
         this.actors = [];
         this.workerErrorSubscriptions = [];
-        this.actorsPromise = undefined;
+        this._actorsPromise = undefined;
     }
 
     /**
@@ -84,15 +84,15 @@ export class Dispatcher extends Evented<ErrorEventType> {
      */
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
-        if (!this.actorsPromise) {
-            this.actorsPromise = this.initActors(this.id);
+        if (!this._actorsPromise) {
+            this._actorsPromise = this.initActors(this.id);
             if (this.id === GLOBAL_DISPATCHER_ID) {
                 for (const listener of globalWorkersCreatedListeners.slice()) {
                     listener();
                 }
             }
         }
-        return this.actorsPromise;
+        return this._actorsPromise;
     }
 
     /**

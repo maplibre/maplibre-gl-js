@@ -55,7 +55,7 @@ describe('Dispatcher', () => {
         dispatcher = new Dispatcher(workerPool, mapId);
         await dispatcher.getActors();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
-        dispatcher.remove();
+        dispatcher.remove(true);
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);
     });
