@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add a variant level to `GlyphPositions` and the `getGlyphs` request/response types in `RequestResponseMessageMap`, requiring existing data to be nested under `default` ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+- Support multiple glyph variants in requests, caches, and atlases ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
