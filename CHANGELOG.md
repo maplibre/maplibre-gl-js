@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
-- Skip point labels in the tile buffer before requesting their glyphs and icons, since the neighbouring tile draws them (by [@cherenkov](https://github.com/cherenkov))
+- Skip point labels in the tile buffer before requesting their glyphs and icons, since the neighbouring tile draws them ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
