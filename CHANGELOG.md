@@ -5,6 +5,7 @@
 ### 🐞 Bug fixes
 - Fix the camera jumping when a drag over terrain ends at a pitch above 84° ([#8541](https://github.com/maplibre/maplibre-gl-js/pull/8541)) (by [@birkskyum](https://github.com/birkskyum))
 - Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543))
+- Keep the camera above the terrain during zoom gestures, where it could dive into a mountain and then jump out ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539))
 - _...Add new stuff here..._
 
 ## 6.11.1

@@ -501,6 +501,55 @@ describe('Keep camera outside terrain', () => {
         expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
         expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
     });
+
+    async function createMapOverTerrainWithACameraFloor(floor: number): Promise<Map> {
+        const map = createMap({interactive: true, zoom: 11, pitch: 45});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(floor);
+        map.redraw();
+        return map;
+    }
+
+    test('a pitch drag that would put the camera into the terrain lifts the center, and the camera with it, and keeps the pitch', async () => {
+        const map = await createMapOverTerrainWithACameraFloor(20000);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        expect(map.getPitch()).toBe(60);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(14273.6, 1);
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 60});
+        map._renderTaskQueue.run();
+        expect(map.getPitch()).toBe(60);
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 60});
+        map._renderTaskQueue.run();
+        expect(map.getPitch()).toBe(60);
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+    });
+
+    test('terrain rising under a resting camera lifts the camera onto it, and the next frame keeps it there', async () => {
+        const map = await createMapOverTerrainWithACameraFloor(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(20000);
+
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
+
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(11901.7, 1);
+        expect(map.getPitch()).toBe(45);
+
+        map.redraw();
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(11901.7, 1);
+        expect(map.getPitch()).toBe(45);
+    });
 });
 
 describe('queryTerrainElevation', () => {

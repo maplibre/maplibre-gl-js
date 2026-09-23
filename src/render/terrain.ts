@@ -512,13 +512,18 @@ export class Terrain {
         return minMax;
     }
 
+    /**
+     * The tile at the zoom's integer part that covers the location, and the location in that tile grid's units;
+     * a fractional zoom names no tile, so it is floored.
+     */
     _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
+        const tileZoom = Math.floor(zoom);
         const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
-        const worldSize = (1 << zoom) * EXTENT;
+        const worldSize = (1 << tileZoom) * EXTENT;
         const mercatorX = mercatorCoordinate.x * worldSize;
         const mercatorY = mercatorCoordinate.y * worldSize;
         const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
-        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        const tileID = new OverscaledTileID(tileZoom, 0, tileZoom, tileX, tileY);
         return {
             tileID,
             mercatorX,

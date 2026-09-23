@@ -276,7 +276,7 @@ export type CameraInitOptions = {
     zoomSnap: number;
     renderWorldCopies: boolean;
     centerClampedToGround: boolean;
-    terrain: Terrain;
+    terrain?: Terrain;
     transformConstrain: TransformConstrainFunction;
     requestRenderFrame: (a: () => void) => TaskID;
     cancelRenderFrame: (_: TaskID) => void;
@@ -295,7 +295,7 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Copy of the map's `terrain` (which the `Map` owns).
-     * The camera reads terrain for elevation handling but does not own it.
+     * The map's terrain, or null when the map has none; the map's own `terrain` reads and writes this field.
      */
     terrain: Terrain;
     cameraHelper: ICameraHelper;
@@ -415,12 +415,12 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Hands the camera the map's terrain, or null when the map has none, and brings the center
-     * elevation up to date with it, see {@link Camera.applyTerrainChange}.
+     * Hands the camera the map's terrain, or null when the map has none, and clamps the transform
+     * to it, see {@link Camera.clampToTerrain}.
      */
     setTerrain(terrain: Terrain): void {
         this.terrain = terrain;
-        this.applyTerrainChange();
+        this.clampToTerrain();
     }
 
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
@@ -923,24 +923,23 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Applies a change of the terrain under the center to the transform: the terrain was set or
-     * removed, or a DEM tile landed. The center keeps its place and the camera moves with the
-     * center's elevation, as it does on every rendered frame while nothing holds the elevation.
-     * While a gesture or an ease holds it this does nothing: the camera stays where the user put
-     * it and the hold's end re-solves zoom and center onto the new terrain without moving it.
-     * Nothing is in flight when this writes, so it writes the rendered transform, like the
-     * per-frame clamp; a requested camera state created here would outlive the call and the
-     * next gesture would start from it.
+     * Clamps the rendered transform to the terrain: the minimum elevation of the tile under the center, the center
+     * onto the terrain under it while no gesture or ease holds the elevation, and the camera above the terrain at
+     * its own position. Runs on every rendered frame, when the terrain is set or removed, and when a DEM tile lands.
+     * While a gesture or an ease holds the elevation, the center stays where the user put it, the requested camera
+     * state carries the camera floor, and the hold's end re-solves zoom and center onto the terrain without moving
+     * the camera.
      */
-    applyTerrainChange(): void {
-        if (this.elevationFreeze) {
-            return;
-        }
+    clampToTerrain(): void {
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
+        if (this.terrain && this.elevationFreeze) {
+            return;
+        }
         if (this.getCenterClampedToGround()) {
             tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
         }
+        this._keepCameraAboveTerrain(tr);
     }
 
     /**
@@ -961,68 +960,62 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Checks the given transform for the camera being below terrain surface and
-     * returns new pitch and zoom to fix that.
-     *
-     * With the new pitch and zoom, the camera will be at the same ground
-     * position but at higher altitude. It will still point to the same spot on
-     * the map.
-     *
-     * @param tr - The transform to check.
+     * Keeps the camera above the terrain at its own position, on the given transform, so a gesture, an ease or
+     * `jumpTo` continues from the corrected camera. With terrain and the center clamped to the ground, the center's
+     * elevation is raised by what the camera lacks, which lifts the camera and keeps pitch and zoom; a gesture's end
+     * puts the center back onto the terrain with the camera where it is. Otherwise, and without terrain when the
+     * camera has dipped below sea level past a pitch of 90 degrees, pitch and zoom are re-solved so the camera
+     * stands on the floor at the same ground position, still looking at the same center.
+     * @param tr - the requested camera state, or the rendered transform while nothing is in flight
      */
-    _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
+    _keepCameraAboveTerrain(tr: ITransform): void {
         if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
-            return {};
+            return;
         }
         const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
         const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
-        if (cameraAltitude < minAltitude) {
-            const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
-            return {
-                pitch: newCamera.pitch,
-                zoom: newCamera.zoom,
-            };
+        if (cameraAltitude >= minAltitude) {
+            return;
         }
-        return {};
+        if (this.terrain && this.getCenterClampedToGround()) {
+            tr.setElevation(tr.elevation + minAltitude - cameraAltitude);
+            return;
+        }
+        const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
+        tr.setZoom(newCamera.zoom);
+        tr.setPitch(newCamera.pitch);
     }
 
     /**
      * @internal
-     * Called after the camera is done being manipulated.
+     * Called after the camera is done being manipulated. Keeps the camera above the terrain on the requested
+     * state itself, lets `transformCameraUpdate`, if present, propose its changes on a copy, and applies the
+     * "approved" result to the rendered transform.
      * @param tr - the requested camera end state
-     * If the camera is inside terrain, it gets elevated.
-     * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
     applyUpdatedTransform(tr: ITransform): void {
-        const modifiers : Array<(tr: ITransform) => ReturnType<CameraUpdateTransformFunction>> = [];
-        modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
-        if (this.transformCameraUpdate) {
-            modifiers.push(tr => this.transformCameraUpdate(tr));
-        }
-        if (!modifiers.length) {
+        this._keepCameraAboveTerrain(tr);
+        if (!this.transformCameraUpdate) {
+            if (tr !== this.transform) this.transform.apply(tr, false);
             return;
         }
-        const finalTransform = tr.clone();
-        for (const modifier of modifiers) {
-            const nextTransform = finalTransform.clone();
-            const {
-                center,
-                zoom,
-                roll,
-                pitch,
-                bearing,
-                elevation
-            } = modifier(nextTransform);
-            if (center) nextTransform.setCenter(center);
-            if (elevation !== undefined) nextTransform.setElevation(elevation);
-            if (zoom !== undefined) nextTransform.setZoom(zoom);
-            if (roll !== undefined) nextTransform.setRoll(roll);
-            if (pitch !== undefined) nextTransform.setPitch(pitch);
-            if (bearing !== undefined) nextTransform.setBearing(bearing);
-            finalTransform.apply(nextTransform, false);
-        }
-        this.transform.apply(finalTransform, false);
+        const nextTransform = tr.clone();
+        const {
+            center,
+            zoom,
+            roll,
+            pitch,
+            bearing,
+            elevation
+        } = this.transformCameraUpdate(nextTransform);
+        if (center) nextTransform.setCenter(center);
+        if (elevation !== undefined) nextTransform.setElevation(elevation);
+        if (zoom !== undefined) nextTransform.setZoom(zoom);
+        if (roll !== undefined) nextTransform.setRoll(roll);
+        if (pitch !== undefined) nextTransform.setPitch(pitch);
+        if (bearing !== undefined) nextTransform.setBearing(bearing);
+        this.transform.apply(nextTransform, false);
     }
 
     _fireMoveEvents(eventData?: Record<string, unknown>): void {
