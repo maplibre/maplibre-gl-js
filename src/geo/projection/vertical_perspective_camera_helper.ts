@@ -169,8 +169,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         versorSetLocationAtPoint(tr, preZoomAroundLoc, anchor, deltas.panDelta);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        const result = cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
+        const result = cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
         // Get clip space bounds including padding
@@ -194,6 +194,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Obtain a globe projection matrix that does not include pitch (unsupported)
         const clonedTr = tr.clone();
         clonedTr.setCenter(result.center);
+        clonedTr.setPadding(mapPadding);
         clonedTr.setBearing(result.bearing);
         clonedTr.setPitch(0);
         clonedTr.setRoll(0);

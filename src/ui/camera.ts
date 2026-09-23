@@ -120,6 +120,13 @@ export type CameraForBoundsOptions = CameraOptions & {
      */
     padding?: number | PaddingOptions;
     /**
+     * The persistent padding of the map to calculate the fit for, as returned by {@link Map.getPadding}.
+     * Unlike `padding`, which only leaves space around the bounds for this calculation,
+     * this is the padding the map will have when the result is applied.
+     * @defaultValue the map's current padding
+     */
+    mapPadding?: PaddingOptions;
+    /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
      */
@@ -200,6 +207,13 @@ export type FitBoundsOptions = FlyToOptions & {
      * @defaultValue false
      */
     linear?: boolean;
+    /**
+     * The persistent padding of the map to calculate the fit for and to set on the map, as returned by {@link Map.getPadding}.
+     * Unlike `padding`, which only leaves space around the bounds for this fit and is not kept,
+     * this is the padding the map will have after the transition.
+     * @defaultValue the map's current padding
+     */
+    mapPadding?: PaddingOptions;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -621,9 +635,10 @@ export class Camera extends Evented<MapEventType> {
         const padding = extend(defaultPadding, options.padding) as PaddingOptions;
         options.padding = padding;
         const tr = this.transform;
+        const mapPadding = extend({top: 0, bottom: 0, right: 0, left: 0}, options.mapPadding ?? tr.padding) as PaddingOptions;
         const bounds = new LngLatBounds(p0, p1);
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
         if (result && this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
         }
@@ -655,6 +670,11 @@ export class Camera extends Evented<MapEventType> {
         options = extend(calculatedOptions, options);
         // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
         delete options.padding;
+        // The fit was calculated against mapPadding, so the map has to end up with that padding for the bounds to be in view.
+        if (options.mapPadding) {
+            options.padding = options.mapPadding;
+            delete options.mapPadding;
+        }
 
         return options.linear ?
             this.easeTo(options, eventData) :

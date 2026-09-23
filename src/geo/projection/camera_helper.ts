@@ -127,7 +127,7 @@ export interface ICameraHelper {
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void;
 
@@ -165,8 +165,8 @@ export function updateRotation(args: UpdateRotationArgs): void {
     }
 }
 
-export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
-    const edgePadding = tr.padding;
+export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
+    const edgePadding = mapPadding;
 
     // Consider all corners of the rotated bounding box derived from the given points
     // when find the camera position that fits the given points.

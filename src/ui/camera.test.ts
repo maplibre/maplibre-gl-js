@@ -2371,6 +2371,40 @@ describe('cameraForBounds', () => {
     });
 });
 
+describe('mapPadding', () => {
+    const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+    const mapPadding = {top: 20, right: 150, bottom: 40, left: 60};
+
+    test('cameraForBounds fits for the given padding instead of the map\'s current padding', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        const expected = paddedCamera.cameraForBounds(bb, {padding: 15});
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        expect(camera.cameraForBounds(bb, {padding: 15, mapPadding})).toEqual(expected);
+        expect(camera.getPadding()).toEqual({top: 300, right: 300, bottom: 300, left: 300});
+        // defaults to the map's current padding
+        expect(paddedCamera.cameraForBounds(bb, {padding: 15, mapPadding})).toEqual(expected);
+        // missing sides are 0, not taken from the map or the bounds padding
+        paddedCamera.setPadding({top: 0, right: 0, bottom: 0, left: 60});
+        expect(camera.cameraForBounds(bb, {padding: 15, mapPadding: {left: 60}})).toEqual(paddedCamera.cameraForBounds(bb, {padding: 15}));
+    });
+
+    test('fitBounds transitions to the given padding', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(mapPadding);
+        const expected = paddedCamera.cameraForBounds(bb);
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        camera.fitBounds(bb, {mapPadding, duration: 0});
+        expect(camera.getPadding()).toEqual(mapPadding);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual(fixedLngLat(expected.center, 4));
+        expect(fixedNum(camera.getZoom(), 3)).toBe(fixedNum(expected.zoom, 3));
+    });
+});
+
 describe('fitBounds', () => {
     test('no padding passed', () => {
         const {camera} = createCamera();

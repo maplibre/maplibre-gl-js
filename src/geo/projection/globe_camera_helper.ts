@@ -45,8 +45,8 @@ export class GlobeCameraHelper implements ICameraHelper {
         this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        return this.currentHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
+        return this.currentHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
     }
 
     /**
