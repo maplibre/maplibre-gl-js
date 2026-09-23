@@ -15,6 +15,7 @@ import {latFromMercatorY} from '../geo/mercator_coordinate.ts';
 import {fakeServer, type FakeServer} from 'nise';
 
 import type {RequestTransformFunction} from '../util/request_manager.ts';
+import type {LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 import type {Projection} from '../geo/projection/projection.ts';
@@ -1455,6 +1456,20 @@ describe('GeoJSONSource in a planar projection', () => {
         expect(coordinates[1]).toBeCloseTo(pseudo[1], 9);
     }
 
+    /** The worker's answer to a tile request is the empty GeoJSON tile a real painter accepts; anything else gets an empty result. */
+    function respondWithEmptyTiles(message: ActorMessage<MessageType>) {
+        return message.type === MessageType.loadTile || message.type === MessageType.reloadTile ? null : {};
+    }
+
+    function createTile(): Tile {
+        return new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512);
+    }
+
+    /** The `loadData` parameters the source sent, in order; tile requests are left out. */
+    function sentLoadData(spy: ReturnType<typeof vi.fn>): LoadGeoJSONParameters[] {
+        return spy.mock.calls.map(call => call[0] as ActorMessage<MessageType>).filter(message => message.type === MessageType.loadData).map(message => message.data as LoadGeoJSONParameters);
+    }
+
     test('sends object data pre-projected and keeps the original', async () => {
         const data = createPointData();
         const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
@@ -1588,51 +1603,74 @@ describe('GeoJSONSource in a planar projection', () => {
         }
     });
 
-    test('does not resend the data for a projection change that keeps the world mapping, like mercator to globe', async () => {
+    test('does not resend the data when a tile loads under another projection with the same world mapping', async () => {
         const data = createPointData();
-        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, () => ({}));
+        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, respondWithEmptyTiles);
         source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        expect(spy).toHaveBeenCalledTimes(1);
-
-        source.reloadForProjection();
-        await sleep(0);
-
-        expect(spy).toHaveBeenCalledTimes(1);
-    });
-
-    test('resends the data pre-projected when the projection becomes planar and as is when it goes back to mercator', async () => {
-        const data = createPointData();
-        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, () => ({}));
-        source.load();
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        expect(spy).toHaveBeenCalledTimes(1);
-
-        map.style.projection = createSimpleCrsProjection();
-        source.reloadForProjection();
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        expect(spy).toHaveBeenCalledTimes(2);
-        expectPseudo((spy.mock.calls[1][0].data.data.features[0].geometry as GeoJSON.Point).coordinates);
 
         map.style.projection = new MercatorProjection();
-        source.reloadForProjection();
+        await source.loadTile(createTile());
+        await sleep(0);
+
+        expect(sentLoadData(spy)).toHaveLength(1);
+    });
+
+    test('resends the data pre-projected when a tile loads after the projection became planar, and as is after it went back to mercator', async () => {
+        const data = createPointData();
+        const {source, spy} = createSpiedSource({data} as GeoJSONSourceOptions, map, respondWithEmptyTiles);
+        source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        expect(spy).toHaveBeenCalledTimes(3);
-        expect(spy.mock.calls[2][0].data.data).toBe(data);
+
+        const resentPlanar = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        map.style.projection = createSimpleCrsProjection();
+        await source.loadTile(createTile());
+        await resentPlanar;
+        expect(sentLoadData(spy)).toHaveLength(2);
+        expectPseudo(((sentLoadData(spy)[1].data as GeoJSON.FeatureCollection).features[0].geometry as GeoJSON.Point).coordinates);
+
+        const resentMercator = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        map.style.projection = new MercatorProjection();
+        await source.loadTile(createTile());
+        await resentMercator;
+        expect(sentLoadData(spy)).toHaveLength(3);
+        expect(sentLoadData(spy)[2].data).toBe(data);
     });
 
     test('keeps a diff that is still waiting for the worker when the projection changes', async () => {
-        const {source, spy} = createSpiedSource({data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, map, () => ({}));
+        const {source, spy} = createSpiedSource({data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, map, respondWithEmptyTiles);
         source.load();
         source.updateData({add: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]});
         map.style.projection = createSimpleCrsProjection();
-        source.reloadForProjection();
+        await source.loadTile(createTile());
         await vi.waitFor(() => expect(source.loaded()).toBe(true));
 
-        const sent = spy.mock.calls.map(call => call[0].data);
+        const sent = sentLoadData(spy);
         expect(sent.map(params => params.dataDiff ? 'diff' : 'data')).toEqual(['data', 'data', 'diff']);
         expectPseudo((sent[2].dataDiff.add[0].geometry as GeoJSON.Point).coordinates);
         const data = await source.getData() as GeoJSON.FeatureCollection;
         expect((data.features[0].geometry as GeoJSON.Point).coordinates).toEqual([45, 45]);
+    });
+
+    test('keeps the ids promoteId derives through a pre-projected diff and through the re-send after a projection change', async () => {
+        const {source, spy} = createSpiedSource({data: createPointData(), promoteId: 'name'} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), respondWithEmptyTiles);
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        await source.updateData({update: [{id: 'p', newGeometry: {type: 'Point', coordinates: [45, 0]}}]});
+        const sentUpdate = sentLoadData(spy)[1].dataDiff.update[0];
+        expect(sentUpdate.id).toBe('p');
+        expect((sentUpdate.newGeometry as GeoJSON.Point).coordinates).toEqual([90, expect.closeTo(0, 9)]);
+        const data = await source.getData() as GeoJSON.FeatureCollection;
+        expect(data.features[0].properties.name).toBe('p');
+        expect((data.features[0].geometry as GeoJSON.Point).coordinates).toEqual([45, 0]);
+
+        const resent = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        map.style.projection = new MercatorProjection();
+        await source.loadTile(createTile());
+        await resent;
+        const resentFeature = (sentLoadData(spy)[2].data as GeoJSON.FeatureCollection).features[0];
+        expect(resentFeature.properties.name).toBe('p');
+        expect((resentFeature.geometry as GeoJSON.Point).coordinates).toEqual([45, 0]);
     });
 });
