@@ -13,6 +13,27 @@ import type {IndexedFeature} from '../data/bucket.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
+const collisionBoxArray = new CollisionBoxArray();
+
+/**
+ * Two tiles at the same tile ID, each with a symbol bucket holding the same one label, so
+ * that the cross tile index gives both buckets the same cross tile ID for it.
+ */
+function setupTwoTilesSharingOneLabel() {
+    const features = [{feature: loadVectorTile().layers.place_label.feature(10)} as unknown as IndexedFeature];
+    const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+    const tiles = Array.from({length: 2}, () => createSymbolTile(tileID, features, collisionBoxArray,
+        {'text-allow-overlap': true, 'text-ignore-placement': true}));
+    const buckets = tiles.map(tile => tile.buckets.test as SymbolBucket);
+
+    const layer = buckets[0].layers[0];
+    new CrossTileSymbolIndex().addLayer(layer, tiles, 0);
+    return {tiles, buckets, layer};
+}
+
+/** Written over a packed opacity, so that finding it again means the buffer was not rewritten. */
+const SENTINEL = 12345;
+
 describe('placement', () => {
     let placement: Placement;
     let transform: MercatorTransform;
@@ -64,71 +85,48 @@ describe('placement', () => {
         }).not.toThrow();
     });
 
-    describe('updateLayerOpacities', () => {
-        const collisionBoxArray = new CollisionBoxArray();
+    test('the first bucket draws the shared label and the second hides it', () => {
+        const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
+        expect(buckets[1].symbolInstances.get(0).crossTileID).toBe(buckets[0].symbolInstances.get(0).crossTileID);
 
-        /**
-         * Two tiles at the same tile ID, each with a symbol bucket holding the same one label, so
-         * that the cross tile index gives both buckets the same cross tile ID for it.
-         */
-        function setupTwoTilesSharingOneLabel() {
-            const features = [{feature: loadVectorTile().layers.place_label.feature(10)} as unknown as IndexedFeature];
-            const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-            const tiles = Array.from({length: 2}, () => createSymbolTile(tileID, features, collisionBoxArray,
-                {'text-allow-overlap': true, 'text-ignore-placement': true}));
-            const buckets = tiles.map(tile => tile.buckets.test as SymbolBucket);
+        placement.updateLayerOpacities(layer, tiles);
 
-            const layer = buckets[0].layers[0];
-            new CrossTileSymbolIndex().addLayer(layer, tiles, 0);
-            return {tiles, buckets, layer};
-        }
+        expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
+        expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
+    });
 
-        /** Written over a packed opacity, so that finding it again means the buffer was not rewritten. */
-        const SENTINEL = 12345;
+    test('leaves the opacity buffers alone when the same tiles come round again', () => {
+        const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
+        placement.updateLayerOpacities(layer, tiles);
 
-        test('the first bucket draws the shared label and the second hides it', () => {
-            const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
-            expect(buckets[1].symbolInstances.get(0).crossTileID).toBe(buckets[0].symbolInstances.get(0).crossTileID);
+        for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
+        placement.updateLayerOpacities(layer, tiles);
 
-            placement.updateLayerOpacities(layer, tiles);
+        for (const bucket of buckets) expect(bucket.text.opacityVertexArray.uint32[0]).toBe(SENTINEL);
+    });
 
-            expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
-            expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
-        });
+    test('rewrites a bucket whose cross tile IDs were reassigned', () => {
+        const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
+        placement.updateLayerOpacities(layer, tiles);
 
-        test('leaves the opacity buffers alone when the same tiles come round again', () => {
-            const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
-            placement.updateLayerOpacities(layer, tiles);
+        for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
+        // Reindexing hands out fresh IDs. The same bucket still draws the label, so only the
+        // cross tile IDs differ from what was recorded, not the duplicate flags.
+        for (const bucket of buckets) bucket.symbolInstances.get(0).crossTileID = 9999;
+        placement.updateLayerOpacities(layer, tiles);
 
-            for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
-            placement.updateLayerOpacities(layer, tiles);
+        expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
+        expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
+    });
 
-            for (const bucket of buckets) expect(bucket.text.opacityVertexArray.uint32[0]).toBe(SENTINEL);
-        });
+    test('rewrites a bucket once the bucket that was hiding its label is gone', () => {
+        const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
+        placement.updateLayerOpacities(layer, tiles);
+        expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
 
-        test('rewrites a bucket whose cross tile IDs were reassigned', () => {
-            const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
-            placement.updateLayerOpacities(layer, tiles);
+        // The first tile drops out, so the second bucket now has to draw the label itself.
+        placement.updateLayerOpacities(layer, tiles.slice(1));
 
-            for (const bucket of buckets) bucket.text.opacityVertexArray.uint32[0] = SENTINEL;
-            // Reindexing hands out fresh IDs. The same bucket still draws the label, so only the
-            // cross tile IDs differ from what was recorded, not the duplicate flags.
-            for (const bucket of buckets) bucket.symbolInstances.get(0).crossTileID = 9999;
-            placement.updateLayerOpacities(layer, tiles);
-
-            expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
-            expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
-        });
-
-        test('rewrites a bucket once the bucket that was hiding its label is gone', () => {
-            const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
-            placement.updateLayerOpacities(layer, tiles);
-            expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_HIDDEN_OPACITY);
-
-            // The first tile drops out, so the second bucket now has to draw the label itself.
-            placement.updateLayerOpacities(layer, tiles.slice(1));
-
-            expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
-        });
+        expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
     });
 });
