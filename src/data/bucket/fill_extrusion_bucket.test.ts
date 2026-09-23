@@ -32,8 +32,8 @@ function regularPolygon(sides: number): Point[] {
     return ring;
 }
 
-function wallNormals(ring: Point[]): Array<{start: string; end: string}> {
-    const bucket = createFillExtrusionBucket({id: 'test', paint: {'fill-extrusion-height': 10}});
+function wallNormals(ring: Point[], roundedCornerDistance = 1): Array<{start: string; end: string}> {
+    const bucket = createFillExtrusionBucket({id: 'test', layout: {'fill-extrusion-rounded-corner-distance': roundedCornerDistance}, paint: {'fill-extrusion-height': 10}});
     const feature = {id: 0, sourceLayerIndex: 0, index: 0, geometry: [ring], properties: {}, type: 3, patterns: {}} as BucketFeature;
     bucket.addFeature(feature, feature.geometry, 0, {x: 0, y: 0, z: 14} as any, {}, createPopulateOptions([]).subdivisionGranularity);
 
@@ -104,6 +104,15 @@ describe('FillExtrusionBucket', () => {
 
     test('walls meeting at a right angle keep their own normal', () => {
         const walls = wallNormals(regularPolygon(4));
+
+        for (let i = 0; i < walls.length; i++) {
+            expect(walls[i].end).toBe(walls[i].start);
+            expect(walls[i].end).not.toBe(walls[(i + 1) % walls.length].start);
+        }
+    });
+
+    test('walls keep their own normal without rounded corners', () => {
+        const walls = wallNormals(regularPolygon(12), 0);
 
         for (let i = 0; i < walls.length; i++) {
             expect(walls[i].end).toBe(walls[i].start);

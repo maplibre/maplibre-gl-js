@@ -76,6 +76,7 @@ export class FillExtrusionBucket implements Bucket {
     indexBuffer: IndexBuffer;
 
     hasDependencies: boolean;
+    smoothWallNormals: boolean;
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
@@ -88,6 +89,7 @@ export class FillExtrusionBucket implements Bucket {
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
         this.hasDependencies = false;
+        this.smoothWallNormals = this.layers[0].layout.get('fill-extrusion-rounded-corner-distance') > 0;
 
         this.layoutVertexArray = new FillExtrusionLayoutArray();
         this.centroidVertexArray = new PosArray();
@@ -271,21 +273,15 @@ export class FillExtrusionBucket implements Bucket {
     private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}): void {
         let edgeDistance = 0;
 
-        // Edge normals, indexed by the edge's end vertex. Boundary and zero-length edges get none and are skipped.
-        const edgeNormals: Point[] = [null];
-        for (let p = 1; p < geometry.length; p++) {
-            const edge = geometry[p].sub(geometry[p - 1]);
-            edgeNormals.push(isBoundaryEdge(geometry[p], geometry[p - 1]) || edge.mag() === 0 ? null : edge._perp()._unit());
-        }
+        const edgeNormals = this.smoothWallNormals ? wallNormals(geometry) : null;
         const isRing = geometry.length > 2 && geometry[0].equals(geometry[geometry.length - 1]);
         const lastEdge = geometry.length - 1;
 
         for (let p = 1; p < geometry.length; p++) {
             const p1 = geometry[p];
             const p2 = geometry[p - 1];
-            const perp = edgeNormals[p];
 
-            if (!perp) {
+            if (isBoundaryEdge(p1, p2) || (edgeNormals && !edgeNormals[p])) {
                 continue;
             }
 
@@ -293,10 +289,15 @@ export class FillExtrusionBucket implements Bucket {
                 segmentReference.segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
             }
 
-            const next = edgeNormals[p + 1] || (isRing && p === lastEdge ? edgeNormals[1] : null);
-            const previous = edgeNormals[p - 1] || (isRing && p === 1 ? edgeNormals[lastEdge] : null);
-            const normal1 = smoothNormal(perp, next);
-            const normal2 = smoothNormal(perp, previous);
+            const perp = p1.sub(p2)._perp()._unit();
+            let normal1 = perp;
+            let normal2 = perp;
+            if (edgeNormals) {
+                const next = edgeNormals[p + 1] || (isRing && p === lastEdge ? edgeNormals[1] : null);
+                const previous = edgeNormals[p - 1] || (isRing && p === 1 ? edgeNormals[lastEdge] : null);
+                normal1 = smoothNormal(perp, next);
+                normal2 = smoothNormal(perp, previous);
+            }
             const dist = p2.dist(p1);
             if (edgeDistance + dist > 32768) edgeDistance = 0;
 
@@ -327,6 +328,16 @@ export class FillExtrusionBucket implements Bucket {
 // Turns of at most this angle between two neighbouring walls are shaded as one curved surface.
 // Rounded corners split their arc into steps of 30 degrees or less.
 const SMOOTH_NORMAL_MIN_DOT = Math.cos(35 * Math.PI / 180);
+
+// Wall normals indexed by the edge's end vertex. Boundary and zero-length edges get none.
+function wallNormals(geometry: Point[]): Point[] {
+    const normals: Point[] = [null];
+    for (let p = 1; p < geometry.length; p++) {
+        const edge = geometry[p].sub(geometry[p - 1]);
+        normals.push(isBoundaryEdge(geometry[p], geometry[p - 1]) || edge.mag() === 0 ? null : edge._perp()._unit());
+    }
+    return normals;
+}
 
 /**
  * Normal at the vertex shared by two walls: the average of both walls' normals when the turn between
