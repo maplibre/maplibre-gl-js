@@ -22,6 +22,7 @@ import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 import {createRenderContext, getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from './render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
+import {destroyProjectionUniformBuffers, releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -514,6 +515,7 @@ export class Painter {
         updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
 
         this.imageManager.beginFrame();
+        releaseProjectionUniformBuffers(this.context);
 
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
@@ -933,7 +935,7 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
 
-        this.context.projectionUniformBuffer.destroy();
+        destroyProjectionUniformBuffers(this.context);
         this.context.terrainUniformBuffer.destroy();
         this.context.frameUniformBuffer.destroy();
 

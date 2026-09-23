@@ -40,12 +40,16 @@ export function createRenderContext(transform: IReadonlyTransform, projection: P
 }
 
 export function getProjectionDataForTile(renderContext: RenderContext, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
-    return renderContext.transform.getProjectionData({
+    const projectionData = renderContext.transform.getProjectionData({
         overscaledTileID: tileID,
         aligned: options.aligned,
         applyGlobeMatrix: !renderContext.isRenderingToTexture,
         applyTerrainMatrix: options.applyTerrainMatrix ?? true
     });
+    if (renderContext.isRenderingToTexture) return projectionData;
+
+    projectionData.uniformBufferKey = options.aligned ? `${tileID.key}/aligned` : tileID.key;
+    return projectionData;
 }
 
 /**
