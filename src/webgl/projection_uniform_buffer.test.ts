@@ -57,7 +57,7 @@ describe('releaseProjectionUniformBuffers', () => {
 });
 
 describe('destroyProjectionUniformBuffers', () => {
-    test('deletes every projection buffer once, also when called twice', () => {
+    test('deletes every projection buffer once, even when called twice', () => {
         const gl = createNullGL();
         const context = new Context(gl);
         const sharedBuffer = context.projectionUniformBuffer.buffer;
