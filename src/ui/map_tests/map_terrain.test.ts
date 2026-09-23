@@ -278,6 +278,24 @@ describe('Gesture end on terrain', () => {
 
         expect(map.getCenterElevation()).toBe(400);
     });
+
+    test('the camera stays in place when a drag ends at pitch 85', async () => {
+        const map = createMap({interactive: true, zoom: 11, maxPitch: 85, pitch: 85});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(400);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 100});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 150});
+        map.redraw();
+        const probe = map.unproject([100, 150]);
+        const probeAtRelease = map.project(probe);
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 150});
+        map.redraw();
+
+        expect(map.project(probe).dist(probeAtRelease)).toBeLessThan(0.01);
+    });
 });
 
 describe('Terrain changing under and around a gesture', () => {

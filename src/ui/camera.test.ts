@@ -103,6 +103,13 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         expect(own.getPitch()).toBeCloseTo(60);
     });
 
+    test('puts the center on the ground at pitch 85', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 1000, 0, 85);
+        const center = LngLat.convert(cameraOptions.center);
+        expect(cameraOptions.elevation).toBe(0);
+        expect(center.lat).toBeCloseTo(0.1028, 3);
+    });
+
     test('look level', () => {
         const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 90);
         expect(cameraOptions).toBeDefined();
