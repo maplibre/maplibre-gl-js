@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix the camera jumping or bobbing around gestures over terrain, and ignoring terrain that loads after `easeTo`/`flyTo` ([#8471](https://github.com/maplibre/maplibre-gl-js/pull/8471)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Stop sending a vector tile to the worker when it was dropped while its request was being transformed or while the worker was still starting up, which left the parsed tile in the worker for the lifetime of the map ([#8516](https://github.com/maplibre/maplibre-gl-js/pull/8516)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ## 6.11.0
