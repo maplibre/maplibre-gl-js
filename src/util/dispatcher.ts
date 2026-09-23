@@ -21,10 +21,6 @@ export class Dispatcher extends Evented<ErrorEventType> {
     private removed: boolean;
     private workerErrorSubscriptions: Subscription[];
 
-    /**
-     * The global dispatcher builds its actors from {@link getGlobalDispatcher} instead, since the
-     * listeners it runs can call back into it before the instance is reachable.
-     */
     constructor(workerPool: WorkerPool, mapId: string | number) {
         super();
         this.workerPool = workerPool;
@@ -37,10 +33,6 @@ export class Dispatcher extends Evented<ErrorEventType> {
         if (mapId !== GLOBAL_DISPATCHER_ID) this.getActors();
     }
 
-    /**
-     * The global dispatcher weakly acquires the workers rather than keeping them alive. Every other
-     * dispatcher revives it first, since workers answer `getResource` through it.
-     */
     private async initActors(mapId: string | number): Promise<Actor[]> {
         let workers: ActorTarget[];
         if (mapId === GLOBAL_DISPATCHER_ID) {
@@ -65,7 +57,6 @@ export class Dispatcher extends Evented<ErrorEventType> {
         return this.actors;
     }
 
-    /** Leaves the dispatcher ready to build actors again once new workers exist. */
     private discardActors(): void {
         for (const actor of this.actors) {
             actor.remove();
@@ -78,20 +69,9 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this._actorsPromise = undefined;
     }
 
-    /**
-     * The actors to send through, built again if the workers behind the last ones were terminated.
-     * A removed dispatcher has none and never will, so messages sent to one go nowhere.
-     */
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
-        if (!this._actorsPromise) {
-            this._actorsPromise = this.initActors(this.id);
-            if (this.id === GLOBAL_DISPATCHER_ID) {
-                for (const listener of globalWorkersCreatedListeners.slice()) {
-                    listener();
-                }
-            }
-        }
+        this._actorsPromise ??= this.initActors(this.id);
         return this._actorsPromise;
     }
 
@@ -150,7 +130,6 @@ let globalDispatcher: Dispatcher;
 
 /** Every script url {@link importScriptInWorkers} has sent, so they can be sent again to new workers. */
 const scriptsImportedIntoWorkers: Set<string> = new Set();
-const globalWorkersCreatedListeners: Array<() => void> = [];
 
 /**
  * Registers a callback that restores state living in the workers rather than in any one map. It
@@ -170,13 +149,7 @@ const globalWorkersCreatedListeners: Array<() => void> = [];
  * ```
  */
 export function onGlobalWorkersCreated(listener: () => void): Subscription {
-    globalWorkersCreatedListeners.push(listener);
-    return {
-        unsubscribe: () => {
-            const index = globalWorkersCreatedListeners.indexOf(listener);
-            if (index !== -1) globalWorkersCreatedListeners.splice(index, 1);
-        }
-    };
+    return getGlobalWorkerPool().onCreate(listener);
 }
 
 /**

@@ -3,6 +3,7 @@ import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
 
 import type {ActorTarget} from './actor.ts';
+import type {Subscription} from './util.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
@@ -16,12 +17,24 @@ export class WorkerPool {
         [_ in number | string]: boolean;
     };
     workersPromise: Promise<ActorTarget[]> | null;
+    private onCreateListeners: Array<() => void>;
     private onTerminateListeners: Array<() => void>;
 
     constructor() {
         this.active = {};
         this.workersPromise = null;
+        this.onCreateListeners = [];
         this.onTerminateListeners = [];
+    }
+
+    onCreate(listener: () => void): Subscription {
+        this.onCreateListeners.push(listener);
+        return {
+            unsubscribe: () => {
+                const index = this.onCreateListeners.indexOf(listener);
+                if (index !== -1) this.onCreateListeners.splice(index, 1);
+            }
+        };
     }
 
     /** Claims the shared workers, creating them on the first claim. */
@@ -40,12 +53,15 @@ export class WorkerPool {
     }
 
     private async ensureWorkers(): Promise<ActorTarget[]> {
-        if (!this.workersPromise) {
-            const promises: Array<Promise<Worker>> = [];
-            while (promises.length < WorkerPool.workerCount) {
-                promises.push(workerFactory());
-            }
-            this.workersPromise = Promise.all(promises);
+        if (this.workersPromise) return (await this.workersPromise).slice();
+
+        const promises: Array<Promise<Worker>> = [];
+        while (promises.length < WorkerPool.workerCount) {
+            promises.push(workerFactory());
+        }
+        this.workersPromise = Promise.all(promises);
+        for (const onCreate of this.onCreateListeners.slice()) {
+            onCreate();
         }
         return (await this.workersPromise).slice();
     }
