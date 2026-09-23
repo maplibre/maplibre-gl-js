@@ -103,30 +103,31 @@ describe('Dispatcher', () => {
 describe('global dispatcher', () => {
     afterEach(terminateGlobalWorkers);
 
-    test('removing the last map dispatcher terminates the workers', () => {
+    test('removing the last map dispatcher terminates the workers', async () => {
         const pool = getGlobalWorkerPool();
         getGlobalDispatcher();
+        const mapDispatcher = new Dispatcher(pool, 1);
+        await mapDispatcher.getActors();
 
-        new Dispatcher(pool, 1).remove();
+        mapDispatcher.remove();
 
-        expect(pool.numActive()).toBe(0);
+        expect(pool.workersPromise).toBeFalsy();
     });
 
     test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
         const globalWorkersCreated = vi.fn();
         onGlobalWorkersCreated(globalWorkersCreated);
 
-        new Dispatcher(getGlobalWorkerPool(), 1).getActors();
+        await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
 
-        await getGlobalDispatcher().getActors();
         expect(globalWorkersCreated).toHaveBeenCalled();
     });
 
-    test('keeps the workers while another map still holds them', () => {
+    test('keeps the workers while another map still holds them', async () => {
         const pool = getGlobalWorkerPool();
         const mapDispatcher = new Dispatcher(pool, 1);
-        mapDispatcher.getActors();
-        new Dispatcher(pool, 2).getActors();
+        await mapDispatcher.getActors();
+        await new Dispatcher(pool, 2).getActors();
 
         mapDispatcher.remove();
 

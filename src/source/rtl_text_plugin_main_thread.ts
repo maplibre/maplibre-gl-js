@@ -94,7 +94,7 @@ class RTLMainThreadPlugin extends Evented {
 
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
 
-onGlobalWorkersCreated(() => rtlMainThreadPluginFactory()._syncStateToNewWorkers());
+onGlobalWorkersCreated(() => rtlMainThreadPlugin?._syncStateToNewWorkers());
 
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
     rtlMainThreadPlugin ||= new RTLMainThreadPlugin();

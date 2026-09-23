@@ -148,5 +148,4 @@ describe('importScriptInWorkers', () => {
 
         expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
     });
-
 });

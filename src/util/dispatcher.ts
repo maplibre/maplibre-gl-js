@@ -70,7 +70,15 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
-        this.actorsPromise ??= this.initActors(this.id);
+        if (!this.actorsPromise) {
+            let resolveActors: (actors: Actor[]) => void;
+            let rejectActors: (error: Error) => void;
+            this.actorsPromise = new Promise((resolve, reject) => {
+                resolveActors = resolve;
+                rejectActors = reject;
+            });
+            this.initActors(this.id).then(resolveActors, rejectActors);
+        }
         return this.actorsPromise;
     }
 
@@ -110,14 +118,14 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
         (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
-        for (const actor of await (this.actorsPromise ?? [])) {
+        for (const actor of this.actors) {
             actor.registerMessageHandler(type, handler);
         }
     }
 
     public async unregisterMessageHandler<T extends MessageType>(type: T): Promise<void> {
         delete this.messageHandlers[type];
-        for (const actor of await (this.actorsPromise ?? [])) {
+        for (const actor of this.actors) {
             actor.unregisterMessageHandler(type);
         }
     }
@@ -149,7 +157,7 @@ const scriptsImportedIntoWorkers: Set<string> = new Set();
  * ```
  */
 export function onGlobalWorkersCreated(listener: () => void): Subscription {
-    return getGlobalWorkerPool().onCreate(listener);
+    return getGlobalWorkerPool().on('create', listener);
 }
 
 /**
@@ -203,8 +211,8 @@ export function getGlobalDispatcher(): Dispatcher {
  * ```
  */
 export async function importScriptInWorkers(workerUrl: string): Promise<void> {
-    const dispatcher = getGlobalDispatcher();
     if (scriptsImportedIntoWorkers.has(workerUrl)) return;
+    const dispatcher = getGlobalDispatcher();
     scriptsImportedIntoWorkers.add(workerUrl);
     await dispatcher.broadcast(MessageType.importScript, workerUrl);
 }

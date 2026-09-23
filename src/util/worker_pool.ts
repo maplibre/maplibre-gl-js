@@ -1,40 +1,33 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
+import {Evented} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
-import type {Subscription} from './util.ts';
+import type {Event} from './evented.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
+
+export type WorkerPoolEventType = {
+    create: Event;
+    terminate: Event;
+};
 
 /**
  * Constructs a worker pool.
  */
-export class WorkerPool {
+export class WorkerPool extends Evented<WorkerPoolEventType> {
     static workerCount: number;
 
     active: {
         [_ in number | string]: boolean;
     };
     workersPromise: Promise<ActorTarget[]> | null;
-    private onCreateListeners: Array<() => void>;
-    private onTerminateListeners: Array<() => void>;
 
     constructor() {
+        super();
         this.active = {};
         this.workersPromise = null;
-        this.onCreateListeners = [];
-        this.onTerminateListeners = [];
-    }
-
-    onCreate(listener: () => void): Subscription {
-        this.onCreateListeners.push(listener);
-        return {
-            unsubscribe: () => {
-                const index = this.onCreateListeners.indexOf(listener);
-                if (index !== -1) this.onCreateListeners.splice(index, 1);
-            }
-        };
     }
 
     /** Claims the shared workers, creating them on the first claim. */
@@ -48,22 +41,22 @@ export class WorkerPool {
      * `onTerminate` fires once the last claim is released, since the workers are dead from then on.
      */
     async weakAcquire(onTerminate: () => void): Promise<ActorTarget[]> {
-        this.onTerminateListeners.push(onTerminate);
+        this.once('terminate', onTerminate);
         return this.ensureWorkers();
     }
 
+    /**
+     * Returns the shared workers, creating them on first use. The `create` event fires before the
+     * workers boot, so listeners replay only state recorded before the call that created them.
+     */
     private async ensureWorkers(): Promise<ActorTarget[]> {
-        if (this.workersPromise) return (await this.workersPromise).slice();
-
-        const promises: Array<Promise<Worker>> = [];
-        while (promises.length < WorkerPool.workerCount) {
-            promises.push(workerFactory());
-        }
-        this.workersPromise = Promise.all(promises);
-        // Fires before the await so listeners replay state the caller has not recorded yet.
-        // Waiting until the workers boot makes the first importScriptInWorkers send twice.
-        for (const onCreate of this.onCreateListeners.slice()) {
-            onCreate();
+        if (!this.workersPromise) {
+            const promises: Array<Promise<Worker>> = [];
+            while (promises.length < WorkerPool.workerCount) {
+                promises.push(workerFactory());
+            }
+            this.workersPromise = Promise.all(promises);
+            this.fire('create');
         }
         return (await this.workersPromise).slice();
     }
@@ -73,9 +66,7 @@ export class WorkerPool {
         if (this.numActive() === 0 && this.workersPromise) {
             const promise = this.workersPromise;
             this.workersPromise = null;
-            for (const onTerminate of this.onTerminateListeners.splice(0)) {
-                onTerminate();
-            }
+            this.fire('terminate');
             promise.then(workers => {
                 for (const w of workers) {
                     w.terminate();
