@@ -45,7 +45,8 @@ describe('HandlerManager terrain scenarios', () => {
             center: new LngLat(0, 0),
             screenPointToLocation: vi.fn(() => new LngLat(1, 1)),
             setCenter: setCenterMock,
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+            isPointOnMapSurface: () => true,
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter' | 'isPointOnMapSurface'>;
         const deltas: MapControlsDeltas = {
             panDelta: new Point(0, 0),
             zoomDelta: 0,

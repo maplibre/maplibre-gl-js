@@ -456,6 +456,18 @@ describe('transform', () => {
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.screenPointToLocation(new Point(0, top)).toArray());
     });
 
+    test('isPointOnMapSurface with padding', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setPitch(80);
+
+        transform.setPadding({top: 200, bottom: 0, left: 0, right: 0});
+        expect(transform.isPointOnMapSurface(new Point(250, 200))).toBe(false);
+
+        transform.setPadding({top: 0, bottom: 200, left: 0, right: 0});
+        expect(transform.isPointOnMapSurface(new Point(250, 100))).toBe(true);
+    });
+
     test('projectTileCoordinates', () => {
         const precisionDigits = 10;
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});

@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix zooming and panning with the pointer above the horizon moving the map in the opposite direction ([#4946](https://github.com/maplibre/maplibre-gl-js/issues/4946)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ## 6.11.1
