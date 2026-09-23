@@ -413,6 +413,16 @@ export class Camera extends Evented<MapEventType> {
         });
     }
 
+    /**
+     * @internal
+     * Hands the camera the map's terrain, or null when the map has none, and brings the center
+     * elevation up to date with it, see {@link Camera.applyTerrainChange}.
+     */
+    setTerrain(terrain: Terrain): void {
+        this.terrain = terrain;
+        this.applyTerrainChange();
+    }
+
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
@@ -839,6 +849,7 @@ export class Camera extends Evented<MapEventType> {
 
         }, (interruptingEaseId?: string) => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            else this.elevationFreeze = false;
             this._afterEase(eventData, interruptingEaseId);
         }, options);
 
@@ -894,6 +905,28 @@ export class Camera extends Evented<MapEventType> {
         this.elevationFreeze = false;
         if (this.getCenterClampedToGround()) {
             this.transform.recalculateZoomAndCenter(this.terrain);
+        }
+    }
+
+    /**
+     * @internal
+     * Applies a change of the terrain under the center to the transform: the terrain was set or
+     * removed, or a DEM tile landed. The center keeps its place and the camera moves with the
+     * center's elevation, as it does on every rendered frame while nothing holds the elevation.
+     * While a gesture or an ease holds it this does nothing: the camera stays where the user put
+     * it and the hold's end re-solves zoom and center onto the new terrain without moving it.
+     * Nothing is in flight when this writes, so it writes the rendered transform, like the
+     * per-frame clamp; a requested camera state created here would outlive the call and the
+     * next gesture would start from it.
+     */
+    applyTerrainChange(): void {
+        if (this.elevationFreeze) {
+            return;
+        }
+        const tr = this.transform;
+        tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
+        if (this.getCenterClampedToGround()) {
+            tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
         }
     }
 
@@ -1196,6 +1229,7 @@ export class Camera extends Evented<MapEventType> {
             this._fireMoveEvents(eventData);
         }, () => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            else this.elevationFreeze = false;
             this._afterEase(eventData);
         }, options);
 
