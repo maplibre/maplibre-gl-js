@@ -504,7 +504,7 @@ describe('GlobeTransform', () => {
             expect(globeTransform.isPointOnMapSurface(new Point(221, 144))).toBe(false);
         });
 
-        test('isPointOnMapSurface is false for point in sky', () => {
+        test('isPointOnMapSurface is false for point in sky, and true for point on surface', () => {
             const pitchedTransform = new GlobeTransform({maxPitch: 85});
             pitchedTransform.resize(640, 480);
             pitchedTransform.setZoom(11);
@@ -793,7 +793,7 @@ describe('GlobeTransform', () => {
         test('change projection and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            
+
             expect(globeTransform.renderWorldCopies).toBeTruthy();
         });
 
