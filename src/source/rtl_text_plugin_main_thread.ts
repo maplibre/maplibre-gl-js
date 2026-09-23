@@ -3,12 +3,13 @@ import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {warnOnce} from '../util/util.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
-import {getGlobalDispatcher, onGlobalWorkersCreated} from '../util/dispatcher.ts';
+import {type Dispatcher, getGlobalDispatcher, onGlobalWorkersCreated} from '../util/dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
+    dispatcher: Dispatcher = getGlobalDispatcher();
 
     async _syncStateToNewWorkers(): Promise<void> {
         try {
@@ -24,9 +25,8 @@ class RTLMainThreadPlugin extends Evented {
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
-        const dispatcher = getGlobalDispatcher();
         this.status = statusToSend;
-        return dispatcher.broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
+        return this.dispatcher.broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
             .catch((e: any) => {
                 this.status = 'error';
                 throw e;

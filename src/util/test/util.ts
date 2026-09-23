@@ -19,7 +19,7 @@ import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
-import type {Dispatcher} from '../dispatcher.ts';
+import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -145,9 +145,6 @@ export function beforeMapTest(): void {
 export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
     return (actor: IActor) => {
         return {
-            getActors() {
-                return Promise.resolve([actor]);
-            },
             waitForInitComplete() {
                 return Promise.resolve();
             },
