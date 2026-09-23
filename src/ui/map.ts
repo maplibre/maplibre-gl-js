@@ -591,6 +591,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  */
 export class Map extends Evented<MapEventType> {
     /**
+     * @internal
      * The map's terrain, or null when the map has none. The camera holds it, so reads and writes here reach
      * the camera's `terrain`.
      */
