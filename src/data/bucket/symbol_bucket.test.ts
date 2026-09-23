@@ -53,14 +53,15 @@ function createIndexedFeature(id: number, index: number, iconId: string): Indexe
     } as any as IndexedFeature;
 }
 
-function glyphsRequestedFor(text: string): string[] {
+function glyphsRequestedFor(text: string, point: {x: number; y: number} = {x: 0, y: 0}): string[] {
     const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
     const options = createPopulateOptions([]);
     const feature = {
+        extent: 8192,
         type: 1,
         id: 1,
         properties: {},
-        loadGeometry: () => [[{x: 0, y: 0}]],
+        loadGeometry: () => [[point]],
     };
 
     bucket.populate(
@@ -268,6 +269,11 @@ describe('SymbolBucket', () => {
         const devanagari = glyphsRequestedFor('दि');
         expect(devanagari).toContain('दि');
         expect(devanagari).toEqual(expect.arrayContaining(['द', 'ि']));
+    });
+
+    test('SymbolBucket asks for no glyphs for a point outside the tile', () => {
+        expect(glyphsRequestedFor('abc', {x: -1, y: 100})).toEqual([]);
+        expect(glyphsRequestedFor('abc', {x: 100, y: 8192})).toEqual([]);
     });
 });
 
