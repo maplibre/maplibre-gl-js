@@ -1,21 +1,32 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- Fix the camera jumping or bobbing around gestures over terrain, and ignoring terrain that loads after `easeTo`/`flyTo` ([#8471](https://github.com/maplibre/maplibre-gl-js/pull/8471)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `Map#once(type, layerId, listener)` unsubscribing on the first event that misses the layer instead of the first event that hits it ([#8499](https://github.com/maplibre/maplibre-gl-js/pull/8499)) (by [@cherenkov](https://github.com/cherenkov))
+- _...Add new stuff here..._
+
+## 6.11.0
+
+### ✨ Features and improvements
+
 - Fire a `contextmenu` map event on long press for touch devices ([#373](https://github.com/maplibre/maplibre-gl-js/issues/373)) (by [@kirthi-b](https://github.com/kirthi-b))
 - Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
 - Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
 - Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
 - Skip the loaded-tile scan for constant `symbol-height-offset` layers when computing tile coverage ([#8424](https://github.com/maplibre/maplibre-gl-js/pull/8424)) (by [@clement-igonet](https://github.com/clement-igonet))
-- _...Add new stuff here..._
+- Type and document that an `addProtocol` handler may return an `ImageBitmap` or `HTMLImageElement` for an image resource, so decoded pixels are not encoded and decoded again ([#8515](https://github.com/maplibre/maplibre-gl-js/issues/8515)) (by [@MannXo](https://github.com/MannXo))
 
 ### 🐞 Bug fixes
+
 - Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
 - Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
 - Fix slow panning and zooming in Firefox on macOS since 6.8.0 ([#8468](https://github.com/maplibre/maplibre-gl-js/issues/8468)) (by [@timsluis](https://github.com/timsluis) and [@birkskyum](https://github.com/birkskyum))
 - Keep source-specific tile LOD settings from changing internal terrain render-to-texture tile selection ([#8048](https://github.com/maplibre/maplibre-gl-js/pull/8048)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `map.setSky()` silently keeping the old sky and firing no `error` event when the value included a `-transition` key ([#8375](https://github.com/maplibre/maplibre-gl-js/issues/8375)) (by [@Yasser-Ameur](https://github.com/Yasser-Ameur))
 - Fix markers and popups misplaced after a projection change or by terrain that loads after the map settled. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
-- Fix `Map#once(type, layerId, listener)` unsubscribing on the first event that misses the layer instead of the first event that hits it ([#8499](https://github.com/maplibre/maplibre-gl-js/pull/8499)) (by [@cherenkov](https://github.com/cherenkov))
-- _...Add new stuff here..._
+- Insert sanitized attribution HTML as DOM nodes instead of re-parsing a serialized string ([#8528](https://github.com/maplibre/maplibre-gl-js/pull/8528)) (by [@cherenkov](https://github.com/cherenkov))
 
 ## 6.10.0
 
