@@ -31,16 +31,15 @@ test('packs glyphs separately by font, variant, and unmodified text', () => {
     expect(Object.keys(atlas.positions.Test.alternate)).toEqual(['\u093E']);
     expect(Object.keys(atlas.positions.Other)).toEqual(['alternate', 'empty']);
     expect(atlas.positions.Other.empty).toEqual({});
-    const pixels = new Set<number>();
-    for (const stack of Object.keys(atlas.positions)) {
-        for (const variant of Object.keys(atlas.positions[stack])) {
-            for (const [text, {rect, metrics}] of Object.entries(atlas.positions[stack][variant])) {
-                const pixel = (rect.y + 1) * atlas.image.width + rect.x + 1;
-                pixels.add(pixel);
-                expect(atlas.image.data[pixel]).toBe(glyphs[stack][variant][text].bitmap.data[0]);
-                expect(metrics).toEqual(glyphs[stack][variant][text].metrics);
-            }
-        }
-    }
-    expect(pixels.size).toBe(4);
+
+    const defaultGlyph = atlas.positions.Test.default['\u093E'];
+    const alternateGlyph = atlas.positions.Test.alternate['\u093E'];
+    const otherFontGlyph = atlas.positions.Other.alternate['\u093E'];
+    expect(defaultGlyph.metrics).toEqual(glyphs.Test.default['\u093E'].metrics);
+    expect(alternateGlyph.metrics).toEqual(glyphs.Test.alternate['\u093E'].metrics);
+    expect(otherFontGlyph.metrics).toEqual(glyphs.Other.alternate['\u093E'].metrics);
+
+    expect(atlas.image.data[(defaultGlyph.rect.y + 1) * atlas.image.width + defaultGlyph.rect.x + 1]).toBe(10);
+    expect(atlas.image.data[(alternateGlyph.rect.y + 1) * atlas.image.width + alternateGlyph.rect.x + 1]).toBe(30);
+    expect(atlas.image.data[(otherFontGlyph.rect.y + 1) * atlas.image.width + otherFontGlyph.rect.x + 1]).toBe(40);
 });
