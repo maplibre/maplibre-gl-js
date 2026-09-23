@@ -504,7 +504,7 @@ describe('GlobeTransform', () => {
             expect(globeTransform.isPointOnMapSurface(new Point(221, 144))).toBe(false);
         });
 
-        test('Sky above the horizon of a pitched view', () => {
+        test('isPointOnMapSurface is false for point in sky', () => {
             const pitchedTransform = new GlobeTransform({maxPitch: 85});
             pitchedTransform.resize(640, 480);
             pitchedTransform.setZoom(11);
