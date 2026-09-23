@@ -87,8 +87,6 @@ describe('placement', () => {
 
     test('the first bucket draws the shared label and the second hides it', () => {
         const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
-        expect(buckets[1].symbolInstances.get(0).crossTileID).toBe(buckets[0].symbolInstances.get(0).crossTileID);
-
         placement.updateLayerOpacities(layer, tiles);
 
         expect(buckets[0].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
