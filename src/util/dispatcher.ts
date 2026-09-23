@@ -14,7 +14,7 @@ import type {RequestResponseMessageMap} from './actor_messages.ts';
 export class Dispatcher extends Evented<ErrorEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
-    private _actorsPromise: Promise<Actor[]> | undefined;
+    private actorsPromise: Promise<Actor[]> | undefined;
     currentActor: number;
     id: string | number;
     private messageHandlers: {[K in MessageType]?: MessageHandler<K>};
@@ -65,13 +65,13 @@ export class Dispatcher extends Evented<ErrorEventType> {
         }
         this.actors = [];
         this.workerErrorSubscriptions = [];
-        this._actorsPromise = undefined;
+        this.actorsPromise = undefined;
     }
 
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
-        this._actorsPromise ??= this.initActors(this.id);
-        return this._actorsPromise;
+        this.actorsPromise ??= this.initActors(this.id);
+        return this.actorsPromise;
     }
 
     /**
@@ -110,14 +110,14 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
         (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
-        for (const actor of await (this._actorsPromise ?? [])) {
+        for (const actor of await (this.actorsPromise ?? [])) {
             actor.registerMessageHandler(type, handler);
         }
     }
 
     public async unregisterMessageHandler<T extends MessageType>(type: T): Promise<void> {
         delete this.messageHandlers[type];
-        for (const actor of await (this._actorsPromise ?? [])) {
+        for (const actor of await (this.actorsPromise ?? [])) {
             actor.unregisterMessageHandler(type);
         }
     }
