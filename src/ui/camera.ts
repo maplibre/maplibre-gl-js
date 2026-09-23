@@ -837,7 +837,7 @@ export class Camera extends Evented<MapEventType> {
         this._prepareEase(eventData, options.noMoveStart, currently);
 
         if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter);
+            this._prepareElevation(easeHandler.elevationCenter, tr);
         }
 
         this._ease((k) => {
@@ -876,10 +876,17 @@ export class Camera extends Evented<MapEventType> {
         }
     }
 
-    _prepareElevation(center: LngLat): void {
+    /**
+     * @internal
+     * Starts easing the center elevation: records where it stands on the transform the animation edits and
+     * samples the terrain under the map center the animation ends on.
+     * @param center - the map center when the animation ends
+     * @param tr - the transform the animation edits
+     */
+    _prepareElevation(center: LngLat, tr: ITransform): void {
         this._elevationCenter = center;
-        this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, this.transform);
+        this._elevationStart = tr.elevation;
+        this._elevationTarget = this.terrain.getElevationForLngLat(center, tr);
         this.elevationFreeze = true;
     }
 
@@ -892,7 +899,7 @@ export class Camera extends Evented<MapEventType> {
      */
     _updateElevation(k: number, tr: ITransform): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
-            this._prepareElevation(tr.center);
+            this._prepareElevation(tr.center, tr);
         }
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
@@ -1205,7 +1212,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
+        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter, tr);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.

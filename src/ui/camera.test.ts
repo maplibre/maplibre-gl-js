@@ -2090,7 +2090,7 @@ describe('flyTo', () => {
             setElevation: (e) => (camera.transform as any).elevation = e
         } as any;
 
-        camera._prepareElevation(new LngLat(10, 0));
+        camera._prepareElevation(new LngLat(10, 0), camera.transform);
         // expect(camera._elevationCenter).toBe([10, 0]);
         expect(camera._elevationStart).toBe(0);
         expect(camera._elevationTarget).toBe(100);
