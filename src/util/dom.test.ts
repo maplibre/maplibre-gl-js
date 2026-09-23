@@ -178,6 +178,18 @@ describe('DOM', () => {
             expect(output).toBe('<a>click me</a>');
         });
 
+        test('should keep aria attributes', () => {
+            const input = '<a href="https://maplibre.org/" aria-label="MapLibre" aria-hidden="false">MapLibre</a>';
+            const output = sanitizeToHTML(input);
+            expect(output).toBe('<a href="https://maplibre.org/" aria-label="MapLibre" aria-hidden="false">MapLibre</a>');
+        });
+
+        test('should remove urls that cannot be parsed', () => {
+            const input = '<a href="http://">click me</a><img src="https://%">';
+            const output = sanitizeToHTML(input);
+            expect(output).toBe('<a>click me</a><img>');
+        });
+
         test('should remove data urls', () => {
             const input = '<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">';
             const output = sanitizeToHTML(input);

@@ -29,7 +29,8 @@ const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
 const RELATIVE_URL_BASE = 'https://maplibre.invalid/';
 
 type ElementInternals = {
-    getAttribute: Element['getAttribute'];
+    /** Only ever called with a name `getAttributeNames` just returned, so the attribute is always there. */
+    getAttribute: (this: Element, qualifiedName: string) => string;
     getAttributeNames: Element['getAttributeNames'];
     querySelectorAll: (this: Element, selectors: string) => NodeListOf<Element>;
     remove: Element['remove'];
@@ -153,7 +154,7 @@ export class DOM {
     public static sanitize(str: string): DocumentFragment {
         const parser = new DOMParser();
         const doc = parser.parseFromString(str, 'text/html');
-        const body = doc.body || document.createElement('body');
+        const body = doc.body;
 
         const {querySelectorAll, remove} = getElementInternals();
         for (const element of Array.from<Element>(querySelectorAll.call(body, '*'))) {
@@ -182,7 +183,7 @@ export class DOM {
     private static removeDisallowedAttributes(element: Element) {
         const {getAttributeNames, getAttribute, removeAttribute} = getElementInternals();
         for (const name of getAttributeNames.call(element)) {
-            if (DOM.isAllowedAttribute(name, getAttribute.call(element, name) ?? '')) continue;
+            if (DOM.isAllowedAttribute(name, getAttribute.call(element, name))) continue;
             removeAttribute.call(element, name);
         }
     }
