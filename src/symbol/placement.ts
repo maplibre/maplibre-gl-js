@@ -178,8 +178,8 @@ export type CrossTileID = string | number;
 /** What the last rewrite of a bucket's opacity buffers read, one entry per symbol. */
 type OpacityInputs = {
     crossTileIDs: Uint32Array;
-    /** 1 for every symbol whose label another bucket is drawing. */
-    duplicates: Uint8Array;
+    /** True for every symbol whose label another bucket is drawing. */
+    duplicates: boolean[];
 };
 
 export class Placement {
@@ -1060,12 +1060,12 @@ export class Placement {
      * Marks the bucket's symbols whose label an earlier bucket already draws, and claims the rest in `seenCrossTileIDs`.
      * `changed` is false when the marks match the last call, which means the buffers are already up to date.
      */
-    _markDuplicates(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}): {duplicates: Uint8Array; changed: boolean} {
+    _markDuplicates(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}): {duplicates: boolean[]; changed: boolean} {
         const length = bucket.symbolInstances.length;
         let inputs = this.lastOpacityInputs.get(bucket);
         let changed = false;
         if (!inputs) {
-            inputs = {crossTileIDs: new Uint32Array(length), duplicates: new Uint8Array(length)};
+            inputs = {crossTileIDs: new Uint32Array(length), duplicates: new Array<boolean>(length).fill(false)};
             this.lastOpacityInputs.set(bucket, inputs);
             changed = true;
         }
@@ -1073,7 +1073,7 @@ export class Placement {
         const {crossTileIDs, duplicates} = inputs;
         for (let s = 0; s < length; s++) {
             const crossTileID = bucket.symbolInstances.get(s).crossTileID;
-            const duplicate = seenCrossTileIDs[crossTileID] ? 1 : 0;
+            const duplicate = Boolean(seenCrossTileIDs[crossTileID]);
             seenCrossTileIDs[crossTileID] = true;
             if (crossTileIDs[s] !== crossTileID || duplicates[s] !== duplicate) {
                 crossTileIDs[s] = crossTileID;
@@ -1084,7 +1084,7 @@ export class Placement {
         return {duplicates, changed};
     }
 
-    updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, duplicates: Uint8Array, collisionBoxArray?: CollisionBoxArray | null): void {
+    updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, duplicates: boolean[], collisionBoxArray?: CollisionBoxArray | null): void {
         if (bucket.hasTextData()) {
             bucket.text.opacityVertexArray.clear();
             bucket.text.hasVisibleVertices = false;
@@ -1135,7 +1135,7 @@ export class Placement {
                 crossTileID
             } = symbolInstance;
 
-            const isDuplicate = duplicates[s] === 1;
+            const isDuplicate = duplicates[s];
 
             let opacityState = this.opacities[crossTileID];
             if (isDuplicate) {
