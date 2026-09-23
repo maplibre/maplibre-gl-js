@@ -2,7 +2,7 @@ import type {LoadGeoJSONParameters} from '../source/geojson_worker_source.ts';
 import type {TileParameters, WorkerDEMTileParameters, WorkerTileParameters, WorkerTileResult} from '../source/worker_source.ts';
 import type {DEMData} from '../data/dem_data.ts';
 import type {StyleImage} from '../style/style_image.ts';
-import type {GlyphMap, GlyphVariants} from '../style/style_glyph.ts';
+import type {GlyphMap, GlyphRequests} from '../style/style_glyph.ts';
 import type {PluginState} from '../source/rtl_text_plugin_status.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
@@ -64,15 +64,10 @@ export type GetImagesParameters = {
 export type GetGlyphsParameters = {
     type: string;
     /** Grapheme clusters requested for each font stack and variant. */
-    stacks: Record<string, GlyphVariants<string[]>>;
+    stacks: GlyphRequests;
     source: string;
     tileID: OverscaledTileID;
 };
-
-/**
- * A response object returned when requesting glyphs
- */
-export type GetGlyphsResponse = GlyphMap;
 
 /**
  * A response object returned when requesting images
@@ -135,7 +130,7 @@ export type RequestResponseMessageMap = {
     [MessageType.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
-    [MessageType.getGlyphs]: [GetGlyphsParameters, GetGlyphsResponse];
+    [MessageType.getGlyphs]: [GetGlyphsParameters, GlyphMap];
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
     [MessageType.updateGlobalState]: [Record<string, any>, void];

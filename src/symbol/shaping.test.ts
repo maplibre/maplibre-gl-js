@@ -7,7 +7,7 @@ import {Formatted} from '@maplibre/maplibre-gl-style-spec';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 
-import type {GlyphMap, GlyphVariants, StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap, StyleGlyph} from '../style/style_glyph.ts';
 
 describe('applyTextFit', () => {
 
@@ -384,8 +384,8 @@ describe('shapeText vertical glyph orientation', () => {
     }
 
     /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
-    function createStubGlyphMap(text: string): GlyphVariants<Record<string, StyleGlyph>> {
-        const glyphs: GlyphVariants<Record<string, StyleGlyph>> = {default: {}};
+    function createStubGlyphMap(text: string): Record<string, Record<string, StyleGlyph>> {
+        const glyphs: Record<string, Record<string, StyleGlyph>> = {default: {}};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);

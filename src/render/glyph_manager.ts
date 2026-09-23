@@ -9,9 +9,8 @@ import {ResourceType} from '../util/request_manager.ts';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
-import type {GlyphVariants, StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap, GlyphRequests, StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
-import type {GetGlyphsParameters, GetGlyphsResponse} from '../util/actor_messages.ts';
 import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
@@ -19,7 +18,7 @@ type Entry = {
      * The glyphs drawn or downloaded so far, keyed by variant and grapheme cluster.
      * `null` means the requested glyph is unavailable.
      */
-    glyphs: GlyphVariants<Record<string, StyleGlyph | null>>;
+    glyphs: Record<string, Record<string, StyleGlyph | null>>;
     requests: Record<number, Promise<{[_: number]: StyleGlyph | null}>>;
     ranges: Record<number, boolean | null>;
     tinySDF?: Promise<Rasterizer>;
@@ -33,6 +32,14 @@ type Entry = {
      * to fit in than a single codepoint does.
      */
     clusterTinySDFs?: Record<string, Promise<Rasterizer>>;
+};
+
+/** A requested glyph with its lookup keys; `null` means unavailable. */
+type GlyphResult = {
+    stack: string;
+    id: string;
+    variant: string;
+    glyph: StyleGlyph | null;
 };
 
 /**
@@ -116,8 +123,8 @@ export class GlyphManager {
         this.entries = {};
     }
 
-    async getGlyphs(glyphs: GetGlyphsParameters['stacks']): Promise<GetGlyphsResponse> {
-        const glyphsPromises: Array<Promise<{stack: string; id: string; variant: string; glyph: StyleGlyph}>> = [];
+    async getGlyphs(glyphs: GlyphRequests): Promise<GlyphMap> {
+        const glyphsPromises: Array<Promise<GlyphResult>> = [];
 
         for (const stack in glyphs) {
             for (const variant in glyphs[stack]) {
@@ -129,7 +136,7 @@ export class GlyphManager {
 
         const updatedGlyphs = await Promise.all(glyphsPromises);
 
-        const result: GetGlyphsResponse = {};
+        const result: GlyphMap = {};
 
         for (const {stack, id, variant, glyph} of updatedGlyphs) {
             result[stack] ||= {};
@@ -155,7 +162,7 @@ export class GlyphManager {
      * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
      * Providers support the `default` variant; unsupported variants return `null`.
      */
-    async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<{stack: string; id: string; variant: string; glyph: StyleGlyph}> {
+    async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult> {
         // Create an entry for this fontstack if it doesn’t already exist.
         this.entries[stack] ??= {glyphs: {default: {}}, requests: {}, ranges: {}};
         const entry = this.entries[stack];

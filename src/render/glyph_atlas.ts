@@ -2,8 +2,7 @@ import {AlphaImage} from '../util/image.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import potpack from 'potpack';
 
-import type {GlyphMetrics, GlyphVariants} from '../style/style_glyph.ts';
-import type {GetGlyphsResponse} from '../util/actor_messages.ts';
+import type {GlyphMap, GlyphMetrics} from '../style/style_glyph.ts';
 
 const padding = 1;
 
@@ -28,13 +27,13 @@ export type GlyphPosition = {
 /**
  * Glyph positions keyed by font stack, variant, and grapheme cluster.
  */
-export type GlyphPositions = Record<string, GlyphVariants<Record<string, GlyphPosition>>>;
+export type GlyphPositions = Record<string, Record<string, Record<string, GlyphPosition>>>;
 
 export class GlyphAtlas {
     image: AlphaImage;
     positions: GlyphPositions;
 
-    constructor(stacks: GetGlyphsResponse) {
+    constructor(stacks: GlyphMap) {
         const positions: GlyphPositions = {};
         const bins = [];
 

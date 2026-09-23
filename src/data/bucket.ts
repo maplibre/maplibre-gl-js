@@ -11,9 +11,9 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
-import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages.ts';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 import type {GlyphPositions} from '../render/glyph_atlas.ts';
-import type {GlyphVariants} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -39,7 +39,7 @@ export type PopulateParameters = {
      * {"SomeFontName": {"default": {"a": true, "b": true}}}
      * ```
      */
-    glyphDependencies: Record<string, GlyphVariants<Record<string, boolean>>>;
+    glyphDependencies: Record<string, Record<string, Record<string, boolean>>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
@@ -55,7 +55,7 @@ export type PopulateParameters = {
 export type BucketDependencyParameters = {
     options: PopulateParameters;
     canonical: CanonicalTileID;
-    glyphMap: GetGlyphsResponse;
+    glyphMap: GlyphMap;
     glyphPositions: GlyphPositions;
     iconMap: GetImagesResponse;
     iconPositions: Record<string, ImagePosition>;

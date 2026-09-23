@@ -24,8 +24,8 @@ export type StyleGlyph = {
     metrics: GlyphMetrics;
 };
 
-/** Data keyed by glyph variant name, using `default` for the standard glyphs. */
-export type GlyphVariants<T> = Record<string, T>;
+/** Grapheme clusters requested by font stack and variant, using `default` for standard glyphs. */
+export type GlyphRequests = Record<string, Record<string, string[]>>;
 
 /** Glyphs keyed by font stack, variant, and grapheme cluster; `null` means unavailable. */
-export type GlyphMap = Record<string, GlyphVariants<Record<string, StyleGlyph | null>>>;
+export type GlyphMap = Record<string, Record<string, Record<string, StyleGlyph | null>>>;

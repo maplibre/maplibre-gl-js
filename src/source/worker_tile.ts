@@ -6,12 +6,13 @@ import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages.ts';
+import {type GetDashesResponse, MessageType, type GetImagesResponse} from '../util/actor_messages.ts';
 
 import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
@@ -132,7 +133,7 @@ export class WorkerTile {
         }
         this.inFlightDependencies = [];
 
-        let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
+        let getGlyphsPromise = Promise.resolve<GlyphMap>({});
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
