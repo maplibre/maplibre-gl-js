@@ -2184,18 +2184,26 @@ export class Map extends Evented<MapEventType> {
         }
     }
 
-    _removeDelegatedListener(type: string, delegatedListener: DelegatedListener): void {
-        const listeners = this._delegatedListeners[type];
-        const index = listeners.indexOf(delegatedListener);
-        // already removed: unsubscribed twice, or by off() earlier in the dispatch running this once delegate
-        if (index === -1) {
+    _removeDelegatedListener(type: string, layerIds: string[], listener: Listener): void {
+        if (!this._delegatedListeners?.[type]) {
             return;
         }
 
-        for (const event in delegatedListener.delegates) {
-            this.off(event as keyof MapEventType, delegatedListener.delegates[event]);
+        const listeners = this._delegatedListeners[type];
+        for (let i = 0; i < listeners.length; i++) {
+            const delegatedListener = listeners[i];
+            if (
+                delegatedListener.listener === listener &&
+                delegatedListener.layers.length === layerIds.length &&
+                delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
+            ) {
+                for (const event in delegatedListener.delegates) {
+                    this.off(event as keyof MapEventType, delegatedListener.delegates[event]);
+                }
+                listeners.splice(i, 1);
+                return;
+            }
         }
-        listeners.splice(index, 1);
     }
 
     /**
@@ -2346,7 +2354,7 @@ export class Map extends Evented<MapEventType> {
 
         return {
             unsubscribe: () => {
-                this._removeDelegatedListener(type, delegatedListener);
+                this._removeDelegatedListener(type, layerIds, listener);
             }
         };
     }
@@ -2435,7 +2443,7 @@ export class Map extends Evented<MapEventType> {
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
         const delegatedListener: DelegatedListener = {layers: layerIds, listener, delegates: this._createDelegates(type, layerIds, (e) => {
-            this._removeDelegatedListener(type, delegatedListener);
+            this._removeDelegatedListener(type, layerIds, listener);
             listener.call(this, e);
         })};
         this._addDelegatedListener(type, delegatedListener);
@@ -2489,13 +2497,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
-        const delegatedListener = this._delegatedListeners?.[type]?.find((candidate) =>
-            candidate.listener === listener &&
-            candidate.layers.length === layerIds.length &&
-            candidate.layers.every((layerId: string) => layerIds.includes(layerId)));
-        if (delegatedListener) {
-            this._removeDelegatedListener(type, delegatedListener);
-        }
+        this._removeDelegatedListener(type, layerIds, listener);
 
         return this;
     }

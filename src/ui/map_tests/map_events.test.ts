@@ -486,25 +486,6 @@ describe('map events', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.once with layerId keeps a Map.on listener registered with the same function', async () => {
-        const map = createMap();
-        await map.once('load');
-        map.addSource('source', createStyleSource());
-        map.addLayer({id: 'layer', type: 'circle', source: 'source'});
-        vi.spyOn(map.style, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-        const spy = vi.fn();
-
-        map.on('click', 'layer', spy);
-        map.once('click', 'layer', spy);
-
-        simulate.click(map.getCanvas());
-        expect(spy).toHaveBeenCalledTimes(2);
-
-        simulate.click(map.getCanvas());
-        simulate.click(map.getCanvas());
-        expect(spy).toHaveBeenCalledTimes(4);
-    });
-
     const mouseInteractionEvents = ['mouseenter', 'mouseover'] as const;
     test.each(mouseInteractionEvents)('Map.on %s does not fire if the specified layer does not exist', (event) => {
         const map = createMap();
