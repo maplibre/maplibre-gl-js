@@ -5,19 +5,40 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import posAttributes from '../../data/pos_attributes.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 
+import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Context} from '../../webgl/context.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {Projection, TileMeshUsage} from './projection.ts';
+import type {WorldCoordinateHelper} from '../transform_interface.ts';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
+/**
+ * The flat projection. Mercator by default; the factory also builds one for a CRS registered with `addProjection`,
+ * since such tiles already sit in their own quad grid and render exactly like mercator tiles do. The projection
+ * takes its name from the lng/lat mapping of that grid, which the transform built alongside it runs on too.
+ * Every planar projection shares one shader variant.
+ */
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
+    private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
-    get name(): 'mercator' {
-        return 'mercator';
+    /**
+     * @param worldCoordinateHelper - the lng/lat mapping of the grid this projection draws; mercator's when omitted
+     */
+    constructor(worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper) {
+        this._worldCoordinateHelper = worldCoordinateHelper;
+    }
+
+    get name(): ProjectionSpecification['type'] {
+        return this._worldCoordinateHelper.name;
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._worldCoordinateHelper;
     }
 
     get useSubdivision(): boolean {

@@ -1,12 +1,15 @@
 import {vi, expect, onTestFinished, type Mock} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
-import {NullWebGL2RenderingContext} from './null_gl.ts';
+import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {Terrain} from '../../render/terrain.ts';
+import {Painter} from '../../render/painter.ts';
+import {TileManager} from '../../tile/tile_manager.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
@@ -21,8 +24,6 @@ import type {IActor} from '../actor.ts';
 import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {TileManager} from '../../tile/tile_manager.ts';
-import type {Painter} from '../../render/painter.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -317,13 +318,20 @@ export function createDEM(heightFn: (x: number, y: number) => number, dim: numbe
     return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
 }
 
+/** A painter over a null GL context, for code that reads the painter's transform. */
+export function createPainter(transform: IReadonlyTransform = new MercatorTransform()): Painter {
+    return new Painter(createNullGL(), transform);
+}
+
+/** A tile manager over a raster-dem source that never loads, for terrain built in tests. */
+export function createRasterDEMTileManager(): TileManager {
+    return new TileManager('dem', {type: 'raster-dem', tiles: ['/dem/{z}/{x}/{y}.png'], tileSize: 512}, getMockDispatcher());
+}
+
 export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | null, exaggeration: number = 1): Terrain {
-    const painter = {} as Painter;
-    const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
-    const terrain = new Terrain(painter, tileManager, {exaggeration} as TerrainSpecification);
+    const terrain = new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem', exaggeration});
     terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as Tile);
     terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
-    terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
     return terrain;
 }
 
@@ -368,5 +376,41 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
                 });
             });
         })
+    };
+}
+
+/**
+ * A transform over the built-in simple CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
+ * axes), sized to the given viewport.
+ */
+export function createSimpleCrsTransform(width: number, height: number): MercatorTransform {
+    const transform = new MercatorTransform({
+        minZoom: -5,
+        maxZoom: 22,
+        minPitch: 0,
+        maxPitch: 85,
+        renderWorldCopies: true,
+    });
+    transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
+    transform.resize(width, height);
+    return transform;
+}
+
+/**
+ * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
+ * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
+ */
+export function createRotatedCrs(): CrsDefinition {
+    const cos = Math.cos(Math.PI / 6);
+    const sin = Math.sin(Math.PI / 6);
+    return {
+        name: 'rotated-test',
+        project(lng, lat) {
+            return [lng * cos - lat * sin, lng * sin + lat * cos];
+        },
+        unproject(x, y) {
+            return [x * cos + y * sin, -x * sin + y * cos];
+        },
+        tileMatrix: {origin: [-150, 150], extentAtZoom0: 300},
     };
 }

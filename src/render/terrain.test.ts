@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {Terrain} from './terrain.ts';
+import {Terrain, sampleAt, type TerrainCoverageIndex} from './terrain.ts';
 import {Context} from '../webgl/context.ts';
 import {RGBAImage} from '../util/image.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -12,7 +12,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
+import {createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createSimpleCrsTransform} from '../util/test/util.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -206,6 +206,7 @@ describe('Terrain', () => {
             },
             width: 1,
             height: 1,
+            transform: new MercatorTransform(),
             style: {
                 projection: {
                     transitionState: 0,
@@ -348,6 +349,7 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: 1,
             height: 1,
+            transform: new MercatorTransform(),
             getTileTexture: () => null
         } as any as Painter;
         const tileManager = {
@@ -375,14 +377,14 @@ describe('Terrain', () => {
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
-        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const terrain = new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'});
 
         terrain.getElevation = () => 1;
         expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
     });
 
     test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
-        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const terrain = new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'});
 
         terrain.getMinMaxElevation = () => ({minElevation: 1, maxElevation: 42});
         expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
@@ -418,22 +420,24 @@ describe('Terrain', () => {
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {
-        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        function createMercatorTerrain(): Terrain {
+            return new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'});
+        }
 
         test('lng', () => {
-            expect(terrain.getElevationForLngLatZoom(new LngLat(180, 0), 0)).toBe(0);
+            expect(createMercatorTerrain().getElevationForLngLatZoom(new LngLat(180, 0), 0)).toBe(0);
         });
 
         test('lat', () => {
-            expect(terrain.getElevationForLngLatZoom(new LngLat(0, 88), 0)).toBe(0);
+            expect(createMercatorTerrain().getElevationForLngLatZoom(new LngLat(0, 88), 0)).toBe(0);
         });
 
         test('zoom below the minimum', () => {
-            expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MIN_TILE_ZOOM - 1)).toBe(0);
+            expect(createMercatorTerrain().getElevationForLngLatZoom(new LngLat(0, 0), MIN_TILE_ZOOM - 1)).toBe(0);
         });
 
         test('zoom above the maximum', () => {
-            expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), MAX_TILE_ZOOM + 1)).toBe(0);
+            expect(createMercatorTerrain().getElevationForLngLatZoom(new LngLat(0, 0), MAX_TILE_ZOOM + 1)).toBe(0);
         });
     });
 
@@ -455,4 +459,66 @@ describe('Terrain', () => {
         expect(() => terrain.destroy()).not.toThrow();
     });
 
+});
+
+describe('Terrain in a planar projection', () => {
+    function createPlanarTerrain() {
+        return new Terrain(createPainter(createSimpleCrsTransform(512, 512)), createRasterDEMTileManager(), {source: 'dem'});
+    }
+
+    test('getElevationForLngLatZoom samples tile 1/1/0 at its center for 45,45 at zoom 1', () => {
+        const terrain = createPlanarTerrain();
+        const getElevation = vi.spyOn(terrain, 'getElevation').mockReturnValue(0);
+        const tileCenter = 4096;
+
+        terrain.getElevationForLngLatZoom(new LngLat(45, 45), 1);
+
+        expect(getElevation).toHaveBeenCalledWith(expect.objectContaining({canonical: expect.objectContaining({z: 1, x: 1, y: 0})}), tileCenter, tileCenter, EXTENT);
+    });
+
+    test('getElevationForLngLatZoom returns 0 outside the world square instead of wrapping the longitude', () => {
+        const terrain = createPlanarTerrain();
+        terrain.getElevation = () => 1;
+
+        expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(0);
+        expect(terrain.getElevationForLngLatZoom(new LngLat(100, 0), 0)).toBe(0);
+        expect(terrain.getElevationForLngLatZoom(new LngLat(0, 0), 0)).toBe(1);
+    });
+
+    test('getMinTileElevationForLngLatZoom returns 0 outside the world square instead of wrapping the longitude', () => {
+        const terrain = createPlanarTerrain();
+        terrain.getMinMaxElevation = () => ({minElevation: 1, maxElevation: 42});
+
+        expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(0);
+        expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(0, 0), 0)).toBe(1);
+    });
+
+    test('skirt length is a fifth of the tile width in CRS meters, 36 at zoom 0 of the 180 meter simple world and 18 at zoom 1', () => {
+        const terrain = createPlanarTerrain();
+
+        expect(terrain.getSkirtLength(0)).toBe(36);
+        expect(terrain.getSkirtLength(1)).toBe(18);
+    });
+});
+
+describe('sampleAt', () => {
+    const elevation = 5;
+
+    function createIndexOfTileZeroInTwoWorldCopies(): TerrainCoverageIndex {
+        const tileIDs = [new OverscaledTileID(0, 0, 0, 0, 0), new OverscaledTileID(0, 1, 0, 0, 0)];
+        return createDEMTerrain(tileIDs, createDEM(() => elevation)).getCoverageIndex();
+    }
+
+    test('wraps x into world copies when the projection wraps', () => {
+        const index = createIndexOfTileZeroInTwoWorldCopies();
+        expect(sampleAt(index, 1, 0.5, 0.5, true)).toMatchObject({covered: true, elevation});
+        expect(sampleAt(index, 1, 1.5, 0.5, true)).toMatchObject({covered: true, elevation});
+    });
+
+    test('is not covered outside the world square when the projection does not wrap', () => {
+        const index = createIndexOfTileZeroInTwoWorldCopies();
+        expect(sampleAt(index, 1, 0.5, 0.5, false)).toMatchObject({covered: true, elevation});
+        expect(sampleAt(index, 1, 1.5, 0.5, false)).toMatchObject({covered: false, elevation: 0});
+        expect(sampleAt(index, 1, -0.1, 0.5, false)).toMatchObject({covered: false, elevation: 0});
+    });
 });

@@ -8,6 +8,8 @@ import {GlobeCameraHelper} from './globe_camera_helper.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
+import {CrsWorldCoordinateHelper} from './crs.ts';
+import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
@@ -26,6 +28,17 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             projection: globeProjection,
             transform: new GlobeTransform(transformOptions),
             cameraHelper: new GlobeCameraHelper(globeProjection),
+        };
+    }
+    const registered = getRegisteredProjection(name);
+    if (registered) {
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(registered);
+        const transform = new MercatorTransform(transformOptions);
+        transform.setWorldCoordinateHelper(worldCoordinateHelper);
+        return {
+            projection: new MercatorProjection(worldCoordinateHelper),
+            transform,
+            cameraHelper: new MercatorCameraHelper(),
         };
     }
     switch (name) {

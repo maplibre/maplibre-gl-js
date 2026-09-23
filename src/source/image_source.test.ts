@@ -2,21 +2,28 @@ import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vite
 import {ImageSource, type Coordinates} from './image_source.ts';
 import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, getMockDispatcher, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
+import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
 import type {Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {Map} from '../ui/map.ts';
 
+let map: Map;
+
 function createSource(options) {
     options = extend({
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
     }, options);
 
-    return new ImageSource('id', options, {} as any, options.eventedParent);
+    const source = new ImageSource('id', options, getMockDispatcher(), options.eventedParent);
+    source.map = map;
+    return source;
 }
 
 async function createLoadedSourceWithTile(map: Map, server: FakeServer) {
@@ -40,15 +47,15 @@ function bilinearBlend(source: ImageSource) {
 describe('ImageSource', () => {
     stubAjaxGetImage(undefined);
     let server: FakeServer;
-    let map: Map;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         beforeMapTest();
         global.fetch = null;
         server = fakeServer.create();
         server.respondWith(new ArrayBuffer(1));
         server.respondWith('/missing-image.png', [404, {}, '']);
-        map = createMap({style: null});
+        map = createMap();
+        await map.once('style.load');
     });
 
     afterEach(() => {
@@ -828,6 +835,29 @@ describe('ImageSource', () => {
                 minTileY: 0,
                 maxTileY: 1
             });
+        });
+    });
+
+    describe('corner placement', () => {
+        const coordinates: Coordinates = [[0, 60], [45, 60], [45, 30], [0, 30]];
+
+        test('places the corners with mercator on a mercator map', () => {
+            const source = createSource({type: 'image', url: '/image.png', coordinates});
+
+            source.setCoordinates(coordinates);
+
+            expect(source.tileID).toEqual(expect.objectContaining({z: 3, x: 4, y: 2}));
+        });
+
+        test('places the corners with the map projection on a planar map, a third of a tile above and below tile 2/2/1', () => {
+            map.style.projection = new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs));
+            const source = createSource({type: 'image', url: '/image.png', coordinates});
+            const thirdOfATile = 2731;
+
+            source.setCoordinates(coordinates);
+
+            expect(source.tileID).toEqual(expect.objectContaining({z: 2, x: 2, y: 1}));
+            expect(source.tileCoords.map(p => [p.x, p.y])).toEqual([[0, -thirdOfATile], [EXTENT, -thirdOfATile], [EXTENT, thirdOfATile], [0, thirdOfATile]]);
         });
     });
 });

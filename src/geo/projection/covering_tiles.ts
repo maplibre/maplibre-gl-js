@@ -2,7 +2,6 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec3, type vec4} from 'gl-matrix';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
@@ -291,7 +290,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, options.maxContentElevation));
     }
     const cameraCoord = cameraMercatorCoordinate(transform);
-    const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
+    const centerCoord = transform.worldCoordinateHelper.worldFromLngLat(transform.center.lng, transform.center.lat, transform.elevation);
     const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
@@ -322,7 +321,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const stack: CoveringTilesStackEntry[] = [];
     const result: CoveringTilesResult[] = [];
 
-    if (transform.renderWorldCopies && detailsProvider.allowWorldCopies()) {
+    if (transform.renderWorldCopies && transform.worldCoordinateHelper.wraps && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides
         for (let i = 1; i <= 3; i++) {
             stack.push(newRootTile(-i));
