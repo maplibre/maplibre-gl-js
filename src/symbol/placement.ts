@@ -9,7 +9,6 @@ import Point from '@mapbox/point-geometry';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
 import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
 import {translatePosition, warnOnce} from '../util/util.ts';
-import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attributes.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
@@ -175,10 +174,6 @@ export type BucketPart = {
 };
 
 export type CrossTileID = string | number;
-
-/** Where `crossTileID` sits within one `SymbolInstanceArray` element, counted in uint32s. */
-const CROSS_TILE_ID_UINT32_OFFSET: number =
-    symbolInstanceLayout.members.find(member => member.name === 'crossTileID').offset / 4;
 
 /** What the last rewrite of a bucket's opacity buffers read, one entry per symbol. */
 type OpacityInputs = {
@@ -1047,12 +1042,13 @@ export class Placement {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
             if (!symbolBucket || !tile.latestFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0]) continue;
 
-            if (this._needsOpacityRewrite(symbolBucket, seenCrossTileIDs)) {
-                const {duplicates} = this.lastOpacityInputs.get(symbolBucket);
+            const {duplicates, changed} = this._markDuplicates(symbolBucket, seenCrossTileIDs);
+            // Debug geometry and pending collision circles reach the bucket only through a rewrite.
+            const hasDebugOutput = Boolean(symbolBucket.hasDebugData()) || symbolBucket.bucketInstanceId in this.collisionCircleArrays;
+            if (changed || hasDebugOutput) {
                 this.updateBucketOpacities(symbolBucket, tile.tileID, duplicates, tile.collisionBoxArray);
             }
 
-            // Sorting is by bearing, not opacity, so it runs even when the buffers were reused.
             symbolBucket.sortFeatures(-this.transform.bearingInRadians);
             if (this.retainedQueryData[symbolBucket.bucketInstanceId]) {
                 this.retainedQueryData[symbolBucket.bucketInstanceId].featureSortOrder = symbolBucket.featureSortOrder;
@@ -1061,43 +1057,33 @@ export class Placement {
     }
 
     /**
-     * Refreshes the bucket's {@link lastOpacityInputs} and reports whether a rewrite would change its buffers.
-     * Claims cross tile IDs, so it runs for every bucket whether or not the buffers are reused.
+     * Marks the bucket's symbols whose label an earlier bucket already draws, and claims the rest in `seenCrossTileIDs`.
+     * `changed` is false when the marks match the last call, which means the buffers are already up to date.
      */
-    _needsOpacityRewrite(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}): boolean {
+    _markDuplicates(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}): {duplicates: Uint8Array; changed: boolean} {
         const length = bucket.symbolInstances.length;
         let inputs = this.lastOpacityInputs.get(bucket);
         let changed = false;
-        if (inputs?.crossTileIDs.length !== length) {
+        if (!inputs) {
             inputs = {crossTileIDs: new Uint32Array(length), duplicates: new Uint8Array(length)};
             this.lastOpacityInputs.set(bucket, inputs);
             changed = true;
         }
 
         const {crossTileIDs, duplicates} = inputs;
-        // Straight out of the buffer: `get` builds a struct per symbol.
-        const uint32 = bucket.symbolInstances.uint32;
-        const stride = bucket.symbolInstances.bytesPerElement / 4;
         for (let s = 0; s < length; s++) {
-            const crossTileID = uint32[s * stride + CROSS_TILE_ID_UINT32_OFFSET];
-            let duplicate = 0;
-            if (seenCrossTileIDs[crossTileID]) {
-                duplicate = 1;
-            } else {
-                seenCrossTileIDs[crossTileID] = true;
-            }
+            const crossTileID = bucket.symbolInstances.get(s).crossTileID;
+            const duplicate = seenCrossTileIDs[crossTileID] ? 1 : 0;
+            seenCrossTileIDs[crossTileID] = true;
             if (crossTileIDs[s] !== crossTileID || duplicates[s] !== duplicate) {
                 crossTileIDs[s] = crossTileID;
                 duplicates[s] = duplicate;
                 changed = true;
             }
         }
-
-        // Debug geometry and pending collision circles reach the bucket only through a rewrite.
-        return changed || Boolean(bucket.hasDebugData()) || bucket.bucketInstanceId in this.collisionCircleArrays;
+        return {duplicates, changed};
     }
 
-    /** @param duplicates - 1 for every symbol whose label another bucket is drawing. */
     updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, duplicates: Uint8Array, collisionBoxArray?: CollisionBoxArray | null): void {
         if (bucket.hasTextData()) {
             bucket.text.opacityVertexArray.clear();
