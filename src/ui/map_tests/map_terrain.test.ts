@@ -279,6 +279,24 @@ describe('Gesture end on terrain', () => {
 
         expect(map.getCenterElevation()).toBe(400);
     });
+
+    test('the camera stays in place when a drag ends at pitch 85', async () => {
+        const map = createMap({interactive: true, zoom: 11, maxPitch: 85, pitch: 85});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(400);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 100});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 150});
+        map.redraw();
+        const probe = map.unproject([100, 150]);
+        const probeAtRelease = map.project(probe);
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 150});
+        map.redraw();
+
+        expect(map.project(probe).dist(probeAtRelease)).toBeLessThan(0.01);
+    });
 });
 
 describe('Terrain changing under and around a gesture', () => {
@@ -378,16 +396,12 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(1500);
     });
 
-    function linearEasing(k: number): number {
-        return k;
-    }
-
     test('easeTo and flyTo ease the center elevation to the terrain under the destination, and the frame after the animation leaves it there', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
         vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lnglat: LngLat) => lnglat.lat > 2.5 ? 3000 : lnglat.lat > 0.5 ? 1000 : 0);
 
-        map.easeTo({center: [1, 1], zoom: 12, duration: 1000, easing: linearEasing});
+        map.easeTo({center: [1, 1], zoom: 12, duration: 1000, easing: k => k});
         now.mockReturnValue(500);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(500);
@@ -397,7 +411,7 @@ describe('Terrain changing under and around a gesture', () => {
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(1000);
 
-        map.flyTo({center: [3, 3], zoom: 13, duration: 1000, easing: linearEasing});
+        map.flyTo({center: [3, 3], zoom: 13, duration: 1000, easing: k => k});
         now.mockReturnValue(1500);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(2000);
@@ -413,7 +427,7 @@ describe('Terrain changing under and around a gesture', () => {
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
         vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lnglat: LngLat) => lnglat.lat > 0.75 ? 2000 : lnglat.lat > 0.25 ? 1000 : 0);
 
-        map.easeTo({zoom: 12, around: [1, 1], duration: 1000, easing: linearEasing});
+        map.easeTo({zoom: 12, around: [1, 1], duration: 1000, easing: k => k});
         now.mockReturnValue(500);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(500);
@@ -432,7 +446,7 @@ describe('Terrain changing under and around a gesture', () => {
         const offsetBelowCenter: [number, number] = [0, 100];
 
         terrainElevation.mockImplementation((lnglat: LngLat) => lnglat.lng > 1.01 ? 1000 : lnglat.lat > 0.5 ? 500 : 0);
-        map.easeTo({center: [1, 1], zoom: 12, bearing: 90, offset: offsetBelowCenter, duration: 1000, easing: linearEasing});
+        map.easeTo({center: [1, 1], zoom: 12, bearing: 90, offset: offsetBelowCenter, duration: 1000, easing: k => k});
         now.mockReturnValue(900);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(900);
@@ -443,7 +457,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(1000);
 
         terrainElevation.mockImplementation((lnglat: LngLat) => lnglat.lat > 2.995 ? 2000 : lnglat.lat > 2.5 ? 3000 : 1000);
-        map.flyTo({center: [3, 3], zoom: 13, bearing: 180, offset: offsetBelowCenter, duration: 1000, easing: linearEasing});
+        map.flyTo({center: [3, 3], zoom: 13, bearing: 180, offset: offsetBelowCenter, duration: 1000, easing: k => k});
         now.mockReturnValue(1900);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(2800);

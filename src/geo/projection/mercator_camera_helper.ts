@@ -131,12 +131,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
         };
 
-        const endTransform = tr.clone();
-        endTransform.setZoom(endZoom);
-        endTransform.setRoll(endRoll);
-        endTransform.setPitch(endPitch);
-        endTransform.setBearing(endBearing);
-        endTransform.setPadding(options.padding);
+        const endTransform = this._transformAtAnimationEnd(tr, endZoom, endEulerAngles, options.padding);
         if (options.around) {
             endTransform.setLocationAtPoint(options.around, options.aroundPoint);
         } else {
@@ -187,12 +182,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 
-        const endTransform = tr.clone();
-        endTransform.setZoom(targetZoom);
-        endTransform.setRoll(options.roll);
-        endTransform.setPitch(options.pitch);
-        endTransform.setBearing(options.bearing);
-        endTransform.setPadding(options.padding);
+        const endTransform = this._transformAtAnimationEnd(tr, targetZoom, {roll: options.roll, pitch: options.pitch, bearing: options.bearing}, options.padding);
         endTransform.setLocationAtPoint(constrainedCenter, endTransform.centerPoint.add(options.offsetAsPoint));
 
         return {
@@ -202,5 +192,19 @@ export class MercatorCameraHelper implements ICameraHelper {
             scaleOfMinZoom,
             pixelPathLength,
         };
+    }
+
+    /**
+     * A copy of the transform at the animation's end zoom, angles and padding, for reading where the map center
+     * ends up once a location is placed at its screen point.
+     */
+    private _transformAtAnimationEnd(tr: ITransform, zoom: number, angles: {roll: number; pitch: number; bearing: number}, padding: PaddingOptions): ITransform {
+        const endTransform = tr.clone();
+        endTransform.setZoom(zoom);
+        endTransform.setRoll(angles.roll);
+        endTransform.setPitch(angles.pitch);
+        endTransform.setBearing(angles.bearing);
+        endTransform.setPadding(padding);
+        return endTransform;
     }
 }
