@@ -2634,6 +2634,19 @@ describe('transformCameraUpdate', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 10});
         expect(fixedNum(camera.getZoom())).toBe(3);
     });
+
+    test('keeps a field of view set during easeTo', () => {
+        const {camera, queue} = createCamera({transformCameraUpdate: () => ({})});
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        camera.easeTo({center: [100, 0], duration: 10});
+        camera.setVerticalFieldOfView(50);
+        stub.mockReturnValue(10);
+        queue.run();
+
+        expect(camera.getVerticalFieldOfView()).toBeCloseTo(50, 10);
+    });
 });
 
 test('create camera with globe returns make globe controls true', () => {

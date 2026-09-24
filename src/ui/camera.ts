@@ -494,7 +494,7 @@ export class Camera extends Evented<MapEventType> {
 
     setVerticalFieldOfView(fov: number, eventData?: any): this {
         if (fov != this.transform.fov) {
-            this.transform.setFov(fov);
+            this.applyTransformChange(tr => tr.setFov(fov));
             this.fire(new MapMovementEvent('movestart', eventData))
                 .fire(new MapMovementEvent('move', eventData))
                 .fire(new MapMovementEvent('moveend', eventData));
@@ -1023,6 +1023,22 @@ export class Camera extends Evented<MapEventType> {
             finalTransform.apply(nextTransform, false);
         }
         this.transform.apply(finalTransform, false);
+    }
+
+    /**
+     * @internal
+     * Applies a change that is not itself a movement, such as new bounds, limits or field of view, the way
+     * any camera update is applied. A requested camera state created only for this change is dropped again,
+     * so a later movement cannot restore the old values.
+     */
+    applyTransformChange(change: (tr: ITransform) => void): void {
+        const hadRequestedCameraState = this._requestedCameraState !== undefined;
+        const tr = this.getTransformForUpdate();
+        change(tr);
+        this.applyUpdatedTransform(tr);
+        if (!hadRequestedCameraState) {
+            delete this._requestedCameraState;
+        }
     }
 
     _fireMoveEvents(eventData?: Record<string, unknown>): void {

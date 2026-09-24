@@ -396,6 +396,21 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(1500);
     });
 
+    test('easeTo after a pitch limit change starts from the camera as rendered, after a DEM tile landing', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        map.setMaxPitch(70);
+        terrainElevation.mockReturnValue(1000);
+        demTileLands(map);
+        map.easeTo({center: [1, 1], duration: 1000, easing: k => k});
+        now.mockReturnValue(500);
+        map.redraw();
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
     test('easeTo and flyTo ease the center elevation to the terrain under the destination, and the frame after the animation leaves it there', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
