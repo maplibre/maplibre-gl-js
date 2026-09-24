@@ -7,7 +7,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
-import {beforeMapTest, createMap, getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
@@ -58,6 +58,18 @@ async function createMapTransformingRequests(transformRequest: RequestTransformF
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
 });
+
+function createSource(opts?: Partial<GeoJSONSourceOptions>) {
+    const source = new GeoJSONSource('id', extend({}, opts, {data: {}}) as GeoJSONSourceOptions, wrapDispatcher({
+        sendAsync(_message) {
+            return new Promise((resolve) => {
+                setTimeout(() => resolve({}), 0);
+            });
+        }
+    }), undefined);
+    source.map = map;
+    return source;
+}
 
 const hawkHill = {
     'type': 'FeatureCollection',
@@ -124,20 +136,6 @@ describe('GeoJSONSource.constructor', () => {
 });
 
 describe('GeoJSONSource.setData', () => {
-    function createSource(opts?) {
-        opts ||= {};
-        opts = extend(opts, {data: {}});
-        const source = new GeoJSONSource('id', opts, wrapDispatcher({
-            sendAsync(_message) {
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
-                });
-            }
-        }), undefined);
-        source.map = map;
-        return source;
-    }
-
     test('fires "data" event', async () => {
         const source = createSource();
         const loadPromise = source.once('data');
@@ -913,6 +911,26 @@ describe('GeoJSONSource.updateData', () => {
             remove: ['1', '4'],
             add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
             update: [{id: '3', addOrUpdateProperties: [], newGeometry: {type: 'Point', coordinates: []}}, {id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
+        });
+    });
+
+    test('merges diffs of a promoteId source by the promoted id when data is loading', async () => {
+        const source = createSource({promoteId: 'id'});
+        const spy = vi.spyOn(await source.actorPromise, 'sendAsync');
+
+        source.setData({type: 'FeatureCollection', features: []});
+        source.updateData({add: [
+            {type: 'Feature', properties: {id: 'a'}, geometry: {type: 'LineString', coordinates: []}},
+            {type: 'Feature', properties: {id: 'b'}, geometry: {type: 'LineString', coordinates: []}}
+        ]});
+        source.updateData({remove: ['b']});
+        await waitForMetadataEvent(source);
+        await waitForMetadataEvent(source);
+
+        expect((spy.mock.calls[1][0].data as LoadGeoJSONParameters).dataDiff).toEqual({
+            remove: ['b'],
+            add: [{type: 'Feature', properties: {id: 'a'}, geometry: {type: 'LineString', coordinates: []}}],
+            update: []
         });
     });
 
