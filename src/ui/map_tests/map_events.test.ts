@@ -475,13 +475,15 @@ describe('map events', () => {
         await map.once('load');
         map.addSource('source', createStyleSource());
         map.addLayer({id: 'layer', type: 'circle', source: 'source'});
-        vi.spyOn(map.style, 'queryRenderedFeatures').mockReturnValueOnce([]).mockReturnValue([{} as MapGeoJSONFeature]);
+        const queryRenderedFeatures = vi.spyOn(map.style, 'queryRenderedFeatures');
         const spy = vi.fn();
 
         map.once('click', 'layer', spy);
+        queryRenderedFeatures.mockReturnValue([]);
         simulate.click(map.getCanvas());
         expect(spy).not.toHaveBeenCalled();
 
+        queryRenderedFeatures.mockReturnValue([{} as MapGeoJSONFeature]);
         simulate.click(map.getCanvas());
         simulate.click(map.getCanvas());
         expect(spy).toHaveBeenCalledTimes(1);
