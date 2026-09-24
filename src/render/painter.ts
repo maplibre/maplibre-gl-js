@@ -176,10 +176,12 @@ export class Painter {
     /*
      * Update the GL viewport, projection matrix, and transforms to compensate
      * for a new width and height value.
+     *
+     * The viewport is the canvas' backing store, so it rounds as {@link Map._resizeCanvas} does.
      */
     resize(width: number, height: number, pixelRatio: number): void {
-        this.width = Math.floor(width * pixelRatio);
-        this.height = Math.floor(height * pixelRatio);
+        this.width = Math.round(width * pixelRatio);
+        this.height = Math.round(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
