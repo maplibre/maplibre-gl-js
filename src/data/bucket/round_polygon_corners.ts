@@ -34,6 +34,40 @@ export function getTileUnitsForMeters(distanceInMeters: number, canonical: Canon
     return distanceInMeters * meterInMercator * tileUnitsPerMercator;
 }
 
+// Turns of at most this angle between two neighbouring walls are shaded as one curved surface.
+// Rounded corners split their arc into steps of 30 degrees or less.
+const SMOOTH_WALL_MIN_DOT = Math.cos(35 * Math.PI / 180);
+
+/**
+ * Wall normals of a rounded ring, indexed by the wall's end vertex. At a shallow turn both walls
+ * share the average of their normals, so the lighting blends across the arc of a rounded corner;
+ * at a sharp turn each wall keeps its own. Boundary and zero-length walls get `null`.
+ * @param ring - Ring as passed to the bucket, closed or open
+ */
+export function roundedWallNormals(ring: Point[]): Array<{start: Point; end: Point} | null> {
+    const perps: Point[] = [null];
+    for (let p = 1; p < ring.length; p++) {
+        const edge = ring[p].sub(ring[p - 1]);
+        perps.push(isBoundaryEdge(ring[p], ring[p - 1]) || edge.mag() === 0 ? null : edge._perp()._unit());
+    }
+
+    const last = ring.length - 1;
+    const isClosed = last > 1 && ring[0].equals(ring[last]);
+    return perps.map((perp, p) => {
+        if (!perp) return null;
+        const previous = perps[p - 1] || (isClosed && p === 1 ? perps[last] : null);
+        const next = perps[p + 1] || (isClosed && p === last ? perps[1] : null);
+        return {start: smoothNormal(perp, previous), end: smoothNormal(perp, next)};
+    });
+}
+
+function smoothNormal(perp: Point, neighbour: Point | null): Point {
+    if (!neighbour || perp.x * neighbour.x + perp.y * neighbour.y < SMOOTH_WALL_MIN_DOT) {
+        return perp;
+    }
+    return perp.add(neighbour)._unit();
+}
+
 /**
  * Rounds the corners of a single ring.
  *

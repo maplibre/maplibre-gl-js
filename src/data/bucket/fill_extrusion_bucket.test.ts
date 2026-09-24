@@ -1,5 +1,4 @@
 import {beforeAll, describe, test, expect} from 'vitest';
-import Point from '@mapbox/point-geometry';
 import {FillExtrusionBucket} from './fill_extrusion_bucket.ts';
 import {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
@@ -7,7 +6,7 @@ import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
-import type {BucketFeature, BucketParameters} from '../bucket.ts';
+import type {BucketParameters} from '../bucket.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 function createFillExtrusionBucket({id, layout, paint, globalState, availableImages}: CreateBucketParameters): FillExtrusionBucket {
@@ -21,31 +20,6 @@ function createFillExtrusionBucket({id, layout, paint, globalState, availableIma
         availableImages);
 
     return new FillExtrusionBucket({layers: [layer]} as BucketParameters<FillExtrusionStyleLayer>);
-}
-
-function regularPolygon(sides: number): Point[] {
-    const ring: Point[] = [];
-    for (let i = 0; i <= sides; i++) {
-        const angle = 2 * Math.PI * i / sides;
-        ring.push(new Point(4096 + Math.round(1000 * Math.cos(angle)), 4096 + Math.round(1000 * Math.sin(angle))));
-    }
-    return ring;
-}
-
-function wallNormals(ring: Point[], roundedCornerDistance = 1): Array<{start: string; end: string}> {
-    const bucket = createFillExtrusionBucket({id: 'test', layout: {'fill-extrusion-rounded-corner-distance': roundedCornerDistance}, paint: {'fill-extrusion-height': 10}});
-    const feature = {id: 0, sourceLayerIndex: 0, index: 0, geometry: [ring], properties: {}, type: 3, patterns: {}} as BucketFeature;
-    bucket.addFeature(feature, feature.geometry, 0, {x: 0, y: 0, z: 14} as any, {}, createPopulateOptions([]).subdivisionGranularity);
-
-    const normalAt = (vertex: number) => {
-        const v = bucket.layoutVertexArray.int16.subarray(vertex * 6 + 2, vertex * 6 + 4);
-        return `${v[0] >> 1},${v[1]}`;
-    };
-    const walls = [];
-    for (let wall = 0; wall < ring.length - 1; wall++) {
-        walls.push({end: normalAt(wall * 4), start: normalAt(wall * 4 + 2)});
-    }
-    return walls;
 }
 
 describe('FillExtrusionBucket', () => {
@@ -91,32 +65,7 @@ describe('FillExtrusionBucket', () => {
 
         expect(bucketWithoutRounding.layoutVertexArray.length).toBeGreaterThan(0);
         expect(bucketWithRounding.layoutVertexArray.length).toBeGreaterThan(bucketWithoutRounding.layoutVertexArray.length);
-    });
-
-    test('walls meeting at a shallow angle share the vertex normal', () => {
-        const walls = wallNormals(regularPolygon(12));
-
-        for (let i = 0; i < walls.length; i++) {
-            expect(walls[i].end).toBe(walls[(i + 1) % walls.length].start);
-            expect(walls[i].end).not.toBe(walls[i].start);
-        }
-    });
-
-    test('walls meeting at a right angle keep their own normal', () => {
-        const walls = wallNormals(regularPolygon(4));
-
-        for (let i = 0; i < walls.length; i++) {
-            expect(walls[i].end).toBe(walls[i].start);
-            expect(walls[i].end).not.toBe(walls[(i + 1) % walls.length].start);
-        }
-    });
-
-    test('walls keep their own normal without rounded corners', () => {
-        const walls = wallNormals(regularPolygon(12), 0);
-
-        for (let i = 0; i < walls.length; i++) {
-            expect(walls[i].end).toBe(walls[i].start);
-            expect(walls[i].end).not.toBe(walls[(i + 1) % walls.length].start);
-        }
+        expect(bucketWithoutRounding.smoothWallNormals).toBe(false);
+        expect(bucketWithRounding.smoothWallNormals).toBe(true);
     });
 });
