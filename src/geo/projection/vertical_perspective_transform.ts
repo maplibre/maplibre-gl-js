@@ -61,6 +61,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
+    private _nearZ: number;
+    private _farZ: number;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
@@ -85,6 +87,10 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     }
 
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
+
+    public get nearZ(): number { return this._nearZ; }
+
+    public get farZ(): number { return this._farZ; }
 
     public get modelViewProjectionMatrix(): mat4 { return this._globeViewProjMatrixF64; }
 
@@ -280,21 +286,15 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         return cx * cx + cy * cy + cz * cz < 1.0;
     }
 
-    /**
-     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the transform already
-     * holds. Defaults to {@link Transform.autoCalculateNearFarZ}; a composing part such as {@link GlobeTransform}
-     * overrides it so that its two children share a single depth range.
-     */
-    calcMatrices(calculateNearFarZ: boolean = this._transform.autoCalculateNearFarZ): void {
+    calcMatrices(): void {
         const globeRadiusPixels = getGlobeRadiusPixels(this._transform.worldSize, this._transform.center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
-        if (calculateNearFarZ) {
-            this._transform._nearZ = 0.5;
-            this._transform._farZ = this._transform.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        }
-        mat4.perspective(globeMatrix, this._transform.fovInRadians, this._transform.width / this._transform.height, this._transform._nearZ, this._transform._farZ);
+        const override = this._transform.nearFarZOverride;
+        this._nearZ = override ? override.nearZ : 0.5;
+        this._farZ = override ? override.farZ : this._transform.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        mat4.perspective(globeMatrix, this._transform.fovInRadians, this._transform.width / this._transform.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         const offset = this._transform.centerOffset;

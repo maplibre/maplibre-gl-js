@@ -75,6 +75,10 @@ export class GlobeTransform implements IProjectionTransform {
 
     public get inverseProjectionMatrix(): mat4 { return this.currentTransform.inverseProjectionMatrix; }
 
+    public get nearZ(): number { return this.currentTransform.nearZ; }
+
+    public get farZ(): number { return this.currentTransform.farZ; }
+
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
@@ -119,16 +123,15 @@ export class GlobeTransform implements IProjectionTransform {
     }
 
     /**
-     * Both children write their near/far Z into the transform, so the order here is what keeps the two render
-     * paths at the same depth across the globe-to-mercator transition: vertical perspective computes the globe's Z
-     * first, and while the globe is rendering mercator is made to reuse that result instead of computing its own.
+     * Vertical perspective computes the globe's depth range first. While the globe renders, mercator is given that range
+     * instead of computing its own, which keeps the two render paths at the same depth across the globe-to-mercator transition.
      */
     calcMatrices(): void {
         if (!this._transform.width || !this._transform.height) {
             return;
         }
         this._verticalPerspectiveTransform.calcMatrices();
-        this._mercatorTransform.calcMatrices(this._transform.autoCalculateNearFarZ && !this.isGlobeRendering);
+        this._mercatorTransform.calcMatrices(this.isGlobeRendering ? this._verticalPerspectiveTransform : this._transform.nearFarZOverride);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {

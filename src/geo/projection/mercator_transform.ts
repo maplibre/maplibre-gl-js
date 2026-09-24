@@ -17,7 +17,7 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 
 import type {CameraOptionsFromTo, TransformConstrainFunction} from '../transform_interface.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {IProjectionTransform, TransformOptions} from '../transform.ts';
+import type {NearFarZ, IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
@@ -71,6 +71,8 @@ export class MercatorTransform implements IProjectionTransform {
     private _transform: Transform;
 
     private _cameraPosition: vec3;
+    private _nearZ: number;
+    private _farZ: number;
 
     private _mercatorMatrix: mat4;
     private _projectionMatrix: mat4;
@@ -106,6 +108,8 @@ export class MercatorTransform implements IProjectionTransform {
     }
 
     public get cameraPosition(): vec3 { return this._cameraPosition; }
+    public get nearZ(): number { return this._nearZ; }
+    public get farZ(): number { return this._farZ; }
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
     public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
     public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
@@ -213,7 +217,7 @@ export class MercatorTransform implements IProjectionTransform {
         if (!index) return null;
         const {near, far} = this.getRaySegmentFromPixel(this._transform.centerPoint, NEAR_PLANE_CLIP_Z);
         const distanceAtMaxZoom = this._transform.cameraToCenterDistance * zoomScale(this._transform.zoom - this._transform.maxZoom);
-        const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this._transform.nearZ) / (this._transform.farZ - this._transform.nearZ)));
+        const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this._nearZ) / (this._farZ - this._nearZ)));
         if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / this._transform.worldSize, start[1] / this._transform.worldSize), start[2])) return null;
         return this._raycastTerrain(start, far, terrain)?.toLngLat() ?? null;
     }
@@ -574,7 +578,7 @@ export class MercatorTransform implements IProjectionTransform {
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
 
-        this._transform._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -583,15 +587,14 @@ export class MercatorTransform implements IProjectionTransform {
         // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
-        this._transform._nearZ = this._transform.height / 50;
+        this._nearZ = this._transform.height / 50;
     }
 
     /**
-     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the transform already
-     * holds. Defaults to {@link Transform.autoCalculateNearFarZ}; a composing part such as {@link GlobeTransform}
-     * overrides it so that its two children share a single depth range.
+     * @param nearFarZ - A depth range to use instead of computing one. Defaults to the transform's override; a composing
+     * part such as {@link GlobeTransform} passes its own so that its two children share a single depth range.
      */
-    calcMatrices(calculateNearFarZ: boolean = this._transform.autoCalculateNearFarZ): void {
+    calcMatrices(nearFarZ: NearFarZ | null = this._transform.nearFarZOverride): void {
         const offset = this._transform.centerOffset;
         const point = projectToWorldCoordinates(this._transform.worldSize, this._transform.center);
         const x = point.x, y = point.y;
@@ -600,14 +603,17 @@ export class MercatorTransform implements IProjectionTransform {
         const limitedPitchRadians = degreesToRadians(Math.min(this._transform.pitch, maxMercatorHorizonAngle));
         const cameraToSeaLevelDistance = Math.max(this._transform.cameraToCenterDistance / 2, this._transform.cameraToCenterDistance + this._transform.elevation * this._transform.pixelsPerMeter / Math.cos(limitedPitchRadians));
 
-        if (calculateNearFarZ) {
+        if (nearFarZ) {
+            this._nearZ = nearFarZ.nearZ;
+            this._farZ = nearFarZ.farZ;
+        } else {
             this._calculateNearFarZ(cameraToSeaLevelDistance, limitedPitchRadians, offset);
         }
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
         m = new Float64Array(16);
-        mat4.perspective(m, this._transform.fovInRadians, this._transform.width / this._transform.height, this._transform._nearZ, this._transform._farZ);
+        mat4.perspective(m, this._transform.fovInRadians, this._transform.width / this._transform.height, this._nearZ, this._farZ);
         this._invProjMatrix = new Float64Array(16);
         fastInvertProjMat4(this._invProjMatrix, m);
 
@@ -649,7 +655,7 @@ export class MercatorTransform implements IProjectionTransform {
         // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
         this._fogMatrix = new Float64Array(16);
-        mat4.perspective(this._fogMatrix, this._transform.fovInRadians, this._transform.width / this._transform.height, cameraToSeaLevelDistance, this._transform._farZ);
+        mat4.perspective(this._fogMatrix, this._transform.fovInRadians, this._transform.width / this._transform.height, cameraToSeaLevelDistance, this._farZ);
         this._fogMatrix[8] = -offset.x * 2 / this._transform.width;
         this._fogMatrix[9] = offset.y * 2 / this._transform.height;
         mat4.scale(this._fogMatrix, this._fogMatrix, [1, -1, 1]);
