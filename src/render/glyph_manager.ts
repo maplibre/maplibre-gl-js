@@ -305,8 +305,11 @@ export class GlyphManager {
      * Draws a glyph offscreen using TinySDF, created lazily. The whole cluster goes to TinySDF, which
      * is what lets the browser's text engine place a letter's marks on it.
      *
-     * @param vertical - `true` for vertical glyphs, which are rejected if they have no ink
-     * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
+     * @param entry - cached glyphs and rasterizers for this font stack
+     * @param stack - font stack used for local font fallback
+     * @param id - grapheme cluster to rasterize
+     * @param vertical - `true` when drawing a vertical alternate
+     * @param fontFaceFamily - the CSS family of the selected declared font, if any
      * @returns the glyph, or `null` if a vertical glyph is empty or its font face was replaced
      */
     async _drawGlyph(entry: Entry, stack: string, id: string, vertical: boolean, fontFaceFamily?: string): Promise<StyleGlyph | null> {

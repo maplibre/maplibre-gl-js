@@ -38,14 +38,11 @@ type DeclaredFontFace = {
      * after one the page uses, and so that each file can be selected on its own.
      */
     family: string;
-    /**
-     * Resolves to the loaded CSS family, or `null` if unavailable. Started the first time a codepoint
-     * needs this file, so that a style may declare more fonts than any one map ever draws with.
-     */
-    loaded?: Promise<string | null>;
-    /** The same font with OpenType vertical alternates enabled, loaded only when requested. */
-    verticalLoaded?: Promise<string | null>;
-    /** Downloaded bytes shared by concurrent loads, released when loading finishes. */
+    /** Cached load result for the default face: its CSS family, or `null` if unavailable. */
+    defaultLoad?: Promise<string | null>;
+    /** Cached load result for the `vert` face: its CSS family, or `null` if unavailable. */
+    verticalLoad?: Promise<string | null>;
+    /** Font download temporarily shared by overlapping face loads. */
     data?: Promise<ArrayBuffer>;
 };
 
@@ -151,7 +148,9 @@ export class FontFaceManager {
      *
      * Vertical requests use that file's `vert` face and return `null` if it fails to load.
      *
-     * @param vertical - required: `true` for `vert`, `false` for normal feature settings
+     * @param fontStack - comma-separated font names, in fallback order
+     * @param codePoint - codepoint to match against the declared Unicode ranges
+     * @param vertical - `true` for `vert`, `false` for normal feature settings
      * @returns the CSS family to draw with, or `null` to use normal glyph fallbacks; for vertical
      * requests, `null` means to retain the existing rotation or compatibility punctuation
      */
@@ -160,12 +159,12 @@ export class FontFaceManager {
             for (const face of this._faces[fontName.trim()] ?? []) {
                 if (!covers(face, codePoint)) continue;
 
-                face.loaded ??= this._loadFontFace(face, false);
+                face.defaultLoad ??= this._loadFontFace(face, false);
                 const data = face.data;
-                const family = await face.loaded;
+                const family = await face.defaultLoad;
                 if (!family) continue;
 
-                return vertical ? face.verticalLoaded ??= this._loadFontFace(face, true, data) : family;
+                return vertical ? face.verticalLoad ??= this._loadFontFace(face, true, data) : family;
             }
         }
         return null;
@@ -208,6 +207,7 @@ export class FontFaceManager {
      * Downloads a declared file and hands it to the browser.
      * A failure is not an error: the caller chooses a fallback.
      *
+     * @param face - font file declaration and CSS family to register
      * @param vertical - `true` to enable `vert`, `false` for normal feature settings
      * @param data - a download retained by a concurrent request while the normal face loads
      * @returns the registered CSS family, or `null` on failure, ignored feature settings or disposal

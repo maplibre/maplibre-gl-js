@@ -430,6 +430,9 @@ export class SymbolBucket implements Bucket {
      * came from -- the same way layout attributes it. Collecting each section's text on its own
      * would ask for glyphs no cluster is ever looked up by.
      *
+     * @param text - label text and section formatting
+     * @param stacks - destination for dependencies grouped by font stack and variant
+     * @param fontStack - default font stack for sections without a font override
      * @param needsVerticalForms - whether to request vertical alternates and compatibility punctuation
      */
     private calculateGlyphDependencies(

@@ -250,6 +250,8 @@ export class TaggedString {
     /**
      * Uses compatibility punctuation where a font's vertical form is unavailable or unused, preserving
      * UTF-16 length, keeping whole-text context, cluster boundaries and section indices intact.
+     *
+     * @param glyphMap - glyph variants used to check for font-provided vertical forms
      * @param verticals - resolved orientations, if available; only upright glyphs use font alternates
      */
     verticalizePunctuation(glyphMap: GlyphMap = {}, verticals?: boolean[]): void {
