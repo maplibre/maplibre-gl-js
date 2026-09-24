@@ -24,7 +24,7 @@ import {mergeLines} from '../../symbol/merge_lines.ts';
 import {isCluster} from '../../util/graphemes.ts';
 import {TaggedString} from '../../symbol/tagged_string.ts';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
-import {WritingMode} from '../../symbol/shaping.ts';
+import {mayUseVerticalGlyph, WritingMode} from '../../symbol/shaping.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
@@ -419,7 +419,7 @@ export class SymbolBucket implements Bucket {
     }
 
     /**
-     * Collects the glyphs a label needs into `stacks`, so that the tile can ask for them.
+     * Collects a label's default and vertical glyph dependencies into `stacks` for the tile to request.
      *
      * A cluster of several codepoints is asked for as a whole, so that it can be drawn as the one
      * shape it is written as. Its codepoints are asked for as well, to give layout something to draw
@@ -429,15 +429,18 @@ export class SymbolBucket implements Bucket {
      * the label is taken as a whole and each cluster attributed to the section its first character
      * came from -- the same way layout attributes it. Collecting each section's text on its own
      * would ask for glyphs no cluster is ever looked up by.
+     *
+     * @param text - label text and section formatting
+     * @param stacks - destination for dependencies grouped by font stack and variant
+     * @param fontStack - default font stack for sections without a font override
+     * @param needsVerticalForms - whether to request vertical alternates and compatibility punctuation
      */
     private calculateGlyphDependencies(
         text: Formatted,
         stacks: PopulateParameters['glyphDependencies'],
         fontStack: string,
-        textAlongLine: boolean,
-        doesAllowVerticalWritingMode: boolean): void {
+        needsVerticalForms: boolean): void {
 
-        const needsVerticalForms = (textAlongLine || this.allowVerticalPlacement) && doesAllowVerticalWritingMode;
         const tagged = TaggedString.fromFeature(text, fontStack);
         const graphemes = tagged.graphemes();
 
@@ -445,16 +448,19 @@ export class SymbolBucket implements Bucket {
             const section = tagged.getSection(i);
             if ('imageName' in section) continue;
 
-            const stack = (stacks[section.fontStack] ||= {default: {}}).default;
+            const stack = stacks[section.fontStack] ||= {default: {}, vertical: {}};
             const grapheme = graphemes[i];
-            if (isCluster(grapheme)) stack[grapheme] = true;
+            const needsVerticalGlyph = needsVerticalForms && mayUseVerticalGlyph(grapheme.codePointAt(0), this.allowVerticalPlacement);
+            if (isCluster(grapheme)) stack.default[grapheme] = true;
+            if (needsVerticalGlyph) stack.vertical[grapheme] = true;
 
             for (const char of grapheme) {
-                stack[char] = true;
+                stack.default[char] = true;
                 if (!needsVerticalForms) continue;
 
+                if (needsVerticalGlyph && isCluster(grapheme)) stack.vertical[char] = true;
                 const verticalChar = verticalizedCharacterMap[char];
-                if (verticalChar) stack[verticalChar] = true;
+                if (verticalChar) stack.default[verticalChar] = true;
             }
         }
     }
@@ -488,6 +494,7 @@ export class SymbolBucket implements Bucket {
         const stacks = options.glyphDependencies;
         const availableImages = options.availableImages;
         const globalProperties = new EvaluationParameters(this.zoom);
+        const keepUpright = layout.get('text-keep-upright');
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
 
@@ -552,8 +559,9 @@ export class SymbolBucket implements Bucket {
                 const fontStack = textFont.evaluate(evaluationFeature, {}, canonical).join(',');
                 const textAlongLine = layout.get('text-rotation-alignment') !== 'viewport' && layout.get('symbol-placement') !== 'point';
                 this.allowVerticalPlacement = this.writingModes?.includes(WritingMode.vertical);
-                const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
-                this.calculateGlyphDependencies(text, stacks, fontStack, textAlongLine, doesAllowVerticalWritingMode);
+                const needsVerticalForms = ((textAlongLine && keepUpright) || this.allowVerticalPlacement) &&
+                    allowsVerticalWritingMode(text.toString());
+                this.calculateGlyphDependencies(text, stacks, fontStack, needsVerticalForms);
 
                 for (const section of text.sections) {
                     if (section.image) icons[section.image.name] = true;
