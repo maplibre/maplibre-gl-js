@@ -2116,7 +2116,7 @@ export class Map extends Evented<MapEventType> {
         return this._camera.isRotating() || this._handlers?.isRotating() || false;
     }
 
-    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener {
+    _createDelegates(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener['delegates'] {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
@@ -2132,7 +2132,7 @@ export class Map extends Evented<MapEventType> {
             const mouseout = () => {
                 mousein = false;
             };
-            return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
+            return {mousemove, mouseout};
         } else if (type === 'mouseleave' || type === 'mouseout') {
             let mousein = false;
             const mousemove = (e) => {
@@ -2151,7 +2151,7 @@ export class Map extends Evented<MapEventType> {
                     listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
                 }
             };
-            return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
+            return {mousemove, mouseout};
         } else {
             const delegate = (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
@@ -2163,14 +2163,17 @@ export class Map extends Evented<MapEventType> {
                     delete e.features;
                 }
             };
-            return {layers: layerIds, listener, delegates: {[type]: delegate}};
+            return {[type]: delegate};
         }
     }
 
-    _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
+    _addDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
         this._delegatedListeners ||= {} as Record<keyof MapEventType, DelegatedListener[]>;
         this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
+        for (const event in delegatedListener.delegates) {
+            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
+        }
     }
 
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener): void {
@@ -2338,13 +2341,8 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
-
-        this._saveDelegatedListener(type, delegatedListener);
-
-        for (const event in delegatedListener.delegates) {
-            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
-        }
+        const delegatedListener: DelegatedListener = {layers: layerIds, listener, delegates: this._createDelegates(type, layerIds, listener)};
+        this._addDelegatedListener(type, delegatedListener);
 
         return {
             unsubscribe: () => {
@@ -2436,21 +2434,11 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
-
-        for (const key in delegatedListener.delegates) {
-            const delegate: Delegate = delegatedListener.delegates[key];
-            delegatedListener.delegates[key] = (...args: Parameters<Delegate>) => {
-                this._removeDelegatedListener(type, layerIds, listener);
-                delegate(...args);
-            };
-        }
-
-        this._saveDelegatedListener(type, delegatedListener);
-
-        for (const event in delegatedListener.delegates) {
-            this.once(event as keyof MapEventType, delegatedListener.delegates[event]);
-        }
+        const delegatedListener: DelegatedListener = {layers: layerIds, listener, delegates: this._createDelegates(type, layerIds, (e) => {
+            this._removeDelegatedListener(type, layerIds, listener);
+            listener.call(this, e);
+        })};
+        this._addDelegatedListener(type, delegatedListener);
 
         return this;
     }

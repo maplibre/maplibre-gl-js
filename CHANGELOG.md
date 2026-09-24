@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `Map#once(type, layerId, listener)` unsubscribing on the first event that misses the layer instead of the first event that hits it ([#8499](https://github.com/maplibre/maplibre-gl-js/pull/8499)) (by [@cherenkov](https://github.com/cherenkov))
 - Remove hillshade gradient toward the poles ([#8551](https://github.com/maplibre/maplibre-gl-js/pull/8551)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix camera settings being undone during camera movement with terrain or `transformCameraUpdate` ([#8550](https://github.com/maplibre/maplibre-gl-js/pull/8550)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix zooming and panning with the pointer above the horizon moving the map in the opposite direction ([#8544](https://github.com/maplibre/maplibre-gl-js/pull/8544)) (by [@birkskyum](https://github.com/birkskyum))

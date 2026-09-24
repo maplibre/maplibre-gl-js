@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep, createTerrain} from '../../util/test/util.ts';
 import {type MapLibreEvent, MapSourceDataEvent} from '../events.ts';
 import {Map} from '../map.ts';
 import {ErrorEvent} from '../../util/evented.ts';
@@ -468,6 +468,25 @@ describe('map events', () => {
         simulate.click(map.getCanvas());
 
         expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('Map.once with layerId fires on the first hit, not the first event', async () => {
+        const map = createMap();
+        await map.once('load');
+        map.addSource('source', createStyleSource());
+        map.addLayer({id: 'layer', type: 'circle', source: 'source'});
+        const queryRenderedFeatures = vi.spyOn(map.style, 'queryRenderedFeatures');
+        const spy = vi.fn();
+
+        map.once('click', 'layer', spy);
+        queryRenderedFeatures.mockReturnValue([]);
+        simulate.click(map.getCanvas());
+        expect(spy).not.toHaveBeenCalled();
+
+        queryRenderedFeatures.mockReturnValue([{} as MapGeoJSONFeature]);
+        simulate.click(map.getCanvas());
+        simulate.click(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     const mouseInteractionEvents = ['mouseenter', 'mouseover'] as const;
