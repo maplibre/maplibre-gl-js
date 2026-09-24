@@ -544,7 +544,7 @@ export class MercatorTransform implements ITransform {
         if (terrain) {
             return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
-        return (p.y > this.height / 2 - getMercatorHorizon(this));
+        return (p.y > this.centerPoint.y - getMercatorHorizon(this));
     }
 
     /**
