@@ -134,7 +134,7 @@ describe('global dispatcher', () => {
         expect(pool.workersPromise).toBeTruthy();
     });
 
-    test('the global dispatcher works again on the workers that replace terminated ones', async () => {
+    test('the global dispatcher hands out fresh actors after its workers terminate', async () => {
         const globalDispatcher = getGlobalDispatcher();
         const actor = await globalDispatcher.getActor();
 
