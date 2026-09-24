@@ -1,8 +1,17 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- Fix globe cameraForBoxAndBearing throwing when padding exceeds the viewport ([#8553](https://github.com/maplibre/maplibre-gl-js/pull/8553)) (by [@drakeo338](https://github.com/drakeo338))
+- Size the canvas to whole device pixels ([#8513](https://github.com/maplibre/maplibre-gl-js/pull/8513)) (by [@zdila](https://github.com/zdila))
+- refactor: one method builds the mercator animation's end transform ([#8546](https://github.com/maplibre/maplibre-gl-js/pull/8546)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+## 6.11.2
+### ✨ Features and improvements
 - Improve rendering performance by uploading each tile's projection data once per frame instead of before every draw call ([#8545](https://github.com/maplibre/maplibre-gl-js/pull/8545)) (by [@birkskyum](https://github.com/birkskyum))
 - Support multiple glyph variants in requests, caches, and atlases ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix `Map#once(type, layerId, listener)` unsubscribing on the first event that misses the layer instead of the first event that hits it ([#8499](https://github.com/maplibre/maplibre-gl-js/pull/8499)) (by [@cherenkov](https://github.com/cherenkov))
@@ -13,7 +22,6 @@
 - Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543))
 - Fix `fitBounds` and `cameraForBounds` throwing on the globe projection when the padding exceeds the viewport, instead of warning and returning `undefined` as on mercator ([#8538](https://github.com/maplibre/maplibre-gl-js/issues/8538))
 - Keep raster tiles sharp at a fractional `devicePixelRatio`, where the canvas covered a different number of device pixels than its backing store held and the compositor rescaled it ([#1590](https://github.com/maplibre/maplibre-gl-js/issues/1590)) (by [@zdila](https://github.com/zdila))
-- _...Add new stuff here..._
 
 ## 6.11.1
 
