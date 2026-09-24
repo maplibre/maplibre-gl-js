@@ -94,6 +94,7 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
             0, tr);
 
         expect(result).toBeUndefined();
+        // Both the base helper and this one call cameraBoundsWarning, but warnOnce dedupes by message.
         expect(warn).toHaveBeenCalledTimes(1);
         warn.mockRestore();
     });
