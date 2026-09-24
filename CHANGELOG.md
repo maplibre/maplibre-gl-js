@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Remove hillshade gradient toward the poles ([#8551](https://github.com/maplibre/maplibre-gl-js/pull/8551)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix camera settings being undone during camera movement with terrain or `transformCameraUpdate` ([#8550](https://github.com/maplibre/maplibre-gl-js/pull/8550)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix zooming and panning with the pointer above the horizon moving the map in the opposite direction ([#8544](https://github.com/maplibre/maplibre-gl-js/pull/8544)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix the camera jumping when a drag over terrain ends at a pitch above 84° ([#8541](https://github.com/maplibre/maplibre-gl-js/pull/8541)) (by [@birkskyum](https://github.com/birkskyum))
 - Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543))
