@@ -27,7 +27,8 @@ export type BackgroundDrawables = {
  * Meshes with borders would hide tiny holes at tile boundaries, but they need a tile clipping mask in stencil first.
  */
 export function prepareBackgroundDrawables(painter: Painter): void {
-    const {context, transform, style, renderContext, backgroundDrawables} = painter;
+    const {context, style, renderContext, backgroundDrawables} = painter;
+    const transform = renderContext.transform;
     let tiles: OverscaledTileID[];
 
     for (let i = 0; i < style._order.length; i++) {
