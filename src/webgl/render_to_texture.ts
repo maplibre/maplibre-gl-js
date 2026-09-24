@@ -185,7 +185,7 @@ export class RenderToTexture {
      * @returns if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer, renderContext: RenderContext): boolean {
-        if (layer.isHidden(this.painter.transform.zoom)) return false;
+        if (layer.isHidden(renderContext.transform.zoom)) return false;
 
         const type = layer.type;
         const painter = this.painter;
