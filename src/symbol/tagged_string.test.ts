@@ -33,6 +33,45 @@ describe('TaggedString', () => {
         });
     });
 
+    describe('verticalizePunctuation', () => {
+        test('preserves spacing marks and section ownership when later sections need segmentation', () => {
+            const formatted = new Formatted([
+                new FormattedSection('လား', null, 1, 'Burmese', null, null),
+                new FormattedSection('、a\u0301', null, 2, 'Other', null, null)
+            ]);
+            const tagged = TaggedString.fromFeature(formatted, 'Test');
+            const graphemes = tagged.graphemes().slice();
+            const sectionIndex = tagged.sectionIndex.slice();
+            const glyphMap = {
+                Burmese: {default: {}, vertical: {'လ': {id: 0x101C} as StyleGlyph}},
+                Other: {default: {}, vertical: {'、': {id: 0x3001} as StyleGlyph}}
+            };
+
+            tagged.verticalizePunctuation(glyphMap);
+
+            expect(tagged.text).toBe('လား、a\u0301');
+            expect(tagged.graphemes()).toEqual(graphemes);
+            expect(tagged.sectionIndex).toEqual(sectionIndex);
+            expect(tagged.getSection(tagged.graphemes().indexOf('、'))).toMatchObject({fontStack: 'Other', scale: 2});
+        });
+
+        test('uses each font’s alternates while retaining the context of punctuation beside Latin', () => {
+            const tagged = TaggedString.fromFeature(new Formatted([
+                new FormattedSection('𠮷（小）小 ', null, 1, 'Test', null, null),
+                new FormattedSection('A(B)', null, 2, 'Other', null, null)
+            ]), 'Test');
+
+            tagged.verticalizePunctuation({Test: {default: {}, vertical: {
+                '（': {id: 0xFF08} as StyleGlyph,
+                '）': null
+            }}});
+
+            expect(tagged.text).toBe('𠮷（小︶小 A(B)');
+            expect(tagged.sectionIndex).toEqual([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]);
+            expect(tagged.getSection(6)).toMatchObject({fontStack: 'Other', scale: 2});
+        });
+    });
+
     describe('hasZeroWidthSpaces', () => {
         test('detects a zero width space', () => {
             const tagged = new TaggedString('三三\u200b三三\u200b三三\u200b三三三三三三\u200b三三');

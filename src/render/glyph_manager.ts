@@ -87,6 +87,15 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
  */
 const clusterEmsWide = 3;
 
+/** Whether two glyphs have identical bitmaps and metrics. */
+function glyphsEqual(a: StyleGlyph, b: StyleGlyph): boolean {
+    return a.bitmap.width === b.bitmap.width && a.bitmap.height === b.bitmap.height &&
+        a.metrics.width === b.metrics.width && a.metrics.height === b.metrics.height &&
+        a.metrics.left === b.metrics.left && a.metrics.top === b.metrics.top &&
+        a.metrics.advance === b.metrics.advance &&
+        a.bitmap.data.every((value, index) => value === b.bitmap.data[index]);
+}
+
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string | false;
@@ -125,9 +134,11 @@ export class GlyphManager {
 
     async getGlyphs(glyphs: GlyphRequests): Promise<GlyphMap> {
         const glyphsPromises: Array<Promise<GlyphResult>> = [];
+        const hasFontFaces = this.fontFaceManager.hasFontFaces();
 
         for (const stack in glyphs) {
             for (const variant in glyphs[stack]) {
+                if (variant === 'vertical' && !hasFontFaces) continue;
                 for (const id of glyphs[stack][variant]) {
                     glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id, variant));
                 }
@@ -160,7 +171,7 @@ export class GlyphManager {
      * has no way to serve the one shape they are written as. A file the style pinned with
      * `font-faces` draws it where one covers it, and the local fonts otherwise. For a single
      * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
-     * Providers support the `default` variant; unsupported variants return `null`.
+     * The `vertical` variant uses only declared font files; unsupported variants return `null`.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult> {
         // Create an entry for this fontstack if it doesn’t already exist.
@@ -175,28 +186,48 @@ export class GlyphManager {
         }
 
         if (variant !== 'default') {
-            glyphs[id] = null;
-            return {stack, id, variant, glyph: null};
+            glyph = glyphs[id] = variant === 'vertical' ? await this._drawVerticalGlyph(entry, stack, id) : null;
+            return {stack, id, variant, glyph};
         }
 
         const codePoint = id.codePointAt(0);
         const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
-            await this.fontFaceManager.getFontFamily(stack, codePoint) :
+            await this.fontFaceManager.getFontFamily(stack, codePoint, false) :
             null;
 
         if (fontFaceFamily) {
-            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
+            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id, false, fontFaceFamily);
             return {stack, id, variant, glyph};
         }
 
         // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
         // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
         if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
-            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id);
+            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id, false);
             return {stack, id, variant, glyph};
         }
 
         return {...await this._downloadAndCacheRangePromise(stack, id), variant};
+    }
+
+    /**
+     * Draws a vertical alternate, comparing both forms from the same declared font file.
+     * Cached default glyphs may come from a PBF range. Unchanged or empty alternates and
+     * results from replaced font faces return `null`.
+     */
+    async _drawVerticalGlyph(entry: Entry, stack: string, id: string): Promise<StyleGlyph | null> {
+        const codePoint = id.codePointAt(0);
+        const verticalFamily = await this.fontFaceManager.getFontFamily(stack, codePoint, true);
+        if (!verticalFamily || this.entries[stack] !== entry) return null;
+
+        const glyph = await this._drawGlyph(entry, stack, id, true, verticalFamily);
+        if (!glyph || this.entries[stack] !== entry) return null;
+
+        const defaultFamily = await this.fontFaceManager.getFontFamily(stack, codePoint, false);
+        if (!defaultFamily || this.entries[stack] !== entry) return null;
+
+        const original = await this._drawGlyph(entry, stack, id, false, defaultFamily);
+        return this.entries[stack] === entry && !glyphsEqual(original, glyph) ? glyph : null;
     }
 
     /**
@@ -226,7 +257,7 @@ export class GlyphManager {
             return {stack, id, glyph: response[codePoint] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = entry.glyphs.default[id] = await this._drawGlyph(entry, stack, id);
+            const glyph = entry.glyphs.default[id] = await this._drawGlyph(entry, stack, id, false);
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
         }
@@ -274,11 +305,15 @@ export class GlyphManager {
      * Draws a glyph offscreen using TinySDF, created lazily. The whole cluster goes to TinySDF, which
      * is what lets the browser's text engine place a letter's marks on it.
      *
+     * @param vertical - `true` for vertical glyphs, which are rejected if they have no ink
      * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
+     * @returns the glyph, or `null` if a vertical glyph is empty or its font face was replaced
      */
-    async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
+    async _drawGlyph(entry: Entry, stack: string, id: string, vertical: boolean, fontFaceFamily?: string): Promise<StyleGlyph | null> {
         const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
+        if (vertical && this.entries[stack] !== entry) return null;
         const char = tinySDF.draw(id);
+        if (vertical && (!char.glyphWidth || !char.glyphHeight)) return null;
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
