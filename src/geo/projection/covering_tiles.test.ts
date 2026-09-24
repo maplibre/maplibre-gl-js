@@ -3,7 +3,9 @@ import {createGlobeTransform} from './globe_transform.ts';
 import {LngLat} from '../lng_lat.ts';
 import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
-import {type MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
+import {createMercatorTransform} from './mercator_transform.ts';
+
+import type {Transform} from '../transform.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
@@ -810,7 +812,7 @@ describe('coveringTiles', () => {
 });
 
 describe('coveringZoomLevel', () => {
-    let transform: MercatorTransform;
+    let transform: Transform;
     let options: CoveringTilesOptions;
 
     beforeEach(() => {

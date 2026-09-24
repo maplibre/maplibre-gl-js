@@ -1,4 +1,4 @@
-import {TransformHelper} from '../transform_helper.ts';
+import {Transform} from '../transform.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {lerp} from '../../util/util.ts';
@@ -12,23 +12,19 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
-import type {TransformOptions} from '../transform_helper.ts';
+import type {CameraOptionsFromTo, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
- * Globe transform is a transform that moves between vertical perspective and mercator projections.
- *
- * The two child transforms share this transform's {@link TransformHelper}, so the camera exists exactly once:
- * a child that moves itself - as {@link setLocationAtPoint} has it do, since only the child knows its own
- * projection's geometry - has moved this transform too, with no copying back. The children own only what they
- * derive from that shared camera, such as their matrices, and this transform drives their `_calcMatrices`
- * because a helper has a single `calcMatrices` callback.
+ * @internal
+ * The part of a globe transform, which moves between the vertical perspective and mercator projections.
+ * Both child parts belong to the same {@link Transform}, and this part drives their `calcMatrices`.
  */
-export class GlobeTransform implements ITransform {
-    private _helper: TransformHelper;
+export class GlobeTransform implements IProjectionTransform {
+    private _helper: Transform;
 
     //
     // Implementation of transform getters and setters
@@ -123,9 +119,6 @@ export class GlobeTransform implements ITransform {
     }
     clearNearFarZOverride(): void {
         this._helper.clearNearFarZOverride();
-    }
-    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
 
     get tileSize(): number {
@@ -239,12 +232,12 @@ export class GlobeTransform implements ITransform {
 
     setTransitionState(globeness: number): void {
         this._globeness = globeness;
-        this._calcMatrices();
+        this.calcMatrices();
         this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
         this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
     }
 
-    private get currentTransform(): ITransform {
+    private get currentTransform(): IProjectionTransform {
         return this.isGlobeRendering ? this._verticalPerspectiveTransform : this._mercatorTransform;
     }
 
@@ -256,25 +249,20 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
-    public constructor(options?: TransformOptions) {
-        this._helper = new TransformHelper({
-            calcMatrices: () => this._calcMatrices(),
-            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
-        }, options);
+    /**
+     * @param transform - The transform whose camera state this part's children derive their matrices from.
+     */
+    public constructor(transform: Transform) {
+        this._helper = transform;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._mercatorTransform = new MercatorTransform(undefined, this._helper);
-        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(undefined, this._helper);
+        this._mercatorTransform = new MercatorTransform(transform);
+        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(transform);
     }
 
-    clone(): ITransform {
-        const clone = new GlobeTransform();
+    clone(transform: Transform): GlobeTransform {
+        const clone = new GlobeTransform(transform);
         clone._globeness = this._globeness;
-        clone.apply(this, false);
         return clone;
-    }
-
-    public apply(that: IReadonlyTransform, constrain: boolean): void {
-        this._helper.apply(that, constrain);
     }
 
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
@@ -327,16 +315,16 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * Both children write their near/far Z into the shared helper, so the order here is what keeps the two render
+     * Both children write their near/far Z into the transform, so the order here is what keeps the two render
      * paths at the same depth across the globe-to-mercator transition: vertical perspective computes the globe's Z
      * first, and while the globe is rendering mercator is made to reuse that result instead of computing its own.
      */
-    private _calcMatrices(): void {
+    calcMatrices(): void {
         if (!this._helper._width || !this._helper._height) {
             return;
         }
-        this._verticalPerspectiveTransform._calcMatrices();
-        this._mercatorTransform._calcMatrices(this.autoCalculateNearFarZ && !this.isGlobeRendering);
+        this._verticalPerspectiveTransform.calcMatrices();
+        this._mercatorTransform.calcMatrices(this.autoCalculateNearFarZ && !this.isGlobeRendering);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
@@ -470,6 +458,6 @@ export class GlobeTransform implements ITransform {
 /**
  * Creates a transform for the globe projection.
  */
-export function createGlobeTransform(options?: TransformOptions): GlobeTransform {
-    return new GlobeTransform(options);
+export function createGlobeTransform(options?: TransformOptions): Transform {
+    return new Transform((transform) => new GlobeTransform(transform), options);
 }

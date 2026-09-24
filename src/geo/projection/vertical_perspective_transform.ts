@@ -1,5 +1,5 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {TransformHelper} from '../transform_helper.ts';
+import {Transform} from '../transform.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, remapSaturate, warnOnce, zoomScale, type Mat4f32} from '../../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
@@ -14,8 +14,8 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
-import type {TransformOptions} from '../transform_helper.ts';
+import type {CameraOptionsFromTo, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -46,8 +46,12 @@ type GlobeRay = {
     direction: vec3;
 };
 
-export class VerticalPerspectiveTransform implements ITransform {
-    private _helper: TransformHelper;
+/**
+ * @internal
+ * The vertical perspective part of a {@link Transform}.
+ */
+export class VerticalPerspectiveTransform implements IProjectionTransform {
+    private _helper: Transform;
 
     //
     // Implementation of transform getters and setters
@@ -142,9 +146,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
     clearNearFarZOverride(): void {
         this._helper.clearNearFarZOverride();
-    }
-    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
     }
 
     get tileSize(): number {
@@ -264,27 +265,15 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
     /**
-     * @param options - Initial state. Ignored when `sharedHelper` is given, which already carries it.
-     * @param sharedHelper - Camera to use instead of owning one, so that a composing transform such as
-     * {@link GlobeTransform} keeps a single copy of the state rather than one per child. Its owner then drives
-     * {@link _calcMatrices}, because a helper has only one `calcMatrices` callback.
+     * @param transform - The transform whose camera state this part derives its matrices from.
      */
-    public constructor(options?: TransformOptions, sharedHelper?: TransformHelper) {
-        this._helper = sharedHelper ?? new TransformHelper({
-            calcMatrices: () => this._calcMatrices(),
-            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
-        }, options);
+    public constructor(transform: Transform) {
+        this._helper = transform;
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
-    clone(): ITransform {
-        const clone = new VerticalPerspectiveTransform();
-        clone.apply(this, false);
-        return clone;
-    }
-
-    public apply(that: IReadonlyTransform, constrain: boolean): void {
-        this._helper.apply(that, constrain);
+    clone(transform: Transform): VerticalPerspectiveTransform {
+        return new VerticalPerspectiveTransform(transform);
     }
 
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
@@ -389,7 +378,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     /** {@inheritDoc ITransform.isLocationOccluded} */
     public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         const coverage = terrain?.getCoverageIndex();
-        elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, this) : 0;
+        elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, this._helper) : 0;
         const location = raisedSurfaceVector(lngLat, elevation);
         if (!this.isSurfacePointVisible(location)) return true;
         if (!coverage) return false;
@@ -489,11 +478,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the helper already
-     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing transform such as {@link GlobeTransform}
+     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the transform already
+     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing part such as {@link GlobeTransform}
      * overrides it so that its two children share a single depth range.
      */
-    _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
+    calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
@@ -577,7 +566,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             warnOnce('terrain is not fully supported on vertical perspective projection.');
             return;
         }
-        this._helper.recalculateZoomAndCenter(0);
+        this._helper.recalculateZoomAndCenterAtElevation(0);
     }
 
     maxPitchScaleFactor(): number {
@@ -591,7 +580,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     /**
      * The altitude of the rendered camera above sea level. The sphere keeps the center point at sea level whatever its
-     * elevation (`_calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
+     * elevation (`calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
      * {@link calculateCameraOptionsFromTo} is the inverse.
      */
     getCameraAltitude(): number {
@@ -716,7 +705,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * Inverts the camera placement of `_calcMatrices` in unit-globe coordinates: the camera sits at radius
+     * Inverts the camera placement of `calcMatrices` in unit-globe coordinates: the camera sits at radius
      * `1 + altitudeFrom / earthRadius` and looks at the center on the sea-level sphere, the target altitude only becoming
      * the center elevation (the inverse of {@link getCameraAltitude}). Pitch and bearing are read in the center's local
      * frame, +z up, +y north, +x east. A camera straight above the center keeps the transform's bearing.
@@ -852,7 +841,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
-            const elevation = terrain.getElevationForLngLat(lnglat, this);
+            const elevation = terrain.getElevationForLngLat(lnglat, this._helper);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
 
@@ -1068,8 +1057,8 @@ export class VerticalPerspectiveTransform implements ITransform {
 /**
  * Creates a transform for the vertical perspective projection.
  */
-export function createVerticalPerspectiveTransform(options?: TransformOptions): VerticalPerspectiveTransform {
-    return new VerticalPerspectiveTransform(options);
+export function createVerticalPerspectiveTransform(options?: TransformOptions): Transform {
+    return new Transform((transform) => new VerticalPerspectiveTransform(transform), options);
 }
 
 function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {

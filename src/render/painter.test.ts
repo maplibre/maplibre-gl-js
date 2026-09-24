@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {FrameRenderContext} from './frame_render_context.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
@@ -10,11 +10,13 @@ import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
 
+import type {Transform} from '../geo/transform.ts';
+
 describe('render', () => {
     let painter: Painter;
     let map: any;
     let style: Style;
-    let transform: MercatorTransform;
+    let transform: Transform;
     const renderOptions = createFrameRenderData();
 
     beforeEach(() => {
