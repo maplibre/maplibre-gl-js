@@ -480,9 +480,10 @@ describe('map events', () => {
 
         map.once('click', 'layer', spy);
         simulate.click(map.getCanvas());
-        simulate.click(map.getCanvas());
-        simulate.click(map.getCanvas());
+        expect(spy).not.toHaveBeenCalled();
 
+        simulate.click(map.getCanvas());
+        simulate.click(map.getCanvas());
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
