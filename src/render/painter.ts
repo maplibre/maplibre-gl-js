@@ -9,6 +9,7 @@ import posAttributes from '../data/pos_attributes.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {Program} from '../webgl/program.ts';
+import {prepareBackgroundDrawables, type BackgroundDrawables} from '../webgl/draw/draw_background.ts';
 import {programUniforms} from '../webgl/program/program_uniforms.ts';
 import {Context} from '../webgl/context.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
@@ -82,6 +83,7 @@ export type RTTObject = {
  * Initialize a new painter object.
  */
 export class Painter {
+    backgroundDrawables: Map<string, BackgroundDrawables> = new Map();
     drawFunctions: DrawFunctions;
     context: Context;
     renderToTexture: IRenderToTexture;
@@ -581,6 +583,7 @@ export class Painter {
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         renderContext.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
+        prepareBackgroundDrawables(this);
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
@@ -904,6 +907,7 @@ export class Painter {
     }
 
     destroy(): void {
+        this.backgroundDrawables.clear();
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
                 const textures = this._tileTextures[size];
