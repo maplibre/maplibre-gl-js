@@ -1745,7 +1745,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
-        this._camera.transform.setMaxBounds(LngLatBounds.convert(bounds));
+        this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
         return this._update();
     }
 
@@ -1775,9 +1775,7 @@ export class Map extends Evented<MapEventType> {
 
         if (minZoom >= defaultMinZoom && minZoom <= this._camera.transform.maxZoom) {
             const zoomBefore = this._camera.transform.zoom;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMinZoom(minZoom);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMinZoom(minZoom));
             this._update();
             if (zoomBefore !== this._camera.transform.zoom) {
                 this.fire(new MapMovementEvent('zoomstart'))
@@ -1830,9 +1828,7 @@ export class Map extends Evented<MapEventType> {
 
         if (maxZoom >= this._camera.transform.minZoom) {
             const zoomBefore = this._camera.transform.zoom;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMaxZoom(maxZoom);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMaxZoom(maxZoom));
             this._update();
             if (zoomBefore !== this._camera.transform.zoom) {
                 this.fire(new MapMovementEvent('zoomstart'))
@@ -1880,9 +1876,7 @@ export class Map extends Evented<MapEventType> {
 
         if (minPitch >= defaultMinPitch && minPitch <= this._camera.transform.maxPitch) {
             const pitchBefore = this._camera.transform.pitch;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMinPitch(minPitch);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMinPitch(minPitch));
             this._update();
             if (pitchBefore !== this._camera.transform.pitch) {
                 this.fire(new MapMovementEvent('pitchstart'))
@@ -1926,9 +1920,7 @@ export class Map extends Evented<MapEventType> {
 
         if (maxPitch >= this._camera.transform.minPitch) {
             const pitchBefore = this._camera.transform.pitch;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMaxPitch(maxPitch);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMaxPitch(maxPitch));
             this._update();
             if (pitchBefore !== this._camera.transform.pitch) {
                 this.fire(new MapMovementEvent('pitchstart'))
@@ -2027,7 +2019,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
-        this._camera.transform.setRenderWorldCopies(renderWorldCopies);
+        this._camera.applyTransformChange(tr => tr.setRenderWorldCopies(renderWorldCopies));
         return this._update();
     }
 
@@ -2046,7 +2038,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): this {
-        this._camera.transform.setConstrainOverride(constrain);
+        this._camera.applyTransformChange(tr => tr.setConstrainOverride(constrain));
         return this._update();
     }
 
@@ -2299,7 +2291,7 @@ export class Map extends Evented<MapEventType> {
      * map.on('click', 'countries', (e) => {
      *   new Popup()
      *     .setLngLat(e.lngLat)
-     *     .setHTML(`Country name: ${e.features[0].properties.name}`)
+     *     .setText(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
      * });
      * ```
@@ -2984,11 +2976,7 @@ export class Map extends Evented<MapEventType> {
             this.terrain = null;
             this.painter.renderToTexture = null;
             this.painter.destroyRTTResources();
-            this._camera.terrain = null;
-            this._camera.transform.setMinElevationForCurrentTile(0);
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(0);
-            }
+            this._camera.setTerrain(null);
         } else {
             // add terrain
             const tileManager = this.style.tileManagers[options.source];
@@ -3010,9 +2998,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this._camera.terrain = this.terrain;
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+            this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -3035,12 +3021,7 @@ export class Map extends Evented<MapEventType> {
         }
         if (isTerrainSourceEvent && event.tile) {
             this.painter.markTerrainDepthDirty();
-        }
-        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
-            }
+            this._camera.applyTerrainChange();
         }
 
         if (!event.tile) return;
