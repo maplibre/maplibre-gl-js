@@ -936,11 +936,10 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Tra
     return transform;
 }
 
-function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
-    const transform = Object.create(MercatorTransform.prototype);
-    Object.defineProperty(transform, 'worldSize', {value: worldSize});
-    transform.getRaySegmentFromPixel = () => ({near, far});
-    return transform as MercatorTransform;
+function createRayTransform(near: number[], far: number[]): MercatorTransform {
+    const part = new MercatorTransform(createMercatorTransform());
+    Object.defineProperty(part, 'getRaySegmentFromPixel', {value: () => ({near, far})});
+    return part;
 }
 
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {
@@ -1095,7 +1094,7 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
 
         // Staying below the terrain surface the whole way.
         const submergedTerrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
-        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
+        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100]);
         expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), submergedTerrain)).toBeNull();
     });
 
@@ -1185,12 +1184,11 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     test('handles a ray with no vertical component', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
-        const worldSize = 512;
 
-        const crossing = createRayTransform([0, 256, 500], [512, 256, 500], worldSize);
+        const crossing = createRayTransform([0, 256, 500], [512, 256, 500]);
         expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
 
-        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
+        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000]);
         expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 });
