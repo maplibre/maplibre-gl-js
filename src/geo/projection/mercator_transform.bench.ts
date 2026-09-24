@@ -2,7 +2,7 @@ import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {MercatorTransform} from './mercator_transform.ts';
+import {type MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
 
@@ -11,7 +11,7 @@ import type {Terrain} from '../../render/terrain.ts';
 const DEM_DIM = 256;
 
 function createScene(zoom: number, heightFn: (x: number, y: number) => number, pitch: number): {terrain: Terrain; transform: MercatorTransform} {
-    const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+    const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
     transform.resize(1024, 1024);
     transform.setCenter(new LngLat(11.4, 47.3));
     transform.setZoom(zoom);

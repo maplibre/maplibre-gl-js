@@ -466,3 +466,10 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
 }
+
+/**
+ * Creates a transform for the globe projection.
+ */
+export function createGlobeTransform(options?: TransformOptions): GlobeTransform {
+    return new GlobeTransform(options);
+}
