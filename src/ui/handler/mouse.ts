@@ -32,12 +32,18 @@ const assignEvents = <T extends DragPanResult | DragRotateResult | DragPitchResu
     };
 };
 
-export function generateMousePanHandler({enable, clickTolerance}: {
+export function generateMousePanHandler({enable, clickTolerance, isCtrlDragClaimed = () => true}: {
     clickTolerance: number;
     enable?: boolean;
+    /**
+     * Whether another handler takes a `ctrl` + left button drag, in which case pan leaves it alone.
+     * When nothing claims it, such a drag pans like a plain left button drag.
+     * @defaultValue `() => true`
+     */
+    isCtrlDragClaimed?: () => boolean;
 }): MousePanHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON && !e.ctrlKey,
+        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON && !(e.ctrlKey && isCtrlDragClaimed()),
     });
     return new DragHandler<DragPanResult, MouseEvent>({
         clickTolerance,

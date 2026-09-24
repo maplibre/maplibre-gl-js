@@ -13,6 +13,7 @@
 - Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543))
 - Fix `fitBounds` and `cameraForBounds` throwing on the globe projection when the padding exceeds the viewport, instead of warning and returning `undefined` as on mercator ([#8538](https://github.com/maplibre/maplibre-gl-js/issues/8538))
 - Keep raster tiles sharp at a fractional `devicePixelRatio`, where the canvas covered a different number of device pixels than its backing store held and the compositor rescaled it ([#1590](https://github.com/maplibre/maplibre-gl-js/issues/1590)) (by [@zdila](https://github.com/zdila))
+- Pan on a `ctrl` + left button drag when `dragRotate` is disabled, so a user holding `ctrl` for a `cooperativeGestures` zoom can keep dragging ([#4683](https://github.com/maplibre/maplibre-gl-js/issues/4683))
 - _...Add new stuff here..._
 
 ## 6.11.1

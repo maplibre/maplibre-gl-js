@@ -332,7 +332,7 @@ export class HandlerManager {
             map.dragRotate.enable();
         }
 
-        const mousePan = generateMousePanHandler(options);
+        const mousePan = generateMousePanHandler({...options, isCtrlDragClaimed: () => mouseRotate.isEnabled() || mousePitch.isEnabled()});
         const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
         this._add('mousePan', mousePan);
