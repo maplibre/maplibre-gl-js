@@ -615,7 +615,7 @@ export class Painter {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (renderContext.isRenderingGlobe && !this.style.map.terrain) {
+                if (renderContext.isRenderingGlobe && !renderContext.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -666,7 +666,7 @@ export class Painter {
      * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
      */
     maybeDrawDepth(): void {
-        if (!this.style?.projection || !this.style.map?.terrain) {
+        if (!this.style?.projection || !this.renderContext.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
@@ -675,7 +675,7 @@ export class Painter {
         // Update depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.depthDirty;
         doUpdate ||= !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+        doUpdate ||= this.renderContext.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -684,7 +684,7 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = now();
         this.terrainFacilitator.depthDirty = false;
-        this.drawFunctions.terrainDepth(this, this.style.map.terrain);
+        this.drawFunctions.terrainDepth(this, this.renderContext.terrain);
     }
 
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
@@ -846,7 +846,7 @@ export class Painter {
      */
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
         this.cache ||= {};
-        const useTerrain = !!this.style.map.terrain;
+        const useTerrain = !!this.renderContext.terrain;
 
         const projection = this.style.projection;
 

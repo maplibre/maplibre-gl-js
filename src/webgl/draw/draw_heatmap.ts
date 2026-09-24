@@ -26,7 +26,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
     }
     const context = painter.context;
 
-    if (painter.style.map.terrain) {
+    if (renderContext.terrain) {
         for (const coord of tileIDs) {
             const tile = tileManager.getTile(coord);
             // Skip tiles that have uncovered parents to avoid flickering; we don't need
