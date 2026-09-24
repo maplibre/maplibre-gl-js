@@ -44,7 +44,7 @@ export function drawSky(painter: Painter, sky: Sky): void {
     const context = painter.context;
     const gl = context.gl;
 
-    const skyUniforms = skyUniformValues(sky, painter.transform, painter.pixelRatio);
+    const skyUniforms = skyUniformValues(sky, painter.renderContext.transform, painter.pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
@@ -82,9 +82,9 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     const gl = context.gl;
     const program = painter.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
-    const transform = painter.transform;
+    const transform = painter.renderContext.transform;
 
-    const sunPos = getSunPos(light, painter.transform);
+    const sunPos = getSunPos(light, painter.renderContext.transform);
 
     const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);

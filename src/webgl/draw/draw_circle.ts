@@ -50,7 +50,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
 
     const context = painter.context;
     const gl = context.gl;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     // Turn off stencil testing to allow circles to be drawn across boundaries,
@@ -122,6 +122,6 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration);
+            layer.paint, renderContext.transform.zoom, programConfiguration);
     }
 }

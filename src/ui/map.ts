@@ -4217,7 +4217,7 @@ export class Map extends Evented<MapEventType> {
             throw new GPUInitializationError(attributes, creationEvent);
         }
 
-        this.painter = new Painter(gl, this._camera.transform);
+        this.painter = new Painter(gl);
     }
 
     /**
@@ -4228,7 +4228,6 @@ export class Map extends Evented<MapEventType> {
      */
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         this._camera.migrateProjection(newTransform, newCameraHelper);
-        this.painter.transform = newTransform;
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));
@@ -4435,7 +4434,7 @@ export class Map extends Evented<MapEventType> {
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         // Actually draw
-        this.painter.render(this.style, {
+        this.painter.render(this.style, this._camera.transform, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
             rotating: this.isRotating(),
