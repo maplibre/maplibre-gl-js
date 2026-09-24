@@ -1,20 +1,28 @@
 ## main
 ### ✨ Features and improvements
-- Improve rendering performance by uploading each tile's projection data once per frame instead of before every draw call ([#8545](https://github.com/maplibre/maplibre-gl-js/pull/8545)) (by [@birkskyum](https://github.com/birkskyum))
-- Support multiple glyph variants in requests, caches, and atlases ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
+- _...Add new stuff here..._
+
+## 6.11.2
+
+### ✨ Features and improvements
+
+- Improve rendering performance by uploading each tile's projection data once per frame instead of before every draw call ([#8545](https://github.com/maplibre/maplibre-gl-js/pull/8545)) (by [@birkskyum](https://github.com/birkskyum))
+- Support multiple glyph variants in requests, caches, and atlases ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+
+### 🐞 Bug fixes
+
 - Fix `Map#once(type, layerId, listener)` unsubscribing on the first event that misses the layer instead of the first event that hits it ([#8499](https://github.com/maplibre/maplibre-gl-js/pull/8499)) (by [@cherenkov](https://github.com/cherenkov))
 - Remove hillshade gradient toward the poles ([#8551](https://github.com/maplibre/maplibre-gl-js/pull/8551)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix camera settings being undone during camera movement with terrain or `transformCameraUpdate` ([#8550](https://github.com/maplibre/maplibre-gl-js/pull/8550)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix zooming and panning with the pointer above the horizon moving the map in the opposite direction ([#8544](https://github.com/maplibre/maplibre-gl-js/pull/8544)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix the camera jumping when a drag over terrain ends at a pitch above 84° ([#8541](https://github.com/maplibre/maplibre-gl-js/pull/8541)) (by [@birkskyum](https://github.com/birkskyum))
-- Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543))
-- Fix `fitBounds` and `cameraForBounds` throwing on the globe projection when the padding exceeds the viewport, instead of warning and returning `undefined` as on mercator ([#8538](https://github.com/maplibre/maplibre-gl-js/issues/8538))
+- Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `fitBounds` and `cameraForBounds` throwing on the globe projection when the padding exceeds the viewport, instead of warning and returning `undefined` as on mercator ([#8538](https://github.com/maplibre/maplibre-gl-js/issues/8538)) (by [@drakeo338](https://github.com/drakeo338))
 - Keep raster tiles sharp at a fractional `devicePixelRatio`, where the canvas covered a different number of device pixels than its backing store held and the compositor rescaled it ([#1590](https://github.com/maplibre/maplibre-gl-js/issues/1590)) (by [@zdila](https://github.com/zdila))
-- _...Add new stuff here..._
 
 ## 6.11.1
 
@@ -3059,7 +3067,6 @@ August 16, 2018
 ### ✨ Features and improvements
 
 - Add configurable drag pan threshold ([#6809](https://github.com/mapbox/mapbox-gl-js/pull/6809)) (by [msbarry](https://github.com/msbarry))
-- Add `raster-resampling` raster paint property ([#6411](https://github.com/mapbox/mapbox-gl-js/pull/6411)) (by [@andrewharvey](https://github.com/andrewharvey))
 - Add `symbol-placement: line-center` ([#6821](https://github.com/mapbox/mapbox-gl-js/pull/6821))
 - Add methods for inspecting GeoJSON clusters ([#3318](https://github.com/mapbox/mapbox-gl-js/issues/3318), fixed by [#6829](https://github.com/mapbox/mapbox-gl-js/pull/6829))
 - Add warning to geolocate control when unsupported ([#6923](https://github.com/mapbox/mapbox-gl-js/pull/6923)) (by [@aendrew](https://github.com/aendrew))
