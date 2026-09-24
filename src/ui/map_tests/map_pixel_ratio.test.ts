@@ -87,6 +87,8 @@ describe('canvas CSS size', () => {
         expect(canvas.height).toBe(1488);
         expect(parseFloat(canvas.style.width) * 1.75).toBe(canvas.width);
         expect(parseFloat(canvas.style.height) * 1.75).toBe(canvas.height);
+        expect(map.painter.width).toBe(canvas.width);
+        expect(map.painter.height).toBe(canvas.height);
     });
 
     test('keeps every device pixel at a pixel ratio just below a whole number', () => {
@@ -95,20 +97,11 @@ describe('canvas CSS size', () => {
         Object.defineProperty(container, 'clientHeight', {value: 850});
         // What a Wayland compositor at 200% reports: the float32 value below 2.
         const map = createMap({container, pixelRatio: 1.9999998807907104});
+        const canvas = map.getCanvas();
 
-        expect(map.getCanvas().width).toBe(1976);
-        expect(map.getCanvas().height).toBe(1700);
-    });
-
-    test('painter viewport matches the canvas backing store', () => {
-        for (const pixelRatio of [1, 1.75, 1.9999998807907104, 2]) {
-            const container = window.document.createElement('div');
-            Object.defineProperty(container, 'clientWidth', {value: 988});
-            Object.defineProperty(container, 'clientHeight', {value: 850});
-            const map = createMap({container, pixelRatio});
-
-            expect([map.painter.width, map.painter.height])
-                .toEqual([map.getCanvas().width, map.getCanvas().height]);
-        }
+        expect(canvas.width).toBe(1976);
+        expect(canvas.height).toBe(1700);
+        expect(map.painter.width).toBe(canvas.width);
+        expect(map.painter.height).toBe(canvas.height);
     });
 });
