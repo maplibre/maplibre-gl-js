@@ -4900,6 +4900,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../type-aliases/GlyphMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GlyphMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../type-aliases/GlyphPosition/" class="md-nav__link">
         
   
@@ -10843,14 +10870,14 @@
 
 
 <h1 id="overscaledtileid">OverscaledTileID</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/tile/tile_id.ts#L88">tile/tile_id.ts:88</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/tile/tile_id.ts#L88">tile/tile_id.ts:88</a></p>
 <p>An overscaled tile identifier</p>
 <h2 id="methods">Methods</h2>
 <h3 id="normalizecoordinates">normalizeCoordinates()</h3>
 <blockquote>
 <p><strong>normalizeCoordinates</strong>(<code>x</code>: <code>number</code>, <code>y</code>: <code>number</code>, <code>extent?</code>: <code>number</code>): <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/tile/tile_id.ts#L244">tile/tile_id.ts:244</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/tile/tile_id.ts#L244">tile/tile_id.ts:244</a></p>
 <p>Maps tile-local coordinates that may fall outside the <code>[0, extent)</code> range
 to the correct neighbor tile and the corresponding in-tile position.</p>
 <p>Coordinates can exceed tile bounds when geometry (e.g. symbol labels along
@@ -10910,7 +10937,7 @@ and returning <code>null</code> when the target falls beyond the polar tile-grid
 <blockquote>
 <p><strong>scaledTo</strong>(<code>targetZ</code>: <code>number</code>): <code>OverscaledTileID</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/tile/tile_id.ts#L125">tile/tile_id.ts:125</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/tile/tile_id.ts#L125">tile/tile_id.ts:125</a></p>
 <p>Returns a new <code>OverscaledTileID</code> representing the tile at the target zoom level.
 When targetZ is greater than the current canonical z, the canonical coordinates are unchanged.
 When targetZ is less than the current canonical z, the canonical coordinates are updated.</p>
@@ -10941,7 +10968,7 @@ When targetZ is less than the current canonical z, the canonical coordinates are
 <blockquote>
 <p><strong>terrainRttPosMatrix32f</strong>: <a href="../../type-aliases/Mat4f32/"><code>Mat4f32</code></a> = <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/tile/tile_id.ts#L99">tile/tile_id.ts:99</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/tile/tile_id.ts#L99">tile/tile_id.ts:99</a></p>
 <p>This matrix is used during terrain's render-to-texture stage only.
 If the render-to-texture stage is active, this matrix will be present
 and should be used, otherwise this matrix will be null.

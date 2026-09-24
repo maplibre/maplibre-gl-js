@@ -4916,6 +4916,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../GlyphMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GlyphMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../GlyphPosition/" class="md-nav__link">
         
   
@@ -10878,7 +10905,7 @@
 <blockquote>
 <p><strong>AnimationOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L220">ui/camera.ts:220</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L220">ui/camera.ts:220</a></p>
 <p>Options common to map movement methods that involve animation, such as <a href="../../classes/Map/#panby">Map.panBy</a> and
 <a href="../../classes/Map/#easeto">Map.easeTo</a>, controlling the duration and easing function of the animation. All properties
 are optional.</p>
@@ -10887,21 +10914,21 @@ are optional.</p>
 <blockquote>
 <p><code>optional</code> <strong>animate?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L237">ui/camera.ts:237</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L237">ui/camera.ts:237</a></p>
 <p>If <code>false</code>, no animation will occur.</p>
 <hr />
 <h3 id="duration">duration?</h3>
 <blockquote>
 <p><code>optional</code> <strong>duration?</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L224">ui/camera.ts:224</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L224">ui/camera.ts:224</a></p>
 <p>The animation's duration, measured in milliseconds.</p>
 <hr />
 <h3 id="easing">easing?</h3>
 <blockquote>
 <p><code>optional</code> <strong>easing?</strong>: (<code>_</code>: <code>number</code>) =&gt; <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L229">ui/camera.ts:229</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L229">ui/camera.ts:229</a></p>
 <p>A function taking a time in the range 0..1 and returning a number where 0 is
 the initial state and 1 is the final state.</p>
 <h4 id="parameters">Parameters</h4>
@@ -10926,7 +10953,7 @@ the initial state and 1 is the final state.</p>
 <blockquote>
 <p><code>optional</code> <strong>essential?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L242">ui/camera.ts:242</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L242">ui/camera.ts:242</a></p>
 <p>If <code>true</code>, then the animation is considered essential and will not be affected by
 <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion"><code>prefers-reduced-motion</code></a>.</p>
 <hr />
@@ -10934,7 +10961,7 @@ the initial state and 1 is the final state.</p>
 <blockquote>
 <p><code>optional</code> <strong>freezeElevation?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L248">ui/camera.ts:248</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L248">ui/camera.ts:248</a></p>
 <p>Default false. Needed in 3D maps to let the camera stay in a constant
 height based on sea-level. After the animation finished the zoom-level will be recalculated in respect of
 the distance from the camera to the center-coordinate-altitude.</p>
@@ -10943,7 +10970,7 @@ the distance from the camera to the center-coordinate-altitude.</p>
 <blockquote>
 <p><code>optional</code> <strong>offset?</strong>: <a href="../PointLike/"><code>PointLike</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/ui/camera.ts#L233">ui/camera.ts:233</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/ui/camera.ts#L233">ui/camera.ts:233</a></p>
 <p>of the target center relative to real map container center at the end of animation.</p>
 
 

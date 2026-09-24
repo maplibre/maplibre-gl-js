@@ -4786,6 +4786,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../GlyphMap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GlyphMap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../GlyphPosition/" class="md-nav__link">
         
   
@@ -5713,6 +5740,23 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  RendererProjectionData
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="././" class="md-nav__link md-nav__link--active">
         
   
@@ -5728,6 +5772,54 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#type-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Type Declaration
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type Declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uniformbufferkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        uniformBufferKey?
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -10630,6 +10722,11 @@
                       
                     
                     
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
                   
                   <div class="md-sidebar__inner">
                     
@@ -10641,6 +10738,42 @@
   
     
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#type-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Type Declaration
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type Declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uniformbufferkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        uniformBufferKey?
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -10660,11 +10793,17 @@
 
 <h1 id="rendererprojectiondata">RendererProjectionData</h1>
 <blockquote>
-<p><strong>RendererProjectionData</strong> = <a href="../ProjectionData/"><code>ProjectionData</code></a>&lt;<a href="../Mat4f32/"><code>Mat4f32</code></a>&gt;</p>
+<p><strong>RendererProjectionData</strong> = <a href="../ProjectionData/"><code>ProjectionData</code></a>&lt;<a href="../Mat4f32/"><code>Mat4f32</code></a>&gt; &amp; <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/453a323a3f30cb7041637980eb0dd8fe19bf6ee8/src/geo/projection/projection_data.ts#L11">geo/projection/projection_data.ts:11</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/geo/projection/projection_data.ts#L11">geo/projection/projection_data.ts:11</a></p>
 <p>Projection data used by renderer shader uniforms. Renderer matrices are stored
 as 32-bit floats so WebGL can consume them directly without per-upload copies.</p>
+<h2 id="type-declaration">Type Declaration</h2>
+<h3 id="uniformbufferkey">uniformBufferKey?</h3>
+<blockquote>
+<p><code>optional</code> <strong>uniformBufferKey?</strong>: <code>string</code></p>
+</blockquote>
+<p>Draws of one frame with the same key share one uniform buffer.</p>
 
 
 

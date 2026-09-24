@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-multidirectional-hillshade-layer/">
+        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GlyphMap/">
       
       
-        <link rel="prev" href="../add-a-hillshade-layer/">
+        <link rel="prev" href="../GetResourceResponse/">
       
       
-        <link rel="next" href="../add-a-new-layer-below-labels/">
+        <link rel="next" href="../GlyphPosition/">
       
       
         
@@ -27,19 +27,19 @@
     
     
       
-        <title>Add a multidirectional hillshade layer - MapLibre GL JS</title>
+        <title>GlyphMap - MapLibre GL JS</title>
       
     
     
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.10763589.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.10763589.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.812a03bb.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.812a03bb.min.css">
       
       
 
@@ -58,9 +58,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/extra.css">
+      <link rel="stylesheet" href="../../../assets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    <script>__md_scope=new URL("../../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#add-a-multidirectional-hillshade-layer" class="md-skip">
+        <a href="#glyphmap" class="md-skip">
           Skip to content
         </a>
       
@@ -101,9 +101,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+    <a href="../../.." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
       
-  <img src="../../assets/logo.svg" alt="MapLibre GL JS">
+  <img src="../../../assets/logo.svg" alt="MapLibre GL JS">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Add a multidirectional hillshade layer
+              GlyphMap
             
           </span>
         </div>
@@ -208,7 +208,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link">
         
   
   Introduction
@@ -224,7 +224,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../plugins/" class="md-tabs__link">
+      <a href="../../../plugins/" class="md-tabs__link">
         
   
   Plugins
@@ -240,35 +240,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../style-spec/" class="md-tabs__link">
+      <a href="../../../style-spec/" class="md-tabs__link">
         
   
   Style Specifications
 
       </a>
     </li>
-  
-
-      
-        
-  
-  
-  
-  
-    
-      
-    
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../API/" class="md-tabs__link">
-          
-  
-  API
-
-        </a>
-      </li>
-    
   
 
       
@@ -285,7 +263,29 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../examples/" class="md-tabs__link">
           
   
   Examples
@@ -307,7 +307,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../guides/" class="md-tabs__link">
+        <a href="../../../guides/" class="md-tabs__link">
           
   
   Guides
@@ -346,9 +346,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+    <a href="../../.." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
       
-  <img src="../../assets/logo.svg" alt="MapLibre GL JS">
+  <img src="../../../assets/logo.svg" alt="MapLibre GL JS">
 
     </a>
     MapLibre GL JS
@@ -375,7 +375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -401,7 +401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plugins/" class="md-nav__link">
+      <a href="../../../plugins/" class="md-nav__link">
         
   
   
@@ -427,7 +427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../style-spec/" class="md-nav__link">
+      <a href="../../../style-spec/" class="md-nav__link">
         
   
   
@@ -450,26 +450,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -487,7 +492,7 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
             <label class="md-nav__title" for="__nav_4">
               <span class="md-nav__icon md-icon"></span>
               
@@ -504,7 +509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -537,17 +542,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
         
           
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
             
   
   
@@ -582,7 +590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/AJAXError/" class="md-nav__link">
+      <a href="../../classes/AJAXError/" class="md-nav__link">
         
   
   
@@ -609,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/AttributionControl/" class="md-nav__link">
+      <a href="../../classes/AttributionControl/" class="md-nav__link">
         
   
   
@@ -636,7 +644,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/BoxZoomHandler/" class="md-nav__link">
+      <a href="../../classes/BoxZoomHandler/" class="md-nav__link">
         
   
   
@@ -663,7 +671,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/CanvasSource/" class="md-nav__link">
+      <a href="../../classes/CanvasSource/" class="md-nav__link">
         
   
   
@@ -690,7 +698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/CooperativeGesturesHandler/" class="md-nav__link">
+      <a href="../../classes/CooperativeGesturesHandler/" class="md-nav__link">
         
   
   
@@ -717,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/DoubleClickZoomHandler/" class="md-nav__link">
+      <a href="../../classes/DoubleClickZoomHandler/" class="md-nav__link">
         
   
   
@@ -744,7 +752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/DragPanHandler/" class="md-nav__link">
+      <a href="../../classes/DragPanHandler/" class="md-nav__link">
         
   
   
@@ -771,7 +779,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/DragRotateHandler/" class="md-nav__link">
+      <a href="../../classes/DragRotateHandler/" class="md-nav__link">
         
   
   
@@ -798,7 +806,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/EdgeInsets/" class="md-nav__link">
+      <a href="../../classes/EdgeInsets/" class="md-nav__link">
         
   
   
@@ -825,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/ErrorEvent/" class="md-nav__link">
+      <a href="../../classes/ErrorEvent/" class="md-nav__link">
         
   
   
@@ -852,7 +860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Event/" class="md-nav__link">
+      <a href="../../classes/Event/" class="md-nav__link">
         
   
   
@@ -879,7 +887,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Evented/" class="md-nav__link">
+      <a href="../../classes/Evented/" class="md-nav__link">
         
   
   
@@ -906,7 +914,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/FullscreenControl/" class="md-nav__link">
+      <a href="../../classes/FullscreenControl/" class="md-nav__link">
         
   
   
@@ -933,7 +941,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/FullscreenEvent/" class="md-nav__link">
+      <a href="../../classes/FullscreenEvent/" class="md-nav__link">
         
   
   
@@ -960,7 +968,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GPUInitializationError/" class="md-nav__link">
+      <a href="../../classes/GPUInitializationError/" class="md-nav__link">
         
   
   
@@ -987,7 +995,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GeoJSONSource/" class="md-nav__link">
+      <a href="../../classes/GeoJSONSource/" class="md-nav__link">
         
   
   
@@ -1014,7 +1022,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GeolocateControl/" class="md-nav__link">
+      <a href="../../classes/GeolocateControl/" class="md-nav__link">
         
   
   
@@ -1041,7 +1049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GeolocateErrorEvent/" class="md-nav__link">
+      <a href="../../classes/GeolocateErrorEvent/" class="md-nav__link">
         
   
   
@@ -1068,7 +1076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GeolocateEvent/" class="md-nav__link">
+      <a href="../../classes/GeolocateEvent/" class="md-nav__link">
         
   
   
@@ -1095,7 +1103,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GeolocatePositionEvent/" class="md-nav__link">
+      <a href="../../classes/GeolocatePositionEvent/" class="md-nav__link">
         
   
   
@@ -1122,7 +1130,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/GlobeControl/" class="md-nav__link">
+      <a href="../../classes/GlobeControl/" class="md-nav__link">
         
   
   
@@ -1149,7 +1157,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Hash/" class="md-nav__link">
+      <a href="../../classes/Hash/" class="md-nav__link">
         
   
   
@@ -1176,7 +1184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/ImageSource/" class="md-nav__link">
+      <a href="../../classes/ImageSource/" class="md-nav__link">
         
   
   
@@ -1203,7 +1211,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/KeyboardHandler/" class="md-nav__link">
+      <a href="../../classes/KeyboardHandler/" class="md-nav__link">
         
   
   
@@ -1230,7 +1238,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/LngLat/" class="md-nav__link">
+      <a href="../../classes/LngLat/" class="md-nav__link">
         
   
   
@@ -1257,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/LngLatBounds/" class="md-nav__link">
+      <a href="../../classes/LngLatBounds/" class="md-nav__link">
         
   
   
@@ -1284,7 +1292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/LogoControl/" class="md-nav__link">
+      <a href="../../classes/LogoControl/" class="md-nav__link">
         
   
   
@@ -1311,7 +1319,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Map/" class="md-nav__link">
+      <a href="../../classes/Map/" class="md-nav__link">
         
   
   
@@ -1338,7 +1346,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapBoxZoomEvent/" class="md-nav__link">
+      <a href="../../classes/MapBoxZoomEvent/" class="md-nav__link">
         
   
   
@@ -1365,7 +1373,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapContextEvent/" class="md-nav__link">
+      <a href="../../classes/MapContextEvent/" class="md-nav__link">
         
   
   
@@ -1392,7 +1400,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapLibreEvent/" class="md-nav__link">
+      <a href="../../classes/MapLibreEvent/" class="md-nav__link">
         
   
   
@@ -1419,7 +1427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapMouseEvent/" class="md-nav__link">
+      <a href="../../classes/MapMouseEvent/" class="md-nav__link">
         
   
   
@@ -1446,7 +1454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapMovementEvent/" class="md-nav__link">
+      <a href="../../classes/MapMovementEvent/" class="md-nav__link">
         
   
   
@@ -1473,7 +1481,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapProjectionEvent/" class="md-nav__link">
+      <a href="../../classes/MapProjectionEvent/" class="md-nav__link">
         
   
   
@@ -1500,7 +1508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapSourceDataEvent/" class="md-nav__link">
+      <a href="../../classes/MapSourceDataEvent/" class="md-nav__link">
         
   
   
@@ -1527,7 +1535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapStyleDataEvent/" class="md-nav__link">
+      <a href="../../classes/MapStyleDataEvent/" class="md-nav__link">
         
   
   
@@ -1554,7 +1562,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapStyleImageMissingEvent/" class="md-nav__link">
+      <a href="../../classes/MapStyleImageMissingEvent/" class="md-nav__link">
         
   
   
@@ -1581,7 +1589,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapStyleLoadEvent/" class="md-nav__link">
+      <a href="../../classes/MapStyleLoadEvent/" class="md-nav__link">
         
   
   
@@ -1608,7 +1616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapTerrainEvent/" class="md-nav__link">
+      <a href="../../classes/MapTerrainEvent/" class="md-nav__link">
         
   
   
@@ -1635,7 +1643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapTouchEvent/" class="md-nav__link">
+      <a href="../../classes/MapTouchEvent/" class="md-nav__link">
         
   
   
@@ -1662,7 +1670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MapWheelEvent/" class="md-nav__link">
+      <a href="../../classes/MapWheelEvent/" class="md-nav__link">
         
   
   
@@ -1689,7 +1697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Marker/" class="md-nav__link">
+      <a href="../../classes/Marker/" class="md-nav__link">
         
   
   
@@ -1716,7 +1724,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MarkerClickEvent/" class="md-nav__link">
+      <a href="../../classes/MarkerClickEvent/" class="md-nav__link">
         
   
   
@@ -1743,7 +1751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MarkerDragEvent/" class="md-nav__link">
+      <a href="../../classes/MarkerDragEvent/" class="md-nav__link">
         
   
   
@@ -1770,7 +1778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/MercatorCoordinate/" class="md-nav__link">
+      <a href="../../classes/MercatorCoordinate/" class="md-nav__link">
         
   
   
@@ -1797,7 +1805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/NavigationControl/" class="md-nav__link">
+      <a href="../../classes/NavigationControl/" class="md-nav__link">
         
   
   
@@ -1824,7 +1832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Popup/" class="md-nav__link">
+      <a href="../../classes/Popup/" class="md-nav__link">
         
   
   
@@ -1851,7 +1859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/PopupEvent/" class="md-nav__link">
+      <a href="../../classes/PopupEvent/" class="md-nav__link">
         
   
   
@@ -1878,7 +1886,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/RasterDEMTileSource/" class="md-nav__link">
+      <a href="../../classes/RasterDEMTileSource/" class="md-nav__link">
         
   
   
@@ -1905,7 +1913,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/RasterTileSource/" class="md-nav__link">
+      <a href="../../classes/RasterTileSource/" class="md-nav__link">
         
   
   
@@ -1932,7 +1940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/ScaleControl/" class="md-nav__link">
+      <a href="../../classes/ScaleControl/" class="md-nav__link">
         
   
   
@@ -1959,7 +1967,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/ScrollZoomHandler/" class="md-nav__link">
+      <a href="../../classes/ScrollZoomHandler/" class="md-nav__link">
         
   
   
@@ -1986,7 +1994,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/Style/" class="md-nav__link">
+      <a href="../../classes/Style/" class="md-nav__link">
         
   
   
@@ -2013,7 +2021,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/TerrainControl/" class="md-nav__link">
+      <a href="../../classes/TerrainControl/" class="md-nav__link">
         
   
   
@@ -2040,7 +2048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/TwoFingersTouchPitchHandler/" class="md-nav__link">
+      <a href="../../classes/TwoFingersTouchPitchHandler/" class="md-nav__link">
         
   
   
@@ -2067,7 +2075,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/TwoFingersTouchRotateHandler/" class="md-nav__link">
+      <a href="../../classes/TwoFingersTouchRotateHandler/" class="md-nav__link">
         
   
   
@@ -2094,7 +2102,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/TwoFingersTouchZoomHandler/" class="md-nav__link">
+      <a href="../../classes/TwoFingersTouchZoomHandler/" class="md-nav__link">
         
   
   
@@ -2121,7 +2129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
+      <a href="../../classes/TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
         
   
   
@@ -2148,7 +2156,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/VectorTileSource/" class="md-nav__link">
+      <a href="../../classes/VectorTileSource/" class="md-nav__link">
         
   
   
@@ -2175,7 +2183,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/VideoSource/" class="md-nav__link">
+      <a href="../../classes/VideoSource/" class="md-nav__link">
         
   
   
@@ -2217,17 +2225,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
         
           
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
             
   
   
@@ -2262,7 +2273,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/enumerations/MessageType/" class="md-nav__link">
+      <a href="../../enumerations/MessageType/" class="md-nav__link">
         
   
   
@@ -2289,7 +2300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/enumerations/ResourceType/" class="md-nav__link">
+      <a href="../../enumerations/ResourceType/" class="md-nav__link">
         
   
   
@@ -2316,7 +2327,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/enumerations/TextFit/" class="md-nav__link">
+      <a href="../../enumerations/TextFit/" class="md-nav__link">
         
   
   
@@ -2358,17 +2369,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
             
   
   
@@ -2403,7 +2417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/addProtocol/" class="md-nav__link">
+      <a href="../../functions/addProtocol/" class="md-nav__link">
         
   
   
@@ -2430,7 +2444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/addSourceType/" class="md-nav__link">
+      <a href="../../functions/addSourceType/" class="md-nav__link">
         
   
   
@@ -2457,7 +2471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/clearPrewarmedResources/" class="md-nav__link">
+      <a href="../../functions/clearPrewarmedResources/" class="md-nav__link">
         
   
   
@@ -2484,7 +2498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/createTileMesh/" class="md-nav__link">
+      <a href="../../functions/createTileMesh/" class="md-nav__link">
         
   
   
@@ -2511,7 +2525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/getGlobalDispatcher/" class="md-nav__link">
+      <a href="../../functions/getGlobalDispatcher/" class="md-nav__link">
         
   
   
@@ -2538,7 +2552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/getMaxParallelImageRequests/" class="md-nav__link">
+      <a href="../../functions/getMaxParallelImageRequests/" class="md-nav__link">
         
   
   
@@ -2565,7 +2579,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/getRTLTextPluginStatus/" class="md-nav__link">
+      <a href="../../functions/getRTLTextPluginStatus/" class="md-nav__link">
         
   
   
@@ -2592,7 +2606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/getVersion/" class="md-nav__link">
+      <a href="../../functions/getVersion/" class="md-nav__link">
         
   
   
@@ -2619,7 +2633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/getWorkerCount/" class="md-nav__link">
+      <a href="../../functions/getWorkerCount/" class="md-nav__link">
         
   
   
@@ -2646,7 +2660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/getWorkerUrl/" class="md-nav__link">
+      <a href="../../functions/getWorkerUrl/" class="md-nav__link">
         
   
   
@@ -2673,7 +2687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/importScriptInWorkers/" class="md-nav__link">
+      <a href="../../functions/importScriptInWorkers/" class="md-nav__link">
         
   
   
@@ -2700,7 +2714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/isTimeFrozen/" class="md-nav__link">
+      <a href="../../functions/isTimeFrozen/" class="md-nav__link">
         
   
   
@@ -2727,7 +2741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/now/" class="md-nav__link">
+      <a href="../../functions/now/" class="md-nav__link">
         
   
   
@@ -2754,7 +2768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/prewarm/" class="md-nav__link">
+      <a href="../../functions/prewarm/" class="md-nav__link">
         
   
   
@@ -2781,7 +2795,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/removeProtocol/" class="md-nav__link">
+      <a href="../../functions/removeProtocol/" class="md-nav__link">
         
   
   
@@ -2808,7 +2822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/restoreNow/" class="md-nav__link">
+      <a href="../../functions/restoreNow/" class="md-nav__link">
         
   
   
@@ -2835,7 +2849,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/setMaxParallelImageRequests/" class="md-nav__link">
+      <a href="../../functions/setMaxParallelImageRequests/" class="md-nav__link">
         
   
   
@@ -2862,7 +2876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/setNow/" class="md-nav__link">
+      <a href="../../functions/setNow/" class="md-nav__link">
         
   
   
@@ -2889,7 +2903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/setRTLTextPlugin/" class="md-nav__link">
+      <a href="../../functions/setRTLTextPlugin/" class="md-nav__link">
         
   
   
@@ -2916,7 +2930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/setWorkerCount/" class="md-nav__link">
+      <a href="../../functions/setWorkerCount/" class="md-nav__link">
         
   
   
@@ -2943,7 +2957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/functions/setWorkerUrl/" class="md-nav__link">
+      <a href="../../functions/setWorkerUrl/" class="md-nav__link">
         
   
   
@@ -2985,17 +2999,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
         
           
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
             
   
   
@@ -3030,7 +3047,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/Actor/" class="md-nav__link">
+      <a href="../../interfaces/Actor/" class="md-nav__link">
         
   
   
@@ -3057,7 +3074,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/AlphaImage/" class="md-nav__link">
+      <a href="../../interfaces/AlphaImage/" class="md-nav__link">
         
   
   
@@ -3084,7 +3101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/CustomLayerInterface/" class="md-nav__link">
+      <a href="../../interfaces/CustomLayerInterface/" class="md-nav__link">
         
   
   
@@ -3111,7 +3128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/Dispatcher/" class="md-nav__link">
+      <a href="../../interfaces/Dispatcher/" class="md-nav__link">
         
   
   
@@ -3138,7 +3155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/FeatureIndex/" class="md-nav__link">
+      <a href="../../interfaces/FeatureIndex/" class="md-nav__link">
         
   
   
@@ -3165,7 +3182,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/GeoJSONFeature/" class="md-nav__link">
+      <a href="../../interfaces/GeoJSONFeature/" class="md-nav__link">
         
   
   
@@ -3192,7 +3209,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/Handler/" class="md-nav__link">
+      <a href="../../interfaces/Handler/" class="md-nav__link">
         
   
   
@@ -3219,7 +3236,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/IActor/" class="md-nav__link">
+      <a href="../../interfaces/IActor/" class="md-nav__link">
         
   
   
@@ -3246,7 +3263,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/IControl/" class="md-nav__link">
+      <a href="../../interfaces/IControl/" class="md-nav__link">
         
   
   
@@ -3273,7 +3290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/OverscaledTileID/" class="md-nav__link">
+      <a href="../../interfaces/OverscaledTileID/" class="md-nav__link">
         
   
   
@@ -3300,7 +3317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/Source/" class="md-nav__link">
+      <a href="../../interfaces/Source/" class="md-nav__link">
         
   
   
@@ -3327,7 +3344,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/StyleImageInterface/" class="md-nav__link">
+      <a href="../../interfaces/StyleImageInterface/" class="md-nav__link">
         
   
   
@@ -3354,7 +3371,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/StyleLayer/" class="md-nav__link">
+      <a href="../../interfaces/StyleLayer/" class="md-nav__link">
         
   
   
@@ -3381,7 +3398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/Subscription/" class="md-nav__link">
+      <a href="../../interfaces/Subscription/" class="md-nav__link">
         
   
   
@@ -3408,7 +3425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/Tile/" class="md-nav__link">
+      <a href="../../interfaces/Tile/" class="md-nav__link">
         
   
   
@@ -3441,26 +3458,31 @@
                   
   
   
+    
   
   
+  
     
     
     
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
         
           
-          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="">
             
   
   
@@ -3478,7 +3500,7 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="true">
             <label class="md-nav__title" for="__nav_4_6">
               <span class="md-nav__icon md-icon"></span>
               
@@ -3495,7 +3517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ActorMessage/" class="md-nav__link">
+      <a href="../ActorMessage/" class="md-nav__link">
         
   
   
@@ -3522,7 +3544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AddLayerObject/" class="md-nav__link">
+      <a href="../AddLayerObject/" class="md-nav__link">
         
   
   
@@ -3549,7 +3571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AddProtocolAction/" class="md-nav__link">
+      <a href="../AddProtocolAction/" class="md-nav__link">
         
   
   
@@ -3576,7 +3598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AddProtocolResponseData/" class="md-nav__link">
+      <a href="../AddProtocolResponseData/" class="md-nav__link">
         
   
   
@@ -3603,7 +3625,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Alignment/" class="md-nav__link">
+      <a href="../Alignment/" class="md-nav__link">
         
   
   
@@ -3630,7 +3652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AnchoredCameraOptions/" class="md-nav__link">
+      <a href="../AnchoredCameraOptions/" class="md-nav__link">
         
   
   
@@ -3657,7 +3679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AnimationOptions/" class="md-nav__link">
+      <a href="../AnimationOptions/" class="md-nav__link">
         
   
   
@@ -3684,7 +3706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AroundCenterOptions/" class="md-nav__link">
+      <a href="../AroundCenterOptions/" class="md-nav__link">
         
   
   
@@ -3711,7 +3733,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/AttributionControlOptions/" class="md-nav__link">
+      <a href="../AttributionControlOptions/" class="md-nav__link">
         
   
   
@@ -3738,7 +3760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/BoxZoomEndHandler/" class="md-nav__link">
+      <a href="../BoxZoomEndHandler/" class="md-nav__link">
         
   
   
@@ -3765,7 +3787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/BoxZoomHandlerOptions/" class="md-nav__link">
+      <a href="../BoxZoomHandlerOptions/" class="md-nav__link">
         
   
   
@@ -3792,7 +3814,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CalculateTileZoomFunction/" class="md-nav__link">
+      <a href="../CalculateTileZoomFunction/" class="md-nav__link">
         
   
   
@@ -3819,7 +3841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CameraForBoundsOptions/" class="md-nav__link">
+      <a href="../CameraForBoundsOptions/" class="md-nav__link">
         
   
   
@@ -3846,7 +3868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CameraOptions/" class="md-nav__link">
+      <a href="../CameraOptions/" class="md-nav__link">
         
   
   
@@ -3873,7 +3895,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CameraUpdateTransformFunction/" class="md-nav__link">
+      <a href="../CameraUpdateTransformFunction/" class="md-nav__link">
         
   
   
@@ -3900,7 +3922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CanvasSourceSpecification/" class="md-nav__link">
+      <a href="../CanvasSourceSpecification/" class="md-nav__link">
         
   
   
@@ -3927,7 +3949,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CenterZoomBearing/" class="md-nav__link">
+      <a href="../CenterZoomBearing/" class="md-nav__link">
         
   
   
@@ -3954,7 +3976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Complete/" class="md-nav__link">
+      <a href="../Complete/" class="md-nav__link">
         
   
   
@@ -3981,7 +4003,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ControlPosition/" class="md-nav__link">
+      <a href="../ControlPosition/" class="md-nav__link">
         
   
   
@@ -4008,7 +4030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Coordinates/" class="md-nav__link">
+      <a href="../Coordinates/" class="md-nav__link">
         
   
   
@@ -4035,7 +4057,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CreateTileMeshOptions/" class="md-nav__link">
+      <a href="../CreateTileMeshOptions/" class="md-nav__link">
         
   
   
@@ -4062,7 +4084,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CustomLayerProjectionData/" class="md-nav__link">
+      <a href="../CustomLayerProjectionData/" class="md-nav__link">
         
   
   
@@ -4089,7 +4111,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CustomLayerProjectionDataParams/" class="md-nav__link">
+      <a href="../CustomLayerProjectionDataParams/" class="md-nav__link">
         
   
   
@@ -4116,7 +4138,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CustomRenderMethod/" class="md-nav__link">
+      <a href="../CustomRenderMethod/" class="md-nav__link">
         
   
   
@@ -4143,7 +4165,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/CustomRenderMethodInput/" class="md-nav__link">
+      <a href="../CustomRenderMethodInput/" class="md-nav__link">
         
   
   
@@ -4170,7 +4192,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/DashEntry/" class="md-nav__link">
+      <a href="../DashEntry/" class="md-nav__link">
         
   
   
@@ -4197,7 +4219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/DistributiveKeys/" class="md-nav__link">
+      <a href="../DistributiveKeys/" class="md-nav__link">
         
   
   
@@ -4224,7 +4246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/DistributiveOmit/" class="md-nav__link">
+      <a href="../DistributiveOmit/" class="md-nav__link">
         
   
   
@@ -4251,7 +4273,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/DragPanOptions/" class="md-nav__link">
+      <a href="../DragPanOptions/" class="md-nav__link">
         
   
   
@@ -4278,7 +4300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/EaseToOptions/" class="md-nav__link">
+      <a href="../EaseToOptions/" class="md-nav__link">
         
   
   
@@ -4305,7 +4327,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ErrorEventType/" class="md-nav__link">
+      <a href="../ErrorEventType/" class="md-nav__link">
         
   
   
@@ -4332,7 +4354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/EventTypeMap/" class="md-nav__link">
+      <a href="../EventTypeMap/" class="md-nav__link">
         
   
   
@@ -4359,7 +4381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/EventedParentData/" class="md-nav__link">
+      <a href="../EventedParentData/" class="md-nav__link">
         
   
   
@@ -4386,7 +4408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ExpiryData/" class="md-nav__link">
+      <a href="../ExpiryData/" class="md-nav__link">
         
   
   
@@ -4413,7 +4435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/FeatureIdentifier/" class="md-nav__link">
+      <a href="../FeatureIdentifier/" class="md-nav__link">
         
   
   
@@ -4440,7 +4462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/FitBoundsOptions/" class="md-nav__link">
+      <a href="../FitBoundsOptions/" class="md-nav__link">
         
   
   
@@ -4467,7 +4489,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/FlyToOptions/" class="md-nav__link">
+      <a href="../FlyToOptions/" class="md-nav__link">
         
   
   
@@ -4494,7 +4516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/FullscreenControlEventType/" class="md-nav__link">
+      <a href="../FullscreenControlEventType/" class="md-nav__link">
         
   
   
@@ -4521,7 +4543,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/FullscreenControlOptions/" class="md-nav__link">
+      <a href="../FullscreenControlOptions/" class="md-nav__link">
         
   
   
@@ -4548,7 +4570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GeoJSONFeatureDiff/" class="md-nav__link">
+      <a href="../GeoJSONFeatureDiff/" class="md-nav__link">
         
   
   
@@ -4575,7 +4597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GeoJSONFeatureId/" class="md-nav__link">
+      <a href="../GeoJSONFeatureId/" class="md-nav__link">
         
   
   
@@ -4602,7 +4624,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GeoJSONSourceDiff/" class="md-nav__link">
+      <a href="../GeoJSONSourceDiff/" class="md-nav__link">
         
   
   
@@ -4629,7 +4651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GeolocateControlEventType/" class="md-nav__link">
+      <a href="../GeolocateControlEventType/" class="md-nav__link">
         
   
   
@@ -4656,7 +4678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GeolocateControlOptions/" class="md-nav__link">
+      <a href="../GeolocateControlOptions/" class="md-nav__link">
         
   
   
@@ -4683,7 +4705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GestureOptions/" class="md-nav__link">
+      <a href="../GestureOptions/" class="md-nav__link">
         
   
   
@@ -4710,7 +4732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GetClusterOptions/" class="md-nav__link">
+      <a href="../GetClusterOptions/" class="md-nav__link">
         
   
   
@@ -4737,7 +4759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GetResourceResponse/" class="md-nav__link">
+      <a href="../GetResourceResponse/" class="md-nav__link">
         
   
   
@@ -4761,10 +4783,19 @@
                   
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../API/type-aliases/GlyphMap/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
@@ -4779,6 +4810,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4791,7 +4823,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GlyphPosition/" class="md-nav__link">
+      <a href="../GlyphPosition/" class="md-nav__link">
         
   
   
@@ -4818,7 +4850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/GlyphPositions/" class="md-nav__link">
+      <a href="../GlyphPositions/" class="md-nav__link">
         
   
   
@@ -4845,7 +4877,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/HandlerResult/" class="md-nav__link">
+      <a href="../HandlerResult/" class="md-nav__link">
         
   
   
@@ -4872,7 +4904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ImageSourceImage/" class="md-nav__link">
+      <a href="../ImageSourceImage/" class="md-nav__link">
         
   
   
@@ -4899,7 +4931,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ImageSourceWarp/" class="md-nav__link">
+      <a href="../ImageSourceWarp/" class="md-nav__link">
         
   
   
@@ -4926,7 +4958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/IndicesType/" class="md-nav__link">
+      <a href="../IndicesType/" class="md-nav__link">
         
   
   
@@ -4953,7 +4985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/JumpToOptions/" class="md-nav__link">
+      <a href="../JumpToOptions/" class="md-nav__link">
         
   
   
@@ -4980,7 +5012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Listener/" class="md-nav__link">
+      <a href="../Listener/" class="md-nav__link">
         
   
   
@@ -5007,7 +5039,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/LngLatBoundsLike/" class="md-nav__link">
+      <a href="../LngLatBoundsLike/" class="md-nav__link">
         
   
   
@@ -5034,7 +5066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/LngLatLike/" class="md-nav__link">
+      <a href="../LngLatLike/" class="md-nav__link">
         
   
   
@@ -5061,7 +5093,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/LogoControlOptions/" class="md-nav__link">
+      <a href="../LogoControlOptions/" class="md-nav__link">
         
   
   
@@ -5088,7 +5120,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapEventType/" class="md-nav__link">
+      <a href="../MapEventType/" class="md-nav__link">
         
   
   
@@ -5115,7 +5147,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapGeoJSONFeature/" class="md-nav__link">
+      <a href="../MapGeoJSONFeature/" class="md-nav__link">
         
   
   
@@ -5142,7 +5174,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapLayerEventType/" class="md-nav__link">
+      <a href="../MapLayerEventType/" class="md-nav__link">
         
   
   
@@ -5169,7 +5201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapLayerMouseEvent/" class="md-nav__link">
+      <a href="../MapLayerMouseEvent/" class="md-nav__link">
         
   
   
@@ -5196,7 +5228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapLayerTouchEvent/" class="md-nav__link">
+      <a href="../MapLayerTouchEvent/" class="md-nav__link">
         
   
   
@@ -5223,7 +5255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapOptions/" class="md-nav__link">
+      <a href="../MapOptions/" class="md-nav__link">
         
   
   
@@ -5250,7 +5282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MapSourceDataType/" class="md-nav__link">
+      <a href="../MapSourceDataType/" class="md-nav__link">
         
   
   
@@ -5277,7 +5309,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MarkerEventType/" class="md-nav__link">
+      <a href="../MarkerEventType/" class="md-nav__link">
         
   
   
@@ -5304,7 +5336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MarkerOptions/" class="md-nav__link">
+      <a href="../MarkerOptions/" class="md-nav__link">
         
   
   
@@ -5331,7 +5363,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Mat4f32/" class="md-nav__link">
+      <a href="../Mat4f32/" class="md-nav__link">
         
   
   
@@ -5358,7 +5390,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Mat4f64/" class="md-nav__link">
+      <a href="../Mat4f64/" class="md-nav__link">
         
   
   
@@ -5385,7 +5417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/MissingStyleImageResolver/" class="md-nav__link">
+      <a href="../MissingStyleImageResolver/" class="md-nav__link">
         
   
   
@@ -5412,7 +5444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/NavigationControlOptions/" class="md-nav__link">
+      <a href="../NavigationControlOptions/" class="md-nav__link">
         
   
   
@@ -5439,7 +5471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Offset/" class="md-nav__link">
+      <a href="../Offset/" class="md-nav__link">
         
   
   
@@ -5466,7 +5498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/PaddingOptions/" class="md-nav__link">
+      <a href="../PaddingOptions/" class="md-nav__link">
         
   
   
@@ -5493,7 +5525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/PointLike/" class="md-nav__link">
+      <a href="../PointLike/" class="md-nav__link">
         
   
   
@@ -5520,7 +5552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/PopupEventType/" class="md-nav__link">
+      <a href="../PopupEventType/" class="md-nav__link">
         
   
   
@@ -5547,7 +5579,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/PopupOptions/" class="md-nav__link">
+      <a href="../PopupOptions/" class="md-nav__link">
         
   
   
@@ -5574,7 +5606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/PositionAnchor/" class="md-nav__link">
+      <a href="../PositionAnchor/" class="md-nav__link">
         
   
   
@@ -5601,7 +5633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ProjectionData/" class="md-nav__link">
+      <a href="../ProjectionData/" class="md-nav__link">
         
   
   
@@ -5628,7 +5660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ProjectionDataParams/" class="md-nav__link">
+      <a href="../ProjectionDataParams/" class="md-nav__link">
         
   
   
@@ -5655,7 +5687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/QueryRenderedFeaturesOptions/" class="md-nav__link">
+      <a href="../QueryRenderedFeaturesOptions/" class="md-nav__link">
         
   
   
@@ -5682,7 +5714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/QuerySourceFeatureOptions/" class="md-nav__link">
+      <a href="../QuerySourceFeatureOptions/" class="md-nav__link">
         
   
   
@@ -5709,7 +5741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/RendererProjectionData/" class="md-nav__link">
+      <a href="../RendererProjectionData/" class="md-nav__link">
         
   
   
@@ -5736,7 +5768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/RequestParameters/" class="md-nav__link">
+      <a href="../RequestParameters/" class="md-nav__link">
         
   
   
@@ -5763,7 +5795,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/RequestResponseMessageMap/" class="md-nav__link">
+      <a href="../RequestResponseMessageMap/" class="md-nav__link">
         
   
   
@@ -5790,7 +5822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/RequestTransformFunction/" class="md-nav__link">
+      <a href="../RequestTransformFunction/" class="md-nav__link">
         
   
   
@@ -5817,7 +5849,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/RequireAtLeastOne/" class="md-nav__link">
+      <a href="../RequireAtLeastOne/" class="md-nav__link">
         
   
   
@@ -5844,7 +5876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/ScaleControlOptions/" class="md-nav__link">
+      <a href="../ScaleControlOptions/" class="md-nav__link">
         
   
   
@@ -5871,7 +5903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/SetClusterOptions/" class="md-nav__link">
+      <a href="../SetClusterOptions/" class="md-nav__link">
         
   
   
@@ -5898,7 +5930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/SourceClass/" class="md-nav__link">
+      <a href="../SourceClass/" class="md-nav__link">
         
   
   
@@ -5925,7 +5957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/SourceEventType/" class="md-nav__link">
+      <a href="../SourceEventType/" class="md-nav__link">
         
   
   
@@ -5952,7 +5984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleGlyph/" class="md-nav__link">
+      <a href="../StyleGlyph/" class="md-nav__link">
         
   
   
@@ -5979,7 +6011,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleImage/" class="md-nav__link">
+      <a href="../StyleImage/" class="md-nav__link">
         
   
   
@@ -6006,7 +6038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleImageData/" class="md-nav__link">
+      <a href="../StyleImageData/" class="md-nav__link">
         
   
   
@@ -6033,7 +6065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleImageMetadata/" class="md-nav__link">
+      <a href="../StyleImageMetadata/" class="md-nav__link">
         
   
   
@@ -6060,7 +6092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleImageSource/" class="md-nav__link">
+      <a href="../StyleImageSource/" class="md-nav__link">
         
   
   
@@ -6087,7 +6119,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleImageWebGLData/" class="md-nav__link">
+      <a href="../StyleImageWebGLData/" class="md-nav__link">
         
   
   
@@ -6114,7 +6146,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleImageWebGLTarget/" class="md-nav__link">
+      <a href="../StyleImageWebGLTarget/" class="md-nav__link">
         
   
   
@@ -6141,7 +6173,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleOptions/" class="md-nav__link">
+      <a href="../StyleOptions/" class="md-nav__link">
         
   
   
@@ -6168,7 +6200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleSetterOptions/" class="md-nav__link">
+      <a href="../StyleSetterOptions/" class="md-nav__link">
         
   
   
@@ -6195,7 +6227,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/StyleSwapOptions/" class="md-nav__link">
+      <a href="../StyleSwapOptions/" class="md-nav__link">
         
   
   
@@ -6222,7 +6254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/TileMesh/" class="md-nav__link">
+      <a href="../TileMesh/" class="md-nav__link">
         
   
   
@@ -6249,7 +6281,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/TransformConstrainFunction/" class="md-nav__link">
+      <a href="../TransformConstrainFunction/" class="md-nav__link">
         
   
   
@@ -6276,7 +6308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/TransformStyleFunction/" class="md-nav__link">
+      <a href="../TransformStyleFunction/" class="md-nav__link">
         
   
   
@@ -6303,7 +6335,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/Unit/" class="md-nav__link">
+      <a href="../Unit/" class="md-nav__link">
         
   
   
@@ -6330,7 +6362,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/UnwrappedTileIDLiteral/" class="md-nav__link">
+      <a href="../UnwrappedTileIDLiteral/" class="md-nav__link">
         
   
   
@@ -6357,7 +6389,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/type-aliases/UpdateImageOptions/" class="md-nav__link">
+      <a href="../UpdateImageOptions/" class="md-nav__link">
         
   
   
@@ -6399,17 +6431,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
         
           
-          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="">
             
   
   
@@ -6444,7 +6479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/variables/EXTENT/" class="md-nav__link">
+      <a href="../../variables/EXTENT/" class="md-nav__link">
         
   
   
@@ -6485,31 +6520,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -6527,7 +6557,7 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
             <label class="md-nav__title" for="__nav_5">
               <span class="md-nav__icon md-icon"></span>
               
@@ -6544,7 +6574,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../../../examples/" class="md-nav__link">
         
   
   
@@ -6571,7 +6601,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../3d-terrain/" class="md-nav__link">
+      <a href="../../../examples/3d-terrain/" class="md-nav__link">
         
   
   
@@ -6598,7 +6628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-3d-terrain-from-quantized-mesh-tiles/" class="md-nav__link">
+      <a href="../../../examples/add-3d-terrain-from-quantized-mesh-tiles/" class="md-nav__link">
         
   
   
@@ -6633,7 +6663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-3d-tiles-using-threejs/" class="md-nav__link">
+      <a href="../../../examples/add-3d-tiles-using-threejs/" class="md-nav__link">
         
   
   
@@ -6660,7 +6690,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-3d-model-to-globe-using-threejs/" class="md-nav__link">
+      <a href="../../../examples/add-a-3d-model-to-globe-using-threejs/" class="md-nav__link">
         
   
   
@@ -6687,7 +6717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-3d-model-using-threejs/" class="md-nav__link">
+      <a href="../../../examples/add-a-3d-model-using-threejs/" class="md-nav__link">
         
   
   
@@ -6714,7 +6744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-3d-model-with-babylonjs/" class="md-nav__link">
+      <a href="../../../examples/add-a-3d-model-with-babylonjs/" class="md-nav__link">
         
   
   
@@ -6741,7 +6771,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-3d-model-with-shadow-using-threejs/" class="md-nav__link">
+      <a href="../../../examples/add-a-3d-model-with-shadow-using-threejs/" class="md-nav__link">
         
   
   
@@ -6768,7 +6798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-canvas-source/" class="md-nav__link">
+      <a href="../../../examples/add-a-canvas-source/" class="md-nav__link">
         
   
   
@@ -6795,7 +6825,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-cog-raster-source/" class="md-nav__link">
+      <a href="../../../examples/add-a-cog-raster-source/" class="md-nav__link">
         
   
   
@@ -6822,7 +6852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-color-relief-layer/" class="md-nav__link">
+      <a href="../../../examples/add-a-color-relief-layer/" class="md-nav__link">
         
   
   
@@ -6849,7 +6879,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-custom-layer-with-tiles-to-a-globe/" class="md-nav__link">
+      <a href="../../../examples/add-a-custom-layer-with-tiles-to-a-globe/" class="md-nav__link">
         
   
   
@@ -6876,7 +6906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-custom-style-layer/" class="md-nav__link">
+      <a href="../../../examples/add-a-custom-style-layer/" class="md-nav__link">
         
   
   
@@ -6903,7 +6933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-default-marker/" class="md-nav__link">
+      <a href="../../../examples/add-a-default-marker/" class="md-nav__link">
         
   
   
@@ -6930,7 +6960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-generated-icon-to-the-map/" class="md-nav__link">
+      <a href="../../../examples/add-a-generated-icon-to-the-map/" class="md-nav__link">
         
   
   
@@ -6957,7 +6987,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-geojson-line/" class="md-nav__link">
+      <a href="../../../examples/add-a-geojson-line/" class="md-nav__link">
         
   
   
@@ -6984,7 +7014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-geojson-polygon/" class="md-nav__link">
+      <a href="../../../examples/add-a-geojson-polygon/" class="md-nav__link">
         
   
   
@@ -7011,7 +7041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-hillshade-layer/" class="md-nav__link">
+      <a href="../../../examples/add-a-hillshade-layer/" class="md-nav__link">
         
   
   
@@ -7035,19 +7065,10 @@
                   
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      
-      
-      
-        
-      
-      
-      <a href="././" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../examples/add-a-multidirectional-hillshade-layer/" class="md-nav__link">
         
   
   
@@ -7062,7 +7083,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -7075,7 +7095,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-new-layer-below-labels/" class="md-nav__link">
+      <a href="../../../examples/add-a-new-layer-below-labels/" class="md-nav__link">
         
   
   
@@ -7102,7 +7122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-pattern-to-a-polygon/" class="md-nav__link">
+      <a href="../../../examples/add-a-pattern-to-a-polygon/" class="md-nav__link">
         
   
   
@@ -7129,7 +7149,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-raster-tile-source/" class="md-nav__link">
+      <a href="../../../examples/add-a-raster-tile-source/" class="md-nav__link">
         
   
   
@@ -7156,7 +7176,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-simple-custom-layer-on-a-globe/" class="md-nav__link">
+      <a href="../../../examples/add-a-simple-custom-layer-on-a-globe/" class="md-nav__link">
         
   
   
@@ -7183,7 +7203,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-stretchable-image-to-the-map/" class="md-nav__link">
+      <a href="../../../examples/add-a-stretchable-image-to-the-map/" class="md-nav__link">
         
   
   
@@ -7210,7 +7230,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-vector-tile-source/" class="md-nav__link">
+      <a href="../../../examples/add-a-vector-tile-source/" class="md-nav__link">
         
   
   
@@ -7237,7 +7257,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-video/" class="md-nav__link">
+      <a href="../../../examples/add-a-video/" class="md-nav__link">
         
   
   
@@ -7264,7 +7284,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-wms-source/" class="md-nav__link">
+      <a href="../../../examples/add-a-wms-source/" class="md-nav__link">
         
   
   
@@ -7291,7 +7311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-an-animated-icon-to-the-map/" class="md-nav__link">
+      <a href="../../../examples/add-an-animated-icon-to-the-map/" class="md-nav__link">
         
   
   
@@ -7318,7 +7338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-an-icon-to-the-map/" class="md-nav__link">
+      <a href="../../../examples/add-an-icon-to-the-map/" class="md-nav__link">
         
   
   
@@ -7345,7 +7365,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-contour-lines/" class="md-nav__link">
+      <a href="../../../examples/add-contour-lines/" class="md-nav__link">
         
   
   
@@ -7372,7 +7392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-custom-icons-with-markers/" class="md-nav__link">
+      <a href="../../../examples/add-custom-icons-with-markers/" class="md-nav__link">
         
   
   
@@ -7399,7 +7419,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-live-realtime-data/" class="md-nav__link">
+      <a href="../../../examples/add-live-realtime-data/" class="md-nav__link">
         
   
   
@@ -7426,7 +7446,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-multiple-geometries-from-one-geojson-source/" class="md-nav__link">
+      <a href="../../../examples/add-multiple-geometries-from-one-geojson-source/" class="md-nav__link">
         
   
   
@@ -7453,7 +7473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
+      <a href="../../../examples/adding-3d-models-using-threejs-on-terrain/" class="md-nav__link">
         
   
   
@@ -7480,7 +7500,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-a-line/" class="md-nav__link">
+      <a href="../../../examples/animate-a-line/" class="md-nav__link">
         
   
   
@@ -7507,7 +7527,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-a-marker/" class="md-nav__link">
+      <a href="../../../examples/animate-a-marker/" class="md-nav__link">
         
   
   
@@ -7534,7 +7554,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-a-point-along-a-route/" class="md-nav__link">
+      <a href="../../../examples/animate-a-point-along-a-route/" class="md-nav__link">
         
   
   
@@ -7561,7 +7581,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-a-point/" class="md-nav__link">
+      <a href="../../../examples/animate-a-point/" class="md-nav__link">
         
   
   
@@ -7588,7 +7608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-a-series-of-images/" class="md-nav__link">
+      <a href="../../../examples/animate-a-series-of-images/" class="md-nav__link">
         
   
   
@@ -7615,7 +7635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-an-icon-on-the-gpu/" class="md-nav__link">
+      <a href="../../../examples/animate-an-icon-on-the-gpu/" class="md-nav__link">
         
   
   
@@ -7650,7 +7670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-map-camera-around-a-point/" class="md-nav__link">
+      <a href="../../../examples/animate-map-camera-around-a-point/" class="md-nav__link">
         
   
   
@@ -7677,7 +7697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-symbol-to-follow-the-mouse/" class="md-nav__link">
+      <a href="../../../examples/animate-symbol-to-follow-the-mouse/" class="md-nav__link">
         
   
   
@@ -7704,7 +7724,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../attach-a-popup-to-a-marker-instance/" class="md-nav__link">
+      <a href="../../../examples/attach-a-popup-to-a-marker-instance/" class="md-nav__link">
         
   
   
@@ -7731,7 +7751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../center-the-map-on-a-clicked-symbol/" class="md-nav__link">
+      <a href="../../../examples/center-the-map-on-a-clicked-symbol/" class="md-nav__link">
         
   
   
@@ -7758,7 +7778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-a-layers-color-with-buttons/" class="md-nav__link">
+      <a href="../../../examples/change-a-layers-color-with-buttons/" class="md-nav__link">
         
   
   
@@ -7785,7 +7805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-a-maps-language/" class="md-nav__link">
+      <a href="../../../examples/change-a-maps-language/" class="md-nav__link">
         
   
   
@@ -7812,7 +7832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-building-color-based-on-zoom-level/" class="md-nav__link">
+      <a href="../../../examples/change-building-color-based-on-zoom-level/" class="md-nav__link">
         
   
   
@@ -7839,7 +7859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-the-case-of-labels/" class="md-nav__link">
+      <a href="../../../examples/change-the-case-of-labels/" class="md-nav__link">
         
   
   
@@ -7866,7 +7886,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-the-default-position-for-attribution/" class="md-nav__link">
+      <a href="../../../examples/change-the-default-position-for-attribution/" class="md-nav__link">
         
   
   
@@ -7893,7 +7913,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../check-if-webgl-is-supported/" class="md-nav__link">
+      <a href="../../../examples/check-if-webgl-is-supported/" class="md-nav__link">
         
   
   
@@ -7920,7 +7940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cooperative-gestures/" class="md-nav__link">
+      <a href="../../../examples/cooperative-gestures/" class="md-nav__link">
         
   
   
@@ -7947,7 +7967,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-draggable-marker/" class="md-nav__link">
+      <a href="../../../examples/create-a-draggable-marker/" class="md-nav__link">
         
   
   
@@ -7974,7 +7994,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-draggable-point/" class="md-nav__link">
+      <a href="../../../examples/create-a-draggable-point/" class="md-nav__link">
         
   
   
@@ -8001,7 +8021,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-gradient-dashed-line-using-an-expression/" class="md-nav__link">
+      <a href="../../../examples/create-a-gradient-dashed-line-using-an-expression/" class="md-nav__link">
         
   
   
@@ -8028,7 +8048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-gradient-line-using-an-expression/" class="md-nav__link">
+      <a href="../../../examples/create-a-gradient-line-using-an-expression/" class="md-nav__link">
         
   
   
@@ -8055,7 +8075,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-heatmap-layer-on-a-globe-with-terrain-elevation/" class="md-nav__link">
+      <a href="../../../examples/create-a-heatmap-layer-on-a-globe-with-terrain-elevation/" class="md-nav__link">
         
   
   
@@ -8082,7 +8102,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-heatmap-layer/" class="md-nav__link">
+      <a href="../../../examples/create-a-heatmap-layer/" class="md-nav__link">
         
   
   
@@ -8109,7 +8129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-hover-effect/" class="md-nav__link">
+      <a href="../../../examples/create-a-hover-effect/" class="md-nav__link">
         
   
   
@@ -8136,7 +8156,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-a-time-slider/" class="md-nav__link">
+      <a href="../../../examples/create-a-time-slider/" class="md-nav__link">
         
   
   
@@ -8163,7 +8183,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-and-style-clusters/" class="md-nav__link">
+      <a href="../../../examples/create-and-style-clusters/" class="md-nav__link">
         
   
   
@@ -8190,7 +8210,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-deckgl-layer-using-rest-api/" class="md-nav__link">
+      <a href="../../../examples/create-deckgl-layer-using-rest-api/" class="md-nav__link">
         
   
   
@@ -8217,7 +8237,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../customize-camera-animations/" class="md-nav__link">
+      <a href="../../../examples/customize-camera-animations/" class="md-nav__link">
         
   
   
@@ -8244,7 +8264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../customize-the-map-transform-constrain/" class="md-nav__link">
+      <a href="../../../examples/customize-the-map-transform-constrain/" class="md-nav__link">
         
   
   
@@ -8271,7 +8291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../disable-map-rotation/" class="md-nav__link">
+      <a href="../../../examples/disable-map-rotation/" class="md-nav__link">
         
   
   
@@ -8298,7 +8318,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../disable-scroll-zoom/" class="md-nav__link">
+      <a href="../../../examples/disable-scroll-zoom/" class="md-nav__link">
         
   
   
@@ -8325,7 +8345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-globe-with-a-fill-extrusion-layer/" class="md-nav__link">
+      <a href="../../../examples/display-a-globe-with-a-fill-extrusion-layer/" class="md-nav__link">
         
   
   
@@ -8352,7 +8372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-globe-with-a-vector-map/" class="md-nav__link">
+      <a href="../../../examples/display-a-globe-with-a-vector-map/" class="md-nav__link">
         
   
   
@@ -8379,7 +8399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-globe-with-an-atmosphere/" class="md-nav__link">
+      <a href="../../../examples/display-a-globe-with-an-atmosphere/" class="md-nav__link">
         
   
   
@@ -8406,7 +8426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-hybrid-satellite-map-with-terrain-elevation/" class="md-nav__link">
+      <a href="../../../examples/display-a-hybrid-satellite-map-with-terrain-elevation/" class="md-nav__link">
         
   
   
@@ -8433,7 +8453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-map-with-mlt/" class="md-nav__link">
+      <a href="../../../examples/display-a-map-with-mlt/" class="md-nav__link">
         
   
   
@@ -8460,7 +8480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-map/" class="md-nav__link">
+      <a href="../../../examples/display-a-map/" class="md-nav__link">
         
   
   
@@ -8487,7 +8507,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-non-interactive-map/" class="md-nav__link">
+      <a href="../../../examples/display-a-non-interactive-map/" class="md-nav__link">
         
   
   
@@ -8514,7 +8534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-popup-on-click/" class="md-nav__link">
+      <a href="../../../examples/display-a-popup-on-click/" class="md-nav__link">
         
   
   
@@ -8541,7 +8561,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-popup-on-hover/" class="md-nav__link">
+      <a href="../../../examples/display-a-popup-on-hover/" class="md-nav__link">
         
   
   
@@ -8568,7 +8588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-popup/" class="md-nav__link">
+      <a href="../../../examples/display-a-popup/" class="md-nav__link">
         
   
   
@@ -8595,7 +8615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-remote-svg-symbol/" class="md-nav__link">
+      <a href="../../../examples/display-a-remote-svg-symbol/" class="md-nav__link">
         
   
   
@@ -8622,7 +8642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-a-satellite-map/" class="md-nav__link">
+      <a href="../../../examples/display-a-satellite-map/" class="md-nav__link">
         
   
   
@@ -8649,7 +8669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-and-style-rich-text-labels/" class="md-nav__link">
+      <a href="../../../examples/display-and-style-rich-text-labels/" class="md-nav__link">
         
   
   
@@ -8676,7 +8696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-buildings-in-3d/" class="md-nav__link">
+      <a href="../../../examples/display-buildings-in-3d/" class="md-nav__link">
         
   
   
@@ -8703,7 +8723,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-html-clusters-with-custom-properties/" class="md-nav__link">
+      <a href="../../../examples/display-html-clusters-with-custom-properties/" class="md-nav__link">
         
   
   
@@ -8730,7 +8750,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-line-that-crosses-180th-meridian/" class="md-nav__link">
+      <a href="../../../examples/display-line-that-crosses-180th-meridian/" class="md-nav__link">
         
   
   
@@ -8757,7 +8777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-map-navigation-controls/" class="md-nav__link">
+      <a href="../../../examples/display-map-navigation-controls/" class="md-nav__link">
         
   
   
@@ -8784,7 +8804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../display-performance-metrics/" class="md-nav__link">
+      <a href="../../../examples/display-performance-metrics/" class="md-nav__link">
         
   
   
@@ -8819,7 +8839,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../draw-a-circle/" class="md-nav__link">
+      <a href="../../../examples/draw-a-circle/" class="md-nav__link">
         
   
   
@@ -8846,7 +8866,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../draw-geojson-points/" class="md-nav__link">
+      <a href="../../../examples/draw-geojson-points/" class="md-nav__link">
         
   
   
@@ -8873,7 +8893,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../draw-geometries-with-terra-draw/" class="md-nav__link">
+      <a href="../../../examples/draw-geometries-with-terra-draw/" class="md-nav__link">
         
   
   
@@ -8900,7 +8920,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../draw-polygon-with-mapbox-gl-draw/" class="md-nav__link">
+      <a href="../../../examples/draw-polygon-with-mapbox-gl-draw/" class="md-nav__link">
         
   
   
@@ -8927,7 +8947,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../elevate-symbols-above-the-terrain/" class="md-nav__link">
+      <a href="../../../examples/elevate-symbols-above-the-terrain/" class="md-nav__link">
         
   
   
@@ -8962,7 +8982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../enter-a-360-photosphere/" class="md-nav__link">
+      <a href="../../../examples/enter-a-360-photosphere/" class="md-nav__link">
         
   
   
@@ -8997,7 +9017,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../extrude-polygons-for-3d-indoor-mapping/" class="md-nav__link">
+      <a href="../../../examples/extrude-polygons-for-3d-indoor-mapping/" class="md-nav__link">
         
   
   
@@ -9024,7 +9044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fill-extrusion-rounded-corners/" class="md-nav__link">
+      <a href="../../../examples/fill-extrusion-rounded-corners/" class="md-nav__link">
         
   
   
@@ -9059,7 +9079,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../filter-layer-symbols-using-global-state/" class="md-nav__link">
+      <a href="../../../examples/filter-layer-symbols-using-global-state/" class="md-nav__link">
         
   
   
@@ -9086,7 +9106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../filter-symbols-by-text-input/" class="md-nav__link">
+      <a href="../../../examples/filter-symbols-by-text-input/" class="md-nav__link">
         
   
   
@@ -9113,7 +9133,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../filter-symbols-by-toggling-a-list/" class="md-nav__link">
+      <a href="../../../examples/filter-symbols-by-toggling-a-list/" class="md-nav__link">
         
   
   
@@ -9140,7 +9160,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../filter-within-a-layer/" class="md-nav__link">
+      <a href="../../../examples/filter-within-a-layer/" class="md-nav__link">
         
   
   
@@ -9167,7 +9187,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fit-a-map-to-a-bounding-box/" class="md-nav__link">
+      <a href="../../../examples/fit-a-map-to-a-bounding-box/" class="md-nav__link">
         
   
   
@@ -9194,7 +9214,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fit-to-the-bounds-of-a-linestring/" class="md-nav__link">
+      <a href="../../../examples/fit-to-the-bounds-of-a-linestring/" class="md-nav__link">
         
   
   
@@ -9221,7 +9241,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fly-to-a-location-based-on-scroll-position/" class="md-nav__link">
+      <a href="../../../examples/fly-to-a-location-based-on-scroll-position/" class="md-nav__link">
         
   
   
@@ -9248,7 +9268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fly-to-a-location/" class="md-nav__link">
+      <a href="../../../examples/fly-to-a-location/" class="md-nav__link">
         
   
   
@@ -9275,7 +9295,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../generate-and-add-a-missing-icon-to-the-map/" class="md-nav__link">
+      <a href="../../../examples/generate-and-add-a-missing-icon-to-the-map/" class="md-nav__link">
         
   
   
@@ -9302,7 +9322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../geocode-with-nominatim/" class="md-nav__link">
+      <a href="../../../examples/geocode-with-nominatim/" class="md-nav__link">
         
   
   
@@ -9329,7 +9349,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../get-coordinates-of-the-mouse-pointer/" class="md-nav__link">
+      <a href="../../../examples/get-coordinates-of-the-mouse-pointer/" class="md-nav__link">
         
   
   
@@ -9356,7 +9376,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../get-features-under-the-mouse-pointer/" class="md-nav__link">
+      <a href="../../../examples/get-features-under-the-mouse-pointer/" class="md-nav__link">
         
   
   
@@ -9383,7 +9403,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hash-routing/" class="md-nav__link">
+      <a href="../../../examples/hash-routing/" class="md-nav__link">
         
   
   
@@ -9410,7 +9430,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../jump-to-a-series-of-locations/" class="md-nav__link">
+      <a href="../../../examples/jump-to-a-series-of-locations/" class="md-nav__link">
         
   
   
@@ -9437,7 +9457,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../level-of-detail-control/" class="md-nav__link">
+      <a href="../../../examples/level-of-detail-control/" class="md-nav__link">
         
   
   
@@ -9464,7 +9484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../locale-switching/" class="md-nav__link">
+      <a href="../../../examples/locale-switching/" class="md-nav__link">
         
   
   
@@ -9491,7 +9511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../locate-the-user/" class="md-nav__link">
+      <a href="../../../examples/locate-the-user/" class="md-nav__link">
         
   
   
@@ -9518,7 +9538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../measure-distances/" class="md-nav__link">
+      <a href="../../../examples/measure-distances/" class="md-nav__link">
         
   
   
@@ -9545,7 +9565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../navigate-the-map-with-game-like-controls/" class="md-nav__link">
+      <a href="../../../examples/navigate-the-map-with-game-like-controls/" class="md-nav__link">
         
   
   
@@ -9572,7 +9592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../offset-the-vanishing-point-using-padding/" class="md-nav__link">
+      <a href="../../../examples/offset-the-vanishing-point-using-padding/" class="md-nav__link">
         
   
   
@@ -9599,7 +9619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pmtiles-source-and-protocol/" class="md-nav__link">
+      <a href="../../../examples/pmtiles-source-and-protocol/" class="md-nav__link">
         
   
   
@@ -9626,7 +9646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../render-world-copies/" class="md-nav__link">
+      <a href="../../../examples/render-world-copies/" class="md-nav__link">
         
   
   
@@ -9653,7 +9673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../restrict-map-panning-to-an-area/" class="md-nav__link">
+      <a href="../../../examples/restrict-map-panning-to-an-area/" class="md-nav__link">
         
   
   
@@ -9680,7 +9700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../select-features-with-boxzoomend-callback/" class="md-nav__link">
+      <a href="../../../examples/select-features-with-boxzoomend-callback/" class="md-nav__link">
         
   
   
@@ -9707,7 +9727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../set-center-point-above-ground/" class="md-nav__link">
+      <a href="../../../examples/set-center-point-above-ground/" class="md-nav__link">
         
   
   
@@ -9734,7 +9754,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../set-pitch-and-bearing/" class="md-nav__link">
+      <a href="../../../examples/set-pitch-and-bearing/" class="md-nav__link">
         
   
   
@@ -9761,7 +9781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../show-polygon-information-on-click/" class="md-nav__link">
+      <a href="../../../examples/show-polygon-information-on-click/" class="md-nav__link">
         
   
   
@@ -9788,7 +9808,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../sky-fog-terrain/" class="md-nav__link">
+      <a href="../../../examples/sky-fog-terrain/" class="md-nav__link">
         
   
   
@@ -9815,7 +9835,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../slowly-fly-to-a-location/" class="md-nav__link">
+      <a href="../../../examples/slowly-fly-to-a-location/" class="md-nav__link">
         
   
   
@@ -9842,7 +9862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../style-labels-with-font-faces/" class="md-nav__link">
+      <a href="../../../examples/style-labels-with-font-faces/" class="md-nav__link">
         
   
   
@@ -9877,7 +9897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../style-labels-with-local-fonts/" class="md-nav__link">
+      <a href="../../../examples/style-labels-with-local-fonts/" class="md-nav__link">
         
   
   
@@ -9904,7 +9924,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../style-labels-with-web-fonts/" class="md-nav__link">
+      <a href="../../../examples/style-labels-with-web-fonts/" class="md-nav__link">
         
   
   
@@ -9931,7 +9951,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../style-lines-with-a-data-driven-property/" class="md-nav__link">
+      <a href="../../../examples/style-lines-with-a-data-driven-property/" class="md-nav__link">
         
   
   
@@ -9958,7 +9978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../sync-movement-of-multiple-maps/" class="md-nav__link">
+      <a href="../../../examples/sync-movement-of-multiple-maps/" class="md-nav__link">
         
   
   
@@ -9985,7 +10005,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../toggle-deckgl-layer/" class="md-nav__link">
+      <a href="../../../examples/toggle-deckgl-layer/" class="md-nav__link">
         
   
   
@@ -10012,7 +10032,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../toggle-interactions/" class="md-nav__link">
+      <a href="../../../examples/toggle-interactions/" class="md-nav__link">
         
   
   
@@ -10039,7 +10059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../update-a-feature-in-realtime/" class="md-nav__link">
+      <a href="../../../examples/update-a-feature-in-realtime/" class="md-nav__link">
         
   
   
@@ -10066,7 +10086,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../update-geojson-polygons/" class="md-nav__link">
+      <a href="../../../examples/update-geojson-polygons/" class="md-nav__link">
         
   
   
@@ -10093,7 +10113,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../use-a-fallback-image/" class="md-nav__link">
+      <a href="../../../examples/use-a-fallback-image/" class="md-nav__link">
         
   
   
@@ -10120,7 +10140,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../use-addprotocol-to-transform-feature-properties/" class="md-nav__link">
+      <a href="../../../examples/use-addprotocol-to-transform-feature-properties/" class="md-nav__link">
         
   
   
@@ -10147,7 +10167,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../use-locally-generated-ideographs/" class="md-nav__link">
+      <a href="../../../examples/use-locally-generated-ideographs/" class="md-nav__link">
         
   
   
@@ -10174,7 +10194,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../variable-label-placement-with-offset/" class="md-nav__link">
+      <a href="../../../examples/variable-label-placement-with-offset/" class="md-nav__link">
         
   
   
@@ -10201,7 +10221,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../variable-label-placement/" class="md-nav__link">
+      <a href="../../../examples/variable-label-placement/" class="md-nav__link">
         
   
   
@@ -10228,7 +10248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../view-a-fullscreen-map/" class="md-nav__link">
+      <a href="../../../examples/view-a-fullscreen-map/" class="md-nav__link">
         
   
   
@@ -10255,7 +10275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../view-local-geojson-experimental/" class="md-nav__link">
+      <a href="../../../examples/view-local-geojson-experimental/" class="md-nav__link">
         
   
   
@@ -10282,7 +10302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../view-local-geojson/" class="md-nav__link">
+      <a href="../../../examples/view-local-geojson/" class="md-nav__link">
         
   
   
@@ -10309,7 +10329,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../visualize-population-density/" class="md-nav__link">
+      <a href="../../../examples/visualize-population-density/" class="md-nav__link">
         
   
   
@@ -10336,7 +10356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../walk-around-a-map-in-first-person/" class="md-nav__link">
+      <a href="../../../examples/walk-around-a-map-in-first-person/" class="md-nav__link">
         
   
   
@@ -10371,7 +10391,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../zoom-and-planet-size-relation-on-globe/" class="md-nav__link">
+      <a href="../../../examples/zoom-and-planet-size-relation-on-globe/" class="md-nav__link">
         
   
   
@@ -10457,7 +10477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/" class="md-nav__link">
+      <a href="../../../guides/" class="md-nav__link">
         
   
   
@@ -10484,7 +10504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/large-data/" class="md-nav__link">
+      <a href="../../../guides/large-data/" class="md-nav__link">
         
   
   
@@ -10511,7 +10531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/leaflet-migration-guide/" class="md-nav__link">
+      <a href="../../../guides/leaflet-migration-guide/" class="md-nav__link">
         
   
   
@@ -10538,7 +10558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/mapbox-migration-guide/" class="md-nav__link">
+      <a href="../../../guides/mapbox-migration-guide/" class="md-nav__link">
         
   
   
@@ -10565,7 +10585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/openlayers-migration-guide/" class="md-nav__link">
+      <a href="../../../guides/openlayers-migration-guide/" class="md-nav__link">
         
   
   
@@ -10592,7 +10612,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/v5-to-v6-migration-guide/" class="md-nav__link">
+      <a href="../../../guides/v5-to-v6-migration-guide/" class="md-nav__link">
         
   
   
@@ -10665,116 +10685,12 @@
   
 
 
-<h1 id="add-a-multidirectional-hillshade-layer">Add a multidirectional hillshade layer</h1>
-<p>Add a hillshade layer with multiple illumination sources.</p>
-<iframe src="../add-a-multidirectional-hillshade-layer.html" width="100%" style="border:none; height:400px"></iframe>
-
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Only JS</label><label for="__tabbed_1_2">Full HTML</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-js highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs'</span><span class="p">;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">'map'</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nx">zoom</span><span class="o">:</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nx">center</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">11.491</span><span class="p">,</span><span class="w"> </span><span class="mf">47.274</span><span class="p">],</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nx">pitch</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nx">renderWorldCopies</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nx">hash</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">        </span><span class="nx">version</span><span class="o">:</span><span class="w"> </span><span class="mf">8</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">        </span><span class="nx">sources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">            </span><span class="nx">hillshadeSource</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'raster-dem'</span><span class="p">,</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">                </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s1">'https://demotiles.maplibre.org/terrain-tiles/tiles.json'</span><span class="p">,</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">                </span><span class="nx">tileSize</span><span class="o">:</span><span class="w"> </span><span class="mf">256</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">            </span><span class="p">}</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">        </span><span class="nx">layers</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">            </span><span class="p">{</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">                </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">'hillshade'</span><span class="p">,</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'hillshade'</span><span class="p">,</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">                </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s1">'hillshadeSource'</span><span class="p">,</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">                </span><span class="nx">paint</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">                    </span><span class="s1">'hillshade-method'</span><span class="o">:</span><span class="w"> </span><span class="s1">'multidirectional'</span><span class="p">,</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">                    </span><span class="s1">'hillshade-highlight-color'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">'#FF4000'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#FFFF00'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#40ff00'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#00FF80'</span><span class="p">],</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">                    </span><span class="s1">'hillshade-shadow-color'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">'#00bfff'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#0000ff'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#bf00ff'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#FF0080'</span><span class="p">],</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">                    </span><span class="s1">'hillshade-illumination-direction'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">270</span><span class="p">,</span><span class="w"> </span><span class="mf">315</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">],</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">                    </span><span class="s1">'hillshade-illumination-altitude'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">]</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">                </span><span class="p">}</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">            </span><span class="p">}</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">        </span><span class="p">]</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">    </span><span class="nx">maxZoom</span><span class="o">:</span><span class="w"> </span><span class="mf">18</span><span class="p">,</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">    </span><span class="nx">maxPitch</span><span class="o">:</span><span class="w"> </span><span class="mf">85</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="p">});</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-html highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">"en"</span><span class="p">&gt;</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Add a multidirectional hillshade layer<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">property</span><span class="o">=</span><span class="s">"og:description"</span> <span class="na">content</span><span class="o">=</span><span class="s">"Add a hillshade layer with multiple illumination sources."</span> <span class="p">/&gt;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">property</span><span class="o">=</span><span class="s">"og:category"</span> <span class="na">content</span><span class="o">=</span><span class="s">"Terrain &amp; Hillshade"</span> <span class="p">/&gt;</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">property</span><span class="o">=</span><span class="s">"og:created"</span> <span class="na">content</span><span class="o">=</span><span class="s">"2025-06-25"</span> <span class="p">/&gt;</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">'utf-8'</span><span class="p">&gt;</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">"viewport"</span> <span class="na">content</span><span class="o">=</span><span class="s">"width=device-width, initial-scale=1"</span><span class="p">&gt;</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">'stylesheet'</span> <span class="na">href</span><span class="o">=</span><span class="s">'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css'</span> <span class="p">/&gt;</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">        </span><span class="nt">body</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="nt">html</span><span class="o">,</span><span class="w"> </span><span class="nt">body</span><span class="o">,</span><span class="w"> </span><span class="p">#</span><span class="nn">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">'map'</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">"module"</span><span class="p">&gt;</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">maplibregl</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs'</span><span class="p">;</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">        </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">'map'</span><span class="p">,</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">        </span><span class="nx">zoom</span><span class="o">:</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">        </span><span class="nx">center</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">11.491</span><span class="p">,</span><span class="w"> </span><span class="mf">47.274</span><span class="p">],</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">        </span><span class="nx">pitch</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
-</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">        </span><span class="nx">renderWorldCopies</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">        </span><span class="nx">hash</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">        </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">            </span><span class="nx">version</span><span class="o">:</span><span class="w"> </span><span class="mf">8</span><span class="p">,</span>
-</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">            </span><span class="nx">sources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">                </span><span class="nx">hillshadeSource</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">                    </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'raster-dem'</span><span class="p">,</span>
-</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">                    </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s1">'https://demotiles.maplibre.org/terrain-tiles/tiles.json'</span><span class="p">,</span>
-</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">                    </span><span class="nx">tileSize</span><span class="o">:</span><span class="w"> </span><span class="mf">256</span>
-</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">                </span><span class="p">}</span>
-</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">            </span><span class="p">},</span>
-</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="w">            </span><span class="nx">layers</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="w">                </span><span class="p">{</span>
-</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="w">                    </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">'hillshade'</span><span class="p">,</span>
-</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="w">                    </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'hillshade'</span><span class="p">,</span>
-</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="w">                    </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="s1">'hillshadeSource'</span><span class="p">,</span>
-</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="w">                    </span><span class="nx">paint</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="w">                        </span><span class="s1">'hillshade-method'</span><span class="o">:</span><span class="w"> </span><span class="s1">'multidirectional'</span><span class="p">,</span>
-</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="w">                        </span><span class="s1">'hillshade-highlight-color'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">'#FF4000'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#FFFF00'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#40ff00'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#00FF80'</span><span class="p">],</span>
-</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="w">                        </span><span class="s1">'hillshade-shadow-color'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">'#00bfff'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#0000ff'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#bf00ff'</span><span class="p">,</span><span class="w"> </span><span class="s1">'#FF0080'</span><span class="p">],</span>
-</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="w">                        </span><span class="s1">'hillshade-illumination-direction'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">270</span><span class="p">,</span><span class="w"> </span><span class="mf">315</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">],</span>
-</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="w">                        </span><span class="s1">'hillshade-illumination-altitude'</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">]</span>
-</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="w">                    </span><span class="p">}</span>
-</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="w">                </span><span class="p">}</span>
-</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="w">            </span><span class="p">]</span>
-</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="w">        </span><span class="nx">maxZoom</span><span class="o">:</span><span class="w"> </span><span class="mf">18</span><span class="p">,</span>
-</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="w">        </span><span class="nx">maxPitch</span><span class="o">:</span><span class="w"> </span><span class="mf">85</span>
-</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="w">    </span><span class="p">});</span>
-</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
-</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-</span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</span></code></pre></div>
-</div>
-</div>
-</div>
+<h1 id="glyphmap">GlyphMap</h1>
+<blockquote>
+<p><strong>GlyphMap</strong> = <code>Record</code>&lt;<code>string</code>, <code>Record</code>&lt;<code>string</code>, <code>Record</code>&lt;<code>string</code>, <a href="../StyleGlyph/"><code>StyleGlyph</code></a> | <code>null</code>&gt;&gt;&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/style/style_glyph.ts#L31">style/style_glyph.ts:31</a></p>
+<p>Glyphs keyed by font stack, variant, and grapheme cluster; <code>null</code> means unavailable.</p>
 
 
 
@@ -10909,10 +10825,10 @@
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
     
   </body>
