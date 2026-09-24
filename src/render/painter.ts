@@ -22,6 +22,7 @@ import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 import {createRenderContext, getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from './render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
+import {destroyProjectionUniformBuffers, releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -175,10 +176,12 @@ export class Painter {
     /*
      * Update the GL viewport, projection matrix, and transforms to compensate
      * for a new width and height value.
+     *
+     * The viewport is the canvas' backing store, so it rounds as {@link Map._resizeCanvas} does.
      */
     resize(width: number, height: number, pixelRatio: number): void {
-        this.width = Math.floor(width * pixelRatio);
-        this.height = Math.floor(height * pixelRatio);
+        this.width = Math.round(width * pixelRatio);
+        this.height = Math.round(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
@@ -514,6 +517,7 @@ export class Painter {
         updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
 
         this.imageManager.beginFrame();
+        releaseProjectionUniformBuffers(this.context);
 
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
@@ -933,7 +937,7 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
 
-        this.context.projectionUniformBuffer.destroy();
+        destroyProjectionUniformBuffers(this.context);
         this.context.terrainUniformBuffer.destroy();
         this.context.frameUniformBuffer.destroy();
 

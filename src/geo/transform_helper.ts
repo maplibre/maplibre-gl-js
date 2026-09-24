@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
-import {cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
 
@@ -668,7 +668,7 @@ export class TransformHelper implements ITransformGetters {
         const altitudeAGL = alt - elevation;
         let distanceToCenter: number;
         let clampedElevation = elevation;
-        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < Math.cos(degreesToRadians(maxMercatorHorizonAngle))) {
             distanceToCenter = 10000;
             clampedElevation = alt + distanceToCenter * dzNormalized;
         } else {
