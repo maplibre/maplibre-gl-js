@@ -31,6 +31,7 @@ import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
+import {EXTENT} from '../extent.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
@@ -477,6 +478,7 @@ export class SymbolBucket implements Bucket {
         // and null returned because icon-image wasn't defined is to check whether or not iconImage.parameters is an empty object
         const hasIcon = iconImage.value.kind !== 'constant' || !!iconImage.value.value || Object.keys(iconImage.parameters).length > 0;
         const symbolSortKey = layout.get('symbol-sort-key');
+        const pointPlacement = layout.get('symbol-placement') === 'point';
 
         this.features = [];
 
@@ -498,6 +500,9 @@ export class SymbolBucket implements Bucket {
             }
 
             if (!needGeometry)  evaluationFeature.geometry = loadGeometry(feature);
+
+            // A point outside the tile is labelled by the neighbouring tile, so skip it before requesting its glyphs and icons.
+            if (pointPlacement && feature.type === 1 && isOutsideTile(evaluationFeature.geometry)) continue;
 
             let text: Formatted | void;
             if (hasText) {
@@ -989,6 +994,16 @@ export class SymbolBucket implements Bucket {
         if (this.text.indexBuffer) this.text.indexBuffer.updateData(this.text.indexArray);
         if (this.icon.indexBuffer) this.icon.indexBuffer.updateData(this.icon.indexArray);
     }
+}
+
+// Mirrors the anchor check in symbol_layout.ts, which drops these points after shaping.
+function isOutsideTile(geometry: Point[][]): boolean {
+    for (const ring of geometry) {
+        for (const p of ring) {
+            if (!(p.x < 0 || p.x >= EXTENT || p.y < 0 || p.y >= EXTENT)) return false;
+        }
+    }
+    return true;
 }
 
 register('SymbolBucket', SymbolBucket, {
