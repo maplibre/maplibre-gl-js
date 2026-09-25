@@ -6,7 +6,7 @@ import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import {Painter} from '../../render/painter.ts';
-import {createRenderContext} from '../../render/render_context.ts';
+import {RenderContext} from '../../render/render_context.ts';
 import {Program} from '../program.ts';
 import {drawSymbols} from './draw_symbol.ts';
 import * as symbolProjection from '../../symbol/projection.ts';
@@ -57,12 +57,13 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null);
-        const renderContext = createRenderContext(null, undefined, null);
+        const renderContext = new RenderContext({transform: null, projection: undefined, terrain: null, context: null, programs: {}, showOverdrawInspector: false});
         renderContext.currentPass = 'opaque';
+        vi.spyOn(renderContext, 'colorModeForRenderPass');
 
         drawSymbols(mockPainter, null, null, null, null, renderContext);
 
-        expect(mockPainter.colorModeForRenderPass).not.toHaveBeenCalled();
+        expect(renderContext.colorModeForRenderPass).not.toHaveBeenCalled();
     });
 
     test('should call program.draw', () => {
@@ -73,7 +74,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.renderContext = createRenderContext(createMockTransform(), undefined, null);
+        painterMock.renderContext = new RenderContext({transform: createMockTransform(), projection: undefined, terrain: null, context: painterMock.context, programs: {}, showOverdrawInspector: false});
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
@@ -96,7 +97,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+        vi.spyOn(painterMock.renderContext, 'useProgram').mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -135,7 +136,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.renderContext = createRenderContext(createMockTransform(), undefined, null);
+        painterMock.renderContext = new RenderContext({transform: createMockTransform(), projection: undefined, terrain: null, context: painterMock.context, programs: {}, showOverdrawInspector: false});
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
 
@@ -158,7 +159,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+        vi.spyOn(painterMock.renderContext, 'useProgram').mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -202,7 +203,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.renderContext = createRenderContext(createMockTransform(), undefined, null);
+        painterMock.renderContext = new RenderContext({transform: createMockTransform(), projection: undefined, terrain: null, context: painterMock.context, programs: {}, showOverdrawInspector: false});
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
@@ -224,7 +225,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+        vi.spyOn(painterMock.renderContext, 'useProgram').mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {

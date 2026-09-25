@@ -6,10 +6,10 @@ import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
 } from '../program/fill_extrusion_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
@@ -26,7 +26,7 @@ export function drawFillExtrusion(painter: Painter, tileManager: TileManager, la
         const depthMode = new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, renderContext.depthRangeFor3D);
 
         if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
-            const colorMode = painter.colorModeForRenderPass();
+            const colorMode = renderContext.colorModeForRenderPass();
             drawExtrusionTiles(painter, tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, renderContext);
 
         } else {
@@ -41,7 +41,7 @@ export function drawFillExtrusion(painter: Painter, tileManager: TileManager, la
             // to prevent the second draw in cases where we have coincident polygons.
             drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
                 painter.stencilModeFor3D(),
-                painter.colorModeForRenderPass(), renderContext);
+                renderContext.colorModeForRenderPass(), renderContext);
         }
     }
 }
@@ -70,9 +70,9 @@ function drawExtrusionTiles(
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const terrainData = renderContext.getTerrainDataForTile(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
+        const program = renderContext.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -80,7 +80,7 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = getProjectionDataForTile(renderContext, coord);
+        const projectionData = renderContext.getProjectionDataForTile(coord);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(

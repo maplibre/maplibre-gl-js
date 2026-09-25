@@ -1,11 +1,11 @@
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {terrainUniformValues, terrainDepthUniformValues} from '../program/terrain_program.ts';
-import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -22,7 +22,7 @@ function drawDepth(painter: Painter, terrain: Terrain): void {
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const tiles = terrain.tileManager.getRenderableTiles();
-    const program = painter.useProgram('terrainDepth');
+    const program = painter.renderContext.useProgram('terrainDepth');
     context.bindFramebuffer.set(terrain.getFramebuffer().framebuffer);
     context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
     context.clear({color: Color.white, depth: 1});
@@ -42,9 +42,9 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderCo
     const context = painter.context;
     const gl = context.gl;
     const tr = renderContext.transform;
-    const colorMode = painter.colorModeForRenderPass();
-    const depthMode = painter.getDepthModeFor3D();
-    const program = painter.useProgram('terrain');
+    const colorMode = renderContext.colorModeForRenderPass();
+    const depthMode = renderContext.getDepthModeFor3D();
+    const program = renderContext.useProgram('terrain');
 
     context.bindFramebuffer.set(null);
     context.viewport.set([0, 0, painter.width, painter.height]);
@@ -58,7 +58,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderCo
         const eleDelta = terrain.getSkirtLength(tr.zoom);
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
         const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
-        const projectionData = getProjectionDataForTile(renderContext, tile.tileID, {applyTerrainMatrix: false});
+        const projectionData = renderContext.getProjectionDataForTile(tile.tileID, {applyTerrainMatrix: false});
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

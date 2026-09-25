@@ -51,7 +51,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         const prerender = implementation.prerender;
         if (prerender) {
             painter.setCustomLayerDefaults();
-            context.setColorMode(painter.colorModeForRenderPass());
+            context.setColorMode(renderContext.colorModeForRenderPass());
 
             prerender.call(implementation, context.gl, customLayerArgs);
 
@@ -62,12 +62,12 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
 
         painter.setCustomLayerDefaults();
 
-        context.setColorMode(painter.colorModeForRenderPass());
+        context.setColorMode(renderContext.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
 
         const depthMode = renderingMode === '3d' ?
-            painter.getDepthModeFor3D() :
-            painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+            renderContext.getDepthModeFor3D() :
+            renderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
         context.setDepthMode(depthMode);
 

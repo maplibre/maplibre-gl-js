@@ -1,13 +1,13 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
-import {createRenderContext} from '../render/render_context.ts';
+import {RenderContext} from '../render/render_context.ts';
 import {Context} from '../webgl/context.ts';
-import {ColorMode} from '../webgl/color_mode.ts';
 import {Terrain} from '../render/terrain.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {DepthMode} from '../webgl/depth_mode.ts';
+import {Program} from './program.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 
 import type {Style} from '../style/style.ts';
@@ -67,6 +67,8 @@ describe('render to texture', () => {
     } as any as SymbolStyleLayer;
 
     let layersDrawn = 0;
+    vi.spyOn(Program.prototype, 'draw').mockImplementation(() => { layersDrawn++; });
+    const projection = new MercatorProjection();
     function createMockRTTObject(size: number) {
         return {
             texture: {texture: gl.createTexture(), bind: vi.fn(), generateMipmap: vi.fn()},
@@ -78,9 +80,6 @@ describe('render to texture', () => {
         layersDrawn: 0,
         context: new Context(gl),
         options: {moving: false},
-        colorModeForRenderPass: () => ColorMode.alphaBlended,
-        getDepthModeFor3D: () => DepthMode.disabled,
-        useProgram: () => ({draw: () => { layersDrawn++; }}),
         renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
         acquireRTT: (size: number) => createMockRTTObject(size),
@@ -155,7 +154,7 @@ describe('render to texture', () => {
         const renderLayerSpy = vi.spyOn(painter, 'renderLayer');
         rtt.prepareForRender(style, 0);
 
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         for (const layerId of style._order) {
             const layer = style._layers[layerId];
             rtt.renderLayer(layer, renderContext);
@@ -201,7 +200,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
         expect(rtt.renderLayer(fillLayer, renderContext)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderContext)).toBeFalsy();
@@ -212,7 +211,7 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, renderContext)).toBeTruthy();
         expect(rtt.renderLayer(fillLayer, renderContext)).toBeTruthy();
@@ -228,7 +227,7 @@ describe('render to texture', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, renderContext)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderContext)).toBeFalsy();
@@ -261,7 +260,7 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
 
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         rtt.renderLayer(fillLayer, renderContext);
         rtt.renderLayer(symbolLayer, renderContext);
 
@@ -274,7 +273,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         rtt.renderLayer(fillLayer, renderContext);
         rtt.renderLayer(symbolLayer, renderContext);
 
@@ -285,7 +284,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         rtt.renderLayer(fillLayer, renderContext);
         rtt.renderLayer(symbolLayer, renderContext);
 
@@ -302,7 +301,7 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
 
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         rtt.renderLayer(fillLayer, renderContext);
         rtt.renderLayer(symbolLayer, renderContext);
 
@@ -315,7 +314,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         rtt.renderLayer(fillLayer, renderContext);
         rtt.renderLayer(symbolLayer, renderContext);
 
@@ -416,7 +415,7 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0);
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
-        const renderContext = createRenderContext(transform, undefined, terrain);
+        const renderContext = new RenderContext({transform, projection, terrain, context: painter.context, programs: {}, showOverdrawInspector: false});
         rtt.renderLayer(fillLayer, renderContext);
         rtt.renderLayer(symbolLayer, renderContext);
 

@@ -3,9 +3,9 @@ import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {translatePosition} from '../../util/util.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Program} from '../program.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -52,11 +52,11 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
     const gl = context.gl;
     const transform = renderContext.transform;
 
-    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = renderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     // Turn off stencil testing to allow circles to be drawn across boundaries,
     // so that large circles are not clipped to tiles
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = renderContext.colorModeForRenderPass();
 
     const segmentsRenderStates: SegmentsTileRenderState[] = [];
 
@@ -74,13 +74,13 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         const translateForUniforms = translatePosition(transform, tile, styleTranslate, styleTranslateAnchor);
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram('circle', programConfiguration);
+        const program = renderContext.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const terrainData = renderContext.getTerrainDataForTile(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
-        const projectionData = getProjectionDataForTile(renderContext, coord);
+        const projectionData = renderContext.getProjectionDataForTile(coord);
 
         const state: TileRenderState = {
             programConfiguration,

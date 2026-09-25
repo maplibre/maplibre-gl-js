@@ -9,8 +9,8 @@ import {
     heatmapTextureUniformValues
 } from '../program/heatmap_program.ts';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {Context} from '../context.ts';
 import type {Framebuffer} from '../framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
@@ -77,9 +77,9 @@ function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: H
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram('heatmap', programConfiguration);
+        const program = renderContext.useProgram('heatmap', programConfiguration);
 
-        const projectionData = getProjectionDataForTile(renderContext, coord, {applyTerrainMatrix: false});
+        const projectionData = renderContext.getProjectionDataForTile(coord, {applyTerrainMatrix: false});
 
         const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
@@ -98,7 +98,7 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
     const context = painter.context;
     const gl = context.gl;
 
-    context.setColorMode(painter.colorModeForRenderPass());
+    context.setColorMode(painter.renderContext.colorModeForRenderPass());
 
     // Here we bind two different textures from which we'll sample in drawing
     // heatmaps: the kernel texture, prepared in the offscreen pass, and a
@@ -112,8 +112,8 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
     const colorRampTexture = getColorRampTexture(context, layer);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
+    painter.renderContext.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, painter.renderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.renderContext.transform.zoom);
@@ -143,11 +143,11 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     context.clear({color: Color.transparent});
 
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration, !renderContext.isRenderingGlobe);
+    const program = renderContext.useProgram('heatmap', programConfiguration, !renderContext.isRenderingGlobe);
 
-    const projectionData = getProjectionDataForTile(renderContext, tile.tileID);
+    const projectionData = renderContext.getProjectionDataForTile(tile.tileID);
 
-    const terrainData = getTerrainDataForTile(renderContext, coord);
+    const terrainData = renderContext.getTerrainDataForTile(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
         heatmapUniformValues(tile, renderContext.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
         layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
@@ -160,7 +160,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     const gl = context.gl;
     const transform = renderContext.transform;
 
-    context.setColorMode(painter.colorModeForRenderPass());
+    context.setColorMode(renderContext.colorModeForRenderPass());
 
     const colorRampTexture = getColorRampTexture(context, layer);
 
@@ -177,10 +177,10 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    const projectionData = getProjectionDataForTile(renderContext, coord, {applyTerrainMatrix: renderContext.isRenderingGlobe});
+    const projectionData = renderContext.getProjectionDataForTile(coord, {applyTerrainMatrix: renderContext.isRenderingGlobe});
 
-    painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
+    renderContext.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, renderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1), null, projectionData,
         layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer,
         painter.rasterBoundsSegments, layer.paint, transform.zoom);

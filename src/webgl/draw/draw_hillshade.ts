@@ -6,8 +6,8 @@ import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
 } from '../program/hillshade_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -21,8 +21,8 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
 
-    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
-    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = renderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const colorMode = renderContext.colorModeForRenderPass();
 
     if (renderContext.currentPass === 'offscreen') {
         // Prepare tiles
@@ -60,7 +60,7 @@ function renderHillshade(
     const gl = context.gl;
 
     const defines = [`#define NUM_ILLUMINATION_SOURCES ${layer.paint.get('hillshade-highlight-color').values.length}`];
-    const program = painter.useProgram('hillshade', null, false, defines);
+    const program = renderContext.useProgram('hillshade', null, false, defines);
     const align = !painter.options.moving;
 
     for (const coord of coords) {
@@ -71,12 +71,12 @@ function renderHillshade(
         }
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const terrainData = renderContext.getTerrainDataForTile(coord);
 
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-        const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
+        const projectionData = renderContext.getProjectionDataForTile(coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
@@ -143,7 +143,7 @@ function prepareHillshade(
         context.bindFramebuffer.set(fbo.framebuffer);
         context.viewport.set([0, 0, hillshadeTextureSize, hillshadeTextureSize]);
 
-        painter.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
+        painter.renderContext.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             hillshadeUniformPrepareValues(tile.tileID, dem),
             null, null, layer.id, painter.rasterBoundsBuffer,
