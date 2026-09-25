@@ -80,6 +80,18 @@ export interface Handler {
      */
     isActive(): boolean;
     /**
+     * Optional. Like `isActive`, but true as soon as the handler has claimed a valid start event,
+     * even if it hasn't produced a camera change (and so hasn't become `isActive`) yet. Unlike
+     * `isActive`, this does not feed the general active/allowed-list blocking on its own: a
+     * handler only blocks on another's `isTracking` when it is named in that handler's
+     * `blockedByTracking` list (see `_add`). That lets a handler whose gesture only becomes
+     * visible after some movement (e.g. mouse rotate, which may never move the bearing on a
+     * vertical drag) still keep a specific other handler off the same mousedown (e.g. mouse pan on
+     * a `ctrl` + left drag) without also blocking unrelated handlers that only care about
+     * `isActive`.
+     */
+    isTracking?(): boolean;
+    /**
      * `reset` can be called by the manager at any time and must reset everything to it's original state
      */
     reset(): void;
@@ -178,6 +190,11 @@ export class HandlerManager {
         handlerName: string;
         handler: Handler;
         allowed: string[];
+        /**
+         * Names of other handlers whose `isTracking()` (not just `isActive()`) blocks this
+         * handler. See `Handler#isTracking`.
+         */
+        blockedByTracking?: string[];
     }>;
     _eventsInProgress: EventsInProgress;
     _frameId: number;
@@ -332,10 +349,13 @@ export class HandlerManager {
             map.dragRotate.enable();
         }
 
-        const mousePan = generateMousePanHandler({...options, isCtrlDragClaimed: () => mouseRotate.isEnabled() || mousePitch.isEnabled()});
+        const mousePan = generateMousePanHandler(options);
         const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
-        this._add('mousePan', mousePan);
+        // mouseRotate/mousePitch claim a `ctrl` + left drag too, but may never become `isActive`
+        // for it (e.g. a vertical drag while `pitchWithRotate` is off never produces a bearing
+        // delta); block mousePan on them tracking it, not just on them being active.
+        this._add('mousePan', mousePan, undefined, ['mouseRotate', 'mousePitch']);
         this._add('touchPan', touchPan, ['touchZoom', 'touchRotate']);
         if (options.interactive && options.dragPan) {
             map.dragPan.enable(options.dragPan);
@@ -365,8 +385,8 @@ export class HandlerManager {
         }
     }
 
-    _add(handlerName: string, handler: Handler, allowed?: string[]): void {
-        this._handlers.push({handlerName, handler, allowed});
+    _add(handlerName: string, handler: Handler, allowed?: string[], blockedByTracking?: string[]): void {
+        this._handlers.push({handlerName, handler, allowed, blockedByTracking});
         this._handlersById[handlerName] = handler;
     }
 
@@ -410,6 +430,15 @@ export class HandlerManager {
         return false;
     }
 
+    /**
+     * True if any handler named in `blockedByTracking` is currently tracking a gesture it may yet
+     * claim, even though it hasn't produced a camera change (and so isn't in `activeHandlers`) yet.
+     * See `Handler#isTracking`.
+     */
+    _blockedByTracking(blockedByTracking: string[] | undefined): boolean {
+        return !!blockedByTracking?.some(name => this._handlersById[name]?.isTracking?.());
+    }
+
     handleWindowEvent = (e: Event): void => {
         this.handleEvent(e, `${e.type}Window` as keyof Handler);
     };
@@ -445,11 +474,11 @@ export class HandlerManager {
         const eventsInProgress: EventsInProgress = {};
         const activeHandlers = {};
 
-        for (const {handlerName, handler, allowed} of this._handlers) {
+        for (const {handlerName, handler, allowed, blockedByTracking} of this._handlers) {
             if (!handler.isEnabled()) continue;
 
             let data: HandlerResult;
-            if (this._blockedByActive(activeHandlers, allowed, handlerName)) {
+            if (this._blockedByActive(activeHandlers, allowed, handlerName) || this._blockedByTracking(blockedByTracking)) {
                 handler.reset();
 
             } else {

@@ -344,6 +344,40 @@ describe('drag_pan', () => {
         map.remove();
     });
 
+    test('DragPanHandler does not pan on a vertical ctrl + drag that mouseRotate tracks but never activates', () => {
+        // With pitchWithRotate disabled, ctrl + left is handled by mouseRotate alone, and a purely
+        // vertical drag makes mouseRotate compute a bearingDelta of 0 on every move (see
+        // generateMouseRotationHandler), so it never becomes active. mousePan must still stay off
+        // the gesture because mouseRotate is tracking it, not because mouseRotate is active.
+        const map = createMap(undefined, undefined, {pitchWithRotate: false});
+        expect(map.dragRotate.isEnabled()).toBeTruthy();
+
+        const dragstart = vi.fn();
+        const drag      = vi.fn();
+        const dragend   = vi.fn();
+        const rotate    = vi.fn();
+
+        map.on('dragstart', dragstart);
+        map.on('drag',      drag);
+        map.on('dragend',   dragend);
+        map.on('rotate',    rotate);
+
+        simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true, clientX: 100, clientY: 0});
+        map._renderTaskQueue.run();
+
+        simulate.mousemove(map.getCanvas(), {buttons, ctrlKey: true, clientX: 100, clientY: 40});
+        map._renderTaskQueue.run();
+        expect(rotate).toHaveBeenCalledTimes(0);
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+
+        simulate.mouseup(map.getCanvas(), {ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(dragend).toHaveBeenCalledTimes(0);
+
+        map.remove();
+    });
+
     test.each(modifiers)('DragPanHandler still ends a drag if the %s key is down on mouseup', (modifier) => {
         const map = createMap();
         expect(map.dragRotate.isEnabled()).toBeTruthy();
