@@ -38,6 +38,12 @@ export type GeolocateControlOptions = {
      * @defaultValue true
      */
     showUserLocation?: boolean;
+    /**
+     * If `true` then map updates from the user's location may also change the map zoom level based on the location update accuracy. If `false` then the map zoom level will not change.
+     * Has no effect when `trackUserLocation` is `false`.
+     * @defaultValue true
+     */
+    trackZoom?: boolean;
 };
 
 const defaultOptions: GeolocateControlOptions = {
@@ -51,7 +57,8 @@ const defaultOptions: GeolocateControlOptions = {
     },
     trackUserLocation: false,
     showAccuracyCircle: true,
-    showUserLocation: true
+    showUserLocation: true,
+    trackZoom: true
 };
 
 let numberOfWatches = 0;
@@ -530,20 +537,31 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
     };
 
     /**
-     * Update the camera location to center on the current position
+     * Update the camera location to center on the current position.
+     * The camera change is tagged with `geolocateSource` so it does not switch the control to the background state.
      *
      * @param position - the Geolocation API Position
      */
     _updateCamera = (position: GeolocationPosition): void => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
-        const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
+        const eventData = {geolocateSource: true};
+
+        if (!this.options.trackZoom) {
+            const options = extend({}, this.options.fitBoundsOptions, {center, bearing, zoom: this._map.getZoom()});
+            if (options.linear) {
+                this._map.easeTo(options, eventData);
+            } else {
+                this._map.flyTo(options, eventData);
+            }
+            return;
+        }
+
+        const radius = position.coords.accuracy;
         const options = extend({bearing}, this.options.fitBoundsOptions);
         const newBounds = LngLatBounds.fromLngLat(center, radius);
 
-        this._map.fitBounds(newBounds, options, {
-            geolocateSource: true // tag this camera change so it won't cause the control to change to background state
-        });
+        this._map.fitBounds(newBounds, options, eventData);
     };
 
     /**
