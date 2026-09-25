@@ -71,8 +71,8 @@
                     paint: { 'hillshade-shadow-color': '#473B24' }
                 })
 
-                const firstNonFillLayer = nextStyle.layers.find(layer => layer.type !== 'fill' && layer.type !== 'background');
-                nextStyle.layers.splice(nextStyle.layers.indexOf(firstNonFillLayer), 0, {
+                const firstRoadLayer = nextStyle.layers.find(layer => layer['source-layer'] === 'transportation');
+                nextStyle.layers.splice(nextStyle.layers.indexOf(firstRoadLayer), 0, {
                     id: 'satellite',
                     type: 'raster',
                     source: 'satelliteSource',
