@@ -13,7 +13,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
