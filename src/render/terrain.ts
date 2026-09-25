@@ -22,6 +22,22 @@ import type {Painter} from './painter.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
+ * A framebuffer for {@link Map.renderTerrainHeightMap}, with a float color attachment such as `RGBA32F`, which needs
+ * the `EXT_color_buffer_float` extension. Red holds the elevation in meters, including the terrain exaggeration, alpha
+ * is 1 where terrain is loaded and 0 elsewhere, and the first row is the south edge.
+ */
+export type TerrainHeightMapTarget = {
+    /** A framebuffer in the map's WebGL context. */
+    framebuffer: WebGLFramebuffer;
+    /** The width of the color attachment in pixels. */
+    width: number;
+    /** The height of the color attachment in pixels. */
+    height: number;
+    /** The area to draw, `[minX, minY, maxX, maxY]` in {@link MercatorCoordinate} units, with x counting world copies. */
+    bounds: [number, number, number, number];
+};
+
+/**
  * @internal
  * A terrain GPU related object
  */

@@ -1,0 +1,35 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "description": "A custom layer shows the height map of the area around the view, grey by exaggerated elevation and red where no terrain is loaded, which is north and east of the loaded tiles.",
+      "operations": [
+        ["addCustomLayer", "terrain-height-map"],
+        ["wait"]
+      ]
+    }
+  },
+  "center": [11.52517, 47.34487],
+  "zoom": 12,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}

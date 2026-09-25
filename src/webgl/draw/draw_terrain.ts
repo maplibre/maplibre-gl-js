@@ -1,12 +1,12 @@
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
-import {terrainUniformValues, terrainDepthUniformValues} from '../program/terrain_program.ts';
+import {terrainUniformValues, terrainDepthUniformValues, terrainHeightUniformValues} from '../program/terrain_program.ts';
 import {getProjectionDataForTile, type RenderContext} from '../../render/render_context.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
 
-import type {Terrain} from '../../render/terrain.ts';
+import type {Terrain, TerrainHeightMapTarget} from '../../render/terrain.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {Painter} from '../../render/painter.ts';
 
@@ -63,7 +63,38 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderCo
     }
 }
 
+/**
+ * Draws the elevation of the loaded renderable terrain tiles into a framebuffer, see {@link Map.renderTerrainHeightMap}.
+ */
+function drawTerrainHeightMap(painter: Painter, terrain: Terrain | null, target: TerrainHeightMapTarget): void {
+    const context = painter.context;
+    const gl = context.gl;
+    const [minX, minY, maxX, maxY] = target.bounds;
+    context.setDirty();
+    context.bindFramebuffer.set(target.framebuffer);
+    context.viewport.set([0, 0, target.width, target.height]);
+    context.clear({color: Color.transparent});
+    if (!terrain) return;
+
+    const program = painter.useProgram('terrainHeight', null, true);
+    for (const tile of terrain.tileManager.getRenderableTiles()) {
+        const terrainData = terrain.getTerrainData(tile.tileID);
+        if (!terrainData.tile?.dem) continue;
+        const {canonical, wrap} = tile.tileID;
+        const tileSize = 1 / (1 << canonical.z);
+        const uniformValues = terrainHeightUniformValues([
+            (canonical.x * tileSize + wrap - minX) / (maxX - minX),
+            (canonical.y * tileSize - minY) / (maxY - minY),
+            tileSize / (maxX - minX),
+            tileSize / (maxY - minY)
+        ]);
+        const mesh = terrain.getTerrainMesh(tile.tileID);
+        program.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, ColorMode.unblended, CullFaceMode.disabled, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    }
+}
+
 export {
     drawTerrain,
-    drawDepth
+    drawDepth,
+    drawTerrainHeightMap
 };

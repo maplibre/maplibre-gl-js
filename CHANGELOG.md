@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
+- Add `Map.renderTerrainHeightMap`, which draws the terrain elevation into a framebuffer so custom layers can place objects on the terrain on the GPU (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
