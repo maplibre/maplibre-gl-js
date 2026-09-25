@@ -22,6 +22,7 @@ import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 import {createRenderContext, getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from './render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
+import {destroyProjectionUniformBuffers, releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -83,7 +84,6 @@ export type RTTObject = {
 export class Painter {
     drawFunctions: DrawFunctions;
     context: Context;
-    transform: IReadonlyTransform;
     renderToTexture: IRenderToTexture;
     _tileTextures: {
         [_: number]: Texture[];
@@ -152,10 +152,9 @@ export class Painter {
     // every time the camera-matrix changes the depth framebuffer will be redrawn.
     terrainFacilitator: {depthDirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
+    constructor(gl: WebGL2RenderingContext) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
-        this.transform = transform;
         this.layerOpacityFbo = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
@@ -175,10 +174,12 @@ export class Painter {
     /*
      * Update the GL viewport, projection matrix, and transforms to compensate
      * for a new width and height value.
+     *
+     * The viewport is the canvas' backing store, so it rounds as {@link Map._resizeCanvas} does.
      */
     resize(width: number, height: number, pixelRatio: number): void {
-        this.width = Math.floor(width * pixelRatio);
-        this.height = Math.floor(height * pixelRatio);
+        this.width = Math.round(width * pixelRatio);
+        this.height = Math.round(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
@@ -358,7 +359,7 @@ export class Painter {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
-        const transform = this.transform;
+        const transform = this.renderContext.transform;
 
         const program = this.useProgram('depth');
         const depthMode = this.getDepthModeFor3D();
@@ -500,10 +501,10 @@ export class Painter {
         return this.renderContext.currentLayer < this.renderContext.opaquePassCutoff;
     }
 
-    render(style: Style, options: PainterOptions): void {
+    render(style: Style, transform: IReadonlyTransform, options: PainterOptions): void {
         this.style = style;
         this.options = options;
-        const renderContext = this.renderContext = createRenderContext(this.transform, style.projection, style.map.terrain ?? null);
+        const renderContext = this.renderContext = createRenderContext(transform, style.projection, style.map.terrain ?? null);
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
@@ -514,6 +515,7 @@ export class Painter {
         updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
 
         this.imageManager.beginFrame();
+        releaseProjectionUniformBuffers(this.context);
 
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
@@ -545,7 +547,7 @@ export class Painter {
         this.maybeDrawDepth();
 
         if (this.renderToTexture) {
-            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
+            this.renderToTexture.prepareForRender(this.style, transform.zoom);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             renderContext.opaquePassCutoff = 0;
         }
@@ -558,7 +560,7 @@ export class Painter {
 
         for (const layerId of layerIds) {
             const layer = this.style._layers[layerId];
-            if (!layer.hasOffscreenPass() || layer.isHidden(this.transform.zoom)) continue;
+            if (!layer.hasOffscreenPass() || layer.isHidden(transform.zoom)) continue;
 
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
@@ -587,7 +589,7 @@ export class Painter {
 
             for (renderContext.currentLayer = layerIds.length - 1; renderContext.currentLayer >= 0; renderContext.currentLayer--) {
                 const layer = this.style._layers[layerIds[renderContext.currentLayer]];
-                if (layer.isHidden(this.transform.zoom)) continue;
+                if (layer.isHidden(transform.zoom)) continue;
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
@@ -604,7 +606,7 @@ export class Painter {
 
         for (renderContext.currentLayer = 0; renderContext.currentLayer < layerIds.length; renderContext.currentLayer++) {
             const layer = this.style._layers[layerIds[renderContext.currentLayer]];
-            if (layer.isHidden(this.transform.zoom)) continue;
+            if (layer.isHidden(transform.zoom)) continue;
             const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture?.renderLayer(layer, renderContext)) continue;
@@ -613,7 +615,7 @@ export class Painter {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (renderContext.isRenderingGlobe && !this.style.map.terrain) {
+                if (renderContext.isRenderingGlobe && !renderContext.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -633,7 +635,7 @@ export class Painter {
         }
 
         if (this.options.showTileBoundaries) {
-            const selectedSource = selectDebugSource(this.style, this.transform.zoom);
+            const selectedSource = selectDebugSource(this.style, transform.zoom);
             if (selectedSource) {
                 this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates(), renderContext);
             }
@@ -664,16 +666,16 @@ export class Painter {
      * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
      */
     maybeDrawDepth(): void {
-        if (!this.style?.projection || !this.style.map?.terrain) {
+        if (!this.style?.projection || !this.renderContext.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
-        const currMatrix = this.transform.modelViewProjectionMatrix;
+        const currMatrix = this.renderContext.transform.modelViewProjectionMatrix;
 
         // Update depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.depthDirty;
         doUpdate ||= !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+        doUpdate ||= this.renderContext.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -682,11 +684,11 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = now();
         this.terrainFacilitator.depthDirty = false;
-        this.drawFunctions.terrainDepth(this, this.style.map.terrain);
+        this.drawFunctions.terrainDepth(this, this.renderContext.terrain);
     }
 
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
-        if (layer.isHidden(this.transform.zoom)) return;
+        if (layer.isHidden(renderContext.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
@@ -844,7 +846,7 @@ export class Painter {
      */
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
         this.cache ||= {};
-        const useTerrain = !!this.style.map.terrain;
+        const useTerrain = !!this.renderContext.terrain;
 
         const projection = this.style.projection;
 
@@ -933,7 +935,7 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
 
-        this.context.projectionUniformBuffer.destroy();
+        destroyProjectionUniformBuffers(this.context);
         this.context.terrainUniformBuffer.destroy();
         this.context.frameUniformBuffer.destroy();
 

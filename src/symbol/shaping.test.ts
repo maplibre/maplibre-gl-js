@@ -7,7 +7,7 @@ import {Formatted} from '@maplibre/maplibre-gl-style-spec';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap, StyleGlyph} from '../style/style_glyph.ts';
 
 describe('applyTextFit', () => {
 
@@ -384,14 +384,14 @@ describe('shapeText vertical glyph orientation', () => {
     }
 
     /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
-    function createStubGlyphMap(text: string): Record<string, StyleGlyph> {
-        const glyphs: Record<string, StyleGlyph> = {};
+    function createStubGlyphMap(text: string): Record<string, Record<string, StyleGlyph>> {
+        const glyphs: Record<string, Record<string, StyleGlyph>> = {default: {}};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);
 
         for (const grapheme of [...toGraphemes(text), ...verticalizedChars]) {
-            glyphs[grapheme] = createStubGlyph(grapheme.codePointAt(0));
+            glyphs.default[grapheme] = createStubGlyph(grapheme.codePointAt(0));
         }
         return glyphs;
     }
@@ -733,7 +733,7 @@ describe('shapeText with a right-to-left text plugin', () => {
     });
 
     /** A glyph for every grapheme cluster of `text`, and for every codepoint, as a tile asks for. */
-    function glyphsFor(text: string): Record<string, Record<string, StyleGlyph>> {
+    function glyphsFor(text: string): GlyphMap {
         const glyphs: Record<string, StyleGlyph> = {};
         for (const grapheme of toGraphemes(text)) {
             glyphs[grapheme] = {id: grapheme.codePointAt(0), metrics} as StyleGlyph;
@@ -741,7 +741,7 @@ describe('shapeText with a right-to-left text plugin', () => {
                 glyphs[char] = {id: char.codePointAt(0), metrics} as StyleGlyph;
             }
         }
-        return {Test: glyphs};
+        return {Test: {default: glyphs}};
     }
 
     function shape(text: string, glyphs = glyphsFor(text)): Shaping | false {
@@ -774,7 +774,7 @@ describe('shapeText with a right-to-left text plugin', () => {
     test('draws only clusters the tile asked for a glyph for', () => {
         stubReversingPlugin();
 
-        const requested = new Set(Object.keys(glyphsFor(text).Test));
+        const requested = new Set(Object.keys(glyphsFor(text).Test.default));
         for (const grapheme of drawn(shape(text))) {
             expect(requested).toContain(grapheme);
         }
@@ -789,7 +789,7 @@ describe('shapeText with a right-to-left text plugin', () => {
         }
 
         const asClusters = drawn(shape(text)).join('');
-        const asCodepoints = drawn(shape(text, {Test: codepointsOnly}));
+        const asCodepoints = drawn(shape(text, {Test: {default: codepointsOnly}}));
 
         expect(asCodepoints.join('')).toBe(asClusters);
         expect(asCodepoints).toHaveLength([...text].length);

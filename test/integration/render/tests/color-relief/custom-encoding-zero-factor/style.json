@@ -1,0 +1,49 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256,
+      "description": "A custom DEM encoding with a redFactor of 0 must still pack the color-relief elevation stops. The fixture's red channel is always 1, so this encoding decodes the same elevations as the mapbox one and should match color-relief/rainbow."
+    }
+  },
+  "center": [-113.26903, 35.9654],
+  "zoom": 11,
+  "sources": {
+    "source": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 15,
+      "tileSize": 256,
+      "encoding": "custom",
+      "redFactor": 0,
+      "greenFactor": 25.6,
+      "blueFactor": 0.1,
+      "baseShift": 3446.4
+    }
+  },
+  "layers": [
+    {
+      "id": "color-relief",
+      "type": "color-relief",
+      "source": "source",
+      "paint": {
+        "color-relief-opacity": 1,
+        "color-relief-color": [
+          "interpolate",
+          ["linear"],
+          ["elevation"],
+          400, "#F00",
+          800, "#AA0",
+          1000, "#AF0",
+          1200, "#0F0",
+          1400, "#0AA",
+          1600, "#00F",
+          2000, "#C0C"
+        ]
+      }
+    }
+  ]
+}
