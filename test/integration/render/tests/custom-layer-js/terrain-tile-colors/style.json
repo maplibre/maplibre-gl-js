@@ -1,0 +1,74 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "description": "A custom layer draws an orange square into the terrain tiles between a blue fill below it and a black line above it, all draped over the terrain.",
+      "operations": [
+        ["addCustomLayer", "terrain-tile-colors", "line"],
+        ["wait"]
+      ]
+    }
+  },
+  "center": [11.52517, 47.34487],
+  "zoom": 13,
+  "pitch": 45,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "shapes": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[11.52311, 47.34347], [11.52723, 47.34347], [11.52723, 47.34627], [11.52311, 47.34627], [11.52311, 47.34347]]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[11.52174, 47.34487], [11.52860, 47.34487]]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "shapes",
+      "filter": ["==", ["geometry-type"], "Polygon"],
+      "paint": {"fill-color": "blue"}
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "shapes",
+      "filter": ["==", ["geometry-type"], "LineString"],
+      "paint": {"line-color": "black", "line-width": 2}
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  }
+}

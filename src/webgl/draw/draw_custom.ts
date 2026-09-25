@@ -7,7 +7,11 @@ import type {RenderContext} from '../../render/render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 
-export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderContext: RenderContext): void {
+export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
+    if (renderContext.isRenderingToTexture) {
+        drawCustomTerrainTile(painter, layer, coords[0]);
+        return;
+    }
 
     const {isRenderingGlobe} = renderContext;
     const context = painter.context;
@@ -77,4 +81,30 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         painter.setBaseState();
         context.bindFramebuffer.set(null);
     }
+}
+
+/**
+ * Draws a custom layer into the terrain tile texture that is bound, see {@link CustomLayerInterface.renderToTerrainTile},
+ * and binds that texture again for the layers after it.
+ */
+function drawCustomTerrainTile(painter: Painter, layer: CustomStyleLayer, tileID: OverscaledTileID): void {
+    const context = painter.context;
+    const framebuffer = context.bindFramebuffer.get();
+    const viewport = context.viewport.get();
+
+    painter.setCustomLayerDefaults();
+    context.setColorMode(painter.colorModeForRenderPass());
+    context.setDepthMode(DepthMode.disabled);
+    context.setStencilMode(StencilMode.disabled);
+
+    layer.implementation.renderToTerrainTile(context.gl, {
+        tileID: {canonical: tileID.canonical, wrap: tileID.wrap},
+        width: viewport[2],
+        height: viewport[3]
+    });
+
+    context.setDirty();
+    painter.setBaseState();
+    context.bindFramebuffer.set(framebuffer);
+    context.viewport.set(viewport);
 }

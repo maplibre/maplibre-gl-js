@@ -169,6 +169,18 @@ export type CustomRenderMethodInput = {
 export type CustomRenderMethod = (gl: WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 
 /**
+ * Input for {@link CustomLayerInterface.renderToTerrainTile}.
+ */
+export type CustomTerrainRenderInput = {
+    /** The terrain tile to draw. */
+    tileID: UnwrappedTileIDLiteral;
+    /** The width of the tile's framebuffer in pixels. */
+    width: number;
+    /** The height of the tile's framebuffer in pixels. */
+    height: number;
+};
+
+/**
  * Interface for custom style layers. This is a specification for
  * implementers to model: it is not an exported method or class.
  *
@@ -276,6 +288,14 @@ export interface CustomLayerInterface {
      * The layer cannot make any assumptions about the current GL state and must bind a framebuffer before rendering.
      */
     prerender?: CustomRenderMethod;
+    /**
+     * Optional method called instead of `render` while terrain is enabled, to draw the layer into a terrain tile that
+     * MapLibre drapes over the terrain with the fill, line and raster layers around the layer in the style.
+     * Clip space `(-1, -1)` is the tile's south-west corner and `(1, 1)` its north-east corner. Draw over what the
+     * framebuffer holds, with the same blending as `render` and without depth or stencil testing. MapLibre calls it
+     * again when it redraws the tile, and after {@link Map.triggerTerrainRepaint}.
+     */
+    renderToTerrainTile?: (gl: WebGL2RenderingContext, options: CustomTerrainRenderInput) => void;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map.addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.

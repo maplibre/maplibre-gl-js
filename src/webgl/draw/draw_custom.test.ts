@@ -73,7 +73,7 @@ describe('drawCustom', () => {
                 };
             },
         }, {});
-        drawCustom(mockPainter, tileManagerMock, mockLayer, renderContext);
+        drawCustom(mockPainter, tileManagerMock, mockLayer, [tileId], renderContext);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
         expect(result.args.farZ).toBe(transform.farZ);

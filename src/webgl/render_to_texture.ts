@@ -2,6 +2,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawTerrain} from './draw/draw_terrain.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {RTT_DIFFERENCES, RTTFingerprint, type RTTDifference} from './rtt_fingerprint.ts';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 import type {Tile} from '../tile/tile.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
@@ -23,6 +24,15 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
     hillshade: true,
     'color-relief': true
 };
+
+/**
+ * Whether the layer is drawn into the terrain tiles' textures rather than onto the map: the layer types above, and
+ * custom layers that implement `renderToTerrainTile`.
+ */
+function isRenderedToTexture(layer: StyleLayer): boolean {
+    if (isCustomStyleLayer(layer)) return layer.implementation.renderToTerrainTile !== undefined;
+    return LAYERS_TO_TEXTURES[layer.type] === true;
+}
 
 /**
  * @internal
@@ -54,9 +64,9 @@ export class RenderToTexture {
      */
     _stacks: string[][];
     /**
-     * remember the previous processed layer to check if a new stack is needed
+     * whether the previous processed layer was rendered to texture, to check if a new stack is needed
      */
-    _prevType: string;
+    _prevRenderedToTexture: boolean;
     /**
      * a list of tiles that can potentially rendered
      */
@@ -101,7 +111,7 @@ export class RenderToTexture {
         const zoomChanged = zoom !== this._lastPrepareZoom;
         this._lastPrepareZoom = zoom;
         this._stacks = [];
-        this._prevType = null;
+        this._prevRenderedToTexture = false;
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
@@ -187,24 +197,24 @@ export class RenderToTexture {
     renderLayer(layer: StyleLayer, renderContext: RenderContext): boolean {
         if (layer.isHidden(renderContext.transform.zoom)) return false;
 
-        const type = layer.type;
+        const renderedToTexture = isRenderedToTexture(layer);
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
         // remember background, fill, line & raster layer to render into a stack
-        if (LAYERS_TO_TEXTURES[type]) {
+        if (renderedToTexture) {
             // create a new stack if previous layer was not rendered to texture (f.e. symbols)
-            if (!this._prevType || !LAYERS_TO_TEXTURES[this._prevType]) this._stacks.push([]);
+            if (!this._prevRenderedToTexture) this._stacks.push([]);
             // push current render-to-texture layer to render-stack
-            this._prevType = type;
+            this._prevRenderedToTexture = true;
             this._stacks[this._stacks.length - 1].push(layer.id);
             // rendering is done later, all in once
             if (!isLastLayer) return true;
         }
 
         // in case a stack is finished render all collected stack-layers into a texture
-        if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
-            this._prevType = type;
+        if (this._prevRenderedToTexture || (renderedToTexture && isLastLayer)) {
+            this._prevRenderedToTexture = renderedToTexture;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             renderContext.isRenderingToTexture = true;
             for (const tile of this._renderableTiles) {
@@ -229,7 +239,7 @@ export class RenderToTexture {
             drawTerrain(this.painter, this.terrain, this._rttTiles, renderContext);
             this._rttTiles = [];
 
-            return LAYERS_TO_TEXTURES[type];
+            return renderedToTexture;
         }
 
         return false;
