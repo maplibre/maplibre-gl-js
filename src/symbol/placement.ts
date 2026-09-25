@@ -182,7 +182,7 @@ const CROSS_TILE_ID_UINT32_OFFSET: number =
 
 /** What the last rewrite of a bucket's opacity buffers read, one entry per symbol. */
 type OpacityInputs = {
-    crossTileIDs: Uint32Array;
+    crossTileIDs: number[];
     /** True for every symbol whose label another bucket is drawing. */
     duplicates: boolean[];
 };
@@ -1070,7 +1070,7 @@ export class Placement {
         let inputs = this.lastOpacityInputs.get(bucket);
         let changed = false;
         if (!inputs) {
-            inputs = {crossTileIDs: new Uint32Array(length), duplicates: new Array<boolean>(length).fill(false)};
+            inputs = {crossTileIDs: new Array<number>(length).fill(0), duplicates: new Array<boolean>(length).fill(false)};
             this.lastOpacityInputs.set(bucket, inputs);
             changed = true;
         }
