@@ -25,6 +25,14 @@ describe('TransferableGridIndex', () => {
         expect(grid.query(0, 0, 30, 30)).toEqual([key, key, key]);
     });
 
+    test('returns an entry once when the query spans several of its cells', () => {
+        const grid = new TransferableGridIndex(100, 4, 0);
+        grid.insert(7, 0, 0, 100, 100);
+        grid.insert(8, 60, 60, 70, 70);
+        expect(grid.query(0, 0, 50, 50)).toEqual([7]);
+        expect(grid.query(10, 10, 90, 90).sort()).toEqual([7, 8]);
+    });
+
     test('serializing to an arraybuffer', () => {
         const originalGrid  = new TransferableGridIndex(100, 4, 1);
         originalGrid.insert(0, 4, 10, 6, 30);

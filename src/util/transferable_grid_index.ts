@@ -105,19 +105,22 @@ export class TransferableGridIndex {
 
         } else {
             const result = [];
-            const seenUids = {};
+            // 0: not visited, 1: matched, 2: rejected. A typed array stays
+            // fast where a plain object keyed by uid falls into dictionary mode
+            // on grids with tens of thousands of entries.
+            const seenUids = new Uint8Array(this.keys.length);
             this._forEachCell(x1, y1, x2, y2, this._queryCell, result, seenUids, intersectionTest);
             return result;
         }
     }
 
-    _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: number[], seenUids: Record<number, boolean>, intersectionTest: (x1: number, y1: number, x2: number, y2: number) => boolean): void {
+    _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: number[], seenUids: Uint8Array, intersectionTest: (x1: number, y1: number, x2: number, y2: number) => boolean): void {
         const cell = this.cells[cellIndex];
         if (cell !== null) {
             const keys = this.keys;
             const bboxes = this.bboxes;
             for (const uid of cell) {
-                if (seenUids[uid] === undefined) {
+                if (seenUids[uid] === 0) {
                     const offset = uid * 4;
                     if (intersectionTest ?
                         intersectionTest(bboxes[offset + 0], bboxes[offset + 1], bboxes[offset + 2], bboxes[offset + 3]) :
@@ -125,10 +128,10 @@ export class TransferableGridIndex {
                         (y1 <= bboxes[offset + 3]) &&
                         (x2 >= bboxes[offset + 0]) &&
                         (y2 >= bboxes[offset + 1]))) {
-                        seenUids[uid] = true;
+                        seenUids[uid] = 1;
                         result.push(keys[uid]);
                     } else {
-                        seenUids[uid] = false;
+                        seenUids[uid] = 2;
                     }
                 }
             }

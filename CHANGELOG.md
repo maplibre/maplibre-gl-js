@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Speed up `queryRenderedFeatures` on dense tiles by tracking visited grid index entries in a typed array instead of a plain object
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
