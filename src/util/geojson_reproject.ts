@@ -3,10 +3,10 @@ import {latFromMercatorY, lngFromMercatorX, mercatorXfromLng, mercatorYfromLat} 
 import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
 
 /**
- * A function mapping the first two ordinates of a GeoJSON position to a new position; any further ordinates
- * (altitude and beyond) are carried over.
+ * A function mapping one GeoJSON position to another: the first two ordinates are the horizontal position, and any
+ * further ones (altitude and beyond) are carried over as they are.
  */
-type PositionMapper = (lng: number, lat: number) => [number, number];
+type PositionMapper = (position: GeoJSON.Position) => GeoJSON.Position;
 
 /**
  * @internal
@@ -16,9 +16,9 @@ type PositionMapper = (lng: number, lat: number) => [number, number];
  * Returns a new object; the input is never mutated, and non-coordinate members are carried over as they are.
  */
 export function reprojectGeoJSONToPseudoLngLat<T extends GeoJSON.GeoJSON>(data: T, worldCoordinateHelper: WorldCoordinateHelper): T {
-    return mapPositions(data, (lng, lat) => {
+    return mapPositions(data, ([lng, lat, ...rest]) => {
         const {x, y} = worldCoordinateHelper.worldFromLngLat(lng, lat);
-        return [lngFromMercatorX(x), latFromMercatorY(y)];
+        return [lngFromMercatorX(x), latFromMercatorY(y), ...rest];
     });
 }
 
@@ -28,9 +28,9 @@ export function reprojectGeoJSONToPseudoLngLat<T extends GeoJSON.GeoJSON>(data: 
  * worker for cluster children and leaves) back to the map's lng/lat. Returns a new object.
  */
 export function reprojectGeoJSONFromPseudoLngLat<T extends GeoJSON.GeoJSON>(data: T, worldCoordinateHelper: WorldCoordinateHelper): T {
-    return mapPositions(data, (pseudoLng, pseudoLat) => {
+    return mapPositions(data, ([pseudoLng, pseudoLat, ...rest]) => {
         const lngLat = worldCoordinateHelper.lngLatFromWorld(mercatorXfromLng(pseudoLng), mercatorYfromLat(pseudoLat));
-        return [lngLat.lng, lngLat.lat];
+        return [lngLat.lng, lngLat.lat, ...rest];
     });
 }
 
@@ -44,20 +44,16 @@ function mapPositions<T extends GeoJSON.GeoJSON>(data: T, mapper: PositionMapper
         case 'GeometryCollection':
             return {...data, geometries: data.geometries.map(geometry => mapPositions(geometry, mapper))};
         case 'Point':
-            return {...data, coordinates: mapPosition(data.coordinates, mapper)};
+            return {...data, coordinates: mapper(data.coordinates)};
         case 'MultiPoint':
         case 'LineString':
-            return {...data, coordinates: data.coordinates.map(position => mapPosition(position, mapper))};
+            return {...data, coordinates: data.coordinates.map(mapper)};
         case 'MultiLineString':
         case 'Polygon':
-            return {...data, coordinates: data.coordinates.map(line => line.map(position => mapPosition(position, mapper)))};
+            return {...data, coordinates: data.coordinates.map(line => line.map(mapper))};
         case 'MultiPolygon':
-            return {...data, coordinates: data.coordinates.map(polygon => polygon.map(ring => ring.map(position => mapPosition(position, mapper))))};
+            return {...data, coordinates: data.coordinates.map(polygon => polygon.map(ring => ring.map(mapper)))};
         default:
             return data;
     }
-}
-
-function mapPosition(position: GeoJSON.Position, mapper: PositionMapper): GeoJSON.Position {
-    return [...mapper(position[0], position[1]), ...position.slice(2)];
 }

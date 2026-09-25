@@ -1522,7 +1522,7 @@ describe('GeoJSONSource in a planar projection', () => {
             server.restore();
         });
 
-        test('is fetched on the main thread and sent pre-projected', async () => {
+        test('is fetched by the source instead of the worker and sent pre-projected', async () => {
             const data = createPointData();
             server.respondWith('/data.geojson', JSON.stringify(data));
             const {source, spy} = createSpiedSource({data: '/data.geojson'} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));
@@ -1555,7 +1555,7 @@ describe('GeoJSONSource in a planar projection', () => {
             await expect(error).resolves.toBeDefined();
         });
 
-        test('keeps resource timing for the main-thread fetch', async () => {
+        test('keeps resource timing when the source fetches the data itself', async () => {
             restorePerformanceMarks();
             server.respondWith('/data.geojson', JSON.stringify(createPointData()));
             const {source} = createSpiedSource({data: '/data.geojson', collectResourceTiming: true} as GeoJSONSourceOptions, mapWithProjection(createSimpleCrsProjection()), () => ({}));

@@ -93,20 +93,21 @@ export type GetClusterOptions = {
 };
 
 /**
- * The data a planar projection fetches on the main thread, which the source keeps as its own copy once the
- * worker has taken the update, and the fetch's resource timing for the data event that follows.
+ * URL data the source fetched itself instead of leaving the fetch to the worker, so it could pre-project it for a
+ * planar projection: the source keeps it as its own copy once the worker has taken the update, and the fetch's
+ * resource timing goes with the data event that follows.
  */
-type MainThreadFetch = {
+type FetchedGeoJSON = {
     data: GeoJSON.GeoJSON;
     resourceTiming?: PerformanceResourceTiming[];
 };
 
 /**
- * A pending worker update: the parameters to send, and the main-thread fetch behind them when there was one.
+ * A pending worker update: the parameters to send, and the source's own fetch behind them when there was one.
  */
 type WorkerUpdate = {
     params: LoadGeoJSONParameters;
-    fetched?: MainThreadFetch;
+    fetched?: FetchedGeoJSON;
 };
 
 /**
@@ -198,7 +199,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     _removed: boolean;
     /**
      * The world mapping the worker's copy of the data was pre-projected for: the worker tiles GeoJSON in
-     * mercator, so for a planar projection the main thread first moves every position to the lng/lat whose
+     * mercator, so for a planar projection the source first moves every position to the lng/lat whose
      * mercator projection is the map's world position (`reprojectGeoJSONToPseudoLngLat`); for mercator the
      * worker gets the data as is. A tile load under a projection with another mapping re-sends the data.
      */
@@ -530,7 +531,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 params.request.collectResourceTiming = this._collectResourceTiming;
                 return {params};
             }
-            const fetched = await this._fetchOnMainThread(request);
+            const fetched = await this._fetchForPreProjection(request);
             params.data = reprojectGeoJSONToPseudoLngLat(fetched.data, worldCoordinateHelper);
             return {params, fetched};
         }
@@ -559,19 +560,20 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
-     * Fetches URL data on the main thread for a planar projection: the data has to be pre-projected before the
-     * worker tiles it, and the projection's `project` function is a closure that cannot be posted to the worker.
-     * The resource timing entries are copied to plain objects, the shape the worker path posts them in.
+     * Fetches URL data in the source instead of the worker, for a planar projection: the data has to be
+     * pre-projected before the worker tiles it, and the projection's `project` function is a closure that cannot
+     * be posted to the worker. The resource timing entries are copied to plain objects, the shape the worker path
+     * posts them in.
      */
-    private async _fetchOnMainThread(request: RequestParameters): Promise<MainThreadFetch> {
+    private async _fetchForPreProjection(request: RequestParameters): Promise<FetchedGeoJSON> {
         const timing = this._collectResourceTiming ? new RequestPerformance(request.url) : undefined;
         const data = (await getJSON<GeoJSON.GeoJSON>(request, new AbortController())).data;
         return {data, resourceTiming: timing ? JSON.parse(JSON.stringify(timing.finish())) : undefined};
     }
 
     /**
-     * Send the worker update data from the main thread to the worker.
-     * @param updatePromise - the parameters for the worker, whose data or diff may be pre-projected for a planar projection, and the main-thread fetch behind them
+     * Send the worker update data from the main thread to the worker
+     * @param updatePromise - the parameters for the worker, whose data or diff may be pre-projected for a planar projection, and the source's own fetch behind them
      * @param diff - the diff as the caller gave it, in real lng/lat, which is what this source's own data copy takes
      */
     private async _dispatchWorkerUpdate(updatePromise: Promise<WorkerUpdate>, diff: GeoJSONSourceDiff | undefined) {
