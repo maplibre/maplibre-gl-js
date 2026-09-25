@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Speed up `queryRenderedFeatures` on dense tiles by tracking visited grid index entries in a typed array instead of a plain object
+- Speed up `queryRenderedFeatures` on dense tiles by tracking visited grid index entries in a typed array instead of a plain object ([#8565](https://github.com/maplibre/maplibre-gl-js/pull/8565)) (by [@MatiasOB](https://github.com/MatiasOB))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
