@@ -103,7 +103,7 @@ function drawTiles(
     const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
     const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
-    const isTerrain = !!painter.style.map.terrain;
+    const isTerrain = !!renderContext.terrain;
 
     // Draw all tiles
     for (const coord of coords) {
