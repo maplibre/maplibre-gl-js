@@ -528,6 +528,10 @@ describe('Keep camera outside terrain', () => {
         return map;
     }
 
+    function lowestNearPlaneAltitude(map: Map): number {
+        return Math.min(...map._camera.transform.getCameraFrustum().points.slice(0, 4).map(corner => corner[2]));
+    }
+
     test('a pitch drag that would put the camera into the terrain lifts the center, and the camera with it, and keeps the pitch', async () => {
         const map = await createMapOverTerrainWithACameraFloor(20000);
 
@@ -535,34 +539,43 @@ describe('Keep camera outside terrain', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBe(60);
-        expect(map.getCameraTargetElevation()).toBeCloseTo(14273.6, 1);
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(14394.1, 1);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
 
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 60});
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBe(60);
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 60});
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBe(60);
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
     });
 
-    test('terrain rising under a resting camera lifts the camera onto it, and the next frame keeps it there', async () => {
+    test('terrain rising under a resting camera lifts the camera until its near clipping plane clears it, and the next frame keeps it there', async () => {
         const map = await createMapOverTerrainWithACameraFloor(0);
         vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(20000);
 
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
 
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
-        expect(map.getCameraTargetElevation()).toBeCloseTo(11901.7, 1);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(12045.7, 1);
         expect(map.getPitch()).toBe(45);
 
         map.redraw();
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(20000, 0);
-        expect(map.getCameraTargetElevation()).toBeCloseTo(11901.7, 1);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(12045.7, 1);
+        expect(map.getPitch()).toBe(45);
+    });
+
+    test('a resting camera above the terrain whose near clipping plane reaches into it rises until the plane clears it', async () => {
+        const map = await createMapOverTerrainWithACameraFloor(8000);
+
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(8144.0, 1);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(8000, 0);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(45.7, 1);
         expect(map.getPitch()).toBe(45);
     });
 });
