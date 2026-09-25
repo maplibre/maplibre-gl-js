@@ -37,7 +37,11 @@ export function generateMousePanHandler({enable, clickTolerance}: {
     enable?: boolean;
 }): MousePanHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON && !e.ctrlKey,
+        // `ctrl` + left button is a valid pan start too: when mouseRotate/mousePitch are enabled,
+        // they track that same mousedown themselves and the handler manager's blocking (which
+        // treats a tracked-but-not-yet-active drag the same as an active one, see
+        // DragHandler#isTracking) keeps mousePan off it before it can move the map.
+        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON,
     });
     return new DragHandler<DragPanResult, MouseEvent>({
         clickTolerance,

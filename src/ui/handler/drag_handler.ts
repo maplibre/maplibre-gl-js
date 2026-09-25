@@ -173,6 +173,17 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         return this._active;
     }
 
+    /**
+     * Whether a valid start event has been seen and not yet ended, even if it hasn't moved enough
+     * to become `active` (e.g. a `ctrl` + left drag that never crosses the click tolerance). The
+     * handler manager blocks other handlers on this the same way it does on `isActive`, so a
+     * handler that only starts producing camera deltas after some movement can still claim the
+     * gesture from mousedown.
+     */
+    isTracking(): boolean {
+        return !!this._lastPoint;
+    }
+
     getClickTolerance(): number {
         return this._clickTolerance;
     }
