@@ -1,0 +1,153 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512
+    }
+  },
+  "sources": {
+    "pit": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"kind": "walls", "base": -10, "top": 0, "color": "#8a6a4f"},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.0002, -0.0002],
+                  [-0.0002, 0.0002],
+                  [0.0002, 0.0002],
+                  [0.0002, -0.0002],
+                  [-0.0002, -0.0002]
+                ],
+                [
+                  [-0.00015, -0.00015],
+                  [0.00015, -0.00015],
+                  [0.00015, 0.00015],
+                  [-0.00015, 0.00015],
+                  [-0.00015, -0.00015]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "floor", "base": -10, "top": -9.6, "color": "#5b4632"},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.00015, -0.00015],
+                  [-0.00015, 0.00015],
+                  [0.00015, 0.00015],
+                  [0.00015, -0.00015],
+                  [-0.00015, -0.00015]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ground": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"kind": "grass"},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.0008, -0.0008],
+                  [-0.0008, 0.0008],
+                  [0.0008, 0.0008],
+                  [0.0008, -0.0008],
+                  [-0.0008, -0.0008]
+                ],
+                [
+                  [-0.0002, -0.0002],
+                  [0.0002, -0.0002],
+                  [0.0002, 0.0002],
+                  [-0.0002, 0.0002],
+                  [-0.0002, -0.0002]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "road"},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.0008, 0.0003],
+                  [-0.0008, 0.00045],
+                  [0.0008, 0.00045],
+                  [0.0008, 0.0003],
+                  [-0.0008, 0.0003]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "water"},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.0007, -0.0007],
+                  [-0.0007, -0.0004],
+                  [-0.0004, -0.0004],
+                  [-0.0004, -0.0007],
+                  [-0.0007, -0.0007]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "pitch": 70,
+  "bearing": 20,
+  "zoom": 18,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "#d8e0d0"}
+    },
+    {
+      "id": "pit",
+      "type": "fill-extrusion",
+      "source": "pit",
+      "paint": {
+        "fill-extrusion-base": ["get", "base"],
+        "fill-extrusion-height": ["get", "top"],
+        "fill-extrusion-color": ["get", "color"]
+      }
+    },
+    {
+      "id": "ground",
+      "type": "fill",
+      "source": "ground",
+      "paint": {
+        "fill-color": [
+          "match", ["get", "kind"],
+          "road", "#c0bbb1",
+          "water", "#8fb4c8",
+          "#a8b89a"
+        ]
+      }
+    }
+  ]
+}

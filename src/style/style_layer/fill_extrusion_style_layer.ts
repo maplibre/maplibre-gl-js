@@ -6,6 +6,8 @@ import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExt
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Painter} from '../../render/painter.ts';
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
@@ -223,4 +225,31 @@ function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: n
         projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
     }
     return projectedQueryGeometry;
+}
+
+/**
+ * Tracks the lowest point any visible fill-extrusion can reach, so the far plane
+ * covers geometry extruded below the datum. Fill-extrusion specific, hence next to
+ * the layer implementation rather than in the painter.
+ */
+export function updateMinElevationFromExtrusions(painter: Painter, layerIds: string[], coordsAscending: {[_: string]: OverscaledTileID[]}): void {
+    let minElevation = 0;
+    for (const layerId of layerIds) {
+        const layer = painter.style._layers[layerId];
+        if (!isFillExtrusionStyleLayer(layer) || layer.isHidden(painter.transform.zoom)) continue;
+        // Constants are read from the layer here, so a runtime paint change is seen on the next
+        // frame; data-driven values come from the bucket, which tracked them at layout.
+        minElevation = Math.min(minElevation,
+            layer.paint.get('fill-extrusion-base').constantOr(0),
+            layer.paint.get('fill-extrusion-height').constantOr(0));
+        const tileManager = painter.style.tileManagers[layer.source];
+        for (const coord of coordsAscending[layer.source] || []) {
+            const bucket = tileManager?.getTile(coord)?.getBucket(layer) as FillExtrusionBucket;
+            if (bucket && bucket.minElevation < minElevation) {
+                minElevation = bucket.minElevation;
+            }
+        }
+    }
+    const transform = painter.style.map?._camera?.transform;
+    transform?.setMinGeometryElevation?.(minElevation);
 }
