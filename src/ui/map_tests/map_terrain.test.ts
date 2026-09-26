@@ -1000,6 +1000,7 @@ describe('Keep camera outside terrain', () => {
         map.setTerrain({source: 'dem'});
         vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
         vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(40000);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 40000, 40000, 40000));
         map.redraw();
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 190});
@@ -1009,6 +1010,17 @@ describe('Keep camera outside terrain', () => {
         }
 
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(40000, 1);
+    });
+
+    test('a jumpTo on a globe from a zoom it draws as a globe to one it draws as mercator keeps the pitch of a camera above the terrain', async () => {
+        const {map} = await createMapOverFlatTerrain({zoom: 11, pitch: 0, maxPitch: 85}, 600);
+        map.setProjection({type: 'globe'});
+        map.redraw();
+
+        map.jumpTo({zoom: 14.6, pitch: 80});
+
+        expect(map.getPitch()).toBe(80);
+        expect(map.getZoom()).toBeCloseTo(14.6, 6);
     });
 });
 

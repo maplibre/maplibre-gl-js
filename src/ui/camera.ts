@@ -294,6 +294,13 @@ export type CameraInitOptions = {
      * with a way to stop them rather than holding a reference to the `HandlerManager`.
      */
     stopHandlers?: () => void;
+    /**
+     * @internal
+     * The projection transition the map draws at a zoom, 0 for mercator to 1 for a globe, see
+     * `Projection.transitionStateAt`. The `Camera` does not own the style's projection (the `Map` does), so it is
+     * injected with a way to read it.
+     */
+    projectionTransitionAt?: (zoom: number) => number;
 };
 
 export class Camera extends Evented<MapEventType> {
@@ -311,6 +318,11 @@ export class Camera extends Evented<MapEventType> {
      * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
      */
     _stopHandlers: () => void;
+    /**
+     * @internal
+     * See {@link CameraInitOptions.projectionTransitionAt}.
+     */
+    _projectionTransitionAt: ((zoom: number) => number) | undefined;
 
     _moving: boolean;
     _zooming: boolean;
@@ -421,6 +433,7 @@ export class Camera extends Evented<MapEventType> {
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
         this._stopHandlers = options.stopHandlers ?? (() => {});
+        this._projectionTransitionAt = options.projectionTransitionAt;
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
@@ -1085,12 +1098,17 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Called after the camera is done being manipulated. Keeps the camera above the terrain, see
-     * {@link Camera._keepCameraAboveTerrain}, lets `transformCameraUpdate`, if present, propose its changes on a copy,
-     * and applies the "approved" result to the rendered transform.
+     * Called after the camera is done being manipulated. The transform first takes the projection transition the map
+     * draws at its zoom, since a copy of a globe's transform keeps the one it was copied under and would measure that
+     * projection; then the camera is kept above the terrain, see {@link Camera._keepCameraAboveTerrain},
+     * `transformCameraUpdate`, if present, proposes its changes on a copy, and the "approved" result is applied to the
+     * rendered transform.
      * @param tr - the requested camera end state
      */
     applyUpdatedTransform(tr: ITransform): void {
+        if (this._projectionTransitionAt && tr !== this.transform) {
+            tr.setTransitionState(this._projectionTransitionAt(tr.zoom));
+        }
         const corrected = this._keepCameraAboveTerrain(tr);
         if (!this.transformCameraUpdate) {
             if (corrected !== this.transform) this.transform.apply(corrected, false);
