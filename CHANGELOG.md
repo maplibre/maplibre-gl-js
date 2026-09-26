@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- With `fill-extrusion-rounded-corner-distance` set, shade the walls of a rounded corner as one curved surface by sharing the vertex normal between walls that meet at a shallow angle, instead of one flat shade per arc segment ([#8475](https://github.com/maplibre/maplibre-gl-js/issues/8475)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
