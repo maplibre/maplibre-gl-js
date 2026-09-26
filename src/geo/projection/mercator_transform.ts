@@ -421,7 +421,6 @@ export class MercatorTransform implements ITransform {
         const dx = far[0] - near[0];
         const dy = far[1] - near[1];
         const dz = far[2] - near[2];
-        const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize};
 
         let tStart = 0;
         let tEnd = 1;
@@ -438,6 +437,7 @@ export class MercatorTransform implements ITransform {
         const horizontalLength = Math.hypot(dx, dy);
         const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_WORLD_STEP_PX), 1, MAX_SAMPLES);
 
+        const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize};
         let previousT = 0;
         let aboveTerrain = near[2] > index.maxElevation || !mercatorIsBelowTerrain(ray, 0);
 
