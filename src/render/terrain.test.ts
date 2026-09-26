@@ -12,7 +12,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
+import {createDEM, createDEMTerrain} from '../util/test/util.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -378,6 +378,37 @@ describe('Terrain', () => {
 
         terrain.getElevation = () => 1;
         expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
+    });
+
+    /** A terrain rendering one tile at zoom 1, whose DEM data has loaded for the tile zooms `demAtZoom` names. */
+    function createTerrainWithDEMAt(demAtZoom: Record<number, number>): Terrain {
+        const terrain = createDEMTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], null);
+        terrain.tileManager.getSourceTile = tileID => tileID.overscaledZ in demAtZoom ? {tileID, dem: createDEM(() => demAtZoom[tileID.overscaledZ])} as Tile : undefined;
+        return terrain;
+    }
+
+    test('getLoadedElevationForLngLat is undefined while no DEM data under the location has loaded', () => {
+        const terrain = createTerrainWithDEMAt({});
+
+        expect(terrain.getLoadedElevationForLngLat(new LngLat(-90, 40), 17)).toBeUndefined();
+    });
+
+    test('getLoadedElevationForLngLat is the rendered surface where the rendered tile has DEM data', () => {
+        const terrain = createTerrainWithDEMAt({1: 300, 17: 1000});
+
+        expect(terrain.getLoadedElevationForLngLat(new LngLat(-90, 40), 17)).toBeCloseTo(300, 6);
+    });
+
+    test('getLoadedElevationForLngLat samples the DEM tile at the floored zoom while the rendered tile has no DEM data', () => {
+        const terrain = createTerrainWithDEMAt({17: 1000});
+
+        expect(terrain.getLoadedElevationForLngLat(new LngLat(-90, 40), 17.6)).toBeCloseTo(1000, 6);
+    });
+
+    test('getLoadedElevationForLngLat is undefined outside the tile grid', () => {
+        const terrain = createTerrainWithDEMAt({17: 1000});
+
+        expect(terrain.getLoadedElevationForLngLat(new LngLat(-90, 86), 17)).toBeUndefined();
     });
 
     test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {

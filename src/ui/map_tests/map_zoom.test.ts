@@ -110,6 +110,7 @@ test('recalculate zoom is done on the camera update transform', async () => {
     });
     await map.once('style.load');
     map.terrain = createTerrain();
+    map._camera.terrain = map.terrain;
     const canvas = map.getCanvas();
     simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
     map._renderTaskQueue.run();

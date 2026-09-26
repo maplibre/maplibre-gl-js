@@ -244,12 +244,8 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
-        const index = this.getCoverageIndex();
-        if (index) {
-            const mercator = MercatorCoordinate.fromLngLat(lnglat);
-            const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
-            if (sample.demLoaded) return sample.elevation;
-        }
+        const rendered = this._renderedSurfaceElevation(lnglat);
+        if (rendered !== undefined) return rendered;
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
         let zoom = 0;
         for (const tile of terrainCoveringTiles) {
@@ -258,6 +254,33 @@ export class Terrain {
             }
         }
         return this.getElevationForLngLatZoom(lnglat, zoom);
+    }
+
+    /**
+     * Get the elevation for given {@link LngLat} in respect of exaggeration from DEM data that has loaded: the rendered
+     * surface where a rendered tile with loaded DEM data covers the location, as {@link getElevationForLngLat} samples
+     * it, and elsewhere the DEM tile {@link getElevationForLngLatZoom} samples at the zoom, or its closest loaded parent.
+     * @param lnglat - the location
+     * @param zoom - the zoom whose tile is sampled where no rendered tile has DEM data, floored to a whole zoom
+     * @returns the elevation, or undefined while no DEM data under the location has loaded
+     */
+    getLoadedElevationForLngLat(lnglat: LngLat, zoom: number): number | undefined {
+        const rendered = this._renderedSurfaceElevation(lnglat);
+        if (rendered !== undefined) return rendered;
+        const tileZoom = Math.floor(zoom);
+        if (!isInBoundsForZoomLngLat(tileZoom, lnglat.wrap())) return undefined;
+        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, tileZoom);
+        if (!this.tileManager.getSourceTile(tileID, true)?.dem) return undefined;
+        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+    }
+
+    /** The rendered terrain surface's elevation at a location, or undefined where no rendered tile with loaded DEM data covers it. */
+    private _renderedSurfaceElevation(lnglat: LngLat): number | undefined {
+        const index = this.getCoverageIndex();
+        if (!index) return undefined;
+        const mercator = MercatorCoordinate.fromLngLat(lnglat);
+        const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
+        return sample.demLoaded ? sample.elevation : undefined;
     }
 
     /**

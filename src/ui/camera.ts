@@ -351,6 +351,12 @@ export class Camera extends Evented<MapEventType> {
     elevationFreeze: boolean;
     /**
      * @internal
+     * Whether the center elevation a hold carries came from no DEM data, so the first that lands under the center
+     * replaces it, see {@link Camera.holdElevation}.
+     */
+    _heldElevationAwaitsDem: boolean = false;
+    /**
+     * @internal
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: ITransform;
@@ -838,6 +844,7 @@ export class Camera extends Evented<MapEventType> {
 
         if (this.terrain) {
             this._prepareElevation(easeHandler.elevationCenter, tr);
+            if (options.freezeElevation) this.holdElevation(tr);
         }
 
         this._ease((k) => {
@@ -915,10 +922,54 @@ export class Camera extends Evented<MapEventType> {
     }
 
     _finalizeElevation(): void {
+        this.releaseElevation(this.transform);
+    }
+
+    /**
+     * @internal
+     * Holds the center elevation over terrain, for a gesture or an animation with `freezeElevation`: the frames
+     * leave it alone and the end puts the center back onto the terrain with the camera where it is. An elevation
+     * no DEM produced, because the terrain was switched on mid-gesture or its tiles have not landed, is held only
+     * until one does.
+     * @param tr - the transform the gesture or animation edits
+     */
+    holdElevation(tr: ITransform): void {
+        this.elevationFreeze = true;
+        this._heldElevationAwaitsDem = !!this.terrain && this.terrain.getLoadedElevationForLngLat(tr.center, tr.zoom) === undefined;
+    }
+
+    /**
+     * @internal
+     * Ends a hold on the center elevation: an elevation no DEM produced takes the one that has landed, then the
+     * center goes back onto the terrain with the camera where it is.
+     * @param tr - the transform to put back on the terrain: the one a gesture edits, or the rendered transform at
+     * the end of an animation
+     */
+    releaseElevation(tr: ITransform): void {
+        this._takeLandedElevation(tr);
         this.elevationFreeze = false;
+        this._heldElevationAwaitsDem = false;
         if (this.getCenterClampedToGround()) {
-            this.transform.recalculateZoomAndCenter(this.terrain);
+            tr.recalculateZoomAndCenter(this.terrain);
         }
+    }
+
+    /**
+     * @internal
+     * While a hold carries a center elevation no DEM produced, the first elevation that lands under the center
+     * replaces it on the given transform, lifting the camera onto the terrain as the terrain's arrival does at rest.
+     * @param tr - the transform the hold edits
+     */
+    _takeLandedElevation(tr: ITransform): void {
+        if (!this._heldElevationAwaitsDem || !this.terrain || !this.getCenterClampedToGround()) {
+            return;
+        }
+        const elevation = this.terrain.getLoadedElevationForLngLat(tr.center, tr.zoom);
+        if (elevation === undefined) {
+            return;
+        }
+        tr.setElevation(elevation);
+        this._heldElevationAwaitsDem = false;
     }
 
     /**
@@ -991,10 +1042,12 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Called after the camera is done being manipulated.
      * @param tr - the requested camera end state
+     * A held center elevation no DEM produced takes the one that has landed, see {@link Camera._takeLandedElevation}.
      * If the camera is inside terrain, it gets elevated.
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
     applyUpdatedTransform(tr: ITransform): void {
+        this._takeLandedElevation(tr);
         const modifiers : Array<(tr: ITransform) => ReturnType<CameraUpdateTransformFunction>> = [];
         modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         if (this.transformCameraUpdate) {
@@ -1228,7 +1281,10 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter, tr);
+        if (this.terrain) {
+            this._prepareElevation(flyToHandler.targetCenter, tr);
+            if (options.freezeElevation) this.holdElevation(tr);
+        }
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
