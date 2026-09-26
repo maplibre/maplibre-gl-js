@@ -383,7 +383,12 @@ describe('Terrain', () => {
     /** A terrain rendering one tile at zoom 1, whose DEM data has loaded for the tile zooms `demAtZoom` names. */
     function createTerrainWithDEMAt(demAtZoom: Record<number, number>): Terrain {
         const terrain = createDEMTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], null);
-        terrain.tileManager.getSourceTile = tileID => tileID.overscaledZ in demAtZoom ? {tileID, dem: createDEM(() => demAtZoom[tileID.overscaledZ])} as Tile : undefined;
+        terrain.tileManager.getSourceTile = tileID => {
+            if (!(tileID.overscaledZ in demAtZoom)) return undefined;
+            const tile = new Tile(tileID, 512);
+            tile.dem = createDEM(() => demAtZoom[tileID.overscaledZ]);
+            return tile;
+        };
         return terrain;
     }
 

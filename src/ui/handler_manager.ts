@@ -189,8 +189,9 @@ export class HandlerManager {
     /**
      * The gesture in flight over terrain, from its first handler frame to the
      * `_fireEvents` call that sees the movement end. While it is in flight the center
-     * elevation is frozen, so a DEM tile landing mid-gesture cannot move the camera
-     * under the fingers; the gesture's end re-solves the camera onto the terrain.
+     * elevation is held, so a DEM tile landing mid-gesture leaves the camera where the
+     * fingers put it, unless the hold still waits for its first DEM data (see
+     * {@link Camera.holdElevation}); the gesture's end re-solves the camera onto the terrain.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null};
     _zoom: {handlerName: string};

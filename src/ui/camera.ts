@@ -940,13 +940,12 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Ends a hold on the center elevation: an elevation no DEM produced takes the one that has landed, then the
-     * center goes back onto the terrain with the camera where it is.
+     * Ends a hold on the center elevation, and any wait for DEM data with it: the center goes back onto the terrain
+     * with the camera where it is.
      * @param tr - the transform to put back on the terrain: the one a gesture edits, or the rendered transform at
      * the end of an animation
      */
     releaseElevation(tr: ITransform): void {
-        this._takeLandedElevation(tr);
         this.elevationFreeze = false;
         this._heldElevationAwaitsDem = false;
         if (this.getCenterClampedToGround()) {
@@ -959,17 +958,19 @@ export class Camera extends Evented<MapEventType> {
      * While a hold carries a center elevation no DEM produced, the first elevation that lands under the center
      * replaces it on the given transform, lifting the camera onto the terrain as the terrain's arrival does at rest.
      * @param tr - the transform the hold edits
+     * @returns whether it took a landed elevation
      */
-    _takeLandedElevation(tr: ITransform): void {
+    _takeLandedElevation(tr: ITransform): boolean {
         if (!this._heldElevationAwaitsDem || !this.terrain || !this.getCenterClampedToGround()) {
-            return;
+            return false;
         }
         const elevation = this.terrain.getLoadedElevationForLngLat(tr.center, tr.zoom);
         if (elevation === undefined) {
-            return;
+            return false;
         }
         tr.setElevation(elevation);
         this._heldElevationAwaitsDem = false;
+        return true;
     }
 
     /**
@@ -977,14 +978,19 @@ export class Camera extends Evented<MapEventType> {
      * Applies a change of the terrain under the center to the transform: the terrain was set or
      * removed, or a DEM tile landed. The center keeps its place and the camera moves with the
      * center's elevation, as it does on every rendered frame while nothing holds the elevation.
-     * While a gesture or an ease holds it this does nothing: the camera stays where the user put
-     * it and the hold's end re-solves zoom and center onto the new terrain without moving it.
-     * Nothing is in flight when this writes, so it writes the rendered transform, like the
+     * While a gesture or an ease holds it, the camera stays where the user put it and the hold's
+     * end re-solves zoom and center onto the new terrain without moving it; only a held elevation
+     * no DEM produced takes the one that has landed, on the transform the hold edits, and the
+     * rendered camera follows at once, so a gesture resting while the terrain arrives is not drawn
+     * from inside it (see {@link Camera._takeLandedElevation}).
+     * Nothing else is in flight when this writes, so it writes the rendered transform, like the
      * per-frame clamp; a requested camera state created here would outlive the call and the
      * next gesture would start from it.
      */
     applyTerrainChange(): void {
         if (this.elevationFreeze) {
+            const tr = this._requestedCameraState;
+            if (tr && this._takeLandedElevation(tr)) this.applyUpdatedTransform(tr);
             return;
         }
         const tr = this.transform;
@@ -1040,9 +1046,9 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Called after the camera is done being manipulated.
+     * Called after the camera is done being manipulated. A held center elevation no DEM produced takes the one that
+     * has landed, see {@link Camera._takeLandedElevation}.
      * @param tr - the requested camera end state
-     * A held center elevation no DEM produced takes the one that has landed, see {@link Camera._takeLandedElevation}.
      * If the camera is inside terrain, it gets elevated.
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
