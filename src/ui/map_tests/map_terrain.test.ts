@@ -422,8 +422,8 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getZoom()).toBeCloseTo(17, 6);
     });
 
-    test('a drag that switches terrain on takes the DEM elevation once it moves the center over a tile that has landed', async () => {
-        const {map, landAwayFrom} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
+    /** Starts a drag that switches terrain on while no DEM tile under the map has loaded, then lands every DEM tile but the center's at 1000 m. */
+    async function startDragThatSwitchesTerrainOnAndLandsTheTilesAround(map: Map, landAwayFrom: (elevation: number, lngLat: LngLat) => Promise<void>): Promise<void> {
         simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 100});
         simulate.mousemove(window.document.body, {buttons: 1, clientX: 105, clientY: 105});
         map._renderTaskQueue.run();
@@ -432,9 +432,27 @@ describe('Terrain changing under and around a gesture', () => {
         simulate.mousemove(window.document.body, {buttons: 1, clientX: 110, clientY: 110});
         map._renderTaskQueue.run();
         await landAwayFrom(1000, map.getCenter());
+    }
+
+    test('a drag that switches terrain on takes the DEM elevation once it moves the center over a tile that has landed', async () => {
+        const {map, landAwayFrom} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
+        await startDragThatSwitchesTerrainOnAndLandsTheTilesAround(map, landAwayFrom);
         expect(map.getCameraTargetElevation()).toBe(0);
 
         simulate.mousemove(window.document.body, {buttons: 1, clientX: 40, clientY: 40});
+        map._renderTaskQueue.run();
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
+    test('a drag that took the DEM elevation holds it when the last tile lands lower and the center moves over it', async () => {
+        const {map, land, landAwayFrom} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
+        await startDragThatSwitchesTerrainOnAndLandsTheTilesAround(map, landAwayFrom);
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 40, clientY: 40});
+        map._renderTaskQueue.run();
+        await land(500);
+
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 150, clientY: 150});
         map._renderTaskQueue.run();
 
         expect(map.getCameraTargetElevation()).toBe(1000);
