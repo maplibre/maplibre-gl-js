@@ -1,7 +1,7 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createMat4f64, degreesToRadians, radiansToDegrees, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
+import {wrap, clamp, createMat4f64, createVec3f64, degreesToRadians, radiansToDegrees, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
@@ -399,7 +399,7 @@ export class MercatorTransform implements ITransform {
         const {near, far} = this.getRaySegmentFromPixel(this.centerPoint, -1);
         const t = (this.cameraToCenterDistance * zoomScale(this.zoom - this.maxZoom) - this.nearZ) / (this.farZ - this.nearZ);
         if (!(t > 0 && t < 1)) return null;
-        const start = vec3.lerp(vec3.create(), near, far, t);
+        const start = vec3.lerp(createVec3f64(), near, far, t);
         const startLngLat = new MercatorCoordinate(start[0] / this.worldSize, start[1] / this.worldSize).toLngLat();
         if (terrain.getElevationForLngLat(startLngLat, this) >= start[2]) return null;
         return this._raycastTerrain(start, far, terrain)?.toLngLat() ?? null;

@@ -425,6 +425,20 @@ describe('transform', () => {
         expect(transform.getCameraAltitude()).toBeCloseTo(cameraAltitude, 3);
     });
 
+    test('recalculateZoomAndCenter puts the center on the slope the center ray meets', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 14, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.setCenter(new LngLat(0.2, -0.05));
+        transform.setZoom(12);
+        transform.setPitch(70);
+        transform.resize(512, 512);
+        const risingEastward = createDEM((x) => 100 * x, 64);
+        const terrain = createDEMTerrain([new OverscaledTileID(10, 0, 10, 512, 512)], risingEastward);
+
+        transform.recalculateZoomAndCenter(terrain);
+
+        expect(transform.elevation).toBeCloseTo(3590.889, 3);
+    });
+
     test('recalculateZoomAndCenter at maxZoom places the camera for the new center', () => {
         const options = {minZoom: 0, maxZoom: 12, minPitch: 0, maxPitch: 85, renderWorldCopies: true};
         const transform = new MercatorTransform(options);
