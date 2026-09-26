@@ -4,7 +4,7 @@ import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
-import {setMatchMedia} from '../util/test/util.ts';
+import {createTerrain, setMatchMedia} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
@@ -2036,7 +2036,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
+        const terrain = createTerrain();
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2060,7 +2060,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
+        const terrain = createTerrain();
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
