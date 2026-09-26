@@ -1028,11 +1028,13 @@ export class Camera extends Evented<MapEventType> {
         if (!this.terrain || !this.getCenterClampedToGround() || tr.getClippingPlane()) {
             return;
         }
-        const moved = tr.clone();
-        moved.recalculateZoomAndCenter(this.terrain);
-        const centerOnTerrain = Math.abs(this.terrain.getElevationForLngLat(moved.center, moved) - moved.elevation) < 1;
-        if (centerOnTerrain && moved.zoom > tr.minZoom) {
-            tr.apply(moved, false);
+        const {center, elevation, zoom} = tr;
+        tr.recalculateZoomAndCenter(this.terrain);
+        const centerOnTerrain = Math.abs(this.terrain.getElevationForLngLat(tr.center, tr) - tr.elevation) < 1;
+        if (!centerOnTerrain || tr.zoom <= tr.minZoom) {
+            tr.setZoom(zoom);
+            tr.setCenter(center);
+            tr.setElevation(elevation);
         }
     }
 
