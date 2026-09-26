@@ -590,13 +590,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  * @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-map/)
  */
 export class Map extends Evented<MapEventType> {
-    /**
-     * @internal
-     * The map's terrain, or null when the map has none. The camera holds it, so reads and writes here reach
-     * the camera's `terrain`.
-     */
-    get terrain(): Terrain { return this._camera.terrain; }
-    set terrain(terrain: Terrain) { this._camera.terrain = terrain; }
+    terrain: Terrain;
     style: Style;
     painter: Painter;
     _camera: Camera;
@@ -773,6 +767,7 @@ export class Map extends Evented<MapEventType> {
             zoomSnap: resolvedOptions.zoomSnap,
             renderWorldCopies: resolvedOptions.renderWorldCopies,
             centerClampedToGround: resolvedOptions.centerClampedToGround,
+            terrain: this.terrain,
             transformConstrain: resolvedOptions.transformConstrain,
             requestRenderFrame: (callback) => this._requestRenderFrame(callback),
             cancelRenderFrame: (id) => this._cancelRenderFrame(id),
@@ -2966,9 +2961,10 @@ export class Map extends Evented<MapEventType> {
             if (this.terrain) {
                 this.terrain.destroy();
             }
-            this._camera.setTerrain(null);
+            this.terrain = null;
             this.painter.renderToTexture = null;
             this.painter.destroyRTTResources();
+            this._camera.setTerrain(null);
         } else {
             // add terrain
             const tileManager = this.style.tileManagers[options.source];
@@ -2988,8 +2984,9 @@ export class Map extends Evented<MapEventType> {
             if (this.terrain) {
                 this.terrain.destroy();
             }
-            this._camera.setTerrain(new Terrain(this.painter, tileManager, options, this._terrainSkirtLength));
+            this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -3012,7 +3009,7 @@ export class Map extends Evented<MapEventType> {
         }
         if (isTerrainSourceEvent && event.tile) {
             this.painter.markTerrainDepthDirty();
-            this._camera.clampToTerrain();
+            this._camera.applyTerrainChange();
         }
 
         if (!event.tile) return;
@@ -4423,8 +4420,16 @@ export class Map extends Evented<MapEventType> {
             if (renderableTilesChanged) {
                 this.terrain.resetElevationCache();
             }
+            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+            }
+        } else {
+            this._camera.transform.setMinElevationForCurrentTile(0);
+            if (this.getCenterClampedToGround()) {
+                this._camera.transform.setElevation(0);
+            }
         }
-        this._camera.clampToTerrain();
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 

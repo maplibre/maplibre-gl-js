@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {extend, wrap, defaultEasing, pick, evaluateZoomSnap} from '../util/util.ts';
+import {extend, wrap, defaultEasing, pick, evaluateZoomSnap, degreesToRadians} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -10,6 +10,7 @@ import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
+import {maxMercatorHorizonAngle} from '../geo/projection/mercator_utils.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
@@ -277,7 +278,7 @@ export type CameraInitOptions = {
     zoomSnap: number;
     renderWorldCopies: boolean;
     centerClampedToGround: boolean;
-    terrain?: Terrain;
+    terrain: Terrain;
     transformConstrain: TransformConstrainFunction;
     requestRenderFrame: (a: () => void) => TaskID;
     cancelRenderFrame: (_: TaskID) => void;
@@ -296,7 +297,7 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Copy of the map's `terrain` (which the `Map` owns).
-     * The map's terrain, or null when the map has none; the map's own `terrain` reads and writes this field.
+     * The camera reads terrain for elevation handling but does not own it.
      */
     terrain: Terrain;
     cameraHelper: ICameraHelper;
@@ -416,12 +417,12 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Hands the camera the map's terrain, or null when the map has none, and clamps the transform
-     * to it, see {@link Camera.clampToTerrain}.
+     * Hands the camera the map's terrain, or null when the map has none, and brings the center
+     * elevation up to date with it, see {@link Camera.applyTerrainChange}.
      */
     setTerrain(terrain: Terrain): void {
         this.terrain = terrain;
-        this.clampToTerrain();
+        this.applyTerrainChange();
     }
 
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
@@ -924,23 +925,24 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Clamps the rendered transform to the terrain: the minimum elevation of the tile under the center, the center
-     * onto the terrain under it while no gesture or ease holds the elevation, and the camera and its near clipping
-     * plane above the terrain. Runs on every rendered frame, when the terrain is set or removed, and when a DEM tile lands.
-     * While a gesture or an ease holds the elevation, the center stays where the user put it, the requested camera
-     * state carries the camera floor, and the hold's end re-solves zoom and center onto the terrain without moving
-     * the camera.
+     * Applies a change of the terrain under the center to the transform: the terrain was set or
+     * removed, or a DEM tile landed. The center keeps its place and the camera moves with the
+     * center's elevation, as it does on every rendered frame while nothing holds the elevation.
+     * While a gesture or an ease holds it this does nothing: the camera stays where the user put
+     * it and the hold's end re-solves zoom and center onto the new terrain without moving it.
+     * Nothing is in flight when this writes, so it writes the rendered transform, like the
+     * per-frame clamp; a requested camera state created here would outlive the call and the
+     * next gesture would start from it.
      */
-    clampToTerrain(): void {
-        const tr = this.transform;
-        tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
-        if (this.terrain && this.elevationFreeze) {
+    applyTerrainChange(): void {
+        if (this.elevationFreeze) {
             return;
         }
+        const tr = this.transform;
+        tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
         if (this.getCenterClampedToGround()) {
             tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
         }
-        this._keepCameraAboveTerrain(tr);
     }
 
     /**
@@ -961,14 +963,15 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Keeps the camera and its near clipping plane above the terrain, on the given transform, so a gesture, an ease
-     * or `jumpTo` continues from the corrected camera. The renderer drops whatever is nearer than that plane, so
-     * terrain reaching above it would show as a hole into the ground. With terrain and the center clamped to the
-     * ground, the center's elevation is raised by what the camera lacks, which lifts the camera and keeps pitch and
-     * zoom; a gesture's end puts the center back onto the terrain with the camera where it is. Otherwise, and without
-     * terrain when the camera has dipped below sea level past a pitch of 90 degrees, pitch and zoom are re-solved so
-     * the camera rises by what it lacks at the same ground position, still looking at the same center.
-     * @param tr - the requested camera state, or the rendered transform while nothing is in flight
+     * Keeps the camera above the terrain on the transform a camera update edits, so a gesture, an ease or `jumpTo`
+     * continues from the corrected camera. While a gesture holds the center elevation over mercator terrain, the held
+     * elevation is raised until the camera and its near clipping plane clear the terrain, which lifts the camera and
+     * keeps pitch and zoom; the renderer drops whatever is nearer than that plane, so terrain reaching above it would
+     * show as a hole into the ground, and the gesture's end puts the center back onto the terrain with the camera where
+     * it is. Otherwise, and without terrain when the camera has dipped below sea level past a pitch of 90 degrees, pitch
+     * and zoom are re-solved so the camera sits on the terrain at the same ground position, still looking at the same
+     * center.
+     * @param tr - the transform the camera update edits
      */
     _keepCameraAboveTerrain(tr: ITransform): void {
         if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
@@ -976,32 +979,32 @@ export class Camera extends Evented<MapEventType> {
         }
         const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const deficit = this.terrain ? this._terrainAboveCamera(tr, cameraLngLat, cameraAltitude) : -cameraAltitude;
-        if (deficit <= 0) {
+        if (this.terrain && this.elevationFreeze && !this._moving && this.getCenterClampedToGround() && !tr.getClippingPlane()) {
+            const deficit = this._terrainAboveCamera(tr, cameraLngLat, cameraAltitude);
+            if (deficit > 0) {
+                tr.setElevation(tr.elevation + deficit);
+            }
             return;
         }
-        if (this.terrain && this.getCenterClampedToGround()) {
-            tr.setElevation(tr.elevation + deficit);
-            return;
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
+        if (cameraAltitude < minAltitude) {
+            const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
+            tr.setZoom(newCamera.zoom);
+            tr.setPitch(newCamera.pitch);
         }
-        const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, cameraAltitude + deficit, tr.center, tr.elevation);
-        tr.setZoom(newCamera.zoom);
-        tr.setPitch(newCamera.pitch);
     }
 
     /**
      * @internal
-     * How far the terrain reaches above the camera or above a corner of its near clipping plane, in meters, whichever
-     * is more; zero or less while all are clear. A globe drawn as a globe has its frustum in its own space, so there the
-     * camera alone is checked.
-     * @param tr - the transform whose camera is checked
+     * How far the terrain reaches above the camera or above its near clipping plane, sampled at the plane's corners and
+     * middle, in meters, whichever is most; zero or less while all are clear.
+     * @param tr - the transform whose camera is checked, with its frustum in mercator space
      */
     _terrainAboveCamera(tr: ITransform, cameraLngLat: LngLat, cameraAltitude: number): number {
+        const corners = tr.getCameraFrustum().points.slice(0, 4);
+        const middle = [0, 1, 2].map(axis => corners.reduce((sum, corner) => sum + corner[axis], 0) / 4);
         let deficit = this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) - cameraAltitude;
-        if (tr.getClippingPlane()) {
-            return deficit;
-        }
-        for (const [x, y, altitude] of tr.getCameraFrustum().points.slice(0, 4)) {
+        for (const [x, y, altitude] of [...corners, middle]) {
             deficit = Math.max(deficit, this.terrain.getElevationForLngLatZoom(new MercatorCoordinate(x, y).toLngLat(), tr.zoom) - altitude);
         }
         return deficit;
@@ -1011,15 +1014,23 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Moves the center a zoom gesture holds onto the terrain the camera looks at, with the camera where it is, so the
      * zoom measures the distance to what the camera sees: a zoom toward rising terrain slows down before it instead of
-     * running into it, the tiles drawn for the zoom keep their detail, and the gesture's end has nothing to re-solve.
-     * Does nothing while the camera looks at no terrain.
+     * running into it, and the gesture's end has nothing to re-solve. Terrain nearer than maxZoom allows holds the
+     * camera back, unless the ray has passed over it by then. Does nothing while the camera looks at no terrain, within
+     * 0.75 degrees of a level view, where the center would land 10 km out, or when the terrain is farther than minZoom
+     * allows, which would pull the camera forward.
      * @param tr - the requested camera state
      */
     moveCenterOntoTerrain(tr: ITransform): void {
-        if (!this.terrain || !this.getCenterClampedToGround() || tr.getClippingPlane() || !tr.screenTerrainPointToMercatorCoordinate(tr.centerPoint, this.terrain)) {
+        if (!this.terrain || !this.getCenterClampedToGround() || tr.getClippingPlane() ||
+            Math.abs(Math.cos(degreesToRadians(tr.pitch))) < Math.cos(degreesToRadians(maxMercatorHorizonAngle)) ||
+            !tr.screenTerrainPointToMercatorCoordinate(tr.centerPoint, this.terrain)) {
             return;
         }
-        tr.recalculateZoomAndCenter(this.terrain);
+        const moved = tr.clone();
+        moved.recalculateZoomAndCenter(this.terrain);
+        if (moved.zoom > tr.minZoom) {
+            tr.apply(moved, false);
+        }
     }
 
     /**

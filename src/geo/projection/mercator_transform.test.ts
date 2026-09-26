@@ -406,6 +406,46 @@ describe('transform', () => {
         expect(transform.zoom).toBeCloseTo(13.68939960698451, 10);
     });
 
+    test('recalculateZoomAndCenter looks past terrain nearer than maxZoom allows once the center ray has passed over it', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 12.5, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.setCenter(new LngLat(0.1758, -0.03));
+        transform.setZoom(12);
+        transform.setPitch(80);
+        transform.resize(512, 512);
+        const plateauUnderTheCameraThenAPlain = createDEM((_x, y) => y >= 26 ? 2400 : 0, 64);
+        const terrain = createDEMTerrain([new OverscaledTileID(10, 0, 10, 512, 512)], plateauUnderTheCameraThenAPlain);
+        const cameraLngLat = transform.getCameraLngLat();
+        const cameraAltitude = transform.getCameraAltitude();
+
+        transform.recalculateZoomAndCenter(terrain);
+
+        expect(transform.zoom).toBeCloseTo(12, 6);
+        expect(transform.elevation).toBeCloseTo(0, 6);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(cameraLngLat.lat, 9);
+        expect(transform.getCameraAltitude()).toBeCloseTo(cameraAltitude, 3);
+    });
+
+    test('recalculateZoomAndCenter at maxZoom places the camera for the new center', () => {
+        const options = {minZoom: 0, maxZoom: 12, minPitch: 0, maxPitch: 85, renderWorldCopies: true};
+        const transform = new MercatorTransform(options);
+        transform.setCenter(new LngLat(0.1758, -0.03));
+        transform.setZoom(12);
+        transform.setPitch(80);
+        transform.resize(512, 512);
+        const terrain = createDEMTerrain([new OverscaledTileID(10, 0, 10, 512, 512)], createDEM(() => 2400, 64));
+
+        transform.recalculateZoomAndCenter(terrain);
+
+        const expected = new MercatorTransform(options);
+        expected.setElevation(transform.elevation);
+        expected.setCenter(transform.center);
+        expected.setZoom(12);
+        expected.setPitch(80);
+        expected.resize(512, 512);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expected.getCameraLngLat().lat, 9);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expected.getCameraAltitude(), 3);
+    });
+
     test('recalculateZoomAndCenterNoTerrain', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
@@ -1027,6 +1067,14 @@ describe('MercatorTransform.isLocationOccluded', () => {
         const elevationAboveRidge = 3500;
 
         expect(transform.isLocationOccluded(behindRidge, terrain, elevationAboveRidge)).toBe(false);
+    });
+
+    test('a location on the terrain nearer than twice the near clipping plane\'s distance is in view', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 449));
+        const transform = createMercatorTransform(new LngLat(0, 0), 16, 60);
+        const drawnAtTheScreenCenter = transform.screenPointToMercatorCoordinateAtZ(new Point(256, 256), 449).toLngLat();
+
+        expect(transform.isLocationOccluded(drawnAtTheScreenCenter, terrain)).toBe(false);
     });
 
     test('a location behind the camera or beyond the far plane is hidden', () => {

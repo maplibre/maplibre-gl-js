@@ -336,7 +336,7 @@ describe('terrain gesture anchoring', () => {
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = createTerrain();
-        const raycastSpy = vi.spyOn(map._camera.getTransformForUpdate(), 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
+        const raycastSpy = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         // Start the pinch with the finger midpoint exactly where the grabbed point renders
         const start = map.project(anchor);
@@ -370,7 +370,7 @@ describe('terrain gesture anchoring', () => {
         const anchor = new LngLat(7.494, 45.904);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.getTransformForUpdate(), 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);
@@ -406,8 +406,8 @@ describe('terrain gesture anchoring', () => {
             getElevationForLngLat: (lngLat: LngLat) => elevationAt(lngLat),
             getElevationForLngLatZoom: (lngLat: LngLat) => elevationAt(lngLat),
         } as any as Terrain;
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 2000));
         map._camera.transform.setElevation(300);
-        vi.spyOn(map._camera.getTransformForUpdate(), 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 2000));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);
@@ -433,7 +433,7 @@ describe('terrain gesture anchoring', () => {
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.getTransformForUpdate(), 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);
@@ -478,7 +478,7 @@ describe('terrain gesture anchoring', () => {
     test('a drag that starts over terrain that is not loaded moves the map the same distance per pixel when that terrain loads mid-drag', async () => {
         const target = await setupGestureMap(45);
         map.terrain = createTerrain();
-        const grabbedTerrain = vi.spyOn(map._camera.getTransformForUpdate(), 'screenTerrainPointToMercatorCoordinate').mockReturnValue(null);
+        const grabbedTerrain = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(null);
 
         gestureStep('touchstart', target, [new Point(100, 150)]);
         gestureStep('touchmove', target, [new Point(100, 140)]);
@@ -496,7 +496,7 @@ describe('terrain gesture anchoring', () => {
     test('falls back to the center-elevation behavior when the grabbed terrain point is above the camera altitude', async () => {
         const target = await setupGestureMap();
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.getTransformForUpdate(), 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(0.5, 0.35, 1e6));
+        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(0.5, 0.35, 1e6));
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);

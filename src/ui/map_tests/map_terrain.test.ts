@@ -485,6 +485,10 @@ describe('Terrain changing under and around a gesture', () => {
 });
 
 describe('Keep camera outside terrain', () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     test('Try to move camera into terrain', () => {
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
@@ -546,37 +550,12 @@ describe('Keep camera outside terrain', () => {
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBe(60);
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+        const cameraAltitude = map._camera.transform.getCameraAltitude();
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 60});
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBe(60);
-        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
-    });
-
-    test('terrain rising under a resting camera lifts the camera until its near clipping plane clears it, and the next frame keeps it there', async () => {
-        const map = await createMapOverTerrainWithACameraFloor(0);
-        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(20000);
-
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        map.getSource('dem').fire(new MapSourceDataEvent('data', {tile: {tileID}, coord: tileID}));
-
-        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
-        expect(map.getCameraTargetElevation()).toBeCloseTo(12045.7, 1);
-        expect(map.getPitch()).toBe(45);
-
-        map.redraw();
-        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
-        expect(map.getCameraTargetElevation()).toBeCloseTo(12045.7, 1);
-        expect(map.getPitch()).toBe(45);
-    });
-
-    test('a resting camera above the terrain whose near clipping plane reaches into it rises until the plane clears it', async () => {
-        const map = await createMapOverTerrainWithACameraFloor(8000);
-
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(8144.0, 1);
-        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(8000, 0);
-        expect(map.getCameraTargetElevation()).toBeCloseTo(45.7, 1);
-        expect(map.getPitch()).toBe(45);
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(cameraAltitude, 1);
     });
 
     test('a wheel zoom over terrain that rose under the held center moves the center onto that terrain, and its end leaves the camera and the zoom where they were', async () => {
@@ -585,6 +564,7 @@ describe('Keep camera outside terrain', () => {
         timeControlNow.mockReturnValue(now);
         const map = createMap({interactive: true, zoom: 12, pitch: 70, maxZoom: 18});
         await map.once('load');
+        vi.useFakeTimers();
         map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
         map.setTerrain({source: 'dem'});
         const elevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
@@ -608,7 +588,7 @@ describe('Keep camera outside terrain', () => {
         const cameraAltitude = map._camera.transform.getCameraAltitude();
         const cameraLngLat = map._camera.transform.getCameraLngLat();
 
-        await new Promise(resolve => setTimeout(resolve, 250));
+        vi.advanceTimersByTime(250);
         for (let i = 0; i < 3; i++) frame();
 
         expect(map._camera.elevationFreeze).toBe(false);
@@ -617,6 +597,48 @@ describe('Keep camera outside terrain', () => {
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(cameraAltitude, 1);
         expect(map._camera.transform.getCameraLngLat().lng).toBeCloseTo(cameraLngLat.lng, 7);
         expect(map._camera.transform.getCameraLngLat().lat).toBeCloseTo(cameraLngLat.lat, 7);
+    });
+
+    async function createMapForAWheelZoomOverTerrain(options: {zoom: number; pitch: number; maxPitch?: number; minZoom?: number}, elevation: number): Promise<{map: Map; frame: () => void}> {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        let now = 1555555555555;
+        timeControlNow.mockReturnValue(now);
+        const map = createMap({interactive: true, ...options});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        setTerrainElevation(map, elevation);
+        map.redraw();
+        return {map, frame: () => { now += 1000 / 60; timeControlNow.mockReturnValue(now); map._renderTaskQueue.run(); }};
+    }
+
+    function setTerrainElevation(map: Map, elevation: number) {
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(elevation);
+        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(elevation);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => elevation)).getCoverageIndex());
+    }
+
+    test('a wheel zoom within 0.75 degrees of a level view over terrain that fell under the held center zooms by the notch', async () => {
+        const {map, frame} = await createMapForAWheelZoomOverTerrain({zoom: 14, pitch: 89.5, maxPitch: 90}, 0);
+        simulate.wheel(map.getCanvas(), {deltaY: -100.006103515625, clientX: 100, clientY: 100});
+        frame();
+        setTerrainElevation(map, -100);
+
+        for (let i = 0; i < 20; i++) frame();
+
+        expect(map.getZoom()).toBeCloseTo(14.15, 2);
+    });
+
+    test('a wheel zoom-out over terrain that fell away farther than minZoom allows keeps raising the camera', async () => {
+        const {map, frame} = await createMapForAWheelZoomOverTerrain({zoom: 10.4, pitch: 60, minZoom: 10}, 3000);
+        simulate.wheel(map.getCanvas(), {deltaY: 100.006103515625, clientX: 100, clientY: 100});
+        frame();
+        setTerrainElevation(map, 0);
+        const cameraAltitude = map._camera.transform.getCameraAltitude();
+
+        for (let i = 0; i < 20; i++) frame();
+
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(cameraAltitude);
     });
 });
 

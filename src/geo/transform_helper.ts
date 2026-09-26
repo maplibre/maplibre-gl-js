@@ -657,10 +657,16 @@ export class TransformHelper implements ITransformGetters {
         const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenter / mercUnitsPerMeter / this.tileSize);
 
-        // Update matrices
+        // Update matrices; setZoom skips them when the zoom stays, as at a zoom bound, though center and elevation moved
         this._elevation = clampedElevation;
         this._center = center;
+        const previousZoom = this._zoom;
         this.setZoom(zoom);
+        if (this._zoom === previousZoom) {
+            this._unmodified = false;
+            this.constrainInternal();
+            this._calcMatrices();
+        }
     }
 
     _distanceToCenterFromAltElevationPitch(alt: number, elevation: number, pitch: number): {distanceToCenter: number; clampedElevation: number} {
