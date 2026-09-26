@@ -776,6 +776,7 @@ export class HandlerManager {
             const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);
+                tr.setElevation(this._map.terrain ? this._map.terrain.getElevationForLngLat(tr.center, tr) : 0);
             }
             this._camera.applyUpdatedTransform(tr);
         }
