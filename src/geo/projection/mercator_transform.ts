@@ -438,7 +438,7 @@ export class MercatorTransform implements ITransform {
         const samples = clamp(Math.ceil(horizontalLength * (tEnd - tStart) / TARGET_WORLD_STEP_PX), 1, MAX_SAMPLES);
 
         let previousT = 0;
-        let aboveTerrain = !mercatorIsBelowTerrain(ray, 0);
+        let aboveTerrain = near[2] > index.maxElevation || !mercatorIsBelowTerrain(ray, 0);
 
         for (let i = 0; i <= samples; i++) {
             const t = tStart + (tEnd - tStart) * i / samples;
