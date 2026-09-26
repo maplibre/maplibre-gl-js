@@ -391,17 +391,17 @@ export class MercatorTransform implements ITransform {
 
     /**
      * Where the center ray meets the terrain beyond the distance at which the center sits from the camera at maxZoom,
-     * if the ray is above the terrain there; null otherwise. A center on nearer terrain needs a zoom past maxZoom,
-     * which `setZoom` clamps by moving the camera back, so past a bump the ray has cleared the center goes to what lies
-     * behind it.
+     * if the ray is above the terrain there; null otherwise. A center on nearer terrain needs a zoom past maxZoom, which
+     * `setZoom` clamps by moving the camera back, so once the ray has cleared a bump nearer than that, the center goes
+     * to the terrain behind it. Where maxZoom lets the camera nearer than the near clipping plane, the ray is followed
+     * from that plane, like every terrain pick.
      */
     private _terrainPointPastMaxZoom(terrain: Terrain): LngLat | null {
         const index = terrain.getCoverageIndex();
         if (!index) return null;
         const {near, far} = this.getRaySegmentFromPixel(this.centerPoint, -1);
-        const t = (this.cameraToCenterDistance * zoomScale(this.zoom - this.maxZoom) - this.nearZ) / (this.farZ - this.nearZ);
-        if (!(t > 0 && t < 1)) return null;
-        const start = vec3.lerp([], near, far, t);
+        const distanceAtMaxZoom = this.cameraToCenterDistance * zoomScale(this.zoom - this.maxZoom);
+        const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this.nearZ) / (this.farZ - this.nearZ)));
         if (isBelowTerrainAt(index, terrain.exaggeration, start[0] / this.worldSize, start[1] / this.worldSize, start[2])) return null;
         return this._raycastTerrain(start, far, terrain)?.toLngLat() ?? null;
     }

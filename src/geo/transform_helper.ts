@@ -625,6 +625,12 @@ export class TransformHelper implements ITransformGetters {
         return {center, elevation: clampedElevation, zoom};
     }
 
+    /**
+     * Moves the center along the view to the given elevation with the camera where it is, and sets the zoom to match.
+     * The matrices are recomputed even where `setZoom` leaves the zoom as it was, as at a zoom bound, since the center
+     * and its elevation have moved.
+     * @param elevation - the elevation in meters for the center
+     */
     recalculateZoomAndCenter(elevation: number): void {
         if (this.elevation - elevation === 0) return;
 
@@ -657,7 +663,7 @@ export class TransformHelper implements ITransformGetters {
         const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenter / mercUnitsPerMeter / this.tileSize);
 
-        // Update matrices; setZoom skips them when the zoom stays, as at a zoom bound, though center and elevation moved
+        // Update matrices
         this._elevation = clampedElevation;
         this._center = center;
         const previousZoom = this._zoom;
