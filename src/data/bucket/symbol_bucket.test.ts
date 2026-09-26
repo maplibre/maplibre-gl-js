@@ -18,17 +18,17 @@ import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type:
 import type {BucketParameters, IndexedFeature, PopulateParameters} from '../bucket.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {StyleImage} from '../../style/style_image.ts';
-import type {StyleGlyph} from '../../style/style_glyph.ts';
+import type {GlyphMap} from '../../style/style_glyph.ts';
 
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
 transform.resize(100, 100);
 
 const glyphsByCluster = {
-    'Test': Object.fromEntries(
+    'Test': {default: Object.fromEntries(
         Object.entries(glyphs).map(([codePoint, glyph]) => [String.fromCodePoint(Number(codePoint)), glyph])
-    )
-} as unknown as Record<string, Record<string, StyleGlyph>>;
+    )}
+} as unknown as GlyphMap;
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
@@ -69,7 +69,7 @@ function glyphsRequestedFor(text: string): string[] {
         new CanonicalTileID(0, 0, 0),
     );
 
-    return Object.keys(options.glyphDependencies.Test ?? {});
+    return Object.keys(options.glyphDependencies.Test?.default ?? {});
 }
 
 describe('SymbolBucket', () => {
@@ -142,7 +142,7 @@ describe('SymbolBucket', () => {
         performSymbolLayout({
             bucket,
             glyphMap: glyphsByCluster,
-            glyphPositions: {'Test': {a: fakeGlyph, b: fakeGlyph, c: fakeGlyph, d: fakeGlyph, e: fakeGlyph, f: fakeGlyph} as any},
+            glyphPositions: {'Test': {default: {a: fakeGlyph, b: fakeGlyph, c: fakeGlyph, d: fakeGlyph, e: fakeGlyph, f: fakeGlyph}} as any},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
 
@@ -258,6 +258,7 @@ describe('SymbolBucket', () => {
 
     test('SymbolBucket asks for one glyph per character of plain text and nothing besides', () => {
         expect(glyphsRequestedFor('abc').sort()).toEqual(['a', 'b', 'c']);
+        expect(glyphsRequestedFor('東京ー').sort()).toEqual(['東', '京', 'ー'].sort());
     });
 
     test('SymbolBucket asks for a cluster as a whole, and for its codepoints to fall back to', () => {

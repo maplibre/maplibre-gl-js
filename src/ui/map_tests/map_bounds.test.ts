@@ -1,5 +1,6 @@
-import {describe, beforeEach, test, expect} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {setNow, restoreNow} from '../../util/time_control.ts';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
 
 import type {LngLatBoundsLike} from '../../geo/lng_lat_bounds.ts';
@@ -77,6 +78,10 @@ describe('getBounds', () => {
 });
 
 describe('setMaxBounds', () => {
+    afterEach(() => {
+        restoreNow();
+    });
+
     test('constrains map bounds', () => {
         const map = createMap({zoom: 0});
         map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
@@ -97,6 +102,17 @@ describe('setMaxBounds', () => {
         const map = createMap();
         map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
         expect(map.setZoom(0).getZoom()).not.toBe(0);
+    });
+
+    test('keeps the bounds set during easeTo when transformCameraUpdate is set', async () => {
+        const map = createMap({transformCameraUpdate: () => ({})});
+        await map.once('load');
+        setNow(0);
+        map.easeTo({center: [1, 1], duration: 1000});
+        map.setMaxBounds([[-20, -20], [20, 20]]);
+        setNow(1000);
+        map.redraw();
+        expect(map.getMaxBounds().toArray()).toEqual([[-20, -20], [20, 20]]);
     });
 
     function toFixed(bounds) {

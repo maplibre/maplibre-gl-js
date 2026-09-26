@@ -132,8 +132,8 @@ function updateVariableAnchors(coords: OverscaledTileID[],
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
-    const transform = painter.transform;
-    const terrain = painter.style.map.terrain;
+    const transform = painter.renderContext.transform;
+    const terrain = painter.renderContext.terrain;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
 
@@ -145,8 +145,8 @@ function updateVariableAnchors(coords: OverscaledTileID[],
         const sizeData = bucket.textSizeData;
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
 
-        const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, pixelToTileScale);
+        const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.renderContext.transform.zoom);
+        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.renderContext.transform, pixelToTileScale);
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' && bucket.hasIconData();
 
         if (size) {
@@ -310,7 +310,7 @@ function drawLayerSymbols(
 
     const context = painter.context;
     const gl = context.gl;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -375,9 +375,9 @@ function drawLayerSymbols(
         }
 
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
-        const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
-        const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
+        const s = pixelsToTileUnits(tile, 1, renderContext.transform.zoom);
+        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, renderContext.transform, s);
+        const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, renderContext.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
         const projectionData = getProjectionDataForTile(renderContext, coord);
@@ -393,7 +393,7 @@ function drawLayerSymbols(
             const pitchedLabelPlaneMatrixInverse = mat4.create();
             fastInvertTransformMat4(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
 
-            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : undefined;
+            const getElevation = renderContext.terrain ? (x: number, y: number) => renderContext.terrain.getElevation(coord, x, y) : undefined;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
             updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
         }
@@ -401,7 +401,7 @@ function drawLayerSymbols(
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
 
         // If the label plane matrix is used, it transforms either map-pitch-aligned pixels, or to screenspace pixels
-        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : painter.transform.clipSpaceToPixelsMatrix;
+        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : renderContext.transform.clipSpaceToPixelsMatrix;
         // Label plane matrix is unused in the shader if variable anchors are used or the text is placed along a line
         const noLabelPlane = (alongLine || shaderVariableAnchor);
         const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : combinedLabelPlaneMatrix;
@@ -518,6 +518,6 @@ function drawSymbolElements(
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
         uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
-        painter.transform.zoom, buffers.programConfigurations.get(layer.id),
+        painter.renderContext.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
 }
