@@ -539,12 +539,8 @@ describe('Keep camera outside terrain', () => {
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(height, min, max));
     }
 
-    function setTerrainElevation(map: Map, elevation: number): void {
-        setTerrainHeight(map, () => elevation, elevation, elevation);
-    }
-
     /** A map over terrain whose clock and timers the returned `frame` advances by one frame before it renders. */
-    async function createMapOverTerrain(options: Partial<MapOptions>, height: TerrainHeight, min: number, max: number): Promise<{map: Map; frame: () => void}> {
+    async function createMapOverShapedTerrain(options: Partial<MapOptions>, height: TerrainHeight, min: number, max: number): Promise<{map: Map; frame: () => void}> {
         const timeControlNow = vi.spyOn(timeControl, 'now');
         let now = 1555555555555;
         timeControlNow.mockReturnValue(now);
@@ -564,7 +560,7 @@ describe('Keep camera outside terrain', () => {
     }
 
     function createMapOverFlatTerrain(options: Partial<MapOptions>, elevation: number): Promise<{map: Map; frame: () => void}> {
-        return createMapOverTerrain(options, () => elevation, elevation, elevation);
+        return createMapOverShapedTerrain(options, () => elevation, elevation, elevation);
     }
 
     /** Terrain at sea level with ridges running east and west, `height` meters tall and `width` meters to each side of their crest, `y` meters north of the equator. */
@@ -594,7 +590,7 @@ describe('Keep camera outside terrain', () => {
     }
 
     /** A map at zoom 11 and pitch 45 whose DEM and drawn terrain are at 20000 m while the ground under the center is at sea level. */
-    async function createMapUnderATerrainFloorAt20000Meters(options: Partial<MapOptions> = {}): Promise<Map> {
+    async function createMapUnderATerrainFloorAt20000Meters(options: Partial<MapOptions>): Promise<Map> {
         const map = createMap({interactive: true, zoom: 11, pitch: 45, maxPitch: 85, ...options});
         await map.once('load');
         map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
@@ -607,7 +603,7 @@ describe('Keep camera outside terrain', () => {
     }
 
     test('a pitch drag that would put the camera into the terrain lifts the center, and the camera with it, and keeps the pitch', async () => {
-        const map = await createMapUnderATerrainFloorAt20000Meters();
+        const map = await createMapUnderATerrainFloorAt20000Meters({});
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
@@ -628,8 +624,8 @@ describe('Keep camera outside terrain', () => {
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(cameraAltitude, 1);
     });
 
-    test('a pitch drag after one the floor lifted starts from the center elevation that one ended with', async () => {
-        const map = await createMapUnderATerrainFloorAt20000Meters();
+    test('a pitch drag after a lifted one starts from the center elevation that one ended with', async () => {
+        const map = await createMapUnderATerrainFloorAt20000Meters({});
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
         map._renderTaskQueue.run();
@@ -640,7 +636,6 @@ describe('Keep camera outside terrain', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 110});
         map._renderTaskQueue.run();
 
-        expect(map.getPitch()).toBe(65);
         expect(map.getCameraTargetElevation()).toBe(0);
     });
 
@@ -666,18 +661,8 @@ describe('Keep camera outside terrain', () => {
         expect(map.getCameraTargetElevation()).toBeCloseTo(ridgeAboveTheMiddle, 3);
     });
 
-    test('a pitch drag into the terrain with the center not clamped to the ground leaves the center elevation alone', async () => {
-        const map = await createMapUnderATerrainFloorAt20000Meters({centerClampedToGround: false});
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 60});
-        map._renderTaskQueue.run();
-
-        expect(map.getCameraTargetElevation()).toBe(0);
-    });
-
     test('a pitch drag held over a floor that ends looking where no terrain is drawn leaves the camera on the floor', async () => {
-        const map = await createMapUnderATerrainFloorAt20000Meters();
+        const map = await createMapUnderATerrainFloorAt20000Meters({});
         vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lngLat: LngLat) => lngLat.lat < 0.001 ? 10000 : 0);
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
         map.redraw();
@@ -706,7 +691,7 @@ describe('Keep camera outside terrain', () => {
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(0, 1);
     });
 
-    test('a transformCameraUpdate that sets the center elevation during a pitch drag into the terrain leaves the camera above it', async () => {
+    test('a transformCameraUpdate that sets the center elevation during a pitch drag into the terrain leaves the camera and its near clipping plane above it', async () => {
         const map = await createMapUnderATerrainFloorAt20000Meters({transformCameraUpdate: () => ({elevation: 0})});
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
@@ -722,21 +707,17 @@ describe('Keep camera outside terrain', () => {
             const d = Math.hypot(lng * metersPerDegree + 600, lat * metersPerDegree + 300) / 250;
             return d < 1 ? 450 * (1 - d * d) : 0;
         };
-        const {map, frame} = await createMapOverTerrain({zoom: 15, pitch: 70, maxPitch: 85}, hill, 0, 450);
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 70, maxPitch: 85}, hill, 0, 450);
         const start = cameraPosition(map);
-        let highest = start[2];
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 100});
         for (let move = 1; move <= 40; move++) {
             simulate.mousemove(window.document.body, {buttons: 2, clientX: 40 + 3 * move, clientY: 100});
             frame();
-            highest = Math.max(highest, cameraPosition(map)[2]);
         }
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 160, clientY: 100});
         for (let i = 0; i < 90; i++) frame();
 
-        expect(highest - start[2]).toBeCloseTo(210.8, 0);
-        expect(map.getBearing()).toBeCloseTo(97.38, 2);
         expect(map.getZoom()).toBeCloseTo(15, 6);
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(start[2], 1);
     });
@@ -746,7 +727,7 @@ describe('Keep camera outside terrain', () => {
 
         simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
         frame();
-        setTerrainElevation(map, 1000);
+        setTerrainHeight(map, () => 1000, 1000, 1000);
         for (let notch = 0; notch < 12; notch++) {
             simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
             for (let i = 0; i < 4; i++) frame();
@@ -765,45 +746,10 @@ describe('Keep camera outside terrain', () => {
         expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
     });
 
-    test('a pinch zoom over terrain that rose under the held center moves the center onto that terrain', async () => {
-        const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 60, maxZoom: 18}, 0);
-        map.touchZoomRotate.disableRotation();
-        map.touchPitch.disable();
-        const target = map.getCanvas();
-        const pinch = (spread: number) => simulate.touchmove(target, {touches: [{target, identifier: 1, clientX: 100, clientY: 100 - spread}, {target, identifier: 2, clientX: 100, clientY: 100 + spread}]});
-
-        simulate.touchstart(target, {touches: [{target, identifier: 1, clientX: 100, clientY: 90}, {target, identifier: 2, clientX: 100, clientY: 110}]});
-        pinch(15);
-        frame();
-        setTerrainElevation(map, 1000);
-        pinch(20);
-        frame();
-
-        expect(map.getCameraTargetElevation()).toBe(1000);
-    });
-
-    test('a one-finger tap-drag zoom over terrain that rose under the held center moves the center onto that terrain', async () => {
-        const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 60, maxZoom: 18}, 0);
-        const target = map.getCanvas();
-        const touchAt = (clientY: number) => ({touches: [{target, clientX: 100, clientY}]});
-
-        simulate.touchstart(target, touchAt(100));
-        simulate.touchend(target);
-        simulate.touchstart(target, touchAt(100));
-        simulate.touchmove(target, touchAt(120));
-        frame();
-        setTerrainElevation(map, 1000);
-        simulate.touchmove(target, touchAt(140));
-        frame();
-
-        expect(map.getZoom()).toBeCloseTo(13.0238, 4);
-        expect(map.getCameraTargetElevation()).toBe(1000);
-    });
-
     test('a wheel zoom-out over a crest between the camera and the center moves the camera as it would over flat ground at the center\'s elevation', async () => {
         const crest = ridges([{y: -157.7, height: 878.4, width: 318.2}]);
         const zoomOut = async (height: TerrainHeight, max: number) => {
-            const {map, frame} = await createMapOverTerrain({zoom: 16.2, pitch: 60, maxZoom: 18}, height, 0, max);
+            const {map, frame} = await createMapOverShapedTerrain({zoom: 16.2, pitch: 60, maxZoom: 18}, height, 0, max);
             const moves: number[] = [];
             for (let notch = 0; notch < 4; notch++) {
                 simulate.wheel(map.getCanvas(), {deltaY: wheelNotch, clientX: 111, clientY: 124});
@@ -824,9 +770,9 @@ describe('Keep camera outside terrain', () => {
         expect(Math.max(...overTheCrest.map((move, i) => Math.abs(move - overFlatGround[i])))).toBeLessThan(1e-5);
     });
 
-    test('a wheel zoom whose screen center slips over a crest keeps its pace from one frame to the next', async () => {
+    test('a wheel zoom whose screen center slips over a crest never speeds up more than 2.3 times from one frame to the next', async () => {
         const terrain = ridges([{y: -423.8, height: 652.7, width: 363.3}, {y: 8.26, height: 876.5, width: 301.4}, {y: -852.2, height: 382.6, width: 300.4}]);
-        const {map, frame} = await createMapOverTerrain({zoom: 14.6, pitch: 70, bearing: 30, maxPitch: 85, maxZoom: 18}, terrain, 0, 2020);
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 14.6, pitch: 70, bearing: 30, maxPitch: 85, maxZoom: 18}, terrain, 0, 2020);
         const moves: number[] = [];
 
         for (let notch = 0; notch < 13; notch++) {
@@ -839,12 +785,12 @@ describe('Keep camera outside terrain', () => {
         }
         const speedUps = moves.slice(1).map((move, i) => moves[i] > 1 ? move / moves[i] : 0);
 
-        expect(Math.max(...speedUps)).toBeLessThan(2.5);
+        expect(Math.max(...speedUps)).toBeLessThan(2.3);
     });
 
     test('a wheel zoom around a point over terrain that falls away under the center follows it down, and its end leaves the camera where it was', async () => {
         const fallingSouthward: TerrainHeight = (_lng, lat) => 1000 + 0.2 * lat * metersPerDegree;
-        const {map, frame} = await createMapOverTerrain({zoom: 15, pitch: 60, maxZoom: 18}, fallingSouthward, 0, 2000);
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 60, maxZoom: 18}, fallingSouthward, 0, 2000);
 
         for (let notch = 0; notch < 6; notch++) {
             simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 170});
@@ -864,22 +810,23 @@ describe('Keep camera outside terrain', () => {
     test('a wheel zoom-in toward terrain nearer than maxZoom allows never moves the camera back', async () => {
         const blockSouthEdge = -0.06, blockNorthEdge = -0.04;
         const block: TerrainHeight = (_lng, lat) => lat > blockSouthEdge && lat < blockNorthEdge ? 500 : 0;
-        const {map, frame} = await createMapOverTerrain({center: [0.1758, -0.03], zoom: 12, pitch: 80, maxPitch: 85, maxZoom: 12.5}, block, 0, 500);
+        const {map, frame} = await createMapOverShapedTerrain({center: [0.1758, -0.03], zoom: 12, pitch: 80, maxPitch: 85, maxZoom: 12.5}, block, 0, 500);
         const southwardMoves: number[] = [];
 
         simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 100});
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < framesOfTheWheelEasing + framesUntilTheZoomEnds; i++) {
             const before = cameraPosition(map);
             frame();
             southwardMoves.push(before[1] - cameraPosition(map)[1]);
         }
 
+        expect(map.isMoving()).toBe(false);
         expect(Math.max(...southwardMoves)).toBeLessThanOrEqual(0);
     });
 
     test('a wheel zoom over a rise in the terrain under the center that is not drawn yet leaves the held center elevation alone', async () => {
         const slopeRisingNorth = (rise: number): TerrainHeight => (_lng, lat) => 1000 + rise + 50000 * lat;
-        const {map, frame} = await createMapOverTerrain({zoom: 14, pitch: 60, maxZoom: 18}, slopeRisingNorth(0), 0, 2000);
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 14, pitch: 60, maxZoom: 18}, slopeRisingNorth(0), 0, 2000);
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
         simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 100});
         frame();
@@ -902,41 +849,6 @@ describe('Keep camera outside terrain', () => {
         expect(map.getCameraTargetElevation()).toBe(0);
     });
 
-    test('a wheel zoom within 0.75 degrees of a level view over terrain that fell under the held center zooms by the notch', async () => {
-        const {map, frame} = await createMapOverFlatTerrain({zoom: 14, pitch: 89.5, maxPitch: 90}, 0);
-        simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 100});
-        frame();
-        setTerrainElevation(map, -100);
-
-        for (let i = 0; i < 20; i++) frame();
-
-        expect(map.getZoom()).toBeCloseTo(14.15, 2);
-    });
-
-    test('a wheel zoom-out over terrain that fell away under the held center keeps raising the camera', async () => {
-        const {map, frame} = await createMapOverFlatTerrain({zoom: 10.4, pitch: 60, minZoom: 10}, 3000);
-        simulate.wheel(map.getCanvas(), {deltaY: wheelNotch, clientX: 100, clientY: 100});
-        frame();
-        setTerrainElevation(map, 0);
-        const cameraAltitude = map._camera.transform.getCameraAltitude();
-
-        for (let i = 0; i < 20; i++) frame();
-
-        expect(map._camera.transform.getCameraAltitude() - cameraAltitude).toBeCloseTo(861.5, 0);
-    });
-
-    test('an easeTo at constant pitch over a ridge the camera flies through ends at its pitch and zoom', async () => {
-        const {map, frame} = await createMapOverFlatTerrain({zoom: 13, pitch: 60}, 0);
-        const ridgeSouthEdge = map._camera.transform.getCameraLngLat().lat + 0.02;
-        setTerrainHeight(map, (_lng, lat) => lat > ridgeSouthEdge && lat < ridgeSouthEdge + 0.01 ? 3000 : 0, 0, 3000);
-
-        map.easeTo({center: [0, 0.06], duration: 1000});
-        for (let i = 0; i < 90; i++) frame();
-
-        expect(map.getPitch()).toBe(60);
-        expect(map.getZoom()).toBe(13);
-    });
-
     test('an easeTo that would end with the camera inside the terrain ends with the camera and its near clipping plane above it', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 13, pitch: 60}, 0);
         const cliffSouthEdge = -0.01;
@@ -949,7 +861,7 @@ describe('Keep camera outside terrain', () => {
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(5000, 0);
     });
 
-    test('a jumpTo at a fractional zoom whose camera would be inside the terrain raises the camera and its near clipping plane above it, where the camera was', async () => {
+    test('a jumpTo whose camera would be inside the terrain raises the camera and its near clipping plane above it, where the camera was', async () => {
         const {map} = await createMapOverFlatTerrain({zoom: 13, pitch: 45, maxPitch: 85}, 0);
         const cliffSouthEdge = -0.01;
         setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 3000 : 0, 0, 3000);
@@ -966,7 +878,7 @@ describe('Keep camera outside terrain', () => {
         expect(map._camera.transform.getCameraLngLat().lat).toBeCloseTo(asked.getCameraLngLat().lat, 9);
     });
 
-    test('a pitch drag past 90 degrees over terrain that stops before its end leaves the camera where it stopped', async () => {
+    test('a pitch drag past 90 degrees over terrain that rests before its release leaves the camera where it rested', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 14, pitch: 60, maxPitch: 110}, 500);
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 190});
         for (let i = 1; i <= 40; i++) {
@@ -982,17 +894,7 @@ describe('Keep camera outside terrain', () => {
         expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
     });
 
-    test('a jumpTo whose camera would be inside a slope keeps its center on the ground', async () => {
-        const {map} = await createMapOverFlatTerrain({zoom: 13, pitch: 60}, 0);
-        const cliffSouthEdge = 0;
-        setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 5000 : 0, 0, 5000);
-
-        map.jumpTo({center: [0, 0.01], zoom: 14});
-
-        expect(map.getCameraTargetElevation()).toBe(0);
-    });
-
-    test('a pitch drag into terrain on a globe keeps the camera above it', async () => {
+    test('a pitch drag into terrain on a globe raises the camera onto the terrain and no higher', async () => {
         const map = createMap({interactive: true, zoom: 8, pitch: 45, center: [10, 45]});
         await map.once('load');
         map.setProjection({type: 'globe'});

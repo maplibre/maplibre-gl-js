@@ -190,10 +190,11 @@ export class HandlerManager {
      * The gesture in flight over terrain, from its first handler frame to the
      * `_fireEvents` call that sees the movement end. While it is in flight the center
      * elevation is held, so a DEM tile landing mid-gesture cannot move the camera
-     * under the fingers; a frame that zooms in moves the held center onto the terrain the
-     * camera looks at, with the camera where it is. The gesture's end re-solves zoom
-     * and center onto the terrain the same way, then sets the center elevation to the
-     * terrain under the new center, as the next frame's clamp would.
+     * under the fingers; {@link Camera._keepCameraAboveTerrain} may raise the held elevation to keep
+     * the camera out of the terrain and lower it again, and a frame that zooms in moves the held center
+     * onto the terrain the camera looks at, with the camera where it is. The gesture's end
+     * re-solves zoom and center onto the terrain the same way, then sets the center
+     * elevation to the terrain under the new center, as the next frame's clamp would.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null};
     _zoom: {handlerName: string};
@@ -583,7 +584,7 @@ export class HandlerManager {
         this._camera.stop(true);
 
         const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta} = combinedResult;
-        if (terrain && zoomDelta > 0 && this._terrainGesture.inFlight) {
+        if (zoomDelta > 0 && this._terrainGesture.inFlight) {
             this._camera.moveCenterOntoTerrain(tr, zoomDelta);
         }
 

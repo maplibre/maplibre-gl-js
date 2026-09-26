@@ -76,6 +76,19 @@ export type TerrainCoverageIndex = {
 };
 
 /**
+ * A coverage index over the samplers of the tiles it keys by `wrap/z/x/y`, at the given zooms from finest to coarsest,
+ * whose elevation bracket reaches a little past the tiles' lowest and highest elevation.
+ * @param zooms - the zooms of the tiles, finest first
+ * @param samplerPerTile - each tile's sampler, null for a tile whose DEM has not loaded
+ * @param minElevation - the lowest elevation of the tiles, in meters
+ * @param maxElevation - the highest elevation of the tiles, in meters
+ */
+function createTerrainCoverageIndex(zooms: number[], samplerPerTile: Map<string, TerrainElevationSampler | null>, minElevation: number, maxElevation: number): TerrainCoverageIndex {
+    const lastCell: CoveredCell = {wrap: NaN, x: NaN, y: NaN, zoom: 0, tileX: 0, tileY: 0, sampler: undefined};
+    return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M, lastCell};
+}
+
+/**
  * A cell of the coverage index's finest zoom and the tile covering it, the same tile for every position in the cell:
  * the one at the finest zoom that has a tile there. `sampler` is undefined where no zoom has one and null where the
  * tile's DEM has not loaded.
@@ -329,8 +342,7 @@ export class Terrain {
 
         if (samplerPerTile.size === 0) return null;
         zooms.sort((a, b) => b - a);
-        const lastCell: CoveredCell = {wrap: NaN, x: NaN, y: NaN, zoom: 0, tileX: 0, tileY: 0, sampler: undefined};
-        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M, lastCell};
+        return createTerrainCoverageIndex(zooms, samplerPerTile, minElevation, maxElevation);
     }
 
     /**

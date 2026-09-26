@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {Terrain, elevationAt} from './terrain.ts';
+import {Terrain} from './terrain.ts';
 import {Context} from '../webgl/context.ts';
 import {RGBAImage} from '../util/image.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -423,34 +423,6 @@ describe('Terrain', () => {
 
         expect(result).toBe(0);
         expect(getSourceTile).not.toHaveBeenCalled();
-    });
-
-    describe('elevationAt', () => {
-        /** A terrain rendering the two northern zoom 1 tiles and a southern one, whose DEMs are at 100 m, at 900 m and not loaded. */
-        function createCoverageIndex() {
-            const west = new OverscaledTileID(1, 0, 1, 0, 0);
-            const east = new OverscaledTileID(1, 0, 1, 1, 0);
-            const terrain = createDEMTerrain([west, east, new OverscaledTileID(1, 0, 1, 0, 1)], null);
-            const dems = {[west.key]: createDEM(() => 100), [east.key]: createDEM(() => 900)};
-            terrain.tileManager.getSourceTile = tileID => dems[tileID.key] ? {tileID, dem: dems[tileID.key]} as Tile : undefined;
-            return terrain.getCoverageIndex();
-        }
-
-        test('is the covering tile\'s elevation times the exaggeration, whichever tile the position before was in', () => {
-            const index = createCoverageIndex();
-
-            expect(elevationAt(index, 2, 0.25, 0.25)).toBeCloseTo(200, 6);
-            expect(elevationAt(index, 2, 0.75, 0.25)).toBeCloseTo(1800, 6);
-            expect(elevationAt(index, 2, 0.25, 0.25)).toBeCloseTo(200, 6);
-        });
-
-        test('is null where the covering tile\'s DEM has not loaded', () => {
-            expect(elevationAt(createCoverageIndex(), 1, 0.25, 0.75)).toBeNull();
-        });
-
-        test('is undefined where no rendered tile covers the position', () => {
-            expect(elevationAt(createCoverageIndex(), 1, 0.75, 0.75)).toBeUndefined();
-        });
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {

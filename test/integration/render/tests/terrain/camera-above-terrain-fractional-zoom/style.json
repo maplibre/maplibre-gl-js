@@ -10,7 +10,7 @@
         ["jumpTo", {"center": [11.5, 47.29], "zoom": 12.5, "pitch": 65, "bearing": 180}],
         ["wait"]
       ],
-      "description": "At zoom 12.5 the jumpTo would put the camera 751 m inside the mountain, which draws nothing but its underside. Pitch and zoom are re-solved so the camera and its near clipping plane clear the slope, which the view then looks down, across the valley."
+      "description": "At zoom 12.5 the jumpTo would put the camera 751 m inside the mountain, which draws the slope from inside. Pitch and zoom are re-solved so the camera and its near clipping plane clear the slope, which the view then looks down, across the valley."
     }
   },
   "center": [11.5, 47.29],

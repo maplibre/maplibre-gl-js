@@ -319,6 +319,9 @@ export function createDEM(heightFn: (x: number, y: number) => number, dim: numbe
     return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
 }
 
+/** The margin a terrain's coverage index keeps between its elevation bracket and its tiles' lowest and highest elevation. */
+const COVERAGE_BRACKET_PADDING_M = 10;
+
 /**
  * The coverage index of a terrain drawn as one world tile whose surface is `height` meters at a location, between
  * `minElevation` and `maxElevation` meters.
@@ -331,8 +334,8 @@ export function createCoverageIndex(height: (lng: number, lat: number) => number
     return {
         zooms: [0],
         samplerPerTile: new globalThis.Map([['0/0/0/0', sampler]]),
-        minElevation: minElevation - 10,
-        maxElevation: maxElevation + 10,
+        minElevation: minElevation - COVERAGE_BRACKET_PADDING_M,
+        maxElevation: maxElevation + COVERAGE_BRACKET_PADDING_M,
         lastCell: {wrap: NaN, x: NaN, y: NaN, zoom: 0, tileX: 0, tileY: 0, sampler: undefined}
     };
 }

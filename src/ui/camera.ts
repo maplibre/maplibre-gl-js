@@ -369,10 +369,10 @@ export class Camera extends Evented<MapEventType> {
     elevationFreeze: boolean;
     /**
      * @internal
-     * The elevation the camera floor left on the transform a gesture edits, and how far it raised the held elevation to
-     * get there, so later updates can take the camera back down as the terrain allows. A held elevation other than the
-     * one it left was set anew, as the zoom's move onto the terrain or a new hold do, and carries no lift; see
-     * {@link Camera._keepCameraAboveTerrain}.
+     * The elevation {@link Camera._keepCameraAboveTerrain} left on the transform a gesture edits, and how far it raised
+     * the held elevation to get there, so later updates can take the camera back down as the terrain allows; null while
+     * it has not raised it. A held elevation other than the one it left was set anew, as the zoom's move onto the
+     * terrain or a new hold do, and carries no lift.
      */
     _heldLift: {elevation: number; height: number} | null = null;
     /**
@@ -1042,8 +1042,9 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * How far the terrain reaches above the camera, or the rendered terrain above one of nine points spread over its
-     * near clipping plane, in meters, whichever is more; zero or less while all are clear. The plane is checked on
-     * mercator only, where the frustum is in mercator coordinates.
+     * near clipping plane, in meters, whichever is more; zero or less while all are clear. The points are a 3 by 3 grid
+     * weighted bilinearly over the plane's four corners, the frustum's first four points in order around the plane. The
+     * plane is checked on mercator only, where the frustum is in mercator coordinates.
      * @param tr - the transform whose camera is checked
      */
     _terrainHeightAboveCamera(tr: ITransform): number {
@@ -1052,7 +1053,6 @@ export class Camera extends Evented<MapEventType> {
         if (!index) {
             return height;
         }
-        // The near plane's corners, in order around it, and bilinear weights over them for a 3 by 3 grid of points.
         const [p0, p1, p2, p3] = tr.getCameraFrustum().points;
         for (let row = 0; row <= 2; row++) {
             const v = row / 2;
