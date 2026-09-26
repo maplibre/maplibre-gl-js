@@ -13,7 +13,7 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainAt, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
 
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
@@ -402,7 +402,7 @@ export class MercatorTransform implements ITransform {
         const t = (this.cameraToCenterDistance * zoomScale(this.zoom - this.maxZoom) - this.nearZ) / (this.farZ - this.nearZ);
         if (!(t > 0 && t < 1)) return null;
         const start = vec3.lerp([], near, far, t);
-        if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / this.worldSize, start[1] / this.worldSize), start[2])) return null;
+        if (isBelowTerrainAt(index, terrain.exaggeration, start[0] / this.worldSize, start[1] / this.worldSize, start[2])) return null;
         return this._raycastTerrain(start, far, terrain)?.toLngLat() ?? null;
     }
 
@@ -1034,7 +1034,7 @@ function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
 }
 
 function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
-    return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
+    return isBelowTerrainAt(ray.index, ray.exaggeration, (ray.near[0] + t * ray.dx) / ray.worldSize, (ray.near[1] + t * ray.dy) / ray.worldSize, ray.near[2] + t * ray.dz);
 }
 
 /**

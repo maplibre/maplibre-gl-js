@@ -597,20 +597,40 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
     if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
     const wrap = Math.floor(mercatorX);
     const wrappedX = mercatorX - wrap;
-    const finestScale = 1 << index.zooms[0];
-    const cellX = Math.floor(wrappedX * finestScale);
-    const cellY = Math.floor(mercatorY * finestScale);
-    let cell = index.lastCell;
-    if (cell?.wrap !== wrap || cell.x !== cellX || cell.y !== cellY) {
-        cell = index.lastCell = lookUpCell(index, wrap, cellX, cellY, wrappedX, mercatorY);
-    }
-    const {zoom, tileX, tileY, sampler} = cell;
+    const {zoom, tileX, tileY, sampler} = cellAt(index, wrap, wrappedX, mercatorY);
     if (sampler === undefined) return NOT_COVERED;
     if (sampler === null) return {covered: true, demLoaded: false, elevation: 0};
     const scale = 1 << zoom;
     const x = Math.min((wrappedX * scale - tileX) * EXTENT, MAX_TILE_COORD);
     const y = Math.min((mercatorY * scale - tileY) * EXTENT, MAX_TILE_COORD);
     return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
+}
+
+/**
+ * Whether a height in meters is at or below the rendered terrain surface at a mercator position:
+ * {@link isBelowTerrainSample} of {@link sampleAt}, without building the sample.
+ */
+export function isBelowTerrainAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number, height: number): boolean {
+    if (mercatorY < 0 || mercatorY >= 1) return false;
+    const wrap = Math.floor(mercatorX);
+    const wrappedX = mercatorX - wrap;
+    const {zoom, tileX, tileY, sampler} = cellAt(index, wrap, wrappedX, mercatorY);
+    if (sampler === undefined) return false;
+    if (sampler === null) return height <= HIT_EPSILON_M;
+    const scale = 1 << zoom;
+    const x = Math.min((wrappedX * scale - tileX) * EXTENT, MAX_TILE_COORD);
+    const y = Math.min((mercatorY * scale - tileY) * EXTENT, MAX_TILE_COORD);
+    return height <= sampler(x, y, EXTENT) * exaggeration + HIT_EPSILON_M;
+}
+
+/** The cell of the index's finest zoom that holds a position, the one looked up last when it matches. */
+function cellAt(index: TerrainCoverageIndex, wrap: number, wrappedX: number, mercatorY: number): CoveredCell {
+    const finestScale = 1 << index.zooms[0];
+    const cellX = Math.floor(wrappedX * finestScale);
+    const cellY = Math.floor(mercatorY * finestScale);
+    const last = index.lastCell;
+    if (last?.wrap === wrap && last.x === cellX && last.y === cellY) return last;
+    return index.lastCell = lookUpCell(index, wrap, cellX, cellY, wrappedX, mercatorY);
 }
 
 /** The tile covering a cell of the index's finest zoom, found at the finest zoom that has a tile there. */
