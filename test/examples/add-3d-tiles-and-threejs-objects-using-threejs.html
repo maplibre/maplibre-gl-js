@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add 3D Tiles and 3D objects using ThreeJS</title>
+    <meta property="og:description" content="Use maplibre-gl-three to add 3D Tiles and Three.JS objects to a map." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-03-03" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.22.0/dist/proj4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/geotiff@3.0.5/dist-browser/geotiff.js"></script>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
+            "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/maplibre-gl-three.js"
+        }
+    }
+</script>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'maplibre-gl';
+    import * as THREE from 'three';
+    import { ThreeDManager } from 'maplibre-gl-three';
+
+    const terrainTileUrl = window.location.origin === 'null'
+        ? 'https://maplibre.org/maplibre-gl-js/docs/assets/height-mock/110_above_sea.png'
+        : `${window.location.origin}/docs/assets/height-mock/110_above_sea.png`;
+
+    const style = {
+        version: 8,
+        terrain: {
+            source: 'height-mock'
+        },
+        projection: {
+            type: 'globe'
+        },
+        layers: [
+            {
+                id: 'background-map',
+                type: 'raster',
+                source: 'osm-tiles'
+            },
+            {
+                id: 'rivers',
+                type: 'line',
+                source: 'osm-vectors',
+                filter: ['==', 'type', 'river'],
+                paint: {
+                    'line-color': 'rgba(69, 69, 255, 1)',
+                    'line-width': 3
+                }
+            },
+            {
+                id: 'roads-outline',
+                type: 'line',
+                source: 'osm-vectors',
+                filter: ['==', 'type', 'road'],
+                paint: {
+                    'line-color': 'rgba(10, 10, 10, 1)',
+                    'line-width': 6
+                }
+            },
+            {
+                id: 'roads-fill',
+                type: 'line',
+                source: 'osm-vectors',
+                filter: ['==', 'type', 'road'],
+                paint: {
+                    'line-color': 'rgba(255, 255, 255, 1)',
+                    'line-width': 4
+                }
+            }
+        ],
+        sources: {
+            'height-mock': {
+                type: 'raster-dem',
+                tiles: [terrainTileUrl],
+                tileSize: 256,
+                maxzoom: 8,
+                encoding: 'mapbox'
+            },
+            'osm-tiles': {
+                type: 'raster',
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                minzoom: 0,
+                maxzoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            },
+            'osm-vectors': {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [
+                        {
+                            type: 'Feature',
+                            properties: {type: 'river'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.587048, 40.035393],
+                                    [-75.590677, 40.036812],
+                                    [-75.595126, 40.037389],
+                                    [-75.600501, 40.035389],
+                                    [-75.603808, 40.034465]
+                                ]
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            properties: {type: 'road'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.605282, 40.041043],
+                                    [-75.601071, 40.040964],
+                                    [-75.597454, 40.04072],
+                                    [-75.595296, 40.040899],
+                                    [-75.592183, 40.041221]
+                                ]
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            properties: {type: 'road'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.592032, 40.032431],
+                                    [-75.593718, 40.036774],
+                                    [-75.594677, 40.038622],
+                                    [-75.596183, 40.040017],
+                                    [-75.596631, 40.040788]
+                                ]
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            properties: {type: 'road'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.596631, 40.040788],
+                                    [-75.596344, 40.040007],
+                                    [-75.595194, 40.038884],
+                                    [-75.593856, 40.036754],
+                                    [-75.592126, 40.032307]
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    };
+
+    const map = new maplibregl.Map({
+        terrainSkirtLength: 'none',
+        container: 'map',
+        zoom: 16,
+        center: [-75.596, 40.038],
+        pitch: 55,
+        bearing: -20,
+        maxPitch: 60,
+        style,
+        canvasContextAttributes: {antialias: true}
+    });
+
+    map.addControl(new maplibregl.NavigationControl({visualizePitch: true}));
+
+    map.on('load', async () => {
+        const threeDManager = new ThreeDManager();
+        await threeDManager.init();
+        const layer = threeDManager.createLayer();
+        // Add the Three.JS scene below the rivers Style Spec layer 
+        map.addLayer(layer, 'rivers');
+
+        // Add 3D Tiles to the scene
+        await layer.load3dTiles({
+            tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
+            offset: {east: 0, up: -234, south: 0},
+            maxDepth: 5
+        });
+        
+        // Add a pink sphere
+        const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(10, 32, 16),
+            new THREE.MeshStandardMaterial({color: 0xff00ff})
+        );
+        sphere.applyMatrix4(threeDManager.getEcefMatrix({point: [-75.598, 40.040], height: 130}));
+        layer.getScene().add(sphere);
+        
+        // Add a group of 4 spheres, with offsets in meter from a geographical center 
+        const placement = new THREE.Group();
+        placement.applyMatrix4(threeDManager.getEcefMatrix({point: [-75.595, 40.040], height: 140}));
+        const geometry = new THREE.SphereGeometry(10, 32, 16);
+        const northSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({color: 0xff0000}));
+        const southSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({color: 0x00ff00}));
+        const eastSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({color: 0x0000ff}));
+        const westSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({color: 0xffff00}));
+        northSphere.position.set(0, 0, -30);
+        southSphere.position.set(0, 0, 30);
+        eastSphere.position.set(30, 0, 0);
+        westSphere.position.set(-30, 0, 0);
+        placement.add(northSphere, southSphere, eastSphere, westSphere);
+        layer.getScene().add(placement);
+
+        map.on('remove', () => threeDManager.destroy());
+    });
+</script>
+</body>
+</html>
