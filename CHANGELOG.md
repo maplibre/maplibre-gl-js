@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Terminate the pooled web workers when the last map is removed, so a new map is not handed workers the browser already killed. Call `prewarm()` to keep them alive between maps, and re-send any state your plugin broadcasts into the workers from `onGlobalWorkersCreated`. ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
