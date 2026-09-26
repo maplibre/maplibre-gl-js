@@ -6,7 +6,9 @@ import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '..
 import {Evented} from '../evented.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
-import {Terrain} from '../../render/terrain.ts';
+import {Terrain, type TerrainCoverageIndex, type TerrainElevationSampler} from '../../render/terrain.ts';
+import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
+import {EXTENT} from '../../data/extent.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
@@ -315,6 +317,27 @@ export function createDEM(heightFn: (x: number, y: number) => number, dim: numbe
         }
     }
     return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
+}
+
+/** The margin a terrain's coverage index keeps between its elevation bracket and its tiles' lowest and highest elevation. */
+const COVERAGE_BRACKET_PADDING_M = 10;
+
+/**
+ * The coverage index of a terrain drawn as one world tile whose surface is `height` meters at a location, between
+ * `minElevation` and `maxElevation` meters.
+ */
+export function createCoverageIndex(height: (lng: number, lat: number) => number, minElevation: number, maxElevation: number): TerrainCoverageIndex {
+    const sampler: TerrainElevationSampler = (x, y) => {
+        const {lng, lat} = new MercatorCoordinate(x / EXTENT, y / EXTENT).toLngLat();
+        return height(lng, lat);
+    };
+    return {
+        zooms: [0],
+        samplerPerTile: new globalThis.Map([['0/0/0/0', sampler]]),
+        minElevation: minElevation - COVERAGE_BRACKET_PADDING_M,
+        maxElevation: maxElevation + COVERAGE_BRACKET_PADDING_M,
+        lastCell: {wrap: NaN, x: NaN, y: NaN, zoom: 0, tileX: 0, tileY: 0, sampler: undefined}
+    };
 }
 
 export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | null, exaggeration: number = 1): Terrain {

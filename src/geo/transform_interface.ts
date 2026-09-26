@@ -207,7 +207,9 @@ interface ITransformMutators {
     /**
      * This method works in combination with freezeElevation activated.
      * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoom level and center point for the current camera-height in current terrain.
+     * Once it ends, and on each frame of a zoom in, call this method to put the center onto the terrain the camera
+     * looks at and recalculate the zoom level for the current camera position. Where the terrain under the center is
+     * above a camera looking down, no zoom puts the center there with the camera in place, and the center stays.
      * @param terrain - the terrain
      */
     recalculateZoomAndCenter(terrain?: Terrain): void;

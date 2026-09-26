@@ -625,6 +625,12 @@ export class TransformHelper implements ITransformGetters {
         return {center, elevation: clampedElevation, zoom};
     }
 
+    /**
+     * Moves the center along the view to the given elevation with the camera where it is, and sets the zoom to match.
+     * The matrices are recomputed even where `setZoom` leaves the zoom as it was, as at a zoom bound, since the center
+     * and its elevation have moved.
+     * @param elevation - the elevation in meters for the center
+     */
     recalculateZoomAndCenter(elevation: number): void {
         if (this.elevation - elevation === 0) return;
 
@@ -660,7 +666,13 @@ export class TransformHelper implements ITransformGetters {
         // Update matrices
         this._elevation = clampedElevation;
         this._center = center;
+        const previousZoom = this._zoom;
         this.setZoom(zoom);
+        if (this._zoom === previousZoom) {
+            this._unmodified = false;
+            this.constrainInternal();
+            this._calcMatrices();
+        }
     }
 
     _distanceToCenterFromAltElevationPitch(alt: number, elevation: number, pitch: number): {distanceToCenter: number; clampedElevation: number} {

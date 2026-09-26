@@ -1,0 +1,52 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "maxPitch": 85,
+      "operations": [
+        ["wait"],
+        ["jumpTo", {"center": [11.5, 47.29], "zoom": 12.5, "pitch": 65, "bearing": 180}],
+        ["wait"]
+      ],
+      "description": "At zoom 12.5 the jumpTo would put the camera 751 m inside the mountain, which draws the slope from inside. Pitch and zoom are re-solved so the camera and its near clipping plane clear the slope, which the view then looks down, across the valley."
+    }
+  },
+  "center": [11.5, 47.29],
+  "zoom": 12,
+  "pitch": 60,
+  "bearing": 180,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "hillshade": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "hillshade"
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}

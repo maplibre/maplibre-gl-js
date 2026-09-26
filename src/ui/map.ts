@@ -773,6 +773,7 @@ export class Map extends Evented<MapEventType> {
             cancelRenderFrame: (id) => this._cancelRenderFrame(id),
             transformCameraUpdate: resolvedOptions.transformCameraUpdate,
             stopHandlers: () => this._handlers?.stop(false),
+            projectionTransitionAt: (zoom) => this.style?.projection ? this.style.projection.transitionStateAt(zoom) : 0,
         });
         this._camera.setEventedParent(this);
 

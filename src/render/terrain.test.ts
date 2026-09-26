@@ -12,7 +12,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
+import {createDEM, createDEMTerrain} from '../util/test/util.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -378,6 +378,15 @@ describe('Terrain', () => {
 
         terrain.getElevation = () => 1;
         expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
+    });
+
+    test('getElevationForLngLatZoom at a fractional zoom samples the tile at the zoom\'s integer part', () => {
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const terrain = createDEMTerrain([tileID], createDEM(() => 300));
+        const sourceTile = terrain.tileManager.getSourceTile(tileID);
+        terrain.tileManager.getSourceTile = (id) => id.key === tileID.key ? sourceTile : undefined;
+
+        expect(terrain.getElevationForLngLatZoom(new LngLat(-90, 40), 1.5)).toBeCloseTo(300, 6);
     });
 
     test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
