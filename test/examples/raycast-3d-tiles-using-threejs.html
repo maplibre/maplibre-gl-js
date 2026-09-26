@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Raycast 3D Tiles using ThreeJS</title>
+    <meta property="og:description" content="Use maplibre-gl-three to raycast against 3D Tiles and display the impact location." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-09-26" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #status {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            max-width: 100%;
+            box-sizing: border-box;
+            padding: 4px;
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            white-space: pre-wrap;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.22.0/dist/proj4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/geotiff@3.0.5/dist-browser/geotiff.js"></script>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
+            "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/maplibre-gl-three.js"
+        }
+    }
+</script>
+<div id="status">Loading 3D Tiles...</div>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'maplibre-gl';
+    import * as THREE from 'three';
+    import { ThreeDManager } from 'maplibre-gl-three';
+
+    const terrainTileUrl = window.location.origin === 'null'
+        ? 'https://maplibre.org/maplibre-gl-js/docs/assets/height-mock/110_above_sea.png'
+        : `${window.location.origin}/docs/assets/height-mock/110_above_sea.png`;
+
+    const style = {
+        version: 8,
+        terrain: {
+            source: 'height-mock'
+        },
+        layers: [
+            {
+                id: 'background-map',
+                type: 'raster',
+                source: 'osm-tiles'
+            },
+            {
+                id: 'rivers',
+                type: 'line',
+                source: 'osm-vectors',
+                filter: ['==', 'type', 'river'],
+                paint: {
+                    'line-color': 'rgba(69, 69, 255, 1)',
+                    'line-width': 3
+                }
+            },
+            {
+                id: 'roads-outline',
+                type: 'line',
+                source: 'osm-vectors',
+                filter: ['==', 'type', 'road'],
+                paint: {
+                    'line-color': 'rgba(10, 10, 10, 1)',
+                    'line-width': 6
+                }
+            },
+            {
+                id: 'roads-fill',
+                type: 'line',
+                source: 'osm-vectors',
+                filter: ['==', 'type', 'road'],
+                paint: {
+                    'line-color': 'rgba(255, 255, 255, 1)',
+                    'line-width': 4
+                }
+            }
+        ],
+        sources: {
+            'height-mock': {
+                type: 'raster-dem',
+                tiles: [terrainTileUrl],
+                tileSize: 256,
+                maxzoom: 8,
+                encoding: 'mapbox'
+            },
+            'osm-tiles': {
+                type: 'raster',
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                minzoom: 0,
+                maxzoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            },
+            'osm-vectors': {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [
+                        {
+                            type: 'Feature',
+                            properties: {type: 'river'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.587048, 40.035393],
+                                    [-75.590677, 40.036812],
+                                    [-75.595126, 40.037389],
+                                    [-75.600501, 40.035389],
+                                    [-75.603808, 40.034465]
+                                ]
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            properties: {type: 'road'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.605282, 40.041043],
+                                    [-75.601071, 40.040964],
+                                    [-75.597454, 40.04072],
+                                    [-75.595296, 40.040899],
+                                    [-75.592183, 40.041221]
+                                ]
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            properties: {type: 'road'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.592032, 40.032431],
+                                    [-75.593718, 40.036774],
+                                    [-75.594677, 40.038622],
+                                    [-75.596183, 40.040017],
+                                    [-75.596631, 40.040788]
+                                ]
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            properties: {type: 'road'},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [-75.596631, 40.040788],
+                                    [-75.596344, 40.040007],
+                                    [-75.595194, 40.038884],
+                                    [-75.593856, 40.036754],
+                                    [-75.592126, 40.032307]
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    };
+
+    const map = new maplibregl.Map({
+        terrainSkirtLength: 'none',
+        container: 'map',
+        zoom: 16,
+        center: [-75.596, 40.038],
+        pitch: 55,
+        bearing: -20,
+        maxPitch: 60,
+        style,
+        canvasContextAttributes: {antialias: true}
+    });
+
+    map.addControl(new maplibregl.NavigationControl({visualizePitch: true}));
+
+    map.on('load', async () => {
+        const threeDManager = new ThreeDManager();
+        await threeDManager.init();
+        const layer = threeDManager.createLayer({id: 'agi-hq-3d'});
+        const tilesAsset = await layer.load3dTiles({
+            tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
+            offset: {east: 0, up: -234, south: 0},
+            maxDepth: 5
+        });
+        map.addLayer(layer, 'rivers');
+
+        const scene = layer.getScene();
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        const camera = layer.getCamera();
+        const renderer = layer.getRenderer();
+        const statusElement = document.getElementById('status');
+
+        if (!renderer || !statusElement) return;
+
+        // Prepare the raycast arrow and the impact point but do not show them yet.
+        const rayArrow = new THREE.ArrowHelper(
+            new THREE.Vector3(0, 0, -1),
+            new THREE.Vector3(),
+            1,
+            0xffcc33,
+            0,
+            0
+        );
+        const rayImpact = new THREE.Mesh(
+            new THREE.SphereGeometry(6, 16, 8),
+            new THREE.MeshBasicMaterial({color: 0xff5533, transparent: true, opacity: 0.4})
+        );
+        rayImpact.visible = false;
+        rayArrow.visible = false;
+        scene.add(rayArrow);
+        scene.add(rayImpact);
+
+        const tilesRenderer = tilesAsset.getTilesRenderer();
+
+        // We want to make one automatic raycast, then allow map clicks to do new raycasts.
+
+        // At first, keep raycasting on each tile load, until a ray hits something.
+        tilesAsset.getTilesRenderer().addEventListener('load-model', topDownRayCast);
+        function topDownRayCast() {
+            // The raycast destination is the reference point of the 3D Tiles, which is the center of the tiles' enclosing circle.
+            const destination = tilesAsset.getReference();
+            if (!destination) {
+                throw new Error("could not obtain the 3D Tiles reference")
+            }
+            // The ray starts 10 meters above the reference point, heading straight down.
+            const origin = { 
+                point: destination.point,
+                height: destination.height + 10
+            };
+            // Convert to the ECEF coordinate system.
+            const ecef_origin = threeDManager.lngLatAltToEcef(origin);
+            const ecef_destination = threeDManager.lngLatAltToEcef(destination);
+            // Perform the actual raycast, in ECEF coordinates.
+            const ecef_impactPoint = raycast_originDestination(ecef_origin, ecef_destination);
+            if (ecef_impactPoint) {
+                // we hit something. Render it...
+                renderHit(ecef_origin, ecef_impactPoint);
+                // ...and stop trying to raycast top-down
+                tilesAsset.getTilesRenderer().removeEventListener('load-model', topDownRayCast);
+                // Now enable raycasting via mouse click:
+                renderer.domElement.addEventListener('click', function (event) {
+                    const result = raycast_pointer(event);
+                    if (result) {
+                        const {ecef_cameraOrigin, ecef_impactPoint} = result;
+                        renderHit(ecef_cameraOrigin, ecef_impactPoint);
+                    }
+                });
+            }
+        }
+
+        // Renders the hit on the Three.JS scene and updates the HTML text
+        function renderHit(ecef_origin, ecef_impactPoint) {
+            const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
+            const ecef_rayLength = ecef_direction.length();
+            ecef_direction.normalize();
+        
+            drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
+            drawImpact(ecef_impactPoint);
+
+            // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
+            const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
+            updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
+        }
+
+        // The actual raycasting functions are below.
+
+        function raycast_originDestination(ecef_origin, ecef_destination) {
+            const direction = ecef_destination.clone().sub(ecef_origin);
+            return raycast_originDirection(ecef_origin, direction);
+        }
+        function raycast_originDirection(ecef_origin, ecef_direction) {
+            ecef_direction = ecef_direction.clone();
+            if (ecef_direction.lengthSq() === 0) {
+                statusElement.textContent = 'Cannot cast a ray with a zero direction.';
+                return;
+            }
+            ecef_direction.normalize();
+            raycaster.set(ecef_origin, ecef_direction);
+            // The raycaster works internally in LocalSpace; this converts ECEF to LocalSpace.
+            raycaster.ray.applyMatrix4(threeDManager.getAnchorEcefToLocalMatrix());
+            const intersections = raycaster.intersectObject(tilesAsset.getObject3D(), true);
+            const hit = intersections.length === 0 ? null : intersections[0];
+
+            if (!hit) return null;
+            // Convert LocalSpace back to ECEF.
+            hit.point.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
+            return hit.point;
+        }
+        function raycast_pointer(event) {
+            const bounds = renderer.domElement.getBoundingClientRect();
+
+            // From pixels (MapLibre) to normalized device coordinates as expected by Three.js.
+            pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+            pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+
+            raycaster.setFromCamera(pointer, camera);
+
+            // The camera ray is in LocalSpace, so we change it to ECEF space.
+            // This is a bit of a redundant calculation and we could have implemented a separate LocalSpace raycaster. But this is less code.
+            raycaster.ray.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
+
+            const ecef_cameraOrigin = raycaster.ray.origin.clone();
+            const ecef_impactPoint = raycast_originDirection(raycaster.ray.origin, raycaster.ray.direction);
+            if (!ecef_impactPoint) {
+                return null;
+            }
+            return {
+                ecef_cameraOrigin,
+                ecef_impactPoint
+            }
+        }
+        
+        // Functions used by renderHit are below. 
+
+        function drawArrow(origin, direction, length) {
+            rayArrow.position.copy(origin);
+            rayArrow.setDirection(direction);
+            rayArrow.setLength(
+                length,
+                4,
+                1
+            );
+            rayArrow.visible = true;
+        }
+        function drawImpact(impactPoint) {
+            rayImpact.position.copy(impactPoint);
+            rayImpact.visible = true;
+        }
+        function updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint) {
+            const str = 
+            `Raycasting impact Point (WGS84)\n\n` +
+            `lngLatAlt EPSG:4326/EPSG:9707: (lon: ${lngLatAlt_impactPoint.point[0].toFixed(6)}°, lat: ${lngLatAlt_impactPoint.point[1].toFixed(6)}°, alt: ${lngLatAlt_impactPoint.height.toFixed(1)}m orthometric)\n` + 
+            `ECEF EPSG:4978:                (${ecef_impactPoint.x.toFixed(1)}m, ${ecef_impactPoint.y.toFixed(1)}m, ${ecef_impactPoint.z.toFixed(1)}m)`;
+            console.log(str);
+            statusElement.textContent = str;
+        }
+    });
+</script>
+</body>
+</html>
