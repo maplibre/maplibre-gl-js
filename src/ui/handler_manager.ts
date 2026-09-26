@@ -580,6 +580,9 @@ export class HandlerManager {
         this._camera.stop(true);
 
         const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta} = combinedResult;
+        if (terrain && zoomDelta && this._terrainGesture.inFlight) {
+            this._camera.moveCenterOntoTerrain(tr);
+        }
 
         let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
         const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;

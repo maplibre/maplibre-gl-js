@@ -394,7 +394,7 @@ export class MercatorTransform implements ITransform {
         const index = terrain.getCoverageIndex();
         if (!index) return null;
 
-        const {near, far} = this.getRaySegmentFromPixel(p);
+        const {near, far} = this.getRaySegmentFromPixel(p, -1);
         const worldSize = this.worldSize;
         const dx = far[0] - near[0];
         const dy = far[1] - near[1];
@@ -444,10 +444,12 @@ export class MercatorTransform implements ITransform {
     }
 
     /**
-     * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
+     * Returns the segment of the ray through the given screen pixel from its point at `nearZ` in clip space to the far
+     * clipping plane. The default of 0 lies at about twice the near clipping plane's distance from the camera, which is
+     * all a plane intersection needs; -1 starts the segment at the near clipping plane, so it holds all the view shows.
      */
-    private getRaySegmentFromPixel(p: Point): RaySegment {
-        const coord0 = [p.x, p.y, 0, 1] as vec4;
+    private getRaySegmentFromPixel(p: Point, nearZ: number = 0): RaySegment {
+        const coord0 = [p.x, p.y, nearZ, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
 
         vec4.transformMat4(coord0, coord0, this._pixelMatrixInverse);

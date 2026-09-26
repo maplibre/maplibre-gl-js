@@ -1009,6 +1009,21 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
+     * Moves the center a zoom gesture holds onto the terrain the camera looks at, with the camera where it is, so the
+     * zoom measures the distance to what the camera sees: a zoom toward rising terrain slows down before it instead of
+     * running into it, the tiles drawn for the zoom keep their detail, and the gesture's end has nothing to re-solve.
+     * Does nothing while the camera looks at no terrain.
+     * @param tr - the requested camera state
+     */
+    moveCenterOntoTerrain(tr: ITransform): void {
+        if (!this.terrain || !this.getCenterClampedToGround() || tr.getClippingPlane() || !tr.screenTerrainPointToMercatorCoordinate(tr.centerPoint, this.terrain)) {
+            return;
+        }
+        tr.recalculateZoomAndCenter(this.terrain);
+    }
+
+    /**
+     * @internal
      * Called after the camera is done being manipulated. Keeps the camera above the terrain on the requested
      * state itself, lets `transformCameraUpdate`, if present, propose its changes on a copy, and applies the
      * "approved" result to the rendered transform.

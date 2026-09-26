@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, waitForEvent, createTerrain} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, waitForEvent, createTerrain, createDEM, createDEMTerrain} from '../../util/test/util.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -577,6 +577,46 @@ describe('Keep camera outside terrain', () => {
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(8000, 0);
         expect(map.getCameraTargetElevation()).toBeCloseTo(45.7, 1);
         expect(map.getPitch()).toBe(45);
+    });
+
+    test('a wheel zoom over terrain that rose under the held center moves the center onto that terrain, and its end leaves the camera and the zoom where they were', async () => {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        let now = 1555555555555;
+        timeControlNow.mockReturnValue(now);
+        const map = createMap({interactive: true, zoom: 12, pitch: 70, maxZoom: 18});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        const elevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        const tileElevation = vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(0);
+        map.redraw();
+        const frame = () => { now += 1000 / 60; timeControlNow.mockReturnValue(now); map._renderTaskQueue.run(); };
+
+        simulate.wheel(map.getCanvas(), {deltaY: -400.0244140625, clientX: 100, clientY: 100});
+        frame();
+        const plateau = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(plateau.getCoverageIndex());
+        elevation.mockReturnValue(1000);
+        tileElevation.mockReturnValue(1000);
+        for (let notch = 0; notch < 12; notch++) {
+            simulate.wheel(map.getCanvas(), {deltaY: -400.0244140625, clientX: 100, clientY: 100});
+            for (let i = 0; i < 4; i++) frame();
+        }
+        for (let i = 0; i < 20; i++) frame();
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getZoom()).toBe(18);
+        const cameraAltitude = map._camera.transform.getCameraAltitude();
+        const cameraLngLat = map._camera.transform.getCameraLngLat();
+
+        await new Promise(resolve => setTimeout(resolve, 250));
+        for (let i = 0; i < 3; i++) frame();
+
+        expect(map._camera.elevationFreeze).toBe(false);
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getZoom()).toBe(18);
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(cameraAltitude, 1);
+        expect(map._camera.transform.getCameraLngLat().lng).toBeCloseTo(cameraLngLat.lng, 7);
+        expect(map._camera.transform.getCameraLngLat().lat).toBeCloseTo(cameraLngLat.lat, 7);
     });
 });
 

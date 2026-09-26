@@ -835,6 +835,17 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         }
     });
 
+    test('hits the terrain between the near clipping plane and twice its distance from the camera', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 449));
+        const transform = createMercatorTransform(new LngLat(0, 0), 16, 60);
+        const center = new Point(256, 256);
+
+        const result = transform.screenTerrainPointToMercatorCoordinate(center, terrain);
+
+        expect(result.z).toBeCloseTo(449, 6);
+        expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(center, 449), transform.worldSize);
+    });
+
     test('applies the terrain exaggeration to the hit elevation', () => {
         const height = 300;
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => height), 2.5);
