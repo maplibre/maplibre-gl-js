@@ -519,6 +519,42 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(100);
     });
 
+    /** The center elevation on the first frame of an easeTo onto landed terrain, after `animate` started a `freezeElevation` animation that ended with the terrain switched off. */
+    async function firstEasedElevationAfterAFreezeAnimationWithoutTerrain(animate: (map: Map) => void): Promise<number> {
+        const start = new LngLat(0.0105, 0);
+        const {map, landAwayFrom} = await createMapWithWaitingDem({zoom: 17, pitch: 30, center: start});
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        animate(map);
+        now.mockReturnValue(500);
+        map.redraw();
+        map.setTerrain(null);
+        now.mockReturnValue(1000);
+        map.redraw();
+        map.setTerrain({source: 'dem'});
+        now.mockReturnValue(1500);
+        map.redraw();
+        await landAwayFrom(1000, start);
+
+        map.easeTo({center: [0.0125, 0], duration: 1000, easing: k => k});
+        now.mockReturnValue(1600);
+        map.redraw();
+        return map.getCameraTargetElevation();
+    }
+
+    test('an easeTo after an easeTo with freezeElevation that ended with the terrain switched off eases the center elevation to the terrain under its destination', async () => {
+        const elevation = await firstEasedElevationAfterAFreezeAnimationWithoutTerrain(map => map.easeTo({center: [0.0106, 0], duration: 1000, freezeElevation: true, easing: k => k}));
+
+        expect(elevation).toBe(100);
+    });
+
+    test('an easeTo after a flyTo with freezeElevation that ended with the terrain switched off eases the center elevation to the terrain under its destination', async () => {
+        const elevation = await firstEasedElevationAfterAFreezeAnimationWithoutTerrain(map => map.flyTo({center: [0.0106, 0], duration: 1000, freezeElevation: true, easing: k => k}));
+
+        expect(elevation).toBe(100);
+    });
+
     test('a flyTo with freezeElevation takes the DEM elevation once it lands under the center', async () => {
         const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 30});
         map.setTerrain({source: 'dem'});

@@ -856,7 +856,7 @@ export class Camera extends Evented<MapEventType> {
 
         }, (interruptingEaseId?: string) => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
-            else this.elevationFreeze = false;
+            else this._endElevationHold();
             this._afterEase(eventData, interruptingEaseId);
         }, options);
 
@@ -946,11 +946,20 @@ export class Camera extends Evented<MapEventType> {
      * the end of an animation
      */
     releaseElevation(tr: ITransform): void {
-        this.elevationFreeze = false;
-        this._heldElevationAwaitsDem = false;
+        this._endElevationHold();
         if (this.getCenterClampedToGround()) {
             tr.recalculateZoomAndCenter(this.terrain);
         }
+    }
+
+    /**
+     * @internal
+     * Ends a hold on the center elevation, and any wait for DEM data with it, leaving the center where it is: an
+     * animation that ends without terrain or without `freezeElevation` has nothing to put back onto the terrain.
+     */
+    _endElevationHold(): void {
+        this.elevationFreeze = false;
+        this._heldElevationAwaitsDem = false;
     }
 
     /**
@@ -1320,7 +1329,7 @@ export class Camera extends Evented<MapEventType> {
             this._fireMoveEvents(eventData);
         }, () => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
-            else this.elevationFreeze = false;
+            else this._endElevationHold();
             this._afterEase(eventData);
         }, options);
 
