@@ -1,0 +1,90 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Renders geojson in the built-in simple (identity CRS) projection, where the square spanning lng/lat -90..90 is tile 0/0/0. At zoom 0 a 256px view centered on 0,0 shows lng/lat -45..45, so in the identity CRS the polygon fills the top-right quadrant, the line runs along x=14px and the diagonal from top-left to bottom-right, and the point sits at 43,213.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [0, 0],
+  "zoom": 0,
+  "projection": {"type": "simple"},
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"kind": "polygon"},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[0, 0], [45, 0], [45, 45], [0, 45], [0, 0]]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "line"},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[-40, -40], [-40, 40], [40, -40]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "point", "name": "P"},
+            "geometry": {
+              "type": "Point",
+              "coordinates": [-30, -30]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "filter": ["==", "kind", "polygon"],
+      "paint": {"fill-color": "red", "fill-opacity": 0.5}
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "filter": ["==", "kind", "line"],
+      "paint": {"line-color": "blue", "line-width": 4}
+    },
+    {
+      "id": "circle",
+      "type": "circle",
+      "source": "geojson",
+      "filter": ["==", "kind", "point"],
+      "paint": {"circle-color": "green", "circle-radius": 8}
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "geojson",
+      "filter": ["==", "kind", "point"],
+      "layout": {
+        "text-field": "{name}",
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        "text-size": 24,
+        "text-offset": [1, 0],
+        "text-anchor": "left"
+      },
+      "paint": {"text-color": "black"}
+    }
+  ]
+}

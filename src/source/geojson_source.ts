@@ -9,14 +9,19 @@ import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
+import {getJSON} from '../util/ajax.ts';
+import {reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
+import {RequestPerformance} from '../util/request_performance.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {RequestParameters} from '../util/ajax.ts';
 import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import type {Source} from './source.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {Actor} from '../util/actor.ts';
-import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages.ts';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff.ts';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source.ts';
@@ -88,7 +93,27 @@ export type GetClusterOptions = {
 };
 
 /**
+ * URL data the source fetched itself instead of leaving the fetch to the worker, so it could pre-project it for a
+ * planar projection: the source keeps it as its own copy once the worker has taken the update, and the fetch's
+ * resource timing goes with the data event that follows.
+ */
+type FetchedGeoJSON = {
+    data: GeoJSON.GeoJSON;
+    resourceTiming?: PerformanceResourceTiming[];
+};
+
+/**
+ * A pending worker update: the parameters to send, and the source's own fetch behind them when there was one.
+ */
+type WorkerUpdate = {
+    params: LoadGeoJSONParameters;
+    fetched?: FetchedGeoJSON;
+};
+
+/**
  * A source containing GeoJSON.
+ * On a projection registered with {@link addProjection} the data is tiled from pre-projected coordinates, so the
+ * `filter` option is evaluated on those and geometry-based filters (`within`) are not supported there.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
  * GeoJSON is tiled internally for rendering. Features exposed from rendered tiles and related events come from vector-tile data, so GeoJSON foreign members that cannot be represented by the vector-tile format are not preserved there. Keep that data separately, or map it to supported feature properties, if you need it after tiling.
@@ -172,6 +197,13 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     };
     _collectResourceTiming: boolean;
     _removed: boolean;
+    /**
+     * The world mapping the worker's copy of the data was pre-projected for: the worker tiles GeoJSON in
+     * mercator, so for a planar projection the source first moves every position to the lng/lat whose
+     * mercator projection is the map's world position (`reprojectGeoJSONToPseudoLngLat`); for mercator the
+     * worker gets the data as is. A tile load under a projection with another mapping re-sends the data.
+     */
+    private _workerDataHelper: WorldCoordinateHelper | undefined;
 
     /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -386,7 +418,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * @returns a promise that is resolved when the features are retrieved
      */
     async getClusterChildren(clusterId: number): Promise<GeoJSON.Feature[]> {
-        return (await this.actorPromise).sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
+        const features = await (await this.actorPromise).sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
+        return this._fromWorkerLngLat(features);
     }
 
     /**
@@ -415,13 +448,39 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * ```
      */
     async getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<GeoJSON.Feature[]> {
-        return (await this.actorPromise).sendAsync({type: MessageType.getClusterLeaves, data: {
+        const features = await (await this.actorPromise).sendAsync({type: MessageType.getClusterLeaves, data: {
             type: this.type,
             source: this.id,
             clusterId,
             limit,
             offset
         }});
+        return this._fromWorkerLngLat(features);
+    }
+
+    /**
+     * Maps features returned by the worker back to the map's lng/lat when the worker holds pre-projected data.
+     */
+    private _fromWorkerLngLat(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
+        const worldCoordinateHelper = this._workerDataHelper;
+        if (!worldCoordinateHelper || worldCoordinateHelper === mercatorWorldCoordinateHelper) return features;
+        return features.map(feature => reprojectGeoJSONFromPseudoLngLat(feature, worldCoordinateHelper));
+    }
+
+    /**
+     * Re-sends the data to the worker once the map's projection no longer shares the world mapping the worker's
+     * copy was pre-projected for (mercator and globe share one). A diff still waiting to be sent stays pending
+     * and follows the data.
+     */
+    private _resendDataForProjection(): void {
+        if (this._data.url) {
+            this._pendingWorkerUpdate.data = this._data.url;
+        } else if (this._data.updateable) {
+            this._pendingWorkerUpdate.data = {type: 'FeatureCollection', features: Array.from(this._data.updateable.values())};
+        } else {
+            this._pendingWorkerUpdate.data = this._data.geojson;
+        }
+        this._updateWorkerData();
     }
 
     /**
@@ -439,62 +498,91 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
         const {data, diff, updateCluster} = this._pendingWorkerUpdate;
         // delay awaiting params until _isUpdatingWorker is set, otherwise, a race condition could happen
-        const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
+        const update = this._getLoadGeoJSONParameters(data, diff, updateCluster);
 
+        let sentDiff: GeoJSONSourceDiff | undefined;
         if (data !== undefined) {
             this._pendingWorkerUpdate.data = undefined;
         } else if (diff) {
             this._pendingWorkerUpdate.diff = undefined;
+            sentDiff = diff;
         } else if (updateCluster) {
             this._pendingWorkerUpdate.updateCluster = undefined;
         }
 
-        this._updatePromise = this._dispatchWorkerUpdate(params);
+        this._updatePromise = this._dispatchWorkerUpdate(update, sentDiff);
         await this._updatePromise;
     }
 
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
-    private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
+    private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<WorkerUpdate | undefined> {
         const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
+        const worldCoordinateHelper = this.map.style.projection.worldCoordinateHelper;
+        const isMercator = worldCoordinateHelper === mercatorWorldCoordinateHelper;
+        if (data !== undefined || diff) this._workerDataHelper = worldCoordinateHelper;
 
         // Data comes from a remote url
         if (typeof data === 'string') {
-            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data), ResourceType.Source);
-            params.request.collectResourceTiming = this._collectResourceTiming;
-            return params;
+            const request = await this.map._requestManager.transformRequest(browser.resolveURL(data), ResourceType.Source);
+            if (isMercator) {
+                params.request = request;
+                params.request.collectResourceTiming = this._collectResourceTiming;
+                return {params};
+            }
+            const fetched = await this._fetchForPreProjection(request);
+            params.data = reprojectGeoJSONToPseudoLngLat(fetched.data, worldCoordinateHelper);
+            return {params, fetched};
         }
 
         // Data is a geojson object
         if (data !== undefined) {
-            params.data = data;
-            return params;
+            params.data = isMercator ? data : reprojectGeoJSONToPseudoLngLat(data, worldCoordinateHelper);
+            return {params};
         }
 
         // Data is a differential update
         if (diff) {
-            params.dataDiff = diff;
-            return params;
+            params.dataDiff = isMercator ? diff : {
+                ...diff,
+                add: diff.add?.map(feature => reprojectGeoJSONToPseudoLngLat(feature, worldCoordinateHelper)),
+                update: diff.update?.map(update => update.newGeometry ? {...update, newGeometry: reprojectGeoJSONToPseudoLngLat(update.newGeometry, worldCoordinateHelper)} : update)
+            };
+            return {params};
         }
 
         // Update supercluster with the latest worker cluster options
         if (updateCluster) {
             params.updateCluster = true;
-            return params;
+            return {params};
         }
     }
 
     /**
-     * Send the worker update data from the main thread to the worker
+     * Fetches URL data in the source instead of the worker, for a planar projection: the data has to be
+     * pre-projected before the worker tiles it, and the projection's `project` function is a closure that cannot
+     * be posted to the worker. The resource timing entries are copied to plain objects, the shape the worker path
+     * posts them in.
      */
-    private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
+    private async _fetchForPreProjection(request: RequestParameters): Promise<FetchedGeoJSON> {
+        const timing = this._collectResourceTiming ? new RequestPerformance(request.url) : undefined;
+        const data = (await getJSON<GeoJSON.GeoJSON>(request, new AbortController())).data;
+        return {data, resourceTiming: timing ? JSON.parse(JSON.stringify(timing.finish())) : undefined};
+    }
+
+    /**
+     * Send the worker update data from the main thread to the worker
+     * @param updatePromise - the parameters for the worker, whose data or diff may be pre-projected for a planar projection, and the source's own fetch behind them
+     * @param diff - the diff as the caller gave it, in real lng/lat, which is what this source's own data copy takes
+     */
+    private async _dispatchWorkerUpdate(updatePromise: Promise<WorkerUpdate>, diff: GeoJSONSourceDiff | undefined) {
         this._isUpdatingWorker = true;
         this.fire(new MapSourceDataEvent('dataloading'));
 
         try {
-            const options = await optionsPromise;
-            const result = await (await this.actorPromise).sendAsync({type: MessageType.loadData, data: options});
+            const {params, fetched} = await updatePromise;
+            const result = await (await this.actorPromise).sendAsync({type: MessageType.loadData, data: params});
             this._isUpdatingWorker = false;
 
             if (this._removed || result.abandoned) {
@@ -502,16 +590,19 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 return;
             }
 
-            // Update the copy of the data in this source with the worker result. (only sent for url based geojson data)
+            // Update the copy of the data in this source with the worker result (only sent for url based geojson data
+            // the worker fetched), or with the data fetched here for a planar projection.
             if (result.data) {
                 this._data = {geojson: result.data};
+            } else if (fetched) {
+                this._data = {geojson: fetched.data};
             }
 
-            const affectedGeometries = this._applyDiffToSource(options.dataDiff);
+            const affectedGeometries = this._applyDiffToSource(diff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
             const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};
-            this._applyResourceTiming(eventData, result);
+            this._applyResourceTiming(eventData, result.resourceTiming?.[this.id] ?? fetched?.resourceTiming);
 
             // Fire the metadata event to let the TileManager know it's ok to start requesting tiles.
             this.fire(new MapSourceDataEvent('data', {...eventData, sourceDataType: 'metadata'}));
@@ -536,10 +627,9 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     /**
      * Apply resource timing data to the event object.
      */
-    private _applyResourceTiming(eventData: {resourceTiming?: PerformanceResourceTiming[]}, result: GeoJSONWorkerSourceLoadDataResult) {
+    private _applyResourceTiming(eventData: {resourceTiming?: PerformanceResourceTiming[]}, timingData: PerformanceResourceTiming[] | undefined) {
         if (!this._collectResourceTiming) return;
 
-        const timingData = result.resourceTiming?.[this.id];
         if (!timingData) return;
 
         const resourceTiming = timingData.slice(0);
@@ -627,6 +717,9 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
+        if (this._workerDataHelper && this._workerDataHelper !== this.map.style.projection.worldCoordinateHelper) {
+            this._resendDataForProjection();
+        }
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {
