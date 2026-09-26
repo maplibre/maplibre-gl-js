@@ -71,6 +71,23 @@ export type TerrainCoverageIndex = {
     samplerPerTile: Map<string, TerrainElevationSampler | null>;
     minElevation: number;
     maxElevation: number;
+    /** The cell {@link sampleAt} looked up last; samples along a ray mostly fall in the cell before them. */
+    lastCell: CoveredCell | null;
+};
+
+/**
+ * A cell of the coverage index's finest zoom and the tile covering it, the same tile for every position in the cell:
+ * the one at the finest zoom that has a tile there. `sampler` is undefined where no zoom has one and null where the
+ * tile's DEM has not loaded.
+ */
+type CoveredCell = {
+    wrap: number;
+    x: number;
+    y: number;
+    zoom: number;
+    tileX: number;
+    tileY: number;
+    sampler: TerrainElevationSampler | null | undefined;
 };
 
 /**
@@ -312,7 +329,7 @@ export class Terrain {
 
         if (samplerPerTile.size === 0) return null;
         zooms.sort((a, b) => b - a);
-        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
+        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M, lastCell: null};
     }
 
     /**
@@ -580,22 +597,32 @@ export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, merc
     if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
     const wrap = Math.floor(mercatorX);
     const wrappedX = mercatorX - wrap;
+    const finestScale = 1 << index.zooms[0];
+    const cellX = Math.floor(wrappedX * finestScale);
+    const cellY = Math.floor(mercatorY * finestScale);
+    let cell = index.lastCell;
+    if (cell?.wrap !== wrap || cell.x !== cellX || cell.y !== cellY) {
+        cell = index.lastCell = lookUpCell(index, wrap, cellX, cellY, wrappedX, mercatorY);
+    }
+    const {zoom, tileX, tileY, sampler} = cell;
+    if (sampler === undefined) return NOT_COVERED;
+    if (sampler === null) return {covered: true, demLoaded: false, elevation: 0};
+    const scale = 1 << zoom;
+    const x = Math.min((wrappedX * scale - tileX) * EXTENT, MAX_TILE_COORD);
+    const y = Math.min((mercatorY * scale - tileY) * EXTENT, MAX_TILE_COORD);
+    return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
+}
 
+/** The tile covering a cell of the index's finest zoom, found at the finest zoom that has a tile there. */
+function lookUpCell(index: TerrainCoverageIndex, wrap: number, x: number, y: number, wrappedX: number, mercatorY: number): CoveredCell {
     for (const z of index.zooms) {
         const scale = 1 << z;
-        const scaledX = wrappedX * scale;
-        const scaledY = mercatorY * scale;
-        const tileX = Math.floor(scaledX);
-        const tileY = Math.floor(scaledY);
+        const tileX = Math.floor(wrappedX * scale);
+        const tileY = Math.floor(mercatorY * scale);
         const key = `${wrap}/${z}/${tileX}/${tileY}`;
-        if (!index.samplerPerTile.has(key)) continue;
-        const sampler = index.samplerPerTile.get(key);
-        if (!sampler) return {covered: true, demLoaded: false, elevation: 0};
-        const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
-        const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
-        return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
+        if (index.samplerPerTile.has(key)) return {wrap, x, y, zoom: z, tileX, tileY, sampler: index.samplerPerTile.get(key)};
     }
-    return NOT_COVERED;
+    return {wrap, x, y, zoom: 0, tileX: 0, tileY: 0, sampler: undefined};
 }
 
 /**
