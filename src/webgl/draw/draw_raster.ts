@@ -103,7 +103,7 @@ function drawTiles(
     const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
     const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
-    const isTerrain = !!painter.style.map.terrain;
+    const isTerrain = !!renderContext.terrain;
 
     // Draw all tiles
     for (const coord of coords) {
@@ -131,7 +131,7 @@ function drawTiles(
 
         // Enable anisotropic filtering only when the pitch is greater than the threshold pitch.
         // The default threshold is 20 degrees to preserve image sharpness on flat or slightly tilted maps.
-        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > painter.options.anisotropicFilterPitch) {
+        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && renderContext.transform.pitch > painter.options.anisotropicFilterPitch) {
             gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
                 context.extTextureFilterAnisotropicMax);
         }

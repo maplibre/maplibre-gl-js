@@ -203,17 +203,30 @@ export class DEMData {
     }
 }
 
+/**
+ * Packs an elevation into the RGB channels that {@link DEMData.unpack} decodes with the given
+ * unpack vector `[redFactor, greenFactor, blueFactor, baseShift]`.
+ *
+ * A channel whose factor is 0 contributes nothing to the decoded elevation, so it packs to 0 and
+ * takes no part in the scale the other channels are quantized by. When all three factors are 0
+ * every color decodes to `-baseShift`, and the packed color is black.
+ */
 export function packDEMData(v: number, unpackVector: number[]): {r: number; g: number; b: number} {
     const redFactor = unpackVector[0];
     const greenFactor = unpackVector[1];
     const blueFactor = unpackVector[2];
     const baseShift = unpackVector[3];
-    const minScale = Math.min(redFactor, greenFactor, blueFactor);
+    const factors = [redFactor, greenFactor, blueFactor].filter(factor => factor !== 0);
+    if (factors.length === 0) {
+        return {r: 0, g: 0, b: 0};
+    }
+    const minScale = Math.min(...factors);
     const vScaled = Math.round((v + baseShift)/minScale);
+    const packChannel = (factor: number) => factor === 0 ? 0 : Math.floor(vScaled*minScale/factor) % 256;
     return {
-        r: Math.floor(vScaled*minScale/redFactor) % 256,
-        g: Math.floor(vScaled*minScale/greenFactor) % 256,
-        b: Math.floor(vScaled*minScale/blueFactor) % 256
+        r: packChannel(redFactor),
+        g: packChannel(greenFactor),
+        b: packChannel(blueFactor)
     };
 }
 

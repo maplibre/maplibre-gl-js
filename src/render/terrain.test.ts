@@ -39,7 +39,6 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: 2048,
             height: 512,
-            transform,
         } as any as Painter;
         const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
@@ -48,19 +47,19 @@ describe('Terrain', () => {
         terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as any as Tile);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem}) as any as Tile;
         terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
-        return terrain;
+        return {terrain, transform};
     }
 
     test('screenPointToMercatorCoordinate returns the terrain hit instead of the flat plane', () => {
-        const terrain = createFlatTerrain(1000);
+        const {terrain, transform} = createFlatTerrain(1000);
         const p = new Point(1024, 256);
 
-        expect(terrain.painter.transform.screenPointToMercatorCoordinate(p).z).toBe(0);
-        expect(terrain.painter.transform.screenPointToMercatorCoordinate(p, terrain).z).toBeCloseTo(1000, 6);
+        expect(transform.screenPointToMercatorCoordinate(p).z).toBe(0);
+        expect(transform.screenPointToMercatorCoordinate(p, terrain).z).toBeCloseTo(1000, 6);
     });
 
     test('a globe transform that renders mercator picks with the mercator raycast', () => {
-        const terrain = createFlatTerrain(0);
+        const {terrain} = createFlatTerrain(0);
         const globeTransform = new GlobeTransform();
         globeTransform.resize(2048, 512);
         globeTransform.setZoom(0);
@@ -75,7 +74,7 @@ describe('Terrain', () => {
     });
 
     test('a globe transform that renders the globe picks with the globe raycast', () => {
-        const terrain = createFlatTerrain(0);
+        const {terrain} = createFlatTerrain(0);
         const globeTransform = new GlobeTransform();
         globeTransform.resize(2048, 512);
         globeTransform.setZoom(1);
@@ -94,7 +93,7 @@ describe('Terrain', () => {
     });
 
     test('getCoverageIndex sees newly renderable tiles after resetElevationCache', () => {
-        const terrain = createFlatTerrain(0);
+        const {terrain} = createFlatTerrain(0);
         const renderableTiles = terrain.tileManager.getRenderableTiles;
         terrain.tileManager.getRenderableTiles = () => [];
         expect(terrain.getCoverageIndex()).toBeNull();
@@ -307,39 +306,39 @@ describe('Terrain', () => {
     });
 
     test('getElevationForLngLat samples the rendered tile where its DEM is loaded', () => {
-        const terrain = createFlatTerrain(500);
+        const {terrain, transform} = createFlatTerrain(500);
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
-        (terrain.painter.transform as MercatorTransform).setZoom(3); // renders z0 tiles, covering tiles are z3
+        transform.setZoom(3); // renders z0 tiles, covering tiles are z3
         const renderedDEM = createDEM(() => 500);
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
 
-        expect(terrain.getElevationForLngLat(new LngLat(0, 40), terrain.painter.transform)).toBeCloseTo(500, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), transform)).toBeCloseTo(500, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles while the rendered tile\'s DEM is loading', () => {
-        const terrain = createFlatTerrain(500);
+        const {terrain, transform} = createFlatTerrain(500);
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
-        (terrain.painter.transform as MercatorTransform).setZoom(3); // renders z0 tiles, covering tiles are z3
+        transform.setZoom(3); // renders z0 tiles, covering tiles are z3
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : ({tileID, dem: coveringDEM}) as any as Tile;
 
-        expect(terrain.getElevationForLngLat(new LngLat(0, 40), terrain.painter.transform)).toBeCloseTo(100, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), transform)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles outside the rendered tiles', () => {
-        const terrain = createFlatTerrain(500);
+        const {terrain, transform} = createFlatTerrain(500);
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
-        (terrain.painter.transform as MercatorTransform).setZoom(3); // renders z0 tiles, covering tiles are z3
+        transform.setZoom(3); // renders z0 tiles, covering tiles are z3
         const renderedDEM = createDEM(() => 500);
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
         terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(1, 0, 1, 0, 0)}] as any as Tile[];
 
-        expect(terrain.getElevationForLngLat(new LngLat(90, -40), terrain.painter.transform)).toBeCloseTo(100, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(90, -40), transform)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
