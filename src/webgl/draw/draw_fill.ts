@@ -10,8 +10,8 @@ import {
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -34,7 +34,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     }
 
     const pattern = layer.paint.get('fill-pattern');
-    const fillEligibleForOpaque = painter.opaquePassEnabledForLayer() &&
+    const fillEligibleForOpaque = renderContext.opaquePassEnabledForLayer() &&
         !pattern.constantOr(1 as any) &&
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1;
@@ -42,8 +42,8 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     if (fillEligibleForOpaque && renderContext.currentPass === 'opaque') {
         // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
         // its outline (always translucent) runs in the translucent pass below.
-        const colorMode = painter.colorModeForRenderPass();
-        const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadWrite);
+        const colorMode = renderContext.colorModeForRenderPass();
+        const depthMode = renderContext.getDepthModeForSublayer(1, DepthMode.ReadWrite);
         drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, renderContext);
         return;
     }
@@ -69,9 +69,9 @@ function drawFillAndOutline(
     coords: OverscaledTileID[],
     renderContext: RenderContext
 ) {
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = renderContext.colorModeForRenderPass();
 
-    const fillDepthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
+    const fillDepthMode = renderContext.getDepthModeForSublayer(1, DepthMode.ReadOnly);
     drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, renderContext);
 
     drawOutline(painter, tileManager, layer, coords, renderContext);
@@ -94,8 +94,8 @@ function drawOutline(
     // or stroke color is translucent. If we wouldn't clip to outside
     // the current shape, some pixels from the outline stroke overlapped
     // the (non-antialiased) fill.
-    const colorMode = painter.colorModeForRenderPass();
-    const depthMode = painter.getDepthModeForSublayer(
+    const colorMode = renderContext.colorModeForRenderPass();
+    const depthMode = renderContext.getDepthModeForSublayer(
         layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
     drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, renderContext);
 }
@@ -140,8 +140,8 @@ function drawFillTiles(
 
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const program = renderContext.useProgram(programName, programConfiguration);
+        const terrainData = renderContext.getTerrainDataForTile(coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -151,7 +151,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = getProjectionDataForTile(renderContext, coord);
+        const projectionData = renderContext.getProjectionDataForTile(coord);
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 

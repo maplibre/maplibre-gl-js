@@ -82,8 +82,8 @@ export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawL
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, painter.layerOpacityFbo.colorAttachment.get());
 
-    painter.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
+    painter.renderContext.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, painter.renderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         layerOpacityUniformValues(opacity, 0), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.renderContext.transform.zoom);

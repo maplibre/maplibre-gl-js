@@ -12,8 +12,8 @@ import {
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
 
+import type {RenderContext} from '../../render/render_context.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
@@ -93,11 +93,11 @@ function drawTiles(
 
     const context = painter.context;
     const gl = context.gl;
-    const program = painter.useProgram('raster');
+    const program = renderContext.useProgram('raster');
 
     const projection = painter.style.projection;
 
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = renderContext.colorModeForRenderPass();
     const align = !painter.options.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
     const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
@@ -109,7 +109,7 @@ function drawTiles(
     for (const coord of coords) {
         // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
         // Use gl.LESS to prevent double drawing in areas where tiles overlap.
-        const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
+        const depthMode = renderContext.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
@@ -136,8 +136,8 @@ function drawTiles(
                 context.extTextureFilterAnisotropicMax);
         }
 
-        const terrainData = getTerrainDataForTile(renderContext, coord);
-        const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
+        const terrainData = renderContext.getTerrainDataForTile(coord);
+        const projectionData = renderContext.getProjectionDataForTile(coord, {aligned: align});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 
         const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
