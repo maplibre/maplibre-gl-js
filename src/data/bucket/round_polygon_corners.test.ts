@@ -213,8 +213,16 @@ describe('roundedWallNormals', () => {
     test('averages the normals of two walls meeting at a shallow turn', () => {
         expect(normals([new Point(0, 0), new Point(10, 0), new Point(20, 5)])).toEqual([
             null,
-            {start: [0, 1], end: [-0.23, 0.97]},
-            {start: [-0.23, 0.97], end: [-0.45, 0.89]}
+            {start: [0, 1], end: [-0.24, 0.97]},
+            {start: [-0.24, 0.97], end: [-0.45, 0.89]}
+        ]);
+    });
+
+    test('keeps the normal of a long wall where it meets a short one', () => {
+        expect(normals([new Point(0, 0), new Point(100, 0), new Point(102, 1)])).toEqual([
+            null,
+            {start: [0, 1], end: [0, 1]},
+            {start: [0, 1], end: [-0.45, 0.89]}
         ]);
     });
 
@@ -229,10 +237,10 @@ describe('roundedWallNormals', () => {
     test('blends the last wall of a closed ring into the first', () => {
         expect(normals([new Point(0, 0), new Point(10, 0), new Point(20, 5), new Point(-10, 5), new Point(0, 0)])).toEqual([
             null,
-            {start: [0.23, 0.97], end: [-0.23, 0.97]},
-            {start: [-0.23, 0.97], end: [-0.45, 0.89]},
+            {start: [0.24, 0.97], end: [-0.24, 0.97]},
+            {start: [-0.24, 0.97], end: [-0.45, 0.89]},
             {start: [0, -1], end: [0, -1]},
-            {start: [0.45, 0.89], end: [0.23, 0.97]}
+            {start: [0.45, 0.89], end: [0.24, 0.97]}
         ]);
     });
 

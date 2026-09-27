@@ -40,15 +40,17 @@ const SMOOTH_WALL_MIN_DOT = Math.cos(35 * Math.PI / 180);
 
 /**
  * Wall normals of a rounded ring, indexed by the wall's end vertex. At a shallow turn both walls
- * share the average of their normals, so the lighting blends across the arc of a rounded corner;
- * at a sharp turn each wall keeps its own. Boundary and zero-length walls get `null`.
+ * share one normal, so the lighting blends across the arc of a rounded corner: the average weighted
+ * by wall length, or the longer wall's own normal when it is at least twice as long, which keeps a
+ * straight wall evenly lit up to the arc. At a sharp turn each wall keeps its own. Boundary and
+ * zero-length walls get `null`.
  * @param ring - Ring as passed to the bucket, closed or open
  */
 export function roundedWallNormals(ring: Point[]): Array<{start: Point; end: Point} | null> {
     const perps: Point[] = [null];
     for (let p = 1; p < ring.length; p++) {
         const edge = ring[p].sub(ring[p - 1]);
-        perps.push(isBoundaryEdge(ring[p], ring[p - 1]) || edge.mag() === 0 ? null : edge._perp()._unit());
+        perps.push(isBoundaryEdge(ring[p], ring[p - 1]) || edge.mag() === 0 ? null : edge._perp());
     }
 
     const last = ring.length - 1;
@@ -62,9 +64,12 @@ export function roundedWallNormals(ring: Point[]): Array<{start: Point; end: Poi
 }
 
 function smoothNormal(perp: Point, neighbour: Point | null): Point {
-    if (!neighbour || perp.x * neighbour.x + perp.y * neighbour.y < SMOOTH_WALL_MIN_DOT) {
-        return perp;
+    const length = perp.mag();
+    if (!neighbour || perp.x * neighbour.x + perp.y * neighbour.y < SMOOTH_WALL_MIN_DOT * length * neighbour.mag()) {
+        return perp.unit();
     }
+    if (length >= 2 * neighbour.mag()) return perp.unit();
+    if (neighbour.mag() >= 2 * length) return neighbour.unit();
     return perp.add(neighbour)._unit();
 }
 
