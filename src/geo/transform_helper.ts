@@ -422,6 +422,7 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = false;
         // Update edge-insets in-place
         this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
+        this.constrainInternal();
         this._calcMatrices();
     }
 
