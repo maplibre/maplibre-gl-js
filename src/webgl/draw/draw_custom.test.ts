@@ -31,11 +31,10 @@ describe('drawCustom', () => {
         transform.resize(500, 500);
         transform.setMinPitch(10);
         transform.setMaxPitch(10);
-        const mockPainter = new Painter(null, null);
+        const mockPainter = new Painter(null);
         mockPainter.style = {
             projection: new MercatorProjection(),
         } as any;
-        mockPainter.transform = transform;
         const renderContext = createRenderContext(transform, mockPainter.style.projection, null);
         renderContext.currentPass = 'translucent';
         mockPainter.renderContext = renderContext;
@@ -77,11 +76,11 @@ describe('drawCustom', () => {
         drawCustom(mockPainter, tileManagerMock, mockLayer, renderContext);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
-        expect(result.args.farZ).toBe(mockPainter.transform.farZ);
-        expect(result.args.nearZ).toBe(mockPainter.transform.nearZ);
-        expect(result.args.fov).toBe(mockPainter.transform.fov * Math.PI / 180);
-        expect(result.args.modelViewProjectionMatrix).toEqual(mockPainter.transform.modelViewProjectionMatrix);
-        expect(result.args.projectionMatrix).toEqual(mockPainter.transform.projectionMatrix);
+        expect(result.args.farZ).toBe(transform.farZ);
+        expect(result.args.nearZ).toBe(transform.nearZ);
+        expect(result.args.fov).toBe(transform.fov * Math.PI / 180);
+        expect(result.args.modelViewProjectionMatrix).toEqual(transform.modelViewProjectionMatrix);
+        expect(result.args.projectionMatrix).toEqual(transform.projectionMatrix);
         expectToBeCloseToArray(result.args.defaultProjectionData.tileMercatorCoords, [0, 0, 1, 1]);
         expect(result.args.defaultProjectionData.mainMatrix).toBeInstanceOf(Float64Array);
         expect(result.args.defaultProjectionData.fallbackMatrix).toBeInstanceOf(Float64Array);

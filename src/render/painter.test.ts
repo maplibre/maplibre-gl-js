@@ -13,6 +13,7 @@ describe('render', () => {
     let painter: Painter;
     let map: any;
     let style: Style;
+    let transform: MercatorTransform;
     const renderOptions = {
         fadeDuration: 0,
         moving: false,
@@ -26,9 +27,9 @@ describe('render', () => {
 
     beforeEach(() => {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
-        painter = new Painter(gl, transform);
+        painter = new Painter(gl);
         map = new StubMap() as any;
         style = new Style(map);
         style._setProjectionInternal('mercator');
@@ -36,7 +37,7 @@ describe('render', () => {
     });
 
     test('must not fail with incompletely loaded style', () => {
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
 
         expect(painter.renderContext.currentPass).toBe('translucent');
     });
@@ -45,7 +46,7 @@ describe('render', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
 
         expect(terrainDepth).toHaveBeenCalled();
     });
@@ -55,18 +56,18 @@ describe('render', () => {
         onTestFinished(() => terrainDepth.mockRestore());
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
 
         painter.markTerrainDepthDirty();
         painter.markTerrainDepthDirty();
         expect(terrainDepth).toHaveBeenCalledTimes(1);
 
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(2);
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
@@ -77,16 +78,16 @@ describe('render', () => {
         vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         vi.spyOn(painter.drawFunctions, 'atmosphere').mockImplementation(() => {});
 
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
 
-        expect(painter.renderContext.transform).toBe(painter.transform);
+        expect(painter.renderContext.transform).toBe(transform);
         expect(painter.renderContext.terrain).toBe(terrain);
         expect(painter.renderContext.projectionTransition).toBe(1);
         expect(painter.renderContext.isRenderingGlobe).toBe(true);
     });
 
     test('uses render context for depth and blending when drawing a custom layer', () => {
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
         const renderContext = painter.renderContext;
         renderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
@@ -113,7 +114,7 @@ describe('render', () => {
 
         test('stores terrain render time using the controlled clock', () => {
             setNow(1234);
-            painter.render(style, renderOptions);
+            painter.render(style, transform, renderOptions);
 
             expect(painter.terrainFacilitator.renderTime).toBe(1234);
         });
@@ -123,8 +124,7 @@ describe('render', () => {
 describe('tile texture pool', () => {
     function createPainterWithPool() {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        return new Painter(gl, transform);
+        return new Painter(gl);
     }
 
     function createTexture(painter: Painter, size: number): Texture {
@@ -160,8 +160,7 @@ describe('RTT pool', () => {
 
     beforeEach(() => {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        painter = new Painter(gl, transform);
+        painter = new Painter(gl);
     });
 
     afterEach(() => {

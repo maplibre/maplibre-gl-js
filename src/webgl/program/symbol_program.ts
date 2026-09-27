@@ -202,7 +202,7 @@ const symbolSDFUniformValues = (
     isOffset: boolean,
     heightAnchorGround: boolean
 ): UniformValues<SymbolSDFUniformsType> => {
-    const transform = painter.transform;
+    const transform = painter.renderContext.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,

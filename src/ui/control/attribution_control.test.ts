@@ -374,6 +374,16 @@ describe('AttributionControl', () => {
         expect(attributionControl._innerContainer.innerHTML).toBe('MapLibre');
     });
 
+    test('does not reintroduce dangerous attributes when inserting sanitized attributions', async () => {
+        const attributionControl = new AttributionControl({
+            customAttribution: 'MapLibre<form><math><mtext></form><form><mglyph><style></math><img src onerror="alert(1)">'
+        });
+        map.addControl(attributionControl);
+        await map.once('load');
+
+        expect(attributionControl._innerContainer.querySelector('[onerror]')).toBeNull();
+    });
+
     test('only recreates attributions if sanitized attribution content changes', async () => {
         const attributionControl = new AttributionControl({
             customAttribution: 'MapLibre<script>alert("xss")</script>'

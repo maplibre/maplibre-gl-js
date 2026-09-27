@@ -110,7 +110,7 @@ const lineUniformValues = (
     layer: LineStyleLayer,
     ratioScale: number,
 ): UniformValues<LineUniformsType> => {
-    const transform = painter.transform;
+    const transform = painter.renderContext.transform;
 
     return {
         'u_translation': calculateTranslation(painter, tile, layer),
@@ -138,7 +138,7 @@ const linePatternUniformValues = (
     ratioScale: number,
     crossfade: CrossfadeParameters,
 ): UniformValues<LinePatternUniformsType> => {
-    const transform = painter.transform;
+    const transform = painter.renderContext.transform;
     const tileZoomRatio = calculateTileRatio(tile, transform);
     return {
         'u_translation': calculateTranslation(painter, tile, layer),
@@ -158,7 +158,7 @@ const lineSDFUniformValues = (
     ratioScale: number,
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
-    const transform = painter.transform;
+    const transform = painter.renderContext.transform;
     const tileRatio = calculateTileRatio(tile, transform);
 
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
@@ -180,7 +180,7 @@ const lineGradientSDFUniformValues = (
     crossfade: CrossfadeParameters,
     imageHeight: number,
 ): UniformValues<LineGradientSDFUniformsType> => {
-    const transform = painter.transform;
+    const transform = painter.renderContext.transform;
     const tileRatio = calculateTileRatio(tile, transform);
 
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
@@ -203,7 +203,7 @@ function calculateTileRatio(tile: Tile, transform: IReadonlyTransform) {
 function calculateTranslation(painter: Painter, tile: Tile, layer: LineStyleLayer): [number, number] {
     // Translate line points prior to any transformation
     return translatePosition(
-        painter.transform,
+        painter.renderContext.transform,
         tile,
         layer.paint.get('line-translate'),
         layer.paint.get('line-translate-anchor')

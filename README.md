@@ -104,7 +104,7 @@ Silver:
 
 <a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/caltopo-logo.svg" alt="Logo Caltopo" width="25%"/></a>
 
-<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/smartmaps-logo.svg" alt="Logo SmartMaps" width="25%"/></a>
+<a href="https://www.smartmaps.net/"><img src="https://maplibre.org/img/smartmaps-logo.svg" alt="Logo SmartMaps" width="25%"/></a>
 
 Backers and Supporters:
 

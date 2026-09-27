@@ -26,7 +26,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
     }
     const context = painter.context;
 
-    if (painter.style.map.terrain) {
+    if (renderContext.terrain) {
         for (const coord of tileIDs) {
             const tile = tileManager.getTile(coord);
             // Skip tiles that have uncovered parents to avoid flickering; we don't need
@@ -53,7 +53,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
 function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext) {
     const context = painter.context;
     const gl = context.gl;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     // Allow kernels to be drawn across boundaries, so that
     // large kernels are not clipped to tiles
@@ -116,7 +116,7 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-        painter.viewportSegments, layer.paint, painter.transform.zoom);
+        painter.viewportSegments, layer.paint, painter.renderContext.transform.zoom);
 }
 
 function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyleLayer, coord: OverscaledTileID, renderContext: RenderContext) {
@@ -149,16 +149,16 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
 
     const terrainData = getTerrainDataForTile(renderContext, coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-        heatmapUniformValues(tile, painter.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
+        heatmapUniformValues(tile, renderContext.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
         layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-        bucket.segments, layer.paint, painter.transform.zoom,
+        bucket.segments, layer.paint, renderContext.transform.zoom,
         programConfiguration);
 }
 
 function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord: OverscaledTileID, renderContext: RenderContext) {
     const context = painter.context;
     const gl = context.gl;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     context.setColorMode(painter.colorModeForRenderPass());
 

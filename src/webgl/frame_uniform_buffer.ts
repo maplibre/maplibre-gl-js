@@ -26,7 +26,7 @@ export function createFrameUniformBuffer(context: Context): UniformBuffer {
 
 export function updateFrameUniformBuffer(buffer: UniformBuffer, painter: Painter): void {
     const f32 = buffer.pending;
-    const {transform} = painter;
+    const {transform} = painter.renderContext;
     const gl = painter.context.gl;
     f32[offsets.u_units_to_pixels] = 1 / transform.pixelsToGLUnits[0];
     f32[offsets.u_units_to_pixels + 1] = 1 / transform.pixelsToGLUnits[1];

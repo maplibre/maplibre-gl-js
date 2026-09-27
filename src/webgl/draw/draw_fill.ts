@@ -116,7 +116,7 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
@@ -172,6 +172,6 @@ function drawFillTiles(
         program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration);
+            layer.paint, renderContext.transform.zoom, programConfiguration);
     }
 }

@@ -464,7 +464,6 @@ export type RaySphereIntersection = {
     tMin: number;
     /**
      * The ray parameter for intersection that is "more" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
      * The intersection point can be computed as `origin + direction * tMax`.
      */
     tMax: number;
@@ -500,9 +499,13 @@ export function raySphereIntersection(origin: vec3, direction: vec3, radius: num
     const q = -originDotDirection + (originDotDirection < 0 ? 1 : -1) * Math.sqrt(discriminant);
     const t0 = c / q;
     const t1 = q;
+    const tMax = Math.max(t0, t1);
+    if (tMax < 0) {
+        return null;
+    }
     return {
         tMin: Math.min(t0, t1),
-        tMax: Math.max(t0, t1)
+        tMax
     };
 }
 

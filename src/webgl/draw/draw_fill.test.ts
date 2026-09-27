@@ -85,14 +85,14 @@ describe('drawFill', () => {
     }
 
     function constructMockPainter(): Painter {
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null);
         painterMock.context = {
             gl: {},
             activeTexture: {
                 set: () => {}
             }
         } as any;
-        painterMock.transform = {
+        const transform = {
             pitch: 0,
             labelPlaneMatrix: mat4.create(),
             zoom: 0,
@@ -108,7 +108,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext = createRenderContext(transform, undefined, null);
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {

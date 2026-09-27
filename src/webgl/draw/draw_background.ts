@@ -22,7 +22,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const context = painter.context;
     const gl = context.gl;
     const projection = painter.style.projection;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
 
@@ -35,7 +35,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
+    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: renderContext.terrain});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);

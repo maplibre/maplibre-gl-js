@@ -1,6 +1,7 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
+import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {getZoomAdjustment} from './globe_utils.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
@@ -73,5 +74,27 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
 
             expect(dragged.center.lng).not.toBe(panFrom(centerPoint).center.lng);
         });
+    });
+});
+
+describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
+    test('returns undefined instead of throwing when the padding exceeds the viewport', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const tr = new GlobeTransform();
+        tr.resize(512, 512);
+        tr.setZoom(2);
+        tr.setCenter(new LngLat(0, 0));
+        tr.setTransitionState(1);
+        const helper = new VerticalPerspectiveCameraHelper();
+
+        const result = helper.cameraForBoxAndBearing(
+            {maxZoom: 22, offset: [0, 0]},
+            {top: 50, bottom: 512, left: 50, right: 50},
+            new LngLatBounds([-10, -10], [10, 10]),
+            0, tr);
+
+        expect(result).toBeUndefined();
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
     });
 });
