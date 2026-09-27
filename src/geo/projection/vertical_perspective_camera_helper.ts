@@ -169,8 +169,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         versorSetLocationAtPoint(tr, preZoomAroundLoc, anchor, deltas.panDelta);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        const result = cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, edgePadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
+        const result = cameraForBoxAndBearing(options, padding, edgePadding, bounds, bearing, tr);
         if (!result) {
             return undefined;
         }
@@ -197,7 +197,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Obtain a globe projection matrix that does not include pitch (unsupported)
         const clonedTr = tr.clone();
         clonedTr.setCenter(result.center);
-        clonedTr.setPadding(mapPadding);
+        clonedTr.setPadding(edgePadding);
         clonedTr.setBearing(result.bearing);
         clonedTr.setPitch(0);
         clonedTr.setRoll(0);
