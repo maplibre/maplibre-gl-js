@@ -63,25 +63,20 @@ const SHARP_CORNER_OFFSET = 15;
 // Angle per triangle for approximating round line joins.
 const DEG_PER_TRIANGLE = 20;
 
-/*
- * `line-offset` moves every vertex of a join along the angle bisector, scaled by the miter length of
- * that join, so that the offset line keeps its width all the way around the corner. The miter length
- * grows without bound as a corner approaches a hairpin, so it is clamped, just like the extrude
- * normals are: both are stored as bytes scaled by EXTRUDE_SCALE, which caps them at 127 / 63.
+/**
+ * Longest miter vector `line-offset` follows into a corner. It is also as far as the vector can be
+ * stored: a_offset_normal holds bytes scaled by EXTRUDE_SCALE, which cap out at 127 / 63.
  */
 const MAX_OFFSET_MITER_LENGTH = 2;
 
-/*
- * Clamping alone leaves the bisector pointing along the line at a near hairpin, so the whole join is
- * shoved forwards past its neighbours while the corner itself collapses towards the centre line. The
- * offset of such a join eases back to the plain segment normals instead, which keeps each side the
- * full offset away from its own segment at the cost of pulling the two sides of the join apart.
- *
- * The ease-in starts well beyond the clamp so that ordinary corners - anything up to a turn of about
- * 140° - keep the exact miter, which is what holds the line width constant around a corner. Only the
- * joins whose geometry is already capped, the round and flipped bevel ones, are eased at all.
+/**
+ * Miter length at which `line-offset` starts easing from the miter vector of a join to the plain
+ * segment normals. The bisector of a near hairpin points along the line rather than across it, so a
+ * corner that sharp is offset forwards past its neighbours instead of sideways.
  */
 const OFFSET_FALLBACK_START = 3;
+
+/** Miter length at which `line-offset` follows the segment normals alone. */
 const OFFSET_FALLBACK_END = 8;
 
 // The number of bits that is used to store the line distance in the buffer.
@@ -407,9 +402,6 @@ export class LineBucket implements Bucket {
             const isSharpCorner = cosHalfAngle < COS_HALF_SHARP_CORNER && prevVertex && nextVertex;
             const lineTurnsLeft = prevNormal.x * nextNormal.y - prevNormal.y * nextNormal.x > 0;
 
-            // Where `line-offset` moves every vertex of this join: the corner of the offset line is where the two
-            // offset segments meet, which is along the angle bisector, miterLength away. At a 180° turn the bisector
-            // is a zero vector and `offsetFallback` is 1, so the vertices fall back to their own normals entirely.
             const offsetNormal = joinNormal.mult(Math.min(miterLength, MAX_OFFSET_MITER_LENGTH));
             const offsetFallback = clamp((miterLength - OFFSET_FALLBACK_START) / (OFFSET_FALLBACK_END - OFFSET_FALLBACK_START), 0, 1);
 
@@ -558,9 +550,10 @@ export class LineBucket implements Bucket {
      * @param endRight - extrude to shift the left vertex along the line
      * @param segment - the segment object to add the vertex to
      * @param round - whether this is a round cap
-     * @param offsetNormal - where `line-offset` moves this vertex, see {@link LineBucket.addHalfVertex}. Defaults to
-     * the vertex normal, which is correct for everything but the joins that extrude along a plain segment normal.
-     * @param offsetFallback - how far to ease that back to the vertex normal, see {@link OFFSET_FALLBACK_START}
+     * @param offsetNormal - the vector `line-offset` moves this vertex along. An offset line turns its corner where
+     * the two offset segments meet, on the angle bisector `miterLength` away, so every vertex of a join shares that
+     * vector. Defaults to the vertex normal, which is where a vertex outside a join belongs.
+     * @param offsetFallback - how far to ease `offsetNormal` back to the vertex normal, see {@link OFFSET_FALLBACK_START}
      */
     addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false, offsetNormal: Point = normal, offsetFallback: number = 0): void {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight
@@ -592,8 +585,8 @@ export class LineBucket implements Bucket {
      * @param p - the line vertex to add a buffer vertex for
      * @param extrudeX - x of the vector the vertex is extruded along by half the line width
      * @param extrudeY - y of the vector the vertex is extruded along by half the line width
-     * @param offsetX - x of the vector the vertex is moved along by `line-offset`
-     * @param offsetY - y of the vector the vertex is moved along by `line-offset`
+     * @param offsetX - x of the vector `line-offset` moves the vertex along
+     * @param offsetY - y of the vector `line-offset` moves the vertex along
      * @param round - whether this is a round cap
      * @param up - whether this is the vertex on the positive side of the normal
      * @param segment - the segment object to add the vertex to
@@ -612,9 +605,7 @@ export class LineBucket implements Bucket {
             // add 128 to store a byte in an unsigned byte
             Math.round(EXTRUDE_SCALE * extrudeX) + 128,
             Math.round(EXTRUDE_SCALE * extrudeY) + 128,
-            // The lower 6 bits of `linesofarScaled`, shifted by 2 bits: the first two bits of .z of
-            // a_data are unused and reserved. The upper 8 bits of `linesofarScaled` are placed in
-            // the `w` component.
+            // The lower 6 bits of `linesofarScaled`, past the two unused bits of `z`, then the upper 8
             (linesofarScaled & 0x3F) << 2,
             linesofarScaled >> 6,
             // a_offset_normal
