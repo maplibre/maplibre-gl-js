@@ -117,15 +117,17 @@ export type AnchoredCameraOptions = {
 export type CameraForBoundsOptions = CameraOptions & {
     /**
      * The amount of padding in pixels to add to the given bounds.
+     * Unless `absolutePadding` is set, this is added on top of the map's current padding, see {@link Map.getPadding}.
      */
     padding?: number | PaddingOptions;
     /**
-     * The persistent padding of the map to calculate the fit for, as returned by {@link Map.getPadding}.
-     * Unlike `padding`, which only leaves space around the bounds for this calculation,
-     * this is the padding the map will have when the result is applied.
-     * @defaultValue the map's current padding
+     * If `true`, `padding` is the persistent padding the map will have when the result is applied, as set by {@link Map.setPadding}.
+     * It replaces the map's current padding in the calculation instead of adding to it, and the result includes it.
+     * Use this to calculate a fit for a padding the map does not have yet.
+     * This will become the default in the next major version.
+     * @defaultValue false
      */
-    mapPadding?: PaddingOptions;
+    absolutePadding?: boolean;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -208,12 +210,12 @@ export type FitBoundsOptions = FlyToOptions & {
      */
     linear?: boolean;
     /**
-     * The persistent padding of the map to calculate the fit for and to set on the map, as returned by {@link Map.getPadding}.
-     * Unlike `padding`, which only leaves space around the bounds for this fit and is not kept,
-     * this is the padding the map will have after the transition.
-     * @defaultValue the map's current padding
+     * If `true`, `padding` is the persistent padding to fit the bounds for and to transition the map to, as set by {@link Map.setPadding}.
+     * It replaces the map's current padding in the calculation instead of adding to it, and is kept after the transition.
+     * This will become the default in the next major version.
+     * @defaultValue false
      */
-    mapPadding?: PaddingOptions;
+    absolutePadding?: boolean;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -571,7 +573,10 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    // Returns JumpToOptions rather than CameraOptions like the other camera calculations because CameraOptions has no
+    // padding, and with absolutePadding the result has to carry it. Once absolutePadding becomes the default, padding
+    // can move onto CameraOptions and this can return CameraOptions.
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         bounds = LngLatBounds.convert(bounds).adjustAntiMeridian();
         const bearing = options?.bearing || 0;
 
@@ -587,7 +592,8 @@ export class Camera extends Evented<MapEventType> {
      * @param p1 - Second point
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - the camera options
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     *      plus `padding` when `absolutePadding` is set.
      *      If map is unable to fit, method will warn and return undefined.
      * @example
      * ```ts
@@ -599,7 +605,7 @@ export class Camera extends Evented<MapEventType> {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -625,14 +631,20 @@ export class Camera extends Evented<MapEventType> {
         const padding = extend(defaultPadding, options.padding) as PaddingOptions;
         options.padding = padding;
         const tr = this.transform;
-        const mapPadding = extend({top: 0, bottom: 0, right: 0, left: 0}, options.mapPadding ?? tr.padding) as PaddingOptions;
         const bounds = new LngLatBounds(p0, p1);
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, mapPadding, bounds, bearing, tr);
-        if (result && this._zoomSnap) {
+        // With absolutePadding, the given padding is the persistent padding the map will have, so it takes the place of
+        // the map's current padding and nothing extra is added around the bounds.
+        const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
+        const boundsPadding = options.absolutePadding ? noPadding : padding;
+        const mapPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
+
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, boundsPadding, mapPadding, bounds, bearing, tr);
+        if (!result) return undefined;
+        if (this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
         }
-        return result;
+        return options.absolutePadding ? {...result, padding} : result;
     }
 
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
@@ -653,17 +665,18 @@ export class Camera extends Evented<MapEventType> {
             eventData);
     }
 
-    _fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any): this {
+    _fitInternal(calculatedOptions?: JumpToOptions, options?: FitBoundsOptions, eventData?: any): this {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
         options = extend(calculatedOptions, options);
-        // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
-        delete options.padding;
-        // The fit was calculated against mapPadding, so the map has to end up with that padding for the bounds to be in view.
-        if (options.mapPadding) {
-            options.padding = options.mapPadding;
-            delete options.mapPadding;
+        if (options.absolutePadding) {
+            // The fit was calculated for this padding as the map's padding, so the map has to end up with it for the bounds to be in view.
+            options.padding = calculatedOptions.padding;
+            delete options.absolutePadding;
+        } else {
+            // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
+            delete options.padding;
         }
 
         return options.linear ?
