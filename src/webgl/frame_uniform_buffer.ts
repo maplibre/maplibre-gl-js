@@ -43,3 +43,15 @@ export function updateFrameUniformBuffer(buffer: UniformBuffer, transform: IRead
     f32[offsets.u_pitch] = transform.pitch / 360 * 2 * Math.PI;
     buffer.upload();
 }
+
+/**
+ * @internal
+ * Sets `u_world_size` to the size of the render target about to be drawn into. It is the canvas size,
+ * except while layers are drawn into a terrain texture; the fill outline shaders compare it with `gl_FragCoord`.
+ */
+export function setFrameUniformWorldSize(buffer: UniformBuffer, width: number, height: number): void {
+    const f32 = buffer.pending;
+    f32[offsets.u_world_size] = width;
+    f32[offsets.u_world_size + 1] = height;
+    buffer.upload();
+}

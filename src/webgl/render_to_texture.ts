@@ -1,5 +1,6 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawTerrain} from './draw/draw_terrain.ts';
+import {setFrameUniformWorldSize} from './frame_uniform_buffer.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {RTT_DIFFERENCES, RTTFingerprint, type RTTDifference} from './rtt_fingerprint.ts';
 
@@ -207,6 +208,7 @@ export class RenderToTexture {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             frameRenderContext.isRenderingToTexture = true;
+            setFrameUniformWorldSize(painter.context.frameUniformBuffer, this.rttSize, this.rttSize);
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
@@ -226,6 +228,7 @@ export class RenderToTexture {
                 obj.texture.generateMipmap();
             }
             frameRenderContext.isRenderingToTexture = false;
+            setFrameUniformWorldSize(painter.context.frameUniformBuffer, painter.context.gl.drawingBufferWidth, painter.context.gl.drawingBufferHeight);
             drawTerrain(this.painter, this.terrain, this._rttTiles, frameRenderContext);
             this._rttTiles = [];
 
