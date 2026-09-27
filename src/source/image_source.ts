@@ -351,8 +351,12 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
 
     _finishLoading(): void {
         if (this.map) {
-            this.setCoordinates(this.coordinates);
-            this.fire(new MapSourceDataEvent('data', {sourceDataType: 'metadata'}));
+            try {
+                this.setCoordinates(this.coordinates);
+                this.fire(new MapSourceDataEvent('data', {sourceDataType: 'metadata'}));
+            } catch (err) {
+                this.fire(new ErrorEvent(ensureError(err)));
+            }
         }
     }
 

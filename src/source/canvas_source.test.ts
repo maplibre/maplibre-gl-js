@@ -110,8 +110,8 @@ describe('CanvasSource', () => {
     });
 
     test('load catches invalid coordinates and fires error', async () => {
-        // Invalid lat throws in setCoordinates (via _finishLoading). ImageSource.load
-        // catches and re-fires ErrorEvent; CanvasSource must do the same (#8448).
+        // Invalid lat throws in setCoordinates. ImageSource._finishLoading catches
+        // and re-fires ErrorEvent so every caller (Canvas/Image/Video) is guarded (#8448).
         const source = createSource({
             coordinates: [[0, 0], [1, 0], [1, 91], [0, 1]],
             eventedParent: map,
