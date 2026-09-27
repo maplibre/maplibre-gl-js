@@ -13,6 +13,7 @@ import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {subdivideVertexLine} from '../../render/subdivision.ts';
+import {clamp} from '../../util/util.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -69,6 +70,19 @@ const DEG_PER_TRIANGLE = 20;
  * normals are: both are stored as bytes scaled by EXTRUDE_SCALE, which caps them at 127 / 63.
  */
 const MAX_OFFSET_MITER_LENGTH = 2;
+
+/*
+ * Clamping alone leaves the bisector pointing along the line at a near hairpin, so the whole join is
+ * shoved forwards past its neighbours while the corner itself collapses towards the centre line. The
+ * offset of such a join eases back to the plain segment normals instead, which keeps each side the
+ * full offset away from its own segment at the cost of pulling the two sides of the join apart.
+ *
+ * The ease-in starts well beyond the clamp so that ordinary corners - anything up to a turn of about
+ * 140° - keep the exact miter, which is what holds the line width constant around a corner. Only the
+ * joins whose geometry is already capped, the round and flipped bevel ones, are eased at all.
+ */
+const OFFSET_FALLBACK_START = 3;
+const OFFSET_FALLBACK_END = 8;
 
 // The number of bits that is used to store the line distance in the buffer.
 const LINE_DISTANCE_BUFFER_BITS = 15;
@@ -395,10 +409,9 @@ export class LineBucket implements Bucket {
 
             // Where `line-offset` moves every vertex of this join: the corner of the offset line is where the two
             // offset segments meet, which is along the angle bisector, miterLength away. At a 180° turn the bisector
-            // is undefined and that corner is infinitely far along the line, so head there along the segment instead.
-            const offsetNormal = joinNormal.x === 0 && joinNormal.y === 0 ?
-                prevNormal.perp()._mult(lineTurnsLeft ? MAX_OFFSET_MITER_LENGTH : -MAX_OFFSET_MITER_LENGTH) :
-                joinNormal.mult(Math.min(miterLength, MAX_OFFSET_MITER_LENGTH));
+            // is a zero vector and `offsetFallback` is 1, so the vertices fall back to their own normals entirely.
+            const offsetNormal = joinNormal.mult(Math.min(miterLength, MAX_OFFSET_MITER_LENGTH));
+            const offsetFallback = clamp((miterLength - OFFSET_FALLBACK_START) / (OFFSET_FALLBACK_END - OFFSET_FALLBACK_START), 0, 1);
 
             if (isSharpCorner && i > first) {
                 const prevSegmentLength = currentVertex.dist(prevVertex);
@@ -455,8 +468,8 @@ export class LineBucket implements Bucket {
                     const bevelLength = miterLength * prevNormal.add(nextNormal).mag() / prevNormal.sub(nextNormal).mag();
                     joinNormal._perp()._mult(bevelLength * (lineTurnsLeft ? -1 : 1));
                 }
-                this.addCurrentVertex(currentVertex, joinNormal, 0, 0, segment, false, offsetNormal);
-                this.addCurrentVertex(currentVertex, joinNormal.mult(-1), 0, 0, segment, false, offsetNormal);
+                this.addCurrentVertex(currentVertex, joinNormal, 0, 0, segment, false, offsetNormal, offsetFallback);
+                this.addCurrentVertex(currentVertex, joinNormal.mult(-1), 0, 0, segment, false, offsetNormal, offsetFallback);
 
             } else if (currentJoin === 'bevel' || currentJoin === 'fakeround') {
                 const offset = -Math.sqrt(miterLength * miterLength - 1);
@@ -510,17 +523,17 @@ export class LineBucket implements Bucket {
 
                 if (prevVertex) {
                     // Close previous segment with butt
-                    this.addCurrentVertex(currentVertex, prevNormal, 0, 0, segment, false, offsetNormal);
+                    this.addCurrentVertex(currentVertex, prevNormal, 0, 0, segment, false, offsetNormal, offsetFallback);
 
                     // Add round cap or linejoin at end of segment
-                    this.addCurrentVertex(currentVertex, prevNormal, 1, 1, segment, true, offsetNormal);
+                    this.addCurrentVertex(currentVertex, prevNormal, 1, 1, segment, true, offsetNormal, offsetFallback);
                 }
                 if (nextVertex) {
                     // Add round cap before first segment
-                    this.addCurrentVertex(currentVertex, nextNormal, -1, -1, segment, true, offsetNormal);
+                    this.addCurrentVertex(currentVertex, nextNormal, -1, -1, segment, true, offsetNormal, offsetFallback);
 
                     // Start next segment with a butt
-                    this.addCurrentVertex(currentVertex, nextNormal, 0, 0, segment, false, offsetNormal);
+                    this.addCurrentVertex(currentVertex, nextNormal, 0, 0, segment, false, offsetNormal, offsetFallback);
                 }
             }
 
@@ -547,16 +560,20 @@ export class LineBucket implements Bucket {
      * @param round - whether this is a round cap
      * @param offsetNormal - where `line-offset` moves this vertex, see {@link LineBucket.addHalfVertex}. Defaults to
      * the vertex normal, which is correct for everything but the joins that extrude along a plain segment normal.
+     * @param offsetFallback - how far to ease that back to the vertex normal, see {@link OFFSET_FALLBACK_START}
      */
-    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false, offsetNormal: Point = normal): void {
+    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false, offsetNormal: Point = normal, offsetFallback: number = 0): void {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight
         const leftX = normal.x + normal.y * endLeft;
         const leftY = normal.y - normal.x * endLeft;
         const rightX = -normal.x + normal.y * endRight;
         const rightY = -normal.y - normal.x * endRight;
 
-        this.addHalfVertex(p, leftX, leftY, offsetNormal.x, offsetNormal.y, round, false, segment);
-        this.addHalfVertex(p, rightX, rightY, -offsetNormal.x, -offsetNormal.y, round, true, segment);
+        const offsetX = offsetNormal.x + (normal.x - offsetNormal.x) * offsetFallback;
+        const offsetY = offsetNormal.y + (normal.y - offsetNormal.y) * offsetFallback;
+
+        this.addHalfVertex(p, leftX, leftY, offsetX, offsetY, round, false, segment);
+        this.addHalfVertex(p, rightX, rightY, -offsetX, -offsetY, round, true, segment);
 
         // There is a maximum "distance along the line" that we can store in the buffers.
         // When we get close to the distance, reset it to zero and add the vertex again with
@@ -565,7 +582,7 @@ export class LineBucket implements Bucket {
         if (this.distance > MAX_LINE_DISTANCE / 2 && this.totalDistance === 0) {
             this.distance = 0;
             this.updateScaledDistance();
-            this.addCurrentVertex(p, normal, endLeft, endRight, segment, round, offsetNormal);
+            this.addCurrentVertex(p, normal, endLeft, endRight, segment, round, offsetNormal, offsetFallback);
         }
     }
 
