@@ -174,7 +174,16 @@ export class AttributionControl implements IControl {
         this._attribHTML = attribHTML;
 
         if (attributions.length) {
-            this._innerContainer.replaceChildren(DOM.sanitize(attribHTML));
+            const fragment = document.createDocumentFragment();
+            let isFirst = true;
+            for (const attribution of attributions) {
+                const sanitizedAttribution = DOM.sanitize(attribution);
+                if (!sanitizedAttribution.hasChildNodes()) continue;
+                if (!isFirst) fragment.append(' | ');
+                fragment.append(sanitizedAttribution);
+                isFirst = false;
+            }
+            this._innerContainer.replaceChildren(fragment);
             this._container.classList.remove('maplibregl-attrib-empty');
         } else {
             this._container.classList.add('maplibregl-attrib-empty');
