@@ -9,6 +9,7 @@
 - Fix an unclosed disallowed tag in one attribution erasing the other attributions, by sanitizing each attribution before joining them ([#8569](https://github.com/maplibre/maplibre-gl-js/issues/8569)) (by [@sx4im](https://github.com/sx4im))
 - Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix paint transitions starting from a data-driven value holding the stale value for the transition duration instead of applying the new value immediately ([#4961](https://github.com/maplibre/maplibre-gl-js/issues/4961)) (by [@sx4im](https://github.com/sx4im))
 - _...Add new stuff here..._
 
 ## 6.11.2

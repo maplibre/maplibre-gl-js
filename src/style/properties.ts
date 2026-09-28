@@ -271,7 +271,9 @@ export class Transitionable<Props> {
  * `TransitioningPropertyValue` implements the first of two intermediate steps in the evaluation chain of a paint
  * property value. In this step, transitions between old and new values are handled: as long as the transition is in
  * progress, `TransitioningPropertyValue` maintains a reference to the prior value, and interpolates between it and
- * the new value based on the current time and the configured transition duration and delay. The product is the next
+ * the new value based on the current time and the configured transition duration and delay. Transitions involving
+ * data-driven values are not supported: when the new value or the prior value is data-driven, the transition snaps
+ * immediately to the new value, because per-feature values cannot be interpolated. The product is the next
  * step in the evaluation chain: the "possibly evaluated" result type `R`. See below for more on this concept.
  */
 class TransitioningPropertyValue<T, R> {
@@ -314,6 +316,9 @@ class TransitioningPropertyValue<T, R> {
             // Transitions to data-driven properties are not supported.
             // We snap immediately to the data-driven value so that, when we perform layout,
             // we see the data-driven function and can use it to populate vertex buffers.
+            this.prior = null;
+            return finalValue;
+        } else if (prior.value.isDataDriven()) {
             this.prior = null;
             return finalValue;
         } else if (now < this.begin) {

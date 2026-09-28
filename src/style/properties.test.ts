@@ -1,8 +1,9 @@
 import {describe, test, expect, vi, afterEach, beforeEach} from 'vitest';
-import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
+import {Color, ColorArray} from '@maplibre/maplibre-gl-style-spec';
 import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
 import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
+import fillProperties from './style_layer/fill_style_layer_properties.g.ts';
 
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 
@@ -242,5 +243,45 @@ describe('a global state change transitions from the value the state had, issue 
         expect(evaluated.get('text-translate-anchor')).toBe('map');
         expect(evaluated.get('text-opacity').evaluate({properties: {name: 'x'}} as any, {})).toBe(1);
         expect(transitioned.hasTransition()).toBe(false);
+    });
+});
+
+describe('paint property transitions from a data-driven value, issue #4961', () => {
+    const dataDrivenFillColor = ['match', ['get', 'ADM0_A3'], ['ATA', 'GRL'], '#FFFFFF', '#EAB38F'];
+
+    function transitionFillColor(from: unknown, to: unknown, transition: {duration: number; delay: number}, now: number) {
+        const transitionable = new Transitionable(fillProperties.paint, 'layers[0].paint', {});
+        transitionable.setValue('fill-color', from as any);
+        let transitioning = transitionable.transitioned({now: 0, transition}, transitionable.untransitioned());
+
+        transitionable.setValue('fill-color', to as any);
+        transitioning = transitionable.transitioned({now: 0, transition}, transitioning);
+
+        const evaluated = transitioning.possiblyEvaluate({zoom: 0, now} as EvaluationParameters, undefined, []);
+        return {transitioning, value: evaluated.get('fill-color').value};
+    }
+
+    test('a data-driven to constant change snaps to the new value instead of freezing the old one', () => {
+        const {transitioning, value} = transitionFillColor(dataDrivenFillColor, '#41b6c4', {duration: 2000, delay: 0}, 1000);
+
+        expect(value).toEqual({kind: 'constant', value: Color.parse('#41b6c4')});
+        expect(transitioning.hasTransition()).toBe(false);
+    });
+
+    test('a data-driven to constant change snaps immediately even during the transition delay', () => {
+        const {transitioning, value} = transitionFillColor(dataDrivenFillColor, '#41b6c4', {duration: 2000, delay: 1000}, 500);
+
+        expect(value).toEqual({kind: 'constant', value: Color.parse('#41b6c4')});
+        expect(transitioning.hasTransition()).toBe(false);
+    });
+
+    test('a constant to constant change still interpolates', () => {
+        const {transitioning, value} = transitionFillColor('#000000', '#ffffff', {duration: 2000, delay: 0}, 1000);
+
+        expect(value.kind).toBe('constant');
+        const color = (value as {kind: 'constant'; value: Color}).value;
+        expect(color.r).toBeGreaterThan(0);
+        expect(color.r).toBeLessThan(1);
+        expect(transitioning.hasTransition()).toBe(true);
     });
 });
