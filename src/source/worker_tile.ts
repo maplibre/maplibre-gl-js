@@ -98,6 +98,9 @@ export class WorkerTile {
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
                 const id = featureIndex.getId(feature, sourceLayerId);
+                // A tile round-trips through vt-pbf, which cannot represent string feature ids, so write the
+                // resolved id back onto the feature for the filter evaluation and styling below to consume.
+                (feature as {id: string | number}).id = id;
                 features.push({feature, id, index, sourceLayerIndex});
             }
 

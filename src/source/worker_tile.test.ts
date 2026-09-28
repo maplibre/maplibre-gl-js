@@ -8,6 +8,7 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {createFakeActor} from '../util/test/util.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 
+import type {FillBucket} from '../data/bucket/fill_bucket.ts';
 import type {WorkerTileParameters, WorkerTileWithData} from './worker_source.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import type {PossiblyEvaluated} from '../style/properties.ts';
@@ -340,5 +341,37 @@ describe('worker tile', () => {
         const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as any, {})).toEqual(new Color(1, 0, 0, 1));
         expect(paint.get('circle-radius').evaluate({} as any, {})).toBe(15);
+    });
+
+    test('WorkerTile.parse restores promoted string ids so ["id"] filters match', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            type: 'fill',
+            filter: ['in', ['id'], ['literal', ['ak1', 'ak2']]]
+        }]);
+
+        const tile = new WorkerTile({
+            uid: '',
+            zoom: 0,
+            maxZoom: 20,
+            tileSize: 512,
+            source: 'source',
+            tileID: new OverscaledTileID(1, 0, 1, 1, 1),
+            overscaling: 1,
+            promoteId: 'id'
+        } as any as WorkerTileParameters);
+
+        // GeoJSON tile features lose string ids when the tile round-trips through vt-pbf, so the
+        // filter can only match once parse() restores the promoted id on the feature itself.
+        const wrapper = new GeoJSONWrapper([
+            {type: 3, geometry: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]], tags: {id: 'ak1'}, id: 'ak1'} as any as Feature,
+            {type: 3, geometry: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]], tags: {id: 'ak3'}, id: 'ak3'} as any as Feature
+        ]);
+
+        const result = await tile.parse(wrapper, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        expect(result.buckets).toHaveLength(1);
+        // Only the ak1 feature passes the filter: one quad, four vertices
+        expect((result.buckets[0] as FillBucket).layoutVertexArray).toHaveLength(4);
     });
 });
