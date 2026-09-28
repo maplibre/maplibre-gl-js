@@ -1,9 +1,12 @@
 ## main
 ### ✨ Features and improvements
+- Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Terminate the pooled web workers when the last map is removed, so a new map is not handed workers the browser already killed. Call `prewarm()` to keep them alive between maps, and re-send any state your plugin broadcasts into the workers from `onGlobalWorkersCreated`. ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Respect map padding when constraining the camera to max bounds, so the padded viewport can pan fully to its edges ([#8501](https://github.com/maplibre/maplibre-gl-js/issues/8501)) (by [@erenbati](https://github.com/erenbati))
+- Fix an unclosed disallowed tag in one attribution erasing the other attributions, by sanitizing each attribution before joining them ([#8569](https://github.com/maplibre/maplibre-gl-js/issues/8569)) (by [@sx4im](https://github.com/sx4im))
 - Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
