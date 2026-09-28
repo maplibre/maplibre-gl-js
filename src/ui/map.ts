@@ -6,7 +6,7 @@ import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
-import {Style, type StyleSwapOptions} from '../style/style.ts';
+import {Style, type StyleSwapOptions, type TransformStyleFunction} from '../style/style.ts';
 import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {Painter} from '../render/painter.ts';
@@ -387,9 +387,13 @@ export type MapOptions = {
      */
     validateStyle?: boolean;
     /**
-     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the map.
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the map. Subsequent calls to {@link Map.setStyle} will use the same defaults if the {@link StyleOptions.globalState} option is not set.
      */
     globalState?: Record<string, any>;
+    /**
+     * TransformStyleFunction is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}. Subsequent calls to {@link Map.setStyle} will use the same transform if the {@link StyleSwapOptions.transformStyle} option is not set.
+     */
+    transformStyle?: TransformStyleFunction;
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
@@ -554,6 +558,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     reduceMotion: undefined,
     validateStyle: true,
     globalState: undefined,
+    transformStyle: undefined,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
@@ -640,6 +645,7 @@ export class Map extends Evented<MapEventType> {
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _initialGlobalState: Record<string, any>;
+    _transformStyle: TransformStyleFunction | undefined;
     _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -865,6 +871,7 @@ export class Map extends Evented<MapEventType> {
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
         this._initialGlobalState = resolvedOptions.globalState;
+        this._transformStyle = resolvedOptions.transformStyle;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
@@ -2694,6 +2701,7 @@ export class Map extends Evented<MapEventType> {
                 localIdeographFontFamily: this._localIdeographFontFamily,
                 validate: this._validateStyle,
                 globalState: this._initialGlobalState,
+                transformStyle: this._transformStyle,
             }, options);
         this._styleUrl = typeof style === 'string' ? style : null;
 

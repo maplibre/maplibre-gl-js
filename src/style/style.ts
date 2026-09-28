@@ -128,7 +128,7 @@ export type StyleSetterOptions = {
 };
 
 /**
- * Part of {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
+ * Part of {@link MapOptions.transformStyle} and {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
  *
  * This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
  *
