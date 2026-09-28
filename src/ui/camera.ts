@@ -124,7 +124,7 @@ export type CameraForBoundsOptions = CameraOptions & {
      * If `true`, `padding` is the persistent padding the map will have when the result is applied, as set by {@link Map.setPadding}.
      * It replaces the map's current padding in the calculation instead of adding to it, and the result includes it.
      * Use this to calculate a fit for a padding the map does not have yet.
-     * This will become the default in the next major version.
+     * This will become the default in version 7.
      * @defaultValue false
      */
     absolutePadding?: boolean;
