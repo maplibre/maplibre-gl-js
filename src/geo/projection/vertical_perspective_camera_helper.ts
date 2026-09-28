@@ -169,18 +169,18 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         versorSetLocationAtPoint(tr, preZoomAroundLoc, anchor, deltas.panDelta);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, edgePadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        const result = cameraForBoxAndBearing(options, padding, edgePadding, bounds, bearing, tr);
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, boundsPadding: PaddingOptions, viewportPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
+        const result = cameraForBoxAndBearing(options, boundsPadding, viewportPadding, bounds, bearing, tr);
         if (!result) {
             return undefined;
         }
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
-        // Get clip space bounds including padding
-        const xLeft = (padding.left) / tr.width * 2.0 - 1.0;
-        const xRight = (tr.width - padding.right) / tr.width * 2.0 - 1.0;
-        const yTop = (padding.top) / tr.height * -2.0 + 1.0;
-        const yBottom = (tr.height - padding.bottom) / tr.height * -2.0 + 1.0;
+        // Get clip space bounds including boundsPadding
+        const xLeft = (boundsPadding.left) / tr.width * 2.0 - 1.0;
+        const xRight = (tr.width - boundsPadding.right) / tr.width * 2.0 - 1.0;
+        const yTop = (boundsPadding.top) / tr.height * -2.0 + 1.0;
+        const yBottom = (tr.height - boundsPadding.bottom) / tr.height * -2.0 + 1.0;
 
         // Get camera bounds
         const flipEastWest = differenceOfAnglesDegrees(bounds.getWest(), bounds.getEast()) < 0;
@@ -197,7 +197,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Obtain a globe projection matrix that does not include pitch (unsupported)
         const clonedTr = tr.clone();
         clonedTr.setCenter(result.center);
-        clonedTr.setPadding(edgePadding);
+        clonedTr.setPadding(viewportPadding);
         clonedTr.setBearing(result.bearing);
         clonedTr.setPitch(0);
         clonedTr.setRoll(0);

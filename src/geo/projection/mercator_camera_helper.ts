@@ -50,8 +50,8 @@ export class MercatorCameraHelper implements ICameraHelper {
         tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, deltas.aroundElevation);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, edgePadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
-        return cameraForBoxAndBearing(options, padding, edgePadding, bounds, bearing, tr);
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, boundsPadding: PaddingOptions, viewportPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
+        return cameraForBoxAndBearing(options, boundsPadding, viewportPadding, bounds, bearing, tr);
     }
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
