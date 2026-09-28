@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
+- Add an `absolutePadding` option to `Map#cameraForBounds` and `Map#fitBounds` to treat `padding` as the map's persistent padding instead of adding it to the current one ([#8480](https://github.com/maplibre/maplibre-gl-js/issues/8480)) (by [@sargunv](https://github.com/sargunv))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -44,7 +45,6 @@
 - Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
 - Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
 - Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
-- Add an `absolutePadding` option to `Map#cameraForBounds` and `Map#fitBounds` to treat `padding` as the map's persistent padding instead of adding it to the current one ([#8480](https://github.com/maplibre/maplibre-gl-js/issues/8480)) (by [@sargunv](https://github.com/sargunv))
 - Skip the loaded-tile scan for constant `symbol-height-offset` layers when computing tile coverage ([#8424](https://github.com/maplibre/maplibre-gl-js/pull/8424)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Type and document that an `addProtocol` handler may return an `ImageBitmap` or `HTMLImageElement` for an image resource, so decoded pixels are not encoded and decoded again ([#8515](https://github.com/maplibre/maplibre-gl-js/issues/8515)) (by [@MannXo](https://github.com/MannXo))
 
