@@ -116,14 +116,11 @@ export type AnchoredCameraOptions = {
  */
 export type CameraForBoundsOptions = CameraOptions & {
     /**
-     * The amount of padding in pixels to add to the given bounds.
-     * Unless `absolutePadding` is set, this is added on top of the map's current padding, see {@link Map.getPadding}.
+     * The amount of padding in pixels to add to the given bounds, on top of the map's current padding.
      */
     padding?: number | PaddingOptions;
     /**
-     * If `true`, `padding` is the persistent padding the map will have when the result is applied, as set by {@link Map.setPadding}.
-     * It replaces the map's current padding in the calculation instead of adding to it, and the result includes it.
-     * Use this to calculate a fit for a padding the map does not have yet.
+     * If `true`, `padding` replaces the map's current padding instead of adding to it, and is returned with the result.
      * This will become the default in version 7.
      * @defaultValue false
      */
@@ -210,9 +207,8 @@ export type FitBoundsOptions = FlyToOptions & {
      */
     linear?: boolean;
     /**
-     * If `true`, `padding` is the persistent padding to fit the bounds for and to transition the map to, as set by {@link Map.setPadding}.
-     * It replaces the map's current padding in the calculation instead of adding to it, and is kept after the transition.
-     * This will become the default in the next major version.
+     * If `true`, `padding` replaces the map's current padding instead of adding to it, and the map transitions to it.
+     * This will become the default in version 7.
      * @defaultValue false
      */
     absolutePadding?: boolean;
@@ -583,9 +579,10 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
-    // Returns JumpToOptions rather than CameraOptions like the other camera calculations because CameraOptions has no
-    // padding, and with absolutePadding the result has to carry it. Once absolutePadding becomes the default, padding
-    // can move onto CameraOptions and this can return CameraOptions.
+    /**
+     * Returns {@link JumpToOptions} so the result can carry `padding` when `absolutePadding` is set.
+     * Once that is the default, `padding` can move onto {@link CameraOptions} and this can return it.
+     */
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         bounds = LngLatBounds.convert(bounds).adjustAntiMeridian();
         const bearing = options?.bearing || 0;
@@ -643,8 +640,6 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         const bounds = new LngLatBounds(p0, p1);
 
-        // With absolutePadding, the given padding is the persistent padding the map will have, so it takes the place of
-        // the map's current padding and nothing extra is added around the bounds.
         const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
         const boundsPadding = options.absolutePadding ? noPadding : padding;
         const edgePadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
@@ -681,7 +676,6 @@ export class Camera extends Evented<MapEventType> {
 
         options = extend(calculatedOptions, options);
         if (options.absolutePadding) {
-            // The fit was calculated for this padding as the map's padding, so the map has to end up with it for the bounds to be in view.
             options.padding = calculatedOptions.padding;
             delete options.absolutePadding;
         } else {
