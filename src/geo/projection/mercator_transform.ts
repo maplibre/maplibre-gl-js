@@ -618,7 +618,9 @@ export class MercatorTransform implements ITransform {
         let maxX = worldSize;
         let scaleY = 0;
         let scaleX = 0;
-        const {x: screenWidth, y: screenHeight} = this.size;
+        const {top = 0, bottom = 0, left = 0, right = 0} = this.padding;
+        const screenWidth = this.width - left - right;
+        const screenHeight = this.height - top - bottom;
 
         if (this._helper._latRange) {
             const latRange = this._helper._latRange;
