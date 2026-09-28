@@ -387,6 +387,10 @@ export type MapOptions = {
      */
     validateStyle?: boolean;
     /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the map.
+     */
+    globalState?: Record<string, any>;
+    /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
      * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
@@ -549,6 +553,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
+    globalState: undefined,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
@@ -576,7 +581,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  *   zoom: 13,
  *   style: style_object,
  *   hash: true,
- *   transformRequest: (url, resourceType)=> {
+ *   transformRequest: (url, resourceType) => {
  *     if(resourceType === 'Source' && url.startsWith('http://myHost')) {
  *       return {
  *        url: url.replace('http', 'https'),
@@ -634,6 +639,7 @@ export class Map extends Evented<MapEventType> {
     _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
+    _initialGlobalState: Record<string, any>;
     _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -858,6 +864,7 @@ export class Map extends Evented<MapEventType> {
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
+        this._initialGlobalState = resolvedOptions.globalState;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
@@ -2685,7 +2692,8 @@ export class Map extends Evented<MapEventType> {
         options = extend({},
             {
                 localIdeographFontFamily: this._localIdeographFontFamily,
-                validate: this._validateStyle
+                validate: this._validateStyle,
+                globalState: this._initialGlobalState,
             }, options);
         this._styleUrl = typeof style === 'string' ? style : null;
 

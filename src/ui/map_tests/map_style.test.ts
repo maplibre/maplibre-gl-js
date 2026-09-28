@@ -248,7 +248,30 @@ describe('setStyle', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
-    test('initial style global state overrides defaults', async () => {
+    test('initial style global state on map overrides defaults', async () => {
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        const map = createMap({
+            style,
+            globalState: {
+                showCircles: false,
+            }
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: false,
+        });
+    });
+
+    test('initial global state on style overrides defaults', async () => {
         const map = createMap({deleteStyle: true});
         const style = {
             ...createStyle(),
@@ -271,7 +294,28 @@ describe('setStyle', () => {
         });
     });
 
-    test('not setting initial style global state uses defaults', async () => {
+    test('not setting initial style global state on map uses defaults', async () => {
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        const map = createMap({
+            style,
+            globalState: {},
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
+    test('not setting initial style global state on style uses defaults', async () => {
         const map = createMap({deleteStyle: true});
         const style = {
             ...createStyle(),
@@ -292,7 +336,23 @@ describe('setStyle', () => {
         });
     });
 
-    test('allow providing initial style global state that has no defaults defined in the style', async () => {
+    test('allow providing initial style global state on map that has no defaults defined in the style', async () => {
+        const style = createStyle();
+        const map = createMap({
+            style,
+            globalState: {
+                somethingElse: 'something',
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            somethingElse: 'something',
+        });
+    });
+
+    test('allow providing initial style global state on style that has no defaults defined in the style', async () => {
         const map = createMap({deleteStyle: true});
         const style = createStyle();
         map.setStyle(style, {
@@ -308,7 +368,30 @@ describe('setStyle', () => {
         });
     });
 
-    test('setting an initial style global with null value resets to the default', async () => {
+    test('setting an initial style global state on map with null value resets to the default', async () => {
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        const map = createMap({
+            style,
+            globalState: {
+                showCircles: null,
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
+    test('setting an initial style global state on style with null value resets to the default', async () => {
         const map = createMap({deleteStyle: true});
         const style = {
             ...createStyle(),
