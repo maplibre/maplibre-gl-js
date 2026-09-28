@@ -4441,6 +4441,7 @@ export class Map extends Evented<MapEventType> {
             zooming: this.isZooming(),
             moving: this.isMoving(),
             fadeDuration,
+            symbolFadeChange: this.style.placement.symbolFadeChange(now()),
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });

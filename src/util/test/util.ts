@@ -18,6 +18,7 @@ import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
+import type {FrameRenderData} from '../../render/frame_render_context.ts';
 import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
@@ -370,5 +371,22 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
                 });
             });
         })
+    };
+}
+
+/**
+ * Returns frame data for a still map with every debug option off.
+ */
+export function createFrameRenderData(): FrameRenderData {
+    return {
+        showOverdrawInspector: false,
+        showTileBoundaries: false,
+        showPadding: false,
+        rotating: false,
+        zooming: false,
+        moving: false,
+        fadeDuration: 0,
+        symbolFadeChange: 1,
+        anisotropicFilterPitch: 20
     };
 }

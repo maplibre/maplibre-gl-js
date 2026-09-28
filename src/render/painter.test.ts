@@ -23,6 +23,7 @@ describe('render', () => {
         showTileBoundaries: false,
         zooming: false,
         anisotropicFilterPitch: 20,
+        symbolFadeChange: 1,
     };
 
     beforeEach(() => {
@@ -39,7 +40,7 @@ describe('render', () => {
     test('must not fail with incompletely loaded style', () => {
         painter.render(style, transform, renderOptions);
 
-        expect(painter.renderContext.currentPass).toBe('translucent');
+        expect(painter.frameRenderContext.currentPass).toBe('translucent');
     });
 
     test('calls terrainDepth', () => {
@@ -71,7 +72,7 @@ describe('render', () => {
         expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
-    test('builds render context from the transform, globe projection and terrain', () => {
+    test('builds frame render context from the transform, globe projection and terrain', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
@@ -80,16 +81,16 @@ describe('render', () => {
 
         painter.render(style, transform, renderOptions);
 
-        expect(painter.renderContext.transform).toBe(transform);
-        expect(painter.renderContext.terrain).toBe(terrain);
-        expect(painter.renderContext.projectionTransition).toBe(1);
-        expect(painter.renderContext.isRenderingGlobe).toBe(true);
+        expect(painter.frameRenderContext.transform).toBe(transform);
+        expect(painter.frameRenderContext.terrain).toBe(terrain);
+        expect(painter.frameRenderContext.projectionTransition).toBe(1);
+        expect(painter.frameRenderContext.isRenderingGlobe).toBe(true);
     });
 
-    test('uses render context for depth and blending when drawing a custom layer', () => {
+    test('uses frame render context for depth and blending when drawing a custom layer', () => {
         painter.render(style, transform, renderOptions);
-        const renderContext = painter.renderContext;
-        renderContext.depthRangeFor3D = [0.1, 0.8];
+        const frameRenderContext = painter.frameRenderContext;
+        frameRenderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
             expect(painter.context.blend.get()).toBe(true);
@@ -97,7 +98,7 @@ describe('render', () => {
         });
         const layer = new CustomStyleLayer({id: 'custom', type: 'custom', renderingMode: '3d', render}, {});
 
-        painter.renderLayer(painter, null, layer, [], renderContext);
+        painter.renderLayer(painter, null, layer, [], frameRenderContext);
 
         expect(render).toHaveBeenCalledTimes(1);
     });

@@ -7,12 +7,26 @@ import type {DepthRangeType} from '../webgl/types.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
+/** Plain values that describe one frame. The map builds them once per frame. */
+export type FrameRenderData = {
+    showOverdrawInspector: boolean;
+    showTileBoundaries: boolean;
+    showPadding: boolean;
+    rotating: boolean;
+    zooming: boolean;
+    moving: boolean;
+    fadeDuration: number;
+    /** Progress of the symbol fade since the last placement. */
+    symbolFadeChange: number;
+    anisotropicFilterPitch: number;
+};
+
 /**
  * @internal
  * Shared draw state, created per render and updated as rendering proceeds.
  * Corresponds to part of MapLibre Native's `PaintParameters`.
  */
-export type RenderContext = {
+export type FrameRenderContext = {
     currentPass: RenderPass;
     currentLayer: number;
     opaquePassCutoff: number;
@@ -22,9 +36,10 @@ export type RenderContext = {
     readonly terrain: Terrain | null;
     readonly projectionTransition: number;
     readonly isRenderingGlobe: boolean;
+    readonly data: FrameRenderData;
 };
 
-export function createRenderContext(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null): RenderContext {
+export function createFrameRenderContext(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null, data: FrameRenderData): FrameRenderContext {
     const projectionTransition = projection?.transitionState ?? 0;
     return {
         currentPass: 'offscreen',
@@ -35,18 +50,19 @@ export function createRenderContext(transform: IReadonlyTransform, projection: P
         transform,
         terrain,
         projectionTransition,
-        isRenderingGlobe: projectionTransition > 0
+        isRenderingGlobe: projectionTransition > 0,
+        data
     };
 }
 
-export function getProjectionDataForTile(renderContext: RenderContext, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
-    const projectionData = renderContext.transform.getProjectionData({
+export function getProjectionDataForTile(frameRenderContext: FrameRenderContext, tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
+    const projectionData = frameRenderContext.transform.getProjectionData({
         overscaledTileID: tileID,
         aligned: options.aligned,
-        applyGlobeMatrix: !renderContext.isRenderingToTexture,
+        applyGlobeMatrix: !frameRenderContext.isRenderingToTexture,
         applyTerrainMatrix: options.applyTerrainMatrix ?? true
     });
-    if (renderContext.isRenderingToTexture) return projectionData;
+    if (frameRenderContext.isRenderingToTexture) return projectionData;
 
     projectionData.uniformBufferKey = options.aligned ? `${tileID.key}/aligned` : tileID.key;
     return projectionData;
@@ -56,7 +72,7 @@ export function getProjectionDataForTile(renderContext: RenderContext, tileID: O
  * Returns terrain data for a tile.
  * Returns null if terrain is not configured or tiles are being rendered to a texture.
  */
-export function getTerrainDataForTile(renderContext: RenderContext, tileID: OverscaledTileID): TerrainData | null {
-    if (renderContext.isRenderingToTexture) return null;
-    return renderContext.terrain?.getTerrainData(tileID) ?? null;
+export function getTerrainDataForTile(frameRenderContext: FrameRenderContext, tileID: OverscaledTileID): TerrainData | null {
+    if (frameRenderContext.isRenderingToTexture) return null;
+    return frameRenderContext.terrain?.getTerrainData(tileID) ?? null;
 }

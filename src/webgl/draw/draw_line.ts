@@ -12,7 +12,7 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -44,7 +44,7 @@ function updateGradientTexture(
     if (layer.stepInterpolant) {
         const sourceMaxZoom = tileManager.getSource().maxzoom;
         const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
-            Math.ceil(1 << (painter.renderContext.transform.maxZoom - coord.canonical.z)) : 1;
+            Math.ceil(1 << (painter.frameRenderContext.transform.maxZoom - coord.canonical.z)) : 1;
         const lineLength = bucket.maxLineLength / EXTENT;
         // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
         const maxTilePixelSize = 1024;
@@ -140,8 +140,8 @@ function bindGradientAndDashTextures(
     programConfiguration.updatePaintBuffers(crossfade);
 }
 
-export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
-    if (renderContext.currentPass !== 'translucent') return;
+export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+    if (frameRenderContext.currentPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
@@ -150,12 +150,12 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     if (layerOpacity < 1) {
         const results = prepareDrawLayerOpacity(painter, layer, coords);
-        drawLineTiles(painter, tileManager, layer, coords, renderContext);
+        drawLineTiles(painter, tileManager, layer, coords, frameRenderContext);
         drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
     }
 
-    drawLineTiles(painter, tileManager, layer, coords, renderContext);
+    drawLineTiles(painter, tileManager, layer, coords, frameRenderContext);
 }
 
 function drawLineTiles(
@@ -163,7 +163,7 @@ function drawLineTiles(
     tileManager: TileManager,
     layer: LineStyleLayer,
     coords: OverscaledTileID[],
-    renderContext: RenderContext
+    frameRenderContext: FrameRenderContext
 ) {
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
@@ -185,7 +185,7 @@ function drawLineTiles(
 
     const context = painter.context;
     const gl = context.gl;
-    const transform = renderContext.transform;
+    const transform = frameRenderContext.transform;
 
     let firstTile = true;
 
@@ -201,7 +201,7 @@ function drawLineTiles(
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);
@@ -218,7 +218,7 @@ function drawLineTiles(
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);
         }
 
-        const projectionData = getProjectionDataForTile(renderContext, coord);
+        const projectionData = getProjectionDataForTile(frameRenderContext, coord);
 
         const pixelRatio = transform.getPixelScale();
 
@@ -244,7 +244,7 @@ function drawLineTiles(
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
-            layer.paint, renderContext.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+            layer.paint, frameRenderContext.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
