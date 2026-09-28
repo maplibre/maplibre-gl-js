@@ -44,7 +44,7 @@ function updateGradientTexture(
     if (layer.stepInterpolant) {
         const sourceMaxZoom = tileManager.getSource().maxzoom;
         const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
-            Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
+            Math.ceil(1 << (painter.renderContext.transform.maxZoom - coord.canonical.z)) : 1;
         const lineLength = bucket.maxLineLength / EXTENT;
         // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
         const maxTilePixelSize = 1024;
@@ -185,7 +185,7 @@ function drawLineTiles(
 
     const context = painter.context;
     const gl = context.gl;
-    const transform = painter.transform;
+    const transform = renderContext.transform;
 
     let firstTile = true;
 
@@ -244,7 +244,7 @@ function drawLineTiles(
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
-            layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+            layer.paint, renderContext.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic

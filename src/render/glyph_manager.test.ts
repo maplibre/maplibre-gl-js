@@ -62,32 +62,31 @@ describe('GlyphManager', () => {
         delete (document as any).fonts;
     });
 
-    test('GlyphManager requests 0-255 PBF', async () => {
+    test('GlyphManager shares a 0-255 PBF request between different glyphs', async () => {
         serveGlyphRanges();
         const transformRequest = vi.fn((url: string) => ({url}));
         const manager = new GlyphManager(new RequestManager(transformRequest));
         manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
 
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(55), char(56)]}});
 
-        expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(55)].metrics.advance).toBe(12);
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(56)].metrics).toEqual(GLYPHS[56].metrics);
+        const cachedRange = await manager.getGlyphs({'Arial Unicode MS': {default: ['A']}});
+        expect(cachedRange['Arial Unicode MS'].default.A.metrics).toEqual(GLYPHS[65].metrics);
         expect(transformRequest).toHaveBeenCalledExactlyOnceWith(
             'https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
     });
 
     test('GlyphManager doesn\'t request twice 0-255 PBF if a glyph is missing', async () => {
-        serveGlyphRanges();
+        server.respondWith(/\.pbf$/, [200, {}, new ArrayBuffer(0)]);
         const manager = createGlyphManager(true);
 
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
-        expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
-        expect(glyphRangeRequests()).toHaveLength(1);
-
-        // We remove all requests as in getGlyphs code.
-        delete manager.entries['Arial Unicode MS'].requests[0];
-
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x01)]});
-        expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
+        const missing = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x01)]}});
+        expect(missing['Arial Unicode MS'].default[char(0x01)]).toBeNull();
+        const next = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x01), char(0x02), '7']}});
+        expect(next['Arial Unicode MS'].default[char(0x02)]).toBeNull();
+        expect(next['Arial Unicode MS'].default['7']).toBeNull();
         expect(glyphRangeRequests()).toHaveLength(1);
     });
 
@@ -95,8 +94,8 @@ describe('GlyphManager', () => {
         serveGlyphRanges();
         const manager = createGlyphManager(true);
 
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x5e73)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x5e73)]).toBeNull(); // The fixture returns a PBF without the glyph we requested
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x5e73)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x5e73)]).toBeNull(); // The fixture returns a PBF without the glyph we requested
     });
 
     test('GlyphManager requests remote non-BMP, non-CJK PBF', async () => {
@@ -104,8 +103,8 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager(true);
 
         // Request Egyptian hieroglyph 𓃰
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x1e0f0)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x1e0f0)]).toBeNull(); // The fixture returns a PBF without the glyph we requested
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x1e0f0)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x1e0f0)]).toBeNull(); // The fixture returns a PBF without the glyph we requested
     });
 
     test('GlyphManager does not cache CJK chars that should be rendered locally', async () => {
@@ -113,11 +112,11 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
         //Request char that overlaps Katakana range
-        let returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x3005)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x3005)]).not.toBeNull();
+        let returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x3005)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x3005)]).not.toBeNull();
         //Request char from Katakana range (te テ)
-        returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x30C6)]});
-        const glyph = returnedGlyphs['Arial Unicode MS'][char(0x30c6)];
+        returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30C6)]}});
+        const glyph = returnedGlyphs['Arial Unicode MS'].default[char(0x30c6)];
         //Ensure that te is locally generated.
         expect(glyph.bitmap.height).toBe(12);
         expect(glyph.bitmap.width).toBe(12);
@@ -127,32 +126,32 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
         // Chinese character píng 平
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x5e73)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x5e73)].metrics.advance).toBe(0.5);
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x5e73)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x5e73)].metrics.advance).toBe(0.5);
     });
 
     test('GlyphManager generates non-BMP CJK PBF locally', async () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
         // Chinese character biáng 𰻞
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x30EDE)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x30EDE)].metrics.advance).toBe(1);
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30EDE)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x30EDE)].metrics.advance).toBe(1);
     });
 
     test('GlyphManager generates Katakana PBF locally', async () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
         // Katakana letter te テ
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x30c6)].metrics.advance).toBe(0.5);
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30c6)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x30c6)].metrics.advance).toBe(0.5);
     });
 
     test('GlyphManager generates Hiragana PBF locally', async () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
         //Hiragana letter te て
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x3066)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x3066)].metrics.advance).toBe(0.5);
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x3066)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x3066)].metrics.advance).toBe(0.5);
     });
 
     test('GlyphManager consistently generates CJKV text locally', async () => {
@@ -182,18 +181,18 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager(false, 'sans-serif');
 
         // A
-        const returnedGlyphs = await manager.getGlyphs({'Times Old Roman': [char(0x41)]});
-        expect(returnedGlyphs['Times Old Roman'][char(0x41)].metrics.width).toBeGreaterThan(0);
-        expect(returnedGlyphs['Times Old Roman'][char(0x41)].metrics.advance).toBeGreaterThan(0);
+        const returnedGlyphs = await manager.getGlyphs({'Times Old Roman': {default: [char(0x41)]}});
+        expect(returnedGlyphs['Times Old Roman'].default[char(0x41)].metrics.width).toBeGreaterThan(0);
+        expect(returnedGlyphs['Times Old Roman'].default[char(0x41)].metrics.advance).toBeGreaterThan(0);
     });
 
     test('GlyphManager locally generates nonspacing control character', async () => {
         const manager = createGlyphManager(false, 'sans-serif');
 
         // U+202E RIGHT-TO-LEFT OVERRIDE
-        const returnedGlyphs = await manager.getGlyphs({'Ctrl Alt Del': [char(0x202e)]});
-        expect(returnedGlyphs['Ctrl Alt Del'][char(0x202e)].metrics.width).toBe(0);
-        expect(returnedGlyphs['Ctrl Alt Del'][char(0x202e)].metrics.advance).toBe(0);
+        const returnedGlyphs = await manager.getGlyphs({'Ctrl Alt Del': {default: [char(0x202e)]}});
+        expect(returnedGlyphs['Ctrl Alt Del'].default[char(0x202e)].metrics.width).toBe(0);
+        expect(returnedGlyphs['Ctrl Alt Del'].default[char(0x202e)].metrics.advance).toBe(0);
     });
 
     test('GlyphManager locally generates a grapheme cluster when the style has no glyphs URL', async () => {
@@ -201,18 +200,18 @@ describe('GlyphManager', () => {
 
         // \u0926\u093f is Devanagari DA with the vowel sign I, which is written as one shape
         const cluster = '\u0926\u093f';
-        const returnedGlyphs = await manager.getGlyphs({'Noto Sans': [cluster]});
+        const returnedGlyphs = await manager.getGlyphs({'Noto Sans': {default: [cluster]}});
 
-        expect(returnedGlyphs['Noto Sans'][cluster].metrics.advance).toBeGreaterThan(0);
+        expect(returnedGlyphs['Noto Sans'].default[cluster].metrics.advance).toBeGreaterThan(0);
     });
 
     test('GlyphManager locally generates a grapheme cluster the glyphs URL has no way to serve', async () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
         const cluster = '\u0926\u093f';
-        const returnedGlyphs = await manager.getGlyphs({'Noto Sans': [cluster]});
+        const returnedGlyphs = await manager.getGlyphs({'Noto Sans': {default: [cluster]}});
 
-        expect(returnedGlyphs['Noto Sans'][cluster].metrics.advance).toBeGreaterThan(0);
+        expect(returnedGlyphs['Noto Sans'].default[cluster].metrics.advance).toBeGreaterThan(0);
     });
 
     test('GlyphManager matches font styles', async () => {
@@ -239,9 +238,9 @@ describe('GlyphManager', () => {
         server.respondWith(function (request) { request.respond(404, undefined, 'Not Found'); });
         const manager = createGlyphManager(true, 'sans-serif');
 
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x10e1)]});
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x10e1)]}});
 
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x10e1)].metrics.advance).toBeGreaterThan(0);
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x10e1)].metrics.advance).toBeGreaterThan(0);
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Unable to load glyph range'));
     });
 
@@ -251,23 +250,23 @@ describe('GlyphManager', () => {
         const drawSpy = vi.spyOn(TinySDF.prototype, 'draw').mockReturnValue({data: new Uint8ClampedArray(60 * 60)} as any);
 
         // Katakana letter te
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
-        expect(returnedGlyphs['Arial Unicode MS'][char(0x30c6)].metrics.advance).toBe(24);
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30c6)]}});
+        expect(returnedGlyphs['Arial Unicode MS'].default[char(0x30c6)].metrics.advance).toBe(24);
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30c6)]}});
         expect(drawSpy).toHaveBeenCalledTimes(1);
     });
 
     test('GlyphManager passes no language to TinySDF by default', async () => {
         const createRasterizer = fakeRasterizer();
         const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30c6)]}});
         expect(createRasterizer).toHaveBeenCalledWith(expect.not.objectContaining({lang: expect.anything()}), expect.any(Number));
     });
 
     test('GlyphManager sets the language on TinySDF', async () => {
         const createRasterizer = fakeRasterizer();
         const manager = createGlyphManager(true, 'sans-serif', 'zh', createRasterizer);
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x30c6)]});
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x30c6)]}});
         expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}), expect.any(Number));
     });
 
@@ -277,7 +276,7 @@ describe('GlyphManager', () => {
         const createRasterizer = fakeRasterizer();
 
         const manager = createGlyphManager(false, 'sans-serif', undefined, createRasterizer);
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x41)]}});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
         expect(createRasterizer).toHaveBeenCalledTimes(1);
@@ -291,11 +290,11 @@ describe('GlyphManager', () => {
         const createRasterizer = fakeRasterizer();
 
         const manager = createGlyphManager(false, 'sans-serif', undefined, createRasterizer);
-        const result = await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
+        const result = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x41)]}});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
         expect(createRasterizer).toHaveBeenCalledTimes(1);
-        expect(result['Arial Unicode MS'][char(0x41)]).toBeDefined();
+        expect(result['Arial Unicode MS'].default[char(0x41)]).toBeDefined();
     });
 
     test('memoizes document.fonts.load per fontstack', async () => {
@@ -304,11 +303,29 @@ describe('GlyphManager', () => {
         const createRasterizer = fakeRasterizer();
 
         const manager = createGlyphManager(false, 'sans-serif', undefined, createRasterizer);
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x42)]});
-        await manager.getGlyphs({'Arial Unicode MS': [char(0x43)]});
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x41)]}});
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x42)]}});
+        await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x43)]}});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('keeps unsupported variants separate from default glyphs', async () => {
+        serveGlyphRanges();
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
+
+        const alternate = await manager.getGlyphs({Test: {alternate: ['A']}});
+        expect(alternate.Test).toEqual({alternate: {A: null}});
+        expect(server.requests).toHaveLength(0);
+        expect(createRasterizer).not.toHaveBeenCalled();
+
+        const request = {Test: {default: ['A'], alternate: ['A']}};
+        const glyphs = await manager.getGlyphs(request);
+        expect(glyphs.Test.default.A.metrics).toEqual(GLYPHS[65].metrics);
+        expect(glyphs.Test.alternate.A).toBeNull();
+        await expect(manager.getGlyphs(request)).resolves.toEqual(glyphs);
+        expect(glyphRangeRequests()).toHaveLength(1);
     });
 
     describe('font-faces', () => {
@@ -319,7 +336,9 @@ describe('GlyphManager', () => {
             });
             (globalThis as any).FontFace = class {
                 family: string;
-                constructor(family: string) { this.family = family; }
+                constructor(family: string) {
+                    this.family = family;
+                }
                 load = () => Promise.resolve(this);
             };
             server.respondWith(/\.ttf$/, function (request) { request.respond(200, undefined, 'font file'); });
@@ -337,9 +356,9 @@ describe('GlyphManager', () => {
             const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(0x1780)]});
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x1780)]}});
 
-            expect(returnedGlyphs['Arial Unicode MS'][char(0x1780)]).toBeDefined();
+            expect(returnedGlyphs['Arial Unicode MS'].default[char(0x1780)]).toBeDefined();
             expect(glyphRangeRequests()).toHaveLength(0);
             expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
                 fontFamily: expect.stringMatching(/^maplibre-gl-font-face-\d+,sans-serif$/)
@@ -356,14 +375,14 @@ describe('GlyphManager', () => {
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/hebrew.ttf'});
 
             const shinWithShevaAndDot = '\u05E9\u05B0\u05C1';
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [shinWithShevaAndDot]});
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [shinWithShevaAndDot]}});
 
-            expect(returnedGlyphs['Arial Unicode MS'][shinWithShevaAndDot]).toBeDefined();
+            expect(returnedGlyphs['Arial Unicode MS'].default[shinWithShevaAndDot]).toBeDefined();
             expect(drawn).toContain(shinWithShevaAndDot);
             expect(glyphRangeRequests()).toHaveLength(0);
         });
 
-        test('draws a cluster the declared files do not cover from the local fonts instead', async () => {
+        test('draws an uncovered cluster from local fonts', async () => {
             stubFontFaces();
             serveGlyphRanges();
             const createRasterizer = fakeRasterizer();
@@ -373,10 +392,15 @@ describe('GlyphManager', () => {
             manager.setFontFaces({'Arial Unicode MS': khmerOnly});
 
             const shinWithShevaAndDot = '\u05E9\u05B0\u05C1';
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [shinWithShevaAndDot]});
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {
+                default: [shinWithShevaAndDot]
+            }});
 
-            expect(returnedGlyphs['Arial Unicode MS'][shinWithShevaAndDot]).not.toBeNull();
-            expect(createRasterizer).toHaveBeenCalled();
+            expect(returnedGlyphs['Arial Unicode MS'].default[shinWithShevaAndDot]).not.toBeNull();
+            expect(createRasterizer).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+                fontFamily: 'Arial Unicode MS,sans-serif'
+            }), expect.any(Number));
+            expect(server.requests).toHaveLength(0);
         });
 
         test('leaves a codepoint outside every declared range to the glyphs URL', async () => {
@@ -386,9 +410,9 @@ describe('GlyphManager', () => {
             const manager = createGlyphManager(true);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': [char(55)]});
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(55)]}});
 
-            expect(returnedGlyphs['Arial Unicode MS'][char(55)].metrics.advance).toBe(12);
+            expect(returnedGlyphs['Arial Unicode MS'].default[char(55)].metrics.advance).toBe(12);
             expect(glyphRangeRequests()).toHaveLength(1);
         });
 
@@ -398,7 +422,7 @@ describe('GlyphManager', () => {
 
             const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Noto Sans Bold Italic': 'https://localhost/noto-bold-italic.ttf'});
-            await manager.getGlyphs({'Noto Sans Bold Italic': [char(0x41)]});
+            await manager.getGlyphs({'Noto Sans Bold Italic': {default: [char(0x41)]}});
 
             expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({fontWeight: undefined, fontStyle: 'normal'}), expect.any(Number));
         });
@@ -413,7 +437,7 @@ describe('GlyphManager', () => {
                 {url: 'https://localhost/devanagari.ttf', 'unicode-range': ['U+0900-097F']}
             ]});
 
-            await manager.getGlyphs({'Arial Unicode MS': [char(0x1780), char(0x1781), char(0x0915)]});
+            await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x1780), char(0x1781), char(0x0915)]}});
 
             const families = createRasterizer.mock.calls.map(([options]) => options.fontFamily);
             expect(new Set(families).size).toBe(2);
@@ -425,10 +449,10 @@ describe('GlyphManager', () => {
 
             const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/noto.ttf'});
-            await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
+            await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x41)]}});
 
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/other.ttf'});
-            await manager.getGlyphs({'Arial Unicode MS': [char(0x41)]});
+            await manager.getGlyphs({'Arial Unicode MS': {default: [char(0x41)]}});
 
             const families = createRasterizer.mock.calls.map(([options]) => options.fontFamily);
             expect(families).toHaveLength(2);
@@ -442,7 +466,7 @@ describe('GlyphManager', () => {
             const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
             manager.setFontFaces({'Arial Unicode MS': 'https://localhost/myanmar.ttf'});
 
-            await manager.getGlyphs({'Arial Unicode MS': ['\u101C\u102C\u1038', char(0x41)]});
+            await manager.getGlyphs({'Arial Unicode MS': {default: ['\u101C\u102C\u1038', char(0x41)]}});
 
             const buffers = createRasterizer.mock.calls.map(([options]) => options.buffer);
             expect(Math.max(...buffers)).toBeGreaterThan(Math.min(...buffers));

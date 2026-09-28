@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, expect, onTestFinished, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {TileManager} from './tile_manager.ts';
 import {addSourceType, type Source} from '../source/source.ts';
 import {FadingDirections, FadingRoles, Tile} from './tile.ts';
@@ -2698,9 +2698,49 @@ describe('TileManager / etag', () => {
 });
 
 describe('TileManager content elevation', () => {
+    let map: Map;
+    let tileManager: TileManager;
+
+    afterEach(() => {
+        tileManager.onRemove(map);
+        map.remove();
+    });
+
+    test('does not scan loaded tiles for a constant symbol-height-offset', async () => {
+        map = globalCreateMap({
+            style: {
+                version: 8,
+                sources: {id: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                layers: [
+                    {id: 'constant', type: 'symbol', source: 'id', layout: {'symbol-height-offset': 100}},
+                    {id: 'dataDriven', type: 'symbol', source: 'id', layout: {'symbol-height-offset': ['get', 'height']}}
+                ]
+            }
+        });
+        await map.once('load');
+
+        tileManager = createTileManager({
+            async loadTile(tile: Tile) {
+                tile.state = 'loaded';
+            }
+        });
+        tileManager.onAdd(map);
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        tileManager.update(transform);
+        await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
+
+        const tile = tileManager.getLoadedTile(new OverscaledTileID(0, 0, 0, 0, 0));
+        const getBucket = vi.spyOn(tile, 'getBucket');
+        tileManager.update(transform);
+        expect(getBucket).toHaveBeenCalledTimes(1);
+        expect(getBucket).toHaveBeenCalledWith(map.getLayer('dataDriven'));
+        expect(getBucket).not.toHaveBeenCalledWith(map.getLayer('constant'));
+    });
+
     test.each(['resetMaxContentElevation', 'clearTiles'] as const)(
         'preserves expanded tile coverage after unloading until %s', async (reset) => {
-            const map = globalCreateMap({
+            map = globalCreateMap({
                 maxTileCacheSize: 0,
                 fadeDuration: 0,
                 style: {
@@ -2712,12 +2752,11 @@ describe('TileManager content elevation', () => {
                     }]
                 }
             });
-            onTestFinished(() => map.remove());
             await map.once('load');
 
             const elevatedTileID = new OverscaledTileID(4, 0, 4, 0, 10);
             const horizonTileID = new OverscaledTileID(4, 0, 4, 7, 3);
-            const tileManager = createTileManager({
+            tileManager = createTileManager({
                 minzoom: 4,
                 maxzoom: 4,
                 async loadTile(tile: Tile) {
@@ -2732,7 +2771,6 @@ describe('TileManager content elevation', () => {
                 }
             });
             tileManager.onAdd(map);
-            onTestFinished(() => tileManager.onRemove(map));
 
             const transform = new GlobeTransform();
             transform.resize(1400, 800);

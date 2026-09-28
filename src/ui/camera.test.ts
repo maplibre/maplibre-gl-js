@@ -103,6 +103,13 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         expect(own.getPitch()).toBeCloseTo(60);
     });
 
+    test('puts the center on the ground at pitch 85', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 1000, 0, 85);
+        const center = LngLat.convert(cameraOptions.center);
+        expect(cameraOptions.elevation).toBe(0);
+        expect(center.lat).toBeCloseTo(0.1028, 3);
+    });
+
     test('look level', () => {
         const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 0, 0, 90);
         expect(cameraOptions).toBeDefined();
@@ -2090,14 +2097,14 @@ describe('flyTo', () => {
             setElevation: (e) => (camera.transform as any).elevation = e
         } as any;
 
-        camera._prepareElevation(new LngLat(10, 0));
+        camera._prepareElevation(new LngLat(10, 0), camera.transform);
         // expect(camera._elevationCenter).toBe([10, 0]);
         expect(camera._elevationStart).toBe(0);
         expect(camera._elevationTarget).toBe(100);
         expect(camera.elevationFreeze).toBeTruthy();
 
         terrain.getElevationForLngLat = () => 200;
-        camera._updateElevation(0.5);
+        camera._updateElevation(0.5, camera.transform);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 
@@ -2626,6 +2633,19 @@ describe('transformCameraUpdate', () => {
         camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 10});
         expect(fixedNum(camera.getZoom())).toBe(3);
+    });
+
+    test('keeps a field of view set during easeTo', () => {
+        const {camera, queue} = createCamera({transformCameraUpdate: () => ({})});
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        camera.easeTo({center: [100, 0], duration: 10});
+        camera.setVerticalFieldOfView(50);
+        stub.mockReturnValue(10);
+        queue.run();
+
+        expect(camera.getVerticalFieldOfView()).toBeCloseTo(50, 10);
     });
 });
 

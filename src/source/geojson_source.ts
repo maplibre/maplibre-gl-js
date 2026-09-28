@@ -91,6 +91,8 @@ export type GetClusterOptions = {
  * A source containing GeoJSON.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
+ * GeoJSON is tiled internally for rendering. Features exposed from rendered tiles and related events come from vector-tile data, so GeoJSON foreign members that cannot be represented by the vector-tile format are not preserved there. Keep that data separately, or map it to supported feature properties, if you need it after tiling.
+ *
  * @group Sources
  *
  * @example
@@ -220,7 +222,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
                 generateId: options.generateId || false,
-                promoteId: typeof options.promoteId === 'string' ? options.promoteId : undefined,
+                promoteId: this._promoteIdKey,
                 cluster: options.cluster || false,
                 clusterOptions: {
                     maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
@@ -234,6 +236,11 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             clusterProperties: options.clusterProperties,
             filter: options.filter
         }, options.workerOptions);
+    }
+
+    /** The `promoteId` property name, when it is a plain string. */
+    private get _promoteIdKey(): string | undefined {
+        return typeof this.promoteId === 'string' ? this.promoteId : undefined;
     }
 
     private _hasPendingWorkerUpdate(): boolean {
@@ -291,7 +298,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * @param diff - The changes that need to be applied.
      */
     updateData(diff: GeoJSONSourceDiff): Promise<void> {
-        this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
+        this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff, this._promoteIdKey);
         return this._updateWorkerData();
     }
 
@@ -551,7 +558,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             return undefined;
         }
 
-        const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
+        const promoteId = this._promoteIdKey;
 
         // Lazily convert `this._data` to updateable if it's not already
         if (!this._data.url && !this._data.updateable) {

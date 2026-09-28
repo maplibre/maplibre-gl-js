@@ -23,3 +23,9 @@ export type StyleGlyph = {
     bitmap: AlphaImage;
     metrics: GlyphMetrics;
 };
+
+/** Grapheme clusters requested by font stack and variant, using `default` for standard glyphs. */
+export type GlyphRequests = Record<string, Record<string, string[]>>;
+
+/** Glyphs keyed by font stack, variant, and grapheme cluster; `null` means unavailable. */
+export type GlyphMap = Record<string, Record<string, Record<string, StyleGlyph | null>>>;

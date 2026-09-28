@@ -18,7 +18,7 @@ import type {Painter} from '../../render/painter.ts';
 function drawDepth(painter: Painter, terrain: Terrain): void {
     const context = painter.context;
     const gl = context.gl;
-    const tr = painter.transform;
+    const tr = painter.renderContext.transform;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const tiles = terrain.tileManager.getRenderableTiles();
@@ -41,7 +41,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderCo
     const {isRenderingGlobe} = renderContext;
     const context = painter.context;
     const gl = context.gl;
-    const tr = painter.transform;
+    const tr = renderContext.transform;
     const colorMode = painter.colorModeForRenderPass();
     const depthMode = painter.getDepthModeFor3D();
     const program = painter.useProgram('terrain');

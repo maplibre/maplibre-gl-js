@@ -56,7 +56,7 @@ function createMockTransform() {
 
 describe('drawSymbol', () => {
     test('should not do anything', () => {
-        const mockPainter = new Painter(null, null);
+        const mockPainter = new Painter(null);
         const renderContext = createRenderContext(null, undefined, null);
         renderContext.currentPass = 'opaque';
 
@@ -66,15 +66,14 @@ describe('drawSymbol', () => {
     });
 
     test('should call program.draw', () => {
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null);
         painterMock.context = {
             gl: {},
             activeTexture: {
                 set: () => { }
             }
         } as any;
-        painterMock.transform = createMockTransform();
-        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext = createRenderContext(createMockTransform(), undefined, null);
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {
@@ -129,15 +128,14 @@ describe('drawSymbol', () => {
 
     test('should call updateLineLabels with rotateToLine === false if text-rotation-alignment is viewport-glyph', () => {
 
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null);
         painterMock.context = {
             gl: {},
             activeTexture: {
                 set: () => { }
             }
         } as any;
-        painterMock.transform = createMockTransform();
-        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext = createRenderContext(createMockTransform(), undefined, null);
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
 
@@ -197,15 +195,14 @@ describe('drawSymbol', () => {
 
     test('transparent tile optimization should prevent program.draw from being called', () => {
 
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null);
         painterMock.context = {
             gl: {},
             activeTexture: {
                 set: () => { }
             }
         } as any;
-        painterMock.transform = createMockTransform();
-        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
+        painterMock.renderContext = createRenderContext(createMockTransform(), undefined, null);
         painterMock.renderContext.currentPass = 'translucent';
         painterMock.options = {} as any;
         painterMock.style = {

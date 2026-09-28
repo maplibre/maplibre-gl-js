@@ -18,19 +18,19 @@ const rightColor = new Color(1, 0, 1, 1);
 const centerColor = new Color(0, 1, 1, 1);
 
 export function drawDebugPadding(painter: Painter): void {
-    const padding = painter.transform.padding;
+    const padding = painter.renderContext.transform.padding;
     const lineWidth = 3;
     // Top
-    drawHorizontalLine(painter, painter.transform.height - (padding.top || 0), lineWidth, topColor);
+    drawHorizontalLine(painter, painter.renderContext.transform.height - (padding.top || 0), lineWidth, topColor);
     // Bottom
     drawHorizontalLine(painter, padding.bottom || 0, lineWidth, btmColor);
     // Left
     drawVerticalLine(painter, padding.left || 0, lineWidth, leftColor);
     // Right
-    drawVerticalLine(painter, painter.transform.width - (padding.right || 0), lineWidth, rightColor);
+    drawVerticalLine(painter, painter.renderContext.transform.width - (padding.right || 0), lineWidth, rightColor);
     // Center
-    const center = painter.transform.centerPoint;
-    drawCrosshair(painter, center.x, painter.transform.height - center.y, centerColor);
+    const center = painter.renderContext.transform.centerPoint;
+    drawCrosshair(painter, center.x, painter.renderContext.transform.height - center.y, centerColor);
 }
 
 function drawCrosshair(painter: Painter, x: number, y: number, color: Color) {
@@ -43,11 +43,11 @@ function drawCrosshair(painter: Painter, x: number, y: number, color: Color) {
 }
 
 function drawHorizontalLine(painter: Painter, y: number, lineWidth: number, color: Color) {
-    drawDebugSSRect(painter, 0, y  + lineWidth / 2, painter.transform.width,  lineWidth, color);
+    drawDebugSSRect(painter, 0, y  + lineWidth / 2, painter.renderContext.transform.width,  lineWidth, color);
 }
 
 function drawVerticalLine(painter: Painter, x: number, lineWidth: number, color: Color) {
-    drawDebugSSRect(painter, x - lineWidth / 2, 0, lineWidth,  painter.transform.height, color);
+    drawDebugSSRect(painter, x - lineWidth / 2, 0, lineWidth,  painter.renderContext.transform.height, color);
 }
 
 function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, height: number, color: Color) {
@@ -84,7 +84,7 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const tileByteLength = (tileRawData?.byteLength) || 0;
     const tileSizeKb = Math.floor(tileByteLength / 1024);
     const tileSize = tileManager.getTile(coord).tileSize;
-    const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / painter.transform.zoom)) * 0.5;
+    const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / renderContext.transform.zoom)) * 0.5;
     let tileIdText = coord.canonical.toString();
     if (coord.overscaledZ !== coord.canonical.z) {
         tileIdText += ` => ${coord.overscaledZ}`;

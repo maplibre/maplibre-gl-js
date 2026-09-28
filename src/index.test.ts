@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterAll, test, expect, vi} from 'vitest';
-import {config} from './util/config.ts';
+import {config, type AddProtocolAction} from './util/config.ts';
 import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index.ts';
 import {getJSON, getArrayBuffer} from './util/ajax.ts';
 import {ImageRequest} from './util/image_request.ts';
@@ -68,7 +68,7 @@ describe('maplibre', () => {
     });
 
     test('addProtocol - returning ImageBitmap for getImage', async () => {
-        const mockProtocol = vi.fn().mockResolvedValue({data: new ImageBitmap()});
+        const mockProtocol = vi.fn<AddProtocolAction>().mockResolvedValue({data: new ImageBitmap()});
         addProtocol('custom', mockProtocol);
 
         const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
@@ -77,7 +77,7 @@ describe('maplibre', () => {
     });
 
     test('addProtocol - returning HTMLImageElement for getImage', async () => {
-        const mockProtocol = vi.fn().mockResolvedValue({data: new Image()});
+        const mockProtocol = vi.fn<AddProtocolAction>().mockResolvedValue({data: new Image()});
         addProtocol('custom', mockProtocol);
 
         const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());

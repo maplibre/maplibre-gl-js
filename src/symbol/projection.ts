@@ -235,7 +235,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     getElevation: GetElevation | undefined): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
-    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
+    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.renderContext.transform.zoom);
 
     const clippingBuffer: [number, number] = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
 
@@ -247,7 +247,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     const lineVertexArray = bucket.lineVertexArray;
     const placedSymbols = isText ? bucket.text.placedSymbolArray : bucket.icon.placedSymbolArray;
 
-    const aspectRatio = painter.transform.width / painter.transform.height;
+    const aspectRatio = painter.renderContext.transform.width / painter.renderContext.transform.height;
 
     let useVertical = false;
 
@@ -273,7 +273,7 @@ export function updateLineLabels(bucket: SymbolBucket,
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            transform: painter.transform,
+            transform: painter.renderContext.transform,
             tileAnchorPoint,
             unwrappedTileID,
             width: viewportWidth,
@@ -290,10 +290,10 @@ export function updateLineLabels(bucket: SymbolBucket,
         }
 
         const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
-        const perspectiveRatio = getPerspectiveRatio(painter.transform.cameraToCenterDistance, cameraToAnchorDistance);
+        const perspectiveRatio = getPerspectiveRatio(painter.renderContext.transform.cameraToCenterDistance, cameraToAnchorDistance);
 
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
-        const pitchScaledFontSize = pitchWithMap ? (fontSize * painter.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const pitchScaledFontSize = pitchWithMap ? (fontSize * painter.renderContext.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
 
         const placeUnflipped = placeGlyphsAlongLine({
             projectionContext,

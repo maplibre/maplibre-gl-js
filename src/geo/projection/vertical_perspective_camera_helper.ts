@@ -171,6 +171,9 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
         const result = cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        if (!result) {
+            return undefined;
+        }
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
         // Get clip space bounds including padding
