@@ -497,7 +497,7 @@ export class Painter {
         this.patternAtlas = style.patternAtlas;
         this.glyphManager = style.glyphManager;
 
-        updateFrameUniformBuffer(this.context.frameUniformBuffer, this);
+        updateFrameUniformBuffer(this.context.frameUniformBuffer, transform, data, this.pixelRatio);
 
         this.imageManager.beginFrame();
         releaseProjectionUniformBuffers(this.context);
@@ -532,7 +532,7 @@ export class Painter {
         this.maybeDrawDepth();
 
         if (this.renderToTexture) {
-            this.renderToTexture.prepareForRender(this.style, transform.zoom);
+            this.renderToTexture.prepareForRender(this.style, transform.zoom, data.moving);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             frameRenderContext.opaquePassCutoff = 0;
         }

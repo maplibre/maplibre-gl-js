@@ -78,7 +78,6 @@ describe('render to texture', () => {
     const painter = {
         layersDrawn: 0,
         context: new Context(gl),
-        frameRenderContext: {data: createFrameRenderData()},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         getDepthModeFor3D: () => DepthMode.disabled,
         useProgram: () => ({draw: () => { layersDrawn++; }}),
@@ -131,7 +130,7 @@ describe('render to texture', () => {
     map.terrain = terrain;
 
     const rtt = new RenderToTexture(painter, terrain);
-    rtt.prepareForRender(style, 0);
+    rtt.prepareForRender(style, 0, false);
     painter.renderToTexture = rtt;
 
     beforeEach(() => {
@@ -140,7 +139,6 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         vi.spyOn(terrain.tileManager, 'getRenderableTiles').mockReturnValue([tile]);
         vi.spyOn(terrain.tileManager, 'getTerrainCoords').mockReturnValue({[tile.tileID.key]: tile.tileID});
-        painter.frameRenderContext.data.moving = false;
     });
 
     function visibleLayerIds() {
@@ -154,7 +152,7 @@ describe('render to texture', () => {
 
     test('should call painter with overlay tiles for terrain tile', () => {
         const renderLayerSpy = vi.spyOn(painter, 'renderLayer');
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         for (const layerId of style._order) {
@@ -172,7 +170,7 @@ describe('render to texture', () => {
     });
 
     test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
@@ -182,25 +180,25 @@ describe('render to texture', () => {
         (vi.mocked(terrain.tileManager.getTerrainCoords)).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
         (vi.mocked(painter.releaseRTT)).mockClear();
 
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         expect(tile.getRTT(0)).toBeUndefined();
         expect(painter.releaseRTT).toHaveBeenCalledWith(obj);
     });
 
     test('should not clear tile cache if state remains same', () => {
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
 
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         expect(tile.getRTT(0)).toBeTruthy();
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         layersDrawn = 0;
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
@@ -211,7 +209,7 @@ describe('render to texture', () => {
 
     test('render symbol between rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         layersDrawn = 0;
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
@@ -227,7 +225,7 @@ describe('render to texture', () => {
 
     test('render more symbols between rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         layersDrawn = 0;
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
@@ -247,17 +245,17 @@ describe('render to texture', () => {
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
 
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         expect(tile.getRTT(0)).toBeTruthy();
 
         state.revision = 1;
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         expect(tile.getRTT(0)).toBeUndefined();
     });
 
     test('cache miss acquires an rtt object from the painter and stores it on the tile', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
@@ -273,7 +271,7 @@ describe('render to texture', () => {
 
     test('rebuilds the texture mip chain once the stack has been rendered into it', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         rtt.renderLayer(fillLayer, frameRenderContext);
@@ -284,7 +282,7 @@ describe('render to texture', () => {
 
     test('terrain samples the texture with trilinear filtering', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         rtt.renderLayer(fillLayer, frameRenderContext);
@@ -295,7 +293,7 @@ describe('render to texture', () => {
 
     test('cache hit reuses cached RTT and skips acquireRTT', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const cached = createMockRTTObject(rtt.rttSize) as unknown as RTTObject;
         tile.rttObjects[0] = cached;
@@ -314,7 +312,7 @@ describe('render to texture', () => {
     test('renderLayer records the fingerprint including the render zoom', () => {
         (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
         rtt.renderLayer(fillLayer, frameRenderContext);
@@ -329,12 +327,12 @@ describe('render to texture', () => {
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
-        rtt.prepareForRender(style, 11);
+        rtt.prepareForRender(style, 11, false);
         // the zoom is still changing: keep the texture, but ask for the settling frame
         expect(tile.getRTT(0)).toBe(obj);
         expect(rtt.needsFollowUpFrame).toBe(true);
 
-        rtt.prepareForRender(style, 11);
+        rtt.prepareForRender(style, 11, false);
         // the zoom has settled: release, so this frame re-renders at the on-screen zoom
         expect(tile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
@@ -346,8 +344,8 @@ describe('render to texture', () => {
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
-        rtt.prepareForRender(style, 10);
-        rtt.prepareForRender(style, 10);
+        rtt.prepareForRender(style, 10, false);
+        rtt.prepareForRender(style, 10, false);
 
         expect(tile.getRTT(0)).toBe(obj);
         expect(rtt.needsFollowUpFrame).toBe(false);
@@ -358,15 +356,13 @@ describe('render to texture', () => {
         const obj = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
         tile.rttObjects[0] = obj;
-        painter.frameRenderContext.data.moving = true;
 
-        rtt.prepareForRender(style, 10.01);
-        rtt.prepareForRender(style, 10.01);
+        rtt.prepareForRender(style, 10.01, true);
+        rtt.prepareForRender(style, 10.01, true);
         expect(tile.getRTT(0)).toBe(obj);
         expect(rtt.needsFollowUpFrame).toBe(true);
 
-        painter.frameRenderContext.data.moving = false;
-        rtt.prepareForRender(style, 10.01);
+        rtt.prepareForRender(style, 10.01, false);
         expect(tile.getRTT(0)).toBeUndefined();
     });
 
@@ -385,7 +381,7 @@ describe('render to texture', () => {
         });
         (vi.mocked(painter.releaseRTT)).mockClear();
 
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         expect(tile.getRTT(0)).toBeUndefined();
         expect(farTile.getRTT(0)).toBe(objects[1]);
         expect(farthestTile.getRTT(0)).toBe(objects[2]);
@@ -393,14 +389,14 @@ describe('render to texture', () => {
         expect(rtt.needsFollowUpFrame).toBe(true);
 
         markRendered(tile, objects[0], new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds()));
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         expect(tile.getRTT(0)).toBe(objects[0]);
         expect(farTile.getRTT(0)).toBeUndefined();
         expect(farthestTile.getRTT(0)).toBe(objects[2]);
         expect(rtt.needsFollowUpFrame).toBe(true);
 
         markRendered(farTile, objects[1], new RTTFingerprint([farTile.tileID], 0, 0, visibleLayerIds()));
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         expect(farthestTile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
 
@@ -414,7 +410,7 @@ describe('render to texture', () => {
         tile.rttFingerprint = {maine: new RTTFingerprint([], 0, 0, visibleLayerIds())};
         tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
 
-        rtt.prepareForRender(style, 0);
+        rtt.prepareForRender(style, 0, false);
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
         const frameRenderContext = createFrameRenderContext(transform, undefined, terrain, createFrameRenderData());
@@ -440,14 +436,13 @@ describe('render to texture', () => {
             markRendered(t, obj, new RTTFingerprint([t.tileID], 0, 12, visibleLayerIds()));
             return obj;
         });
-        painter.frameRenderContext.data.moving = true;
 
-        rtt.prepareForRender(style, 11.98);
+        rtt.prepareForRender(style, 11.98, true);
         expect(tile.getRTT(0)).toBe(objects[0]);
         expect(farTile.getRTT(0)).toBe(objects[1]);
         expect(rtt.needsFollowUpFrame).toBe(true);
 
-        rtt.prepareForRender(style, 11.98);
+        rtt.prepareForRender(style, 11.98, true);
         expect(tile.getRTT(0)).toBeUndefined();
         expect(farTile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
@@ -460,7 +455,7 @@ describe('render to texture', () => {
         tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 4, visibleLayerIds())};
         tile.rttObjects[0] = obj;
 
-        rtt.prepareForRender(style, 5);
+        rtt.prepareForRender(style, 5, false);
 
         expect(tile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
@@ -491,7 +486,7 @@ describe('render to texture', () => {
         } as any as Style;
 
         (vi.mocked(terrain.tileManager.getTerrainCoords)).mockClear();
-        rtt.prepareForRender(testStyle, 0);
+        rtt.prepareForRender(testStyle, 0, false);
 
         expect(maineTileManager.getVisibleCoordinates).toHaveBeenCalledTimes(1);
         expect(terrainTileManager.getVisibleCoordinates).not.toHaveBeenCalled();

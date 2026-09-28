@@ -1,7 +1,8 @@
 import {UBO_BINDINGS, UniformBuffer, std140Layout} from './uniform_buffer.ts';
 
 import type {Context} from './context.ts';
-import type {Painter} from '../render/painter.ts';
+import type {FrameRenderData} from '../render/frame_render_context.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 const layout = std140Layout([
     {name: 'u_units_to_pixels', type: 'vec2'},
@@ -24,10 +25,9 @@ export function createFrameUniformBuffer(context: Context): UniformBuffer {
     return new UniformBuffer(context, UBO_BINDINGS.FrameUBO, layout);
 }
 
-export function updateFrameUniformBuffer(buffer: UniformBuffer, painter: Painter): void {
+export function updateFrameUniformBuffer(buffer: UniformBuffer, transform: IReadonlyTransform, data: FrameRenderData, pixelRatio: number): void {
     const f32 = buffer.pending;
-    const {transform, data} = painter.frameRenderContext;
-    const gl = painter.context.gl;
+    const gl = buffer.context.gl;
     f32[offsets.u_units_to_pixels] = 1 / transform.pixelsToGLUnits[0];
     f32[offsets.u_units_to_pixels + 1] = 1 / transform.pixelsToGLUnits[1];
     f32[offsets.u_world_size] = gl.drawingBufferWidth;
@@ -35,7 +35,7 @@ export function updateFrameUniformBuffer(buffer: UniformBuffer, painter: Painter
     f32[offsets.u_camera_to_center_distance] = transform.cameraToCenterDistance;
     f32[offsets.u_symbol_fade_change] = data.fadeDuration ? data.symbolFadeChange : 1;
     f32[offsets.u_aspect_ratio] = transform.width / transform.height;
-    f32[offsets.u_device_pixel_ratio] = painter.pixelRatio;
+    f32[offsets.u_device_pixel_ratio] = pixelRatio;
     f32[offsets.u_viewport_size] = transform.width;
     f32[offsets.u_viewport_size + 1] = transform.height;
     f32[offsets.u_pixel_extrude_scale] = 1 / transform.width;

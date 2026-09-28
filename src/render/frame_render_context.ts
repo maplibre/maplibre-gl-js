@@ -9,16 +9,16 @@ export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
 /** Plain values that describe one frame. The map builds them once per frame. */
 export type FrameRenderData = {
-    showOverdrawInspector: boolean;
-    showTileBoundaries: boolean;
-    showPadding: boolean;
-    rotating: boolean;
-    zooming: boolean;
-    moving: boolean;
-    fadeDuration: number;
+    readonly showOverdrawInspector: boolean;
+    readonly showTileBoundaries: boolean;
+    readonly showPadding: boolean;
+    readonly rotating: boolean;
+    readonly zooming: boolean;
+    readonly moving: boolean;
+    readonly fadeDuration: number;
     /** Progress of the symbol fade since the last placement. */
-    symbolFadeChange: number;
-    anisotropicFilterPitch: number;
+    readonly symbolFadeChange: number;
+    readonly anisotropicFilterPitch: number;
 };
 
 /**

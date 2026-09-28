@@ -97,7 +97,7 @@ export class RenderToTexture {
      * is changing and then all re-rendered in the same frame, since a tile-by-tile change would show; a source
      * data change re-renders immediately.
      */
-    prepareForRender(style: Style, zoom: number): void {
+    prepareForRender(style: Style, zoom: number, isMoving: boolean): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
         this._lastPrepareZoom = zoom;
         this._stacks = [];
@@ -141,7 +141,7 @@ export class RenderToTexture {
 
         // check tiles to render
         this.needsFollowUpFrame = false;
-        const moving = zoomChanged || this.painter.frameRenderContext.data.moving;
+        const moving = zoomChanged || isMoving;
         let staleTileReleased = false;
         for (const tile of this._renderableTiles) {
             const difference = this._textureDifference(tile);

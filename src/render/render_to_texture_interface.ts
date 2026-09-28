@@ -13,7 +13,7 @@ export interface IRenderToTexture {
      * textures rendered at another zoom, and stale textures beyond the per-frame budget.
      */
     needsFollowUpFrame: boolean;
-    prepareForRender(style: Style, zoom: number): void;
+    prepareForRender(style: Style, zoom: number, isMoving: boolean): void;
     renderLayer(layer: StyleLayer, frameRenderContext: FrameRenderContext): boolean;
     getTexture(tile: Tile): any;
 }
