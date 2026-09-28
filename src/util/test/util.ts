@@ -6,6 +6,7 @@ import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '..
 import {Evented} from '../evented.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
+import {getGlobalWorkerPool} from '../global_worker_pool.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
@@ -144,7 +145,6 @@ export function beforeMapTest(): void {
 export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
     return (actor: IActor) => {
         return {
-            actorsPromise: Promise.resolve([actor]),
             waitForInitComplete() {
                 return Promise.resolve();
             },
@@ -195,6 +195,18 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     const view = new Uint8Array(newBuffer);
     data.copy(view);
     return view.buffer;
+}
+
+/**
+ * Simulates the last map being removed, which terminates the pooled workers. The global dispatcher
+ * survives and builds new actors on its next use. Also releases claims earlier tests left behind.
+ */
+export function terminateGlobalWorkers(): void {
+    const pool = getGlobalWorkerPool();
+    for (const mapId of Object.keys(pool.active)) {
+        pool.release(mapId);
+    }
+    pool.release('terminateGlobalWorkers');
 }
 
 /**

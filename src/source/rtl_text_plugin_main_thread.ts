@@ -1,14 +1,27 @@
 
 import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
+import {warnOnce} from '../util/util.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
-import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {type Dispatcher, getGlobalDispatcher, onGlobalWorkersCreated} from '../util/dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
     dispatcher: Dispatcher = getGlobalDispatcher();
+
+    async _syncStateToNewWorkers(): Promise<void> {
+        try {
+            if (this.status === 'deferred') {
+                await this._syncState('deferred');
+            } else if (this.status === 'loading' || this.status === 'loaded') {
+                await this._requestImport();
+            }
+        } catch (error) {
+            warnOnce(`Failed to load the RTL text plugin into the new workers: ${error}`);
+        }
+    }
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
@@ -80,6 +93,8 @@ class RTLMainThreadPlugin extends Evented {
 }
 
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
+
+onGlobalWorkersCreated(() => rtlMainThreadPlugin?._syncStateToNewWorkers());
 
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
     rtlMainThreadPlugin ||= new RTLMainThreadPlugin();
