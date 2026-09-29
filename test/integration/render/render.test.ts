@@ -534,7 +534,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             map: MapLibreMap;
             program: WebGLProgram;
             texture: WebGLTexture;
-            framebuffer: WebGLFramebuffer;
 
             onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
                 this.map = map;
@@ -544,9 +543,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, 64, 64);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                this.framebuffer = gl.createFramebuffer();
-                gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);
 
                 const vertexShader = gl.createShader(gl.VERTEX_SHADER);
                 gl.shaderSource(vertexShader, `#version 300 es
@@ -580,7 +576,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 const width = southEast.x - northWest.x;
                 const height = southEast.y - northWest.y;
                 options.renderTerrainHeightMap?.({
-                    framebuffer: this.framebuffer,
+                    texture: this.texture,
                     width: 64,
                     height: 64,
                     bounds: [northWest.x - 8 * width, northWest.y - 8 * height, southEast.x + 8 * width, southEast.y + 8 * height]

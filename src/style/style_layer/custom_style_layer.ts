@@ -163,7 +163,7 @@ export type CustomRenderMethodInput = {
     getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
 
     /**
-     * Draws the elevation of the terrain as the map draws it into a framebuffer, so that the layer can place many
+     * Draws the elevation of the terrain as the map draws it into a texture, so that the layer can place many
      * objects on the ground on the GPU. Only set while terrain is enabled. Call it again after the camera moves,
      * terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
      * @example
@@ -171,7 +171,7 @@ export type CustomRenderMethodInput = {
      * prerender(gl, options) {
      *     const northWest = MercatorCoordinate.fromLngLat([7.87, 46.65]);
      *     const southEast = MercatorCoordinate.fromLngLat([8.11, 46.5]);
-     *     options.renderTerrainHeightMap?.({framebuffer, width: 512, height: 512, bounds: [northWest.x, northWest.y, southEast.x, southEast.y]});
+     *     options.renderTerrainHeightMap?.({texture, width: 512, height: 512, bounds: [northWest.x, northWest.y, southEast.x, southEast.y]});
      * }
      * ```
      */

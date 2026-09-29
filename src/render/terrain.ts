@@ -22,16 +22,16 @@ import type {Painter} from './painter.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
- * A framebuffer for {@link CustomRenderMethodInput.renderTerrainHeightMap}, with a float color attachment such as `RGBA32F`, which needs
- * the `EXT_color_buffer_float` extension. Red holds the elevation in meters, including the terrain exaggeration, alpha
+ * A float texture for {@link CustomRenderMethodInput.renderTerrainHeightMap}, such as `RGBA32F`, which needs the
+ * `EXT_color_buffer_float` extension to be drawn into. Red holds the elevation in meters, including the terrain exaggeration, alpha
  * is 1 where terrain is loaded and 0 elsewhere, and the first row is the south edge.
  */
 export type TerrainHeightMapTarget = {
-    /** A framebuffer in the map's WebGL context. */
-    framebuffer: WebGLFramebuffer;
-    /** The width of the color attachment in pixels. */
+    /** A texture in the map's WebGL context. */
+    texture: WebGLTexture;
+    /** The width of the texture in pixels. */
     width: number;
-    /** The height of the color attachment in pixels. */
+    /** The height of the texture in pixels. */
     height: number;
     /** The area to draw, `[minX, minY, maxX, maxY]` in {@link MercatorCoordinate} units, with x counting world copies. */
     bounds: [number, number, number, number];
@@ -151,6 +151,7 @@ export class Terrain {
      * holds the framebuffer object in size of the screen to render the depth into a texture.
      */
     _fbo: Framebuffer;
+    _heightMapFbo: Framebuffer;
     _fboDepthTexture: Texture;
     _emptyDepthTexture: Texture;
     /**
@@ -201,6 +202,10 @@ export class Terrain {
         if (this._fbo) {
             this._fbo.destroy();
             this._fbo = null;
+        }
+        if (this._heightMapFbo) {
+            this._heightMapFbo.destroy();
+            this._heightMapFbo = null;
         }
         if (this._fboDepthTexture) {
             this._fboDepthTexture.destroy();
@@ -452,6 +457,17 @@ export class Terrain {
         }
         this._fbo.colorAttachment.set(this._fboDepthTexture.texture);
         return this._fbo;
+    }
+
+    /**
+     * get the framebuffer that draws the height map into a texture of a custom layer
+     * @param texture - the texture to draw into
+     * @returns the frame buffer
+     */
+    getHeightMapFramebuffer(texture: WebGLTexture): Framebuffer {
+        this._heightMapFbo ||= this.painter.context.createFramebuffer(1, 1, false, false);
+        this._heightMapFbo.colorAttachment.set(texture);
+        return this._heightMapFbo;
     }
 
     /**

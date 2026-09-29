@@ -64,17 +64,16 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderCo
 }
 
 /**
- * Draws the elevation of the loaded renderable terrain tiles into a framebuffer, see {@link Map.renderTerrainHeightMap}.
+ * Draws the elevation of the loaded renderable terrain tiles into a texture, see {@link CustomRenderMethodInput.renderTerrainHeightMap}.
  */
-function drawTerrainHeightMap(painter: Painter, terrain: Terrain | null, target: TerrainHeightMapTarget): void {
+function drawTerrainHeightMap(painter: Painter, terrain: Terrain, target: TerrainHeightMapTarget): void {
     const context = painter.context;
     const gl = context.gl;
     const [minX, minY, maxX, maxY] = target.bounds;
     context.setDirty();
-    context.bindFramebuffer.set(target.framebuffer);
+    const framebuffer = terrain.getHeightMapFramebuffer(target.texture);
     context.viewport.set([0, 0, target.width, target.height]);
     context.clear({color: Color.transparent});
-    if (!terrain) return;
 
     const program = painter.useProgram('terrainHeight', null, true);
     for (const tile of terrain.tileManager.getRenderableTiles()) {
@@ -91,6 +90,7 @@ function drawTerrainHeightMap(painter: Painter, terrain: Terrain | null, target:
         const mesh = terrain.getTerrainMesh(tile.tileID);
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, ColorMode.unblended, CullFaceMode.disabled, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
+    framebuffer.colorAttachment.set(null);
 }
 
 export {
