@@ -109,9 +109,7 @@ describe('CanvasSource', () => {
         });
     });
 
-    test('load catches invalid coordinates and fires error', async () => {
-        // Invalid lat throws in setCoordinates. ImageSource._finishLoading catches
-        // and re-fires ErrorEvent so every caller (Canvas/Image/Video) is guarded (#8448).
+    test('load catches invalid coordinates from setCoordinates and fires error via _finishLoading', async () => {
         const source = createSource({
             coordinates: [[0, 0], [1, 0], [1, 91], [0, 1]],
             eventedParent: map,
@@ -119,7 +117,7 @@ describe('CanvasSource', () => {
         const errorHandler = vi.fn();
         map.on('error', errorHandler);
 
-        source.map = map as any;
+        source.map = map;
         await expect(source.load()).resolves.toBeUndefined();
 
         expect(errorHandler).toHaveBeenCalledTimes(1);
