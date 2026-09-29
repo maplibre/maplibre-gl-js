@@ -31,7 +31,7 @@ const circleUniformValues = (
     translate: [number, number],
     radiusCorrectionFactor: number
 ): UniformValues<CircleUniformsType> => {
-    const transform = painter.renderContext.transform;
+    const transform = painter.frameRenderContext.transform;
 
     let pitchWithMap: boolean, extrudeScale: [number, number];
     let globeExtrudeScale: number = 0;

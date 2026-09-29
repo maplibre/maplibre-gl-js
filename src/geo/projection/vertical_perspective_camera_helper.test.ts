@@ -90,6 +90,7 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
         const result = helper.cameraForBoxAndBearing(
             {maxZoom: 22, offset: [0, 0]},
             {top: 50, bottom: 512, left: 50, right: 50},
+            tr.padding,
             new LngLatBounds([-10, -10], [10, 10]),
             0, tr);
 
