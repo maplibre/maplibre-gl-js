@@ -2419,17 +2419,18 @@ describe('absolutePadding', () => {
 describe('cameraForBounds pitch', () => {
     const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
 
-    // Projects the corners of the bounds through a fresh camera at the calculated result and returns how far
-    // each edge of their screen box is inside the padded viewport, in pixels. Negative means outside.
-    function slack(result: CameraOptions, mapPadding = {top: 0, right: 0, bottom: 0, left: 0}, padding = mapPadding, offset = [0, 0]) {
-        const {camera} = createCamera();
+    // Projects the corners and edge midpoints of the bounds through a fresh camera at the calculated result and returns
+    // how far each edge of their screen box is inside the padded viewport, in pixels. Negative means outside.
+    function slack(result: CameraOptions, {mapPadding = {top: 0, right: 0, bottom: 0, left: 0}, padding = mapPadding, offset = [0, 0], globe = false} = {}) {
+        const {camera} = createCamera({}, globe);
         camera.setPadding(mapPadding);
         camera.jumpTo(result);
         const bounds = LngLatBounds.convert(bb);
-        const corners = [bounds.getNorthWest(), bounds.getNorthEast(), bounds.getSouthEast(), bounds.getSouthWest()]
-            .map(c => camera.transform.locationToScreenPoint(c));
-        const xs = corners.map(p => p.x);
-        const ys = corners.map(p => p.y);
+        const [w, s, e, n] = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+        const outline = [[w, n], [e, n], [e, s], [w, s], [(w + e) / 2, n], [e, (s + n) / 2], [(w + e) / 2, s], [w, (s + n) / 2]]
+            .map(([lng, lat]) => camera.transform.locationToScreenPoint(new LngLat(lng, lat)));
+        const xs = outline.map(p => p.x);
+        const ys = outline.map(p => p.y);
         return {
             left: Math.min(...xs) - mapPadding.left - padding.left - offset[0],
             right: 512 - mapPadding.right - padding.right - Math.max(...xs) + offset[0],
@@ -2472,14 +2473,14 @@ describe('cameraForBounds pitch', () => {
 
         expect(result.pitch).toBe(60);
         expect(result.bearing).toBe(35);
-        expectInside(slack(result, mapPadding, padding));
+        expectInside(slack(result, {mapPadding, padding}));
     });
 
     test('keeps the bounds in view when pitched with offset', () => {
         const {camera} = createCamera();
         const result = camera.cameraForBounds(bb, {pitch: 60, offset: [0, 30]});
 
-        expectInside(slack(result, undefined, undefined, [0, 30]));
+        expectInside(slack(result, {offset: [0, 30]}));
     });
 
     test('returns undefined when a corner is behind the camera', () => {
@@ -2508,14 +2509,15 @@ describe('cameraForBounds pitch', () => {
         expectInside(slack({center: camera.getCenter(), zoom: camera.getZoom(), bearing: 0, pitch: 45}));
     });
 
-    test('globe fits at pitch 0 but returns the given pitch', () => {
+    test('keeps the bounds in view on a globe when pitched', () => {
         const {camera} = createCamera({}, true);
         const flat = camera.cameraForBounds(bb);
         const pitched = camera.cameraForBounds(bb, {pitch: 60});
 
         expect(pitched.pitch).toBe(60);
-        expect(pitched.zoom).toBe(flat.zoom);
-        expect(pitched.center).toEqual(flat.center);
+        expect(pitched.zoom).toBeLessThan(flat.zoom);
+        expect(slack({...flat, pitch: 60}, {globe: true}).left).toBeLessThan(-50);
+        expectInside(slack(pitched, {globe: true}));
     });
 });
 

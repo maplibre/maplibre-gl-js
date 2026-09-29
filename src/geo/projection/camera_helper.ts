@@ -209,7 +209,7 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
         return undefined;
     }
 
-    let zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+    const zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
 
     // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of the fit padding.
     const offset = Point.convert(options.offset);
@@ -220,50 +220,71 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
     const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
     const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / zoomScale(zoom));
 
-    const boxCenter = unprojectFromWorldCoordinates(tr.worldSize, nwWorld.add(seWorld).div(2));
-    let center = unprojectFromWorldCoordinates(
+    const center = unprojectFromWorldCoordinates(
         tr.worldSize,
         // either world diagonal can be used (NW-SE or NE-SW)
         nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
     );
 
-    if (pitch === 0) {
-        return {center, zoom, bearing, pitch};
-    }
+    const flat = {center, zoom, bearing, pitch: 0};
+    if (pitch === 0) return flat;
 
-    // The zoom and center above fit the box when looking straight down. When pitched, perspective shrinks the far
-    // side of the box and widens the near side, so measure the box on screen from that camera and correct the zoom
-    // and center to fit what is actually drawn. Same as MapLibre Native's cameraForLatLngs, this is a single pass.
+    const corners = [bounds.getNorthWest(), bounds.getNorthEast(), bounds.getSouthEast(), bounds.getSouthWest()];
+    return tiltCameraForBox(flat, corners, mercatorBoxCenter(bounds, tr), pitch, fitPadding, mapPadding, options.maxZoom, tr);
+}
+
+/**
+ * Returns the midpoint of `bounds` in Mercator world coordinates, which a fit looking straight down places where the
+ * paddings and the offset put the center of the box.
+ */
+export function mercatorBoxCenter(bounds: LngLatBounds, tr: IReadonlyTransform): LngLat {
+    const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest());
+    const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast());
+    return unprojectFromWorldCoordinates(tr.worldSize, nwWorld.add(seWorld).div(2));
+}
+
+/**
+ * Tilts a camera that fits a box looking straight down to `pitch`, and corrects its zoom and center so that the box
+ * fits as drawn at that pitch.
+ *
+ * Perspective shrinks the far side of the box and widens the near side. This measures the box on screen from the tilted
+ * camera, scales the zoom by how far the box's screen bounding box over- or under-fills the space the paddings leave,
+ * and moves the center so that bounding box lands where the box's center did when looking straight down, which keeps
+ * the offset and the padding. Like MapLibre Native's `cameraForLatLngs`, it is a single pass, so a tall box on a steeply
+ * pitched camera, whose far edge nears the horizon, can still overflow.
+ *
+ * @param flat - The camera that fits the box at pitch 0.
+ * @param outline - Points whose screen bounding box is the box's: its corners, and points along its edges where the
+ * projection curves them.
+ * @param boxCenter - The point of the box that `flat` places where the paddings and the offset put the box's center.
+ * @returns The tilted camera, or `undefined` if part of the outline is off the map surface once tilted.
+ */
+export function tiltCameraForBox(flat: CameraForBoxAndBearingHandlerResult, outline: LngLat[], boxCenter: LngLat, pitch: number, fitPadding: PaddingOptions, mapPadding: PaddingOptions, maxZoom: number, tr: ITransform): CameraForBoxAndBearingHandlerResult | undefined {
     const fitted = tr.clone();
     fitted.setPadding(mapPadding);
-    fitted.setBearing(bearing);
+    fitted.setBearing(flat.bearing);
     fitted.setPitch(0);
     fitted.setRoll(0);
-    fitted.setZoom(zoom);
-    fitted.setCenter(center);
-    // Where the box center lands on screen when looking straight down, which already accounts for the offset and the padding.
+    fitted.setZoom(flat.zoom);
+    fitted.setCenter(flat.center);
     const targetPoint = fitted.locationToScreenPoint(boxCenter);
     fitted.setPitch(pitch);
 
-    const screenCorners = [
-        fitted.locationToScreenPoint(bounds.getNorthWest()),
-        fitted.locationToScreenPoint(bounds.getNorthEast()),
-        fitted.locationToScreenPoint(bounds.getSouthEast()),
-        fitted.locationToScreenPoint(bounds.getSouthWest())
-    ];
-    if (screenCorners.some(p => !fitted.isPointOnMapSurface(p))) {
+    const screenPoints = outline.map(p => fitted.locationToScreenPoint(p));
+    if (screenPoints.some(p => !fitted.isPointOnMapSurface(p))) {
         cameraBoundsWarning();
         return undefined;
     }
-    const screenMin = new Point(Math.min(...screenCorners.map(p => p.x)), Math.min(...screenCorners.map(p => p.y)));
-    const screenMax = new Point(Math.max(...screenCorners.map(p => p.x)), Math.max(...screenCorners.map(p => p.y)));
+    const screenMin = new Point(Math.min(...screenPoints.map(p => p.x)), Math.min(...screenPoints.map(p => p.y)));
+    const screenMax = new Point(Math.max(...screenPoints.map(p => p.x)), Math.max(...screenPoints.map(p => p.y)));
     const screenSize = screenMax.sub(screenMin);
     const screenCenter = fitted.screenPointToLocation(screenMin.add(screenMax).div(2));
 
-    zoom = Math.min(zoom + scaleZoom(Math.min(availableWidth / screenSize.x, availableHeight / screenSize.y)), options.maxZoom);
+    const availableWidth = tr.width - (mapPadding.left + mapPadding.right + fitPadding.left + fitPadding.right);
+    const availableHeight = tr.height - (mapPadding.top + mapPadding.bottom + fitPadding.top + fitPadding.bottom);
+    const zoom = Math.min(flat.zoom + scaleZoom(Math.min(availableWidth / screenSize.x, availableHeight / screenSize.y)), maxZoom);
     fitted.setZoom(zoom);
     fitted.setLocationAtPoint(screenCenter, targetPoint);
-    center = fitted.center;
 
-    return {center, zoom, bearing, pitch};
+    return {center: fitted.center, zoom, bearing: flat.bearing, pitch};
 }

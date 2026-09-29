@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing, mercatorBoxCenter, tiltCameraForBox} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
@@ -170,10 +170,9 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, pitch: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        // The globe fit below does not support pitch, so the mercator fit it starts from ignores pitch too.
+        // The globe fit below solves for a camera looking straight down, and tilts it to the pitch at the end.
         const result = cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, 0, tr);
         if (!result) return undefined;
-        result.pitch = pitch;
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
         // Get clip space bounds including fitPadding
@@ -204,18 +203,18 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         clonedTr.setZoom(result.zoom);
         const matrix = clonedTr.modelViewProjectionMatrix;
 
-        // Vectors to test - the bounds' corners and edge midpoints
-        const testVectors = [
-            angularCoordinatesToSurfaceVector(bounds.getNorthWest()),
-            angularCoordinatesToSurfaceVector(bounds.getNorthEast()),
-            angularCoordinatesToSurfaceVector(bounds.getSouthWest()),
-            angularCoordinatesToSurfaceVector(bounds.getSouthEast()),
-            // Also test edge midpoints
-            angularCoordinatesToSurfaceVector(new LngLat(lngEast, latMid)),
-            angularCoordinatesToSurfaceVector(new LngLat(lngWest, latMid)),
-            angularCoordinatesToSurfaceVector(new LngLat(lngMid, latNorth)),
-            angularCoordinatesToSurfaceVector(new LngLat(lngMid, latSouth))
+        // The bounds' corners and edge midpoints
+        const outline = [
+            bounds.getNorthWest(),
+            bounds.getNorthEast(),
+            bounds.getSouthWest(),
+            bounds.getSouthEast(),
+            new LngLat(lngEast, latMid),
+            new LngLat(lngWest, latMid),
+            new LngLat(lngMid, latNorth),
+            new LngLat(lngMid, latSouth)
         ];
+        const testVectors = outline.map(p => angularCoordinatesToSurfaceVector(p));
         const vecToCenter = angularCoordinatesToSurfaceVector(result.center);
 
         // Test each vector, measure how much to scale down the globe to satisfy all tested points that they are inside clip space.
@@ -238,7 +237,9 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
         // Compute target zoom from the obtained scale.
         result.zoom = Math.min(clonedTr.zoom + scaleZoom(smallestNeededScale), options.maxZoom);
-        return result;
+        if (pitch === 0) return result;
+
+        return tiltCameraForBox(result, outline, mercatorBoxCenter(bounds, tr), pitch, fitPadding, mapPadding, options.maxZoom, tr);
     }
 
     /**
