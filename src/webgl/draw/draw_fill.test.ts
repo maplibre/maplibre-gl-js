@@ -109,7 +109,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.frameRenderContext = createFrameRenderContext(transform, undefined, null, createFrameRenderData());
+        painterMock.frameRenderContext = createFrameRenderContext(transform, null, createFrameRenderData());
         painterMock.frameRenderContext.currentPass = 'translucent';
         painterMock.style = {
             map: {

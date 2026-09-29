@@ -58,7 +58,7 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null);
-        const frameRenderContext = createFrameRenderContext(null, undefined, null, createFrameRenderData());
+        const frameRenderContext = createFrameRenderContext(null, null, createFrameRenderData());
         frameRenderContext.currentPass = 'opaque';
 
         drawSymbols(mockPainter, null, null, null, null, frameRenderContext);
@@ -74,7 +74,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), undefined, null, createFrameRenderData());
+        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData());
         painterMock.frameRenderContext.currentPass = 'translucent';
         painterMock.style = {
             map: {},
@@ -135,7 +135,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), undefined, null, createFrameRenderData());
+        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData());
         painterMock.frameRenderContext.currentPass = 'translucent';
 
         const layerSpec = {
@@ -201,7 +201,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), undefined, null, createFrameRenderData());
+        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData());
         painterMock.frameRenderContext.currentPass = 'translucent';
         painterMock.style = {
             projection: new MercatorProjection()

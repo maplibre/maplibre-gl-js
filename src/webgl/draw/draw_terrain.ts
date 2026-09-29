@@ -38,7 +38,7 @@ function drawDepth(painter: Painter, terrain: Terrain): void {
 }
 
 function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRenderContext: FrameRenderContext): void {
-    const {isRenderingGlobe} = frameRenderContext;
+    const {isRenderingGlobe} = frameRenderContext.data;
     const context = painter.context;
     const gl = context.gl;
     const tr = frameRenderContext.transform;

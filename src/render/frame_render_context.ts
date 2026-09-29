@@ -1,5 +1,4 @@
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {Projection} from '../geo/projection/projection.ts';
 import type {Terrain, TerrainData} from './terrain.ts';
 import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
@@ -19,6 +18,8 @@ export type FrameRenderData = {
     /** Progress of the symbol fade since the last placement. */
     readonly symbolFadeChange: number;
     readonly anisotropicFilterPitch: number;
+    readonly projectionTransition: number;
+    readonly isRenderingGlobe: boolean;
 };
 
 /**
@@ -34,13 +35,10 @@ export type FrameRenderContext = {
     isRenderingToTexture: boolean;
     readonly transform: IReadonlyTransform;
     readonly terrain: Terrain | null;
-    readonly projectionTransition: number;
-    readonly isRenderingGlobe: boolean;
     readonly data: FrameRenderData;
 };
 
-export function createFrameRenderContext(transform: IReadonlyTransform, projection: Projection | undefined, terrain: Terrain | null, data: FrameRenderData): FrameRenderContext {
-    const projectionTransition = projection?.transitionState ?? 0;
+export function createFrameRenderContext(transform: IReadonlyTransform, terrain: Terrain | null, data: FrameRenderData): FrameRenderContext {
     return {
         currentPass: 'offscreen',
         currentLayer: 0,
@@ -49,8 +47,6 @@ export function createFrameRenderContext(transform: IReadonlyTransform, projecti
         isRenderingToTexture: false,
         transform,
         terrain,
-        projectionTransition,
-        isRenderingGlobe: projectionTransition > 0,
         data
     };
 }

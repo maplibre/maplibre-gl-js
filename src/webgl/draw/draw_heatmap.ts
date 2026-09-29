@@ -143,7 +143,7 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     context.clear({color: Color.transparent});
 
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration, !frameRenderContext.isRenderingGlobe);
+    const program = painter.useProgram('heatmap', programConfiguration, !frameRenderContext.data.isRenderingGlobe);
 
     const projectionData = getProjectionDataForTile(frameRenderContext, tile.tileID);
 
@@ -177,7 +177,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    const projectionData = getProjectionDataForTile(frameRenderContext, coord, {applyTerrainMatrix: frameRenderContext.isRenderingGlobe});
+    const projectionData = getProjectionDataForTile(frameRenderContext, coord, {applyTerrainMatrix: frameRenderContext.data.isRenderingGlobe});
 
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,

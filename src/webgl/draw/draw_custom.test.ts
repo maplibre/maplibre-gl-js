@@ -35,7 +35,7 @@ describe('drawCustom', () => {
         mockPainter.style = {
             projection: new MercatorProjection(),
         } as any;
-        const frameRenderContext = createFrameRenderContext(transform, mockPainter.style.projection, null, createFrameRenderData());
+        const frameRenderContext = createFrameRenderContext(transform, null, createFrameRenderData());
         frameRenderContext.currentPass = 'translucent';
         mockPainter.frameRenderContext = frameRenderContext;
         mockPainter.context = {

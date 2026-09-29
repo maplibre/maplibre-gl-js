@@ -9,7 +9,7 @@ import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomSty
 
 export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, frameRenderContext: FrameRenderContext): void {
 
-    const {isRenderingGlobe} = frameRenderContext;
+    const {isRenderingGlobe} = frameRenderContext.data;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;

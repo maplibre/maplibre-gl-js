@@ -24,6 +24,8 @@ describe('render', () => {
         zooming: false,
         anisotropicFilterPitch: 20,
         symbolFadeChange: 1,
+        projectionTransition: 0,
+        isRenderingGlobe: false,
     };
 
     beforeEach(() => {
@@ -72,19 +74,20 @@ describe('render', () => {
         expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
-    test('builds frame render context from the transform, globe projection and terrain', () => {
+    test('builds frame render context from the transform, terrain and frame data', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
         vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         vi.spyOn(painter.drawFunctions, 'atmosphere').mockImplementation(() => {});
 
-        painter.render(style, transform, renderOptions);
+        const data = {...renderOptions, projectionTransition: 1, isRenderingGlobe: true};
+
+        painter.render(style, transform, data);
 
         expect(painter.frameRenderContext.transform).toBe(transform);
         expect(painter.frameRenderContext.terrain).toBe(terrain);
-        expect(painter.frameRenderContext.projectionTransition).toBe(1);
-        expect(painter.frameRenderContext.isRenderingGlobe).toBe(true);
+        expect(painter.frameRenderContext.data).toBe(data);
     });
 
     test('uses frame render context for depth and blending when drawing a custom layer', () => {

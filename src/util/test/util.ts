@@ -375,7 +375,7 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
 }
 
 /**
- * Returns frame data for a still map with every debug option off.
+ * Returns frame data for a still mercator map with every debug option off.
  */
 export function createFrameRenderData(): FrameRenderData {
     return {
@@ -387,6 +387,8 @@ export function createFrameRenderData(): FrameRenderData {
         moving: false,
         fadeDuration: 0,
         symbolFadeChange: 1,
-        anisotropicFilterPitch: 20
+        anisotropicFilterPitch: 20,
+        projectionTransition: 0,
+        isRenderingGlobe: false
     };
 }

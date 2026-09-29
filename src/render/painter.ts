@@ -490,7 +490,7 @@ export class Painter {
 
     render(style: Style, transform: IReadonlyTransform, data: FrameRenderData): void {
         this.style = style;
-        const frameRenderContext = this.frameRenderContext = createFrameRenderContext(transform, style.projection, style.map.terrain ?? null, data);
+        const frameRenderContext = this.frameRenderContext = createFrameRenderContext(transform, style.map.terrain ?? null, data);
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
@@ -600,7 +600,7 @@ export class Painter {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (frameRenderContext.isRenderingGlobe && !frameRenderContext.terrain) {
+                if (data.isRenderingGlobe && !frameRenderContext.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -615,7 +615,7 @@ export class Painter {
         }
 
         // Render atmosphere, only for Globe projection
-        if (frameRenderContext.isRenderingGlobe) {
+        if (data.isRenderingGlobe) {
             this.drawFunctions.atmosphere(this, this.style.sky, this.style.light);
         }
 
