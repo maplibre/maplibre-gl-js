@@ -77,7 +77,6 @@ describe('render to texture', () => {
     const transform = {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) { return {}; }, calculateFogMatrix: () => {}} as any as IReadonlyTransform;
     const painter = {
         context: new Context(gl),
-        renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
         acquireRTT: (size: number) => createMockRTTObject(size),
         bindRTT: vi.fn(),
@@ -138,6 +137,12 @@ describe('render to texture', () => {
         vi.spyOn(terrain.tileManager, 'getTerrainCoords').mockReturnValue({[tile.tileID.key]: tile.tileID});
     });
 
+    function createFrameRenderContext(): FrameRenderContext {
+        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', viewportMesh: null, width: 0, height: 0, getStencilMesh: null});
+        vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
+        return frameRenderContext;
+    }
+
     function visibleLayerIds() {
         return style._order.join();
     }
@@ -151,7 +156,7 @@ describe('render to texture', () => {
         const renderLayerSpy = vi.spyOn(painter, 'renderLayer');
         rtt.prepareForRender(style, 0, false);
 
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         for (const layerId of style._order) {
             const layer = style._layers[layerId];
             rtt.renderLayer(layer, frameRenderContext);
@@ -196,7 +201,7 @@ describe('render to texture', () => {
     test('should render text after a line by not adding the text to the stack', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0, false);
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
         expect(rtt.renderLayer(fillLayer, frameRenderContext)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
@@ -206,7 +211,7 @@ describe('render to texture', () => {
     test('render symbol between rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0, false);
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, frameRenderContext)).toBeTruthy();
         expect(rtt.renderLayer(fillLayer, frameRenderContext)).toBeTruthy();
@@ -221,7 +226,7 @@ describe('render to texture', () => {
     test('render more symbols between rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0, false);
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, frameRenderContext)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
@@ -254,7 +259,7 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
 
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         rtt.renderLayer(fillLayer, frameRenderContext);
         rtt.renderLayer(symbolLayer, frameRenderContext);
 
@@ -267,7 +272,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0, false);
 
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         rtt.renderLayer(fillLayer, frameRenderContext);
         rtt.renderLayer(symbolLayer, frameRenderContext);
 
@@ -278,7 +283,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0, false);
 
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         rtt.renderLayer(fillLayer, frameRenderContext);
         rtt.renderLayer(symbolLayer, frameRenderContext);
 
@@ -295,7 +300,7 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
 
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         rtt.renderLayer(fillLayer, frameRenderContext);
         rtt.renderLayer(symbolLayer, frameRenderContext);
 
@@ -308,7 +313,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0, false);
 
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         rtt.renderLayer(fillLayer, frameRenderContext);
         rtt.renderLayer(symbolLayer, frameRenderContext);
 
@@ -407,7 +412,7 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen'});
+        const frameRenderContext = createFrameRenderContext();
         rtt.renderLayer(fillLayer, frameRenderContext);
         rtt.renderLayer(symbolLayer, frameRenderContext);
 

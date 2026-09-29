@@ -392,6 +392,7 @@ export function createFrameRenderData(): FrameRenderData {
         anisotropicFilterPitch: 20,
         projectionTransition: 0,
         isRenderingGlobe: false,
-        projectionShaderVariant: {name: MercatorShaderVariantKey, define: MercatorShaderDefine, prelude: shaders.projectionMercator}
+        projectionShaderVariant: {name: MercatorShaderVariantKey, define: MercatorShaderDefine, prelude: shaders.projectionMercator},
+        useSubdivision: false
     };
 }

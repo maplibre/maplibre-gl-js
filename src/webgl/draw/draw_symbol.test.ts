@@ -58,7 +58,7 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null);
-        const frameRenderContext = new FrameRenderContext({transform: null, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'opaque'});
+        const frameRenderContext = new FrameRenderContext({transform: null, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'opaque', viewportMesh: null, width: 0, height: 0, getStencilMesh: null});
         vi.spyOn(frameRenderContext, 'colorModeForRenderPass');
 
         drawSymbols(mockPainter, null, null, null, null, frameRenderContext);
@@ -74,7 +74,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent'});
+        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', viewportMesh: null, width: 0, height: 0, getStencilMesh: null});
         painterMock.style = {
             map: {},
             projection: new MercatorProjection()
@@ -134,7 +134,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent'});
+        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', viewportMesh: null, width: 0, height: 0, getStencilMesh: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -199,7 +199,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent'});
+        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', viewportMesh: null, width: 0, height: 0, getStencilMesh: null});
         painterMock.style = {
             projection: new MercatorProjection()
         } as any as Style;

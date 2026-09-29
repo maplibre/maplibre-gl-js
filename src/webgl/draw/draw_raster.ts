@@ -66,12 +66,12 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
         drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, frameRenderContext, source.getMesh(painter.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
-        const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+        const [stencilBorderless, stencilBorders, coords] = frameRenderContext.stencilConfigForOverlapTwoPass(tileIDs);
         drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw without borders
         drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw with borders
     } else {
         // Simple rendering
-        const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
+        const [stencil, coords] = frameRenderContext.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
         drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext);
     }
 }

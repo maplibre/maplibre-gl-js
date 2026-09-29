@@ -239,7 +239,7 @@ function drawLineTiles(
             uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
         }
 
-        const stencil = painter.stencilModeForClipping(coord);
+        const stencil = frameRenderContext.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,

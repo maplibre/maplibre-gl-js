@@ -277,7 +277,7 @@ describe('hidden layers', () => {
                 {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
             ]
         }});
-        const lastSourceToRenderClippingMasks = () => map.painter.currentStencilSource;
+        const lastSourceToRenderClippingMasks = () => map.painter.frameRenderContext.currentStencilSource;
 
         await map.once('idle');
         expect(lastSourceToRenderClippingMasks()).toBe('other');

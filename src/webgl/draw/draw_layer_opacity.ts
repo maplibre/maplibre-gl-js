@@ -30,8 +30,8 @@ export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer 
     context.viewport.set([0, 0, width, height]);
     context.clear({color: Color.transparent, depth: 1, stencil: 0});
 
-    painter.currentStencilSource = undefined;
-    painter.renderTileClippingMasks(layer, coords);
+    painter.frameRenderContext.invalidateTileClippingMasks();
+    painter.frameRenderContext.renderTileClippingMasks(layer, coords);
 
     return {
         compositeTarget,
@@ -88,7 +88,5 @@ export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawL
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.frameRenderContext.transform.zoom);
 
-    // Clipping masks were drawn into the scratch FBO's stencil buffer, not the composite target's.
-    // Reset currentStencilSource so a later layer on the same source redraws its masks into the composite target instead of reusing stale ones.
-    painter.currentStencilSource = undefined;
+    painter.frameRenderContext.invalidateTileClippingMasks();
 }

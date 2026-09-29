@@ -4451,6 +4451,7 @@ export class Map extends Evented<MapEventType> {
             projectionTransition,
             isRenderingGlobe: projectionTransition > 0,
             projectionShaderVariant: projection ? {name: projection.shaderVariantName, define: projection.shaderDefine, prelude: projection.shaderPreludeCode} : undefined,
+            useSubdivision: projection?.useSubdivision ?? false,
         });
 
         this.fire(new MapLibreEvent('render'));
