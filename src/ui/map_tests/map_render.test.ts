@@ -2,6 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} fr
 import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
@@ -229,6 +230,21 @@ describe('symbol fade after the placement guard', () => {
     });
 });
 
+describe('frame render data', () => {
+    test('passes the projection transition and shader variant to the painter', async () => {
+        const map = createMap();
+        await map.once('idle');
+        map.setProjection({type: 'vertical-perspective'});
+
+        map.redraw();
+
+        expect(map.painter.frameRenderContext.data.projectionTransition).toBe(1);
+        expect(map.painter.frameRenderContext.data.isRenderingGlobe).toBe(true);
+        expect(map.painter.frameRenderContext.data.projectionShaderVariant.name).toBe('globe');
+        map.remove();
+    });
+});
+
 describe('render-to-texture follow-up frame', () => {
     test('keeps rendering, deferring idle, until the follow-up frame is no longer needed', async () => {
         const map = createMap();
@@ -262,14 +278,16 @@ describe('hidden layers', () => {
                 {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
             ]
         }});
-        const lastSourceToRenderClippingMasks = () => map.painter.currentStencilSource;
+        const renderTileClippingMasks = vi.spyOn(FrameRenderContext.prototype, 'renderTileClippingMasks');
+        const hiddenLayer = expect.objectContaining({id: 'shared-fill-hidden-below-zoom-10'});
 
         await map.once('idle');
-        expect(lastSourceToRenderClippingMasks()).toBe('other');
+        expect(renderTileClippingMasks).not.toHaveBeenCalledWith(hiddenLayer, expect.anything());
 
         map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
         await map.once('idle');
-        expect(lastSourceToRenderClippingMasks()).toBe('shared');
+        expect(renderTileClippingMasks).toHaveBeenCalledWith(hiddenLayer, expect.anything());
+        renderTileClippingMasks.mockRestore();
         map.remove();
     });
 });

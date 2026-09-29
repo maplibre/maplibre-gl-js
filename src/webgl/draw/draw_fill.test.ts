@@ -4,12 +4,13 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {createRenderContext} from '../../render/render_context.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {Program} from '../program.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
+import {createFrameRenderData} from '../../util/test/util.ts';
 
 import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
 import type {Style} from '../../style/style.ts';
@@ -39,7 +40,7 @@ describe('drawFill', () => {
         const layer: FillStyleLayer = constructMockLayer();
 
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+        vi.spyOn(painterMock.frameRenderContext, 'useProgram').mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
 
@@ -47,7 +48,7 @@ describe('drawFill', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderContext);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.frameRenderContext);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);
@@ -108,9 +109,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.renderContext = createRenderContext(transform, undefined, null);
-        painterMock.renderContext.currentPass = 'translucent';
-        painterMock.options = {} as any;
+        painterMock.frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
         painterMock.style = {
             map: {
                 projection: {}

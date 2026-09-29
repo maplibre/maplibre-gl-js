@@ -110,6 +110,23 @@ describe('CanvasSource', () => {
         });
     });
 
+    test('load catches invalid coordinates from setCoordinates and fires error via _finishLoading', async () => {
+        const source = createSource({
+            coordinates: [[0, 0], [1, 0], [1, 91], [0, 1]],
+            eventedParent: map,
+        });
+        const errorHandler = vi.fn();
+        map.on('error', errorHandler);
+
+        source.map = map;
+        await expect(source.load()).resolves.toBeUndefined();
+
+        expect(errorHandler).toHaveBeenCalledTimes(1);
+        expect(errorHandler.mock.calls[0][0].error).toBeInstanceOf(Error);
+        expect(errorHandler.mock.calls[0][0].error.message).toMatch(/latitude/i);
+        expect(source.loaded()).toBe(true);
+    });
+
     test('can be initialized with HTML element', async () => {
         const el = document.createElement('canvas');
         const source = createSource({

@@ -10,7 +10,7 @@ import type {Terrain} from '../render/terrain.ts';
 import type {Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Painter} from '../render/painter.ts';
-import type {RenderContext} from '../render/render_context.ts';
+import type {FrameRenderContext} from '../render/frame_render_context.ts';
 
 /**
  * lookup table which layers should rendered to texture
@@ -97,7 +97,7 @@ export class RenderToTexture {
      * is changing and then all re-rendered in the same frame, since a tile-by-tile change would show; a source
      * data change re-renders immediately.
      */
-    prepareForRender(style: Style, zoom: number): void {
+    prepareForRender(style: Style, zoom: number, isMoving: boolean): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
         this._lastPrepareZoom = zoom;
         this._stacks = [];
@@ -141,7 +141,7 @@ export class RenderToTexture {
 
         // check tiles to render
         this.needsFollowUpFrame = false;
-        const moving = zoomChanged || this.painter.options.moving;
+        const moving = zoomChanged || isMoving;
         let staleTileReleased = false;
         for (const tile of this._renderableTiles) {
             const difference = this._textureDifference(tile);
@@ -181,11 +181,11 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
-     * @param renderContext - shared state for the current render
+     * @param frameRenderContext - shared state for the current render
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer, renderContext: RenderContext): boolean {
-        if (layer.isHidden(renderContext.transform.zoom)) return false;
+    renderLayer(layer: StyleLayer, frameRenderContext: FrameRenderContext): boolean {
+        if (layer.isHidden(frameRenderContext.transform.zoom)) return false;
 
         const type = layer.type;
         const painter = this.painter;
@@ -206,7 +206,7 @@ export class RenderToTexture {
         if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
-            renderContext.isRenderingToTexture = true;
+            frameRenderContext.isRenderingToTexture = true;
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
@@ -214,19 +214,19 @@ export class RenderToTexture {
                 const obj = tile.acquireRTT(painter, stack, this.rttSize);
                 painter.bindRTT(obj);
                 painter.context.clear({color: Color.transparent, stencil: 0});
-                painter.currentStencilSource = undefined;
+                frameRenderContext.invalidateTileClippingMasks();
                 for (const layerId of layers) {
                     const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
-                    painter.renderTileClippingMasks(layer, coords);
-                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, renderContext);
+                    frameRenderContext.renderTileClippingMasks(layer, coords);
+                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, frameRenderContext);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
                 obj.texture.generateMipmap();
             }
-            renderContext.isRenderingToTexture = false;
-            drawTerrain(this.painter, this.terrain, this._rttTiles, renderContext);
+            frameRenderContext.isRenderingToTexture = false;
+            drawTerrain(this.painter, this.terrain, this._rttTiles, frameRenderContext);
             this._rttTiles = [];
 
             return LAYERS_TO_TEXTURES[type];

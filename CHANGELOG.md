@@ -2,12 +2,17 @@
 ### ✨ Features and improvements
 - With `fill-extrusion-rounded-corner-distance` set, shade the walls of a rounded corner as one curved surface by sharing the vertex normal between walls that meet at a shallow angle, instead of one flat shade per arc segment ([#8475](https://github.com/maplibre/maplibre-gl-js/issues/8475)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
+- Add an `absolutePadding` option to `Map#cameraForBounds` and `Map#fitBounds` to treat `padding` as the map's persistent padding instead of adding it to the current one ([#8480](https://github.com/maplibre/maplibre-gl-js/issues/8480)) (by [@sargunv](https://github.com/sargunv))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix fill-extrusion walls facing exactly east or west skipping `fill-extrusion-vertical-gradient` and rendering brighter than the other walls ([#8604](https://github.com/maplibre/maplibre-gl-js/pull/8604)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `easeTo` and `flyTo` pulling the center elevation onto the terrain when `centerClampedToGround` is false ([#8566](https://github.com/maplibre/maplibre-gl-js/issues/8566)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Respect map padding when constraining the camera to max bounds, so the padded viewport can pan fully to its edges ([#8501](https://github.com/maplibre/maplibre-gl-js/issues/8501)) (by [@erenbati](https://github.com/erenbati))
+- Fix an unclosed disallowed tag in one attribution erasing the other attributions, by sanitizing each attribution before joining them ([#8569](https://github.com/maplibre/maplibre-gl-js/issues/8569)) (by [@sx4im](https://github.com/sx4im))
 - Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.11.2
