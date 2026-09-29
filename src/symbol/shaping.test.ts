@@ -365,6 +365,51 @@ describe('fitIconToText', () => {
 
     });
 
+    test('icon-text-fit accounts for icon-size', () => {
+        // https://github.com/maplibre/maplibre-gl-js/issues/989
+        // The renderer scales the fitted icon box by `icon-size`, but not the text it is fitted to.
+        // The fitted box must therefore be pre-divided by the icon size, so that once scaled the
+        // icon hugs the text with padding that does not change with the text length.
+        expect(
+            fitIconToText(shapedIcon, shapedText, 'both', [0, 0, 0, 0], [0, 0], 24 / glyphSize, 2)
+        ).toEqual({
+            image: shapedIcon.image,
+            collisionPadding: undefined,
+            top: -5,
+            right: 10,
+            bottom: 15,
+            left: -30
+        });
+
+        expect(
+            fitIconToText(shapedIcon, shapedText, 'both', [5, 10, 5, 10], [0, 0], 24 / glyphSize, 2)
+        ).toEqual({
+            image: shapedIcon.image,
+            collisionPadding: undefined,
+            top: -7.5,
+            right: 15,
+            bottom: 17.5,
+            left: -35
+        });
+    });
+
+    test('icon-text-fit padding is constant across text lengths once scaled by icon-size', () => {
+        // https://github.com/maplibre/maplibre-gl-js/issues/989
+        // Simulates what the renderer does with the fitted box: em offsets are scaled by
+        // `icon-size` while the text is not. The resulting padding around the text must be the
+        // requested padding no matter how long the text is.
+        const padding: [number, number, number, number] = [5, 10, 5, 10];
+        const iconSize = 2;
+        for (const textWidth of [80, 200]) {
+            const text = {...shapedText, left: -textWidth / 2, right: textWidth / 2};
+            const fitted = fitIconToText(shapedIcon, text, 'both', padding, [0, 0], 24 / glyphSize, iconSize);
+            expect(text.left - fitted.left * iconSize).toBe(padding[3]);
+            expect(fitted.right * iconSize - text.right).toBe(padding[1]);
+            expect(text.top - fitted.top * iconSize).toBe(padding[0]);
+            expect(fitted.bottom * iconSize - text.bottom).toBe(padding[2]);
+        }
+    });
+
 });
 
 describe('shapeText vertical glyph orientation', () => {

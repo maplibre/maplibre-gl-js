@@ -321,11 +321,11 @@ function addFeature(bucket: SymbolBucket,
     if (shapedIcon && iconTextFit !== 'none') {
         if (bucket.allowVerticalPlacement && shapedTextOrientations.vertical) {
             verticallyShapedIcon = fitIconToText(shapedIcon, shapedTextOrientations.vertical, iconTextFit,
-                layout.get('icon-text-fit-padding'), iconOffset, fontScale);
+                layout.get('icon-text-fit-padding'), iconOffset, fontScale, layoutIconSize);
         }
         if (defaultHorizontalShaping) {
             shapedIcon = fitIconToText(shapedIcon, defaultHorizontalShaping, iconTextFit,
-                layout.get('icon-text-fit-padding'), iconOffset, fontScale);
+                layout.get('icon-text-fit-padding'), iconOffset, fontScale, layoutIconSize);
         }
     }
 

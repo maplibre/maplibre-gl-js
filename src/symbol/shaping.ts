@@ -823,13 +823,26 @@ function applyTextFit(shapedIcon: PositionedIcon): Box {
     return {x1: iconLeft, y1: iconTop, x2: iconLeft + iconWidth, y2: iconTop + iconHeight};
 }
 
+/**
+ * Fits a shaped icon to the given shaped text, stretching it around the text with the requested
+ * padding. Implements `icon-text-fit`.
+ *
+ * The returned box is expressed in the icon's em units, which the renderer scales by `icon-size`
+ * while the text is not scaled. The text extents and padding are therefore divided by `iconSize`
+ * up front, so that once scaled the icon hugs the text with padding that stays constant no
+ * matter how long the text is. The image dimensions and the icon offset keep their own units
+ * and are left untouched.
+ *
+ * @param iconSize - the evaluated `icon-size` for the feature being laid out.
+ */
 function fitIconToText(
     shapedIcon: PositionedIcon,
     shapedText: Shaping,
     textFit: string,
     padding: [number, number, number, number],
     iconOffset: [number, number],
-    fontScale: number
+    fontScale: number,
+    iconSize: number = 1
 ): PositionedIcon {
 
     const image = shapedIcon.image;
@@ -846,30 +859,33 @@ function fitIconToText(
         ];
     }
 
+    // The icon's em units are scaled by `icon-size` at render time while the text is not.
+    const textToIconScale = iconSize === 0 ? 1 : 1 / iconSize;
+
     // We don't respect the icon-anchor, because icon-text-fit is set. Instead,
     // the icon will be centered on the text, then stretched in the given
     // dimensions.
 
-    const textLeft = shapedText.left * fontScale;
-    const textRight = shapedText.right * fontScale;
+    const textLeft = shapedText.left * fontScale * textToIconScale;
+    const textRight = shapedText.right * fontScale * textToIconScale;
 
     let top, right, bottom, left;
     if (textFit === 'width' || textFit === 'both') {
         // Stretched horizontally to the text width
-        left = iconOffset[0] + textLeft - padding[3];
-        right = iconOffset[0] + textRight + padding[1];
+        left = iconOffset[0] + textLeft - padding[3] * textToIconScale;
+        right = iconOffset[0] + textRight + padding[1] * textToIconScale;
     } else {
         // Centered on the text
         left = iconOffset[0] + (textLeft + textRight - image.displaySize[0]) / 2;
         right = left + image.displaySize[0];
     }
 
-    const textTop = shapedText.top * fontScale;
-    const textBottom = shapedText.bottom * fontScale;
+    const textTop = shapedText.top * fontScale * textToIconScale;
+    const textBottom = shapedText.bottom * fontScale * textToIconScale;
     if (textFit === 'height' || textFit === 'both') {
         // Stretched vertically to the text height
-        top = iconOffset[1] + textTop - padding[0];
-        bottom = iconOffset[1] + textBottom + padding[2];
+        top = iconOffset[1] + textTop - padding[0] * textToIconScale;
+        bottom = iconOffset[1] + textBottom + padding[2] * textToIconScale;
     } else {
         // Centered on the text
         top = iconOffset[1] + (textTop + textBottom - image.displaySize[1]) / 2;
