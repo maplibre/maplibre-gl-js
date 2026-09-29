@@ -2,6 +2,7 @@ uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
 uniform vec2 u_fill_translate;
+uniform vec2 u_gl_viewport_size;
 
 layout(location = 0) in vec2 a_pos;
 
@@ -50,7 +51,7 @@ void main() {
     v_pos_a = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, fromScale * display_size_a, tileRatio, a_pos);
     v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileRatio, a_pos);
 
-    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world_size;
+    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_gl_viewport_size;
     #ifdef GLOBE
     v_depth = gl_Position.z / gl_Position.w;
     #endif

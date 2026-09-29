@@ -19,6 +19,7 @@ export type FillUniformsType = {
 
 export type FillOutlineUniformsType = {
     'u_fill_translate': Uniform2f;
+    'u_gl_viewport_size': Uniform2f;
 };
 
 export type FillPatternUniformsType = {
@@ -43,6 +44,7 @@ export type FillOutlinePatternUniformsType = {
     'u_fade': Uniform1f;
     'u_sdf_pattern': Uniform1i;
     'u_fill_translate': Uniform2f;
+    'u_gl_viewport_size': Uniform2f;
 };
 
 const fillUniforms = (context: Context, locations: UniformLocations): FillUniformsType => ({
@@ -61,7 +63,8 @@ const fillPatternUniforms = (context: Context, locations: UniformLocations): Fil
 });
 
 const fillOutlineUniforms = (context: Context, locations: UniformLocations): FillOutlineUniformsType => ({
-    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_gl_viewport_size': new Uniform2f(context, locations.u_gl_viewport_size)
 });
 
 const fillOutlinePatternUniforms = (context: Context, locations: UniformLocations): FillOutlinePatternUniformsType => ({
@@ -72,7 +75,8 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
     'u_sdf_pattern': new Uniform1i(context, locations.u_sdf_pattern),
-    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_gl_viewport_size': new Uniform2f(context, locations.u_gl_viewport_size)
 });
 
 const fillPatternUniformValues = (
@@ -93,8 +97,17 @@ const fillUniformValues = (translate: [number, number]): UniformValues<FillUnifo
     'u_fill_translate': translate,
 });
 
-const fillOutlineUniformValues = (translate: [number, number]): UniformValues<FillOutlineUniformsType> => ({
+/**
+ * Uniform values for the fill outline programs.
+ *
+ * `glViewportSize` is the size of the GL viewport being rendered into, in device pixels.
+ * The outline shader measures the distance to the line in pixel space against `gl_FragCoord`,
+ * so it must convert clip space with the viewport size rather than the full drawing buffer size:
+ * when terrain is enabled, fills are rendered into a smaller render-to-texture viewport.
+ */
+const fillOutlineUniformValues = (translate: [number, number], glViewportSize: [number, number]): UniformValues<FillOutlineUniformsType> => ({
     'u_fill_translate': translate,
+    'u_gl_viewport_size': glViewportSize,
 });
 
 const fillOutlinePatternUniformValues = (
@@ -102,8 +115,14 @@ const fillOutlinePatternUniformValues = (
     crossfade: CrossfadeParameters,
     tile: Tile,
     translate: [number, number],
-    isSdfPattern: boolean
-): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(painter, crossfade, tile, translate, isSdfPattern);
+    isSdfPattern: boolean,
+    glViewportSize: [number, number]
+): UniformValues<FillOutlinePatternUniformsType> => extend(
+    fillPatternUniformValues(painter, crossfade, tile, translate, isSdfPattern),
+    {
+        'u_gl_viewport_size': glViewportSize,
+    }
+);
 
 export {
     fillUniforms,

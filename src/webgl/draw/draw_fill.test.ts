@@ -90,6 +90,9 @@ describe('drawFill', () => {
             gl: {},
             activeTexture: {
                 set: () => {}
+            },
+            viewport: {
+                get: () => [0, 0, 1024, 1024]
             }
         } as any;
         const transform = {
@@ -162,5 +165,51 @@ describe('drawFill', () => {
         bucketMock.programConfigurations = mockProgramConfigurations;
 
         return bucketMock;
+    }
+
+    test('passes the GL viewport size to the fill outline program', () => {
+        // When terrain is enabled, fills are rendered into a render-to-texture viewport
+        // that is smaller than the full canvas. The outline shader measures the distance
+        // to the line in pixel space against gl_FragCoord, so it needs the size of the
+        // GL viewport being rendered into; without it the outline is fully transparent.
+        const painterMock: Painter = constructMockPainter();
+        painterMock.context.viewport = {
+            get: () => [0, 0, 512, 512]
+        } as any;
+        const layer: FillStyleLayer = constructMockOutlineLayer();
+
+        const programMock = new Program(null, null, null, null, null, null, null, null);
+        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+
+        const mockTile = constructMockTile(layer);
+
+        const tileManagerMock = new TileManager(null, null, null);
+        (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
+
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderContext);
+
+        // twice: first for fill, second for outline
+        expect(programMock.draw).toHaveBeenCalledTimes(2);
+
+        const outlineUniformValues = vi.mocked(programMock.draw).mock.calls[1][6];
+        expect(outlineUniformValues['u_gl_viewport_size']).toEqual([512, 512]);
+    });
+
+    function constructMockOutlineLayer(): FillStyleLayer {
+        const layerSpec = {
+            id: 'mock-outline-layer',
+            source: 'empty-source',
+            type: 'fill',
+            layout: {},
+            'paint': {
+                'fill-color': 'blue',
+                'fill-outline-color': 'red'
+            }
+        } as FillLayerSpecification;
+        const layer = new FillStyleLayer(layerSpec, {});
+        layer.getCrossfadeParameters = () => ({} as any);
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+        return layer;
     }
 });

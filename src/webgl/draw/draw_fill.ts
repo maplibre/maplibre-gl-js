@@ -162,9 +162,11 @@ function drawFillTiles(
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
+            const viewport = painter.context.viewport.get();
+            const glViewportSize: [number, number] = [viewport[2], viewport[3]];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) :
-                fillOutlineUniformValues(translateForUniforms);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern, glViewportSize) :
+                fillOutlineUniformValues(translateForUniforms, glViewportSize);
         }
 
         const stencil = painter.stencilModeForClipping(coord);
