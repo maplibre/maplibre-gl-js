@@ -5,6 +5,7 @@ import type {Map} from '../../ui/map.ts';
 import type {mat4} from 'gl-matrix';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerProjectionData, RendererProjectionData} from '../../geo/projection/projection_data.ts';
+import type {TerrainHeightMapTarget} from '../../render/terrain.ts';
 
 /**
  * Type for an object literal that specifies a map tile.
@@ -160,6 +161,21 @@ export type CustomRenderMethodInput = {
      * @param params - Parameters for the projection data generation.
      */
     getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
+
+    /**
+     * Draws the elevation of the terrain as the map draws it into a framebuffer, so that the layer can place many
+     * objects on the ground on the GPU. Only set while terrain is enabled. Call it again after the camera moves,
+     * terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
+     * @example
+     * ```ts
+     * prerender(gl, options) {
+     *     const northWest = MercatorCoordinate.fromLngLat([7.87, 46.65]);
+     *     const southEast = MercatorCoordinate.fromLngLat([8.11, 46.5]);
+     *     options.renderTerrainHeightMap?.({framebuffer, width: 512, height: 512, bounds: [northWest.x, northWest.y, southEast.x, southEast.y]});
+     * }
+     * ```
+     */
+    renderTerrainHeightMap?: (target: TerrainHeightMapTarget) => void;
 };
 
 /**

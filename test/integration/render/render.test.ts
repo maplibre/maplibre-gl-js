@@ -11,7 +11,7 @@ import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi, type TestContext} from 'vitest';
 
-import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType, CustomRenderMethodInput} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 import type {Page, Browser, WebWorker} from 'puppeteer';
 
@@ -573,13 +573,13 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 gl.linkProgram(this.program);
             }
 
-            prerender() {
+            prerender(gl: WebGL2RenderingContext, options: CustomRenderMethodInput) {
                 const bounds = this.map.getBounds();
                 const northWest = maplibregl.MercatorCoordinate.fromLngLat(bounds.getNorthWest());
                 const southEast = maplibregl.MercatorCoordinate.fromLngLat(bounds.getSouthEast());
                 const width = southEast.x - northWest.x;
                 const height = southEast.y - northWest.y;
-                this.map.renderTerrainHeightMap({
+                options.renderTerrainHeightMap?.({
                     framebuffer: this.framebuffer,
                     width: 64,
                     height: 64,

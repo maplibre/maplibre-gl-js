@@ -24,9 +24,8 @@ import {type Event, ErrorEvent, type Listener, Evented} from '../util/evented.ts
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent, MapMovementEvent, MapTerrainEvent, MapProjectionEvent, MapContextEvent} from './events.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import {throttle} from '../util/throttle.ts';
-import {Terrain, type TerrainHeightMapTarget} from '../render/terrain.ts';
+import {Terrain} from '../render/terrain.ts';
 import {RenderToTexture} from '../webgl/render_to_texture.ts';
-import {drawTerrainHeightMap} from '../webgl/draw/draw_terrain.ts';
 import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
@@ -1532,23 +1531,6 @@ export class Map extends Evented<MapEventType> {
         }
         return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this._camera.transform);
     }
-
-    /**
-     * Draws the terrain elevation, as {@link Map.queryTerrainElevation} returns it, into a framebuffer, so that a custom
-     * layer can place many objects on the ground on the GPU. Call it from the layer's `prerender` or `render` method,
-     * again after the camera moves, terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
-     * @param target - The framebuffer and the area to draw.
-     * @example
-     * ```ts
-     * const northWest = MercatorCoordinate.fromLngLat([7.87, 46.65]);
-     * const southEast = MercatorCoordinate.fromLngLat([8.11, 46.5]);
-     * map.renderTerrainHeightMap({framebuffer, width: 512, height: 512, bounds: [northWest.x, northWest.y, southEast.x, southEast.y]});
-     * ```
-     */
-    renderTerrainHeightMap(target: TerrainHeightMapTarget): void {
-        drawTerrainHeightMap(this.painter, this.terrain, target);
-    }
-
     /**
      * Returns the value of `centerClampedToGround`.
      *

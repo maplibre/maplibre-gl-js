@@ -22,7 +22,7 @@ import type {Painter} from './painter.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
- * A framebuffer for {@link Map.renderTerrainHeightMap}, with a float color attachment such as `RGBA32F`, which needs
+ * A framebuffer for {@link CustomRenderMethodInput.renderTerrainHeightMap}, with a float color attachment such as `RGBA32F`, which needs
  * the `EXT_color_buffer_float` extension. Red holds the elevation in meters, including the terrain exaggeration, alpha
  * is 1 where terrain is loaded and 0 elsewhere, and the first row is the south edge.
  */
