@@ -16,7 +16,7 @@ import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
 import {Mesh} from './mesh.ts';
-import {FrameRenderContext, NUM_SUBLAYERS, DEPTH_EPSILON, type FrameRenderData} from './frame_render_context.ts';
+import {FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
 import {destroyProjectionUniformBuffers, releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
@@ -525,7 +525,7 @@ export class Painter {
         // draw sky first to not overwrite symbols
         if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
-        frameRenderContext.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * NUM_SUBLAYERS * DEPTH_EPSILON)];
+        frameRenderContext.setDepthRangeFor3D(style._order.length);
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.

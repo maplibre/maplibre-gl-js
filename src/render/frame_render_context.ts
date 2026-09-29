@@ -53,10 +53,10 @@ type FrameRenderContextOptions = {
 };
 
 /** Distinct z-planes within each layer that can be drawn to, implemented with the WebGL depth buffer. */
-export const NUM_SUBLAYERS: number = TileManager.maxOverzooming + TileManager.maxUnderzooming + 1;
+const NUM_SUBLAYERS: number = TileManager.maxOverzooming + TileManager.maxUnderzooming + 1;
 
 /** Depth distance between two neighboring sublayers. */
-export const DEPTH_EPSILON: number = 1 / Math.pow(2, 16);
+const DEPTH_EPSILON: number = 1 / Math.pow(2, 16);
 
 /** The mercator variant, for draws that force the simple projection, like fullscreen quads. */
 const MERCATOR_SHADER_VARIANT: ProjectionShaderVariant = {
@@ -154,6 +154,11 @@ export class FrameRenderContext {
 
     getDepthModeFor3D(): Readonly<DepthMode> {
         return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
+    }
+
+    /** Sets the depth range that 3D layers draw into, which lies below the depth values of every sublayer of the `layerCount` layers. */
+    setDepthRangeFor3D(layerCount: number): void {
+        this.depthRangeFor3D = [0, 1 - ((layerCount + 2) * NUM_SUBLAYERS * DEPTH_EPSILON)];
     }
 
     /**
