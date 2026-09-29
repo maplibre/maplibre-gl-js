@@ -631,8 +631,10 @@ export class MapMouseEvent extends MapLibreEvent<MouseEvent> {
 
     /**
      * The geographic location on the map of the mouse cursor.
+     * This is `undefined` when the screen point cannot be unprojected to a valid location,
+     * e.g. when the camera is below the terrain surface and the ray misses the terrain.
      */
-    lngLat: LngLat;
+    lngLat: LngLat | undefined;
 
     /**
      * Prevents subsequent default processing of the event by the map.
@@ -661,7 +663,12 @@ export class MapMouseEvent extends MapLibreEvent<MouseEvent> {
     constructor(type: string, map: Map, originalEvent: MouseEvent, data: any = {}) {
         originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
         const point = DOM.mousePos(map.getCanvas(), originalEvent);
-        const lngLat = map.unproject(point);
+        let lngLat: LngLat | undefined;
+        try {
+            lngLat = map.unproject(point);
+        } catch {
+            // Remove this guard once #1542 is fixed and the camera can no longer end up below the terrain.
+        }
         super(type, extend({point, lngLat, originalEvent}, data));
         this._defaultPrevented = false;
         this.target = map;

@@ -279,6 +279,27 @@ describe('map events', () => {
         });
     });
 
+    test('MapMouseEvent does not throw and keeps firing when unproject fails (issue #3928)', () => {
+        const map = createMap();
+        // Simulate the camera being below the terrain: unprojecting the mouse
+        // position throws because the ray misses the terrain.
+        const unproject = vi.spyOn(map, 'unproject').mockImplementation(() => {
+            throw new Error('Invalid LngLat object: (NaN, NaN)');
+        });
+        const mousedown = vi.fn();
+        map.on('mousedown', mousedown);
+        const target = map.getCanvasContainer();
+
+        expect(() => {
+            target.dispatchEvent(new MouseEvent('mousedown', {clientX: 100, clientY: 100}));
+        }).not.toThrow();
+
+        expect(mousedown).toHaveBeenCalledTimes(1);
+        expect(mousedown.mock.calls[0][0].lngLat).toBeUndefined();
+        unproject.mockRestore();
+        map.remove();
+    });
+
     test('MapMouseEvent constructor does not throw error with Event instance instead of MouseEvent as originalEvent param', () => {
         const map = createMap();
         const target = map.getCanvasContainer();
