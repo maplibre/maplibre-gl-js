@@ -293,9 +293,14 @@ export interface CustomLayerInterface {
      * MapLibre drapes over the terrain with the fill, line and raster layers around the layer in the style.
      * Clip space `(-1, -1)` is the tile's south-west corner and `(1, 1)` its north-east corner. Draw over what the
      * framebuffer holds, with the same blending as `render` and without depth or stencil testing. MapLibre calls it
-     * again when it redraws the tile, and after {@link Map.triggerTerrainRepaint}.
+     * again when it redraws the tile, and after {@link CustomLayerInterface.terrainTileRevision} changes.
      */
     renderToTerrainTile?: (gl: WebGL2RenderingContext, options: CustomTerrainRenderInput) => void;
+    /**
+     * Optional number that the layer changes when what it draws in {@link CustomLayerInterface.renderToTerrainTile}
+     * changes, before calling {@link Map.triggerRepaint}, so that MapLibre draws the terrain tiles again.
+     */
+    terrainTileRevision?: number;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map.addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.

@@ -29,6 +29,10 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
  * Whether the layer is drawn into the terrain tiles' textures rather than onto the map: the layer types above, and
  * custom layers that implement `renderToTerrainTile`.
  */
+function rttFingerprintKey(layer: StyleLayer): string | undefined {
+    return isCustomStyleLayer(layer) ? `custom-layer:${layer.id}` : layer.source;
+}
+
 function isRenderedToTexture(layer: StyleLayer): boolean {
     if (isCustomStyleLayer(layer)) return layer.implementation.renderToTerrainTile !== undefined;
     return LAYERS_TO_TEXTURES[layer.type] === true;
@@ -149,6 +153,17 @@ export class RenderToTexture {
                 fingerprints[key] = new RTTFingerprint(coordsAscending[key], revision, zoom, visibleLayerIds);
         }
 
+        for (const layerId of this._renderableLayerIds) {
+            const layer = style._layers[layerId];
+            if (!isCustomStyleLayer(layer) || !isRenderedToTexture(layer)) continue;
+            const revision = layer.implementation.terrainTileRevision ?? 0;
+            const fingerprints: Record<string, RTTFingerprint> = {};
+            for (const tile of this._renderableTiles) {
+                fingerprints[tile.tileID.key] = new RTTFingerprint([tile.tileID], revision, zoom, visibleLayerIds);
+            }
+            this._rttFingerprints[rttFingerprintKey(layer)] = fingerprints;
+        }
+
         // check tiles to render
         this.needsFollowUpFrame = false;
         const moving = zoomChanged || isMoving;
@@ -231,7 +246,8 @@ export class RenderToTexture {
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
                     frameRenderContext.renderTileClippingMasks(layer, coords);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, frameRenderContext);
-                    if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
+                    const fingerprintKey = rttFingerprintKey(layer);
+                    if (fingerprintKey) tile.rttFingerprint[fingerprintKey] = this._rttFingerprints[fingerprintKey][tile.tileID.key];
                 }
                 obj.texture.generateMipmap();
             }

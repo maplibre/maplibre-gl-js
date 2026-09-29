@@ -4581,19 +4581,6 @@ export class Map extends Evented<MapEventType> {
         }
     }
 
-    /**
-     * Redraws the colors that layers drape over the terrain, and triggers a repaint. Use this method with custom layers
-     * that implement {@link CustomLayerInterface.renderToTerrainTile} when what they draw changes.
-     * @example
-     * ```ts
-     * map.triggerTerrainRepaint();
-     * ```
-     */
-    triggerTerrainRepaint(): void {
-        this.terrain?.tileManager.releaseAllRTT();
-        this.triggerRepaint();
-    }
-
     _onWindowOnline = (): void => {
         this._update();
     };
