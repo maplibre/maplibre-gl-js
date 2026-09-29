@@ -449,7 +449,8 @@ export class Painter {
             terrain: style.map.terrain ?? null,
             data,
             context: this.context,
-            programCache: this.programCache
+            programCache: this.programCache,
+            currentPass: 'offscreen'
         });
 
         this.lineAtlas = style.lineAtlas;

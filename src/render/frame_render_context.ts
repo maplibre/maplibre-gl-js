@@ -49,7 +49,7 @@ type FrameRenderContextOptions = {
     data: FrameRenderData;
     context: Context;
     programCache: ProgramCache;
-    currentPass?: RenderPass;
+    currentPass: RenderPass;
 };
 
 /** Distinct z-planes within each layer that can be drawn to, implemented with the WebGL depth buffer. */
@@ -88,7 +88,7 @@ export class FrameRenderContext {
         this.data = options.data;
         this.context = options.context;
         this.programCache = options.programCache;
-        this.currentPass = options.currentPass ?? 'offscreen';
+        this.currentPass = options.currentPass;
     }
 
     getProjectionDataForTile(tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
