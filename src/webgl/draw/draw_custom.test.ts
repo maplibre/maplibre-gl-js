@@ -3,12 +3,12 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {createRenderContext} from '../../render/render_context.ts';
+import {createFrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
-import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {expectToBeCloseToArray, createFrameRenderData} from '../../util/test/util.ts';
 
 import type {CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
 import type {Map} from '../../ui/map.ts';
@@ -35,9 +35,8 @@ describe('drawCustom', () => {
         mockPainter.style = {
             projection: new MercatorProjection(),
         } as any;
-        const renderContext = createRenderContext(transform, mockPainter.style.projection, null);
-        renderContext.currentPass = 'translucent';
-        mockPainter.renderContext = renderContext;
+        const frameRenderContext = createFrameRenderContext(transform, null, createFrameRenderData(), 'translucent');
+        mockPainter.frameRenderContext = frameRenderContext;
         mockPainter.context = {
             gl: {},
             setColorMode: () => {},
@@ -73,7 +72,7 @@ describe('drawCustom', () => {
                 };
             },
         }, {});
-        drawCustom(mockPainter, tileManagerMock, mockLayer, renderContext);
+        drawCustom(mockPainter, tileManagerMock, mockLayer, frameRenderContext);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
         expect(result.args.farZ).toBe(transform.farZ);

@@ -3,17 +3,17 @@ import {StencilMode} from '../stencil_mode.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderContext} from '../../render/render_context.ts';
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 
-export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderContext: RenderContext): void {
+export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, frameRenderContext: FrameRenderContext): void {
 
-    const {isRenderingGlobe} = renderContext;
+    const {isRenderingGlobe} = frameRenderContext.data;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
-    const transform = renderContext.transform;
+    const transform = frameRenderContext.transform;
 
     const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
@@ -47,7 +47,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
 
-    if (renderContext.currentPass === 'offscreen') {
+    if (frameRenderContext.currentPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
             painter.setCustomLayerDefaults();
@@ -58,7 +58,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
             context.setDirty();
             painter.setBaseState();
         }
-    } else if (renderContext.currentPass === 'translucent') {
+    } else if (frameRenderContext.currentPass === 'translucent') {
 
         painter.setCustomLayerDefaults();
 

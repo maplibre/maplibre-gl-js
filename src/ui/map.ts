@@ -4434,6 +4434,8 @@ export class Map extends Evented<MapEventType> {
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
+        const projectionTransition = this.style.projection?.transitionState ?? 0;
+
         // Actually draw
         this.painter.render(this.style, this._camera.transform, {
             showTileBoundaries: this.showTileBoundaries,
@@ -4442,8 +4444,11 @@ export class Map extends Evented<MapEventType> {
             zooming: this.isZooming(),
             moving: this.isMoving(),
             fadeDuration,
+            symbolFadeChange: this.style.placement.symbolFadeChange(now()),
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
+            projectionTransition,
+            isRenderingGlobe: projectionTransition > 0,
         });
 
         this.fire(new MapLibreEvent('render'));

@@ -6,7 +6,7 @@ import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
 } from '../program/hillshade_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -14,8 +14,8 @@ import type {TileManager} from '../../tile/tile_manager.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderContext: RenderContext): void {
-    if (renderContext.currentPass !== 'offscreen' && renderContext.currentPass !== 'translucent') return;
+export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+    if (frameRenderContext.currentPass !== 'offscreen' && frameRenderContext.currentPass !== 'translucent') return;
 
     const context = painter.context;
     const projection = painter.style.projection;
@@ -24,22 +24,22 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
-    if (renderContext.currentPass === 'offscreen') {
+    if (frameRenderContext.currentPass === 'offscreen') {
         // Prepare tiles
         prepareHillshade(painter, tileManager, tileIDs, layer, depthMode, StencilMode.disabled, colorMode);
         context.viewport.set([0, 0, painter.width, painter.height]);
-    } else if (renderContext.currentPass === 'translucent') {
+    } else if (frameRenderContext.currentPass === 'translucent') {
         // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
         // See comments in draw_raster.ts for more details.
         if (useSubdivision) {
             // Two-pass rendering
             const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-            renderHillshade(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, renderContext); // draw without borders
-            renderHillshade(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, renderContext); // draw with borders
+            renderHillshade(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, frameRenderContext); // draw without borders
+            renderHillshade(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, frameRenderContext); // draw with borders
         } else {
             // Simple rendering
             const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-            renderHillshade(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, renderContext);
+            renderHillshade(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, frameRenderContext);
         }
     }
 }
@@ -53,7 +53,7 @@ function renderHillshade(
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
-    renderContext: RenderContext
+    frameRenderContext: FrameRenderContext
 ) {
     const projection = painter.style.projection;
     const context = painter.context;
@@ -61,7 +61,7 @@ function renderHillshade(
 
     const defines = [`#define NUM_ILLUMINATION_SOURCES ${layer.paint.get('hillshade-highlight-color').values.length}`];
     const program = painter.useProgram('hillshade', null, false, defines);
-    const align = !painter.options.moving;
+    const align = !frameRenderContext.data.moving;
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
@@ -71,12 +71,12 @@ function renderHillshade(
         }
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
 
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-        const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
+        const projectionData = getProjectionDataForTile(frameRenderContext, coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
