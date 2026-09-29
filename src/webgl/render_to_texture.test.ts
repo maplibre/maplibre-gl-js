@@ -138,7 +138,7 @@ describe('render to texture', () => {
     });
 
     function createFrameRenderContext(): FrameRenderContext {
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', viewportMesh: null, width: 0, height: 0, getStencilMesh: null});
+        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', getStencilMesh: null});
         vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
         return frameRenderContext;
     }

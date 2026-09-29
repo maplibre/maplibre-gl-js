@@ -99,7 +99,6 @@ export class Painter {
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
     tileExtentMesh: Mesh;
-    viewportMesh: Mesh;
 
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
@@ -218,7 +217,6 @@ export class Painter {
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
         this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
-        this.viewportMesh = new Mesh(this.viewportBuffer, this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
     /**
@@ -258,9 +256,6 @@ export class Painter {
             context: this.context,
             programCache: this.programCache,
             currentPass: 'offscreen',
-            viewportMesh: this.viewportMesh,
-            width: this.width,
-            height: this.height,
             getStencilMesh: (tileID, hasBorder) => style.projection.getMeshFromTileID(this.context, tileID, hasBorder, true, 'stencil')
         });
 

@@ -4,13 +4,12 @@ import {DepthMode} from '../webgl/depth_mode.ts';
 import {ColorMode} from '../webgl/color_mode.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';
 import {CullFaceMode} from '../webgl/cull_face_mode.ts';
-import {mat4} from 'gl-matrix';
 import {shaders} from '../shaders/shaders.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Terrain, TerrainData} from './terrain.ts';
-import type {ProjectionData, RendererProjectionData} from '../geo/projection/projection_data.ts';
+import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
 import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {Context} from '../webgl/context.ts';
@@ -57,12 +56,6 @@ type FrameRenderContextOptions = {
     context: Context;
     programCache: ProgramCache;
     currentPass: RenderPass;
-    /** The fullscreen quad that clears the stencil buffer. */
-    viewportMesh: Mesh;
-    /** Drawing buffer width in pixels. */
-    width: number;
-    /** Drawing buffer height in pixels. */
-    height: number;
     /** Returns the mesh a tile's clipping mask is drawn with. */
     getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
 };
@@ -100,9 +93,6 @@ export class FrameRenderContext {
     currentStencilSource: string;
     private nextStencilID: number = 1;
     private tileClippingMaskIDs: Record<string, number> = {};
-    private readonly viewportMesh: Mesh;
-    private readonly width: number;
-    private readonly height: number;
     private readonly getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
 
     constructor(options: FrameRenderContextOptions) {
@@ -112,9 +102,6 @@ export class FrameRenderContext {
         this.context = options.context;
         this.programCache = options.programCache;
         this.currentPass = options.currentPass;
-        this.viewportMesh = options.viewportMesh;
-        this.width = options.width;
-        this.height = options.height;
         this.getStencilMesh = options.getStencilMesh;
     }
 
@@ -201,36 +188,9 @@ export class FrameRenderContext {
      * new tiles at the same location, while retaining previously drawn pixels.
      */
     clearStencil(): void {
-        const context = this.context;
-        const gl = context.gl;
-
         this.nextStencilID = 1;
         this.currentStencilSource = undefined;
-
-        // As a workaround for https://github.com/mapbox/mapbox-gl-js/issues/5490, we draw a fullscreen
-        // stencil=0 clipping mask here, effectively clearing the stencil buffer. This can become
-        // context.clear({ stencil: 0x0 }) once Firefox on macOS draws WebGL with ANGLE instead of
-        // Apple's OpenGL, see https://bugzilla.mozilla.org/show_bug.cgi?id=2027951.
-
-        const matrix = mat4.create();
-        mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
-        mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
-
-        const projectionData: ProjectionData = {
-            mainMatrix: matrix,
-            tileMercatorCoords: [0, 0, 1, 1],
-            clippingPlane: [0, 0, 0, 0],
-            projectionTransition: 0.0,
-            fallbackMatrix: matrix,
-            clipAntimeridian: false,
-        };
-
-        const stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
-        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
-            DepthMode.disabled, stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
-            null, null, projectionData,
-            '$clipping', this.viewportMesh.vertexBuffer,
-            this.viewportMesh.indexBuffer, this.viewportMesh.segments);
+        this.context.clear({stencil: 0});
     }
 
     /** Makes the next tile-clipped layer draw its clipping masks again. */
