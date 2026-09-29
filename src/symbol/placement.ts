@@ -4,6 +4,7 @@ import * as symbolSize from './symbol_size.ts';
 import * as projection from './projection.ts';
 import {getAnchorJustification} from './symbol_layout.ts';
 import {getAnchorAlignment, WritingMode} from './shaping.ts';
+import ONE_EM from './one_em.ts';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
 import Point from '@mapbox/point-geometry';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
@@ -148,6 +149,60 @@ export type VariableOffset = {
     textBoxScale: number;
     prevAnchor?: TextAnchor;
 };
+
+/**
+ * Returns the factor by which a symbol's text collision box must grow so that it still
+ * covers the text as drawn at the current fractional zoom.
+ *
+ * The box is baked on the worker for the text size evaluated at (tileZoom + 1), but with a
+ * composite (zoom and feature data) `text-size` expression the shader interpolates the size
+ * at the fractional render zoom, which can exceed the baked size (for example when the size
+ * decreases with zoom). The other size kinds never draw larger than the baked size, so the
+ * factor is 1 for them and their intentionally conservative boxes are left untouched.
+ */
+function getTextBoxScaleFactor(
+    bucket: SymbolBucket,
+    symbolInstance: SymbolInstance,
+    partiallyEvaluatedTextSize: {uSize: number; uSizeT: number},
+    textPixelRatio: number
+): number {
+    const sizeData = bucket.textSizeData;
+    if (sizeData?.kind !== 'composite') {
+        return 1;
+    }
+    const placedSymbolIndex = symbolInstance.centerJustifiedTextSymbolIndex >= 0 ?
+        symbolInstance.centerJustifiedTextSymbolIndex :
+        symbolInstance.verticalPlacedTextSymbolIndex;
+    if (placedSymbolIndex < 0 || !bucket.text) {
+        return 1;
+    }
+    const placedSymbol = bucket.text.placedSymbolArray.get(placedSymbolIndex);
+    const drawnSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedTextSize, placedSymbol);
+    // symbolInstance.textBoxScale is bucket.tilePixelRatio * boxSize / ONE_EM, and
+    // bucket.tilePixelRatio is the reciprocal of textPixelRatio.
+    const boxSize = symbolInstance.textBoxScale * textPixelRatio * ONE_EM;
+    if (!(boxSize > 0)) {
+        return 1;
+    }
+    // Only ever grow the box; shrinking would change the conservative collision
+    // behavior the other size kinds rely on.
+    return Math.max(1, drawnSize / boxSize);
+}
+
+/**
+ * Scales a collision box about its anchor point, leaving the pixel padding unscaled,
+ * mirroring how line-label collision circles are scaled by the runtime font size.
+ */
+function scaleCollisionBox(box: SingleCollisionBox, scale: number, padding: number): SingleCollisionBox {
+    return {
+        x1: (box.x1 + padding) * scale - padding,
+        y1: (box.y1 + padding) * scale - padding,
+        x2: (box.x2 - padding) * scale + padding,
+        y2: (box.y2 - padding) * scale + padding,
+        anchorPointX: box.anchorPointX,
+        anchorPointY: box.anchorPointY,
+    };
+}
 
 type TileLayerParameters = {
     bucket: SymbolBucket;
@@ -515,7 +570,16 @@ export class Placement {
                 verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
             }
 
-            const textBox = collisionArrays.textBox;
+            const textBoxScaleFactor = getTextBoxScaleFactor(bucket, symbolInstance, partiallyEvaluatedTextSize, textPixelRatio);
+            const scaleTextBox = (box: SingleCollisionBox) => {
+                if (textBoxScaleFactor === 1) return box;
+                // The pixel padding baked into the box must not grow with the text.
+                const textPadding = layout.get('text-padding') / textPixelRatio;
+                return scaleCollisionBox(box, textBoxScaleFactor, textPadding);
+            };
+
+            const textBox = collisionArrays.textBox && scaleTextBox(collisionArrays.textBox);
+            const verticalTextBox = collisionArrays.verticalTextBox && scaleTextBox(collisionArrays.verticalTextBox);
             if (textBox) {
 
                 const updatePreviousOrientationIfNotPlaced = (isPlaced) => {
@@ -581,7 +645,6 @@ export class Placement {
                     };
 
                     const placeVertical = () => {
-                        const verticalTextBox = collisionArrays.verticalTextBox;
                         if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBox(verticalTextBox, WritingMode.vertical);
                         }
@@ -674,7 +737,6 @@ export class Placement {
                     };
 
                     const placeVertical = () => {
-                        const verticalTextBox = collisionArrays.verticalTextBox;
                         const wasPlaced = placed?.placeable;
                         if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, WritingMode.vertical);

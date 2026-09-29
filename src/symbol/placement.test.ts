@@ -127,4 +127,37 @@ describe('placement', () => {
 
         expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
     });
+
+    test('grows text collision boxes when a composite text-size draws larger than the baked size', () => {
+        // A composite (zoom + feature data) text-size decreasing with zoom: the collision box is
+        // baked on the worker for the size at (tileZoom + 1), but the shader draws the text at the
+        // fractional render zoom, which is larger. The box must grow to match, or overlapping
+        // labels are both placed. See https://github.com/maplibre/maplibre-gl-js/issues/5677
+        const sizeProperty = {size: 10};
+        const features = [
+            {feature: {extent: 8192, type: 1, id: 0, properties: sizeProperty, loadGeometry: () => [[{x: 4000, y: 4000}]]}, id: 0, index: 0, sourceLayerIndex: 0},
+            {feature: {extent: 8192, type: 1, id: 1, properties: sizeProperty, loadGeometry: () => [[{x: 4700, y: 4000}]]}, id: 1, index: 1, sourceLayerIndex: 0},
+        ] as unknown as IndexedFeature[];
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = createSymbolTile(tileID, features, new CollisionBoxArray(), {
+            'text-size': ['interpolate', ['linear'], ['zoom'], 0, ['*', ['get', 'size'], 2], 1, ['get', 'size']],
+        } as any);
+        const bucket = tile.buckets.test as SymbolBucket;
+        const layer = bucket.layers[0];
+        new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
+
+        const parts = [];
+        placement.getBucketParts(parts, layer, tile, false);
+        for (const part of parts) {
+            placement.placeLayerBucketPart(part, {}, false);
+        }
+
+        // The labels are 700 tile units apart. Their boxes are baked for text size 10 (width 496),
+        // so they do not overlap; but the text is drawn at size 20 and the grown boxes (width 928)
+        // do, so the second label must not be placed.
+        const placements = Object.values(placement.placements);
+        expect(placements).toHaveLength(2);
+        expect(placements[0].text).toBe(true);
+        expect(placements[1].text).toBe(false);
+    });
 });
