@@ -920,7 +920,8 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
-     * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform.
+     * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
+     * that is not clamped to the ground keeps its elevation.
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
      */
@@ -938,7 +939,9 @@ export class Camera extends Evented<MapEventType> {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
+        if (this.getCenterClampedToGround()) {
+            tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
+        }
     }
 
     _finalizeElevation(): void {

@@ -437,6 +437,34 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
+    test('easeTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.easeTo({center: [1, 1], duration: 1000});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(1500);
+    });
+
+    test('flyTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.flyTo({center: [1, 1], duration: 1000});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(1500);
+    });
+
     test('easeTo around a point, as a double-click zoom does, eases the center elevation to the terrain under the center it ends on', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
