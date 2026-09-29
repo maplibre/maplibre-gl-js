@@ -13,9 +13,10 @@ import {SubdivisionGranularitySetting} from '../../render/subdivision_granularit
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 import {SymbolBucket} from './symbol_bucket.ts';
+import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
 import type {BucketParameters, IndexedFeature, PopulateParameters} from '../bucket.ts';
-import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {StyleImage} from '../../style/style_image.ts';
 
 const collisionBoxArray = new CollisionBoxArray();
@@ -253,6 +254,41 @@ describe('SymbolBucket', () => {
     test('SymbolBucket asks for one glyph per character of plain text and nothing besides', () => {
         expect(glyphsRequestedFor('abc').sort()).toEqual(['a', 'b', 'c']);
         expect(glyphsRequestedFor('東京ー').sort()).toEqual(['東', '京', 'ー'].sort());
+    });
+
+    test.each([
+        {placement: 'point', keepUpright: false, vertical: true},
+        {placement: 'line', keepUpright: true, vertical: true},
+        {placement: 'line', keepUpright: false, vertical: false}
+    ] as const)('requests vertical glyph candidates for $placement labels with keep-upright=$keepUpright', ({placement, keepUpright, vertical}) => {
+        const layer = new SymbolStyleLayer({
+            id: 'vertical', type: 'symbol', source: 'test',
+            layout: {
+                'symbol-placement': placement,
+                'text-keep-upright': keepUpright,
+                'text-writing-mode': ['horizontal', 'vertical'],
+                'text-field': ['format', '（か\u3099ー٪ \u3000aａA1ب', {}, '𠮷', {'text-font': ['literal', ['Other']]}],
+                'text-font': ['Test']
+            }
+        }, {});
+        layer.recalculate(new EvaluationParameters(0), []);
+        const bucket = new SymbolBucket({
+            overscaling: 1, zoom: 0, collisionBoxArray, layers: [layer]
+        } as BucketParameters<SymbolStyleLayer>);
+        const options = createPopulateOptions([]);
+        const feature = {
+            type: placement === 'point' ? 1 : 2, properties: {},
+            loadGeometry() { return [[{x: 0, y: 0}, {x: 0, y: 1000}]]; }
+        };
+
+        bucket.populate([{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature], options, new CanonicalTileID(0, 0, 0));
+
+        const verticals = ['（', 'か\u3099', 'か', '\u3099', 'ー', 'ａ', 'A', '1'];
+        if (placement === 'point') verticals.push('a');
+        else verticals.push('\u3000', '٪');
+        expect(options.glyphDependencies.Test.default['︵']).toBe(vertical ? true : undefined);
+        expect(Object.keys(options.glyphDependencies.Test.vertical).sort()).toEqual(vertical ? verticals.sort() : []);
+        expect(options.glyphDependencies.Other).toEqual({default: {'𠮷': true}, vertical: vertical ? {'𠮷': true} : {}});
     });
 
     test('SymbolBucket asks for a cluster as a whole, and for its codepoints to fall back to', () => {
