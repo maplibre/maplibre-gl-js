@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
-- Add `CustomLayerInterface.renderToTerrainTile` and `Map.triggerTerrainRepaint`, so custom layers can drape what they draw over the terrain (by [@birkskyum](https://github.com/birkskyum))
+- Add `CustomLayerInterface.renderToTerrainTile` and `Map.triggerTerrainRepaint`, so custom layers can drape what they draw over the terrain ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
