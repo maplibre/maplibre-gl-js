@@ -214,9 +214,8 @@ export class GlyphManager {
     }
 
     /**
-     * Draws a vertical alternate, comparing both forms from the same declared font file.
-     * Cached default glyphs may come from a PBF range. Unchanged or empty alternates and
-     * results from replaced font faces return `null`.
+     * Draws and compares a font's `vert` glyph with its default glyph.
+     * Returns the vertical glyph, or `null` if it is missing, empty, identical, or its font was replaced.
      */
     async _drawVerticalGlyph(entry: Entry, stack: string, id: string): Promise<StyleGlyph | null> {
         const verticalTinySDF = await this._getFontFaceTinySDF(entry, stack, id, true);

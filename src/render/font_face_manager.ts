@@ -150,9 +150,8 @@ export class FontFaceManager {
      *
      * @param fontStack - comma-separated font names, in fallback order
      * @param codePoint - codepoint to match against the declared Unicode ranges
-     * @param vertical - `true` for `vert`, `false` for normal feature settings
-     * @returns the CSS family to draw with, or `null` to use normal glyph fallbacks; for vertical
-     * requests, `null` means to retain the existing rotation or compatibility punctuation
+     * @param vertical - whether to enable the OpenType `vert` feature
+     * @returns the loaded CSS family, or `null` if the requested face is unavailable
      */
     async getFontFamily(fontStack: string, codePoint: number, vertical: boolean): Promise<string | null> {
         for (const fontName of fontStack.split(',')) {
@@ -207,8 +206,7 @@ export class FontFaceManager {
     }
 
     /**
-     * Downloads a declared file and hands it to the browser.
-     * A failure is not an error: the caller chooses a fallback.
+     * Loads and registers a declared font with normal or `vert` feature settings.
      *
      * @param face - font file declaration and CSS family to register
      * @param vertical - `true` to enable `vert`, `false` for normal feature settings

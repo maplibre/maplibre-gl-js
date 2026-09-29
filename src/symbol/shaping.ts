@@ -428,8 +428,8 @@ function charIsUprightInRun(codePoint: number): boolean {
 }
 
 /**
- * Whether this placement may use a vertical glyph, based on the cluster's first codepoint.
- * Line labels resolve the actual orientation from the surrounding run after glyphs are loaded.
+ * Checks whether a cluster's first codepoint may need a vertical glyph.
+ * Line labels determine the final orientation from the surrounding run.
  */
 function mayUseVerticalGlyph(codePoint: number, allowVerticalPlacement: boolean): boolean {
     if (allowVerticalPlacement) return isLineVertical(WritingMode.vertical, true, codePoint);
@@ -438,13 +438,10 @@ function mayUseVerticalGlyph(codePoint: number, allowVerticalPlacement: boolean)
 }
 
 /**
- * Replaces punctuation surrounded by upright characters with its vertical
- * presentation form (“-” in “1-2” becomes “︲”) and marks it upright.
- * A font's OpenType alternate takes precedence over the compatibility character.
- * `verticalizePunctuation` cannot do this earlier: it doesn't know which
- * characters {@link determineLineVerticals} draws upright.
+ * Marks punctuation surrounded by upright characters as upright. Uses a compatibility
+ * character when the font has no vertical alternate.
  *
- * Returns whether anything in `chars` was replaced.
+ * @returns whether any character in `chars` was replaced
  */
 function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[], verticalForms: boolean[]): boolean {
     let replaced = false;
@@ -476,17 +473,10 @@ function hasSidewaysTextBeside(codePoints: number[], index: number, step: -1 | 1
 }
 
 /**
- * Returns, for each grapheme cluster of a vertically laid out line label, whether
- * its glyph is drawn upright rather than lying along the line, and updates
- * `line` with vertical presentation forms of punctuation.
- *
- * A run passed to {@link runIsUpright} is a maximal sequence of non-upright
- * characters that are neither whitespace nor inline images.
- *
- * Counted in clusters, to line up with `getSection` and the layout loop. A cluster's orientation is
- * that of the character it starts with. Runs are classified before applying vertical alternates,
- * which can make neutral-only or punctuation-only runs upright without splitting Latin runs.
- * Runs are reclassified after unused alternates fall back to compatibility punctuation.
+ * Returns an upright flag for each grapheme cluster and applies vertical punctuation to `line`.
+ * Runs use each cluster's first codepoint and end at upright characters, whitespace or inline images.
+ * Font alternates do not split runs. Runs are reclassified after unused alternates fall back
+ * to compatibility characters.
  */
 function determineLineVerticals(line: TaggedString, glyphMap: GlyphMap): boolean[] {
     const chars = line.graphemes().slice();
