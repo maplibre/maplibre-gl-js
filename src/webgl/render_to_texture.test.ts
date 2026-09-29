@@ -29,31 +29,36 @@ describe('render to texture', () => {
         id: 'maine-background',
         type: 'background',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as BackgroundStyleLayer;
     const fillLayer = {
         id: 'maine-fill',
         type: 'fill',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as FillStyleLayer;
     const rasterLayer = {
         id: 'maine-raster',
         type: 'raster',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as RasterStyleLayer;
     const hillshadeLayer = {
         id: 'maine-hillshade',
         type: 'line',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as HillshadeStyleLayer;
     const lineLayer = {
         id: 'maine-line',
         type: 'line',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as LineStyleLayer;
     const symbolLayer = {
         id: 'maine-symbol',
@@ -63,7 +68,8 @@ describe('render to texture', () => {
             'text-field': 'maine',
             'symbol-placement': 'line'
         },
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as SymbolStyleLayer;
 
     let layersDrawn = 0;
@@ -451,6 +457,25 @@ describe('render to texture', () => {
         expect(farTile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
         delete style._layers['maine-track'];
+    });
+
+    test('releases cached textures while a rendered-to-texture layer has a paint transition', () => {
+        (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
+        style._order = ['maine-fill', 'maine-symbol'];
+        const obj = {texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
+        tile.rttObjects[0] = obj;
+
+        const transitioningFill = {...fillLayer, hasTransition: () => true} as any as FillStyleLayer;
+        style._layers['maine-fill'] = transitioningFill;
+
+        rtt.prepareForRender(style, 0);
+        expect(tile.getRTT(0)).toBeUndefined();
+
+        style._layers['maine-fill'] = fillLayer;
+        tile.rttObjects[0] = obj;
+        rtt.prepareForRender(style, 0);
+        expect(tile.getRTT(0)).toBe(obj);
     });
 
     test('a source data change releases immediately even while the zoom is changing', () => {

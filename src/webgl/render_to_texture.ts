@@ -95,7 +95,8 @@ export class RenderToTexture {
      * source tiles under them are re-rendered one per frame too, `needsFollowUpFrame` bringing in the rest.
      * Textures whose visible layer set changed (a layer entered or left its zoom range) are kept while the zoom
      * is changing and then all re-rendered in the same frame, since a tile-by-tile change would show; a source
-     * data change re-renders immediately.
+     * data change re-renders immediately. Textures are also released while any rendered-to-texture layer has
+     * an active paint transition, so each frame picks up the current transition value.
      */
     prepareForRender(style: Style, zoom: number): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
@@ -142,8 +143,18 @@ export class RenderToTexture {
         // check tiles to render
         this.needsFollowUpFrame = false;
         const moving = zoomChanged || this.painter.options.moving;
+        const paintTransitioning = this._renderableLayerIds.some(id => {
+            const layer = style._layers[id];
+            return LAYERS_TO_TEXTURES[layer.type] && layer.hasTransition();
+        });
         let staleTileReleased = false;
         for (const tile of this._renderableTiles) {
+            if (paintTransitioning) {
+                // A paint transition changes what a re-render would draw on every frame without changing the
+                // texture fingerprint, so the cached texture must be released to pick up the new values.
+                tile.releaseRTT(this.painter);
+                continue;
+            }
             const difference = this._textureDifference(tile);
             if (difference === 'none') continue;
             if ((difference === 'zoom' && moving) || (difference === 'visibleLayers' && zoomChanged)) {
