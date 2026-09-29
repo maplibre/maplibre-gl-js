@@ -116,9 +116,15 @@ export type AnchoredCameraOptions = {
  */
 export type CameraForBoundsOptions = CameraOptions & {
     /**
-     * The amount of padding in pixels to add to the given bounds.
+     * The amount of padding in pixels to add to the given bounds, on top of the map's current padding.
      */
     padding?: number | PaddingOptions;
+    /**
+     * If `true`, `padding` replaces the map's current padding instead of adding to it, and is returned with the result.
+     * This will become the default in version 7.
+     * @defaultValue false
+     */
+    absolutePadding?: boolean;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -200,6 +206,12 @@ export type FitBoundsOptions = FlyToOptions & {
      * @defaultValue false
      */
     linear?: boolean;
+    /**
+     * If `true`, `padding` replaces the map's current padding instead of adding to it, and the map transitions to it.
+     * This will become the default in version 7.
+     * @defaultValue false
+     */
+    absolutePadding?: boolean;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -567,7 +579,11 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    /**
+     * Returns {@link JumpToOptions} so the result can carry `padding` when `absolutePadding` is set.
+     * Once that is the default, `padding` can move onto {@link CameraOptions} and this can return it.
+     */
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         bounds = LngLatBounds.convert(bounds).adjustAntiMeridian();
         const bearing = options?.bearing || 0;
 
@@ -583,7 +599,8 @@ export class Camera extends Evented<MapEventType> {
      * @param p1 - Second point
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - the camera options
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     *      plus `padding` when `absolutePadding` is set.
      *      If map is unable to fit, method will warn and return undefined.
      * @example
      * ```ts
@@ -595,7 +612,7 @@ export class Camera extends Evented<MapEventType> {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -623,11 +640,16 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         const bounds = new LngLatBounds(p0, p1);
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
-        if (result && this._zoomSnap) {
+        const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
+        const fitPadding = options.absolutePadding ? noPadding : padding;
+        const mapPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
+
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr);
+        if (!result) return undefined;
+        if (this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
         }
-        return result;
+        return options.absolutePadding ? {...result, padding} : result;
     }
 
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
@@ -648,13 +670,18 @@ export class Camera extends Evented<MapEventType> {
             eventData);
     }
 
-    _fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any): this {
+    _fitInternal(calculatedOptions?: JumpToOptions, options?: FitBoundsOptions, eventData?: any): this {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
         options = extend(calculatedOptions, options);
-        // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
-        delete options.padding;
+        if (options.absolutePadding) {
+            options.padding = calculatedOptions.padding;
+            delete options.absolutePadding;
+        } else {
+            // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
+            delete options.padding;
+        }
 
         return options.linear ?
             this.easeTo(options, eventData) :
