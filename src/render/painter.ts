@@ -95,10 +95,11 @@ export class Painter {
     emptyProgramConfiguration: ProgramConfiguration;
     width: number;
     height: number;
-    pixelRatio: number;
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
     tileExtentMesh: Mesh;
+    /** A quad covering the viewport in clip space, which the sky and the atmosphere are drawn on. */
+    skyMesh: Mesh;
 
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
@@ -150,7 +151,6 @@ export class Painter {
     resize(width: number, height: number, pixelRatio: number): void {
         this.width = Math.round(width * pixelRatio);
         this.height = Math.round(height * pixelRatio);
-        this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
         if (this.style) {
@@ -217,6 +217,22 @@ export class Painter {
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
         this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
+
+        const skyArray = new PosArray();
+        skyArray.emplaceBack(-1, -1);
+        skyArray.emplaceBack(1, -1);
+        skyArray.emplaceBack(1, 1);
+        skyArray.emplaceBack(-1, 1);
+
+        const skyIndices = new TriangleIndexArray();
+        skyIndices.emplaceBack(0, 1, 2);
+        skyIndices.emplaceBack(0, 2, 3);
+
+        this.skyMesh = new Mesh(
+            context.createVertexBuffer(skyArray, posAttributes.members),
+            context.createIndexBuffer(skyIndices),
+            SegmentVector.simpleSegment(0, 0, skyArray.length, skyIndices.length)
+        );
     }
 
     /**
@@ -264,7 +280,7 @@ export class Painter {
         this.patternAtlas = style.patternAtlas;
         this.glyphManager = style.glyphManager;
 
-        updateFrameUniformBuffer(this.context.frameUniformBuffer, transform, data, this.pixelRatio);
+        updateFrameUniformBuffer(this.context.frameUniformBuffer, transform, data);
 
         this.imageManager.beginFrame();
         releaseProjectionUniformBuffers(this.context);
@@ -329,7 +345,7 @@ export class Painter {
         frameRenderContext.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
+        if (data.sky) this.drawFunctions.sky(this, data.sky);
 
         frameRenderContext.setDepthRangeFor3D(style._order.length);
 
@@ -382,7 +398,7 @@ export class Painter {
 
         // Render atmosphere, only for Globe projection
         if (data.isRenderingGlobe) {
-            this.drawFunctions.atmosphere(this, this.style.sky, this.style.light);
+            this.drawFunctions.atmosphere(this, data.sky, data.light);
         }
 
         if (data.showTileBoundaries) {
@@ -641,6 +657,8 @@ export class Painter {
         if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
         if (this.tileExtentMesh) this.tileExtentMesh.vertexBuffer?.destroy();
         if (this.tileExtentMesh) this.tileExtentMesh.indexBuffer?.destroy();
+        this.skyMesh?.destroy();
+        this.skyMesh = null;
 
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();

@@ -6,7 +6,7 @@ import {
     Uniform3f
 } from '../uniform_binding.ts';
 import {mat3, vec3} from 'gl-matrix';
-import {extend} from '../../util/util.ts';
+import {extend, sphericalToCartesian} from '../../util/util.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -77,21 +77,21 @@ const fillExtrusionUniformValues = (
     opacity: number,
     translate: [number, number],
 ): UniformValues<FillExtrusionUniformsType> => {
-    const light = painter.style.light;
-    const lightPos = light.getCartesianPosition();
+    const light = painter.frameRenderContext.data.light;
+    const lightPos = sphericalToCartesian(light.position);
     const lightMat = mat3.create();
-    if (light.properties.get('anchor') === 'viewport') {
+    if (light.anchor === 'viewport') {
         mat3.fromRotation(lightMat, painter.frameRenderContext.transform.bearingInRadians);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
     const transformedLightPos = painter.frameRenderContext.transform.transformLightDirection(lightPos);
 
-    const lightColor = light.properties.get('color');
+    const lightColor = light.color;
 
     return {
         'u_lightpos': lightPos,
         'u_lightpos_globe': transformedLightPos,
-        'u_lightintensity': light.properties.get('intensity'),
+        'u_lightintensity': light.intensity,
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
         'u_vertical_gradient': +shouldUseVerticalGradient,
         'u_opacity': opacity,

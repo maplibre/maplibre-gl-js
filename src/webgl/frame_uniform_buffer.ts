@@ -25,7 +25,7 @@ export function createFrameUniformBuffer(context: Context): UniformBuffer {
     return new UniformBuffer(context, UBO_BINDINGS.FrameUBO, layout);
 }
 
-export function updateFrameUniformBuffer(buffer: UniformBuffer, transform: IReadonlyTransform, data: FrameRenderData, pixelRatio: number): void {
+export function updateFrameUniformBuffer(buffer: UniformBuffer, transform: IReadonlyTransform, data: FrameRenderData): void {
     const f32 = buffer.pending;
     const gl = buffer.context.gl;
     f32[offsets.u_units_to_pixels] = 1 / transform.pixelsToGLUnits[0];
@@ -35,7 +35,7 @@ export function updateFrameUniformBuffer(buffer: UniformBuffer, transform: IRead
     f32[offsets.u_camera_to_center_distance] = transform.cameraToCenterDistance;
     f32[offsets.u_symbol_fade_change] = data.fadeDuration ? data.symbolFadeChange : 1;
     f32[offsets.u_aspect_ratio] = transform.width / transform.height;
-    f32[offsets.u_device_pixel_ratio] = pixelRatio;
+    f32[offsets.u_device_pixel_ratio] = data.pixelRatio;
     f32[offsets.u_viewport_size] = transform.width;
     f32[offsets.u_viewport_size + 1] = transform.height;
     f32[offsets.u_pixel_extrude_scale] = 1 / transform.width;
