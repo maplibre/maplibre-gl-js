@@ -48,8 +48,8 @@ export function drawSky(painter: Painter, sky: Sky): void {
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
-    const program = painter.useProgram('sky');
+    const colorMode = painter.frameRenderContext.colorModeForRenderPass();
+    const program = painter.frameRenderContext.useProgram('sky');
 
     const mesh = getMesh(context, sky);
 
@@ -80,7 +80,7 @@ function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
 export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     const context = painter.context;
     const gl = context.gl;
-    const program = painter.useProgram('atmosphere');
+    const program = painter.frameRenderContext.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
     const transform = painter.frameRenderContext.transform;
 

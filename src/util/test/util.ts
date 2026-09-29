@@ -11,6 +11,8 @@ import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
+import {shaders} from '../../shaders/shaders.ts';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../../geo/projection/mercator_projection.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
@@ -389,6 +391,7 @@ export function createFrameRenderData(): FrameRenderData {
         symbolFadeChange: 1,
         anisotropicFilterPitch: 20,
         projectionTransition: 0,
-        isRenderingGlobe: false
+        isRenderingGlobe: false,
+        projectionShaderVariant: {name: MercatorShaderVariantKey, define: MercatorShaderDefine, prelude: shaders.projectionMercator}
     };
 }

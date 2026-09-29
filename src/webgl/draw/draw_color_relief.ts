@@ -4,8 +4,8 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {
     colorReliefUniformValues
 } from '../program/color_relief_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {StencilMode} from '../stencil_mode.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -20,8 +20,8 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
 
-    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
-    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const colorMode = frameRenderContext.colorModeForRenderPass();
 
     // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
     // See comments in draw_raster.ts for more details.
@@ -58,7 +58,7 @@ function renderColorRelief(
     const projection = painter.style.projection;
     const context = painter.context;
     const gl = context.gl;
-    const program = painter.useProgram('colorRelief');
+    const program = frameRenderContext.useProgram('colorRelief');
     const align = !frameRenderContext.data.moving;
 
     const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
@@ -100,9 +100,9 @@ function renderColorRelief(
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
 
-        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
-        const projectionData = getProjectionDataForTile(frameRenderContext, coord, {aligned: align});
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
