@@ -4,18 +4,19 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {drawTerrainHeightMap} from './draw_terrain.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {RenderContext} from '../../render/render_context.ts';
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import type {TerrainHeightMapTarget} from '../../render/terrain.ts';
 
-export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderContext: RenderContext): void {
+export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, frameRenderContext: FrameRenderContext): void {
 
-    const {isRenderingGlobe, terrain} = renderContext;
+    const {isRenderingGlobe} = frameRenderContext.data;
+    const {terrain} = frameRenderContext;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
-    const transform = renderContext.transform;
+    const transform = frameRenderContext.transform;
 
     const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
@@ -45,32 +46,32 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
                 applyTerrainMatrix: params.applyTerrainMatrix,
             });
         },
-        renderTerrainHeightMap: terrain ? (target: TerrainHeightMapTarget) => drawTerrainHeightMap(painter, terrain, target) : undefined
+        renderTerrainHeightMap: terrain ? (target: TerrainHeightMapTarget) => drawTerrainHeightMap(frameRenderContext, terrain, target) : undefined
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
 
-    if (renderContext.currentPass === 'offscreen') {
+    if (frameRenderContext.currentPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
             painter.setCustomLayerDefaults();
-            context.setColorMode(painter.colorModeForRenderPass());
+            context.setColorMode(frameRenderContext.colorModeForRenderPass());
 
             prerender.call(implementation, context.gl, customLayerArgs);
 
             context.setDirty();
             painter.setBaseState();
         }
-    } else if (renderContext.currentPass === 'translucent') {
+    } else if (frameRenderContext.currentPass === 'translucent') {
 
         painter.setCustomLayerDefaults();
 
-        context.setColorMode(painter.colorModeForRenderPass());
+        context.setColorMode(frameRenderContext.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
 
         const depthMode = renderingMode === '3d' ?
-            painter.getDepthModeFor3D() :
-            painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+            frameRenderContext.getDepthModeFor3D() :
+            frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
         context.setDepthMode(depthMode);
 
