@@ -38,6 +38,9 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(transform);
+    // The sky is a fullscreen quad in device pixels, while the map projects around the
+    // padded viewport center, so the horizon must be anchored at the padded center to stay aligned.
+    const centerPoint = transform.centerPoint;
     const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
     const globePosition = getGlobeCenterInViewSpace(transform);
@@ -45,8 +48,8 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     return {
         'u_sky_color': sky.properties.get('sky-color'),
         'u_horizon_color': sky.properties.get('horizon-color'),
-        'u_horizon': [(transform.width / 2 - mercatorHorizon * sinRoll)  * pixelRatio,
-            (transform.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
+        'u_horizon': [(centerPoint.x - mercatorHorizon * sinRoll) * pixelRatio,
+            (centerPoint.y + mercatorHorizon * cosRoll) * pixelRatio],
         'u_horizon_normal': [-sinRoll, cosRoll],
         'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
         'u_sky_blend': skyBlend,
