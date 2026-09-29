@@ -641,10 +641,10 @@ export class Camera extends Evented<MapEventType> {
         const bounds = new LngLatBounds(p0, p1);
 
         const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
-        const boundsPadding = options.absolutePadding ? noPadding : padding;
-        const viewportPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
+        const fitPadding = options.absolutePadding ? noPadding : padding;
+        const mapPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, boundsPadding, viewportPadding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr);
         if (!result) return undefined;
         if (this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);

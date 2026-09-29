@@ -127,7 +127,11 @@ export interface ICameraHelper {
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, boundsPadding: PaddingOptions, viewportPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+    /**
+     * @param fitPadding - The `padding` option of `cameraForBounds`: the space wanted around the bounds.
+     * @param mapPadding - The map's own padding, as in `map.getPadding()`, which the bounds must also stay clear of.
+     */
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void;
 
@@ -165,7 +169,7 @@ export function updateRotation(args: UpdateRotationArgs): void {
     }
 }
 
-export function cameraForBoxAndBearing(options: CameraForBoundsOptions, boundsPadding: PaddingOptions, viewportPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
+export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
     // Consider all corners of the rotated bounding box derived from the given points
     // when find the camera position that fits the given points.
 
@@ -194,8 +198,8 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, boundsPa
     // Calculate zoom: consider the original bbox and both paddings.
     const size = upperRight.sub(lowerLeft);
 
-    const availableWidth = (tr.width - (viewportPadding.left + viewportPadding.right + boundsPadding.left + boundsPadding.right));
-    const availableHeight = (tr.height - (viewportPadding.top + viewportPadding.bottom + boundsPadding.top + boundsPadding.bottom));
+    const availableWidth = (tr.width - (mapPadding.left + mapPadding.right + fitPadding.left + fitPadding.right));
+    const availableHeight = (tr.height - (mapPadding.top + mapPadding.bottom + fitPadding.top + fitPadding.bottom));
     const scaleX = availableWidth / size.x;
     const scaleY = availableHeight / size.y;
 
@@ -206,10 +210,10 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, boundsPa
 
     const zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
 
-    // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of the bounds padding.
+    // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of the fit padding.
     const offset = Point.convert(options.offset);
-    const paddingOffsetX = (boundsPadding.left - boundsPadding.right) / 2;
-    const paddingOffsetY = (boundsPadding.top - boundsPadding.bottom) / 2;
+    const paddingOffsetX = (fitPadding.left - fitPadding.right) / 2;
+    const paddingOffsetY = (fitPadding.top - fitPadding.bottom) / 2;
     const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
     const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
     const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
