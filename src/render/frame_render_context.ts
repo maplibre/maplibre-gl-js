@@ -2,19 +2,23 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {TileManager} from '../tile/tile_manager.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {ColorMode} from '../webgl/color_mode.ts';
+import {StencilMode} from '../webgl/stencil_mode.ts';
+import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Terrain, TerrainData} from './terrain.ts';
 import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {Context} from '../webgl/context.ts';
 import type {Program} from '../webgl/program.ts';
 import type {ProgramCache} from '../webgl/program_cache.ts';
 import type {ProgramConfiguration} from '../data/program_configuration.ts';
 import type {PreparedShader} from '../shaders/shaders.ts';
+import type {Mesh} from './mesh.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -41,6 +45,8 @@ export type FrameRenderData = {
     readonly isRenderingGlobe: boolean;
     /** The projection's shader variant for this frame, undefined until the style has a projection. Globe switches it during its transition. */
     readonly projectionShaderVariant: ProjectionShaderVariant | undefined;
+    /** Whether the projection subdivides tile meshes this frame. */
+    readonly useSubdivision: boolean;
 };
 
 type FrameRenderContextOptions = {
@@ -50,6 +56,8 @@ type FrameRenderContextOptions = {
     context: Context;
     programCache: ProgramCache;
     currentPass: RenderPass;
+    /** Returns the mesh a tile's clipping mask is drawn with. */
+    getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
 };
 
 /** Distinct z-planes within each layer that can be drawn to, implemented with the WebGL depth buffer. */
@@ -81,6 +89,11 @@ export class FrameRenderContext {
     readonly data: FrameRenderData;
     readonly context: Context;
     readonly programCache: ProgramCache;
+    /** The source whose clipping masks are in the stencil buffer. */
+    private currentStencilSource: string;
+    private nextStencilID: number = 1;
+    private tileClippingMaskIDs: Record<string, number> = {};
+    private readonly getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
 
     constructor(options: FrameRenderContextOptions) {
         this.transform = options.transform;
@@ -89,6 +102,7 @@ export class FrameRenderContext {
         this.context = options.context;
         this.programCache = options.programCache;
         this.currentPass = options.currentPass;
+        this.getStencilMesh = options.getStencilMesh;
     }
 
     getProjectionDataForTile(tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
@@ -167,5 +181,154 @@ export class FrameRenderContext {
      */
     opaquePassEnabledForLayer(): boolean {
         return this.currentLayer < this.opaquePassCutoff;
+    }
+
+    /**
+     * Reset the drawing canvas by clearing the stencil buffer so that we can draw
+     * new tiles at the same location, while retaining previously drawn pixels.
+     */
+    clearStencil(): void {
+        this.nextStencilID = 1;
+        this.currentStencilSource = undefined;
+        this.context.clear({stencil: 0});
+    }
+
+    /** Makes the next tile-clipped layer draw its clipping masks again. */
+    invalidateTileClippingMasks(): void {
+        this.currentStencilSource = undefined;
+    }
+
+    /** Draws the clipping masks of a layer's tiles into the stencil buffer, unless its source's masks are already there. */
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[]): void {
+        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
+            return;
+        }
+
+        this.currentStencilSource = layer.source;
+
+        if (this.nextStencilID + tileIDs.length > 256) {
+            this.clearStencil();
+        }
+
+        const context = this.context;
+        context.setColorMode(ColorMode.disabled);
+        context.setDepthMode(DepthMode.disabled);
+
+        const stencilRefs: Record<string, number> = {};
+        for (const tileID of tileIDs) {
+            stencilRefs[tileID.key] = this.nextStencilID++;
+        }
+
+        if (this.data.useSubdivision) {
+            this.renderTileMasks(stencilRefs, tileIDs, true);
+        }
+        this.renderTileMasks(stencilRefs, tileIDs, false);
+
+        this.tileClippingMaskIDs = stencilRefs;
+    }
+
+    private renderTileMasks(tileStencilRefs: Record<string, number>, tileIDs: OverscaledTileID[], useBorders: boolean): void {
+        const context = this.context;
+        const gl = context.gl;
+        const program = this.useProgram('clippingMask');
+
+        for (const tileID of tileIDs) {
+            const stencilRef = tileStencilRefs[tileID.key];
+            const terrainData = this.getTerrainDataForTile(tileID);
+            const mesh = this.getStencilMesh(tileID.canonical, useBorders);
+            const projectionData = this.getProjectionDataForTile(tileID);
+
+            program.draw(context, gl.TRIANGLES, DepthMode.disabled,
+                new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
+                ColorMode.disabled, this.isRenderingToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                mesh.indexBuffer, mesh.segments);
+        }
+    }
+
+    /** Returns a stencil mode that draws each pixel of a 3D layer only once. */
+    stencilModeFor3D(): StencilMode {
+        this.currentStencilSource = undefined;
+
+        if (this.nextStencilID + 1 > 256) {
+            this.clearStencil();
+        }
+
+        const id = this.nextStencilID++;
+        const gl = this.context.gl;
+        return new StencilMode({func: gl.NOTEQUAL, mask: 0xFF}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+    }
+
+    stencilModeForClipping(tileID: OverscaledTileID): StencilMode {
+        const gl = this.context.gl;
+        return new StencilMode({func: gl.EQUAL, mask: 0xFF}, this.tileClippingMaskIDs[tileID.key], 0x00, gl.KEEP, gl.KEEP, gl.REPLACE);
+    }
+
+    /**
+     * Sort coordinates by Z as drawing tiles is done in Z-descending order.
+     * All children with the same Z write the same stencil value.  Children
+     * stencil values are greater than parent's.  This is used only for raster
+     * and raster-dem tiles, which are already clipped to tile boundaries, to
+     * mask area of tile overlapped by children tiles.
+     * Stencil ref values continue the range used by the tile clipping masks.
+     *
+     * Attention: This function changes the next stencil ID even if the result of it
+     * is not used, which might cause problems when rendering due to invalid stencil
+     * values.
+     * Returns [StencilMode for tile overscaleZ map, sortedCoords].
+     */
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: OverscaledTileID[]): [Record<number, Readonly<StencilMode>>, OverscaledTileID[]] {
+        const gl = this.context.gl;
+        const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
+        const minTileZ = coords[coords.length - 1].overscaledZ;
+        const stencilValues = coords[0].overscaledZ - minTileZ + 1;
+        if (stencilValues > 1) {
+            this.currentStencilSource = undefined;
+            if (this.nextStencilID + stencilValues > 256) {
+                this.clearStencil();
+            }
+            const zToStencilMode: Record<number, Readonly<StencilMode>> = {};
+            for (let i = 0; i < stencilValues; i++) {
+                zToStencilMode[i + minTileZ] = new StencilMode({func: gl.GEQUAL, mask: 0xFF}, i + this.nextStencilID, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+            }
+            this.nextStencilID += stencilValues;
+            return [zToStencilMode, coords];
+        }
+        return [{[minTileZ]: StencilMode.disabled}, coords];
+    }
+
+    stencilConfigForOverlapTwoPass(tileIDs: OverscaledTileID[]): [
+        Record<number, Readonly<StencilMode>>, // borderless tiles - high priority & high stencil values
+        Record<number, Readonly<StencilMode>>, // tiles with border - low priority
+        OverscaledTileID[]
+    ] {
+        const gl = this.context.gl;
+        const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
+        const minTileZ = coords[coords.length - 1].overscaledZ;
+        const stencilValues = coords[0].overscaledZ - minTileZ + 1;
+
+        this.clearStencil();
+
+        if (stencilValues > 1) {
+            const zToStencilModeHigh: Record<number, Readonly<StencilMode>> = {};
+            const zToStencilModeLow: Record<number, Readonly<StencilMode>> = {};
+            for (let i = 0; i < stencilValues; i++) {
+                zToStencilModeHigh[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, stencilValues + 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+                zToStencilModeLow[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+            }
+            this.nextStencilID = stencilValues * 2 + 1;
+            return [
+                zToStencilModeHigh,
+                zToStencilModeLow,
+                coords
+            ];
+        } else {
+            this.nextStencilID = 3;
+            return [
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 2, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 1, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                coords
+            ];
+        }
     }
 }

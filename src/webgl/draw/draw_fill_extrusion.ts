@@ -40,7 +40,7 @@ export function drawFillExtrusion(painter: Painter, tileManager: TileManager, la
             // same depth value as the closest fragment in the previous pass. Use the stencil buffer
             // to prevent the second draw in cases where we have coincident polygons.
             drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
-                painter.stencilModeFor3D(),
+                frameRenderContext.stencilModeFor3D(),
                 frameRenderContext.colorModeForRenderPass(), frameRenderContext);
         }
     }

@@ -109,7 +109,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent'});
+        painterMock.frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
         painterMock.style = {
             map: {
                 projection: {}

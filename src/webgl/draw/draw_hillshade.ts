@@ -33,12 +33,12 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
         // See comments in draw_raster.ts for more details.
         if (useSubdivision) {
             // Two-pass rendering
-            const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+            const [stencilBorderless, stencilBorders, coords] = frameRenderContext.stencilConfigForOverlapTwoPass(tileIDs);
             renderHillshade(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, frameRenderContext); // draw without borders
             renderHillshade(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, frameRenderContext); // draw with borders
         } else {
             // Simple rendering
-            const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
+            const [stencil, coords] = frameRenderContext.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
             renderHillshade(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, frameRenderContext);
         }
     }

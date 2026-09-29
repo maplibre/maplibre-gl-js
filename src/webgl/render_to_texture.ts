@@ -214,12 +214,12 @@ export class RenderToTexture {
                 const obj = tile.acquireRTT(painter, stack, this.rttSize);
                 painter.bindRTT(obj);
                 painter.context.clear({color: Color.transparent, stencil: 0});
-                painter.currentStencilSource = undefined;
+                frameRenderContext.invalidateTileClippingMasks();
                 for (const layerId of layers) {
                     const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
-                    painter.renderTileClippingMasks(layer, coords);
+                    frameRenderContext.renderTileClippingMasks(layer, coords);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, frameRenderContext);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }

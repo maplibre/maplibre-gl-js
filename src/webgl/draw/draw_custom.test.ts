@@ -45,7 +45,7 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent'});
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
         mockPainter.frameRenderContext = frameRenderContext;
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);

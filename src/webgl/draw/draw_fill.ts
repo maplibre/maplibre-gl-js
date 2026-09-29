@@ -167,7 +167,7 @@ function drawFillTiles(
                 fillOutlineUniformValues(translateForUniforms);
         }
 
-        const stencil = painter.stencilModeForClipping(coord);
+        const stencil = frameRenderContext.stencilModeForClipping(coord);
 
         program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
