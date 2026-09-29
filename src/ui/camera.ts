@@ -675,7 +675,10 @@ export class Camera extends Evented<MapEventType> {
 
         const oldZoom = tr.zoom;
         if (this.terrain) {
-            tr.setElevation(this.terrain.getElevationForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr));
+            const center = options.center ? LngLat.convert(options.center) : tr.center;
+            if (this.terrain.isElevationLoaded(center, tr)) {
+                tr.setElevation(this.terrain.getElevationForLngLat(center, tr));
+            }
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
@@ -941,8 +944,15 @@ export class Camera extends Evented<MapEventType> {
         }
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
-        if (this.getCenterClampedToGround()) {
-            tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
+        if (!this.getCenterClampedToGround()) {
+            return;
+        }
+        if (!this.terrain) {
+            tr.setElevation(0);
+            return;
+        }
+        if (this.terrain.isElevationLoaded(tr.center, tr)) {
+            tr.setElevation(this.terrain.getElevationForLngLat(tr.center, tr));
         }
     }
 

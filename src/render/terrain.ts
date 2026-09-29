@@ -250,6 +250,36 @@ export class Terrain {
             const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
             if (sample.demLoaded) return sample.elevation;
         }
+        return this.getElevationForLngLatZoom(lnglat, this._getFallbackZoom(transform));
+    }
+
+    /**
+     * Whether the elevation {@link getElevationForLngLat} reports at the location is backed by loaded
+     * DEM data — the drawn terrain surface, or the fallback tile it covers — rather than the 0 it
+     * reports while the DEM is still loading.
+     * @param lnglat - the location
+     * @param transform - the transform the fallback tile is located with
+     * @returns true where loaded DEM data backs the elevation
+     */
+    isElevationLoaded(lnglat: LngLat, transform: IReadonlyTransform): boolean {
+        const index = this.getCoverageIndex();
+        if (index) {
+            const mercator = MercatorCoordinate.fromLngLat(lnglat);
+            if (sampleAt(index, this.exaggeration, mercator.x, mercator.y).demLoaded) return true;
+        }
+        const zoom = this._getFallbackZoom(transform);
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return false;
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return !!this.tileManager.getSourceTile(tileID, true)?.dem;
+    }
+
+    /**
+     * The zoom {@link getElevationForLngLat} falls back to where no drawn tile has DEM data:
+     * the deepest zoom of the 512 px tiles covering the view.
+     * @param transform - the transform to locate the covering tiles with
+     * @returns the fallback zoom
+     */
+    private _getFallbackZoom(transform: IReadonlyTransform): number {
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
         let zoom = 0;
         for (const tile of terrainCoveringTiles) {
@@ -257,7 +287,7 @@ export class Terrain {
                 zoom = Math.min(tile.canonical.z, this.tileManager.maxzoom);
             }
         }
-        return this.getElevationForLngLatZoom(lnglat, zoom);
+        return zoom;
     }
 
     /**

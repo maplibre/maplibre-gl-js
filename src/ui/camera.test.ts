@@ -155,6 +155,30 @@ describe('jumpTo', () => {
         expect(camera.getCenter()).toEqual({lng: 1, lat: 2});
     });
 
+    test('keeps the center elevation while the DEM under the new center is loading', () => {
+        const terrain = {
+            getElevationForLngLat: () => 0,
+            getElevationForLngLatZoom: () => 0,
+            isElevationLoaded: () => false
+        } as any as Terrain;
+        const {camera: terrainCamera} = createCamera({terrain});
+        terrainCamera.transform.setElevation(1000);
+        terrainCamera.jumpTo({center: [1, 2]});
+        expect(terrainCamera.getCenterElevation()).toBe(1000);
+    });
+
+    test('sets the center elevation once the DEM under the new center is loaded', () => {
+        const terrain = {
+            getElevationForLngLat: () => 4800,
+            getElevationForLngLatZoom: () => 4800,
+            isElevationLoaded: () => true
+        } as any as Terrain;
+        const {camera: terrainCamera} = createCamera({terrain});
+        terrainCamera.transform.setElevation(1000);
+        terrainCamera.jumpTo({center: [1, 2]});
+        expect(terrainCamera.getCenterElevation()).toBe(4800);
+    });
+
     test('sets zoom', () => {
         camera.jumpTo({zoom: 3});
         expect(camera.getZoom()).toBe(3);
@@ -2036,7 +2060,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
+        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0, isElevationLoaded: () => true} as any as Terrain;
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2060,7 +2084,7 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
+        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0, isElevationLoaded: () => true} as any as Terrain;
         const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
@@ -2110,6 +2134,30 @@ describe('flyTo', () => {
 
         camera._finalizeElevation();
         expect(camera.elevationFreeze).toBeFalsy();
+    });
+
+    test('applyTerrainChange keeps the center elevation while the DEM under the center is loading', () => {
+        const terrain = {
+            getElevationForLngLat: () => 0,
+            getMinTileElevationForLngLatZoom: () => 0,
+            isElevationLoaded: () => false
+        } as any as Terrain;
+        const {camera: terrainCamera} = createCamera({terrain, centerClampedToGround: true});
+        terrainCamera.transform.setElevation(1000);
+        terrainCamera.applyTerrainChange();
+        expect(terrainCamera.getCenterElevation()).toBe(1000);
+    });
+
+    test('applyTerrainChange sets the center elevation once the DEM under the center is loaded', () => {
+        const terrain = {
+            getElevationForLngLat: () => 4800,
+            getMinTileElevationForLngLatZoom: () => 0,
+            isElevationLoaded: () => true
+        } as any as Terrain;
+        const {camera: terrainCamera} = createCamera({terrain, centerClampedToGround: true});
+        terrainCamera.transform.setElevation(1000);
+        terrainCamera.applyTerrainChange();
+        expect(terrainCamera.getCenterElevation()).toBe(4800);
     });
 
     test('respects zoomSnap', () => {

@@ -356,6 +356,7 @@ describe('Terrain changing under and around a gesture', () => {
     test('after easeTo or flyTo the center elevation follows the terrain again on the next frame', async () => {
         const map = await createMapOverTerrain(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'isElevationLoaded').mockReturnValue(true);
 
         map.easeTo({center: [2, 2], zoom: 12, duration: 0});
         terrainElevation.mockReturnValue(2000);
@@ -373,6 +374,7 @@ describe('Terrain changing under and around a gesture', () => {
     test('the gesture after terrain changes at rest starts from the camera as rendered, after a click, a DEM tile landing and the per-frame clamp moving it further', async () => {
         const map = await createMapOverTerrain(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'isElevationLoaded').mockReturnValue(true);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 110, clientY: 150});
@@ -400,6 +402,7 @@ describe('Terrain changing under and around a gesture', () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'isElevationLoaded').mockReturnValue(true);
 
         map.setMaxPitch(70);
         terrainElevation.mockReturnValue(1000);
@@ -520,6 +523,7 @@ describe('Keep camera outside terrain', () => {
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
         terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
+        terrainStub.isElevationLoaded = vi.fn(() => true);
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;
 

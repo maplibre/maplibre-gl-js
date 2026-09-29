@@ -341,6 +341,48 @@ describe('Terrain', () => {
         expect(terrain.getElevationForLngLat(new LngLat(90, -40), transform)).toBeCloseTo(100, 6);
     });
 
+    test('isElevationLoaded is true where the drawn tile\'s DEM is loaded', () => {
+        const {terrain, transform} = createFlatTerrain(500);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+
+        expect(terrain.isElevationLoaded(new LngLat(0, 40), transform)).toBe(true);
+    });
+
+    test('isElevationLoaded is false while the drawn tile\'s DEM is loading', () => {
+        const {terrain, transform} = createFlatTerrain(500);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+        terrain.tileManager.getSourceTile = () => undefined;
+        terrain.resetElevationCache();
+
+        expect(terrain.isElevationLoaded(new LngLat(0, 40), transform)).toBe(false);
+    });
+
+    test('isElevationLoaded falls back to the covering tile where no tile is drawn', () => {
+        const {terrain, transform} = createFlatTerrain(500);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+        transform.setZoom(3); // renders z0 tiles, covering tiles are z3
+        const coveringDEM = createDEM(() => 100);
+        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : ({tileID, dem: coveringDEM}) as any as Tile;
+        terrain.tileManager.getRenderableTiles = () => [];
+        terrain.resetElevationCache();
+
+        expect(terrain.isElevationLoaded(new LngLat(0, 40), transform)).toBe(true);
+    });
+
+    test('isElevationLoaded is false where nothing has DEM data', () => {
+        const {terrain, transform} = createFlatTerrain(500);
+        terrain.tileManager.minzoom = 0;
+        terrain.tileManager.maxzoom = 22;
+        terrain.tileManager.getSourceTile = () => undefined;
+        terrain.tileManager.getRenderableTiles = () => [];
+        terrain.resetElevationCache();
+
+        expect(terrain.isElevationLoaded(new LngLat(0, 40), transform)).toBe(false);
+    });
+
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
         const zoom = 10;
         const painter = {
