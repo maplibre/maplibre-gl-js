@@ -441,7 +441,7 @@ export class SymbolBucket implements Bucket {
         fontStack: string,
         needsVerticalForms: boolean): void {
 
-        const tagged = TaggedString.fromFeature(text, fontStack);
+        const tagged = TaggedString.fromFeature(text, fontStack, false);
         const graphemes = tagged.graphemes();
 
         for (let i = 0; i < graphemes.length; i++) {

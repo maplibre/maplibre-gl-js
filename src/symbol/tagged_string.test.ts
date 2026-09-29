@@ -19,7 +19,7 @@ describe('TaggedString', () => {
                 new FormattedSection('b', null, 2, null, null, null),
             ]);
 
-            const tagged = TaggedString.fromFeature(formatted, 'Test');
+            const tagged = TaggedString.fromFeature(formatted, 'Test', false);
 
             expect(tagged.graphemes()).toEqual(['a\u0301', 'b']);
             expect(tagged.sectionIndex).toEqual([0, 2]);
@@ -39,7 +39,7 @@ describe('TaggedString', () => {
                 new FormattedSection('လား', null, 1, 'Burmese', null, null),
                 new FormattedSection('、a\u0301', null, 2, 'Other', null, null)
             ]);
-            const tagged = TaggedString.fromFeature(formatted, 'Test');
+            const tagged = TaggedString.fromFeature(formatted, 'Test', false);
             const graphemes = tagged.graphemes().slice();
             const sectionIndex = tagged.sectionIndex.slice();
             const glyphMap = {
@@ -59,9 +59,7 @@ describe('TaggedString', () => {
             const tagged = TaggedString.fromFeature(new Formatted([
                 new FormattedSection('𠮷（小）小 ', null, 1, 'Test', null, null),
                 new FormattedSection('A(B)', null, 2, 'Other', null, null)
-            ]), 'Test');
-
-            tagged.verticalizePunctuation({Test: {default: {}, vertical: {
+            ]), 'Test', true, {Test: {default: {}, vertical: {
                 '（': {id: 0xFF08} as StyleGlyph,
                 '）': null
             }}});

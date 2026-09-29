@@ -276,11 +276,7 @@ function shapeText(
     layoutTextSize: number,
     layoutTextSizeThisZoom: number
 ): Shaping | false {
-    const logicalInput = TaggedString.fromFeature(text, defaultFontStack);
-
-    if (writingMode === WritingMode.vertical) {
-        logicalInput.verticalizePunctuation(glyphMap);
-    }
+    const logicalInput = TaggedString.fromFeature(text, defaultFontStack, writingMode === WritingMode.vertical, glyphMap);
 
     const lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
     const lines = stringContainsRTLText(logicalInput.text) ?

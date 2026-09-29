@@ -223,7 +223,8 @@ export class TaggedString {
         return this._graphemes;
     }
 
-    static fromFeature(text: Formatted, defaultFontStack: string): TaggedString {
+    /** Creates tagged text, applying vertical punctuation when requested. */
+    static fromFeature(text: Formatted, defaultFontStack: string, vertical: boolean, glyphMap?: GlyphMap): TaggedString {
         const result = new TaggedString();
         for (const section of text.sections) {
             if (!section.image) {
@@ -232,6 +233,7 @@ export class TaggedString {
                 result.addImageSection(section);
             }
         }
+        if (vertical) result.verticalizePunctuation(glyphMap);
         return result;
     }
 
