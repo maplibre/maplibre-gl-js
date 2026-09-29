@@ -4,8 +4,8 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {debugUniformValues} from '../program/debug_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Style} from '../../style/style.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -70,13 +70,13 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const context = painter.context;
     const gl = context.gl;
 
-    const program = painter.useProgram('debug');
+    const program = frameRenderContext.useProgram('debug');
 
     const depthMode = DepthMode.disabled;
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = frameRenderContext.colorModeForRenderPass();
     const id = '$debug';
-    const terrainData = getTerrainDataForTile(frameRenderContext, coord);
+    const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
 
@@ -92,7 +92,7 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
 
-    const projectionData = getProjectionDataForTile(frameRenderContext, coord);
+    const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
         debugUniformValues(Color.transparent, scaleRatio), null, projectionData, id,

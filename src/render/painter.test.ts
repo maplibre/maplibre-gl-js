@@ -4,7 +4,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-import {StubMap} from '../util/test/util.ts';
+import {StubMap, createFrameRenderData} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
@@ -14,19 +14,7 @@ describe('render', () => {
     let map: any;
     let style: Style;
     let transform: MercatorTransform;
-    const renderOptions = {
-        fadeDuration: 0,
-        moving: false,
-        rotating: false,
-        showOverdrawInspector: false,
-        showPadding: false,
-        showTileBoundaries: false,
-        zooming: false,
-        anisotropicFilterPitch: 20,
-        symbolFadeChange: 1,
-        projectionTransition: 0,
-        isRenderingGlobe: false,
-    };
+    const renderOptions = createFrameRenderData();
 
     beforeEach(() => {
         const gl = createNullGL();

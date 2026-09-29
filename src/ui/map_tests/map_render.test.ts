@@ -230,7 +230,7 @@ describe('symbol fade after the placement guard', () => {
 });
 
 describe('frame render data', () => {
-    test('passes the projection transition to the painter', async () => {
+    test('passes the projection transition and shader variant to the painter', async () => {
         const map = createMap();
         await map.once('idle');
         map.setProjection({type: 'vertical-perspective'});
@@ -239,6 +239,7 @@ describe('frame render data', () => {
 
         expect(map.painter.frameRenderContext.data.projectionTransition).toBe(1);
         expect(map.painter.frameRenderContext.data.isRenderingGlobe).toBe(true);
+        expect(map.painter.frameRenderContext.data.projectionShaderVariant.name).toBe('globe');
         map.remove();
     });
 });

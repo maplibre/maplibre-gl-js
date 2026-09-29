@@ -3,7 +3,7 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {createFrameRenderContext} from '../../render/frame_render_context.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
@@ -35,8 +35,6 @@ describe('drawCustom', () => {
         mockPainter.style = {
             projection: new MercatorProjection(),
         } as any;
-        const frameRenderContext = createFrameRenderContext(transform, null, createFrameRenderData(), 'translucent');
-        mockPainter.frameRenderContext = frameRenderContext;
         mockPainter.context = {
             gl: {},
             setColorMode: () => {},
@@ -47,6 +45,8 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent'});
+        mockPainter.frameRenderContext = frameRenderContext;
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         const tile = new Tile(tileId, 256);

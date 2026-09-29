@@ -1,16 +1,13 @@
 import {now} from '../util/time_control.ts';
 import {mat4} from 'gl-matrix';
-import {TileManager} from '../tile/tile_manager.ts';
 import {EXTENT} from '../data/extent.ts';
 import {SegmentVector} from '../data/segment.ts';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g.ts';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
 import posAttributes from '../data/pos_attributes.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
-import {shaders} from '../shaders/shaders.ts';
-import {Program} from '../webgl/program.ts';
-import {programUniforms} from '../webgl/program/program_uniforms.ts';
 import {Context} from '../webgl/context.ts';
+import {ProgramCache} from '../webgl/program_cache.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';
 import {ColorMode} from '../webgl/color_mode.ts';
@@ -19,8 +16,7 @@ import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
 import {Mesh} from './mesh.ts';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
-import {createFrameRenderContext, getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
+import {FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
 import {destroyProjectionUniformBuffers, releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
@@ -37,6 +33,7 @@ import {isBackgroundStyleLayer} from '../style/style_layer/background_style_laye
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -47,7 +44,6 @@ import type {PatternAtlas} from './pattern_atlas.ts';
 import type {GlyphManager} from './glyph_manager.ts';
 import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
 import type {IndexBuffer} from '../webgl/index_buffer.ts';
-import type {DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
@@ -98,8 +94,6 @@ export class Painter {
      * Resized in place to match the target dimensions.
      */
     layerOpacityFbo: Framebuffer | null;
-    numSublayers: number;
-    depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
     width: number;
     height: number;
@@ -129,8 +123,7 @@ export class Painter {
     currentStencilSource: string;
     nextStencilID: number;
     id: string;
-    _showOverdrawInspector: boolean;
-    cache: {[_: string]: Program<any>};
+    programCache: ProgramCache;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
@@ -142,6 +135,7 @@ export class Painter {
     constructor(gl: WebGL2RenderingContext) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
+        this.programCache = new ProgramCache(this.context);
         this.layerOpacityFbo = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
@@ -149,11 +143,6 @@ export class Painter {
         this.terrainFacilitator = {depthDirty: true, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
-
-        // Within each layer there are multiple distinct z-planes that can be drawn to.
-        // This is implemented using the WebGL depth buffer.
-        this.numSublayers = TileManager.maxOverzooming + TileManager.maxUnderzooming + 1;
-        this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
     }
@@ -269,7 +258,7 @@ export class Painter {
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
-        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
+        this.frameRenderContext.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -318,16 +307,16 @@ export class Painter {
         const projection = this.style.projection;
         const frameRenderContext = this.frameRenderContext;
 
-        const program = this.useProgram('clippingMask');
+        const program = frameRenderContext.useProgram('clippingMask');
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = getTerrainDataForTile(frameRenderContext, tileID);
+            const terrainData = frameRenderContext.getTerrainDataForTile(tileID);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
-            const projectionData = getProjectionDataForTile(frameRenderContext, tileID);
+            const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -348,16 +337,16 @@ export class Painter {
         const projection = this.style.projection;
         const transform = this.frameRenderContext.transform;
 
-        const program = this.useProgram('depth');
-        const depthMode = this.getDepthModeFor3D();
+        const program = this.frameRenderContext.useProgram('depth');
+        const depthMode = this.frameRenderContext.getDepthModeFor3D();
         const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = getTerrainDataForTile(this.frameRenderContext, tileID);
+            const terrainData = this.frameRenderContext.getTerrainDataForTile(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
-            const projectionData = getProjectionDataForTile(this.frameRenderContext, tileID);
+            const projectionData = this.frameRenderContext.getProjectionDataForTile(tileID);
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -453,44 +442,16 @@ export class Painter {
         }
     }
 
-    colorModeForRenderPass(): Readonly<ColorMode> {
-        const gl = this.context.gl;
-        if (this._showOverdrawInspector) {
-            const numOverdrawSteps = 8;
-            const a = 1 / numOverdrawSteps;
-
-            return new ColorMode([gl.CONSTANT_COLOR, gl.ONE], new Color(a, a, a, 0), [true, true, true, true]);
-        } else if (this.frameRenderContext.currentPass === 'opaque') {
-            return ColorMode.unblended;
-        } else {
-            return ColorMode.alphaBlended;
-        }
-    }
-
-    getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode> {
-        if (!this.opaquePassEnabledForLayer()) return DepthMode.disabled;
-        const depth = 1 - ((1 + this.frameRenderContext.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
-        return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
-    }
-
-    getDepthModeFor3D(): Readonly<DepthMode> {
-        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.frameRenderContext.depthRangeFor3D);
-    }
-
-    /*
-     * The opaque pass and 3D layers both use the depth buffer.
-     * Layers drawn above 3D layers need to be drawn using the
-     * painter's algorithm so that they appear above 3D features.
-     * This returns true for layers that can be drawn using the
-     * opaque pass.
-     */
-    opaquePassEnabledForLayer(): boolean {
-        return this.frameRenderContext.currentLayer < this.frameRenderContext.opaquePassCutoff;
-    }
-
     render(style: Style, transform: IReadonlyTransform, data: FrameRenderData): void {
         this.style = style;
-        const frameRenderContext = this.frameRenderContext = createFrameRenderContext(transform, style.map.terrain ?? null, data);
+        const frameRenderContext = this.frameRenderContext = new FrameRenderContext({
+            transform,
+            terrain: style.map.terrain ?? null,
+            data,
+            context: this.context,
+            programCache: this.programCache,
+            currentPass: 'offscreen'
+        });
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
@@ -564,8 +525,7 @@ export class Painter {
         // draw sky first to not overwrite symbols
         if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
-        this._showOverdrawInspector = data.showOverdrawInspector;
-        frameRenderContext.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
+        frameRenderContext.setDepthRangeFor3D(style._order.length);
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
@@ -596,7 +556,7 @@ export class Painter {
 
             if (this.renderToTexture?.renderLayer(layer, frameRenderContext)) continue;
 
-            if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
+            if (!frameRenderContext.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
@@ -820,46 +780,6 @@ export class Painter {
         return !imagePosA || !imagePosB;
     }
 
-    /**
-     * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
-     * @param name - Name of the desired shader.
-     * @param programConfiguration - Configuration of shader's inputs.
-     * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
-     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
-     * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
-     * @returns
-     */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
-        this.cache ||= {};
-        const useTerrain = !!this.frameRenderContext.terrain;
-
-        const projection = this.style.projection;
-
-        const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
-        const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
-        const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
-
-        const configurationKey = (programConfiguration ? programConfiguration.cacheKey : '');
-        const overdrawKey = (this._showOverdrawInspector ? '/overdraw' : '');
-        const terrainKey = (useTerrain ? '/terrain' : '');
-        const definesKey = (defines ? `/${defines.join('/')}` : '');
-
-        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
-
-        this.cache[key] ||= new Program(
-            this.context,
-            shaders[name],
-            programConfiguration,
-            programUniforms[name],
-            this._showOverdrawInspector,
-            useTerrain,
-            projectionPrelude,
-            projectionDefine,
-            defines
-        );
-        return this.cache[key];
-    }
-
     /*
      * Reset some GL state to default values to avoid hard-to-debug bugs
      * in custom layers.
@@ -924,15 +844,7 @@ export class Painter {
         this.context.terrainUniformBuffer.destroy();
         this.context.frameUniformBuffer.destroy();
 
-        if (this.cache) {
-            for (const key in this.cache) {
-                const program = this.cache[key];
-                if (program?.program) {
-                    this.context.gl.deleteProgram(program.program);
-                }
-            }
-            this.cache = {};
-        }
+        this.programCache.destroy();
 
         if (this.context) {
             this.context.setDefault();

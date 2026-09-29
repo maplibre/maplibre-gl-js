@@ -19,8 +19,8 @@ import {
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
@@ -65,7 +65,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
 
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = frameRenderContext.colorModeForRenderPass();
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
     // Compute variable-offsets before painting since icons and text data positioning
@@ -323,7 +323,7 @@ function drawLayerSymbols(
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
-    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
@@ -345,9 +345,9 @@ function drawLayerSymbols(
         const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
         const transformed = pitchWithMap || transform.pitch !== 0;
 
-        const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
+        const program = frameRenderContext.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
-        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];
@@ -380,7 +380,7 @@ function drawLayerSymbols(
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, frameRenderContext.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = getProjectionDataForTile(frameRenderContext, coord);
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
