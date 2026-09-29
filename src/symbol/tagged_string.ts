@@ -5,7 +5,6 @@ import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
-import {hasVerticalForm} from '../style/style_glyph.ts';
 
 import type {GlyphMap} from '../style/style_glyph.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
@@ -263,7 +262,7 @@ export class TaggedString {
             const replacement = replacements.slice(offset, offset + grapheme.length);
             offset += grapheme.length;
             const section = this.getSection(index);
-            return verticals?.[index] !== false && 'fontStack' in section && hasVerticalForm(glyphMap, section.fontStack, grapheme) ?
+            return verticals?.[index] !== false && 'fontStack' in section && glyphMap[section.fontStack]?.vertical?.[grapheme] ?
                 grapheme : replacement;
         });
         this.text = this.cachedGraphemes.join('');

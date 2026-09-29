@@ -18,7 +18,6 @@ import {TaggedString, type SectionOptions, type TextSectionOptions, type ImageSe
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
 import {TextFit} from '../style/style_image.ts';
 import {IMAGE_PADDING} from '../render/image_atlas.ts';
-import {hasVerticalForm} from '../style/style_glyph.ts';
 
 import type {ImagePosition} from '../render/image_atlas.ts';
 import type {StyleGlyph, GlyphMap, GlyphMetrics} from '../style/style_glyph.ts';
@@ -494,7 +493,7 @@ function determineLineVerticals(line: TaggedString, glyphMap: GlyphMap): boolean
     const codePoints = chars.map(char => char.codePointAt(0));
     const verticalForms = chars.map((char, index) => {
         const section = line.getSection(index);
-        return 'fontStack' in section && hasVerticalForm(glyphMap, section.fontStack, char);
+        return 'fontStack' in section && !!glyphMap[section.fontStack]?.vertical?.[char];
     });
     const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
 
@@ -681,7 +680,7 @@ function shapeTextSection(
     glyphMap: GlyphMap,
     glyphPositions: GlyphPositions,
 ): ShapingSectionAttributes | null {
-    const variant = vertical && hasVerticalForm(glyphMap, section.fontStack, key) ? 'vertical' : 'default';
+    const variant = vertical && glyphMap[section.fontStack]?.vertical?.[key] ? 'vertical' : 'default';
     const glyphPosition = glyphPositions[section.fontStack]?.[variant]?.[key];
     const glyph = glyphMap[section.fontStack]?.[variant]?.[key];
     const rectAndMetrics = getRectAndMetrics(glyphPosition, glyph);

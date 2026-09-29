@@ -29,8 +29,3 @@ export type GlyphRequests = Record<string, Record<string, string[]>>;
 
 /** Glyphs keyed by font stack, variant, and grapheme cluster; `null` means unavailable. */
 export type GlyphMap = Record<string, Record<string, Record<string, StyleGlyph | null>>>;
-
-/** Whether the selected font stack provides a usable glyph rendered with `vert` for this grapheme. */
-export function hasVerticalForm(glyphMap: GlyphMap, fontStack: string, grapheme: string): boolean {
-    return !!glyphMap[fontStack]?.vertical?.[grapheme];
-}
