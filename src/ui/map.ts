@@ -1335,7 +1335,7 @@ export class Map extends Evented<MapEventType> {
      * in the viewport. LngLatBounds represent a box that is always axis-aligned with bearing 0.
      * Bounds will be taken in `[sw, ne]` order. Southwest point will always be to the left of the northeast point.
      * @param options - Options object
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, `bearing`, and `pitch`,
      * plus `padding` when `absolutePadding` is set.
      * If map is unable to fit, method will warn and return undefined.
      * @example

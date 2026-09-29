@@ -92,7 +92,7 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
             {top: 50, bottom: 512, left: 50, right: 50},
             tr.padding,
             new LngLatBounds([-10, -10], [10, 10]),
-            0, tr);
+            0, 0, tr);
 
         expect(result).toBeUndefined();
         expect(warn).toHaveBeenCalledTimes(1);

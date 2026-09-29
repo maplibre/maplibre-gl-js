@@ -599,7 +599,7 @@ export class Camera extends Evented<MapEventType> {
      * @param p1 - Second point
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - the camera options
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, `bearing`, and `pitch`,
      *      plus `padding` when `absolutePadding` is set.
      *      If map is unable to fit, method will warn and return undefined.
      * @example
@@ -639,12 +639,13 @@ export class Camera extends Evented<MapEventType> {
         options.padding = padding;
         const tr = this.transform;
         const bounds = new LngLatBounds(p0, p1);
+        const pitch = options.pitch ?? tr.pitch;
 
         const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
         const fitPadding = options.absolutePadding ? noPadding : padding;
         const mapPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, pitch, tr);
         if (!result) return undefined;
         if (this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
