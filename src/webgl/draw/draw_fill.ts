@@ -10,7 +10,7 @@ import {
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
 import type {ColorMode} from '../color_mode.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -19,16 +19,16 @@ import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderContext: RenderContext): void {
+export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
     const layerOpacity = layer.paint.get('fill-layer-opacity');
     if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
     if (layerOpacity < 1) {
-        if (renderContext.currentPass !== 'translucent') return;
+        if (frameRenderContext.currentPass !== 'translucent') return;
         const results = prepareDrawLayerOpacity(painter, layer, coords);
-        drawFillAndOutline(painter, tileManager, layer, coords, renderContext);
+        drawFillAndOutline(painter, tileManager, layer, coords, frameRenderContext);
         drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
     }
@@ -39,21 +39,21 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1;
 
-    if (fillEligibleForOpaque && renderContext.currentPass === 'opaque') {
+    if (fillEligibleForOpaque && frameRenderContext.currentPass === 'opaque') {
         // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
         // its outline (always translucent) runs in the translucent pass below.
         const colorMode = painter.colorModeForRenderPass();
         const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadWrite);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, renderContext);
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, frameRenderContext);
         return;
     }
-    if (fillEligibleForOpaque && renderContext.currentPass === 'translucent') {
+    if (fillEligibleForOpaque && frameRenderContext.currentPass === 'translucent') {
         // Fill already drew in the opaque pass; just draw the outline here.
-        drawOutline(painter, tileManager, layer, coords, renderContext);
+        drawOutline(painter, tileManager, layer, coords, frameRenderContext);
         return;
     }
-    if (renderContext.currentPass === 'translucent') {
-        drawFillAndOutline(painter, tileManager, layer, coords, renderContext);
+    if (frameRenderContext.currentPass === 'translucent') {
+        drawFillAndOutline(painter, tileManager, layer, coords, frameRenderContext);
     }
 }
 
@@ -67,14 +67,14 @@ function drawFillAndOutline(
     tileManager: TileManager,
     layer: FillStyleLayer,
     coords: OverscaledTileID[],
-    renderContext: RenderContext
+    frameRenderContext: FrameRenderContext
 ) {
     const colorMode = painter.colorModeForRenderPass();
 
     const fillDepthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
-    drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, renderContext);
+    drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, frameRenderContext);
 
-    drawOutline(painter, tileManager, layer, coords, renderContext);
+    drawOutline(painter, tileManager, layer, coords, frameRenderContext);
 }
 
 function drawOutline(
@@ -82,7 +82,7 @@ function drawOutline(
     tileManager: TileManager,
     layer: FillStyleLayer,
     coords: OverscaledTileID[],
-    renderContext: RenderContext
+    frameRenderContext: FrameRenderContext
 ) {
     if (!layer.paint.get('fill-antialias')) return;
 
@@ -97,7 +97,7 @@ function drawOutline(
     const colorMode = painter.colorModeForRenderPass();
     const depthMode = painter.getDepthModeForSublayer(
         layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, renderContext);
+    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, frameRenderContext);
 }
 
 function drawFillTiles(
@@ -108,7 +108,7 @@ function drawFillTiles(
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     isOutline: boolean,
-    renderContext: RenderContext) {
+    frameRenderContext: FrameRenderContext) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -116,7 +116,7 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    const transform = painter.transform;
+    const transform = frameRenderContext.transform;
 
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
@@ -141,7 +141,7 @@ function drawFillTiles(
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = getTerrainDataForTile(renderContext, coord);
+        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);
@@ -151,7 +151,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = getProjectionDataForTile(renderContext, coord);
+        const projectionData = getProjectionDataForTile(frameRenderContext, coord);
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
@@ -172,6 +172,6 @@ function drawFillTiles(
         program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration);
+            layer.paint, frameRenderContext.transform.zoom, programConfiguration);
     }
 }

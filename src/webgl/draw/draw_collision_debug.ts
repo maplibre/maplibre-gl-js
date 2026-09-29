@@ -4,7 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
 import type {VertexBuffer} from '../vertex_buffer.ts';
 import type {IndexBuffer} from '../index_buffer.ts';
@@ -22,7 +22,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, renderContext: RenderContext): void {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, frameRenderContext: FrameRenderContext): void {
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
@@ -60,10 +60,10 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             null,
-            getTerrainDataForTile(renderContext, coord),
-            getProjectionDataForTile(renderContext, coord),
+            getTerrainDataForTile(frameRenderContext, coord),
+            getProjectionDataForTile(frameRenderContext, coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
-            buffers.segments, null, painter.transform.zoom, null, null,
+            buffers.segments, null, frameRenderContext.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
     }
 
@@ -114,14 +114,14 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             null,
-            getTerrainDataForTile(renderContext, batch.coord),
+            getTerrainDataForTile(frameRenderContext, batch.coord),
             null,
             layer.id,
             vertexBuffer,
             indexBuffer,
             SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2),
             null,
-            painter.transform.zoom,
+            frameRenderContext.transform.zoom,
             null,
             null,
             null);

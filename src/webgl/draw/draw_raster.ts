@@ -12,7 +12,7 @@ import {
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
-import {getProjectionDataForTile, getTerrainDataForTile, type RenderContext} from '../../render/render_context.ts';
+import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -41,8 +41,8 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], renderContext: RenderContext): void {
-    if (renderContext.currentPass !== 'translucent') return;
+export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+    if (frameRenderContext.currentPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
@@ -63,16 +63,16 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, renderContext, source.getMesh(painter.context, useSubdivision));
+        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, frameRenderContext, source.getMesh(painter.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, renderContext); // draw without borders
-        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, renderContext); // draw with borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw without borders
+        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, renderContext);
+        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext);
     }
 }
 
@@ -87,7 +87,7 @@ function drawTiles(
     corners: Point[],
     imageWarp: RasterImageWarp,
     flipCullfaceMode: boolean = false,
-    renderContext: RenderContext,
+    frameRenderContext: FrameRenderContext,
     sourceMesh: Mesh | null = null) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
@@ -98,12 +98,12 @@ function drawTiles(
     const projection = painter.style.projection;
 
     const colorMode = painter.colorModeForRenderPass();
-    const align = !painter.options.moving;
+    const align = !frameRenderContext.data.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
     const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
     const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
-    const isTerrain = !!painter.style.map.terrain;
+    const isTerrain = !!frameRenderContext.terrain;
 
     // Draw all tiles
     for (const coord of coords) {
@@ -131,13 +131,13 @@ function drawTiles(
 
         // Enable anisotropic filtering only when the pitch is greater than the threshold pitch.
         // The default threshold is 20 degrees to preserve image sharpness on flat or slightly tilted maps.
-        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > painter.options.anisotropicFilterPitch) {
+        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && frameRenderContext.transform.pitch > frameRenderContext.data.anisotropicFilterPitch) {
             gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
                 context.extTextureFilterAnisotropicMax);
         }
 
-        const terrainData = getTerrainDataForTile(renderContext, coord);
-        const projectionData = getProjectionDataForTile(renderContext, coord, {aligned: align});
+        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
+        const projectionData = getProjectionDataForTile(frameRenderContext, coord, {aligned: align});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 
         const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');

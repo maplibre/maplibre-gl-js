@@ -229,6 +229,20 @@ describe('symbol fade after the placement guard', () => {
     });
 });
 
+describe('frame render data', () => {
+    test('passes the projection transition to the painter', async () => {
+        const map = createMap();
+        await map.once('idle');
+        map.setProjection({type: 'vertical-perspective'});
+
+        map.redraw();
+
+        expect(map.painter.frameRenderContext.data.projectionTransition).toBe(1);
+        expect(map.painter.frameRenderContext.data.isRenderingGlobe).toBe(true);
+        map.remove();
+    });
+});
+
 describe('render-to-texture follow-up frame', () => {
     test('keeps rendering, deferring idle, until the follow-up frame is no longer needed', async () => {
         const map = createMap();
