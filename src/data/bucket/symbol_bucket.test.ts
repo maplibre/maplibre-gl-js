@@ -13,10 +13,14 @@ import {SubdivisionGranularitySetting} from '../../render/subdivision_granularit
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 import {SymbolBucket} from './symbol_bucket.ts';
+import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
+import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
+import Point from '@mapbox/point-geometry';
 
 import type {BucketParameters, IndexedFeature, PopulateParameters} from '../bucket.ts';
-import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {StyleImage} from '../../style/style_image.ts';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new MercatorTransform();
@@ -263,6 +267,68 @@ describe('SymbolBucket', () => {
         const devanagari = glyphsRequestedFor('दि');
         expect(devanagari).toContain('दि');
         expect(devanagari).toEqual(expect.arrayContaining(['द', 'ि']));
+    });
+});
+
+describe('interpolated text-size on line symbols', () => {
+    function createLineBucket(textSize: unknown): SymbolBucket {
+        const layer = new SymbolStyleLayer({
+            id: 'test',
+            type: 'symbol',
+            layout: {
+                'text-font': ['Test'],
+                'text-field': 'abc',
+                'symbol-placement': 'line',
+                'text-size': textSize
+            },
+            filter: featureFilter(undefined, 'filter')
+        } as any as LayerSpecification, {});
+        layer.recalculate({zoom: 13, zoomHistory: {}} as EvaluationParameters, undefined);
+        return new SymbolBucket({
+            overscaling: 1,
+            zoom: 13,
+            collisionBoxArray,
+            layers: [layer]
+        } as BucketParameters<SymbolStyleLayer>);
+    }
+
+    function createLineFeature(): IndexedFeature {
+        return {
+            feature: {
+                extent: 8192,
+                type: 2,
+                id: 1,
+                properties: {},
+                loadGeometry() {
+                    return [[new Point(100, 4096), new Point(1600, 4096)]];
+                }
+            },
+            id: 1,
+            index: 0,
+            sourceLayerIndex: 0
+        } as any as IndexedFeature;
+    }
+
+    function placedLabelCount(bucket: SymbolBucket): number {
+        bucket.populate([createLineFeature()], createPopulateOptions([]), new CanonicalTileID(13, 0, 0));
+        performSymbolLayout({
+            bucket,
+            glyphMap: glyphsByCluster,
+            glyphPositions: {},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+        } as any);
+        return bucket.symbolInstances.length;
+    }
+
+    // https://github.com/maplibre/maplibre-gl-js/issues/949
+    test('places line labels with the size interpolated at the current zoom, not at zoom 18', () => {
+        const constant = placedLabelCount(createLineBucket(10));
+        expect(constant).toBeGreaterThan(0);
+
+        // text-size 13->10px / 22->200px evaluates to ~115px at zoom 18. Before the fix,
+        // that value scaled the line-placement boxes, so no anchor fit and no label was placed.
+        const interpolated = placedLabelCount(createLineBucket(['interpolate', ['linear'], ['zoom'], 13, 10, 22, 200]));
+        expect(interpolated).toBeGreaterThan(0);
     });
 });
 

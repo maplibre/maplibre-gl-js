@@ -39,7 +39,7 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 //   2. `icon-size` at the zoom level of the bucket. Used to calculate a per-feature size for source `icon-size`
 //       expressions.
 //   3. `text-size` and `icon-size` at the zoom level of the bucket, plus one. Used to calculate collision boxes.
-//   4. `text-size` at zoom level 18. Used for something line-symbol-placement-related.
+//   4. `text-size` at the zoom level of the bucket, plus one. Used for something line-symbol-placement-related.
 //   5.  For composite `*-size` expressions: two zoom levels of curve stops that "cover" the zoom level of the
 //       bucket. These go into a vertex buffer and are used by the shader to interpolate the size at render time.
 //
@@ -91,7 +91,7 @@ export function performSymbolLayout(args: {
         // compositeTextSizes: undefined,
         layoutIconSize: unevaluatedLayoutValues['icon-size'].possiblyEvaluate(new EvaluationParameters(args.bucket.zoom + 1), args.canonical),
         layoutTextSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(args.bucket.zoom + 1), args.canonical),
-        textMaxSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(18))
+        textMaxSize: unevaluatedLayoutValues['text-size'].possiblyEvaluate(new EvaluationParameters(args.bucket.zoom + 1), args.canonical)
     } as Sizes;
 
     if (args.bucket.textSizeData.kind === 'composite') {
@@ -290,10 +290,8 @@ function addFeature(bucket: SymbolBucket,
     canonical: CanonicalTileID,
     subdivisionGranularity: SubdivisionGranularitySetting,
     hasPromoteId: boolean) {
-    // To reduce the number of labels that jump around when zooming we need
-    // to use a text-size value that is the same for all zoom levels.
-    // bucket calculates text-size at a high zoom level so that all tiles can
-    // use the same value when calculating anchor positions.
+    // The placement boxes are scaled by the text size interpolated at the bucket's zoom level, so an
+    // anchor is only accepted where the label fits at the size it will render.
     let textMaxSize = sizes.textMaxSize.evaluate(feature, {});
     if (textMaxSize === undefined) {
         textMaxSize = layoutTextSize;
