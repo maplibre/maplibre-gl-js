@@ -7,6 +7,7 @@ import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
 import {setMatchMedia} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
@@ -2110,6 +2111,47 @@ describe('flyTo', () => {
 
         camera._finalizeElevation();
         expect(camera.elevationFreeze).toBeFalsy();
+    });
+
+    test('repeated rotateTo with freezeElevation over terrain keeps zoom and center (#2937)', () => {
+        // Raster-like DEM: quantized elevation with a coverage index so the terrain raycast runs.
+        // At a high pitch the screen-center ray hits terrain away from the center; the end-of-animation
+        // zoom adjustment must not nudge zoom/center for a rotation that never moved the camera.
+        const mountainElevation = (lng: number, lat: number) =>
+            1500 * (1.5 + Math.sin(lng * 0.7) * Math.cos(lat * 1.3) + 0.5 * Math.sin(lng * 2.1 + lat * 0.9));
+        const quantizedElevation = (lng: number, lat: number) => Math.round(mountainElevation(lng, lat) * 10) / 10;
+        const z = 10;
+        const scale = 1 << z;
+        const samplerPerTile = new Map();
+        const center = new LngLat(10.615815, 51.799092);
+        const centerTile = MercatorCoordinate.fromLngLat(center);
+        const tileX = Math.floor(centerTile.x * scale), tileY = Math.floor(centerTile.y * scale);
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -2; dy <= 2; dy++) {
+                const tx = tileX + dx, ty = tileY + dy;
+                samplerPerTile.set(`0/${z}/${tx}/${ty}`, (x: number, y: number, extent: number) => {
+                    const ll = new MercatorCoordinate((tx + x / extent) / scale, (ty + y / extent) / scale).toLngLat();
+                    return quantizedElevation(ll.lng, ll.lat);
+                });
+            }
+        }
+        const terrain = {
+            exaggeration: 1,
+            getCoverageIndex: () => ({zooms: [z], samplerPerTile, minElevation: 0, maxElevation: 5000}),
+            getElevationForLngLat: (lnglat: LngLat) => quantizedElevation(lnglat.lng, lnglat.lat),
+            getElevationForLngLatZoom: (lnglat: LngLat) => quantizedElevation(lnglat.lng, lnglat.lat),
+        } as any as Terrain;
+        const {camera} = createCamera({terrain, centerClampedToGround: true, maxPitch: 85});
+        camera.jumpTo({center: [10.615815, 51.799092], zoom: 10, pitch: 85, bearing: 0});
+
+        const zoom = camera.getZoom();
+        for (let bearing = 10; bearing <= 360; bearing += 10) {
+            camera.rotateTo(bearing, {duration: 0, freezeElevation: true});
+        }
+
+        expect(camera.getZoom()).toBeCloseTo(zoom, 10);
+        expect(camera.getCenter().lng).toBeCloseTo(center.lng, 10);
+        expect(camera.getCenter().lat).toBeCloseTo(center.lat, 10);
     });
 
     test('respects zoomSnap', () => {

@@ -917,9 +917,18 @@ export class Camera extends Evented<MapEventType> {
         }
     }
 
+    /**
+     * @internal
+     * Re-grounds the camera on the terrain after a frozen-elevation animation: the animation held the
+     * camera at a constant height while its center may have moved over new terrain, so zoom and center
+     * are re-solved from the camera position. When the terrain under the animation's end center matches
+     * the terrain under its start center the camera never left its ground position (e.g. a pure
+     * rotation): the re-solve is skipped, since re-sampling the rasterized terrain could otherwise nudge
+     * zoom and center on every animation (#2937).
+     */
     _finalizeElevation(): void {
         this.elevationFreeze = false;
-        if (this.getCenterClampedToGround()) {
+        if (this.getCenterClampedToGround() && this._elevationTarget !== this._elevationStart) {
             this.transform.recalculateZoomAndCenter(this.terrain);
         }
     }
