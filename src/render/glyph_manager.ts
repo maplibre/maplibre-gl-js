@@ -197,7 +197,7 @@ export class GlyphManager {
             null;
 
         if (fontFaceFamily) {
-            glyph = await this._drawGlyph(entry, stack, id, false, fontFaceFamily);
+            glyph = await this._drawGlyph(entry, stack, id, fontFaceFamily);
             glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
@@ -205,7 +205,7 @@ export class GlyphManager {
         // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
         // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
         if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
-            glyph = await this._drawGlyph(entry, stack, id, false);
+            glyph = await this._drawGlyph(entry, stack, id);
             glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
@@ -219,18 +219,18 @@ export class GlyphManager {
      * results from replaced font faces return `null`.
      */
     async _drawVerticalGlyph(entry: Entry, stack: string, id: string): Promise<StyleGlyph | null> {
-        const codePoint = id.codePointAt(0);
-        const verticalFamily = await this.fontFaceManager.getFontFamily(stack, codePoint, true);
-        if (!verticalFamily || this.entries[stack] !== entry) return null;
+        const verticalTinySDF = await this._getFontFaceTinySDF(entry, stack, id, true);
+        if (!verticalTinySDF || this.entries[stack] !== entry) return null;
 
-        const glyph = await this._drawGlyph(entry, stack, id, true, verticalFamily);
-        if (!glyph || this.entries[stack] !== entry) return null;
+        const char = verticalTinySDF.draw(id);
+        if (!char.glyphWidth || !char.glyphHeight) return null;
 
-        const defaultFamily = await this.fontFaceManager.getFontFamily(stack, codePoint, false);
-        if (!defaultFamily || this.entries[stack] !== entry) return null;
+        const defaultTinySDF = await this._getFontFaceTinySDF(entry, stack, id, false);
+        if (!defaultTinySDF || this.entries[stack] !== entry) return null;
 
-        const original = await this._drawGlyph(entry, stack, id, false, defaultFamily);
-        return this.entries[stack] === entry && !glyphsEqual(original, glyph) ? glyph : null;
+        const glyph = this._createGlyph(id, char);
+        const original = this._createGlyph(id, defaultTinySDF.draw(id));
+        return glyphsEqual(original, glyph) ? null : glyph;
     }
 
     /**
@@ -260,7 +260,7 @@ export class GlyphManager {
             return {stack, id, glyph: response[codePoint] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = await this._drawGlyph(entry, stack, id, false);
+            const glyph = await this._drawGlyph(entry, stack, id);
             entry.glyphs.default[id] = glyph;
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
@@ -312,16 +312,16 @@ export class GlyphManager {
      * @param entry - cached glyphs and rasterizers for this font stack
      * @param stack - font stack used for local font fallback
      * @param id - grapheme cluster to rasterize
-     * @param vertical - `true` when drawing a vertical alternate
      * @param fontFaceFamily - the CSS family of the selected declared font, if any
-     * @returns the glyph, or `null` if a vertical glyph is empty or its font face was replaced
+     * @returns the rasterized glyph with metrics at the atlas's base resolution
      */
-    async _drawGlyph(entry: Entry, stack: string, id: string, vertical: boolean, fontFaceFamily?: string): Promise<StyleGlyph | null> {
+    async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
         const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
-        if (vertical && this.entries[stack] !== entry) return null;
-        const char = tinySDF.draw(id);
-        if (vertical && (!char.glyphWidth || !char.glyphHeight)) return null;
+        return this._createGlyph(id, tinySDF.draw(id));
+    }
 
+    /** Converts a TinySDF bitmap and metrics to a style glyph. */
+    _createGlyph(id: string, char: ReturnType<TinySDF['draw']>): StyleGlyph {
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
          * Server-generated fonts specify "top" relative to an origin above the em box (the origin
@@ -354,6 +354,16 @@ export class GlyphManager {
                 isDoubleResolution: true
             }
         };
+    }
+
+    /** Resolves a declared font and its rasterizer, skipping obsolete cache entries. */
+    async _getFontFaceTinySDF(entry: Entry, stack: string, id: string, vertical: boolean): Promise<Rasterizer | null> {
+        if (this.entries[stack] !== entry) return null;
+
+        const family = await this.fontFaceManager.getFontFamily(stack, id.codePointAt(0), vertical);
+        if (!family || this.entries[stack] !== entry) return null;
+
+        return this._getTinySDF(entry, stack, id, family);
     }
 
     /**
