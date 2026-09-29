@@ -238,6 +238,43 @@ describe('setTerrain', () => {
     });
 });
 
+describe('triggerTerrainRepaint', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
+    test('draws the terrain tiles of a custom layer again', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
+            layers: [],
+            terrain: {source: 'dem'}
+        }});
+        const renderToTerrainTile = vi.fn();
+        await map.once('load');
+        map.addLayer({id: 'custom', type: 'custom', render: () => {}, renderToTerrainTile});
+        await map.once('idle');
+        const terrainTiles = map.terrain.tileManager.getRenderableTiles().length;
+        renderToTerrainTile.mockClear();
+
+        map.triggerTerrainRepaint();
+        await map.once('idle');
+
+        expect(terrainTiles).toBeGreaterThan(0);
+        expect(renderToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
+    });
+
+    test('triggers a repaint without terrain', () => {
+        const triggerRepaint = vi.spyOn(map, 'triggerRepaint');
+
+        map.triggerTerrainRepaint();
+
+        expect(triggerRepaint).toHaveBeenCalledTimes(1);
+    });
+});
+
 describe('getTerrain', () => {
     test('returns null when not set', () => {
         const map = createMap();
