@@ -207,10 +207,10 @@ export class FrameRenderContext {
         this.nextStencilID = 1;
         this.currentStencilSource = undefined;
 
-        // As a temporary workaround for https://github.com/mapbox/mapbox-gl-js/issues/5490,
-        // pending an upstream fix, we draw a fullscreen stencil=0 clipping mask here,
-        // effectively clearing the stencil buffer: once an upstream patch lands, remove
-        // this function in favor of context.clear({ stencil: 0x0 })
+        // As a workaround for https://github.com/mapbox/mapbox-gl-js/issues/5490, we draw a fullscreen
+        // stencil=0 clipping mask here, effectively clearing the stencil buffer. This can become
+        // context.clear({ stencil: 0x0 }) once Firefox on macOS draws WebGL with ANGLE instead of
+        // Apple's OpenGL, see https://bugzilla.mozilla.org/show_bug.cgi?id=2027951.
 
         const matrix = mat4.create();
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
