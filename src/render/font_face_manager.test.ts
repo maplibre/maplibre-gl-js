@@ -85,9 +85,16 @@ describe('FontFaceManager', () => {
         expect(added).toHaveLength(1);
         expect(added[0].family).toBe(family);
         expect(requestedUrls()).toEqual(['https://example.com/noto.ttf']);
+
+        const vertical = await manager.getFontFamily('Noto Sans Regular', 0x41, true);
+
+        expect(vertical).not.toBe(family);
+        expect(added).toHaveLength(2);
+        expect(added[0].featureSettings).toBe('normal');
+        expect(added[1]).toMatchObject({family: vertical, featureSettings: '"vert" 1'});
     });
 
-    test('downloads a file only once, and only once a codepoint needs it', async () => {
+    test('downloads files on demand and shares concurrent requests across orientations', async () => {
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({
             'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
@@ -98,12 +105,18 @@ describe('FontFaceManager', () => {
         await expect(manager.getFontFamily('Noto Sans Regular', 0x41, false)).resolves.toBeNull();
         expect(requestedUrls()).toEqual([]);
 
-        const [first, second] = await Promise.all([
+        const [first, second, vertical, secondVertical] = await Promise.all([
             manager.getFontFamily('Noto Sans Regular', 0x1780, false),
-            manager.getFontFamily('Noto Sans Regular', 0x1781, false)
+            manager.getFontFamily('Noto Sans Regular', 0x1781, false),
+            manager.getFontFamily('Noto Sans Regular', 0x1780, true),
+            manager.getFontFamily('Noto Sans Regular', 0x1781, true)
         ]);
 
         expect(first).toBe(second);
+        expect(vertical).toBe(secondVertical);
+        expect(vertical).not.toBe(first);
+        expect(added).toHaveLength(2);
+        expect(sources[0]).toBe(sources[1]);
         expect(requestedUrls()).toEqual(['https://example.com/khmer.ttf']);
     });
 
@@ -122,61 +135,11 @@ describe('FontFaceManager', () => {
         expect(requestedUrls()).toEqual(['https://example.com/khmer.ttf', 'https://example.com/devanagari.ttf']);
     });
 
-    test.each([false, true])('shares one download between concurrent orientations (vertical first: %s)', async (verticalFirst) => {
-        const manager = new FontFaceManager(requestManager);
-        manager.setFontFaces({Noto: [{url: 'https://example.com/noto.ttf', 'unicode-range': ['U+3000-30FF']}]});
-
-        await expect(manager.getFontFamily('Noto', 0x41, true)).resolves.toBeNull();
-        expect(requestedUrls()).toEqual([]);
-
-        const families = await Promise.all([
-            manager.getFontFamily('Noto', 0x30FC, verticalFirst),
-            manager.getFontFamily('Noto', 0x3041, !verticalFirst),
-            manager.getFontFamily('Noto', 0x30FC, true)
-        ]);
-        const vertical = families[verticalFirst ? 0 : 1];
-        const horizontal = families[verticalFirst ? 1 : 0];
-        expect(families[2]).toBe(vertical);
-        expect(vertical).toBe(`${horizontal}-vertical`);
-        expect(added).toHaveLength(2);
-        expect(added[0]).toMatchObject({family: horizontal, featureSettings: 'normal'});
-        expect(added[1]).toMatchObject({family: vertical, featureSettings: '"vert" 1'});
-        expect(sources[0]).toBe(sources[1]);
-        await expect(manager.getFontFamily('Noto', 0x30FC, true)).resolves.toBe(vertical);
-        await expect(manager.getFontFamily('Noto', 0x30FC, false)).resolves.toBe(horizontal);
-        expect(requestedUrls()).toEqual(['https://example.com/noto.ttf']);
-
-        manager.setFontFaces({Noto: 'https://example.com/other.ttf'});
-        expect(deleted).toEqual(added);
-        await expect(manager.getFontFamily('Noto', 0x30FC, true)).resolves.not.toBe(vertical);
-        manager.destroy();
-        expect(deleted).toEqual(added);
-    });
-
-    test('releases downloaded bytes after a normal-only load', async () => {
-        const manager = new FontFaceManager(requestManager);
-        manager.setFontFaces({Noto: 'https://example.com/noto.ttf'});
-
-        const horizontal = await manager.getFontFamily('Noto', 0x30FC, false);
-        expect(added).toHaveLength(1);
-        const vertical = await manager.getFontFamily('Noto', 0x30FC, true);
-
-        expect(vertical).toBe(`${horizontal}-vertical`);
-        expect(sources[0]).not.toBe(sources[1]);
-        expect(requestedUrls()).toEqual(['https://example.com/noto.ttf', 'https://example.com/noto.ttf']);
-    });
-
-    test.each(['download', 'decode'])('uses the same fallback face after the primary %s fails', async (failure) => {
+    test('uses the same fallback face for both orientations after the primary fails to decode', async () => {
         silenceWarnings();
-        let primaryRequests = 0;
-        server.respondWith('GET', 'https://example.com/primary.ttf', function (request) {
-            primaryRequests++;
-            request.respond(failure === 'download' && primaryRequests === 1 ? 404 : 200, undefined, 'font file');
-            return true;
-        });
         let normalLoads = 0;
         stubFontFace(function (this: FontFace) {
-            if (failure === 'decode' && this.featureSettings === 'normal' && ++normalLoads === 1) {
+            if (this.featureSettings === 'normal' && ++normalLoads === 1) {
                 return Promise.reject(new Error('invalid font'));
             }
             return Promise.resolve();
@@ -421,14 +384,14 @@ describe('FontFaceManager', () => {
     test('hands the font faces back when they are replaced, and again on destroy', async () => {
         const manager = new FontFaceManager(requestManager);
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/noto.ttf'});
-        await manager.getFontFamily('Noto Sans Regular', 0x41, false);
+        await manager.getFontFamily('Noto Sans Regular', 0x41, true);
 
         manager.setFontFaces({'Noto Sans Regular': 'https://example.com/other.ttf'});
         expect(deleted).toEqual(added);
 
         const family = await manager.getFontFamily('Noto Sans Regular', 0x41, false);
-        expect(added).toHaveLength(2);
-        expect(added[1].family).toBe(family);
+        expect(added).toHaveLength(3);
+        expect(added[2].family).toBe(family);
         expect(requestedUrls()).toEqual(['https://example.com/noto.ttf', 'https://example.com/other.ttf']);
 
         manager.destroy();

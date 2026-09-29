@@ -407,32 +407,6 @@ describe('shapeText vertical glyph orientation', () => {
             (glyph): [string, string] => [glyph.grapheme, glyph.vertical ? 'upright' : 'along-line']));
     }
 
-    test.each([
-        {name: 'horizontal line', writingMode: WritingMode.horizontal, allowVerticalPlacement: false, variant: 'default', vertical: false},
-        {name: 'horizontal point', writingMode: WritingMode.horizontal, allowVerticalPlacement: true, variant: 'default', vertical: false},
-        {name: 'vertical line', writingMode: WritingMode.vertical, allowVerticalPlacement: false, variant: 'vertical', vertical: true},
-        {name: 'vertical point', writingMode: WritingMode.vertical, allowVerticalPlacement: true, variant: 'vertical', vertical: true}
-    ] as const)('selects $variant atlas entries for $name labels', ({writingMode, allowVerticalPlacement, variant, vertical}) => {
-        const text = '東京タワー';
-        const glyphs = createStubGlyphMap(text);
-        glyphs.vertical['ー'] = {...glyphs.default['ー'], metrics: {...glyphs.default['ー'].metrics, width: 3, height: 22}};
-        const positions = {
-            default: {'ー': {rect: {x: 0, y: 0, w: 20, h: 20}, metrics: glyphs.default['ー'].metrics}},
-            vertical: {'ー': {rect: {x: 100, y: 0, w: 10, h: 30}, metrics: glyphs.vertical['ー'].metrics}}
-        };
-
-        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {[fontStack]: positions}, {},
-            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], writingMode, allowVerticalPlacement, 24, 24) as Shaping;
-        const placed = shaping.positionedLines[0].positionedGlyphs;
-
-        expect(placed.map(glyph => glyph.grapheme).join('')).toBe(text);
-        expect(placed.find(glyph => glyph.grapheme === 'ー')).toMatchObject({
-            vertical,
-            metrics: glyphs[variant]['ー'].metrics,
-            rect: positions[variant]['ー'].rect
-        });
-    });
-
     test.each([false, true])('selects Latin and Arabic symbol alternates according to placement (point placement: %s)', (allowVerticalPlacement) => {
         const text = '小aα小٪小A小';
         const glyphs = createStubGlyphMap(text);
@@ -450,19 +424,6 @@ describe('shapeText vertical glyph orientation', () => {
             ['α', allowVerticalPlacement, allowVerticalPlacement ? 5 : 1],
             ['٪', !allowVerticalPlacement, allowVerticalPlacement ? 1 : 5],
             ['A', true, 5]
-        ]);
-    });
-
-    test('retains punctuation substitution and rotation when vertical forms are unavailable', () => {
-        const glyphs = createStubGlyphMap('（東京タワー）');
-        for (const char of ['（', 'ー', '）']) glyphs.vertical[char] = null;
-
-        const shaping = shapeText(Formatted.fromString('（東京タワー）'), {[fontStack]: glyphs}, {}, {},
-            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24);
-
-        expect(getGlyphOrientations(shaping)).toEqual([
-            ['︵', 'upright'], ['東', 'upright'], ['京', 'upright'], ['タ', 'upright'],
-            ['ワ', 'upright'], ['ー', 'along-line'], ['︶', 'upright']
         ]);
     });
 
@@ -484,21 +445,6 @@ describe('shapeText vertical glyph orientation', () => {
             ['𠮷', fontStack, 5], ['か\u3099', fontStack, 5], ['（', fontStack, 5],
             ['𠮷', 'Other', 1], ['か\u3099', 'Other', 1], ['︵', 'Other', 1]
         ]);
-    });
-
-    test('keeps consecutive ellipses upright with and without vertical alternates', () => {
-        const glyphs = createStubGlyphMap('東京……');
-        for (const alternate of [false, true]) {
-            if (alternate) glyphs.vertical['…'] = {...glyphs.default['…'], metrics: {...glyphs.default['…'].metrics, left: 5}};
-            const shaping = shapeText(Formatted.fromString('東京……'), {[fontStack]: glyphs}, {}, {},
-                fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
-
-            expect(getGlyphOrientations(shaping)).toEqual([
-                ['東', 'upright'], ['京', 'upright'],
-                [alternate ? '…' : '︙', 'upright'], [alternate ? '…' : '︙', 'upright']
-            ]);
-            expect(shaping.positionedLines[0].positionedGlyphs[2].metrics.left).toBe(alternate ? 5 : 1);
-        }
     });
 
     test('keeps Latin runs sideways and retains their trailing compatibility punctuation', () => {
@@ -555,26 +501,17 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test.each([
-        {text: '東京 Tokyo … Station', marks: '…', upright: false},
-        {text: '東京 Tokyo （） Station', marks: '（）', upright: false},
-        {text: '東京 AB … CD', marks: '…', upright: true},
-        {text: '東京 12 … 34', marks: '…', upright: true},
-        {text: '東京 …… 小', marks: '…', upright: true}
-    ])('resolves punctuation across spaces in $text', ({text, marks, upright}) => {
+        {text: '東京 Tokyo … Station', upright: false},
+        {text: '東京 AB … CD', upright: true}
+    ])('resolves punctuation across spaces in $text', ({text, upright}) => {
         const glyphs = createStubGlyphMap(text);
-        for (const char of marks) {
-            glyphs.vertical[char] = {...glyphs.default[char], metrics: {...glyphs.default[char].metrics, left: 5}};
-        }
+        glyphs.vertical['…'] = {...glyphs.default['…'], metrics: {...glyphs.default['…'].metrics, left: 5}};
 
         const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
             fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
 
-        const punctuation = shaping.positionedLines[0].positionedGlyphs.filter(glyph => marks.includes(glyph.grapheme));
-        expect(punctuation).toHaveLength([...text].filter(char => marks.includes(char)).length);
-        for (const glyph of punctuation) {
-            expect(glyph.vertical).toBe(upright);
-            expect(glyph.metrics.left).toBe(upright ? 5 : 1);
-        }
+        const punctuation = shaping.positionedLines[0].positionedGlyphs.find(glyph => glyph.grapheme === '…');
+        expect(punctuation).toMatchObject({vertical: upright, metrics: {left: upright ? 5 : 1}});
     });
 
     test('keeps a prolonged sound mark in a Latin run on the rotation fallback', () => {

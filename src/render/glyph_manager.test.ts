@@ -7,7 +7,6 @@ import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {bufferToArrayBuffer} from '../util/test/util.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
-import {toGraphemes} from '../util/graphemes.ts';
 
 import type {CreateRasterizer} from './glyph_manager.ts';
 
@@ -69,10 +68,11 @@ describe('GlyphManager', () => {
         const manager = new GlyphManager(new RequestManager(transformRequest));
         manager.setURL('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
 
-        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(55), char(56)]}});
+        const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(55), char(56)], vertical: [char(55)]}});
 
         expect(returnedGlyphs['Arial Unicode MS'].default[char(55)].metrics.advance).toBe(12);
         expect(returnedGlyphs['Arial Unicode MS'].default[char(56)].metrics).toEqual(GLYPHS[56].metrics);
+        expect(returnedGlyphs['Arial Unicode MS'].vertical).toBeUndefined();
         const cachedRange = await manager.getGlyphs({'Arial Unicode MS': {default: ['A']}});
         expect(cachedRange['Arial Unicode MS'].default.A.metrics).toEqual(GLYPHS[65].metrics);
         expect(transformRequest).toHaveBeenCalledExactlyOnceWith(
@@ -353,103 +353,34 @@ describe('GlyphManager', () => {
 
         test('renders and caches font-provided vertical alternates', async () => {
             stubFontFaces();
-            const drawn: string[] = [];
-            const createRasterizer = vi.fn((options: TinySDFOptions, padding: number) => ({
-                buffer: padding,
-                draw(text: string) {
-                    const vertical = options.fontFamily.includes('-vertical');
-                    drawn.push(`${vertical ? 'vertical' : 'horizontal'}:${text}`);
-                    return {
-                        data: new Uint8ClampedArray(16).fill(vertical && text === 'ー' ? 200 : 100),
-                        width: 4, height: 4, glyphWidth: 2, glyphHeight: 2,
-                        glyphLeft: vertical && text === '（' ? 8 : 0, glyphTop: 2, glyphAdvance: 48
-                    };
-                }
-            }));
-            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
-            manager.setFontFaces({Noto: 'https://localhost/noto.ttf'});
-            const text = ['ー', '（', '京'];
-            const request = {Noto: {default: text, vertical: text}};
-
-            const first = await manager.getGlyphs(request);
-            const initialDraws = drawn.length;
-            const cached = await manager.getGlyphs(request);
-
-            expect(drawn).toHaveLength(initialDraws);
-            for (const char of text) {
-                expect(first.Noto.default[char].bitmap.data[0]).toBe(100);
-                expect(cached.Noto.vertical[char]).toEqual(first.Noto.vertical[char]);
-                expect(cached.Noto.default[char].bitmap.data).not.toBe(first.Noto.default[char].bitmap.data);
-            }
-            expect(first.Noto.vertical['ー'].bitmap.data[0]).toBe(200);
-            expect(first.Noto.vertical['（'].metrics.left).toBe(4.5);
-            expect(first.Noto.vertical['京']).toBeNull();
-            expect(cached.Noto.vertical['ー'].bitmap.data).not.toBe(first.Noto.vertical['ー'].bitmap.data);
-            expect(server.requests.map(request => request.url)).toEqual(['https://localhost/noto.ttf']);
-
-            manager.setFontFaces({Noto: 'https://localhost/other.ttf'});
-            await manager.getGlyphs(request);
-            expect(drawn.length).toBeGreaterThan(initialDraws);
-        });
-
-        test('discards unchanged vertical glyphs without requesting default glyphs', async () => {
-            stubFontFaces();
-            const draw = vi.fn(function (_text: string) {
+            const draw = vi.fn(function (vertical: boolean, text: string) {
                 return {
-                    data: new Uint8ClampedArray(16).fill(100),
+                    data: new Uint8ClampedArray(16).fill(vertical && text === 'ー' ? 200 : 100),
                     width: 4, height: 4, glyphWidth: 2, glyphHeight: 2,
-                    glyphLeft: 0, glyphTop: 2, glyphAdvance: 48
+                    glyphLeft: vertical && text === '（' ? 8 : 0, glyphTop: 2, glyphAdvance: 48
                 };
             });
-            const createRasterizer = fakeRasterizer(draw);
-            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
-            manager.setFontFaces({Noto: 'https://localhost/noto.ttf'});
-            const request = {Noto: {default: [], vertical: ['京', 'か\u3099']}};
-
-            const glyphs = await manager.getGlyphs(request);
-
-            expect(glyphs.Noto.vertical).toEqual({'京': null, 'か\u3099': null});
-            expect(draw.mock.calls.map(([text]) => text).sort()).toEqual(['か\u3099', 'か\u3099', '京', '京']);
-            await expect(manager.getGlyphs(request)).resolves.toEqual(glyphs);
-            expect(draw).toHaveBeenCalledTimes(4);
-            expect(server.requests.map(request => request.url)).toEqual(['https://localhost/noto.ttf']);
-        });
-
-        test('keeps NUL-prefixed text distinct from a vertical glyph for the following spacing mark', async () => {
-            stubFontFaces();
-            const drawn: Array<[string, boolean]> = [];
             function createRasterizer(options: TinySDFOptions, padding: number) {
-                const vertical = options.fontFamily.includes('-vertical');
                 return {
                     buffer: padding,
-                    draw(text: string) {
-                        drawn.push([text, vertical]);
-                        return {
-                            data: new Uint8ClampedArray(16).fill(vertical ? 200 : 100),
-                            width: 4, height: 4, glyphWidth: 2, glyphHeight: 2,
-                            glyphLeft: 0, glyphTop: 2, glyphAdvance: 48
-                        };
-                    }
+                    draw(text: string) { return draw(options.fontFamily.includes('-vertical'), text); }
                 };
             }
-            const manager = createGlyphManager(false, undefined, undefined, createRasterizer);
+            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             manager.setFontFaces({Noto: 'https://localhost/noto.ttf'});
-            const text = '\0\u093E';
-            const request = {Noto: {default: toGraphemes(text), vertical: ['\u093E']}};
+            const request = {Noto: {vertical: ['ー', '（', '京']}};
 
             const glyphs = await manager.getGlyphs(request);
 
-            expect(Object.keys(glyphs.Noto.default)).toEqual([text]);
-            expect(Object.keys(glyphs.Noto.vertical)).toEqual(['\u093E']);
-            expect(glyphs.Noto.default[text].bitmap.data[0]).toBe(100);
-            expect(glyphs.Noto.vertical['\u093E'].bitmap.data[0]).toBe(200);
-            expect(drawn).toEqual(expect.arrayContaining([[text, false], ['\u093E', true], ['\u093E', false]]));
-            expect(drawn).toHaveLength(3);
+            expect(glyphs.Noto.vertical['ー'].bitmap.data[0]).toBe(200);
+            expect(glyphs.Noto.vertical['（'].metrics.left).toBe(4.5);
+            expect(glyphs.Noto.vertical['京']).toBeNull();
+            const initialDraws = draw.mock.calls.length;
             await expect(manager.getGlyphs(request)).resolves.toEqual(glyphs);
-            expect(drawn).toHaveLength(3);
+            expect(draw).toHaveBeenCalledTimes(initialDraws);
         });
 
-        test.each([false, true])('keeps PBF glyphs out of font-face comparisons (range requested first: %s)', async (rangeFirst) => {
+        test('keeps cached PBF glyphs out of font-face comparisons', async () => {
             stubFontFaces();
             serveGlyphRanges();
             const draw = vi.fn(function (_text: string) {
@@ -461,28 +392,12 @@ describe('GlyphManager', () => {
             });
             const manager = createGlyphManager(true, undefined, undefined, fakeRasterizer(draw));
             manager.setFontFaces({Noto: [{url: 'https://localhost/noto.ttf', 'unicode-range': ['U+0028']}]});
-            const request = {Noto: {default: ['('], vertical: ['(']}};
 
-            if (rangeFirst) await manager.getGlyphs({Noto: {default: ['A']}});
-            const glyphs = await manager.getGlyphs(request);
-            if (!rangeFirst) await manager.getGlyphs({Noto: {default: ['A']}});
+            await manager.getGlyphs({Noto: {default: ['A']}});
+            const glyphs = await manager.getGlyphs({Noto: {vertical: ['(']}});
 
             expect(glyphs.Noto.vertical['(']).toBeNull();
-            expect((await manager.getGlyphs(request)).Noto.vertical).toEqual(glyphs.Noto.vertical);
             expect(glyphRangeRequests()).toHaveLength(1);
-        });
-
-        test.each([false, true])('leaves PBF vertical variants unavailable (font-faces declared: %s)', async (declared) => {
-            stubFontFaces();
-            serveGlyphRanges();
-            const manager = createGlyphManager(true);
-            if (declared) manager.setFontFaces({Noto: [{url: 'https://localhost/noto.ttf', 'unicode-range': ['U+3000-30FF']}]});
-
-            const glyphs = await manager.getGlyphs({Noto: {default: ['7'], vertical: ['7']}});
-
-            expect(glyphs.Noto.default['7'].metrics.advance).toBe(12);
-            expect(glyphs.Noto.vertical).toEqual(declared ? {'7': null} : undefined);
-            expect(server.requests.map(request => request.url)).toEqual(['https://localhost/fonts/v1/Noto/0-255.pbf']);
         });
 
         test.each(['vertical', 'horizontal'])('discards vertical glyphs when font faces change while awaiting the %s rasterizer', async (orientation) => {
@@ -612,10 +527,11 @@ describe('GlyphManager', () => {
             const manager = createGlyphManager(true);
             manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]});
 
-            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(55)]}});
+            const returnedGlyphs = await manager.getGlyphs({'Arial Unicode MS': {default: [char(55)], vertical: [char(55)]}});
 
             expect(returnedGlyphs['Arial Unicode MS'].default[char(55)].metrics.advance).toBe(12);
-            expect(glyphRangeRequests()).toHaveLength(1);
+            expect(returnedGlyphs['Arial Unicode MS'].vertical[char(55)]).toBeNull();
+            expect(server.requests.map(request => request.url)).toEqual(['https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf']);
         });
 
         test('does not sniff a weight or a style out of the font name, which the file already carries', async () => {

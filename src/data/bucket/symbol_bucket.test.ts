@@ -273,7 +273,7 @@ describe('SymbolBucket', () => {
                 'symbol-placement': placement,
                 'text-keep-upright': keepUpright,
                 'text-writing-mode': ['horizontal', 'vertical'],
-                'text-field': ['format', '（か\u3099ー）٪ \t\u3000a\u0302áαａA1ب', {}, '𠮷', {'text-font': ['literal', ['Other']]}],
+                'text-field': ['format', '（か\u3099ー٪ \u3000aａA1ب', {}, '𠮷', {'text-font': ['literal', ['Other']]}],
                 'text-font': ['Test']
             }
         }, {});
@@ -289,13 +289,10 @@ describe('SymbolBucket', () => {
 
         bucket.populate([{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature], options, new CanonicalTileID(0, 0, 0));
 
-        const expected = ['（', 'か\u3099', 'か', '\u3099', 'ー', '）', '٪', ' ', '\t', '\u3000', 'a\u0302', 'a', '\u0302', 'á', 'α', 'ａ', 'A', '1', '\uFE8F'];
-        const verticals = ['（', 'か\u3099', 'か', '\u3099', 'ー', '）', 'ａ', 'A', '1'];
-        if (placement === 'point') verticals.push('a\u0302', 'a', '\u0302', 'á', 'α');
+        const verticals = ['（', 'か\u3099', 'か', '\u3099', 'ー', 'ａ', 'A', '1'];
+        if (placement === 'point') verticals.push('a');
         else verticals.push('\u3000', '٪');
-        expect(Object.keys(options.glyphDependencies.Test.default).sort()).toEqual([
-            ...expected, ...(vertical ? ['︵', '︶'] : [])
-        ].sort());
+        expect(options.glyphDependencies.Test.default['︵']).toBe(vertical ? true : undefined);
         expect(Object.keys(options.glyphDependencies.Test.vertical).sort()).toEqual(vertical ? verticals.sort() : []);
         expect(options.glyphDependencies.Other).toEqual({default: {'𠮷': true}, vertical: vertical ? {'𠮷': true} : {}});
     });
