@@ -448,7 +448,8 @@ export class SymbolBucket implements Bucket {
             const section = tagged.getSection(i);
             if ('imageName' in section) continue;
 
-            const stack = stacks[section.fontStack] ||= {default: {}, vertical: {}};
+            stacks[section.fontStack] ||= {default: {}, vertical: {}};
+            const stack = stacks[section.fontStack];
             const grapheme = graphemes[i];
             const needsVerticalGlyph = needsVerticalForms && mayUseVerticalGlyph(grapheme.codePointAt(0), this.allowVerticalPlacement);
             if (isCluster(grapheme)) stack.default[grapheme] = true;

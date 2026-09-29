@@ -164,7 +164,10 @@ export class FontFaceManager {
                 const family = await face.defaultLoad;
                 if (!family) continue;
 
-                return vertical ? face.verticalLoad ??= this._loadFontFace(face, true, data) : family;
+                if (!vertical) return family;
+
+                face.verticalLoad ??= this._loadFontFace(face, true, data);
+                return face.verticalLoad;
             }
         }
         return null;
@@ -221,7 +224,10 @@ export class FontFaceManager {
 
         let fontFace: FontFace;
         try {
-            data ??= face.data ??= this._downloadFontFile(face.url);
+            if (!data) {
+                face.data ??= this._downloadFontFile(face.url);
+                data = face.data;
+            }
             const family = vertical ? `${face.family}-vertical` : face.family;
             fontFace = new FontFace(family, await data,
                 {featureSettings: vertical ? '"vert" 1' : 'normal'});

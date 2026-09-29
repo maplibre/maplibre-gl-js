@@ -186,7 +186,8 @@ export class GlyphManager {
         }
 
         if (variant !== 'default') {
-            glyph = glyphs[id] = variant === 'vertical' ? await this._drawVerticalGlyph(entry, stack, id) : null;
+            glyph = variant === 'vertical' ? await this._drawVerticalGlyph(entry, stack, id) : null;
+            glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
 
@@ -196,14 +197,16 @@ export class GlyphManager {
             null;
 
         if (fontFaceFamily) {
-            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id, false, fontFaceFamily);
+            glyph = await this._drawGlyph(entry, stack, id, false, fontFaceFamily);
+            glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
 
         // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
         // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
         if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
-            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id, false);
+            glyph = await this._drawGlyph(entry, stack, id, false);
+            glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
 
@@ -257,7 +260,8 @@ export class GlyphManager {
             return {stack, id, glyph: response[codePoint] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = entry.glyphs.default[id] = await this._drawGlyph(entry, stack, id, false);
+            const glyph = await this._drawGlyph(entry, stack, id, false);
+            entry.glyphs.default[id] = glyph;
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
         }
