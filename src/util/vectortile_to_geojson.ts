@@ -17,6 +17,23 @@ export type DistributiveOmit<T, K extends DistributiveKeys<T>> = T extends unkno
     : never;
 
 /**
+ * Restores the original types of property values that the GeoJSON worker source JSON-encoded when serializing the tile.
+ *
+ * Vector tiles cannot represent non-primitive property values, so the GeoJSON worker source
+ * stores them as JSON strings prefixed with {@link JSON_PREFIX}. Consumers that evaluate style
+ * expressions against the decoded tile features must parse these values back first, otherwise
+ * e.g. a number array would be evaluated as a string.
+ */
+export function restoreJSONEncodedProperties(feature: VectorTileFeatureLike): void {
+    for (const key in feature.properties) {
+        if (typeof feature.properties[key] !== 'string' || !feature.properties[key].startsWith(JSON_PREFIX)) {
+            continue;
+        }
+        feature.properties[key] = JSON.parse(feature.properties[key].slice(JSON_PREFIX.length));
+    }
+}
+
+/**
  * An extended geojson feature used by the events to return data to the listener
  */
 export type MapGeoJSONFeature = GeoJSONFeature & {
@@ -47,13 +64,7 @@ export class GeoJSONFeature {
         this._y = y;
         this._z = z;
 
-        for (const key in vectorTileFeature.properties) {
-            if (typeof vectorTileFeature.properties[key] !== 'string' || !vectorTileFeature.properties[key].startsWith(JSON_PREFIX)) {
-                continue;
-            }
-            // JSON parsing the special case of a json prefix that is serialized in geojson worker source.
-            vectorTileFeature.properties[key] = JSON.parse(vectorTileFeature.properties[key].slice(JSON_PREFIX.length));
-        }
+        restoreJSONEncodedProperties(vectorTileFeature);
         this.properties = vectorTileFeature.properties;
         this.id = id;
     }

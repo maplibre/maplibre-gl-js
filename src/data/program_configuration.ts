@@ -4,6 +4,7 @@ import {register} from '../util/web_worker_transfer.ts';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g.ts';
 import {clamp} from '../util/util.ts';
+import {restoreJSONEncodedProperties} from '../util/vectortile_to_geojson.ts';
 import {patternAttributes} from './bucket/pattern_attributes.ts';
 import {dashAttributes} from './bucket/dash_attributes.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -192,7 +193,7 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 }
 
-class SourceExpressionBinder implements AttributeBinder {
+export class SourceExpressionBinder implements AttributeBinder {
     expression: SourceExpression;
     type: string;
     maxValue: number;
@@ -578,6 +579,7 @@ export class ProgramConfiguration {
 
             for (const pos of positions) {
                 const feature = vtLayer.feature(pos.index);
+                restoreJSONEncodedProperties(feature);
 
                 for (const property in this.binders) {
                     const binder = this.binders[property];

@@ -3,7 +3,9 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {LineBucket} from './line_bucket.ts';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import {CanonicalTileID} from '../../tile/tile_id.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {serialize, deserialize} from '../../util/web_worker_transfer.ts';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -11,6 +13,7 @@ import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {ZoomHistory} from '../../../src/style/zoom_history.ts';
 import type {BucketFeature, BucketParameters} from '../bucket.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {SourceExpressionBinder, ProgramConfigurationSet} from '../program_configuration.ts';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
 
@@ -224,5 +227,48 @@ describe('LineBucket', () => {
         ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
         expect(bucket.isEmpty()).toBe(true);
+    });
+
+    test('setFeatureState re-evaluation keeps original types of JSON-encoded properties', () => {
+        const bucket = createLineBucket({
+            id: 'test',
+            paint: {
+                'line-width': ['case',
+                    ['boolean', ['feature-state', 'selected'], false], 10,
+                    ['in', 7, ['get', 'attributeIds']], 20,
+                    1]
+            }
+        });
+
+        const feature = {
+            type: 2,
+            properties: {attributeIds: [1, 37]},
+            id: 1
+        } as BucketFeature;
+
+        bucket.addFeature(feature, [[
+            new Point(0, 0),
+            new Point(10, 10)
+        ]], 0, new CanonicalTileID(0, 0, 0), {}, {}, noSubdivision);
+
+        // After setFeatureState the tile is reloaded from the raw pbf, where the GeoJSON worker
+        // source stored the array as a JSON string.
+        const vtLayer = {
+            feature: () => ({
+                type: 2,
+                properties: {attributeIds: '__$json__:[1,37]'},
+                id: 1,
+                extent: 4096,
+                loadGeometry: () => []
+            })
+        } as unknown as VectorTileLayerLike;
+
+        // Buckets cross the worker boundary before update() runs, which indexes the feature map.
+        const programConfigurations = deserialize(serialize(bucket.programConfigurations, [])) as ProgramConfigurationSet<LineStyleLayer>;
+        programConfigurations.updatePaintArrays([{id: '1', state: {selected: false}}], vtLayer, bucket.layers, {imagePositions: {}, dashPositions: {}});
+
+        const binder = programConfigurations.get('test').binders['line-width'] as SourceExpressionBinder;
+        // ["in", 7, [1, 37]] is false for the restored array, but would be true for the raw string.
+        expect(new Float32Array(binder.paintVertexArray.arrayBuffer)[0]).toBe(1);
     });
 });
