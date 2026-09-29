@@ -236,6 +236,37 @@ describe('GeoJSONSource.setData', () => {
         await promise;
         expect(source.loaded()).toBeTruthy();
     });
+
+    test('fires "dataabort" instead of "error" when an update fails after the source is removed', async () => {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                return message.type === MessageType.loadData ? Promise.reject(new Error('worker error')) : Promise.resolve({});
+            }
+        }), undefined);
+        const errorSpy = vi.fn();
+        source.on('error', errorSpy);
+
+        const abort = source.once('dataabort');
+        source.load();
+        source.onRemove();
+
+        await expect(abort).resolves.toBeDefined();
+        expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    test('attaches the resource timing of a URL load to its "data" events', async () => {
+        const timing = {name: 'http://localhost/data.geojson'} as PerformanceResourceTiming;
+        const source = new GeoJSONSource('id', {data: 'http://localhost/data.geojson', collectResourceTiming: true} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() { return Promise.resolve({resourceTiming: {id: [timing]}}); }
+        }), undefined);
+        source.map = {_requestManager: {transformRequest: (url: string) => ({url})}} as any;
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        source.load();
+
+        expect((await promise).resourceTiming).toEqual([timing]);
+    });
+
 });
 
 describe('GeoJSONSource.loadTile', () => {
@@ -298,6 +329,88 @@ describe('GeoJSONSource.loadTile', () => {
         await expect(source.loadTile(tile)).rejects.toThrow('worker error');
         expect(loadVectorDataSpy).not.toHaveBeenCalled();
         expect(tile.abortController).toBeUndefined();
+    });
+
+    test('reloads a tile that was loaded before', async () => {
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                spy(message.type);
+                return Promise.resolve({});
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+        await source.loadTile(tile);
+        await source.loadTile(tile);
+
+        expect(spy.mock.calls).toEqual([[MessageType.loadTile], [MessageType.reloadTile]]);
+    });
+
+    test('ignores what the worker returns for a tile aborted while it was loading', async () => {
+        const answers: Array<() => void> = [];
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return new Promise((resolve) => answers.push(() => resolve({})));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        const loading = source.loadTile(tile);
+        await sleep(0);
+        await source.abortTile(tile);
+        answers.shift()();
+
+        await expect(loading).resolves.toBeUndefined();
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+    });
+
+    test('is cancelled by abortTile while the worker is loading it', async () => {
+        let signal: AbortSignal;
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(_message, abortController: AbortController) {
+                signal = abortController.signal;
+                return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new AbortError())));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        const loading = source.loadTile(tile);
+        await sleep(0);
+        await source.abortTile(tile);
+
+        expect(signal.aborted).toBe(true);
+        expect(tile.aborted).toBe(true);
+        await expect(loading).resolves.toBeUndefined();
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('GeoJSONSource.unloadTile', () => {
+    test('unloads the tile and tells the worker to remove it', async () => {
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                spy(message);
+                return Promise.resolve({});
+            }
+        }), undefined);
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const unloadVectorDataSpy = vi.spyOn(tile, 'unloadVectorData');
+
+        await source.unloadTile(tile);
+
+        expect(unloadVectorDataSpy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith({type: MessageType.removeTile, data: {uid: tile.uid, type: 'geojson', source: 'id'}});
     });
 });
 
@@ -728,6 +841,31 @@ describe('GeoJSONSource.update', () => {
     });
 });
 
+describe('GeoJSONSource.setClusterOptions', () => {
+    test('sends one cluster update for the calls made while the worker is busy', async () => {
+        const messages: LoadGeoJSONParameters[] = [];
+        const answers: Array<() => void> = [];
+        const source = new GeoJSONSource('id', {data: {}, cluster: true} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                messages.push(message.data as LoadGeoJSONParameters);
+                return new Promise((resolve) => answers.push(() => resolve({})));
+            }
+        }), undefined);
+
+        source.load();
+        await sleep(0);
+        source.setClusterOptions({cluster: true, clusterRadius: 10});
+        const done = source.setClusterOptions({cluster: true, clusterMaxZoom: 5});
+        answers.shift()();
+        await sleep(0);
+        answers.shift()();
+        await done;
+
+        expect(messages.map(message => message.updateCluster ?? false)).toEqual([false, true]);
+        expect(messages[1].geojsonVtOptions.clusterOptions).toMatchObject({radius: 10 * EXTENT / source.tileSize, maxZoom: 5});
+    });
+});
+
 describe('GeoJSONSource.getData', () => {
     const mapStub = {
         _requestManager: {
@@ -995,6 +1133,19 @@ describe('GeoJSONSource.updateData', () => {
         source.updateData({add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}}]});
         const error = await errorPromise;
         expect(error.error.message).toBe('GeoJSONSource "id": GeoJSON data is not compatible with updateData');
+    });
+
+    test('asks to reload every tile after a diff to a URL source it has no copy of', async () => {
+        const source = new GeoJSONSource('id', {data: 'http://localhost/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() { return Promise.resolve({}); }
+        }), undefined);
+        source.map = {_requestManager: {transformRequest: (url: string) => ({url})}} as any;
+        await source.load();
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        source.updateData({add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}}]});
+
+        expect((await promise).shouldReloadTileOptions).toBeUndefined();
     });
 });
 
