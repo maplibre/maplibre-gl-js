@@ -204,14 +204,14 @@ export class TaggedString {
      * `text` split into the units it is laid out in. Derived from `text`, so anything that changes
      * `text` clears it.
      */
-    _graphemes: string[] | null;
+    cachedGraphemes: string[] | null;
 
     constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
         this.imageSectionID = null;
-        this._graphemes = null;
+        this.cachedGraphemes = null;
     }
 
     /**
@@ -219,8 +219,8 @@ export class TaggedString {
      * belong to it stay together.
      */
     graphemes(): string[] {
-        this._graphemes ??= toGraphemes(this.text);
-        return this._graphemes;
+        this.cachedGraphemes ??= toGraphemes(this.text);
+        return this.cachedGraphemes;
     }
 
     /** Creates tagged text, applying vertical punctuation when requested. */
@@ -259,14 +259,14 @@ export class TaggedString {
     verticalizePunctuation(glyphMap: GlyphMap = {}, verticals?: boolean[]): void {
         const replacements = verticalizePunctuation(this.text);
         let offset = 0;
-        this._graphemes = this.graphemes().map((grapheme, index) => {
+        this.cachedGraphemes = this.graphemes().map((grapheme, index) => {
             const replacement = replacements.slice(offset, offset + grapheme.length);
             offset += grapheme.length;
             const section = this.getSection(index);
             return verticals?.[index] !== false && 'fontStack' in section && hasVerticalForm(glyphMap, section.fontStack, grapheme) ?
                 grapheme : replacement;
         });
-        this.text = this._graphemes.join('');
+        this.text = this.cachedGraphemes.join('');
     }
 
     /**
@@ -294,7 +294,7 @@ export class TaggedString {
 
         this.text = graphemes.slice(start, end).join('');
         this.sectionIndex = this.sectionIndex.slice(start, end);
-        this._graphemes = null;
+        this.cachedGraphemes = null;
     }
 
     substring(start: number, end: number): TaggedString {
@@ -350,7 +350,7 @@ export class TaggedString {
         const joined = toGraphemes(tail + text);
 
         this.text += text;
-        this._graphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
+        this.cachedGraphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
 
         const added = joined.length - (tail ? 1 : 0);
         for (let i = 0; i < added; i++) {

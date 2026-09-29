@@ -528,7 +528,7 @@ function determineLineVerticals(line: TaggedString, glyphMap: GlyphMap): boolean
 
     if (verticalizeSurroundedPunctuation(chars, verticals, verticalForms)) {
         line.text = chars.join('');
-        line._graphemes = chars;
+        line.cachedGraphemes = chars;
     }
 
     return verticals;
