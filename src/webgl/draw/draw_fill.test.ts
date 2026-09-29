@@ -4,7 +4,7 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {createFrameRenderContext} from '../../render/frame_render_context.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {Program} from '../program.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {drawFill} from './draw_fill.ts';
@@ -40,7 +40,7 @@ describe('drawFill', () => {
         const layer: FillStyleLayer = constructMockLayer();
 
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+        vi.spyOn(painterMock.frameRenderContext, 'useProgram').mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
 
@@ -109,7 +109,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.frameRenderContext = createFrameRenderContext(transform, null, createFrameRenderData(), 'translucent');
+        painterMock.frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent'});
         painterMock.style = {
             map: {
                 projection: {}

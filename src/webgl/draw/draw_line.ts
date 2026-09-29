@@ -12,8 +12,8 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
@@ -165,8 +165,8 @@ function drawLineTiles(
     coords: OverscaledTileID[],
     frameRenderContext: FrameRenderContext
 ) {
-    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
-    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const colorMode = frameRenderContext.colorModeForRenderPass();
 
     const dasharrayProperty = layer.paint.get('line-dasharray');
     const dasharray = dasharrayProperty.constantOr(1 as any);
@@ -199,9 +199,9 @@ function drawLineTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const prevProgram = painter.context.program.get();
-        const program = painter.useProgram(programId, programConfiguration);
+        const program = frameRenderContext.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);
@@ -218,7 +218,7 @@ function drawLineTiles(
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);
         }
 
-        const projectionData = getProjectionDataForTile(frameRenderContext, coord);
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
         const pixelRatio = transform.getPixelScale();
 

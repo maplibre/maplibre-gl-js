@@ -4434,7 +4434,8 @@ export class Map extends Evented<MapEventType> {
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
-        const projectionTransition = this.style.projection?.transitionState ?? 0;
+        const projection = this.style.projection;
+        const projectionTransition = projection?.transitionState ?? 0;
 
         // Actually draw
         this.painter.render(this.style, this._camera.transform, {
@@ -4449,6 +4450,7 @@ export class Map extends Evented<MapEventType> {
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
             projectionTransition,
             isRenderingGlobe: projectionTransition > 0,
+            projectionShaderVariant: projection ? {name: projection.shaderVariantName, define: projection.shaderDefine, prelude: projection.shaderPreludeCode} : undefined,
         });
 
         this.fire(new MapLibreEvent('render'));
