@@ -90,7 +90,7 @@ export class FrameRenderContext {
     readonly context: Context;
     readonly programCache: ProgramCache;
     /** The source whose clipping masks are in the stencil buffer. */
-    currentStencilSource: string;
+    private currentStencilSource: string;
     private nextStencilID: number = 1;
     private tileClippingMaskIDs: Record<string, number> = {};
     private readonly getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
