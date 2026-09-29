@@ -58,8 +58,7 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null);
-        const frameRenderContext = createFrameRenderContext(null, null, createFrameRenderData());
-        frameRenderContext.currentPass = 'opaque';
+        const frameRenderContext = createFrameRenderContext(null, null, createFrameRenderData(), 'opaque');
 
         drawSymbols(mockPainter, null, null, null, null, frameRenderContext);
 
@@ -74,8 +73,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData());
-        painterMock.frameRenderContext.currentPass = 'translucent';
+        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData(), 'translucent');
         painterMock.style = {
             map: {},
             projection: new MercatorProjection()
@@ -135,8 +133,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData());
-        painterMock.frameRenderContext.currentPass = 'translucent';
+        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData(), 'translucent');
 
         const layerSpec = {
             id: 'mock-layer',
@@ -201,8 +198,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData());
-        painterMock.frameRenderContext.currentPass = 'translucent';
+        painterMock.frameRenderContext = createFrameRenderContext(createMockTransform(), null, createFrameRenderData(), 'translucent');
         painterMock.style = {
             projection: new MercatorProjection()
         } as any as Style;

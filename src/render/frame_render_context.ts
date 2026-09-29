@@ -38,9 +38,9 @@ export type FrameRenderContext = {
     readonly data: FrameRenderData;
 };
 
-export function createFrameRenderContext(transform: IReadonlyTransform, terrain: Terrain | null, data: FrameRenderData): FrameRenderContext {
+export function createFrameRenderContext(transform: IReadonlyTransform, terrain: Terrain | null, data: FrameRenderData, currentPass: RenderPass = 'offscreen'): FrameRenderContext {
     return {
-        currentPass: 'offscreen',
+        currentPass,
         currentLayer: 0,
         opaquePassCutoff: Infinity,
         depthRangeFor3D: [0, 1],
