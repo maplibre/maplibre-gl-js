@@ -78,6 +78,7 @@ import type {FeatureIndex} from './data/feature_index.ts';
 import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
 import type {WorkerGlobalScopeInterface} from './util/web_worker.ts';
+import type {TerrainHeightMapTarget} from './render/terrain.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -388,6 +389,7 @@ export {
     type IControl,
     type CustomLayerInterface,
     type CustomLayerProjectionDataParams,
+    type TerrainHeightMapTarget,
     type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
     type PaddingOptions,

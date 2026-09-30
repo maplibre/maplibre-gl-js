@@ -11,7 +11,7 @@ import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi, type TestContext} from 'vitest';
 
-import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType, CustomRenderMethodInput} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 import type {Page, Browser, WebWorker} from 'puppeteer';
 
@@ -574,12 +574,77 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
+        /** Shows the terrain height map of the area around the view in grey, and in red where no terrain is loaded. */
+        class TerrainHeightMap {
+            id = 'terrain-height-map';
+            type = 'custom';
+            map: MapLibreMap;
+            program: WebGLProgram;
+            texture: WebGLTexture;
+
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
+                this.map = map;
+                gl.getExtension('EXT_color_buffer_float');
+                this.texture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, this.texture);
+                gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, 64, 64);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+                const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vertexShader, `#version 300 es
+                out vec2 v_uv;
+                void main() {
+                    v_uv = vec2(gl_VertexID & 1, gl_VertexID >> 1) * 2.0;
+                    gl_Position = vec4(v_uv * 2.0 - 1.0, 0.0, 1.0);
+                }`);
+                gl.compileShader(vertexShader);
+                const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fragmentShader, `#version 300 es
+                precision highp float;
+                uniform highp sampler2D u_heights;
+                in vec2 v_uv;
+                out vec4 fragColor;
+                void main() {
+                    vec4 height = texelFetch(u_heights, ivec2(v_uv * 64.0), 0);
+                    fragColor = height.a == 1.0 ? vec4(vec3(height.r / 6000.0), 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
+                }`);
+                gl.compileShader(fragmentShader);
+                this.program = gl.createProgram();
+                gl.attachShader(this.program, vertexShader);
+                gl.attachShader(this.program, fragmentShader);
+                gl.linkProgram(this.program);
+            }
+
+            prerender(gl: WebGL2RenderingContext, options: CustomRenderMethodInput) {
+                const bounds = this.map.getBounds();
+                const northWest = maplibregl.MercatorCoordinate.fromLngLat(bounds.getNorthWest());
+                const southEast = maplibregl.MercatorCoordinate.fromLngLat(bounds.getSouthEast());
+                const width = southEast.x - northWest.x;
+                const height = southEast.y - northWest.y;
+                options.renderTerrainHeightMap?.({
+                    texture: this.texture,
+                    width: 64,
+                    height: 64,
+                    bounds: [northWest.x - 8 * width, northWest.y - 8 * height, southEast.x + 8 * width, southEast.y + 8 * height]
+                });
+            }
+
+            render(gl: WebGL2RenderingContext) {
+                gl.disable(gl.DEPTH_TEST);
+                gl.useProgram(this.program);
+                gl.bindTexture(gl.TEXTURE_2D, this.texture);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+            }
+        }
+
         const customLayerImplementations = {
             'tent-3d': Tent3D,
             'tent-3d-globe': Tent3DGlobe,
             'null-island': NullIsland,
             'unbind-uniform-buffers': UnbindUniformBuffers,
-            'terrain-tile-colors': TerrainTileColors
+            'terrain-tile-colors': TerrainTileColors,
+            'terrain-height-map': TerrainHeightMap
         };
 
         async function updateFakeCanvas(document: Document, id: string, imagePath: string) {

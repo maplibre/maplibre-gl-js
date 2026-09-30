@@ -1,11 +1,13 @@
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {drawTerrainHeightMap} from './draw_terrain.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
+import type {TerrainHeightMapTarget} from '../../render/terrain.ts';
 
 export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.isRenderingToTexture) {
@@ -14,6 +16,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     }
 
     const {isRenderingGlobe} = frameRenderContext.data;
+    const {terrain} = frameRenderContext;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
@@ -46,7 +49,8 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
                 applyGlobeMatrix: params.applyGlobeMatrix,
                 applyTerrainMatrix: params.applyTerrainMatrix,
             });
-        }
+        },
+        renderTerrainHeightMap: terrain ? (target: TerrainHeightMapTarget) => drawTerrainHeightMap(frameRenderContext, terrain, target) : undefined
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
