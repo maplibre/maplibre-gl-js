@@ -164,6 +164,10 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     map: Map;
     actorPromise: Promise<Actor>;
     _isUpdatingWorker: boolean;
+    /**
+     * Counts the `setData` calls, so that the result of an update sent before the latest one can be told apart.
+     */
+    _setDataCount: number;
     _updatePromise: Promise<void>;
     _pendingWorkerUpdate: {
         data?: GeoJSON.GeoJSON | string;
@@ -194,6 +198,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         this.reparseOverscaled = true;
         this._removed = false;
         this._isUpdatingWorker = false;
+        this._setDataCount = 0;
         this._pendingWorkerUpdate = {data: options.data};
 
         this.actorPromise = dispatcher.getActor();
@@ -283,6 +288,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      */
     setData(data: GeoJSON.GeoJSON | string): Promise<void> {
         this._data = typeof data === 'string' ? {url: data} : {geojson: data};
+        this._setDataCount++;
         this._pendingWorkerUpdate = {data};
         return this._updateWorkerData();
     }
@@ -309,11 +315,13 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     /**
      * Allows to get the source's actual GeoJSON data.
      *
+     * Data set as a URL is returned once it has loaded.
+     *
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        if (this._data.url) {
-            await this.once('data'); // wait for loading to complete
+        while (this._data.url) {
+            await this.once('data');
         }
         if (this._data.geojson) {
             return this._data.geojson;
@@ -490,9 +498,13 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
-     * Send the worker update data from the main thread to the worker
+     * Send the worker update data from the main thread to the worker.
+     *
+     * An update that a `setData` call replaced while it was being sent leaves this source's copy of the data alone,
+     * since the data its result describes is no longer the source's, and still fires its events.
      */
     private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
+        const setDataCount = this._setDataCount;
         this._isUpdatingWorker = true;
         this.fire(new MapSourceDataEvent('dataloading'));
 
@@ -506,12 +518,14 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 return;
             }
 
+            const replaced = setDataCount !== this._setDataCount;
+
             // Update the copy of the data in this source with the worker result. (only sent for url based geojson data)
-            if (result.data) {
+            if (result.data && !replaced) {
                 this._data = {geojson: result.data};
             }
 
-            const affectedGeometries = this._applyDiffToSource(options.dataDiff);
+            const affectedGeometries = replaced ? undefined : this._applyDiffToSource(options.dataDiff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
             const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};

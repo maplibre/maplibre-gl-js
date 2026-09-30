@@ -267,6 +267,71 @@ describe('GeoJSONSource.setData', () => {
         expect((await promise).resourceTiming).toEqual([timing]);
     });
 
+    test('keeps data set during a URL load rather than the data that load returns', async () => {
+        const answers: Array<(result: GeoJSONWorkerSourceLoadDataResult) => void> = [];
+        const source = new GeoJSONSource('id', {data: 'http://localhost/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return new Promise((resolve) => answers.push(resolve));
+            }
+        }), undefined);
+        source.map = {_requestManager: {transformRequest: (url: string) => ({url})}} as any;
+
+        source.load();
+        await sleep(0);
+        const done = source.setData(hawkHill);
+        answers.shift()({data: {type: 'FeatureCollection', features: []}});
+        await sleep(0);
+        answers.shift()({});
+        await done;
+
+        await expect(source.getData()).resolves.toBe(hawkHill);
+    });
+
+    test('resolves getData with the data of the latest URL once it has loaded', async () => {
+        const answers: Array<(result: GeoJSONWorkerSourceLoadDataResult) => void> = [];
+        const source = new GeoJSONSource('id', {data: 'http://localhost/first.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return new Promise((resolve) => answers.push(resolve));
+            }
+        }), undefined);
+        source.map = {_requestManager: {transformRequest: (url: string) => ({url})}} as any;
+
+        source.load();
+        await sleep(0);
+        source.setData('http://localhost/second.geojson');
+        const data = source.getData();
+        answers.shift()({data: {type: 'FeatureCollection', features: []}});
+        await sleep(0);
+        answers.shift()({data: hawkHill});
+
+        await expect(data).resolves.toBe(hawkHill);
+    });
+
+    test('does not apply a diff sent before a setData call to the data that call set', async () => {
+        const answers: Array<() => void> = [];
+        const source = new GeoJSONSource('id', {data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return new Promise((resolve) => answers.push(() => resolve({})));
+            }
+        }), undefined);
+        const errorSpy = vi.fn();
+        source.on('error', errorSpy);
+
+        source.load();
+        await sleep(0);
+        answers.shift()();
+        await sleep(0);
+        source.updateData({add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]});
+        const done = source.setData(hawkHill);
+        await sleep(0);
+        answers.shift()();
+        await sleep(0);
+        answers.shift()();
+        await done;
+
+        expect(errorSpy).not.toHaveBeenCalled();
+        await expect(source.getData()).resolves.toBe(hawkHill);
+    });
 });
 
 describe('GeoJSONSource.loadTile', () => {
