@@ -409,7 +409,7 @@ export class Painter {
         }
 
         if (data.showPadding) {
-            this.drawFunctions.debugPadding(this, data.pixelRatio);
+            this.drawFunctions.debugPadding(frameRenderContext);
         }
 
         // a frame at rest has reused every pooled drape it needs; the rest stay resident until freed here
