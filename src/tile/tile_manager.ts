@@ -807,7 +807,7 @@ export class TileManager extends Evented<SourceEventType> {
                 continue;
             }
             if (tileIds.some(tid => tid.equals(tile.tileID.canonical))) {
-                this._reloadTile(id, 'expired');
+                this._reloadTile(id, tile.state === 'errored' ? 'loading' : 'expired');
             }
         }
     }
