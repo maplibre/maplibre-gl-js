@@ -2684,11 +2684,13 @@ describe('TileManager::refreshTiles', () => {
         expect(tile.state).toBe('errored');
 
         // hold the reload in-flight so the state the tile is reloaded into stays observable
-        tileManager._source.loadTile = () => new Promise<void>(() => {});
+        const loadTile = vi.fn(() => new Promise<void>(() => {}));
+        tileManager._source.loadTile = loadTile;
         tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
 
-        // an errored raster tile has no texture; reloaded as 'expired' it would count as
-        // renderable and crash the raster renderer until the reload settles
+        // a raster tile whose first load failed has no texture; reloaded as 'expired' it would
+        // count as renderable and crash the raster renderer until the reload settles
+        expect(loadTile).toHaveBeenCalledTimes(1);
         expect(tile.state).toBe('loading');
         expect(tile.hasData()).toBe(false);
     });

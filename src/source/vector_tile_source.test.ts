@@ -352,6 +352,42 @@ describe('VectorTileSource', () => {
         await expect(initialLoadPromise).resolves.toStrictEqual({});
     });
 
+    test('requests an errored tile again when it is reloaded as loading', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const events = [];
+        let failRequest = true;
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                events.push(message.type);
+                return failRequest ? Promise.reject(new Error('Error')) : Promise.resolve({});
+            }
+        });
+
+        await waitForMetadataEvent(source);
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData () {
+                this.state = 'loaded';
+            },
+            setExpiryData() {}
+        } as any as Tile;
+        await expect(source.loadTile(tile)).rejects.toThrow('Error');
+        expect(tile.actor).toBeDefined();
+
+        // the tile manager reloads an errored tile as 'loading', on a source data change and in refreshTiles
+        failRequest = false;
+        tile.state = 'loading';
+        const retryPromise = source.loadTile(tile);
+        await sleep(0);
+
+        expect(events).toEqual([MessageType.loadTile, MessageType.loadTile]);
+        expect(tile.state).toBe('loaded');
+        await expect(retryPromise).resolves.toStrictEqual({});
+    });
+
     test('respects TileJSON.bounds', async () => {
         const source = createSource({
             minzoom: 0,

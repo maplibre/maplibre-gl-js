@@ -798,7 +798,8 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     /**
-     * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+     * Reload any currently renderable or errored tiles that match one of the incoming `tileId` x/y/z.
+     * Renderable tiles are reloaded using a state of 'expired', errored tiles use 'loading' since they have nothing to show yet.
      */
     refreshTiles(tileIds: ICanonicalTileID[]): void {
         for (const id of this._inViewTiles.getAllIds()) {

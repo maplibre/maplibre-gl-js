@@ -4,7 +4,8 @@ import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {getMockDispatcher} from '../util/test/util.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {getMockDispatcher, getWrapDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 
 import type {Tile} from '../tile/tile.ts';
@@ -433,5 +434,38 @@ describe('RasterDEMTileSource', () => {
         server.respond();
         await tilePromise;
         expect(tile.state).toBe('loaded');
+    });
+
+    test('loads a tile that errored in the worker when it is reloaded as loading', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const image = await createImageBitmap(new ImageData(16, 16));
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        let failRequest = true;
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                const fail = failRequest && message.type === MessageType.loadDEMTile;
+                return fail ? Promise.reject(new Error('Error')) : Promise.resolve({});
+            }
+        });
+
+        await waitForMetadataEvent(source);
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        await expect(source.loadTile(tile)).rejects.toThrow('Error');
+        expect(tile.state).toBe('errored');
+
+        // the tile manager reloads an errored tile as 'loading', on a source data change and in refreshTiles
+        failRequest = false;
+        tile.state = 'loading';
+        await source.loadTile(tile);
+
+        expect(tile.state).toBe('loaded');
+        expect(tile.dem).toBeDefined();
     });
 });
