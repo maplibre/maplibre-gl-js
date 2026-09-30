@@ -14,6 +14,7 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {Tile} from '../../tile/tile.ts';
+import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
@@ -73,11 +74,11 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 
 const fillExtrusionUniformValues = (
     painter: Painter,
+    light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
 ): UniformValues<FillExtrusionUniformsType> => {
-    const light = painter.frameRenderContext.data.light;
     const lightPos = sphericalToCartesian(light.position);
     const lightMat = mat3.create();
     if (light.anchor === 'viewport') {
@@ -101,6 +102,7 @@ const fillExtrusionUniformValues = (
 
 const fillExtrusionPatternUniformValues = (
     painter: Painter,
+    light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
@@ -108,7 +110,7 @@ const fillExtrusionPatternUniformValues = (
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate),
+    return extend(fillExtrusionUniformValues(painter, light, shouldUseVerticalGradient, opacity, translate),
         patternUniformValues(crossfade, painter, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8

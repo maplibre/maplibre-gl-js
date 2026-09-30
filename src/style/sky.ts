@@ -82,7 +82,7 @@ export class Sky extends Evented {
  * to create an atmosphere near the horizon.
  * But because the fog is drawn from the far-clipping-plane to
  * map-center, and because the fog does nothing know about the horizon,
- * this method does a fadeout in respect of pitch. So, when the horizon
+ * this function does a fadeout in respect of pitch. So, when the horizon
  * gets out of view, which is at about pitch 70, this methods calculates
  * the corresponding opacity values. Below pitch 60 the fog is completely
  * invisible.

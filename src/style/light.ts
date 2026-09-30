@@ -2,9 +2,9 @@ import {Evented} from '../util/evented.ts';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
 import {Transitionable, type Transitioning, type PossiblyEvaluated} from './properties.ts';
-import {EvaluationParameters} from './evaluation_parameters.ts';
 
 import type {LightSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {StyleSetterOptions} from '../style/style.ts';
 import type {TransitionParameters} from './properties.ts';
 
@@ -21,7 +21,6 @@ export class Light extends Evented {
         this._transitionable = new Transitionable(getProperties(), 'light', globalState);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
-        this.recalculate(new EvaluationParameters(0));
     }
 
     getLight(): LightSpecification {

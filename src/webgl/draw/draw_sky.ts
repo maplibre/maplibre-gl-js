@@ -13,11 +13,11 @@ import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.t
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {Painter} from '../../render/painter.ts';
 
-export function drawSky(painter: Painter, sky: Readonly<SkyPropsPossiblyEvaluated>): void {
+export function drawSky(painter: Painter, sky: Readonly<SkyPropsPossiblyEvaluated>, pixelRatio: number): void {
     const context = painter.context;
     const gl = context.gl;
 
-    const skyUniforms = skyUniformValues(sky, painter.frameRenderContext.transform, painter.frameRenderContext.data.pixelRatio);
+    const skyUniforms = skyUniformValues(sky, painter.frameRenderContext.transform, pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;

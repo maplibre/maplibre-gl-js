@@ -17,44 +17,42 @@ const leftColor = new Color(0, 0, 1, 1);
 const rightColor = new Color(1, 0, 1, 1);
 const centerColor = new Color(0, 1, 1, 1);
 
-export function drawDebugPadding(painter: Painter): void {
+export function drawDebugPadding(painter: Painter, pixelRatio: number): void {
     const padding = painter.frameRenderContext.transform.padding;
     const lineWidth = 3;
     // Top
-    drawHorizontalLine(painter, painter.frameRenderContext.transform.height - (padding.top || 0), lineWidth, topColor);
+    drawHorizontalLine(painter, painter.frameRenderContext.transform.height - (padding.top || 0), lineWidth, topColor, pixelRatio);
     // Bottom
-    drawHorizontalLine(painter, padding.bottom || 0, lineWidth, btmColor);
+    drawHorizontalLine(painter, padding.bottom || 0, lineWidth, btmColor, pixelRatio);
     // Left
-    drawVerticalLine(painter, padding.left || 0, lineWidth, leftColor);
+    drawVerticalLine(painter, padding.left || 0, lineWidth, leftColor, pixelRatio);
     // Right
-    drawVerticalLine(painter, painter.frameRenderContext.transform.width - (padding.right || 0), lineWidth, rightColor);
+    drawVerticalLine(painter, painter.frameRenderContext.transform.width - (padding.right || 0), lineWidth, rightColor, pixelRatio);
     // Center
     const center = painter.frameRenderContext.transform.centerPoint;
-    drawCrosshair(painter, center.x, painter.frameRenderContext.transform.height - center.y, centerColor);
+    drawCrosshair(painter, center.x, painter.frameRenderContext.transform.height - center.y, centerColor, pixelRatio);
 }
 
-function drawCrosshair(painter: Painter, x: number, y: number, color: Color) {
+function drawCrosshair(painter: Painter, x: number, y: number, color: Color, pixelRatio: number) {
     const size = 20;
     const lineWidth = 2;
     //Vertical line
-    drawDebugSSRect(painter, x - lineWidth / 2, y - size / 2, lineWidth, size, color);
+    drawDebugSSRect(painter, x - lineWidth / 2, y - size / 2, lineWidth, size, color, pixelRatio);
     //Horizontal line
-    drawDebugSSRect(painter, x - size / 2, y - lineWidth / 2, size, lineWidth, color);
+    drawDebugSSRect(painter, x - size / 2, y - lineWidth / 2, size, lineWidth, color, pixelRatio);
 }
 
-function drawHorizontalLine(painter: Painter, y: number, lineWidth: number, color: Color) {
-    drawDebugSSRect(painter, 0, y  + lineWidth / 2, painter.frameRenderContext.transform.width,  lineWidth, color);
+function drawHorizontalLine(painter: Painter, y: number, lineWidth: number, color: Color, pixelRatio: number) {
+    drawDebugSSRect(painter, 0, y  + lineWidth / 2, painter.frameRenderContext.transform.width,  lineWidth, color, pixelRatio);
 }
 
-function drawVerticalLine(painter: Painter, x: number, lineWidth: number, color: Color) {
-    drawDebugSSRect(painter, x - lineWidth / 2, 0, lineWidth,  painter.frameRenderContext.transform.height, color);
+function drawVerticalLine(painter: Painter, x: number, lineWidth: number, color: Color, pixelRatio: number) {
+    drawDebugSSRect(painter, x - lineWidth / 2, 0, lineWidth,  painter.frameRenderContext.transform.height, color, pixelRatio);
 }
 
-function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, height: number, color: Color) {
+function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, height: number, color: Color, pixelRatio: number) {
     const context = painter.context;
     const gl = context.gl;
-
-    const pixelRatio = painter.frameRenderContext.data.pixelRatio;
 
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(x * pixelRatio, y * pixelRatio, width * pixelRatio, height * pixelRatio);

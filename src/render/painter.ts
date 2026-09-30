@@ -345,7 +345,7 @@ export class Painter {
         frameRenderContext.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (data.sky) this.drawFunctions.sky(this, data.sky);
+        if (data.sky) this.drawFunctions.sky(this, data.sky, data.pixelRatio);
 
         frameRenderContext.setDepthRangeFor3D(style._order.length);
 
@@ -409,7 +409,7 @@ export class Painter {
         }
 
         if (data.showPadding) {
-            this.drawFunctions.debugPadding(this);
+            this.drawFunctions.debugPadding(this, data.pixelRatio);
         }
 
         // a frame at rest has reused every pooled drape it needs; the rest stay resident until freed here

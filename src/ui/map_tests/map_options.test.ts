@@ -49,8 +49,10 @@ describe('mapOptions', () => {
     test('fadeDuration is set after first idle event', async () => {
         let idleTriggered = false;
         const fadeDuration = 100;
-        const spy = vi.spyOn(Style.prototype, 'update').mockImplementation((parameters: EvaluationParameters) => {
+        const update = Style.prototype.update;
+        const spy = vi.spyOn(Style.prototype, 'update').mockImplementation(function (this: Style, parameters: EvaluationParameters) {
             expect(parameters.fadeDuration).toBe(idleTriggered ? fadeDuration : 0);
+            update.call(this, parameters);
         });
         const style = createStyle();
         const map = createMap({style, fadeDuration});
