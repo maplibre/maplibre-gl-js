@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
 - Add an `absolutePadding` option to `Map#cameraForBounds` and `Map#fitBounds` to treat `padding` as the map's persistent padding instead of adding it to the current one ([#8480](https://github.com/maplibre/maplibre-gl-js/issues/8480)) (by [@sargunv](https://github.com/sargunv))
+- Compile new shader programs in parallel where `KHR_parallel_shader_compile` is available, so a style switch or `addLayer` no longer blocks the main thread on each compile; a layer draws once its program is ready, and `load` and `idle` wait for that ([#1876](https://github.com/maplibre/maplibre-gl-js/issues/1876)) (by [@santiago-ramos-02](https://github.com/santiago-ramos-02))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
