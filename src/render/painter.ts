@@ -119,6 +119,11 @@ export class Painter {
     frameRenderContext: FrameRenderContext;
     id: string;
     programCache: ProgramCache;
+    /**
+     * Whether the last frame skipped draws because their programs were still compiling.
+     * The map renders again and does not report itself loaded or idle until a frame draws everything.
+     */
+    skippedDraws: boolean = false;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
@@ -418,6 +423,8 @@ export class Painter {
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.
         this.context.setDefault();
+
+        this.skippedDraws = this.programCache.takePending();
     }
 
     /**

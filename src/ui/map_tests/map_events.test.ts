@@ -987,6 +987,27 @@ describe('map events', () => {
         expect(loadHandler).toThrow('Error in load handler');
     });
 
+    test('fires load and idle only after a frame that skipped no draws', async () => {
+        const map = createMap({style: createStyle(), fadeDuration: 0});
+        const render = map.painter.render.bind(map.painter);
+        let framesWithSkippedDraws = 2;
+        const renderSpy = vi.spyOn(map.painter, 'render').mockImplementation((...args) => {
+            render(...args);
+            if (framesWithSkippedDraws > 0) {
+                framesWithSkippedDraws--;
+                map.painter.skippedDraws = true;
+            }
+        });
+        let framesBeforeLoad = 0;
+        map.on('load', () => { framesBeforeLoad = renderSpy.mock.calls.length; });
+
+        await map.once('idle');
+
+        // The first two frames skipped draws, so the map renders again and loads on the third.
+        expect(framesBeforeLoad).toBe(3);
+        expect(map.painter.skippedDraws).toBe(false);
+    });
+
     test('no idle event during move', async () => {
         const style = createStyle();
         const map = createMap({style, fadeDuration: 0});

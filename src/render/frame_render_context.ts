@@ -82,6 +82,13 @@ const MERCATOR_SHADER_VARIANT: ProjectionShaderVariant = {
 };
 
 /**
+ * Programs that must be ready when first used, because a skipped draw would not be redrawn
+ * next frame: clipping masks and depth passes gate the draws after them in the same frame,
+ * the terrain passes feed its depth and coordinates, and `hillshadePrepare` output is kept per tile.
+ */
+const PROGRAMS_REQUIRED_WHEN_USED: ReadonlySet<string> = new Set(['clippingMask', 'depth', 'terrain', 'terrainDepth', 'hillshadePrepare']);
+
+/**
  * @internal
  * The state of one frame, created per render and updated as rendering proceeds.
  * Corresponds to part of MapLibre Native's `PaintParameters`.
@@ -150,7 +157,9 @@ export class FrameRenderContext {
             projectionShaderVariant: forceSimpleProjection ? MERCATOR_SHADER_VARIANT : this.data.projectionShaderVariant,
             showOverdrawInspector: this.data.showOverdrawInspector,
             useTerrain: this.terrain !== null,
-            defines
+            defines,
+            // Textures rendered for terrain are kept across frames, so every draw into them must happen.
+            wait: this.isRenderingToTexture || PROGRAMS_REQUIRED_WHEN_USED.has(name)
         });
     }
 

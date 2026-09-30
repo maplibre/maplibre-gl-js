@@ -14,15 +14,20 @@ type ProgramVariant = {
     showOverdrawInspector: boolean;
     useTerrain: boolean;
     defines: string[];
+    /** Complete a still-compiling program before returning it instead of letting its draws skip this frame. */
+    wait: boolean;
 };
 
 /**
  * @internal
  * Compiles each shader variant the first time it is asked for and deletes all of them on destroy.
+ * Where the driver compiles in parallel, a new program is returned before it is ready and its
+ * draws are skipped until it is; see {@link ProgramCache#takePending}.
  */
 export class ProgramCache {
     private readonly context: Context;
     private programs: Record<string, Program<UniformBindings>> = {};
+    private pending = false;
 
     constructor(context: Context) {
         this.context = context;
@@ -51,7 +56,21 @@ export class ProgramCache {
             variant.projectionShaderVariant.define,
             variant.defines
         );
-        return this.programs[key];
+        const program = this.programs[key];
+        if (!program.isReady(variant.wait)) {
+            this.pending = true;
+        }
+        return program;
+    }
+
+    /**
+     * Whether a program returned since the last call was still compiling, so some draws were
+     * skipped and the caller should render another frame. Resets the flag.
+     */
+    takePending(): boolean {
+        const pending = this.pending;
+        this.pending = false;
+        return pending;
     }
 
     destroy(): void {

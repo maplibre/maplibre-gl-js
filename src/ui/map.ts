@@ -4310,13 +4310,14 @@ export class Map extends Evented<MapEventType> {
      * Returns a Boolean indicating whether the map is fully loaded.
      *
      * Returns `false` if the style is not yet fully loaded,
-     * or if there has been a change to the sources or style that
-     * has not yet fully loaded.
+     * if there has been a change to the sources or style that
+     * has not yet fully loaded, or if the last frame skipped layers
+     * whose shaders were still compiling.
      *
      * @returns A Boolean indicating whether the map is fully loaded.
      */
     loaded(): boolean {
-        return !this._styleDirty && !this._sourcesDirty && !!this.style && this.style.loaded();
+        return !this._styleDirty && !this._sourcesDirty && !!this.style && this.style.loaded() && !this.painter.skippedDraws;
     }
 
     /**
@@ -4481,7 +4482,7 @@ export class Map extends Evented<MapEventType> {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style.update or
         // Style._updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.painter.renderToTexture?.needsFollowUpFrame;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.painter.renderToTexture?.needsFollowUpFrame || this.painter.skippedDraws;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

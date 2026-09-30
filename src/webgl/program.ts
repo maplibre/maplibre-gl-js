@@ -19,6 +19,9 @@ import type {BinderUniform} from '../data/program_configuration.ts';
 import type {TerrainData} from '../render/terrain.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
+/** `KHR_parallel_shader_compile`: whether the driver has finished compiling and linking a program. */
+const COMPLETION_STATUS_KHR = 0x91B1;
+
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
 function getTokenizedAttributesAndUniforms(array: string[]): string[] {
@@ -65,6 +68,12 @@ export class Program<Us extends UniformBindings> {
     terrainUniforms: TerrainPreludeUniformsType;
     binderUniforms: BinderUniform[];
     failedToCreate: boolean;
+    /**
+     * Completes setup once the driver has linked the program. Set only while a
+     * parallel compile is still pending; see {@link Program#isReady}.
+     */
+    private finishLink: (() => void) | null = null;
+    private readonly gl: WebGL2RenderingContext;
 
     constructor(context: Context,
         source: PreparedShader,
@@ -76,7 +85,7 @@ export class Program<Us extends UniformBindings> {
         projectionDefine: string,
         extraDefines: string[] = []) {
 
-        const gl = context.gl;
+        const gl = this.gl = context.gl;
         this.program = gl.createProgram();
 
         const staticAttrInfo = getTokenizedAttributesAndUniforms(source.staticAttributes);
@@ -130,13 +139,52 @@ export class Program<Us extends UniformBindings> {
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
-        const uniformLocations = {};
 
         this.numAttributes = allAttrInfo.length;
 
         // Link before reading any status so the driver can overlap both compiles; the shaders are
         // only asked how they compiled when the link failed, to name the one at fault.
         gl.linkProgram(this.program);
+
+        // Reading any program state blocks until the driver has compiled and linked. With
+        // KHR_parallel_shader_compile the rest of setup waits until the driver reports completion,
+        // so a frame that meets several new programs issues all their compiles and keeps drawing
+        // instead of stalling on each one in turn.
+        const finishLink = () => this.completeLink(context, fragmentShader, vertexShader,
+            allAttrInfo, allUniformsInfo, fixedUniforms, configuration);
+        if (gl.getExtension('KHR_parallel_shader_compile')) {
+            this.finishLink = finishLink;
+        } else {
+            finishLink();
+        }
+    }
+
+    /**
+     * Whether the program can draw. While a parallel compile is still running this returns
+     * false without blocking, unless `wait` is set, which completes the compile first.
+     * @param wait - Block until the program is ready, for draws that must not be skipped.
+     */
+    isReady(wait: boolean = false): boolean {
+        const finishLink = this.finishLink;
+        if (!finishLink) return true;
+        const gl = this.gl;
+        if (!wait && !gl.isContextLost() && !gl.getProgramParameter(this.program, COMPLETION_STATUS_KHR)) {
+            return false;
+        }
+        this.finishLink = null;
+        finishLink();
+        return true;
+    }
+
+    private completeLink(context: Context,
+        fragmentShader: WebGLShader,
+        vertexShader: WebGLShader,
+        allAttrInfo: string[],
+        allUniformsInfo: string[],
+        fixedUniforms: (b: Context, a: UniformLocations) => Us,
+        configuration: ProgramConfiguration): void {
+        const gl = this.gl;
+        const uniformLocations: UniformLocations = {};
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
             if (gl.isContextLost()) {
@@ -202,7 +250,7 @@ export class Program<Us extends UniformBindings> {
 
         const gl = context.gl;
 
-        if (this.failedToCreate) return;
+        if (!this.isReady() || this.failedToCreate) return;
 
         context.program.set(this.program);
         context.terrainUniformBuffer.bind();
