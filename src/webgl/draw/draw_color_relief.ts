@@ -17,8 +17,7 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
     if (frameRenderContext.currentPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
-    const projection = painter.style.projection;
-    const useSubdivision = projection.useSubdivision;
+    const {useSubdivision} = frameRenderContext.data;
 
     const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = frameRenderContext.colorModeForRenderPass();

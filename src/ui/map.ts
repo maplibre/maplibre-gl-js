@@ -642,6 +642,7 @@ export class Map extends Evented<MapEventType> {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
+    _clampedPixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     _missingStyleImageResolver: MissingStyleImageResolver | null = null;
     /** @internal */
@@ -1627,18 +1628,18 @@ export class Map extends Evented<MapEventType> {
     _resizeInternal(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
-        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-        this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
+        this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+        this._resizeCanvas(width, height, this._clampedPixelRatio);
+        this.painter.resize(width, height, this._clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
         if (this.painter.overLimit()) {
             const gl = this.painter.context.gl;
             // store updated _maxCanvasSize value
             this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-            this._resizeCanvas(width, height, clampedPixelRatio);
-            this.painter.resize(width, height, clampedPixelRatio);
+            this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+            this._resizeCanvas(width, height, this._clampedPixelRatio);
+            this.painter.resize(width, height, this._clampedPixelRatio);
         }
 
         this._resizeTransform(constrainTransform);
@@ -4452,6 +4453,9 @@ export class Map extends Evented<MapEventType> {
             isRenderingGlobe: projectionTransition > 0,
             projectionShaderVariant: projection ? {name: projection.shaderVariantName, define: projection.shaderDefine, prelude: projection.shaderPreludeCode} : undefined,
             useSubdivision: projection?.useSubdivision ?? false,
+            pixelRatio: this._clampedPixelRatio,
+            light: this.style.light?.getEvaluated(),
+            sky: this.style.sky?.getEvaluated(),
         });
 
         this.fire(new MapLibreEvent('render'));

@@ -19,6 +19,8 @@ import type {ProgramConfiguration} from '../data/program_configuration.ts';
 import type {PreparedShader} from '../shaders/shaders.ts';
 import type {Mesh} from './mesh.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
+import type {LightPropsPossiblyEvaluated} from '../style/light_properties.g.ts';
+import type {SkyPropsPossiblyEvaluated} from '../style/sky_properties.g.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -47,6 +49,12 @@ export type FrameRenderData = {
     readonly projectionShaderVariant: ProjectionShaderVariant | undefined;
     /** Whether the projection subdivides tile meshes this frame. */
     readonly useSubdivision: boolean;
+    /** Drawing buffer pixels per CSS pixel, after the map clamps it to the largest canvas the GPU supports. */
+    readonly pixelRatio: number;
+    /** The style's light, evaluated for this frame, undefined until the style has loaded. */
+    readonly light: Readonly<LightPropsPossiblyEvaluated> | undefined;
+    /** The style's sky, evaluated for this frame, undefined until the style has loaded. */
+    readonly sky: Readonly<SkyPropsPossiblyEvaluated> | undefined;
 };
 
 type FrameRenderContextOptions = {
