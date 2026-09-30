@@ -26,13 +26,16 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
 };
 
 /**
- * Whether the layer is drawn into the terrain tiles' textures rather than onto the map: the layer types above, and
- * custom layers that implement `renderToTerrainTile`.
+ * Returns the key under which a tile keeps the fingerprint of the layer, which is the layer's source, or its id for a custom layer.
  */
 function rttFingerprintKey(layer: StyleLayer): string | undefined {
     return isCustomStyleLayer(layer) ? `custom-layer:${layer.id}` : layer.source;
 }
 
+/**
+ * Whether the layer is drawn into the terrain tiles' textures rather than onto the map: the layer types above, and
+ * custom layers that implement `renderToTerrainTile`.
+ */
 function isRenderedToTexture(layer: StyleLayer): boolean {
     if (isCustomStyleLayer(layer)) return layer.implementation.renderToTerrainTile !== undefined;
     return LAYERS_TO_TEXTURES[layer.type] === true;
