@@ -551,7 +551,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     /**
      * Apply a diff to this source's data and return the affected feature geometries.
      * @param diff - The {@link GeoJSONSourceDiff} to apply.
-     * @returns The affected geometries, or undefined if the diff is not applicable or all geometries are affected.
+     * @returns The affected geometries, or undefined if the diff is not applicable or all geometries are affected,
+     * as they are whenever the source is clustered: a changed point can regroup clusters on any tile.
      */
     private _applyDiffToSource(diff: GeoJSONSourceDiff): GeoJSON.Geometry[] | undefined {
         if (!diff) {
@@ -572,7 +573,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         }
         const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
 
-        if (diff.removeAll || this._options.cluster) {
+        if (diff.removeAll || this.workerOptions.geojsonVtOptions.cluster) {
             return undefined;
         }
 

@@ -1435,6 +1435,16 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 
         expect(shouldReloadTileOptions).toBeUndefined();
     });
+
+    test('handles cluster turned on after the source was created', async () => {
+        source = new GeoJSONSource('id', {data: {}, cluster: false} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        await source.setClusterOptions({cluster: true});
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        source.updateData({add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]});
+
+        expect((await promise).shouldReloadTileOptions).toBeUndefined();
+    });
 });
 
 describe('GeoJSONSource.getClusterExpansionZoom', () => {
