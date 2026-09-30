@@ -28,7 +28,7 @@
         maxPitch: 85
     });
 
-    // The area of the grid and the points, [west, north, east, south] in Mercator coordinates
+    // The area of the points, [west, north, east, south] in Mercator coordinates
     const northWest = maplibregl.MercatorCoordinate.fromLngLat([7.9, 46.65]);
     const southEast = maplibregl.MercatorCoordinate.fromLngLat([8.1, 46.5]);
     const bounds = [northWest.x, northWest.y, southEast.x, southEast.y];
@@ -59,11 +59,9 @@
                     v_mercator = mix(u_tile.xw, u_tile.zy, corner);
                     gl_Position = vec4(corner * 2.0 - 1.0, 0.0, 1.0);
                 }`, `
-                uniform vec4 u_bounds;
                 in vec2 v_mercator;
                 out vec4 fragColor;
                 void main() {
-                    if (any(lessThan(v_mercator, u_bounds.xy)) || any(greaterThan(v_mercator, u_bounds.zw))) discard;
                     vec2 lngLat = vec2(v_mercator.x * 360.0 - 180.0, degrees(atan(sinh(3.14159265 * (1.0 - 2.0 * v_mercator.y)))));
                     vec2 pixels = abs(fract(lngLat / 0.01 - 0.5) - 0.5) / fwidth(lngLat / 0.01);
                     float line = 1.0 - clamp(min(pixels.x, pixels.y) - 1.0, 0.0, 1.0);
@@ -78,7 +76,6 @@
             const x = tileID.canonical.x + tileID.wrap * tiles;
             gl.useProgram(this.program);
             gl.uniform4f(gl.getUniformLocation(this.program, 'u_tile'), x / tiles, tileID.canonical.y / tiles, (x + 1) / tiles, (tileID.canonical.y + 1) / tiles);
-            gl.uniform4fv(gl.getUniformLocation(this.program, 'u_bounds'), bounds);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         }
     };
@@ -120,7 +117,6 @@
             this.buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
             // The height map holds the elevation in meters in red, and needs a float texture
             gl.getExtension('EXT_color_buffer_float');
             this.heightMap = gl.createTexture();

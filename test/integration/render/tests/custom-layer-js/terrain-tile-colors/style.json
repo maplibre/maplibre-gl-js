@@ -21,29 +21,13 @@
       "maxzoom": 12,
       "tileSize": 256
     },
-    "shapes": {
+    "polygon": {
       "type": "geojson",
-      "data": {
-        "type": "FeatureCollection",
-        "features": [
-          {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [[[11.52311, 47.34347], [11.52723, 47.34347], [11.52723, 47.34627], [11.52311, 47.34627], [11.52311, 47.34347]]]
-            }
-          },
-          {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-              "type": "LineString",
-              "coordinates": [[11.52174, 47.34487], [11.52860, 47.34487]]
-            }
-          }
-        ]
-      }
+      "data": {"type": "Polygon", "coordinates": [[[11.52311, 47.34347], [11.52723, 47.34347], [11.52723, 47.34627], [11.52311, 47.34627], [11.52311, 47.34347]]]}
+    },
+    "line": {
+      "type": "geojson",
+      "data": {"type": "LineString", "coordinates": [[11.52174, 47.34487], [11.52860, 47.34487]]}
     }
   },
   "layers": [
@@ -55,20 +39,17 @@
     {
       "id": "fill",
       "type": "fill",
-      "source": "shapes",
-      "filter": ["==", ["geometry-type"], "Polygon"],
+      "source": "polygon",
       "paint": {"fill-color": "blue"}
     },
     {
       "id": "line",
       "type": "line",
-      "source": "shapes",
-      "filter": ["==", ["geometry-type"], "LineString"],
+      "source": "line",
       "paint": {"line-color": "black", "line-width": 2}
     }
   ],
   "terrain": {
-    "source": "terrain",
-    "exaggeration": 1
+    "source": "terrain"
   }
 }
