@@ -5,6 +5,9 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `GeoJSONSource#updateData` leaving stale clusters on untouched tiles after clustering was turned on with `setClusterOptions` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
+- Fix `GeoJSONSource#setClusterOptions` clustering twice when called while new data is waiting to be sent ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
+- Fix `GeoJSONSource` data set with `setData` being overwritten by the result of an earlier URL load or `updateData` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix fill-extrusion walls facing exactly east or west skipping `fill-extrusion-vertical-gradient` and rendering brighter than the other walls ([#8604](https://github.com/maplibre/maplibre-gl-js/pull/8604)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `easeTo` and `flyTo` pulling the center elevation onto the terrain when `centerClampedToGround` is false ([#8566](https://github.com/maplibre/maplibre-gl-js/issues/8566)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Respect map padding when constraining the camera to max bounds, so the padded viewport can pan fully to its edges ([#8501](https://github.com/maplibre/maplibre-gl-js/issues/8501)) (by [@erenbati](https://github.com/erenbati))
