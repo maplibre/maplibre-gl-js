@@ -592,7 +592,7 @@ describe('GeoJSONSource.update', () => {
         source.setData(sourceData2);
         await source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        expect(spy).toHaveBeenCalledTimes(3);
+        expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(true);
         expect(spy.mock.calls[0][0].data.data).toEqual(sourceData1);
@@ -602,11 +602,6 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
         expect(spy.mock.calls[1][0].data.data).toEqual(sourceData2);
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
-        expect(spy.mock.calls[2][0].data.geojsonVtOptions.cluster).toBe(true);
-        expect(spy.mock.calls[2][0].data.geojsonVtOptions.clusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
-        expect(spy.mock.calls[2][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
-        expect(spy.mock.calls[2][0].data.data).toBeUndefined();
-        expect(spy.mock.calls[2][0].data.dataDiff).toBeUndefined();
     });
 
     test('modifying cluster properties after sending a diff', async () => {
@@ -863,6 +858,22 @@ describe('GeoJSONSource.setClusterOptions', () => {
 
         expect(messages.map(message => message.updateCluster ?? false)).toEqual([false, true]);
         expect(messages[1].geojsonVtOptions.clusterOptions).toMatchObject({radius: 10 * EXTENT / source.tileSize, maxZoom: 5});
+    });
+
+    test('sends no cluster update behind data that is waiting to be sent', async () => {
+        const messages: LoadGeoJSONParameters[] = [];
+        const source = new GeoJSONSource('id', {data: {}, cluster: false} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                messages.push(message.data as LoadGeoJSONParameters);
+                return Promise.resolve({});
+            }
+        }), undefined);
+
+        await source.setClusterOptions({cluster: true});
+
+        expect(messages).toHaveLength(1);
+        expect(messages[0].updateCluster).toBeUndefined();
+        expect(messages[0].geojsonVtOptions.cluster).toBe(true);
     });
 });
 

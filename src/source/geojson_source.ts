@@ -168,6 +168,10 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     _pendingWorkerUpdate: {
         data?: GeoJSON.GeoJSON | string;
         diff?: GeoJSONSourceDiff;
+        /**
+         * Whether the worker has to regroup its clusters with the current options. Pending data needs no such
+         * refresh, since it is sent with the options current at that time.
+         */
         updateCluster?: boolean;
     };
     _collectResourceTiming: boolean;
@@ -346,7 +350,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         if (options.clusterMaxZoom !== undefined) {
             this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
-        this._pendingWorkerUpdate.updateCluster = true;
+        if (this._pendingWorkerUpdate.data === undefined) this._pendingWorkerUpdate.updateCluster = true;
         return this._updateWorkerData();
     }
 
