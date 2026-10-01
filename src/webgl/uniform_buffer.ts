@@ -48,7 +48,6 @@ export class UniformBuffer {
     uploadedWords: Uint32Array;
     pendingWords: Uint32Array;
     hasData: boolean;
-    bindingDirty: boolean;
 
     constructor(context: Context, binding: number, layout: Std140Layout) {
         this.context = context;
@@ -58,13 +57,11 @@ export class UniformBuffer {
         this.buffer = gl.createBuffer();
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
         gl.bufferData(gl.UNIFORM_BUFFER, layout.sizeWords * 4, gl.DYNAMIC_DRAW);
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, this.buffer);
         this.uploaded = new Float32Array(layout.sizeWords);
         this.pending = new Float32Array(layout.sizeWords);
         this.uploadedWords = new Uint32Array(this.uploaded.buffer);
         this.pendingWords = new Uint32Array(this.pending.buffer);
         this.hasData = false;
-        this.bindingDirty = false;
     }
 
     upload(): void {
@@ -81,11 +78,13 @@ export class UniformBuffer {
             }
         }
 
-        this.bind();
-
-        if (!changed) return;
+        if (!changed) {
+            this.bind();
+            return;
+        }
 
         gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
+        this.context.boundUniformBuffers[this.binding] = this.buffer;
         gl.bufferData(gl.UNIFORM_BUFFER, this.pending, gl.DYNAMIC_DRAW);
         this.uploaded.set(this.pending);
         this.hasData = true;
@@ -93,10 +92,11 @@ export class UniformBuffer {
 
     /** Restores the indexed binding after external rendering without uploading unchanged data. */
     bind(): void {
-        if (!this.bindingDirty) return;
+        const boundUniformBuffers = this.context.boundUniformBuffers;
+        if (boundUniformBuffers[this.binding] === this.buffer) return;
         const gl = this.context.gl;
         gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
-        this.bindingDirty = false;
+        boundUniformBuffers[this.binding] = this.buffer;
     }
 
     destroy(): void {

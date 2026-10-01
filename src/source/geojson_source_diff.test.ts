@@ -607,6 +607,16 @@ describe('mergeSourceDiffs', () => {
         expect(merged.add).toHaveLength(2);
     });
 
+    test('leaves the ids of the merged features alone when using promote id', () => {
+        const kept = {type: 'Feature', id: 'explicit', geometry: {type: 'Point', coordinates: [0, 0]}, properties: {promoted: 'pid1'}} satisfies GeoJSON.Feature;
+        const dropped = {type: 'Feature', geometry: {type: 'Point', coordinates: [1, 1]}, properties: {promoted: 'pid2'}} satisfies GeoJSON.Feature;
+
+        const merged = mergeSourceDiffs({add: [kept, dropped]}, {remove: ['pid2']}, 'promoted');
+        expect(merged.add).toEqual([kept]);
+        expect(kept.id).toBe('explicit');
+        expect('id' in dropped).toBe(false);
+    });
+
     test('merges two diffs update feature then remove', () => {
         const diff1 = {
             update: [{id: 'feature1', newGeometry: {type: 'Point', coordinates: [1, 1]}, addOrUpdateProperties: [{key: 'prop1', value: 'value'}]}],
