@@ -968,14 +968,6 @@ export class VerticalPerspectiveTransform implements ITransform {
             projected[2] > -1 && projected[2] < 1;
     }
 
-    /**
-     * @internal
-     * Returns a {@link LngLat} representing geographical coordinates that correspond to the specified pixel coordinates.
-     * Note: if the point does not lie on the globe, returns a location on the visible globe horizon (edge) that is
-     * as close to the point as possible.
-     * @param p - Screen point in pixels to unproject.
-     * @param terrain - Optional terrain.
-     */
     /** Returns the location under the pixel on the planet raised by the elevation, and what {@link unprojectScreenPoint} returns where the pixel's ray misses it. */
     private unprojectScreenPointAtElevation(p: Point, elevation: number): LngLat {
         const rayDirection = this.getRayDirectionFromPixel(p);
@@ -987,6 +979,14 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(raised);
     }
 
+    /**
+     * @internal
+     * Returns a {@link LngLat} representing geographical coordinates that correspond to the specified pixel coordinates.
+     * Note: if the point does not lie on the globe, returns a location on the visible globe horizon (edge) that is
+     * as close to the point as possible.
+     * @param p - Screen point in pixels to unproject.
+     * @param terrain - Optional terrain.
+     */
     private unprojectScreenPoint(p: Point): LngLat {
         // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
         // As always, we assume that the planet is centered at 0,0,0 and has radius 1.

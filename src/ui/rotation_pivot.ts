@@ -1,6 +1,8 @@
 import Point from '@mapbox/point-geometry';
+import {vec3} from 'gl-matrix';
 import {earthRadius} from '../geo/lng_lat.ts';
-import {degreesToRadians} from '../util/util.ts';
+import {angularCoordinatesToSurfaceVector} from '../geo/projection/globe_utils.ts';
+import {scaleZoom, zoomScale} from '../util/util.ts';
 
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
@@ -41,24 +43,23 @@ export function captureRotationPivot(tr: IReadonlyTransform, point: Point, terra
 /**
  * Turns the camera around the pivot, keeping only the change of bearing where the tilt would bring the pivot close to the horizon.
  * A pivot at the center turns the camera in place, without that limit.
- * Returns false where the pivot cannot be held, as for a camera that looks up or next to a pole of the globe, and turns the camera in place there too.
+ * Returns false where the pivot cannot be held, as next to a pole of the globe, and turns the camera in place there too.
  */
 export function orbitRotationPivot(tr: ITransform, pivot: RotationPivot, deltas: HandlerResult): boolean {
     if (pivot.point.equals(tr.centerPoint)) {
-        turn(tr, deltas);
+        turnInPlace(tr, deltas);
         return true;
     }
     const camera = turnAroundPivot(tr, pivot, deltas) ?? turnAroundPivot(tr, pivot, {bearingDelta: deltas.bearingDelta});
     if (!camera) {
-        turn(tr, deltas);
+        turnInPlace(tr, deltas);
         return false;
     }
     tr.apply(camera, false);
     return true;
 }
 
-/** Changes the bearing, pitch and roll of the camera, which turns it in place. */
-function turn(tr: ITransform, deltas: HandlerResult): void {
+function turnInPlace(tr: ITransform, deltas: HandlerResult): void {
     tr.setBearing(tr.bearing + (deltas.bearingDelta || 0));
     tr.setPitch(tr.pitch + (deltas.pitchDelta || 0));
     tr.setRoll(tr.roll + (deltas.rollDelta || 0));
@@ -67,13 +68,13 @@ function turn(tr: ITransform, deltas: HandlerResult): void {
 /** Returns the camera turned around the pivot, or null where that would make it look up, bring the pivot close to the horizon or lose it. */
 function turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: HandlerResult): ITransform | null {
     const camera = start.clone();
-    turn(camera, deltas);
+    turnInPlace(camera, deltas);
     if (camera.pitch >= 90 || !isBelowHorizon(camera, pivot.point)) return null;
     return holdPivot(camera, pivot) && isAtScreenPoint(camera, pivot) ? camera : null;
 }
 
 /**
- * Zooms and moves the camera so the pivot is at its screen point and distance. A zoom limit can keep it from the distance.
+ * Zooms and moves the camera so the pivot is at its screen point and distance, or as close to the distance as the zoom limits allow.
  * Returns false where no zoom gives the distance, which is where the camera would have to go below the ground.
  *
  * The distance grows with the span of the view, in a straight line on mercator and nearly so on the globe,
@@ -83,19 +84,18 @@ function holdPivot(tr: ITransform, pivot: RotationPivot): boolean {
     let span = 1;
     let distance = placePivot(tr, pivot);
     let nextSpan = pivot.distance / distance;
-    for (let i = 0; ; i++) {
-        if (Math.abs(distance / pivot.distance - 1) < DISTANCE_TOLERANCE) return true;
-        if (i === MAX_ZOOM_CORRECTIONS || !Number.isFinite(nextSpan) || nextSpan <= 0) return false;
+    for (let i = 0; i < MAX_ZOOM_CORRECTIONS && !isAtDistance(distance, pivot); i++) {
+        if (!Number.isFinite(nextSpan) || nextSpan <= 0) return false;
         const zoom = tr.zoom;
-        tr.setZoom(zoom + Math.log2(span / nextSpan));
-        nextSpan = span * 2 ** (zoom - tr.zoom);
-        if (nextSpan === span) return true;
-        const nextDistance = placePivot(tr, pivot);
-        const distancePerSpan = (nextDistance - distance) / (nextSpan - span);
-        span = nextSpan;
-        distance = nextDistance;
-        nextSpan = span + (pivot.distance - distance) / distancePerSpan;
+        tr.setZoom(zoom + scaleZoom(span / nextSpan));
+        const reachedSpan = span * zoomScale(zoom - tr.zoom);
+        if (reachedSpan === span) return true;
+        const reachedDistance = placePivot(tr, pivot);
+        nextSpan = reachedSpan + (pivot.distance - reachedDistance) * (reachedSpan - span) / (reachedDistance - distance);
+        span = reachedSpan;
+        distance = reachedDistance;
     }
+    return isAtDistance(distance, pivot);
 }
 
 /** Moves the camera so the pivot is at its screen point, and returns the pivot's distance from the camera. */
@@ -104,10 +104,14 @@ function placePivot(tr: ITransform, pivot: RotationPivot): number {
     return distanceFromCamera(tr, pivot.location, pivot.elevation);
 }
 
+function isAtDistance(distance: number, pivot: RotationPivot): boolean {
+    return Math.abs(distance / pivot.distance - 1) < DISTANCE_TOLERANCE;
+}
+
 /** Whether the ground under the pivot's screen point is the pivot, which the edge of the map or a pole of the globe can prevent. A pivot on terrain is not checked. */
 function isAtScreenPoint(tr: IReadonlyTransform, pivot: RotationPivot): boolean {
     if (pivot.elevation !== undefined) return true;
-    const offset = 2 * earthRadius * Math.sqrt(haversine(tr.screenPointToLocation(pivot.point), pivot.location));
+    const offset = vec3.distance(positionOf(tr.screenPointToLocation(pivot.point), 0), positionOf(pivot.location, 0));
     return offset < pivot.distance * POINT_TOLERANCE;
 }
 
@@ -117,15 +121,11 @@ function isBelowHorizon(tr: IReadonlyTransform, point: Point): boolean {
 
 /** Returns the straight-line distance in meters from the camera to a location, at the center's elevation unless it has its own. */
 function distanceFromCamera(tr: IReadonlyTransform, location: LngLat, elevation: number = tr.elevation): number {
-    const cameraRadius = earthRadius + tr.getCameraAltitude();
-    const radius = earthRadius + elevation;
-    return Math.hypot(cameraRadius - radius, 2 * Math.sqrt(cameraRadius * radius * haversine(tr.getCameraLngLat(), location)));
+    return vec3.distance(positionOf(tr.getCameraLngLat(), tr.getCameraAltitude()), positionOf(location, elevation));
 }
 
-/** Returns the haversine of the angle between two locations, which unlike {@link LngLat.distanceTo} stays exact for locations a pixel apart. */
-function haversine(a: LngLat, b: LngLat): number {
-    const latitudeA = degreesToRadians(a.lat);
-    const latitudeB = degreesToRadians(b.lat);
-    const longitudes = degreesToRadians(b.lng - a.lng);
-    return Math.sin((latitudeB - latitudeA) / 2) ** 2 + Math.cos(latitudeA) * Math.cos(latitudeB) * Math.sin(longitudes / 2) ** 2;
+/** Returns the position of a location in meters from the center of the earth. */
+function positionOf(location: LngLat, elevation: number): vec3 {
+    const position = angularCoordinatesToSurfaceVector(location);
+    return vec3.scale(position, position, earthRadius + elevation);
 }
