@@ -974,13 +974,12 @@ describe('TileManager.update', () => {
         expect(tileManager.getTile(wrappedTileID)).toBe(tile);
     });
 
-    // maxzoom 10 puts the children exactly at the source max zoom
-    test.each([14, 10])('retains fading children and applies fading logic when zooming out with source maxzoom %i', async (maxzoom) => {
+    test('retains fading children and applies fading logic when zooming out', async () => {
         const transform = new MercatorTransform();
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true, maxzoom});
+        const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -1013,13 +1012,46 @@ describe('TileManager.update', () => {
         }
     });
 
-    // maxzoom 10 puts the grandchildren exactly at the source max zoom
-    test.each([14, 10])('retains fading grandchildren and applies fading logic when zooming out with source maxzoom %i', async (maxzoom) => {
+    test('retains fading children and applies fading logic when zooming out from the source maxzoom', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(1024, 1024);
+        transform.setZoom(10);
+
+        const tileManager = createTileManager({raster: true, maxzoom: 10});
+        const loadedTiles: Record<string, Tile> = {};
+        tileManager._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
+            tile.state = 'loaded';
+        };
+        tileManager.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                tileManager.update(transform);
+            }
+        });
+        tileManager.setRasterFadeDuration(300);
+        tileManager.onAdd(undefined);
+
+        await sleep(0);
+        const children: Tile[] = Object.values(loadedTiles);
+
+        transform.setZoom(9);
+        tileManager.update(transform);
+        await sleep(0);
+
+        for (const child of children) {
+            expect(loadedTiles).toHaveProperty(child.tileID.key);
+            expect(child.fadingRole).toEqual(FadingRoles.Base);
+            expect(child.fadingDirection).toEqual(FadingDirections.Departing);
+            expect(child.fadingParentID).toBeInstanceOf(OverscaledTileID);
+        }
+    });
+
+    test('retains fading grandchildren and applies fading logic when zooming out', async () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(10);
 
-        const tileManager = createTileManager({raster: true, maxzoom});
+        const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
         tileManager._source.loadTile = async (tile) => {
             loadedTiles[tile.tileID.key] = tile;
@@ -1044,6 +1076,40 @@ describe('TileManager.update', () => {
         await sleep(0);
 
         // ensure that the loaded grandchild was retained and fading logic was applied
+        for (const grandChild of grandChildren) {
+            expect(loadedTiles).toHaveProperty(grandChild.tileID.key);
+            expect(grandChild.fadingRole).toEqual(FadingRoles.Base);
+            expect(grandChild.fadingDirection).toEqual(FadingDirections.Departing);
+            expect(grandChild.fadingParentID).toBeInstanceOf(OverscaledTileID);
+        }
+    });
+
+    test('retains fading grandchildren and applies fading logic when zooming out from the source maxzoom', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(10);
+
+        const tileManager = createTileManager({raster: true, maxzoom: 10});
+        const loadedTiles: Record<string, Tile> = {};
+        tileManager._source.loadTile = async (tile) => {
+            loadedTiles[tile.tileID.key] = tile;
+            tile.state = 'loaded';
+        };
+        tileManager.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                tileManager.update(transform);
+            }
+        });
+        tileManager.setRasterFadeDuration(300);
+        tileManager.onAdd(undefined);
+
+        await sleep(0);
+        const grandChildren: Tile[] = Object.values(loadedTiles);
+
+        transform.setZoom(8);
+        tileManager.update(transform);
+        await sleep(0);
+
         for (const grandChild of grandChildren) {
             expect(loadedTiles).toHaveProperty(grandChild.tileID.key);
             expect(grandChild.fadingRole).toEqual(FadingRoles.Base);
