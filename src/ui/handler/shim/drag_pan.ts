@@ -6,6 +6,13 @@ import type {TouchPanHandler} from './../touch_pan.ts';
  */
 export type DragPanOptions = {
     /**
+     * Preserve bearing while dragging the globe. Set to false to allow free
+     * rotation across the poles. Free globe dragging stops on release without pan inertia.
+     * Has no effect on Mercator panning.
+     * @defaultValue true
+     */
+    fixedBearing?: boolean;
+    /**
      * factor used to scale the drag velocity
      * @defaultValue 0
      */
@@ -40,6 +47,7 @@ export class DragPanHandler {
     _mousePan: MousePanHandler;
     _touchPan: TouchPanHandler;
     _inertiaOptions: DragPanOptions | boolean;
+    _fixedBearing = true;
 
     /** @internal */
     constructor(el: HTMLElement, mousePan: MousePanHandler, touchPan: TouchPanHandler) {
@@ -65,6 +73,7 @@ export class DragPanHandler {
      */
     enable(options?: DragPanOptions | boolean): void {
         this._inertiaOptions = options || {};
+        this._fixedBearing = typeof options === 'object' ? options.fixedBearing ?? true : true;
         this._mousePan.enable();
         this._touchPan.enable();
         this._el.classList.add('maplibregl-touch-drag-pan');
