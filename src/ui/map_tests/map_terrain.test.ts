@@ -303,7 +303,7 @@ describe('renderTerrainHeightMap', () => {
         expect(gl.viewport).toHaveBeenCalledWith(0, 0, 64, 32);
     });
 
-    test('keeps the framebuffer and viewport of a custom layer that draws the height map in render', async () => {
+    test('is not given to custom layers in render', async () => {
         vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
         map = createMap({zoom: 14, style: {
             version: 8,
@@ -311,22 +311,13 @@ describe('renderTerrainHeightMap', () => {
             layers: [],
             terrain: {source: 'dem'}
         }});
-        const gl = map.painter.context.gl;
-        const texture = gl.createTexture();
-        const afterHeightMap = vi.fn();
-        const layer: CustomLayerInterface = {
-            id: 'custom',
-            type: 'custom',
-            render: (_gl, options) => {
-                options.renderTerrainHeightMap({texture, width: 64, height: 32, bounds: [0.5, 0.25, 0.75, 0.5]});
-                afterHeightMap(vi.mocked(gl.bindFramebuffer).mock.lastCall, vi.mocked(gl.viewport).mock.lastCall);
-            }
-        };
+        const render = vi.fn();
         await map.once('load');
-        map.addLayer(layer);
+
+        map.addLayer({id: 'custom', type: 'custom', render});
         await map.once('idle');
 
-        expect(afterHeightMap).toHaveBeenCalledWith([gl.FRAMEBUFFER, null], [0, 0, 200, 200]);
+        expect(render).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({renderTerrainHeightMap: undefined}));
     });
 
     test('is not given to custom layers without terrain', async () => {

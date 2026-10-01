@@ -164,9 +164,8 @@ export type CustomRenderMethodInput = {
 
     /**
      * Draws the elevation of the terrain as the map draws it into a texture, so that the layer can place many
-     * objects on the ground on the GPU. Only set while terrain is enabled. Call it again after the camera moves,
-     * terrain tiles load or the terrain changes. It keeps the bound framebuffer and viewport, but set up the rest of
-     * your WebGL state afterwards.
+     * objects on the ground on the GPU. Only set in {@link CustomLayerInterface.prerender}, while terrain is enabled.
+     * Call it again after the camera moves, terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
      */
     renderTerrainHeightMap?: (target: TerrainHeightMapTarget) => void;
 };

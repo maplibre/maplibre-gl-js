@@ -70,8 +70,6 @@ function drawTerrainHeightMap(frameRenderContext: FrameRenderContext, terrain: T
     const context = frameRenderContext.context;
     const gl = context.gl;
     const [minX, minY, maxX, maxY] = target.bounds;
-    const previousFramebuffer = context.bindFramebuffer.get();
-    const previousViewport = context.viewport.get();
     context.setDirty();
     const framebuffer = terrain.getHeightMapFramebuffer(target.texture);
     context.viewport.set([0, 0, target.width, target.height]);
@@ -93,8 +91,6 @@ function drawTerrainHeightMap(frameRenderContext: FrameRenderContext, terrain: T
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, ColorMode.unblended, CullFaceMode.disabled, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
     framebuffer.colorAttachment.set(null);
-    context.bindFramebuffer.set(previousFramebuffer);
-    context.viewport.set(previousViewport);
 }
 
 export {

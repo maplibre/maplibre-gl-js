@@ -50,7 +50,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
                 applyTerrainMatrix: params.applyTerrainMatrix,
             });
         },
-        renderTerrainHeightMap: terrain ? (target: TerrainHeightMapTarget) => drawTerrainHeightMap(frameRenderContext, terrain, target) : undefined
+        renderTerrainHeightMap: terrain && frameRenderContext.currentPass === 'offscreen' ? (target: TerrainHeightMapTarget) => drawTerrainHeightMap(frameRenderContext, terrain, target) : undefined
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
