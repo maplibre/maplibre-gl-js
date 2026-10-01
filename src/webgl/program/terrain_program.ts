@@ -6,8 +6,9 @@ import {
     UniformColor
 } from '../uniform_binding.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {calculateFogBlendOpacity} from '../../style/sky.ts';
 
-import type {Sky} from '../../style/sky.ts';
+import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
 import type {mat4} from 'gl-matrix';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
@@ -65,18 +66,18 @@ const terrainHeightUniforms = (context: Context, locations: UniformLocations): T
 const terrainUniformValues = (
     eleDelta: number,
     fogMatrix: mat4,
-    sky: Sky,
+    sky: Readonly<SkyPropsPossiblyEvaluated> | undefined,
     pitch: number,
     isGlobeMode: boolean): UniformValues<TerrainUniformsType> => ({
     'u_texture': 0,
     'u_ele_delta': eleDelta,
     'u_fog_matrix': fogMatrix,
-    'u_fog_color': sky ? sky.properties.get('fog-color') : Color.white,
-    'u_fog_ground_blend': sky ? sky.properties.get('fog-ground-blend') : 1,
+    'u_fog_color': sky ? sky['fog-color'] : Color.white,
+    'u_fog_ground_blend': sky ? sky['fog-ground-blend'] : 1,
     // Set opacity to 0 when in globe mode to disable fog
-    'u_fog_ground_blend_opacity': isGlobeMode ? 0 : (sky ? sky.calculateFogBlendOpacity(pitch) : 0),
-    'u_horizon_color': sky ? sky.properties.get('horizon-color') : Color.white,
-    'u_horizon_fog_blend': sky ? sky.properties.get('horizon-fog-blend') : 1,
+    'u_fog_ground_blend_opacity': isGlobeMode ? 0 : (sky ? calculateFogBlendOpacity(pitch) : 0),
+    'u_horizon_color': sky ? sky['horizon-color'] : Color.white,
+    'u_horizon_fog_blend': sky ? sky['horizon-fog-blend'] : 1,
     'u_is_globe_mode': isGlobeMode ? 1 : 0
 });
 
