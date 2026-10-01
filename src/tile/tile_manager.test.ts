@@ -2671,6 +2671,29 @@ describe('TileManager::refreshTiles', () => {
         expect(spy.mock.calls[2][1]).toBe('expired');
         expect(spy.mock.calls[3][1]).toBe('expired');
     });
+
+    test('reloads errored tiles as loading, not expired', async () => {
+        const coord = new OverscaledTileID(1, 0, 1, 0, 1);
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const tile = tileManager._addTile(coord);
+        await sleep(0);
+        expect(tile.state).toBe('errored');
+
+        // hold the reload in-flight so the state the tile is reloaded into stays observable
+        const loadTile = vi.fn(() => new Promise<void>(() => {}));
+        tileManager._source.loadTile = loadTile;
+        tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+
+        // a raster tile whose first load failed has no texture; reloaded as 'expired' it would
+        // count as renderable and crash the raster renderer until the reload settles
+        expect(loadTile).toHaveBeenCalledTimes(1);
+        expect(tile.state).toBe('loading');
+        expect(tile.hasData()).toBe(false);
+    });
 });
 
 describe('TileManager / etag', () => {
