@@ -12,9 +12,24 @@ describe('captureRotationPivot', () => {
         const transform = createTransform();
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
 
-        const pivot = captureRotationPivot(transform, new Point(570, 370), terrain);
+        const pivot = captureRotationPivot(transform, new Point(570, 370), terrain, false);
 
         expect(pivot.elevation).toBeCloseTo(1000);
+        expect(transform.locationToScreenPoint(pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
+    });
+
+    test('picks the surface of the planet under the terrain on the globe', () => {
+        const transform = new GlobeTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(800, 600);
+        transform.setCenter(new LngLat(10, 45));
+        transform.setZoom(10);
+        transform.setPitch(60);
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 3000));
+
+        const pivot = captureRotationPivot(transform, new Point(570, 370), terrain, true);
+
+        expect(pivot.elevation).toBeUndefined();
+        expect(transform.locationToScreenPoint(pivot.location).dist(pivot.point)).toBeLessThan(0.1);
         expect(transform.locationToScreenPoint(pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
     });
 
@@ -22,7 +37,7 @@ describe('captureRotationPivot', () => {
         const transform = createTransform();
         transform.setPitch(85);
 
-        const pivot = captureRotationPivot(transform, new Point(400, 0), null);
+        const pivot = captureRotationPivot(transform, new Point(400, 0), null, false);
 
         expect(pivot.point).toEqual(new Point(400, 300));
         expect(pivot.location).toEqual(new LngLat(0, 0));
@@ -33,7 +48,7 @@ describe('orbitRotationPivot', () => {
     test('keeps the pivot at its screen point and zooms to keep its distance from the camera', () => {
         const transform = createTransform();
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 6000));
-        const pivot = captureRotationPivot(transform, new Point(570, 370), terrain);
+        const pivot = captureRotationPivot(transform, new Point(570, 370), terrain, false);
 
         orbitRotationPivot(transform, pivot, {bearingDelta: 30, pitchDelta: -20, rollDelta: 10});
 
@@ -50,7 +65,7 @@ describe('orbitRotationPivot', () => {
         transform.setCenter(new LngLat(10, 45));
         transform.setZoom(5);
         transform.setPitch(60);
-        const pivot = captureRotationPivot(transform, new Point(570, 370), null);
+        const pivot = captureRotationPivot(transform, new Point(570, 370), null, true);
 
         orbitRotationPivot(transform, pivot, {bearingDelta: 30, pitchDelta: -20});
 
@@ -63,7 +78,7 @@ describe('orbitRotationPivot', () => {
     test('keeps the pivot at its screen point where the zoom is at its limit', () => {
         const transform = createTransform();
         transform.setZoom(22);
-        const pivot = captureRotationPivot(transform, new Point(570, 370), null);
+        const pivot = captureRotationPivot(transform, new Point(570, 370), null, false);
 
         orbitRotationPivot(transform, pivot, {bearingDelta: 30, pitchDelta: -20});
 
@@ -75,7 +90,7 @@ describe('orbitRotationPivot', () => {
 
     test('keeps only the change of bearing of a frame that would tilt the pivot close to the horizon', () => {
         const transform = createTransform();
-        const pivot = captureRotationPivot(transform, new Point(500, 50), null);
+        const pivot = captureRotationPivot(transform, new Point(500, 50), null, false);
 
         orbitRotationPivot(transform, pivot, {bearingDelta: 10, pitchDelta: 20});
 
@@ -87,7 +102,7 @@ describe('orbitRotationPivot', () => {
     test('keeps only the change of bearing of a frame that would make the camera look up', () => {
         const transform = createTransform();
         transform.setMaxPitch(180);
-        const pivot = captureRotationPivot(transform, new Point(500, 550), null);
+        const pivot = captureRotationPivot(transform, new Point(500, 550), null, false);
 
         orbitRotationPivot(transform, pivot, {bearingDelta: 10, pitchDelta: 40});
 
@@ -100,7 +115,7 @@ describe('orbitRotationPivot', () => {
         const transform = createTransform();
         transform.setMaxPitch(180);
         transform.setPitch(85);
-        const pivot = captureRotationPivot(transform, new Point(400, 0), null);
+        const pivot = captureRotationPivot(transform, new Point(400, 0), null, false);
 
         orbitRotationPivot(transform, pivot, {bearingDelta: 10, pitchDelta: 10});
 
@@ -112,7 +127,7 @@ describe('orbitRotationPivot', () => {
     test('turns the camera in place where the edge of the map keeps the pivot from its screen point', () => {
         const transform = createTransform();
         transform.setZoom(1);
-        const pivot = captureRotationPivot(transform, new Point(700, 100), null);
+        const pivot = captureRotationPivot(transform, new Point(700, 100), null, false);
 
         const held = orbitRotationPivot(transform, pivot, {bearingDelta: 60});
 

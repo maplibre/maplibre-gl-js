@@ -729,15 +729,14 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * Moves the center so that `lnglat`, `elevation` meters above the planet's surface, renders at the screen `point`.
-     *
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = 0): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point, _elevation?: number): void {
+        // The elevation is ignored: this transform solves on the planet's surface.
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
-        const pointLngLat = this.unprojectScreenPointAtElevation(point, elevation);
+        const pointLngLat = this.unprojectScreenPoint(point);
         const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
         const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
 
@@ -966,17 +965,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return projected[0] > -1 && projected[0] < 1 &&
             projected[1] > -1 && projected[1] < 1 &&
             projected[2] > -1 && projected[2] < 1;
-    }
-
-    /** Returns the location under the pixel on the planet raised by the elevation, and what {@link unprojectScreenPoint} returns where the pixel's ray misses it. */
-    private unprojectScreenPointAtElevation(p: Point, elevation: number): LngLat {
-        const rayDirection = this.getRayDirectionFromPixel(p);
-        const intersection = raySphereIntersection(this._cameraPosition, rayDirection, 1 + elevation / earthRadius);
-        if (!intersection) return this.unprojectScreenPoint(p);
-        const raised = createVec3f64();
-        vec3.scaleAndAdd(raised, this._cameraPosition, rayDirection, intersection.tMin);
-        vec3.normalize(raised, raised);
-        return sphereSurfacePointToCoordinates(raised);
     }
 
     /**

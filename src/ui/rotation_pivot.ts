@@ -25,18 +25,24 @@ const POINT_TOLERANCE = 1e-4;
 export type RotationPivot = {
     point: Point;
     location: LngLat;
-    /** The elevation of a pivot on terrain. Without it the pivot lies on the ground the transform unprojects to. */
+    /** The elevation of a pivot on mercator terrain. Without it the pivot lies on the ground the transform unprojects to. */
     elevation?: number;
     distance: number;
 };
 
-/** Picks the terrain under the point, or the ground without terrain there, and the center for a point in the sky. */
-export function captureRotationPivot(tr: IReadonlyTransform, point: Point, terrain: Terrain | null): RotationPivot {
+/**
+ * Picks the terrain under the point, or the ground without terrain there, and the center for a point in the sky.
+ * On the globe, which holds no location at an elevation, a pivot on terrain is held by the planet's surface under it.
+ */
+export function captureRotationPivot(tr: IReadonlyTransform, point: Point, terrain: Terrain | null, onGlobe: boolean): RotationPivot {
     if (!isBelowHorizon(tr, point)) {
         return {point: tr.centerPoint, location: tr.center, distance: distanceFromCamera(tr, tr.center)};
     }
     const hit = terrain ? tr.screenTerrainPointToMercatorCoordinate(point, terrain) : null;
     const location = hit ? hit.toLngLat() : tr.screenPointToLocation(point);
+    if (hit && onGlobe) {
+        return {point: tr.locationToScreenPoint(location), location, distance: distanceFromCamera(tr, location)};
+    }
     return {point, location, elevation: hit?.z, distance: distanceFromCamera(tr, location, hit?.z)};
 }
 

@@ -439,16 +439,15 @@ describe('GlobeTransform', () => {
                 });
             });
 
-            test('holds the location at the given elevation when rendering the globe', () => {
+            test('ignores the elevation parameter when rendering the globe', () => {
                 const transform = createGlobeTransform();
-                transform.setZoom(10);
-                transform.setPitch(60);
-                coords = new LngLat(0.05, 0.05);
-                point = new Point(320, 200);
+                transform.setZoom(1);
+                coords = new LngLat(5, 10);
+                point = new Point(320, 240);
                 transform.setLocationAtPoint(coords, point, 1000);
-                projected = transform.locationToScreenPoint(coords, createTerrain());
-                expect(projected.x).toBeCloseTo(point.x, 5);
-                expect(projected.y).toBeCloseTo(point.y, 5);
+                unprojected = transform.screenPointToLocationAtElevation(point, 1000);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
             });
 
             test('solves on the plane at the given elevation when rendering mercator', () => {

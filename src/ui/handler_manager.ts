@@ -643,7 +643,7 @@ export class HandlerManager {
 
     /** Turns the camera around the drag's pivot, holding the center elevation over terrain until the drag ends like every gesture. */
     _orbitRotationPivot(tr: ITransform, combinedResult: HandlerResult, terrain: Terrain | null): void {
-        this._rotationPivot ??= captureRotationPivot(tr, combinedResult.around, terrain);
+        this._rotationPivot ??= captureRotationPivot(tr, combinedResult.around, terrain, this._camera.cameraHelper.useGlobeControls);
         const held = orbitRotationPivot(tr, this._rotationPivot, combinedResult);
         if (!held) this._rotationPivot = null;
         if (!terrain) return;
