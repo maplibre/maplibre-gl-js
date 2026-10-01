@@ -623,6 +623,7 @@ export class HandlerManager {
         this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
     }
 
+    /** Applies the frame's camera to the map, records the frame for inertia and fires its events. */
     _commitFrame(tr: ITransform,
         combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,

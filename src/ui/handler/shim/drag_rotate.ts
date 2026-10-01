@@ -22,7 +22,9 @@ export type DragRotateHandlerOptions = {
 export type DragRotateOptions = {
     /**
      * If `'pointer'` is passed, the map turns and tilts around the terrain under the pointer where the drag starts,
-     * which keeps its place on the screen and its distance from the camera, so tilting also zooms.
+     * which keeps its place on the screen and its distance from the camera, so tilting also zooms. The bearing then
+     * follows the horizontal movement of the pointer, as with {@link MapOptions.aroundCenter} set to `false`.
+     * A drag that starts in the sky, or on a globe, turns around the center.
      * @defaultValue 'center'
      */
     around?: 'center' | 'pointer';
@@ -65,7 +67,7 @@ export class DragRotateHandler {
      * ```
      */
     enable(options?: DragRotateOptions | boolean): void {
-        this.around = typeof options === 'object' ? options.around ?? 'center' : 'center';
+        this.around = typeof options === 'object' && options.around === 'pointer' ? 'pointer' : 'center';
         this._mouseRotate.enable();
         if (this._pitchWithRotate) this._mousePitch.enable();
         if (this._rollEnabled) this._mouseRoll.enable();

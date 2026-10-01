@@ -16,9 +16,9 @@ export type RotationPivot = {
     distance: number;
 };
 
-/** Picks the terrain under the point, or the ground at the center's elevation, and the center when the point is in the sky. */
+/** Picks the terrain under the point, or the ground at the center's elevation, and the center for a point in the sky or a camera that looks up. */
 export function captureRotationPivot(tr: IReadonlyTransform, point: Point, terrain: Terrain | null): RotationPivot {
-    if (!isBelowHorizon(tr, point)) {
+    if (tr.pitch >= 90 || !isBelowHorizon(tr, point)) {
         return {point: tr.centerPoint, location: tr.center, elevation: tr.elevation, distance: distanceFromCamera(tr, tr.center, tr.elevation)};
     }
     const hit = terrain ? tr.screenTerrainPointToMercatorCoordinate(point, terrain) : null;
@@ -27,18 +27,30 @@ export function captureRotationPivot(tr: IReadonlyTransform, point: Point, terra
     return {point, location, elevation, distance: distanceFromCamera(tr, location, elevation)};
 }
 
-/** Turns the camera around the pivot, keeping only the change of bearing where the tilt would bring the pivot close to the horizon. */
+/**
+ * Turns the camera around the pivot, keeping only the change of bearing where the tilt would bring the pivot close to the horizon.
+ * A pivot at the center turns the camera in place, without that limit.
+ */
 export function orbitRotationPivot(tr: ITransform, pivot: RotationPivot, deltas: HandlerResult): void {
+    if (pivot.point.equals(tr.centerPoint)) {
+        turn(tr, deltas);
+        return;
+    }
     const camera = turnAroundPivot(tr, pivot, deltas) ?? turnAroundPivot(tr, pivot, {bearingDelta: deltas.bearingDelta});
     if (camera) tr.apply(camera, false);
+}
+
+/** Changes the bearing, pitch and roll of the camera, which turns it in place. */
+function turn(tr: ITransform, deltas: HandlerResult): void {
+    tr.setBearing(tr.bearing + (deltas.bearingDelta || 0));
+    tr.setPitch(tr.pitch + (deltas.pitchDelta || 0));
+    tr.setRoll(tr.roll + (deltas.rollDelta || 0));
 }
 
 /** Returns the camera turned around the pivot, or null where that would bring the pivot close to the horizon. */
 function turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: HandlerResult): ITransform | null {
     const camera = start.clone();
-    camera.setBearing(start.bearing + (deltas.bearingDelta || 0));
-    camera.setPitch(start.pitch + (deltas.pitchDelta || 0));
-    camera.setRoll(start.roll + (deltas.rollDelta || 0));
+    turn(camera, deltas);
     return isBelowHorizon(camera, pivot.point) && holdPivot(camera, pivot) ? camera : null;
 }
 

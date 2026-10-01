@@ -12,7 +12,7 @@ import {Painter, type RTTObject} from '../../render/painter.ts';
 import {MapSourceDataEvent} from '../events.ts';
 import * as timeControl from '../../util/time_control.ts';
 
-import type {Map, MapOptions} from '../map.ts';
+import type {Map} from '../map.ts';
 import type {Terrain} from '../../render/terrain.ts';
 
 let server: FakeServer;
@@ -301,8 +301,8 @@ describe('Gesture end on terrain', () => {
 });
 
 describe('Terrain changing under and around a gesture', () => {
-    async function createMapOverTerrain(pitch: number, options?: Partial<MapOptions>): Promise<Map> {
-        const map = createMap({interactive: true, zoom: 11, pitch, ...options});
+    async function createMapOverTerrain(pitch: number): Promise<Map> {
+        const map = createMap({interactive: true, zoom: 11, pitch});
         await map.once('load');
         map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
         map.setTerrain({source: 'dem'});
@@ -337,7 +337,8 @@ describe('Terrain changing under and around a gesture', () => {
     });
 
     test('a drag around the pointer holds the center elevation until it ends', async () => {
-        const map = await createMapOverTerrain(60, {dragRotate: {around: 'pointer'}});
+        const map = await createMapOverTerrain(60);
+        map.dragRotate.enable({around: 'pointer'});
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
         const pivot = map.unproject([40, 180]);
 

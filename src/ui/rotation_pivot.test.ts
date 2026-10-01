@@ -34,12 +34,13 @@ describe('orbitRotationPivot', () => {
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
         const pivot = captureRotationPivot(transform, new Point(570, 370), terrain);
 
-        orbitRotationPivot(transform, pivot, {bearingDelta: 30, pitchDelta: -20});
+        orbitRotationPivot(transform, pivot, {bearingDelta: 30, pitchDelta: -20, rollDelta: 10});
 
         expect(transform.bearing).toBeCloseTo(30);
         expect(transform.pitch).toBeCloseTo(40);
+        expect(transform.roll).toBeCloseTo(10);
         expect(transform.locationToScreenPoint(pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
-        expect(transform.zoom).toBeCloseTo(12.116943, 5);
+        expect(transform.zoom).toBeCloseTo(12.082897, 5);
     });
 
     test('keeps only the change of bearing of a frame that would tilt the pivot close to the horizon', () => {
@@ -53,6 +54,18 @@ describe('orbitRotationPivot', () => {
         expect(transform.locationToScreenPoint(pivot.location).dist(new Point(500, 50))).toBeLessThan(0.1);
     });
 
+    test('turns a camera that looks up in place', () => {
+        const transform = createTransform();
+        transform.setMaxPitch(180);
+        transform.setPitch(100);
+        const pivot = captureRotationPivot(transform, new Point(400, 500), null);
+
+        orbitRotationPivot(transform, pivot, {bearingDelta: 10, pitchDelta: -5});
+
+        expect(transform.bearing).toBeCloseTo(10);
+        expect(transform.pitch).toBeCloseTo(95);
+        expect(transform.center).toEqual(new LngLat(0, 0));
+    });
 });
 
 function createTransform(): MercatorTransform {
