@@ -195,7 +195,7 @@ export class HandlerManager {
      * under the fingers; the gesture's end re-solves the camera onto the terrain.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null};
-    /** The point a drag turns the camera around, picked on its first frame and kept until it ends. */
+    /** The point a drag turns the camera around, picked on its first frame and kept until it ends or cannot be held. */
     _rotationPivot: RotationPivot | null = null;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
@@ -638,13 +638,14 @@ export class HandlerManager {
     /** Whether a frame rotates the camera around its own `around` point, which drag to rotate sets when it turns around the pointer. */
     _turnsAroundPivot(combinedResult: HandlerResult, combinedEventsInProgress: EventsInProgress): boolean {
         if (!combinedResult.around) return false;
-        return !combinedEventsInProgress.drag && !combinedEventsInProgress.zoom && !this._camera.cameraHelper.useGlobeControls;
+        return !combinedEventsInProgress.drag && !combinedEventsInProgress.zoom;
     }
 
     /** Turns the camera around the drag's pivot, holding the center elevation over terrain until the drag ends like every gesture. */
     _orbitRotationPivot(tr: ITransform, combinedResult: HandlerResult, terrain: Terrain | null): void {
         this._rotationPivot ??= captureRotationPivot(tr, combinedResult.around, terrain);
-        orbitRotationPivot(tr, this._rotationPivot, combinedResult);
+        const held = orbitRotationPivot(tr, this._rotationPivot, combinedResult);
+        if (!held) this._rotationPivot = null;
         if (!terrain) return;
         this._terrainGesture.inFlight = true;
         this._camera.elevationFreeze = true;

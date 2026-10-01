@@ -560,7 +560,7 @@ describe('dragRotate around the pointer', () => {
         map.redraw();
 
         expect(firstPivotDuringDrag.dist(new Point(60, 150))).toBeLessThan(0.1);
-        expect(zoomAfterTilt).toBeCloseTo(11.961011, 5);
+        expect(zoomAfterTilt).toBeCloseTo(11.961036, 5);
         expect(map.project(secondPivot).dist(new Point(140, 120))).toBeLessThan(0.1);
     });
 });
