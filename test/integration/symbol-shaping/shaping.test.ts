@@ -15,7 +15,7 @@ import expectedBreakBeforeBracket from './tests/text-shaping-break-before-bracke
 import expectedZeroWidthSpaceBreak from './tests/text-shaping-zero-width-space.json' with {type: 'json'};
 
 import type {GlyphPosition} from '../../../src/render/glyph_atlas.ts';
-import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
+import type {GlyphMap} from '../../../src/style/style_glyph.ts';
 import type {StyleImage} from '../../../src/style/style_image.ts';
 
 let UPDATE = false;
@@ -44,8 +44,8 @@ describe('shaping', () => {
     const layoutTextSize = 16;
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
-    const glyphPositions = {'Test': byGraphemeCluster(glyphsJson)};
-    const glyphs = glyphPositions as unknown as Record<string, Record<string, StyleGlyph>>;
+    const glyphPositions = {'Test': {default: byGraphemeCluster(glyphsJson)}};
+    const glyphs = glyphPositions as unknown as GlyphMap;
 
     const images = {
         'square': new ImagePosition({x: 0, y: 0, w: 16, h: 16}, {pixelRatio: 1, version: 1} as StyleImage),

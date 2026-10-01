@@ -45,6 +45,9 @@ export type EaseToHandlerOptions = {
 
 export type EaseToHandlerResult = {
     easeFunc: (k: number) => void;
+    /**
+     * The map center when the animation ends.
+     */
     elevationCenter: LngLat;
     isZooming: boolean;
 };
@@ -65,6 +68,9 @@ export type FlyToHandlerResult = {
     easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
     scaleOfZoom: number;
     scaleOfMinZoom: number;
+    /**
+     * The map center when the animation ends.
+     */
     targetCenter: LngLat;
     pixelPathLength: number;
 };
@@ -121,7 +127,11 @@ export interface ICameraHelper {
 
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+    /**
+     * @param fitPadding - The `padding` option of `cameraForBounds`: the space wanted around the bounds.
+     * @param mapPadding - The map's own padding, as in `map.getPadding()`, which the bounds must also stay clear of.
+     */
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void;
 
@@ -159,9 +169,7 @@ export function updateRotation(args: UpdateRotationArgs): void {
     }
 }
 
-export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
-    const edgePadding = tr.padding;
-
+export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
     // Consider all corners of the rotated bounding box derived from the given points
     // when find the camera position that fits the given points.
 
@@ -187,11 +195,11 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
         Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
     );
 
-    // Calculate zoom: consider the original bbox and padding.
+    // Calculate zoom: consider the original bbox and both paddings.
     const size = upperRight.sub(lowerLeft);
 
-    const availableWidth = (tr.width - (edgePadding.left + edgePadding.right + padding.left + padding.right));
-    const availableHeight = (tr.height - (edgePadding.top + edgePadding.bottom + padding.top + padding.bottom));
+    const availableWidth = (tr.width - (mapPadding.left + mapPadding.right + fitPadding.left + fitPadding.right));
+    const availableHeight = (tr.height - (mapPadding.top + mapPadding.bottom + fitPadding.top + fitPadding.bottom));
     const scaleX = availableWidth / size.x;
     const scaleY = availableHeight / size.y;
 
@@ -202,10 +210,10 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
 
     const zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
 
-    // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
+    // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of the fit padding.
     const offset = Point.convert(options.offset);
-    const paddingOffsetX = (padding.left - padding.right) / 2;
-    const paddingOffsetY = (padding.top - padding.bottom) / 2;
+    const paddingOffsetX = (fitPadding.left - fitPadding.right) / 2;
+    const paddingOffsetY = (fitPadding.top - fitPadding.bottom) / 2;
     const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
     const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
     const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);

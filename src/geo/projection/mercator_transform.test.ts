@@ -183,6 +183,35 @@ describe('transform', () => {
         expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
     });
 
+    test('constrains center to padded viewport', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+        transform.setZoom(7);
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+        transform.setPadding({top: 0, right: 500, bottom: 500, left: 0});
+
+        transform.setCenter(new LngLat(50, -50));
+
+        const southeast = transform.locationToScreenPoint(new LngLat(5, -5));
+        expect(southeast.x).toBeCloseTo(500, 6);
+        expect(southeast.y).toBeCloseTo(500, 6);
+    });
+
+    test('re-constrains center when padding changes', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+        transform.setZoom(7);
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+        transform.setPadding({top: 0, right: 500, bottom: 500, left: 0});
+        transform.setCenter(new LngLat(50, -50));
+
+        transform.setPadding({top: 0, right: 0, bottom: 0, left: 0});
+
+        const southeast = transform.locationToScreenPoint(new LngLat(5, -5));
+        expect(southeast.x).toBeCloseTo(1000, 6);
+        expect(southeast.y).toBeCloseTo(1000, 6);
+    });
+
     test('lngRange & latRange constrain zoom and center after cloning', () => {
         const old = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         old.setCenter(new LngLat(0, 0));
@@ -454,6 +483,18 @@ describe('transform', () => {
         const top = Math.max(0, transform.height / 2 - getMercatorHorizon(transform));
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.screenPointToLocation(new Point(0, top)).toArray());
+    });
+
+    test('isPointOnMapSurface with padding', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setPitch(80);
+
+        transform.setPadding({top: 200, bottom: 0, left: 0, right: 0});
+        expect(transform.isPointOnMapSurface(new Point(250, 200))).toBe(false);
+
+        transform.setPadding({top: 0, bottom: 200, left: 0, right: 0});
+        expect(transform.isPointOnMapSurface(new Point(250, 100))).toBe(true);
     });
 
     test('projectTileCoordinates', () => {

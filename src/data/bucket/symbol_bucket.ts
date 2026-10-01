@@ -433,7 +433,7 @@ export class SymbolBucket implements Bucket {
      */
     private calculateGlyphDependencies(
         text: Formatted,
-        stacks: Record<string, Record<string, boolean>>,
+        stacks: PopulateParameters['glyphDependencies'],
         fontStack: string,
         textAlongLine: boolean,
         doesAllowVerticalWritingMode: boolean): void {
@@ -446,7 +446,7 @@ export class SymbolBucket implements Bucket {
             const section = tagged.getSection(i);
             if ('imageName' in section) continue;
 
-            const stack = stacks[section.fontStack] ||= {};
+            const stack = (stacks[section.fontStack] ||= {default: {}}).default;
             const grapheme = graphemes[i];
             if (isCluster(grapheme)) stack[grapheme] = true;
 

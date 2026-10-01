@@ -164,10 +164,18 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     map: Map;
     actorPromise: Promise<Actor>;
     _isUpdatingWorker: boolean;
+    /**
+     * Counts the `setData` calls, so that the result of an update sent before the latest one can be told apart.
+     */
+    _setDataCount: number;
     _updatePromise: Promise<void>;
     _pendingWorkerUpdate: {
         data?: GeoJSON.GeoJSON | string;
         diff?: GeoJSONSourceDiff;
+        /**
+         * Whether the worker has to regroup its clusters with the current options. Pending data needs no such
+         * refresh, since it is sent with the options current at that time.
+         */
         updateCluster?: boolean;
     };
     _collectResourceTiming: boolean;
@@ -190,6 +198,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         this.reparseOverscaled = true;
         this._removed = false;
         this._isUpdatingWorker = false;
+        this._setDataCount = 0;
         this._pendingWorkerUpdate = {data: options.data};
 
         this.actorPromise = dispatcher.getActor();
@@ -222,7 +231,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
                 generateId: options.generateId || false,
-                promoteId: typeof options.promoteId === 'string' ? options.promoteId : undefined,
+                promoteId: this._promoteIdKey,
                 cluster: options.cluster || false,
                 clusterOptions: {
                     maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
@@ -236,6 +245,11 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             clusterProperties: options.clusterProperties,
             filter: options.filter
         }, options.workerOptions);
+    }
+
+    /** The `promoteId` property name, when it is a plain string. */
+    private get _promoteIdKey(): string | undefined {
+        return typeof this.promoteId === 'string' ? this.promoteId : undefined;
     }
 
     private _hasPendingWorkerUpdate(): boolean {
@@ -274,6 +288,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      */
     setData(data: GeoJSON.GeoJSON | string): Promise<void> {
         this._data = typeof data === 'string' ? {url: data} : {geojson: data};
+        this._setDataCount++;
         this._pendingWorkerUpdate = {data};
         return this._updateWorkerData();
     }
@@ -293,18 +308,20 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * @param diff - The changes that need to be applied.
      */
     updateData(diff: GeoJSONSourceDiff): Promise<void> {
-        this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
+        this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff, this._promoteIdKey);
         return this._updateWorkerData();
     }
 
     /**
      * Allows to get the source's actual GeoJSON data.
      *
+     * Data set as a URL is returned once it has loaded.
+     *
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        if (this._data.url) {
-            await this.once('data'); // wait for loading to complete
+        while (this._data.url) {
+            await this.once('data');
         }
         if (this._data.geojson) {
             return this._data.geojson;
@@ -341,7 +358,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         if (options.clusterMaxZoom !== undefined) {
             this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
-        this._pendingWorkerUpdate.updateCluster = true;
+        if (this._pendingWorkerUpdate.data === undefined) this._pendingWorkerUpdate.updateCluster = true;
         return this._updateWorkerData();
     }
 
@@ -481,9 +498,13 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
-     * Send the worker update data from the main thread to the worker
+     * Send the worker update data from the main thread to the worker.
+     *
+     * An update that a `setData` call replaced while it was being sent leaves this source's copy of the data alone,
+     * since the data its result describes is no longer the source's, and still fires its events.
      */
     private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
+        const setDataCount = this._setDataCount;
         this._isUpdatingWorker = true;
         this.fire(new MapSourceDataEvent('dataloading'));
 
@@ -497,12 +518,14 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 return;
             }
 
+            const replaced = setDataCount !== this._setDataCount;
+
             // Update the copy of the data in this source with the worker result. (only sent for url based geojson data)
-            if (result.data) {
+            if (result.data && !replaced) {
                 this._data = {geojson: result.data};
             }
 
-            const affectedGeometries = this._applyDiffToSource(options.dataDiff);
+            const affectedGeometries = replaced ? undefined : this._applyDiffToSource(options.dataDiff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
             const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};
@@ -546,14 +569,15 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     /**
      * Apply a diff to this source's data and return the affected feature geometries.
      * @param diff - The {@link GeoJSONSourceDiff} to apply.
-     * @returns The affected geometries, or undefined if the diff is not applicable or all geometries are affected.
+     * @returns The affected geometries, or undefined if the diff is not applicable or all geometries are affected,
+     * as they are whenever the source is clustered: a changed point can regroup clusters on any tile.
      */
     private _applyDiffToSource(diff: GeoJSONSourceDiff): GeoJSON.Geometry[] | undefined {
         if (!diff) {
             return undefined;
         }
 
-        const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
+        const promoteId = this._promoteIdKey;
 
         // Lazily convert `this._data` to updateable if it's not already
         if (!this._data.url && !this._data.updateable) {
@@ -567,7 +591,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         }
         const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
 
-        if (diff.removeAll || this._options.cluster) {
+        if (diff.removeAll || this.workerOptions.geojsonVtOptions.cluster) {
             return undefined;
         }
 

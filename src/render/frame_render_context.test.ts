@@ -1,9 +1,9 @@
 import {describe, test, expect, vi} from 'vitest';
-import {createRenderContext, getProjectionDataForTile, getTerrainDataForTile} from './render_context.ts';
+import {FrameRenderContext} from './frame_render_context.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {createFrameRenderData} from '../util/test/util.ts';
 
 import type {Terrain} from './terrain.ts';
 
@@ -12,12 +12,12 @@ describe('getProjectionDataForTile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
-        const renderContext = createRenderContext(transform, new MercatorProjection(), null);
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'offscreen', getStencilMesh: null});
         const projectionDataSpy = vi.spyOn(transform, 'getProjectionData');
 
-        const projectionData = getProjectionDataForTile(renderContext, tileID);
-        renderContext.isRenderingToTexture = true;
-        getProjectionDataForTile(renderContext, tileID, {aligned: true, applyTerrainMatrix: false});
+        const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
+        frameRenderContext.isRenderingToTexture = true;
+        frameRenderContext.getProjectionDataForTile(tileID, {aligned: true, applyTerrainMatrix: false});
 
         expect(projectionData).toEqual(projectionDataSpy.mock.results[0].value);
         expect(projectionDataSpy).toHaveBeenCalledTimes(2);
@@ -38,28 +38,28 @@ describe('getTerrainDataForTile', () => {
 
     test('uses terrain data for regular Mercator draws', () => {
         const {tileID, terrainData, getTerrainData, terrain} = mockTerrainData();
-        const renderContext = createRenderContext(new MercatorTransform(), new MercatorProjection(), terrain);
+        const frameRenderContext = new FrameRenderContext({transform: new MercatorTransform(), terrain, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'offscreen', getStencilMesh: null});
 
-        expect(getTerrainDataForTile(renderContext, tileID)).toBe(terrainData);
+        expect(frameRenderContext.getTerrainDataForTile(tileID)).toBe(terrainData);
         expect(getTerrainData).toHaveBeenCalledWith(tileID);
     });
 
     test('skips terrain data for Mercator render-to-texture draws', () => {
         const {tileID, getTerrainData, terrain} = mockTerrainData();
-        const renderContext = createRenderContext(new MercatorTransform(), new MercatorProjection(), terrain);
-        renderContext.isRenderingToTexture = true;
+        const frameRenderContext = new FrameRenderContext({transform: new MercatorTransform(), terrain, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'offscreen', getStencilMesh: null});
+        frameRenderContext.isRenderingToTexture = true;
 
-        expect(getTerrainDataForTile(renderContext, tileID)).toBeNull();
+        expect(frameRenderContext.getTerrainDataForTile(tileID)).toBeNull();
         expect(getTerrainData).not.toHaveBeenCalled();
     });
 
     test('skips terrain data for globe render-to-texture draws', () => {
         const {tileID, getTerrainData, terrain} = mockTerrainData();
-        const {projection, transform} = createProjectionFromName('globe', undefined, {});
-        const renderContext = createRenderContext(transform, projection, terrain);
-        renderContext.isRenderingToTexture = true;
+        const {transform} = createProjectionFromName('globe', undefined, {});
+        const frameRenderContext = new FrameRenderContext({transform, terrain, data: {...createFrameRenderData(), projectionTransition: 1, isRenderingGlobe: true}, context: null, programCache: null, currentPass: 'offscreen', getStencilMesh: null});
+        frameRenderContext.isRenderingToTexture = true;
 
-        expect(getTerrainDataForTile(renderContext, tileID)).toBeNull();
+        expect(frameRenderContext.getTerrainDataForTile(tileID)).toBeNull();
         expect(getTerrainData).not.toHaveBeenCalled();
     });
 });
