@@ -393,6 +393,9 @@ export function createFrameRenderData(): FrameRenderData {
         projectionTransition: 0,
         isRenderingGlobe: false,
         projectionShaderVariant: {name: MercatorShaderVariantKey, define: MercatorShaderDefine, prelude: shaders.projectionMercator},
-        useSubdivision: false
+        useSubdivision: false,
+        pixelRatio: 1,
+        light: undefined,
+        sky: undefined
     };
 }
