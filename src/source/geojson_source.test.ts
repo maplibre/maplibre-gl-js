@@ -595,9 +595,11 @@ describe('GeoJSONSource.update', () => {
         // Immediately modify data again, and update cluster options
         const sourceData2 = {id: 'test-2', type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
         source.setData(sourceData2);
+        const diff = {add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]} as GeoJSONSourceDiff;
+        source.updateData(diff);
         await source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(true);
         expect(spy.mock.calls[0][0].data.data).toEqual(sourceData1);
@@ -607,6 +609,8 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
         expect(spy.mock.calls[1][0].data.data).toEqual(sourceData2);
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
+        expect(spy.mock.calls[2][0].data.dataDiff).toEqual(diff);
+        expect(spy.mock.calls[2][0].data.updateCluster).toBeUndefined();
     });
 
     test('modifying cluster properties after sending a diff', async () => {

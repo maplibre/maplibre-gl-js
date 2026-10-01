@@ -57,6 +57,13 @@ export class UpdateQueue<T, R> {
     }
 
     /**
+     * Whether any waiting update matches the predicate. The update being sent is not waiting, so it is never tested.
+     */
+    some(predicate: (update: T) => boolean): boolean {
+        return this._waiting.some(predicate);
+    }
+
+    /**
      * Queues an update without sending it.
      */
     enqueue(update: T): void {
@@ -104,15 +111,29 @@ export class UpdateQueue<T, R> {
         }
         this._sending = true;
         this._replacedWhileSending = false;
-        this._handlers.send(update)
-            .then((result) => {
-                this._sending = false;
-                this._handlers.onResult(update, result, this._replacedWhileSending);
-            })
-            .catch((error: unknown) => {
-                this._sending = false;
-                this._handlers.onError(update, error);
-            })
-            .finally(() => this._next());
+        this._send(update).finally(() => this._next());
+    }
+
+    /**
+     * Sends one update and hands its result, or the error that sending or handling it raised, to the handlers.
+     *
+     * The update stops counting as being sent once, before either handler runs, so that an update a handler
+     * starts is still counted as being sent when that handler throws.
+     */
+    private async _send(update: T): Promise<void> {
+        let result: R;
+        try {
+            result = await this._handlers.send(update);
+        } catch (error) {
+            this._sending = false;
+            this._handlers.onError(update, error);
+            return;
+        }
+        this._sending = false;
+        try {
+            this._handlers.onResult(update, result, this._replacedWhileSending);
+        } catch (error) {
+            this._handlers.onError(update, error);
+        }
     }
 }

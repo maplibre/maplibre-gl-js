@@ -89,10 +89,10 @@ export type GetClusterOptions = {
 };
 
 /**
- * One update of a source's data in the worker: either new data, or a diff to the current data and a
- * refresh of its clusters, applied in that order.
+ * A change to the data a source's worker already has: a diff to it and a refresh of its clusters, applied in
+ * that order.
  */
-type GeoJSONWorkerUpdate = {data: GeoJSON.GeoJSON | string} | {
+type GeoJSONWorkerChange = {
     diff?: GeoJSONSourceDiff;
     /**
      * Whether the worker has to regroup its clusters with the current options. New data needs no such
@@ -100,6 +100,11 @@ type GeoJSONWorkerUpdate = {data: GeoJSON.GeoJSON | string} | {
      */
     updateCluster?: true;
 };
+
+/**
+ * One update of a source's data in the worker: either new data, or a change to the data it has.
+ */
+type GeoJSONWorkerUpdate = {data: GeoJSON.GeoJSON | string} | GeoJSONWorkerChange;
 
 /**
  * A source containing GeoJSON.
@@ -310,12 +315,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * @param diff - The changes that need to be applied.
      */
     updateData(diff: GeoJSONSourceDiff): Promise<void> {
-        const top = this._workerUpdates.top();
-        if (top && !('data' in top)) {
-            top.diff = mergeSourceDiffs(top.diff, diff, this._promoteIdKey);
-        } else {
-            this._workerUpdates.enqueue({diff});
-        }
+        const change = this._waitingWorkerChange();
+        change.diff = mergeSourceDiffs(change.diff, diff, this._promoteIdKey);
         return this._workerUpdates.flush();
     }
 
@@ -365,13 +366,23 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         if (options.clusterMaxZoom !== undefined) {
             this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
-        const top = this._workerUpdates.top();
-        if (!top) {
-            this._workerUpdates.enqueue({updateCluster: true});
-        } else if (!('data' in top)) {
-            top.updateCluster = true;
+        if (!this._workerUpdates.some((update) => 'data' in update)) {
+            this._waitingWorkerChange().updateCluster = true;
         }
         return this._workerUpdates.flush();
+    }
+
+    /**
+     * The change waiting last to be sent to the worker, which later changes merge into, or a new one queued
+     * behind the waiting data when there is none.
+     */
+    private _waitingWorkerChange(): GeoJSONWorkerChange {
+        const top = this._workerUpdates.top();
+        if (top && !('data' in top)) return top;
+
+        const change: GeoJSONWorkerChange = {};
+        this._workerUpdates.enqueue(change);
+        return change;
     }
 
     /**
@@ -460,7 +471,6 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             return params;
         }
 
-        // Data comes from a remote url
         if (typeof update.data === 'string') {
             params.request = await this.map._requestManager.transformRequest(browser.resolveURL(update.data), ResourceType.Source);
             params.request.collectResourceTiming = this._collectResourceTiming;
@@ -485,6 +495,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     /**
      * Applies the result of a worker update to this source and fires the events that reload its tiles.
      *
+     * The worker sends back the data it loaded from a URL, which becomes this source's copy of the data.
+     *
      * An update that a `setData` call replaced while it was being sent leaves this source's copy of the data alone,
      * since the data its result describes is no longer the source's, and still fires its events.
      *
@@ -497,7 +509,6 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             return;
         }
 
-        // Update the copy of the data in this source with the worker result. (only sent for url based geojson data)
         if (result.data && !replaced) {
             this._data = {geojson: result.data};
         }

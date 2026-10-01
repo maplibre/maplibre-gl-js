@@ -14,10 +14,10 @@ function createQueue() {
         onResult: (_update, result, replaced) => { results.push({result, replaced, idle: queue.isIdle()}); },
         onError: () => {}
     });
-    const answer = async () => {
+    async function answer() {
         answers.shift()();
         await sleep(0);
-    };
+    }
     return {queue, sent, results, answer};
 }
 
@@ -113,5 +113,31 @@ describe('UpdateQueue', () => {
         await queue.flush();
         expect(sent).toEqual(['a', 'b']);
         expect(errors).toHaveLength(1);
+    });
+
+    test('passes an error thrown by onResult to onError, and still counts an update onResult started as being sent', async () => {
+        const errors: unknown[] = [];
+        const answers: Array<() => void> = [];
+        const queue = new UpdateQueue<string, void>({
+            send: () => new Promise((resolve) => answers.push(resolve)),
+            onResult: (update) => {
+                if (update !== 'a') return;
+                queue.enqueue('b');
+                queue.flush();
+                throw new Error('failed');
+            },
+            onError: (_update, error) => { errors.push(error); }
+        });
+        queue.enqueue('a');
+        queue.flush();
+
+        answers.shift()();
+        await sleep(0);
+        expect(errors).toHaveLength(1);
+        expect(queue.isIdle()).toBe(false);
+
+        answers.shift()();
+        await sleep(0);
+        expect(queue.isIdle()).toBe(true);
     });
 });
