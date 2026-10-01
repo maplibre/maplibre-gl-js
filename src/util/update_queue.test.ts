@@ -47,7 +47,7 @@ describe('UpdateQueue', () => {
         await expect(queue.flush()).resolves.toBeUndefined();
     });
 
-    test('exposes the last waiting update, not the one being sent, to be changed until it is sent', async () => {
+    test('exposes the waiting updates, not the one being sent, and lets the last one be changed until it is sent', async () => {
         const sent: string[] = [];
         const queue = new UpdateQueue<{value: string}, void>({
             send: (update) => {
@@ -60,9 +60,11 @@ describe('UpdateQueue', () => {
         queue.enqueue({value: 'a'});
         queue.flush();
         expect(queue.top()).toBeUndefined();
+        expect(queue.some(({value}) => value === 'a')).toBe(false);
 
         queue.enqueue({value: 'b'});
         queue.enqueue({value: 'c'});
+        expect(queue.some(({value}) => value === 'b')).toBe(true);
         queue.top().value += '!';
         await queue.flush();
 
