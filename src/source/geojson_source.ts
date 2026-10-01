@@ -657,7 +657,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             tile.unloadVectorData();
 
             if (!tile.aborted) {
-                tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
+                tile.loadVectorData(data, this.map.style, message ===  MessageType.reloadTile);
             }
         } catch (err) {
             delete tile.abortController;

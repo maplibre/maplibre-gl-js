@@ -13,7 +13,6 @@ import {createIdentityMat4f32} from '../../util/util.ts';
 import {createFrameRenderData} from '../../util/test/util.ts';
 
 import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
-import type {Style} from '../../style/style.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
@@ -109,12 +108,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
-        painterMock.style = {
-            map: {
-                projection: {}
-            }
-        } as any as Style;
+        painterMock.frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getMeshFromTileID: null});
 
         return painterMock;
     }
