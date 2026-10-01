@@ -4,30 +4,28 @@
     "test": {
       "width": 64,
       "height": 64,
-      "description": "A custom layer draws an orange square into the terrain tiles between a blue fill below it and a black line above it, all draped over the terrain.",
+      "description": "A custom layer draws a red point into the terrain tile between a blue fill below it and a black line above it.",
       "operations": [
-        ["addCustomLayer", "terrain-tile-colors", "line"],
+        ["addCustomLayer", "null-island", "line"],
         ["wait"]
       ]
     }
   },
-  "center": [11.52517, 47.34487],
-  "zoom": 13,
-  "pitch": 45,
+  "center": [0, 0],
+  "zoom": 0,
   "sources": {
     "terrain": {
       "type": "raster-dem",
-      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
-      "maxzoom": 12,
+      "tiles": ["local://tiles/zero-elevation-terrain-tile.png"],
       "tileSize": 256
     },
     "polygon": {
       "type": "geojson",
-      "data": {"type": "Polygon", "coordinates": [[[11.52311, 47.34347], [11.52723, 47.34347], [11.52723, 47.34627], [11.52311, 47.34627], [11.52311, 47.34347]]]}
+      "data": {"type": "Polygon", "coordinates": [[[-12, -12], [12, -12], [12, 12], [-12, 12], [-12, -12]]]}
     },
     "line": {
       "type": "geojson",
-      "data": {"type": "LineString", "coordinates": [[11.52174, 47.34487], [11.52860, 47.34487]]}
+      "data": {"type": "LineString", "coordinates": [[-18, 0], [18, 0]]}
     }
   },
   "layers": [

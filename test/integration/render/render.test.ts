@@ -272,6 +272,17 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             render(gl: WebGL2RenderingContext, args) {
+                this.draw(gl, args.defaultProjectionData.mainMatrix);
+            }
+
+            /** Draws the point into a terrain tile, whose south-west corner is (-1, -1) in clip space. */
+            renderToTerrainTile(gl: WebGL2RenderingContext, {tileID}: {tileID: {canonical: {x: number; y: number; z: number}; wrap: number}}) {
+                const tiles = 2 ** tileID.canonical.z;
+                const west = tileID.canonical.x + tileID.wrap * tiles;
+                this.draw(gl, [2 * tiles, 0, 0, 0, 0, -2 * tiles, 0, 0, 0, 0, 1, 0, -2 * west - 1, 2 * tileID.canonical.y + 1, 0, 1]);
+            }
+
+            draw(gl: WebGL2RenderingContext, matrix: Float32List) {
                 const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
                 gl.useProgram(this.program);
                 const vertexBuffer = gl.createBuffer();
@@ -280,7 +291,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 const posAttrib = gl.getAttribLocation(this.program, 'aPos');
                 gl.enableVertexAttribArray(posAttrib);
                 gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, args.defaultProjectionData.mainMatrix);
+                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, matrix);
                 gl.drawArrays(gl.POINTS, 0, 1);
             }
         }
@@ -527,59 +538,11 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
-        /** Draws an orange square around the initial map center into the terrain tiles. */
-        class TerrainTileColors {
-            id = 'terrain-tile-colors';
-            type = 'custom';
-            square: number[];
-            program: WebGLProgram;
-
-            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
-                const center = maplibregl.MercatorCoordinate.fromLngLat(map.getCenter());
-                const halfSize = 8 / (512 * 2 ** map.getZoom());
-                this.square = [center.x - halfSize, center.y - halfSize, center.x + halfSize, center.y + halfSize];
-
-                const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-                gl.shaderSource(vertexShader, `#version 300 es
-                uniform vec4 u_square;
-                void main() {
-                    vec2 corner = vec2(gl_VertexID & 1, gl_VertexID >> 1);
-                    gl_Position = vec4(mix(u_square.xy, u_square.zw, corner), 0.0, 1.0);
-                }`);
-                gl.compileShader(vertexShader);
-                const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-                gl.shaderSource(fragmentShader, `#version 300 es
-                out highp vec4 fragColor;
-                void main() {
-                    fragColor = vec4(1.0, 0.5, 0.0, 1.0);
-                }`);
-                gl.compileShader(fragmentShader);
-                this.program = gl.createProgram();
-                gl.attachShader(this.program, vertexShader);
-                gl.attachShader(this.program, fragmentShader);
-                gl.linkProgram(this.program);
-            }
-
-            render() {}
-
-            renderToTerrainTile(gl: WebGL2RenderingContext, {tileID}: {tileID: {canonical: {x: number; y: number; z: number}; wrap: number}}) {
-                const tiles = 2 ** tileID.canonical.z;
-                const west = tileID.canonical.x + tileID.wrap * tiles;
-                const [minX, minY, maxX, maxY] = this.square;
-                gl.useProgram(this.program);
-                gl.uniform4f(gl.getUniformLocation(this.program, 'u_square'),
-                    (minX * tiles - west) * 2 - 1, 1 - (maxY * tiles - tileID.canonical.y) * 2,
-                    (maxX * tiles - west) * 2 - 1, 1 - (minY * tiles - tileID.canonical.y) * 2);
-                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-            }
-        }
-
         const customLayerImplementations = {
             'tent-3d': Tent3D,
             'tent-3d-globe': Tent3DGlobe,
             'null-island': NullIsland,
-            'unbind-uniform-buffers': UnbindUniformBuffers,
-            'terrain-tile-colors': TerrainTileColors
+            'unbind-uniform-buffers': UnbindUniformBuffers
         };
 
         async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
