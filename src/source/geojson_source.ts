@@ -664,8 +664,13 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         await (await this.actorPromise).sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
+    /**
+     * Drops the worker updates waiting to be sent, which would otherwise rebuild the worker's state for a source
+     * that is gone. The update being sent ends in a `dataabort` event.
+     */
     onRemove(): void {
         this._removed = true;
+        this._workerUpdates.clear();
         this.actorPromise.then(actor => actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}}));
     }
 

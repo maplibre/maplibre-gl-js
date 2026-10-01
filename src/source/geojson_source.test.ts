@@ -417,7 +417,7 @@ describe('GeoJSONSource.unloadTile', () => {
 });
 
 describe('GeoJSONSource.onRemove', () => {
-    test('broadcasts "removeSource" event', async () => {
+    test('broadcasts "removeSource" event and drops the updates waiting to be sent', async () => {
         const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
@@ -425,11 +425,14 @@ describe('GeoJSONSource.onRemove', () => {
                 return Promise.resolve({});
             }
         }), undefined);
+        const loading = source.load();
+        source.setData(hawkHill);
         source.onRemove();
+        await loading;
         await sleep(0);
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0].type).toBe(MessageType.removeSource);
-        expect(spy.mock.calls[0][0].data).toEqual({type: 'geojson', source: 'id'});
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledWith({type: MessageType.removeSource, data: {type: 'geojson', source: 'id'}});
+        expect(spy).not.toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({data: hawkHill})}));
     });
 });
 

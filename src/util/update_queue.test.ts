@@ -93,6 +93,20 @@ describe('UpdateQueue', () => {
         expect(replaced).toEqual([true, false]);
     });
 
+    test('drops the waiting updates on clear, and resolves flush once the one being sent is done', async () => {
+        const {queue, sent, answer} = createQueue();
+        const done = vi.fn();
+        queue.enqueue('a');
+        queue.flush().then(done);
+        queue.enqueue('b');
+        queue.clear();
+
+        await answer();
+        expect(sent).toEqual(['a']);
+        expect(done).toHaveBeenCalledTimes(1);
+        expect(queue.isIdle()).toBe(true);
+    });
+
     test('resolves flush once every update is done', async () => {
         const {queue, answer} = createQueue();
         const done = vi.fn();

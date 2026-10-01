@@ -72,6 +72,13 @@ export class UpdateQueue<T, R> {
     }
 
     /**
+     * Drops the waiting updates. The update being sent, if any, still runs to its end.
+     */
+    clear(): void {
+        this._waiting = [];
+    }
+
+    /**
      * Sends the waiting updates.
      * @returns a promise that resolves once no update is being sent or waiting to be.
      */
