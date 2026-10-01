@@ -97,43 +97,34 @@ describe('UpdateQueue', () => {
         expect(queue.isIdle()).toBe(true);
     });
 
-    test('passes a failed update to onError and sends the next one', async () => {
-        const errors: unknown[] = [];
+    test('passes a failed update, or an error thrown by onResult, to onError and keeps sending one update at a time', async () => {
+        const errors: Error[] = [];
         const sent: string[] = [];
+        const answers: Array<() => void> = [];
         const queue = new UpdateQueue<string, void>({
             send: (update) => {
                 sent.push(update);
-                return update === 'a' ? Promise.reject(new Error('failed')) : Promise.resolve();
+                if (update === 'a') return Promise.reject(new Error('send failed'));
+                return new Promise((resolve) => answers.push(resolve));
             },
-            onResult: () => {},
-            onError: (_update, error) => { errors.push(error); }
+            onResult: (update) => {
+                if (update !== 'b') return;
+                queue.enqueue('c');
+                queue.flush();
+                throw new Error('onResult failed');
+            },
+            onError: (_update, error) => { errors.push(error as Error); }
         });
         queue.enqueue('a');
         queue.enqueue('b');
-        await queue.flush();
-        expect(sent).toEqual(['a', 'b']);
-        expect(errors).toHaveLength(1);
-    });
-
-    test('passes an error thrown by onResult to onError, and still counts an update onResult started as being sent', async () => {
-        const errors: unknown[] = [];
-        const answers: Array<() => void> = [];
-        const queue = new UpdateQueue<string, void>({
-            send: () => new Promise((resolve) => answers.push(resolve)),
-            onResult: (update) => {
-                if (update !== 'a') return;
-                queue.enqueue('b');
-                queue.flush();
-                throw new Error('failed');
-            },
-            onError: (_update, error) => { errors.push(error); }
-        });
-        queue.enqueue('a');
         queue.flush();
+        await sleep(0);
+        expect(sent).toEqual(['a', 'b']);
 
         answers.shift()();
         await sleep(0);
-        expect(errors).toHaveLength(1);
+        expect(errors.map(({message}) => message)).toEqual(['send failed', 'onResult failed']);
+        expect(sent).toEqual(['a', 'b', 'c']);
         expect(queue.isIdle()).toBe(false);
 
         answers.shift()();
