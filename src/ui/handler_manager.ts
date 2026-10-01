@@ -195,7 +195,7 @@ export class HandlerManager {
      * under the fingers; the gesture's end re-solves the camera onto the terrain.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null};
-    /** The point a drag turns the camera around, picked on the drag's first frame and kept until it ends. */
+    /** The point a drag turns the camera around, picked on its first frame and kept until it ends. */
     _rotationPivot: RotationPivot | null = null;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
@@ -634,22 +634,16 @@ export class HandlerManager {
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
     }
 
-    /**
-     * Whether a frame turns the camera around a point of its own, which a handler asks for by giving a frame that rotates,
-     * pitches or rolls the camera an `around`. Globe controls turn the camera around the center.
-     */
+    /** Whether a frame turns the camera around the `around` of a rotation, as drag to rotate gives one around the pointer. */
     _turnsAroundPivot(combinedResult: HandlerResult, combinedEventsInProgress: EventsInProgress): boolean {
         if (!combinedResult.around) return false;
         return !combinedEventsInProgress.drag && !combinedEventsInProgress.zoom && !this._camera.cameraHelper.useGlobeControls;
     }
 
-    /**
-     * Turns the camera around the pivot that the drag picked on its first frame. Over terrain it holds the center
-     * elevation until the drag ends, as every gesture over terrain does.
-     */
+    /** Turns the camera around the drag's pivot, holding the center elevation over terrain until the drag ends like every gesture. */
     _orbitRotationPivot(tr: ITransform, combinedResult: HandlerResult, terrain: Terrain | null): void {
         this._rotationPivot ??= captureRotationPivot(tr, combinedResult.around, terrain);
-        orbitRotationPivot(tr, this._rotationPivot, combinedResult, terrain);
+        orbitRotationPivot(tr, this._rotationPivot, combinedResult);
         if (!terrain) return;
         this._terrainGesture.inFlight = true;
         this._camera.elevationFreeze = true;
@@ -816,7 +810,6 @@ export class HandlerManager {
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
-            const pivot = this._rotationPivot?.location;
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
@@ -824,13 +817,12 @@ export class HandlerManager {
                 if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
                     inertialEase.bearing = 0;
                 }
-                if (pivot) inertialEase.around = pivot;
                 inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._fireEvent('moveend', originalEndEvent);
                 if (shouldSnapToNorth(this._map.getBearing())) {
-                    this._map.rotateTo(0, {duration: 1000, around: pivot, freezeElevation: pivot !== undefined});
+                    this._map.resetNorth();
                 }
             }
             this._updatingCamera = false;

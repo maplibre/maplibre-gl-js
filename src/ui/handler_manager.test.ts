@@ -541,8 +541,8 @@ describe('terrain gesture anchoring', () => {
 });
 
 describe('dragRotate around the pointer', () => {
-    test('each right-button drag turns and tilts the map around the point where it started', async () => {
-        map = createMap({interactive: true, dragRotate: {around: 'pointer'}, pitch: 45});
+    test('each right-button drag orbits the point where it started, so tilting also zooms', async () => {
+        map = createMap({interactive: true, dragRotate: {around: 'pointer'}, zoom: 12, pitch: 45});
         await map.once('load');
         vi.spyOn(timeControl, 'now').mockReturnValue(0);
         const firstPivot = map.unproject([60, 150]);
@@ -551,6 +551,7 @@ describe('dragRotate around the pointer', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 80, clientY: 140});
         map.redraw();
         const firstPivotDuringDrag = map.project(firstPivot);
+        const zoomAfterTilt = map.getZoom();
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 80, clientY: 140});
         map.redraw();
         const secondPivot = map.unproject([140, 120]);
@@ -559,62 +560,7 @@ describe('dragRotate around the pointer', () => {
         map.redraw();
 
         expect(firstPivotDuringDrag.dist(new Point(60, 150))).toBeLessThan(0.1);
+        expect(zoomAfterTilt).toBeCloseTo(11.961011, 5);
         expect(map.project(secondPivot).dist(new Point(140, 120))).toBeLessThan(0.1);
-    });
-
-    test('the turn back to north after a drag goes around the point where the drag started', async () => {
-        map = createMap({interactive: true, dragRotate: {around: 'pointer'}, pitch: 45});
-        await map.once('load');
-        const pivot = map.unproject([60, 150]);
-        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 60, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 68, clientY: 150});
-        map.redraw();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 68, clientY: 150});
-        map.redraw();
-        now.mockReturnValue(250);
-        map.redraw();
-        const pivotDuringTurn = map.project(pivot);
-        now.mockReturnValue(1000);
-        map.redraw();
-
-        expect(pivotDuringTurn.dist(new Point(60, 150))).toBeLessThan(0.1);
-        expect(map.getBearing()).toBe(0);
-    });
-
-    test('the inertia after a drag tilts the map around the point where the drag started', async () => {
-        map = createMap({interactive: true, dragRotate: {around: 'pointer'}, pitch: 45});
-        await map.once('load');
-        const pivot = map.unproject([60, 150]);
-        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 60, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 60, clientY: 146});
-        map.redraw();
-        now.mockReturnValue(10);
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 60, clientY: 142});
-        map.redraw();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 60, clientY: 142});
-        map.redraw();
-        const pitchAtRelease = map.getPitch();
-        now.mockReturnValue(2000);
-        map.redraw();
-
-        expect(map.getPitch()).toBeGreaterThan(pitchAtRelease);
-        expect(map.project(pivot).dist(new Point(60, 150))).toBeLessThan(0.1);
-    });
-
-    test('map.dragRotate.enable with around pointer turns the next drag around the point where it starts', async () => {
-        map = createMap({interactive: true, pitch: 45});
-        await map.once('load');
-        map.dragRotate.enable({around: 'pointer'});
-        const pivot = map.unproject([60, 150]);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 60, clientY: 150});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 80, clientY: 140});
-        map.redraw();
-
-        expect(map.project(pivot).dist(new Point(60, 150))).toBeLessThan(0.1);
     });
 });

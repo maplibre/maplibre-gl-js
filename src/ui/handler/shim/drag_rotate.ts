@@ -21,11 +21,8 @@ export type DragRotateHandlerOptions = {
  */
 export type DragRotateOptions = {
     /**
-     * The point that the drag turns and tilts the map around. With `'center'` it is the center of the map. With
-     * `'pointer'` it is the terrain under the pointer where the drag starts, or the ground where there is no terrain,
-     * and the center where the drag starts in the sky. The drag keeps that point in its place on the screen and at
-     * its distance from the camera, so tilting also zooms, and horizontal movement changes the bearing by
-     * `rotateSpeed` per pixel wherever the pointer is.
+     * If `'pointer'` is passed, the map turns and tilts around the terrain under the pointer where the drag starts,
+     * which keeps its place on the screen and its distance from the camera, so tilting also zooms.
      * @defaultValue 'center'
      */
     around?: 'center' | 'pointer';

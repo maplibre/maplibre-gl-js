@@ -23,10 +23,7 @@ export interface MouseRollHandler extends DragMoveHandler<DragRollResult, MouseE
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
-/**
- * Gives a move that turns the camera the point where the drag started as its `around` when the drag turns the
- * camera around the pointer. A move without a change gets none, as that would make the handler active.
- */
+/** Gives a move around the pointer the drag's start point as its `around`, but not a move without a change, which would make the handler active. */
 function aroundDragStart<T extends DragRotateResult | DragPitchResult | DragRollResult>(result: T, around: 'center' | 'pointer', startPoint: Point): T {
     if (around === 'center' || !(result.bearingDelta || result.pitchDelta || result.rollDelta)) return result;
     return {...result, around: startPoint};

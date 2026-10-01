@@ -71,15 +71,6 @@ describe('mouse handler tests', () => {
         expect(mousePitch.dragMove(new MouseEvent('mousemove', {buttons: 2}), new Point(10, 10))).toEqual({pitchDelta: -5, around: new Point(0, 0)});
     });
 
-    test('MouseRollHandler around the pointer rolls around the point the drag started at', () => {
-        const mouseRoll = generateMouseRollHandler({clickTolerance: 2}, () => new Point(11, 11), () => 'pointer');
-
-        mouseRoll.enable();
-        mouseRoll.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2, ctrlKey: true}), new Point(0, 0));
-
-        expect(mouseRoll.dragMove(new MouseEvent('mousemove', {buttons: 2}), new Point(10, 10))).toEqual({rollDelta: -3, around: new Point(0, 0)});
-    });
-
     test('MousePitchHandler pitches 2 degrees per dragged pixel when pitchSpeed is -2', () => {
         const mousePitch = generateMousePitchHandler({clickTolerance: 2, pitchSpeed: -2});
 

@@ -356,26 +356,6 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
-    test('the turn back to north after a drag around the pointer re-solves the zoom onto terrain that rose under the center without moving the camera', async () => {
-        const map = await createMapOverTerrain(45, {dragRotate: {around: 'pointer'}});
-        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
-        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
-
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 180});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 48, clientY: 180});
-        map.redraw();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 48, clientY: 180});
-        map.redraw();
-        terrainElevation.mockReturnValue(1000);
-        now.mockReturnValue(1000);
-        map.redraw();
-        map.redraw();
-
-        expect(map.getBearing()).toBe(0);
-        expect(map.getCameraTargetElevation()).toBe(1000);
-        expect(map.getZoom()).toBeCloseTo(11.190145, 5);
-    });
-
     test('a DEM tile landing while a pan drag is in flight leaves the camera where the drag put it, and the release re-solves the zoom onto the new terrain without moving it', async () => {
         const map = await createMapOverTerrain(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
