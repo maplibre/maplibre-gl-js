@@ -5,6 +5,7 @@ import type {Map} from '../../ui/map.ts';
 import type {mat4} from 'gl-matrix';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerProjectionData, RendererProjectionData} from '../../geo/projection/projection_data.ts';
+import type {TerrainHeightMapTarget} from '../../render/terrain.ts';
 
 /**
  * Type for an object literal that specifies a map tile.
@@ -160,6 +161,13 @@ export type CustomRenderMethodInput = {
      * @param params - Parameters for the projection data generation.
      */
     getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
+
+    /**
+     * Draws the elevation of the terrain as the map draws it into a texture, so that the layer can place many
+     * objects on the ground on the GPU. Only set in {@link CustomLayerInterface.prerender}, while terrain is enabled.
+     * Call it again after the camera moves, terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
+     */
+    renderTerrainHeightMap?: (target: TerrainHeightMapTarget) => void;
 };
 
 /**
@@ -167,6 +175,18 @@ export type CustomRenderMethodInput = {
  * @param options - Argument object with render inputs like camera properties.
  */
 export type CustomRenderMethod = (gl: WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
+
+/**
+ * Input for {@link CustomLayerInterface.renderToTerrainTile}.
+ */
+export type CustomTerrainRenderInput = {
+    /** The terrain tile to draw. */
+    tileID: UnwrappedTileIDLiteral;
+    /** The width of the tile's framebuffer in pixels. */
+    width: number;
+    /** The height of the tile's framebuffer in pixels. */
+    height: number;
+};
 
 /**
  * Interface for custom style layers. This is a specification for
@@ -276,6 +296,19 @@ export interface CustomLayerInterface {
      * The layer cannot make any assumptions about the current GL state and must bind a framebuffer before rendering.
      */
     prerender?: CustomRenderMethod;
+    /**
+     * Optional method called instead of `render` while terrain is enabled, to draw the layer into a terrain tile that
+     * MapLibre drapes over the terrain with the fill, line and raster layers around the layer in the style.
+     * Clip space `(-1, -1)` is the tile's south-west corner and `(1, 1)` its north-east corner. Draw over what the
+     * framebuffer holds, with the same blending as `render` and without depth or stencil testing. MapLibre calls it
+     * again when it redraws the tile, and after {@link CustomLayerInterface.terrainTileRevision} changes.
+     */
+    renderToTerrainTile?: (gl: WebGL2RenderingContext, options: CustomTerrainRenderInput) => void;
+    /**
+     * Optional number that the layer changes when what it draws in {@link CustomLayerInterface.renderToTerrainTile}
+     * changes, before calling {@link Map.triggerRepaint}, so that MapLibre draws the terrain tiles again.
+     */
+    terrainTileRevision?: number;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map.addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.

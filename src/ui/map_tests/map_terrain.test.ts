@@ -13,6 +13,7 @@ import * as timeControl from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
 import type {Terrain} from '../../render/terrain.ts';
+import type {CustomLayerInterface} from '../../style/style_layer/custom_style_layer.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -235,6 +236,98 @@ describe('setTerrain', () => {
             source: {type: 'raster-dem'}
         } as any);
         expect(triggerSymbolPlacement).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('terrainTileRevision', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
+    test('draws the terrain tiles of a custom layer again when it changes, and only then', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
+            layers: [],
+            terrain: {source: 'dem'}
+        }});
+        const renderToTerrainTile = vi.fn();
+        const layer = {id: 'custom', type: 'custom' as const, render: () => {}, renderToTerrainTile, terrainTileRevision: 0};
+        await map.once('load');
+        map.addLayer(layer);
+        await map.once('idle');
+        const terrainTiles = map.terrain.tileManager.getRenderableTiles().length;
+        renderToTerrainTile.mockClear();
+
+        map.triggerRepaint();
+        await map.once('idle');
+        expect(renderToTerrainTile).not.toHaveBeenCalled();
+
+        layer.terrainTileRevision++;
+        map.triggerRepaint();
+        await map.once('idle');
+        expect(terrainTiles).toBeGreaterThan(0);
+        expect(renderToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
+    });
+});
+
+describe('renderTerrainHeightMap', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
+    test('draws the terrain height map into the texture of a custom layer', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
+            layers: [],
+            terrain: {source: 'dem'}
+        }});
+        const gl = map.painter.context.gl;
+        const texture = gl.createTexture();
+        const layer: CustomLayerInterface = {
+            id: 'custom',
+            type: 'custom',
+            render: () => {},
+            prerender: (_gl, options) => options.renderTerrainHeightMap({texture, width: 64, height: 32, bounds: [0.5, 0.25, 0.75, 0.5]})
+        };
+        await map.once('load');
+        map.addLayer(layer);
+        await map.once('idle');
+
+        expect(gl.framebufferTexture2D).toHaveBeenCalledWith(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+        expect(gl.viewport).toHaveBeenCalledWith(0, 0, 64, 32);
+    });
+
+    test('is not given to custom layers in render', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
+            layers: [],
+            terrain: {source: 'dem'}
+        }});
+        const render = vi.fn();
+        await map.once('load');
+
+        map.addLayer({id: 'custom', type: 'custom', render});
+        await map.once('idle');
+
+        expect(render).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({renderTerrainHeightMap: undefined}));
+    });
+
+    test('is not given to custom layers without terrain', async () => {
+        const prerender = vi.fn();
+        await map.once('load');
+
+        map.addLayer({id: 'custom', type: 'custom', render: () => {}, prerender});
+        await map.once('idle');
+
+        expect(prerender).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({renderTerrainHeightMap: undefined}));
     });
 });
 
