@@ -21,8 +21,8 @@ export type DragRotateHandlerOptions = {
  */
 export type DragRotateOptions = {
     /**
-     * If `'pointer'` is passed, the map turns and tilts around the terrain under the pointer where the drag starts,
-     * which keeps its place on the screen and its distance from the camera, so tilting also zooms. The bearing then
+     * If `'pointer'` is passed, the map turns and tilts around the point under the pointer where the drag starts,
+     * on the terrain where there is any, which keeps its place on the screen and its distance from the camera, so tilting also zooms. The bearing then
      * follows the horizontal movement of the pointer, as with {@link MapOptions.aroundCenter} set to `false`.
      * A drag that starts in the sky turns around the center.
      * @defaultValue 'center'
