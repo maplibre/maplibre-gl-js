@@ -2378,6 +2378,44 @@ describe('cameraForBounds', () => {
     });
 });
 
+describe('absolutePadding', () => {
+    const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+    const padding = {top: 20, right: 150, bottom: 40, left: 60};
+
+    test('cameraForBounds fits for the given padding as the map\'s padding and returns it', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(padding);
+        const expected = {...paddedCamera.cameraForBounds(bb), padding};
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        expect(camera.cameraForBounds(bb, {padding, absolutePadding: true})).toEqual(expected);
+        // the map's own padding is neither used nor changed
+        expect(camera.getPadding()).toEqual({top: 300, right: 300, bottom: 300, left: 300});
+        // a number applies to all sides
+        paddedCamera.setPadding({top: 15, right: 15, bottom: 15, left: 15});
+        expect(camera.cameraForBounds(bb, {padding: 15, absolutePadding: true}))
+            .toEqual({...paddedCamera.cameraForBounds(bb), padding: {top: 15, right: 15, bottom: 15, left: 15}});
+        // missing sides are 0, not taken from the map
+        paddedCamera.setPadding({top: 0, right: 0, bottom: 0, left: 60});
+        expect(camera.cameraForBounds(bb, {padding: {left: 60}, absolutePadding: true}))
+            .toEqual({...paddedCamera.cameraForBounds(bb), padding: {top: 0, right: 0, bottom: 0, left: 60}});
+    });
+
+    test('fitBounds transitions to the given padding', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(padding);
+        const expected = paddedCamera.cameraForBounds(bb);
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        camera.fitBounds(bb, {padding, absolutePadding: true, duration: 0});
+        expect(camera.getPadding()).toEqual(padding);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual(fixedLngLat(expected.center, 4));
+        expect(fixedNum(camera.getZoom(), 3)).toBe(fixedNum(expected.zoom, 3));
+    });
+});
+
 describe('fitBounds', () => {
     test('no padding passed', () => {
         const {camera} = createCamera();
@@ -2633,6 +2671,19 @@ describe('transformCameraUpdate', () => {
         camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 10});
         expect(fixedNum(camera.getZoom())).toBe(3);
+    });
+
+    test('keeps a field of view set during easeTo', () => {
+        const {camera, queue} = createCamera({transformCameraUpdate: () => ({})});
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        camera.easeTo({center: [100, 0], duration: 10});
+        camera.setVerticalFieldOfView(50);
+        stub.mockReturnValue(10);
+        queue.run();
+
+        expect(camera.getVerticalFieldOfView()).toBeCloseTo(50, 10);
     });
 });
 

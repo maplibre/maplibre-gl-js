@@ -183,6 +183,35 @@ describe('transform', () => {
         expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
     });
 
+    test('constrains center to padded viewport', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+        transform.setZoom(7);
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+        transform.setPadding({top: 0, right: 500, bottom: 500, left: 0});
+
+        transform.setCenter(new LngLat(50, -50));
+
+        const southeast = transform.locationToScreenPoint(new LngLat(5, -5));
+        expect(southeast.x).toBeCloseTo(500, 6);
+        expect(southeast.y).toBeCloseTo(500, 6);
+    });
+
+    test('re-constrains center when padding changes', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+        transform.setZoom(7);
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+        transform.setPadding({top: 0, right: 500, bottom: 500, left: 0});
+        transform.setCenter(new LngLat(50, -50));
+
+        transform.setPadding({top: 0, right: 0, bottom: 0, left: 0});
+
+        const southeast = transform.locationToScreenPoint(new LngLat(5, -5));
+        expect(southeast.x).toBeCloseTo(1000, 6);
+        expect(southeast.y).toBeCloseTo(1000, 6);
+    });
+
     test('lngRange & latRange constrain zoom and center after cloning', () => {
         const old = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         old.setCenter(new LngLat(0, 0));

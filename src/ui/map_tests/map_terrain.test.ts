@@ -417,6 +417,21 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(1500);
     });
 
+    test('easeTo after a pitch limit change starts from the camera as rendered, after a DEM tile landing', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        map.setMaxPitch(70);
+        terrainElevation.mockReturnValue(1000);
+        demTileLands(map);
+        map.easeTo({center: [1, 1], duration: 1000, easing: k => k});
+        now.mockReturnValue(500);
+        map.redraw();
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
     test('easeTo and flyTo ease the center elevation to the terrain under the destination, and the frame after the animation leaves it there', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
@@ -441,6 +456,34 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('easeTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.easeTo({center: [1, 1], duration: 1000});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(1500);
+    });
+
+    test('flyTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.flyTo({center: [1, 1], duration: 1000});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(1500);
     });
 
     test('easeTo around a point, as a double-click zoom does, eases the center elevation to the terrain under the center it ends on', async () => {

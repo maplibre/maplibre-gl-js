@@ -159,7 +159,7 @@ void main() {
     // to account for mercator projection distortion. see #4807 for details
     float scaleFactor = cos(radians((u_latrange[0] - u_latrange[1]) * (1.0 - v_pos.y) + u_latrange[1]));
 
-    vec2 deriv = ((pixel.rg * 8.0) - 4.0) / scaleFactor;
+    vec2 deriv = (pixel.rg - 128.0 / 255.0) * 8.0 / scaleFactor;
 
     if (u_method == BASIC) {
         basic_hillshade(deriv);
