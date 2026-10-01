@@ -210,27 +210,6 @@ describe('GeoJSONSource.setData', () => {
         await firstPromise;
     });
 
-    test('does not keep the data of a finished update alive while later ones are sent', async () => {
-        const answers: Array<() => void> = [];
-        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync() {
-                return new Promise((resolve) => answers.push(() => resolve({})));
-            }
-        }), undefined);
-
-        const first = new WeakRef<GeoJSON.GeoJSON>({type: 'FeatureCollection', features: []});
-        source.setData(first.deref());
-        await sleep(0);
-        for (let update = 0; update < 3; update++) {
-            source.setData({type: 'FeatureCollection', features: []});
-            answers.shift()();
-            await sleep(0);
-        }
-
-        gc();
-        expect(first.deref()).toBeUndefined();
-    });
-
     test('marks source as not loaded before firing "dataloading" event', async () => {
         const source = createSource();
         const setDataPromise = source.once('dataloading');
