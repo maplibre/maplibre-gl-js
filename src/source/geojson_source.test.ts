@@ -1,6 +1,4 @@
 import {describe, test, expect, vi, beforeEach} from 'vitest';
-import {setFlagsFromString} from 'node:v8';
-import {runInNewContext} from 'node:vm';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
@@ -229,7 +227,7 @@ describe('GeoJSONSource.setData', () => {
             await sleep(0);
         }
 
-        collectGarbage();
+        gc();
         expect(first.deref()).toBeUndefined();
     });
 
@@ -1545,11 +1543,3 @@ describe('GeoJSONSource.getClusterOptions', () => {
         expect(source.getClusterOptions()).toEqual({cluster: false, clusterMaxZoom: 9, clusterRadius: 40});
     });
 });
-
-/**
- * Runs a full garbage collection, so that a `WeakRef` to an object nothing else holds comes back empty.
- */
-function collectGarbage() {
-    setFlagsFromString('--expose-gc');
-    (runInNewContext('gc') as () => void)();
-}
