@@ -315,8 +315,12 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * @param diff - The changes that need to be applied.
      */
     updateData(diff: GeoJSONSourceDiff): Promise<void> {
-        const change = this._waitingWorkerChange();
-        change.diff = mergeSourceDiffs(change.diff, diff, this._promoteIdKey);
+        const waiting = this._getWaitingWorkerChange();
+        if (waiting) {
+            waiting.diff = mergeSourceDiffs(waiting.diff, diff, this._promoteIdKey);
+        } else {
+            this._workerUpdates.enqueue({diff});
+        }
         return this._workerUpdates.flush();
     }
 
@@ -367,22 +371,24 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
         if (!this._workerUpdates.some((update) => 'data' in update)) {
-            this._waitingWorkerChange().updateCluster = true;
+            const waiting = this._getWaitingWorkerChange();
+            if (waiting) {
+                waiting.updateCluster = true;
+            } else {
+                this._workerUpdates.enqueue({updateCluster: true});
+            }
         }
         return this._workerUpdates.flush();
     }
 
     /**
-     * The change waiting last to be sent to the worker, which later changes merge into, or a new one queued
-     * behind the waiting data when there is none.
+     * The change queued last for the worker, which a later change merges into, if it is still waiting to be sent.
+     * Returns `undefined` when nothing is waiting or the update queued last is new data, which a change has to
+     * wait behind instead.
      */
-    private _waitingWorkerChange(): GeoJSONWorkerChange {
+    private _getWaitingWorkerChange(): GeoJSONWorkerChange | undefined {
         const top = this._workerUpdates.top();
-        if (top && !('data' in top)) return top;
-
-        const change: GeoJSONWorkerChange = {};
-        this._workerUpdates.enqueue(change);
-        return change;
+        return top && !('data' in top) ? top : undefined;
     }
 
     /**
