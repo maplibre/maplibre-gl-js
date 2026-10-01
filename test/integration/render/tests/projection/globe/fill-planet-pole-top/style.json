@@ -1,7 +1,9 @@
 {
   "version": 8,
   "metadata": {
-    "test": {}
+    "test": {
+      "description": "Tests that the globe can be centered on the north pole, and that dashed lines keep their dash length there."
+    }
   },
   "sky": {
     "atmosphere-blend": 0.0

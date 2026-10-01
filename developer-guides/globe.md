@@ -24,6 +24,11 @@ we do not want the planet to get larger or smaller when changing latitudes.
 Map movement thus compensates for the planet size change by also
 changing zoom level along with latitude changes.
 
+Web mercator ends at about 85.05 degrees of latitude, so between that edge and the pole
+the globe keeps the size it has at the edge.
+The map center can reach the poles while the globe is fully shown;
+while the globe transitions to mercator, the center stays within the mercator range.
+
 This behavior is completely automatic and transparent to the user.
 The only case when the user needs to be aware of this is when
 programmatically triggering animations such as `flyTo` and `easeTo`
