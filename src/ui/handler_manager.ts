@@ -325,7 +325,7 @@ export class HandlerManager {
             map.touchPitch.enable(options.touchPitch);
         }
         const getCenter = () => this._camera.transform.centerPoint;
-        const getAround = () => map.dragRotate._around;
+        const getAround = () => map.dragRotate.around;
         const mouseRotate = generateMouseRotationHandler(options, getCenter, getAround);
         const mousePitch = generateMousePitchHandler(options, getAround);
         const mouseRoll = generateMouseRollHandler(options, getCenter, getAround);
@@ -634,7 +634,7 @@ export class HandlerManager {
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
     }
 
-    /** Whether a frame turns the camera around the `around` of a rotation, as drag to rotate gives one around the pointer. */
+    /** Whether a frame rotates the camera around its own `around` point, which drag to rotate sets when it turns around the pointer. */
     _turnsAroundPivot(combinedResult: HandlerResult, combinedEventsInProgress: EventsInProgress): boolean {
         if (!combinedResult.around) return false;
         return !combinedEventsInProgress.drag && !combinedEventsInProgress.zoom && !this._camera.cameraHelper.useGlobeControls;

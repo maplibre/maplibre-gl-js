@@ -5,6 +5,9 @@ import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts
 import type {Terrain} from '../render/terrain.ts';
 import type {HandlerResult} from './handler_manager.ts';
 
+/** Pixels a pivot keeps below the horizon, closer to which a pixel spans too much ground to hold it. */
+const HORIZON_MARGIN = 16;
+
 /** The point a drag turns the camera around, with the screen point and the distance in meters from the camera it keeps. */
 export type RotationPivot = {
     point: Point;
@@ -30,6 +33,7 @@ export function orbitRotationPivot(tr: ITransform, pivot: RotationPivot, deltas:
     if (camera) tr.apply(camera, false);
 }
 
+/** Returns the camera turned around the pivot, or null where that would bring the pivot close to the horizon. */
 function turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: HandlerResult): ITransform | null {
     const camera = start.clone();
     camera.setBearing(start.bearing + (deltas.bearingDelta || 0));
@@ -38,23 +42,20 @@ function turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: Handle
     return isBelowHorizon(camera, pivot.point) && holdPivot(camera, pivot) ? camera : null;
 }
 
-/** Zooms and moves the camera so the pivot is at its screen point and distance, twice, as moving the center changes the scale with the latitude. */
+/** Zooms and moves the camera so the pivot is at its screen point and distance. Returns false where that would put the camera below the center's elevation. */
 function holdPivot(tr: ITransform, pivot: RotationPivot): boolean {
-    for (let solve = 0; solve < 2; solve++) {
-        const height = tr.getCameraAltitude() - tr.elevation;
-        const ground = tr.screenPointToLocation(pivot.point);
-        const descent = height / Math.hypot(height, tr.getCameraLngLat().distanceTo(ground));
-        const targetHeight = pivot.distance * descent + pivot.elevation - tr.elevation;
-        if (height <= 0 || targetHeight <= 0) return false;
-        tr.setZoom(tr.zoom + Math.log2(height / targetHeight));
-        tr.setLocationAtPoint(pivot.location, pivot.point, pivot.elevation);
-    }
+    const height = tr.getCameraAltitude() - tr.elevation;
+    const ground = tr.screenPointToLocation(pivot.point);
+    const descent = height / Math.hypot(height, tr.getCameraLngLat().distanceTo(ground));
+    const targetHeight = pivot.distance * descent + pivot.elevation - tr.elevation;
+    if (height <= 0 || targetHeight <= 0) return false;
+    tr.setZoom(tr.zoom + Math.log2(height / targetHeight));
+    tr.setLocationAtPoint(pivot.location, pivot.point, pivot.elevation);
     return true;
 }
 
-/** Whether the point is at least 16 pixels below the horizon, closer to which a pixel spans too much ground to hold a pivot. */
 function isBelowHorizon(tr: IReadonlyTransform, point: Point): boolean {
-    return tr.isPointOnMapSurface(new Point(point.x, point.y - 16));
+    return tr.isPointOnMapSurface(new Point(point.x, point.y - HORIZON_MARGIN));
 }
 
 function distanceFromCamera(tr: IReadonlyTransform, location: LngLat, elevation: number): number {

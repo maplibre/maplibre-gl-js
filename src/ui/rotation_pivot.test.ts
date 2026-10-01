@@ -29,7 +29,7 @@ describe('captureRotationPivot', () => {
 });
 
 describe('orbitRotationPivot', () => {
-    test('keeps the pivot at its screen point and at its distance from the camera', () => {
+    test('keeps the pivot at its screen point and zooms to keep its distance from the camera', () => {
         const transform = createTransform();
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
         const pivot = captureRotationPivot(transform, new Point(570, 370), terrain);
@@ -39,7 +39,7 @@ describe('orbitRotationPivot', () => {
         expect(transform.bearing).toBeCloseTo(30);
         expect(transform.pitch).toBeCloseTo(40);
         expect(transform.locationToScreenPoint(pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
-        expect(Math.hypot(transform.getCameraLngLat().distanceTo(pivot.location), transform.getCameraAltitude() - 1000)).toBeCloseTo(pivot.distance, 0);
+        expect(transform.zoom).toBeCloseTo(12.116943, 5);
     });
 
     test('keeps only the change of bearing of a frame that would tilt the pivot close to the horizon', () => {

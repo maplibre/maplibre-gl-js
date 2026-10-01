@@ -41,7 +41,8 @@ export class DragRotateHandler {
     _mouseRoll: MouseRollHandler;
     _pitchWithRotate: boolean;
     _rollEnabled: boolean;
-    _around: 'center' | 'pointer';
+    /** @internal */
+    around: 'center' | 'pointer';
 
     /** @internal */
     constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler, mouseRoll: MouseRollHandler) {
@@ -50,7 +51,7 @@ export class DragRotateHandler {
         this._mouseRotate = mouseRotate;
         this._mousePitch = mousePitch;
         this._mouseRoll = mouseRoll;
-        this._around = 'center';
+        this.around = 'center';
     }
 
     /**
@@ -64,7 +65,7 @@ export class DragRotateHandler {
      * ```
      */
     enable(options?: DragRotateOptions | boolean): void {
-        this._around = typeof options === 'object' ? options.around ?? 'center' : 'center';
+        this.around = typeof options === 'object' ? options.around ?? 'center' : 'center';
         this._mouseRotate.enable();
         if (this._pitchWithRotate) this._mousePitch.enable();
         if (this._rollEnabled) this._mouseRoll.enable();
