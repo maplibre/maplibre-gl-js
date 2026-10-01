@@ -1,4 +1,6 @@
 import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {setFlagsFromString} from 'node:v8';
+import {runInNewContext} from 'node:vm';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
@@ -208,6 +210,27 @@ describe('GeoJSONSource.setData', () => {
         expect(spy).toHaveBeenCalledTimes(2);
         expect(source.loaded()).toBeTruthy();
         await firstPromise;
+    });
+
+    test('does not keep the data of a finished update alive while later ones are sent', async () => {
+        const answers: Array<() => void> = [];
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return new Promise((resolve) => answers.push(() => resolve({})));
+            }
+        }), undefined);
+
+        const first = new WeakRef<GeoJSON.GeoJSON>({type: 'FeatureCollection', features: []});
+        source.setData(first.deref());
+        await sleep(0);
+        for (let update = 0; update < 3; update++) {
+            source.setData({type: 'FeatureCollection', features: []});
+            answers.shift()();
+            await sleep(0);
+        }
+
+        collectGarbage();
+        expect(first.deref()).toBeUndefined();
     });
 
     test('marks source as not loaded before firing "dataloading" event', async () => {
@@ -635,6 +658,42 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
         expect(spy.mock.calls[1][0].data.data).toBeUndefined();
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
+    });
+
+    test('modifying cluster properties and sending diffs alternately with pending data', async () => {
+        const spy = vi.fn();
+        const answers: Array<() => void> = [];
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(structuredClone(message));
+                return new Promise((resolve) => answers.push(() => resolve({})));
+            }
+        });
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {type: 'FeatureCollection', features: []},
+            cluster: true
+        }, mockDispatcher, undefined);
+
+        source.load();
+        await sleep(0);
+        for (let id = 0; id < 3; id++) {
+            source.updateData({add: [{type: 'Feature', id, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]});
+            source.setClusterOptions({cluster: false, clusterRadius: 10 + id});
+        }
+        answers.shift()();
+        await sleep(0);
+        const content = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        answers.shift()();
+
+        expect((await content).shouldReloadTileOptions).toBeUndefined();
+        expect(source.loaded()).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[1][0].data.dataDiff.add).toHaveLength(3);
+        expect(spy.mock.calls[1][0].data.updateCluster).toBe(true);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(false);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.radius).toBe(12 * EXTENT / source.tileSize);
+        expect(((await source.getData()) as GeoJSON.FeatureCollection).features).toHaveLength(3);
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {
@@ -1479,3 +1538,11 @@ describe('GeoJSONSource.getClusterOptions', () => {
         expect(source.getClusterOptions()).toEqual({cluster: false, clusterMaxZoom: 9, clusterRadius: 40});
     });
 });
+
+/**
+ * Runs a full garbage collection, so that a `WeakRef` to an object nothing else holds comes back empty.
+ */
+function collectGarbage() {
+    setFlagsFromString('--expose-gc');
+    (runInNewContext('gc') as () => void)();
+}

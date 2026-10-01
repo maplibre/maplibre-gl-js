@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `GeoJSONSource` memory growing until the page crashes when `setData` is called faster than the worker handles it ([#8585](https://github.com/maplibre/maplibre-gl-js/pull/8585)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource#updateData` leaving stale clusters on untouched tiles after clustering was turned on with `setClusterOptions` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource#setClusterOptions` clustering twice when called while new data is waiting to be sent ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource` data set with `setData` being overwritten by the result of an earlier URL load or `updateData` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
