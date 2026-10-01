@@ -5,83 +5,73 @@ import {sleep} from './test/util.ts';
 function createQueue() {
     const sent: string[] = [];
     const answers: Array<() => void> = [];
-    const results: string[] = [];
-    const replaced: boolean[] = [];
+    const results: Array<{result: string; replaced: boolean; idle: boolean}> = [];
     const queue = new UpdateQueue<string, string>({
         send: (update) => {
             sent.push(update);
             return new Promise((resolve) => answers.push(() => resolve(update)));
         },
-        onResult: (_update, result, wasReplaced) => {
-            results.push(result);
-            replaced.push(wasReplaced);
-        },
+        onResult: (_update, result, replaced) => { results.push({result, replaced, idle: queue.isIdle()}); },
         onError: () => {}
     });
     const answer = async () => {
         answers.shift()();
         await sleep(0);
     };
-    return {queue, sent, results, replaced, answer};
+    return {queue, sent, results, answer};
 }
 
 describe('UpdateQueue', () => {
-    test('sends one update at a time, in order', async () => {
+    test('sends the updates one at a time, in order, once flushed', async () => {
         const {queue, sent, results, answer} = createQueue();
+        const done = vi.fn();
         queue.enqueue('a');
+        expect(sent).toEqual([]);
+        expect(queue.isIdle()).toBe(false);
+
+        queue.flush().then(done);
         queue.enqueue('b');
-        queue.flush();
+        queue.flush().then(done);
         expect(sent).toEqual(['a']);
 
         await answer();
         expect(sent).toEqual(['a', 'b']);
-        expect(results).toEqual(['a']);
+        expect(done).not.toHaveBeenCalled();
 
         await answer();
-        expect(results).toEqual(['a', 'b']);
-        expect(queue.isIdle()).toBe(true);
+        expect(results).toEqual([
+            {result: 'a', replaced: false, idle: false},
+            {result: 'b', replaced: false, idle: true}
+        ]);
+        expect(done).toHaveBeenCalledTimes(2);
+        await expect(queue.flush()).resolves.toBeUndefined();
     });
 
-    test('does not send before flush', () => {
-        const {queue, sent} = createQueue();
-        queue.enqueue('a');
-        expect(sent).toEqual([]);
-        expect(queue.isIdle()).toBe(false);
-    });
-
-    test('exposes the last waiting update, not the one being sent', async () => {
-        const {queue, answer} = createQueue();
-        queue.enqueue('a');
-        queue.flush();
-        expect(queue.top()).toBeUndefined();
-
-        queue.enqueue('b');
-        queue.enqueue('c');
-        expect(queue.top()).toBe('c');
-
-        await answer();
-        await answer();
-        expect(queue.top()).toBeUndefined();
-    });
-
-    test('sends a waiting update as changed through top', async () => {
-        const sent: Array<{value: string}> = [];
+    test('exposes the last waiting update, not the one being sent, to be changed until it is sent', async () => {
+        const sent: string[] = [];
         const queue = new UpdateQueue<{value: string}, void>({
             send: (update) => {
-                sent.push({...update});
+                sent.push(update.value);
                 return Promise.resolve();
             },
             onResult: () => {},
             onError: () => {}
         });
         queue.enqueue({value: 'a'});
-        queue.top().value += 'b';
+        queue.flush();
+        expect(queue.top()).toBeUndefined();
+
+        queue.enqueue({value: 'b'});
+        queue.enqueue({value: 'c'});
+        queue.top().value += '!';
         await queue.flush();
-        expect(sent).toEqual([{value: 'ab'}]);
+
+        expect(sent).toEqual(['a', 'b', 'c!']);
+        expect(queue.top()).toBeUndefined();
     });
 
     test('replaces the waiting updates, and tells that the update being sent was replaced', async () => {
-        const {queue, sent, replaced, answer} = createQueue();
+        const {queue, sent, results, answer} = createQueue();
         queue.enqueue('a');
         queue.flush();
         queue.enqueue('b');
@@ -90,7 +80,7 @@ describe('UpdateQueue', () => {
         await answer();
         expect(sent).toEqual(['a', 'c']);
         await answer();
-        expect(replaced).toEqual([true, false]);
+        expect(results.map(({replaced}) => replaced)).toEqual([true, false]);
     });
 
     test('drops the waiting updates on clear, and resolves flush once the one being sent is done', async () => {
@@ -105,32 +95,6 @@ describe('UpdateQueue', () => {
         expect(sent).toEqual(['a']);
         expect(done).toHaveBeenCalledTimes(1);
         expect(queue.isIdle()).toBe(true);
-    });
-
-    test('resolves flush once every update is done', async () => {
-        const {queue, answer} = createQueue();
-        const done = vi.fn();
-        queue.enqueue('a');
-        queue.flush().then(done);
-        queue.enqueue('b');
-        queue.flush().then(done);
-
-        await answer();
-        expect(done).not.toHaveBeenCalled();
-        await answer();
-        expect(done).toHaveBeenCalledTimes(2);
-    });
-
-    test('is idle when the result of the last update is handled', async () => {
-        const idle: boolean[] = [];
-        const queue = new UpdateQueue<string, void>({
-            send: () => Promise.resolve(),
-            onResult: () => { idle.push(queue.isIdle()); },
-            onError: () => {}
-        });
-        queue.enqueue('a');
-        await queue.flush();
-        expect(idle).toEqual([true]);
     });
 
     test('passes a failed update to onError and sends the next one', async () => {
