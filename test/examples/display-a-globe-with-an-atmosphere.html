@@ -27,6 +27,7 @@
 
     const map = new maplibregl.Map({
         container: 'map',
+        dragPan: {fixedBearing: false},
         zoom: 0,
         center: [137.9150899566626, 36.25956997955441],
         style: {
