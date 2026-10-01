@@ -65,7 +65,5 @@ describe('FillExtrusionBucket', () => {
 
         expect(bucketWithoutRounding.layoutVertexArray.length).toBeGreaterThan(0);
         expect(bucketWithRounding.layoutVertexArray.length).toBeGreaterThan(bucketWithoutRounding.layoutVertexArray.length);
-        expect(bucketWithoutRounding.smoothWallNormals).toBe(false);
-        expect(bucketWithRounding.smoothWallNormals).toBe(true);
     });
 });

@@ -76,7 +76,6 @@ export class FillExtrusionBucket implements Bucket {
     indexBuffer: IndexBuffer;
 
     hasDependencies: boolean;
-    smoothWallNormals: boolean;
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
@@ -106,7 +105,6 @@ export class FillExtrusionBucket implements Bucket {
         const layer = this.layers[0];
         const roundedCornerDistanceInMeters = layer.layout.get('fill-extrusion-rounded-corner-distance');
         const roundedCornerDistance = roundedCornerDistanceInMeters > 0 ? getTileUnitsForMeters(roundedCornerDistanceInMeters, canonical) : 0;
-        this.smoothWallNormals = roundedCornerDistance > 0;
         const needGeometry = layer._featureFilter.needGeometry;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
@@ -272,7 +270,8 @@ export class FillExtrusionBucket implements Bucket {
      */
     private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}): void {
         let edgeDistance = 0;
-        const wallNormals = this.smoothWallNormals ? roundedWallNormals(geometry) : null;
+        const hasRoundedCorners = this.layers[0].layout.get('fill-extrusion-rounded-corner-distance') > 0;
+        const wallNormals = hasRoundedCorners ? roundedWallNormals(geometry) : null;
 
         for (let p = 1; p < geometry.length; p++) {
             const p1 = geometry[p];

@@ -10,6 +10,10 @@ function round(p: Point):GeoJSON.Position {
     return [x, y];
 }
 
+function normals(ring: Point[]): Array<{start: GeoJSON.Position; end: GeoJSON.Position} | null> {
+    return roundedWallNormals(ring).map(wall => wall && {start: round(wall.start), end: round(wall.end)});
+}
+
 const square = [
     new Point(0, 0),
     new Point(10, 0),
@@ -208,8 +212,6 @@ describe('roundPolygonCornersIfNeeded', () => {
 });
 
 describe('roundedWallNormals', () => {
-    const normals = (ring: Point[]) => roundedWallNormals(ring).map((wall) => wall && {start: round(wall.start), end: round(wall.end)});
-
     test('averages the normals of two walls meeting at a shallow turn', () => {
         expect(normals([new Point(0, 0), new Point(10, 0), new Point(20, 5)])).toEqual([
             null,
