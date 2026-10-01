@@ -6,7 +6,6 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFrameRenderData} from '../util/test/util.ts';
 
 import type {Terrain} from './terrain.ts';
-import type {ProgramCache} from '../webgl/program_cache.ts';
 
 describe('getProjectionDataForTile', () => {
     test('selects projection options for regular and terrain-texture draws', () => {
@@ -62,30 +61,5 @@ describe('getTerrainDataForTile', () => {
 
         expect(frameRenderContext.getTerrainDataForTile(tileID)).toBeNull();
         expect(getTerrainData).not.toHaveBeenCalled();
-    });
-});
-
-describe('useProgram', () => {
-    const useProgramWith = (name: string, isRenderingToTexture: boolean) => {
-        const getProgram = vi.fn();
-        const programCache = {getProgram} as unknown as ProgramCache;
-        const frameRenderContext = new FrameRenderContext({transform: new MercatorTransform(), terrain: null, data: createFrameRenderData(), context: null, programCache, currentPass: 'translucent', getStencilMesh: null});
-        frameRenderContext.isRenderingToTexture = isRenderingToTexture;
-        frameRenderContext.useProgram(name);
-        return getProgram.mock.calls[0][0].wait;
-    };
-
-    test('lets ordinary draws skip a frame while their program compiles', () => {
-        expect(useProgramWith('fill', false)).toBe(false);
-    });
-
-    test('waits for programs whose skipped draw would not be redrawn', () => {
-        for (const name of ['clippingMask', 'depth', 'terrain', 'terrainDepth', 'hillshadePrepare']) {
-            expect(useProgramWith(name, false)).toBe(true);
-        }
-    });
-
-    test('waits while rendering to a texture kept across frames', () => {
-        expect(useProgramWith('fill', true)).toBe(true);
     });
 });

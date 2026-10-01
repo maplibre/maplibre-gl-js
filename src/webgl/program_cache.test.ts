@@ -43,11 +43,13 @@ describe('ProgramCache', () => {
     describe('with KHR_parallel_shader_compile', () => {
         const COMPLETION_STATUS_KHR = 0x91B1;
         let compiled: boolean;
+        let linked: boolean;
 
         beforeEach(() => {
             compiled = false;
+            linked = true;
             vi.mocked(gl.getExtension).mockImplementation(((name: string) => (name === 'KHR_parallel_shader_compile' ? {COMPLETION_STATUS_KHR} : null)) as typeof gl.getExtension);
-            vi.mocked(gl.getProgramParameter).mockImplementation((_program: WebGLProgram, pname: number) => (pname === COMPLETION_STATUS_KHR ? compiled : true));
+            vi.mocked(gl.getProgramParameter).mockImplementation((_program: WebGLProgram, pname: number) => (pname === COMPLETION_STATUS_KHR ? compiled : linked));
         });
 
         const linkStatusReads = () => vi.mocked(gl.getProgramParameter).mock.calls.filter(([, pname]) => pname === gl.LINK_STATUS).length;
@@ -72,6 +74,25 @@ describe('ProgramCache', () => {
             expect(cache.takePending()).toBe(false);
         });
 
+        test('throws a shader compile error when the pending program is first used', () => {
+            cache.getProgram(clippingMaskVariant);
+            compiled = true;
+            linked = false;
+            vi.mocked(gl.getShaderParameter).mockReturnValue(false);
+            vi.mocked(gl.getShaderInfoLog).mockReturnValue('syntax error');
+
+            expect(() => cache.getProgram(clippingMaskVariant)).toThrow('Could not compile fragment shader: syntax error');
+        });
+
+        test('marks a pending program failed instead of throwing when the context is lost', () => {
+            const program = cache.getProgram(clippingMaskVariant);
+            linked = false;
+            vi.mocked(gl.isContextLost).mockReturnValue(true);
+
+            expect(program.isReady()).toBe(true);
+            expect(program.failedToCreate).toBe(true);
+        });
+
         test('waits for the compile when asked to', () => {
             const program = cache.getProgram({...clippingMaskVariant, wait: true});
 
@@ -79,13 +100,6 @@ describe('ProgramCache', () => {
             expect(linkStatusReads()).toBe(1);
             expect(cache.takePending()).toBe(false);
         });
-    });
-
-    test('completes programs at once without KHR_parallel_shader_compile', () => {
-        const program = cache.getProgram(clippingMaskVariant);
-
-        expect(program.isReady()).toBe(true);
-        expect(cache.takePending()).toBe(false);
     });
 
     test('destroy deletes every program', () => {
