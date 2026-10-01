@@ -18,8 +18,7 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
     if (frameRenderContext.currentPass !== 'offscreen' && frameRenderContext.currentPass !== 'translucent') return;
 
     const context = painter.context;
-    const projection = painter.style.projection;
-    const useSubdivision = projection.useSubdivision;
+    const {useSubdivision} = frameRenderContext.data;
 
     const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = frameRenderContext.colorModeForRenderPass();

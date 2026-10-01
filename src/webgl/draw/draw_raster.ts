@@ -48,8 +48,7 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
 
     const source = tileManager.getSource();
 
-    const projection = painter.style.projection;
-    const useSubdivision = projection.useSubdivision;
+    const {useSubdivision} = frameRenderContext.data;
 
     // When rendering globe (or any other subdivided projection), two passes are needed.
     // Subdivided tiles with different granularities might have tiny gaps between them.

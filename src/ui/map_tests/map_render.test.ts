@@ -3,6 +3,7 @@ import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
 import {FrameRenderContext} from '../../render/frame_render_context.ts';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
@@ -241,6 +242,18 @@ describe('frame render data', () => {
         expect(map.painter.frameRenderContext.data.projectionTransition).toBe(1);
         expect(map.painter.frameRenderContext.data.isRenderingGlobe).toBe(true);
         expect(map.painter.frameRenderContext.data.projectionShaderVariant.name).toBe('globe');
+        map.remove();
+    });
+
+    test('passes the pixel ratio and the evaluated light and sky to the painter', async () => {
+        const map = createMap({pixelRatio: 2, style: {version: 8, sources: {}, layers: [], light: {intensity: 0.2}, sky: {'fog-color': 'red'}}});
+        await map.once('idle');
+
+        map.redraw();
+
+        expect(map.painter.frameRenderContext.data.pixelRatio).toBe(2);
+        expect(map.painter.frameRenderContext.data.light.intensity).toBe(0.2);
+        expect(map.painter.frameRenderContext.data.sky['fog-color']).toEqual(Color.red);
         map.remove();
     });
 });
