@@ -1,9 +1,10 @@
 import {TransformHelper} from '../transform_helper.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
-import {lerp} from '../../util/util.ts';
+import {clamp, lerp, MAX_VALID_LATITUDE} from '../../util/util.ts';
+import {LngLat} from '../lng_lat.ts';
 
-import type {LngLat, LngLatLike,} from '../lng_lat.ts';
+import type {LngLatLike} from '../lng_lat.ts';
 import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
@@ -239,6 +240,9 @@ export class GlobeTransform implements ITransform {
 
     setTransitionState(globeness: number): void {
         this._globeness = globeness;
+        if (globeness < 1 && Math.abs(this.center.lat) > MAX_VALID_LATITUDE) {
+            this.setCenter(this.applyConstrain(this.center, this.zoom).center);
+        }
         this._calcMatrices();
         this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
         this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
@@ -389,8 +393,12 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getBounds();
     }
 
+    /**
+     * Only the globe reaches past the mercator range, so the center stays inside it while the globe blends into mercator.
+     */
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this.currentTransform.defaultConstrain(lngLat, zoom);
+        const center = this._globeness < 1 ? new LngLat(lngLat.lng, clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)) : lngLat;
+        return this.currentTransform.defaultConstrain(center, zoom);
     };
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {

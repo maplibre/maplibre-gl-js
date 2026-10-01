@@ -2888,6 +2888,12 @@ describe('easeTo globe projection', () => {
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(3);
         });
+
+        test('eases onto the pole', () => {
+            camera.jumpTo({center: [0, 60.2]});
+            camera.easeTo({center: [0, 90], duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
+        });
     });
 
     describe('mercator test equivalents', () => {

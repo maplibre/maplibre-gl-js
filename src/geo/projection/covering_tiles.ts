@@ -3,9 +3,9 @@ import {vec2, type vec3, type vec4} from 'gl-matrix';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
+import {clamp, degreesToRadians, MAX_VALID_LATITUDE, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
-import {earthRadius} from '../lng_lat.ts';
+import {earthRadius, LngLat} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
@@ -291,7 +291,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, options.maxContentElevation));
     }
     const cameraCoord = cameraMercatorCoordinate(transform);
-    const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
+    const centerLat = clamp(transform.center.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+    const centerCoord = MercatorCoordinate.fromLngLat(new LngLat(transform.center.lng, centerLat), transform.elevation);
     const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);

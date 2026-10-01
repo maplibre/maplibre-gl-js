@@ -3,9 +3,9 @@ import {EXTENT} from '../../data/extent.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} from '../../util/util.ts';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
+import {LngLat} from '../lng_lat.ts';
 
 import type {UnwrappedTileIDType} from '../transform_helper.ts';
-import type {LngLat} from '../lng_lat.ts';
 
 /*
 * The maximum angle to use for the Mercator horizon. This must be less than 90
@@ -101,6 +101,7 @@ export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, el
 /**
  * Returns the position of the camera in mercator coordinates, with its altitude in `z`.
  * Computed from the center, pitch, bearing and camera distance, so it holds for any projection.
+ * A globe center past the mercator range is taken at the range's edge.
  */
 export function cameraMercatorCoordinate(transform: {
     center: LngLat;
@@ -110,9 +111,10 @@ export function cameraMercatorCoordinate(transform: {
     cameraToCenterDistance: number;
     worldSize: number;
 }): MercatorCoordinate {
-    const pixelPerMeter = mercatorZfromAltitude(1, transform.center.lat) * transform.worldSize;
+    const center = new LngLat(transform.center.lng, clamp(transform.center.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE));
+    const pixelPerMeter = mercatorZfromAltitude(1, center.lat) * transform.worldSize;
     return cameraMercatorCoordinateFromCenterAndRotation(
-        transform.center, transform.elevation, transform.pitch, transform.bearing,
+        center, transform.elevation, transform.pitch, transform.bearing,
         transform.cameraToCenterDistance / pixelPerMeter);
 }
 

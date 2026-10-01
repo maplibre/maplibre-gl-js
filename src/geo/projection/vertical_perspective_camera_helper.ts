@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
@@ -131,7 +131,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const oldZoom = tr.zoom;
         const heuristicCenter = new LngLat(
             tr.center.lng + dLng * factor,
-            clamp(tr.center.lat + dLat * factor, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
+            clamp(tr.center.lat + dLat * factor, -90, 90)
         );
 
         // Now compute the map center exact zoom
@@ -147,7 +147,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
         tr.setCenter(new LngLat(
             exactCenter.lng + lngExactToHeuristic * heuristicFactor,
-            exactCenter.lat + latExactToHeuristic * heuristicFactor
+            clamp(exactCenter.lat + latExactToHeuristic * heuristicFactor, -90, 90)
         ).wrap());
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }

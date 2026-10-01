@@ -10,7 +10,7 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
-import {differenceOfAnglesDegrees, MAX_VALID_LATITUDE} from '../../util/util.ts';
+import {differenceOfAnglesDegrees} from '../../util/util.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -825,6 +825,13 @@ describe('GlobeTransform', () => {
         expect(globeTransform.center.lat).toBeCloseTo(originalLat, 10);
     });
 
+    test('the center reaches the pole', () => {
+        const globeTransform = createGlobeTransform();
+        globeTransform.setCenter(new LngLat(0, 90));
+
+        expect(globeTransform.center.lat).toBe(90);
+    });
+
     describe('versorSetLocationAtPoint', () => {
         const precisionDigits = 4;
         const globeTransform = createGlobeTransform();
@@ -914,12 +921,12 @@ describe('GlobeTransform', () => {
         });
 
         test('panning does not freeze near a centred pole', () => {
-            // With the pole centred the dial supplies all of the longitude change, and the center
-            // latitude is already clamped, so if the dial gives up the drag stops moving entirely.
+            // With the pole centred the dial supplies all of the longitude change, so if the dial
+            // gives up the drag stops moving entirely.
             const tr = createGlobeTransform();
             tr.setZoom(1);
             tr.setTransitionState(1);
-            tr.setCenter(new LngLat(0, MAX_VALID_LATITUDE));
+            tr.setCenter(new LngLat(0, 90));
             const pole = tr.locationToScreenPoint(new LngLat(0, 90));
             const cursor = new Point(pole.x + 10, pole.y);
             const panDelta = new Point(0, 8); // tangential, so it sweeps around the pole
@@ -927,6 +934,18 @@ describe('GlobeTransform', () => {
             const location = tr.screenPointToLocation(cursor.sub(panDelta));
             versorSetLocationAtPoint(tr, location, cursor, panDelta);
             expect(Math.abs(differenceOfAnglesDegrees(lngBefore, tr.center.lng))).toBeGreaterThan(1);
+        });
+
+        test('dragging past the pole stops on it', () => {
+            const tr = createGlobeTransform();
+            tr.setZoom(1);
+            tr.setTransitionState(1);
+            tr.setCenter(new LngLat(0, 88));
+            const panDelta = new Point(0, 100);
+
+            versorSetLocationAtPoint(tr, tr.screenPointToLocation(tr.centerPoint), tr.centerPoint.add(panDelta), panDelta);
+
+            expect(tr.center.lat).toBe(90);
         });
 
         test('panning off the globe is slower than on it', () => {
