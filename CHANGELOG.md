@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Let the globe center reach the poles, where it stopped at 85.05° ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
 - With `fill-extrusion-rounded-corner-distance` set, shade the walls of a rounded corner as one curved surface by sharing the vertex normal between walls that meet at a shallow angle, instead of one flat shade per arc segment ([#8475](https://github.com/maplibre/maplibre-gl-js/issues/8475)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
 - Add an `absolutePadding` option to `Map#cameraForBounds` and `Map#fitBounds` to treat `padding` as the map's persistent padding instead of adding it to the current one ([#8480](https://github.com/maplibre/maplibre-gl-js/issues/8480)) (by [@sargunv](https://github.com/sargunv))
