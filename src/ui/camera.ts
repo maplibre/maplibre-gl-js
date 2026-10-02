@@ -116,9 +116,15 @@ export type AnchoredCameraOptions = {
  */
 export type CameraForBoundsOptions = CameraOptions & {
     /**
-     * The amount of padding in pixels to add to the given bounds.
+     * The amount of padding in pixels to add to the given bounds, on top of the map's current padding.
      */
     padding?: number | PaddingOptions;
+    /**
+     * If `true`, `padding` replaces the map's current padding instead of adding to it, and is returned with the result.
+     * This will become the default in version 7.
+     * @defaultValue false
+     */
+    absolutePadding?: boolean;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -200,6 +206,12 @@ export type FitBoundsOptions = FlyToOptions & {
      * @defaultValue false
      */
     linear?: boolean;
+    /**
+     * If `true`, `padding` replaces the map's current padding instead of adding to it, and the map transitions to it.
+     * This will become the default in version 7.
+     * @defaultValue false
+     */
+    absolutePadding?: boolean;
     /**
      * The center of the given bounds relative to the map's center, measured in pixels.
      * @defaultValue [0, 0]
@@ -328,7 +340,7 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * holds the geographical coordinate of the target
+     * The map center when the animation ends; the animation eases the center elevation to the terrain there.
      */
     _elevationCenter: LngLat;
     /**
@@ -494,7 +506,7 @@ export class Camera extends Evented<MapEventType> {
 
     setVerticalFieldOfView(fov: number, eventData?: any): this {
         if (fov != this.transform.fov) {
-            this.transform.setFov(fov);
+            this.applyTransformChange(tr => tr.setFov(fov));
             this.fire(new MapMovementEvent('movestart', eventData))
                 .fire(new MapMovementEvent('move', eventData))
                 .fire(new MapMovementEvent('moveend', eventData));
@@ -567,7 +579,11 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    /**
+     * Returns {@link JumpToOptions} so the result can carry `padding` when `absolutePadding` is set.
+     * Once that is the default, `padding` can move onto {@link CameraOptions} and this can return it.
+     */
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         bounds = LngLatBounds.convert(bounds).adjustAntiMeridian();
         const bearing = options?.bearing || 0;
 
@@ -583,7 +599,8 @@ export class Camera extends Evented<MapEventType> {
      * @param p1 - Second point
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - the camera options
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     *      plus `padding` when `absolutePadding` is set.
      *      If map is unable to fit, method will warn and return undefined.
      * @example
      * ```ts
@@ -595,7 +612,7 @@ export class Camera extends Evented<MapEventType> {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): JumpToOptions | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -623,11 +640,16 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         const bounds = new LngLatBounds(p0, p1);
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
-        if (result && this._zoomSnap) {
+        const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
+        const fitPadding = options.absolutePadding ? noPadding : padding;
+        const mapPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
+
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr);
+        if (!result) return undefined;
+        if (this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
         }
-        return result;
+        return options.absolutePadding ? {...result, padding} : result;
     }
 
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
@@ -648,13 +670,18 @@ export class Camera extends Evented<MapEventType> {
             eventData);
     }
 
-    _fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any): this {
+    _fitInternal(calculatedOptions?: JumpToOptions, options?: FitBoundsOptions, eventData?: any): this {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
         options = extend(calculatedOptions, options);
-        // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
-        delete options.padding;
+        if (options.absolutePadding) {
+            options.padding = calculatedOptions.padding;
+            delete options.absolutePadding;
+        } else {
+            // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
+            delete options.padding;
+        }
 
         return options.linear ?
             this.easeTo(options, eventData) :
@@ -837,13 +864,13 @@ export class Camera extends Evented<MapEventType> {
         this._prepareEase(eventData, options.noMoveStart, currently);
 
         if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter);
+            this._prepareElevation(easeHandler.elevationCenter, tr);
         }
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -876,21 +903,35 @@ export class Camera extends Evented<MapEventType> {
         }
     }
 
-    _prepareElevation(center: LngLat): void {
+    /**
+     * @internal
+     * Starts easing the center elevation: records where it stands on the transform the animation edits and
+     * samples the terrain under the map center the animation ends on.
+     * @param center - the map center when the animation ends
+     * @param tr - the transform the animation edits
+     */
+    _prepareElevation(center: LngLat, tr: ITransform): void {
         this._elevationCenter = center;
-        this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, this.transform);
+        this._elevationStart = tr.elevation;
+        this._elevationTarget = this.terrain.getElevationForLngLat(center, tr);
         this.elevationFreeze = true;
     }
 
-    _updateElevation(k: number): void {
-
+    /**
+     * @internal
+     * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
+     * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
+     * that is not clamped to the ground keeps its elevation.
+     * @param k - the animation's progress, 0 to 1
+     * @param tr - the transform the animation edits
+     */
+    _updateElevation(k: number, tr: ITransform): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
-            this._prepareElevation(this.transform.center);
+            this._prepareElevation(tr.center, tr);
         }
 
-        this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, this.transform);
+        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
+        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -898,7 +939,9 @@ export class Camera extends Evented<MapEventType> {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
+        if (this.getCenterClampedToGround()) {
+            tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
+        }
     }
 
     _finalizeElevation(): void {
@@ -1010,6 +1053,22 @@ export class Camera extends Evented<MapEventType> {
             finalTransform.apply(nextTransform, false);
         }
         this.transform.apply(finalTransform, false);
+    }
+
+    /**
+     * @internal
+     * Applies a change that is not itself a movement, such as new bounds, limits or field of view, the way
+     * any camera update is applied. A requested camera state created only for this change is dropped again,
+     * so a later movement cannot restore the old values.
+     */
+    applyTransformChange(change: (tr: ITransform) => void): void {
+        const hadRequestedCameraState = this._requestedCameraState !== undefined;
+        const tr = this.getTransformForUpdate();
+        change(tr);
+        this.applyUpdatedTransform(tr);
+        if (!hadRequestedCameraState) {
+            delete this._requestedCameraState;
+        }
     }
 
     _fireMoveEvents(eventData?: Record<string, unknown>): void {
@@ -1199,7 +1258,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
+        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter, tr);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1224,7 +1283,7 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {

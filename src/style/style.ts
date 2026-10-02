@@ -34,7 +34,6 @@ import {
     type GetDashesResponse,
     MessageType,
     type GetGlyphsParameters,
-    type GetGlyphsResponse,
     type GetImagesParameters,
     type GetImagesResponse
 } from '../util/actor_messages.ts';
@@ -48,6 +47,7 @@ import type Point from '@mapbox/point-geometry';
 import type {Map} from '../ui/map.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
 import type {StyleImage} from './style_image.ts';
+import type {GlyphMap} from './style_glyph.ts';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {Placement} from '../symbol/placement.ts';
 import type {
@@ -2006,7 +2006,7 @@ export class Style extends Evented<MapEventType> {
         return images;
     }
 
-    async getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GetGlyphsResponse> {
+    async getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GlyphMap> {
         const glyphs = await this.glyphManager.getGlyphs(params.stacks);
         const tileManager = this.tileManagers[params.source];
         if (tileManager) {

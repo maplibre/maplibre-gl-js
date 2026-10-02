@@ -503,6 +503,15 @@ describe('GlobeTransform', () => {
             expect(globeTransform.isPointOnMapSurface(new Point(223, 147))).toBe(true);
             expect(globeTransform.isPointOnMapSurface(new Point(221, 144))).toBe(false);
         });
+
+        test('isPointOnMapSurface is false for point in sky, and true for point on surface', () => {
+            const pitchedTransform = new GlobeTransform({maxPitch: 85});
+            pitchedTransform.resize(640, 480);
+            pitchedTransform.setZoom(11);
+            pitchedTransform.setPitch(85);
+            expect(pitchedTransform.isPointOnMapSurface(new Point(320, 0))).toBe(false);
+            expect(pitchedTransform.isPointOnMapSurface(new Point(320, 479))).toBe(true);
+        });
     });
 
     test('pointCoordinate', () => {
@@ -784,7 +793,7 @@ describe('GlobeTransform', () => {
         test('change projection and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            
+
             expect(globeTransform.renderWorldCopies).toBeTruthy();
         });
 

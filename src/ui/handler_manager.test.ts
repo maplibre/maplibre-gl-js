@@ -30,7 +30,7 @@ describe('HandlerManager terrain scenarios', () => {
         manager = map._handlers;
     });
 
-    test('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
+    test('_handleMapControls pans through the camera helper when terrain is not enabled and the pointer is on the map', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
         map._camera.cameraHelper = {
@@ -45,7 +45,8 @@ describe('HandlerManager terrain scenarios', () => {
             center: new LngLat(0, 0),
             screenPointToLocation: vi.fn(() => new LngLat(1, 1)),
             setCenter: setCenterMock,
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
+            isPointOnMapSurface: () => true,
+        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter' | 'isPointOnMapSurface'>;
         const deltas: MapControlsDeltas = {
             panDelta: new Point(0, 0),
             zoomDelta: 0,

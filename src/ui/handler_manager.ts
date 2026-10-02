@@ -688,6 +688,11 @@ export class HandlerManager {
 
         cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
+        if (!terrain && !cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(deltasForHelper.around)) {
+            if (panDelta) tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
+            return;
+        }
+
         if (!terrain) {
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
