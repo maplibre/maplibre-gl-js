@@ -899,12 +899,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
         this._zooming ||= easeHandler.isZooming;
         this._easeId = options.easeId;
-        this._prepareEase(eventData, options.noMoveStart, currently);
-
-        if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter, tr);
-            if (options.freezeElevation) this.holdElevation(tr);
-        }
+        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
@@ -914,19 +909,24 @@ export class Camera extends Evented<MapEventType> {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            const tookDem = this.releaseElevation();
-            if (this.terrain && options.freezeElevation && this.getCenterClampedToGround()) {
-                this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
-            }
-            this._afterEase(eventData, interruptingEaseId);
+            this._afterEase(eventData, interruptingEaseId, options.freezeElevation);
         }, options);
 
         return this;
     }
 
+    /**
+     * @param elevation - over terrain, the transform the animation edits, the map center it ends on, and whether
+     * it holds the center elevation (`freezeElevation`) instead of easing it
+     */
     _prepareEase(eventData: any, noMoveStart: boolean,
-        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}): void {
+        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {},
+        elevation?: {tr: ITransform; center: LngLat; freeze: boolean}): void {
         this._moving = true;
+        if (this.terrain && elevation) {
+            this._prepareElevation(elevation.center, elevation.tr);
+            if (elevation.freeze) this.holdElevation(elevation.tr);
+        }
         if (!noMoveStart && !currently.moving) {
             this.fire(new MapMovementEvent('movestart', eventData));
         }
@@ -1207,7 +1207,15 @@ export class Camera extends Evented<MapEventType> {
         }
     }
 
-    _afterEase(eventData?: Record<string, unknown>, easeId?: string): void {
+    /**
+     * @param freezeElevation - whether the animation held the center elevation; its end then puts the center back
+     * onto the terrain, see {@link Camera.putCenterBackOnTerrain}
+     */
+    _afterEase(eventData?: Record<string, unknown>, easeId?: string, freezeElevation: boolean = false): void {
+        const tookDem = this.releaseElevation();
+        if (this.terrain && freezeElevation && this.getCenterClampedToGround()) {
+            this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
+        }
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events
         if (this._easeId && easeId && this._easeId === easeId) {
@@ -1377,11 +1385,7 @@ export class Camera extends Evented<MapEventType> {
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
 
-        this._prepareEase(eventData, false);
-        if (this.terrain) {
-            this._prepareElevation(flyToHandler.targetCenter, tr);
-            if (options.freezeElevation) this.holdElevation(tr);
-        }
+        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1410,11 +1414,7 @@ export class Camera extends Evented<MapEventType> {
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
-            const tookDem = this.releaseElevation();
-            if (this.terrain && options.freezeElevation && this.getCenterClampedToGround()) {
-                this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
-            }
-            this._afterEase(eventData);
+            this._afterEase(eventData, undefined, options.freezeElevation);
         }, options);
 
         return this;
