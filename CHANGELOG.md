@@ -18,6 +18,7 @@
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
 - Cross-fade raster tiles when zooming out from a source's `maxzoom`, where the tiles switched instantly ([#8517](https://github.com/maplibre/maplibre-gl-js/pull/8517)) (by [@cherenkov](https://github.com/cherenkov))
+- Fix `globeDistanceOfLocationsPixels` returning `NaN` when two copies of the same point have a dot product slightly above 1 ([#8624](https://github.com/maplibre/maplibre-gl-js/pull/8624))(by [@Dimononon](https://github.com/Dimononon))
 - _...Add new stuff here..._
 
 ## 6.11.2
