@@ -57,8 +57,12 @@ export type DragMoveHandlerOptions<T, E extends Event> = {
     assignEvents: (handler: DragMoveHandler<T, E>) => void;
     /**
      * Should the move start on the "start" event, or should it start on the first valid move.
+     *
+     * A function decides per start event. A handler that is active blocks every handler outside its
+     * `allowed` list in the handler manager, so activating on start claims the gesture before it has
+     * moved the map.
      */
-    activateOnStart?: boolean;
+    activateOnStart?: boolean | ((e: E) => boolean);
     /**
      * If true, handler will be enabled during construction
      */
@@ -80,7 +84,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
 
     _clickTolerance: number;
     _moveFunction: DragMoveFunction<T>;
-    _activateOnStart: boolean;
+    _activateOnStart: boolean | ((e: E) => boolean);
     _active: boolean;
     _enabled: boolean;
     _moved: boolean;
@@ -92,7 +96,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         this._moveStateManager = options.moveStateManager;
         this._clickTolerance = options.clickTolerance || 1;
         this._moveFunction = options.move;
-        this._activateOnStart = !!options.activateOnStart;
+        this._activateOnStart = options.activateOnStart ?? false;
 
         options.assignEvents(this);
 
@@ -124,7 +128,8 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
 
         this._lastPoint = Array.isArray(point) ? point[0] : point;
 
-        if (this._activateOnStart && this._lastPoint) this._active = true;
+        const activateOnStart = typeof this._activateOnStart === 'function' ? this._activateOnStart(e) : this._activateOnStart;
+        if (activateOnStart && this._lastPoint) this._active = true;
     }
 
     dragMove(e: E, point: Point): T | void;
@@ -171,17 +176,6 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
 
     isActive(): boolean {
         return this._active;
-    }
-
-    /**
-     * Whether a valid start event has been seen and not yet ended, even if it hasn't moved enough
-     * to become `active` (e.g. a `ctrl` + left drag that never crosses the click tolerance). The
-     * handler manager blocks other handlers on this the same way it does on `isActive`, so a
-     * handler that only starts producing camera deltas after some movement can still claim the
-     * gesture from mousedown.
-     */
-    isTracking(): boolean {
-        return !!this._lastPoint;
     }
 
     getClickTolerance(): number {

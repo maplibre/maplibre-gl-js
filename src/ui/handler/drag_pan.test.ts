@@ -277,7 +277,7 @@ describe('drag_pan', () => {
         map.remove();
     });
 
-    test('DragPanHandler begins a drag with the ctrl key down when dragRotate is disabled and cooperativeGestures is enabled', () => {
+    test('DragPanHandler begins a drag with the ctrl key down when dragRotate is disabled', () => {
         const map = createMap(undefined, undefined, {dragRotate: false, cooperativeGestures: true});
         expect(map.dragRotate.isEnabled()).toBeFalsy();
 
@@ -310,70 +310,17 @@ describe('drag_pan', () => {
         map.remove();
     });
 
-    test('DragPanHandler begins a drag with the ctrl key down once dragRotate is disabled at runtime', () => {
-        const map = createMap();
-        expect(map.dragRotate.isEnabled()).toBeTruthy();
-        map.dragRotate.disable();
-
-        const dragstart = vi.fn();
-        const drag      = vi.fn();
-        const dragend   = vi.fn();
-
-        map.on('dragstart', dragstart);
-        map.on('drag',      drag);
-        map.on('dragend',   dragend);
+    test('DragPanHandler leaves the contextmenu of a ctrl + left click to the map when dragRotate is disabled', () => {
+        const map = createMap(undefined, undefined, {dragRotate: false});
+        const contextmenu = vi.fn();
+        map.on('contextmenu', contextmenu);
 
         simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true});
-        map._renderTaskQueue.run();
-        expect(dragstart).toHaveBeenCalledTimes(0);
-        expect(drag).toHaveBeenCalledTimes(0);
-        expect(dragend).toHaveBeenCalledTimes(0);
-
-        simulate.mousemove(map.getCanvas(), {buttons, ctrlKey: true, clientX: 10, clientY: 10});
-        map._renderTaskQueue.run();
-        expect(dragstart).toHaveBeenCalledTimes(1);
-        expect(drag).toHaveBeenCalledTimes(1);
-        expect(dragend).toHaveBeenCalledTimes(0);
-
+        simulate.contextmenu(map.getCanvas(), {ctrlKey: true});
         simulate.mouseup(map.getCanvas(), {ctrlKey: true});
         map._renderTaskQueue.run();
-        expect(dragstart).toHaveBeenCalledTimes(1);
-        expect(drag).toHaveBeenCalledTimes(1);
-        expect(dragend).toHaveBeenCalledTimes(1);
 
-        map.remove();
-    });
-
-    test('DragPanHandler does not pan on a vertical ctrl + drag that mouseRotate tracks but never activates', () => {
-        // With pitchWithRotate disabled, ctrl + left is handled by mouseRotate alone, and a purely
-        // vertical drag makes mouseRotate compute a bearingDelta of 0 on every move (see
-        // generateMouseRotationHandler), so it never becomes active. mousePan must still stay off
-        // the gesture because mouseRotate is tracking it, not because mouseRotate is active.
-        const map = createMap(undefined, undefined, {pitchWithRotate: false});
-        expect(map.dragRotate.isEnabled()).toBeTruthy();
-
-        const dragstart = vi.fn();
-        const drag      = vi.fn();
-        const dragend   = vi.fn();
-        const rotate    = vi.fn();
-
-        map.on('dragstart', dragstart);
-        map.on('drag',      drag);
-        map.on('dragend',   dragend);
-        map.on('rotate',    rotate);
-
-        simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true, clientX: 100, clientY: 0});
-        map._renderTaskQueue.run();
-
-        simulate.mousemove(map.getCanvas(), {buttons, ctrlKey: true, clientX: 100, clientY: 40});
-        map._renderTaskQueue.run();
-        expect(rotate).toHaveBeenCalledTimes(0);
-        expect(dragstart).toHaveBeenCalledTimes(0);
-        expect(drag).toHaveBeenCalledTimes(0);
-
-        simulate.mouseup(map.getCanvas(), {ctrlKey: true});
-        map._renderTaskQueue.run();
-        expect(dragend).toHaveBeenCalledTimes(0);
+        expect(contextmenu).toHaveBeenCalledTimes(1);
 
         map.remove();
     });

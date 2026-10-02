@@ -32,22 +32,29 @@ const assignEvents = <T extends DragPanResult | DragRotateResult | DragPitchResu
     };
 };
 
+/**
+ * Whether a pan claims its drag on mousedown rather than on the first move.
+ *
+ * A `ctrl` + left click is a right click on macOS, so pan only claims such a drag once it moves:
+ * until then the click still fires `contextmenu`, and rotate or pitch, which accept the same
+ * mousedown, can take the drag through the handler manager's blocking once they move the map.
+ */
+function claimsPanOnMousedown(e: MouseEvent): boolean {
+    return !e.ctrlKey;
+}
+
 export function generateMousePanHandler({enable, clickTolerance}: {
     clickTolerance: number;
     enable?: boolean;
 }): MousePanHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        // `ctrl` + left button is a valid pan start too: when mouseRotate/mousePitch are enabled,
-        // they track that same mousedown themselves and the handler manager's blocking (which
-        // treats a tracked-but-not-yet-active drag the same as an active one, see
-        // DragHandler#isTracking) keeps mousePan off it before it can move the map.
         checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON,
     });
     return new DragHandler<DragPanResult, MouseEvent>({
         clickTolerance,
         move: (lastPoint: Point, point: Point) =>
             ({around: point, panDelta: point.sub(lastPoint)}),
-        activateOnStart: true,
+        activateOnStart: claimsPanOnMousedown,
         moveStateManager: mouseMoveStateManager,
         enable,
         assignEvents,
