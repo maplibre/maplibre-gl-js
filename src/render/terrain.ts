@@ -12,7 +12,6 @@ import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
 import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
-import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
@@ -250,14 +249,7 @@ export class Terrain {
             const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
             if (sample.demLoaded) return sample.elevation;
         }
-        const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
-        let zoom = 0;
-        for (const tile of terrainCoveringTiles) {
-            if (tile.canonical.z > zoom) {
-                zoom = Math.min(tile.canonical.z, this.tileManager.maxzoom);
-            }
-        }
-        return this.getElevationForLngLatZoom(lnglat, zoom);
+        return this.getElevationForLngLatZoom(lnglat, Math.min(transform.tileZoom, this.tileManager.maxzoom));
     }
 
     /**

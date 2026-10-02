@@ -7,6 +7,10 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix the map rendering at the display rate instead of going idle over a DEM with a minimum below sea level when `centerClampedToGround` is false ([#8605](https://github.com/maplibre/maplibre-gl-js/issues/8605)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix the terrain elevation reading 0 outside the drawn tiles while the camera is below the terrain, and make that read about 40 times cheaper ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix a hole around the poles of the globe in background, fill and line layers from zoom 3 ([#8638](https://github.com/maplibre/maplibre-gl-js/pull/8638)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `jumpTo`, and the setters that use it, pulling the center elevation onto the terrain when `centerClampedToGround` is false ([#8566](https://github.com/maplibre/maplibre-gl-js/issues/8566)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `GeoJSONSource#updateData` leaving stale clusters on untouched tiles after clustering was turned on with `setClusterOptions` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource#setClusterOptions` clustering twice when called while new data is waiting to be sent ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource` data set with `setData` being overwritten by the result of an earlier URL load or `updateData` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
@@ -17,6 +21,7 @@
 - Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
+- Cross-fade raster tiles when zooming out from a source's `maxzoom`, where the tiles switched instantly ([#8517](https://github.com/maplibre/maplibre-gl-js/pull/8517)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ## 6.11.2
