@@ -243,21 +243,24 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     /**
      * Handles the zoom and center change during camera jumpTo.
+     * The zoom decides how close to a pole the center can be, so the center is set again once the zoom has changed.
      */
     handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
-        // Special zoom & center handling for globe:
-        // Globe constrained center isn't dependent on zoom level
         const startingLat = tr.center.lat;
-        const constrainedCenter = tr.applyConstrain(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
-        tr.setCenter(constrainedCenter.wrap());
+        const center = options.center ? LngLat.convert(options.center) : tr.center;
+        tr.setCenter(tr.applyConstrain(center, tr.zoom).center.wrap());
 
         // Make sure to compute correct target zoom level if no zoom is specified
-        const targetZoom = (typeof options.zoom !== 'undefined') ? +options.zoom : (tr.zoom + getZoomAdjustment(startingLat, constrainedCenter.lat));
+        const targetZoom = (typeof options.zoom !== 'undefined') ? +options.zoom : (tr.zoom + getZoomAdjustment(startingLat, tr.center.lat));
         if (tr.zoom !== targetZoom) {
             tr.setZoom(targetZoom);
+            tr.setCenter(tr.applyConstrain(center, tr.zoom).center.wrap());
         }
     }
 
+    /**
+     * The zoom decides how close to a pole the center can be, so the last frame sets the center again after the zoom.
+     */
     handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
         const startZoom = tr.zoom;
         const startCenter = tr.center;
@@ -282,7 +285,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             startCenter;
         const constrainedCenter = tr.applyConstrain(
             preConstrainCenter,
-            startZoom // zoom can be whatever at this stage, it should not affect anything if globe is enabled
+            optionsZoom ? +options.zoom : startZoom
         ).center;
         normalizeCenter(tr, constrainedCenter);
 
@@ -350,6 +353,10 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
                 const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
                 tr.setZoom(interpolatedZoom);
             }
+
+            if (k === 1 && !options.around) {
+                tr.setCenter(endCenterWithShift.wrap());
+            }
         };
 
         return {
@@ -359,6 +366,9 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         };
     }
 
+    /**
+     * The zoom decides how close to a pole the center can be, so the last frame sets the center again after the zoom.
+     */
     handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult {
         const optionsZoom = typeof options.zoom !== 'undefined';
 
@@ -371,7 +381,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Obtain target center and zoom
         const constrainedCenter = tr.applyConstrain(
             LngLat.convert(options.center || options.locationAtOffset),
-            startZoom
+            optionsZoom ? +options.zoom : startZoom
         ).center;
         const targetZoom = optionsZoom ? +options.zoom : tr.zoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
 
@@ -420,6 +430,9 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
             const interpolatedZoom = normalizedStartZoom + scaleZoom(scale);
             tr.setZoom(k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
+            if (k === 1) {
+                tr.setCenter(targetCenter.wrap());
+            }
         };
 
         return {

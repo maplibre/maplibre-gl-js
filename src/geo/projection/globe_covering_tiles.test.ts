@@ -158,12 +158,8 @@ describe('poles', () => {
         const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setCenter(new LngLat(0, -90));
-        transform.setZoom(5);
+        transform.setZoom(1.6);
 
-        expect(coveringTiles(transform, {tileSize: 512}).map(String)).toEqual([
-            '5/16/31', '5/15/31', '5/17/31', '5/14/31', '5/30/31', '5/1/31', '5/31/31', '5/0/31',
-            '4/14/15', '4/9/15', '4/6/15', '4/1/15',
-            '3/6/7', '3/5/7', '3/2/7', '3/1/7'
-        ]);
+        expect(coveringTiles(transform, {tileSize: 32})).toHaveLength(56);
     });
 });

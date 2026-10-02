@@ -832,6 +832,14 @@ describe('GlobeTransform', () => {
         expect(globeTransform.center.lat).toBe(90);
     });
 
+    test('the center moves back towards the mercator edge as the area past it outgrows the viewport', () => {
+        const globeTransform = createGlobeTransform();
+        globeTransform.setCenter(new LngLat(0, 90));
+        globeTransform.setZoom(2.5);
+
+        expect(globeTransform.center.lat).toBeCloseTo(86.8327, 4);
+    });
+
     describe('versorSetLocationAtPoint', () => {
         const precisionDigits = 4;
         const globeTransform = createGlobeTransform();
