@@ -49,11 +49,11 @@ _Note that a particular bucket may appear multiple times in `tile.buckets`--once
 
  - Rendering happens style-layer by style-layer, in `Painter#renderPass()`, which delegates to the layer-specific `drawXxxx()` methods in `src/render/draw_*.js`.
  - The `drawXxxx()` methods, in turn, render a layer tile by tile, by:
-   - Obtaining a property configured shader program from the `Painter`
+   - Obtaining a property configured shader program from the `FrameRenderContext`
    - Setting _uniform_ values based on the style layer's properties
    - Binding layout buffer data (via `BufferGroup`) and calling `gl.drawElements()`
 
-Compiling and caching GL shader programs is managed by the `Painter` and `ProgramConfiguration` classes.  In particular, an instance of `ProgramConfiguration` handles, for a given (tile, style layer) pair:
+Compiling and caching GL shader programs is managed by the `ProgramCache` and `ProgramConfiguration` classes.  In particular, an instance of `ProgramConfiguration` handles, for a given (tile, style layer) pair:
 
  - Expanding a `#pragma maplibre` statement in our shader source into either a _uniform_ or _attribute_, _varying_, and _local_ variable declaration, depending on whether or not the relevant style property is data-driven.
  - Creating and populating a _paint_ vertex array for data-driven properties, corresponding to the `attributes` declared in the shader. (This happens at layout time, on the worker side.)
