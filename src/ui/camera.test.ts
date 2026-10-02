@@ -2040,11 +2040,11 @@ describe('flyTo', () => {
         const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        vi.spyOn(camera.transform, 'recalculateZoomAndCenter').mockImplementation(() => { terrainCallbacks.finalize++; });
         camera.setCenter([-10, 0]);
+        terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
 
         stub.mockReturnValue(0);
@@ -2056,7 +2056,7 @@ describe('flyTo', () => {
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
         expect(terrainCallbacks.update).toBe(2);
-        expect(terrainCallbacks.finalize).toBe(0);
+        expect(camera.transform.elevation).toBe(1000);
     });
 
     test('check elevation events freezeElevation=true', async() => {
@@ -2064,11 +2064,11 @@ describe('flyTo', () => {
         const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        vi.spyOn(camera.transform, 'recalculateZoomAndCenter').mockImplementation(() => { terrainCallbacks.finalize++; });
         camera.setCenter([-10, 0]);
+        terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
 
         stub.mockReturnValue(0);
@@ -2080,7 +2080,7 @@ describe('flyTo', () => {
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
         expect(terrainCallbacks.update).toBe(0);
-        expect(terrainCallbacks.finalize).toBe(1);
+        expect(camera.transform.elevation).toBe(2000);
     });
 
     test('check elevation callbacks', () => {

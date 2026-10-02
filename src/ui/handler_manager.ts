@@ -45,16 +45,11 @@ type TerrainGesture = {
     /** Whether a gesture over terrain is in flight, and the center elevation frozen with it. */
     inFlight: boolean;
     /**
-     * Elevation in meters of the plane a drag or zoom is solved on, sampled from the terrain under
-     * the pointer on the gesture's first drag or zoom frame, and again on the first such frame after
-     * the hold has changed the center elevation (see {@link Camera.holdElevation}), since the camera
-     * moves with the center:
-     * - `null`: not sampled yet, the gesture has had no drag or zoom frame.
-     * - a number: sampled, the elevation of the terrain point that frame grabbed.
-     * - `undefined`: sampled, and the terrain under the pointer was not loaded. The gesture is
-     *   solved on the center's elevation until the hold changes it. Sampling again on any other
-     *   frame would change how far the map moves per pixel of drag, mid-gesture, once that terrain
-     *   loads.
+     * Elevation in meters of the plane a drag or zoom is solved on, sampled from the terrain under the pointer on
+     * the gesture's first drag or zoom frame and again whenever the hold has changed the center elevation since:
+     * `null` not sampled yet, a number the terrain point that frame grabbed, `undefined` no terrain loaded under
+     * the pointer (the gesture is solved on the center's elevation; sampling on other frames would change how far
+     * the map moves per pixel mid-gesture).
      */
     anchorElevation: number | null | undefined;
     /** The center elevation the anchor was sampled at, or null while it has not been sampled. */
@@ -192,12 +187,9 @@ export class HandlerManager {
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     /**
-     * The gesture in flight over terrain, from its first handler frame to the
-     * `_fireEvents` call that sees the movement end. While it is in flight the center
-     * elevation is held, so a DEM tile landing mid-gesture leaves the camera where the
-     * fingers put it, unless the hold waits for DEM data (see {@link Camera.holdElevation});
-     * the gesture's end re-solves the camera onto the terrain, or puts the center at 0 and keeps
-     * the zoom with the terrain off.
+     * The gesture in flight over terrain, from its first handler frame to the `_fireEvents` call that sees the
+     * movement end. It holds the center elevation (see {@link Camera.holdElevation}); its end puts the center back
+     * onto the terrain, or at 0 keeping the zoom with the terrain off.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
     _zoom: {handlerName: string};
