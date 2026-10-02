@@ -1131,7 +1131,7 @@ export class Camera extends Evented<MapEventType> {
         }
         const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLat(cameraLngLat, tr) : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = tr.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
             return {

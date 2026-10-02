@@ -835,7 +835,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
-            const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
+            const elevation = terrain.getElevationForLngLat(lnglat, this);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
 

@@ -1242,7 +1242,6 @@ describe('easeTo', () => {
 
         terrain = {
             getMinTileElevationForLngLatZoom: () => 0,
-            getElevationForLngLatZoom: () => 0,
             getElevationForLngLat: () => 0
         } as any as Terrain;
 

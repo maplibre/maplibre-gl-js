@@ -1056,9 +1056,6 @@ describe('Keep camera outside terrain', () => {
     test('Try to move camera into terrain', () => {
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
-        terrainStub.getElevationForLngLatZoom = vi.fn(
-            (_lngLat: LngLat, _zoom: number) => terrainElevation
-        );
         terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;
@@ -1093,7 +1090,7 @@ describe('queryTerrainElevation', () => {
         expect(result).toBeNull();
     });
 
-    test('Calls getElevationForLngLatZoom with correct arguments', () => {
+    test('calls getElevationForLngLat with the location and the transform', () => {
         const getElevationForLngLat = vi.fn();
         map.terrain = {getElevationForLngLat} as any as Terrain;
         map._camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
