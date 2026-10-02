@@ -45,15 +45,20 @@ type TerrainGesture = {
     /** Whether a gesture over terrain is in flight, and the center elevation frozen with it. */
     inFlight: boolean;
     /**
-     * Elevation in meters of the plane a drag or zoom is solved on, sampled once per gesture from
-     * the terrain under the pointer, on the gesture's first drag or zoom frame:
+     * Elevation in meters of the plane a drag or zoom is solved on, sampled from the terrain under
+     * the pointer on the gesture's first drag or zoom frame, and again on the first such frame after
+     * the hold has changed the center elevation (see {@link Camera.holdElevation}), since the camera
+     * moves with the center:
      * - `null`: not sampled yet, the gesture has had no drag or zoom frame.
      * - a number: sampled, the elevation of the terrain point that frame grabbed.
      * - `undefined`: sampled, and the terrain under the pointer was not loaded. The gesture is
-     *   solved on the center's elevation to its end. Sampling again on a later frame would change
-     *   how far the map moves per pixel of drag, mid-gesture, once that terrain loads.
+     *   solved on the center's elevation until the hold changes it. Sampling again on any other
+     *   frame would change how far the map moves per pixel of drag, mid-gesture, once that terrain
+     *   loads.
      */
     anchorElevation: number | null | undefined;
+    /** The center elevation the anchor was sampled at, or null while it has not been sampled. */
+    anchorCenterElevation: number | null;
 };
 
 class RenderFrameEvent extends Event {
@@ -189,10 +194,12 @@ export class HandlerManager {
     /**
      * The gesture in flight over terrain, from its first handler frame to the
      * `_fireEvents` call that sees the movement end. While it is in flight the center
-     * elevation is frozen, so a DEM tile landing mid-gesture cannot move the camera
-     * under the fingers; the gesture's end re-solves the camera onto the terrain.
+     * elevation is held, so a DEM tile landing mid-gesture leaves the camera where the
+     * fingers put it, unless the hold waits for DEM data (see {@link Camera.holdElevation});
+     * the gesture's end re-solves the camera onto the terrain, or puts the center at 0 and keeps
+     * the zoom with the terrain off.
      */
-    _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null};
+    _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -642,9 +649,10 @@ export class HandlerManager {
         if (!aroundOnSurface) {
             return undefined;
         }
-        if (this._terrainGesture.anchorElevation === null && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+        if (this._terrainGesture.anchorCenterElevation !== tr.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             const anchor = tr.screenTerrainPointToMercatorCoordinate(around, terrain);
             this._terrainGesture.anchorElevation = anchor ? anchor.z : undefined;
+            this._terrainGesture.anchorCenterElevation = tr.elevation;
         }
         const elevation = this._terrainGesture.anchorElevation;
         if (elevation === null || elevation === undefined) {
@@ -700,7 +708,7 @@ export class HandlerManager {
 
         if (!this._terrainGesture.inFlight) {
             this._terrainGesture.inFlight = true;
-            this._camera.elevationFreeze = true;
+            this._camera.holdElevation(tr);
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
@@ -767,13 +775,16 @@ export class HandlerManager {
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainGesture.inFlight) {
-            this._camera.elevationFreeze = false;
-            this._terrainGesture = {inFlight: false, anchorElevation: null};
-            const tr = this._camera.getTransformForUpdate();
-            if (this._map.getCenterClampedToGround()) {
-                tr.recalculateZoomAndCenter(this._map.terrain);
-            }
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.releaseElevation();
+            this._terrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
+            this._camera.applyTransformChange(tr => {
+                if (!this._map.getCenterClampedToGround()) return;
+                if (this._map.terrain) {
+                    tr.recalculateZoomAndCenter(this._map.terrain);
+                } else {
+                    tr.setElevation(0);
+                }
+            });
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;

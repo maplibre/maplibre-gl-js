@@ -164,6 +164,12 @@ export class Terrain {
      */
     _coverageIndex: TerrainCoverageIndex | null | undefined;
     /**
+     * The coverage index in which a tile whose own DEM data has not loaded has none, though a loaded parent's is drawn
+     * in its place, for {@link getLoadedElevationForLngLat}. It is cleared like the coverage index; undefined means not
+     * built yet, and null that no terrain tile is renderable.
+     */
+    _loadedCoverageIndex: TerrainCoverageIndex | null | undefined;
+    /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
      */
@@ -243,13 +249,66 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
-        const index = this.getCoverageIndex();
-        if (index) {
-            const mercator = MercatorCoordinate.fromLngLat(lnglat);
-            const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
-            if (sample.demLoaded) return sample.elevation;
+        const elevation = this.getDrawnElevationForLngLat(lnglat);
+        if (elevation !== undefined) return elevation;
+        return this.getElevationForLngLatZoom(lnglat, this._getFallbackZoom(transform));
+    }
+
+    /**
+     * Get the elevation of the terrain as drawn at the given {@link LngLat}, in respect of exaggeration: a drawn tile's
+     * DEM data, its own or a loaded parent's.
+     * @param lnglat - the location
+     * @returns the elevation, or undefined where no drawn tile has DEM data
+     */
+    getDrawnElevationForLngLat(lnglat: LngLat): number | undefined {
+        return this._sampleDemElevation(this.getCoverageIndex(), lnglat);
+    }
+
+    /**
+     * Whether {@link getElevationForLngLat} finds DEM data at the given {@link LngLat}, drawn or in the tile it falls
+     * back to, rather than giving 0 for want of any.
+     * @param lnglat - the location
+     * @param transform - the transform {@link getElevationForLngLat} is given
+     * @returns true where a drawn tile or the fallback tile has DEM data, its own or a loaded parent's
+     */
+    hasElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): boolean {
+        if (this.getDrawnElevationForLngLat(lnglat) !== undefined) return true;
+        const zoom = this._getFallbackZoom(transform);
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return false;
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return !!this.tileManager.getSourceTile(tileID, true)?.dem;
+    }
+
+    /**
+     * Get the elevation of the terrain as drawn at the given {@link LngLat}, in respect of exaggeration, once the tile
+     * drawn there has loaded its own DEM data. Until then the tile is drawn flat or from a loaded parent's DEM data,
+     * and a coarse parent's can be a few hundred meters off.
+     * @param lnglat - the location
+     * @returns the elevation, or undefined while no tile drawn at the location has DEM data of its own
+     */
+    getLoadedElevationForLngLat(lnglat: LngLat): number | undefined {
+        if (this._loadedCoverageIndex === undefined) {
+            this._loadedCoverageIndex = this._buildCoverageIndex(true);
         }
-        return this.getElevationForLngLatZoom(lnglat, Math.min(transform.tileZoom, this.tileManager.maxzoom));
+        return this._sampleDemElevation(this._loadedCoverageIndex, lnglat);
+    }
+
+    /**
+     * The zoom {@link getElevationForLngLat} passes to {@link getElevationForLngLatZoom} where no drawn tile has DEM
+     * data: the transform's tile zoom, where the terrain's tiles are loaded.
+     */
+    private _getFallbackZoom(transform: IReadonlyTransform): number {
+        return Math.min(transform.tileZoom, this.tileManager.maxzoom);
+    }
+
+    /**
+     * The elevation a coverage index samples at a location, or undefined where it has no tile with DEM data there.
+     */
+    private _sampleDemElevation(index: TerrainCoverageIndex | null, lnglat: LngLat): number | undefined {
+        if (!index) return undefined;
+        const mercator = MercatorCoordinate.fromLngLat(lnglat);
+        const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
+        return sample.demLoaded ? sample.elevation : undefined;
     }
 
     /**
@@ -271,6 +330,7 @@ export class Terrain {
     resetElevationCache(): void {
         this._elevationSamplerCache.clear();
         this._coverageIndex = undefined;
+        this._loadedCoverageIndex = undefined;
     }
 
     /**
@@ -280,12 +340,16 @@ export class Terrain {
      */
     getCoverageIndex(): TerrainCoverageIndex | null {
         if (this._coverageIndex === undefined) {
-            this._coverageIndex = this._buildCoverageIndex();
+            this._coverageIndex = this._buildCoverageIndex(false);
         }
         return this._coverageIndex;
     }
 
-    private _buildCoverageIndex(): TerrainCoverageIndex | null {
+    /**
+     * @param onlyOwnDem - whether a tile whose own DEM data has not loaded has none, though a loaded parent's is drawn
+     * in its place
+     */
+    private _buildCoverageIndex(onlyOwnDem: boolean): TerrainCoverageIndex | null {
         const zooms: number[] = [];
         const samplerPerTile = new Map<string, TerrainElevationSampler | null>();
         let minElevation = 0;
@@ -295,7 +359,7 @@ export class Terrain {
             if (!tile) continue;
             const {canonical, wrap} = tile.tileID;
             if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
-            const sampler = this.getElevationSampler(tile.tileID);
+            const sampler = onlyOwnDem && !this.tileManager.getSourceTile(tile.tileID)?.dem ? null : this.getElevationSampler(tile.tileID);
             samplerPerTile.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
             const {minElevation: tileMin, maxElevation: tileMax} = this.getMinMaxElevation(tile.tileID);
             minElevation = Math.min(minElevation, tileMin ?? 0);

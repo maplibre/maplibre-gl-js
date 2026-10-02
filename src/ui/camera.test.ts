@@ -4,7 +4,7 @@ import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
-import {setMatchMedia} from '../util/test/util.ts';
+import {createTerrain, setMatchMedia} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
@@ -2036,14 +2036,14 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({terrain});
+        const terrain = createTerrain();
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        camera._finalizeElevation = () => terrainCallbacks.finalize++;
+        vi.spyOn(camera.transform, 'recalculateZoomAndCenter').mockImplementation(() => { terrainCallbacks.finalize++; });
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
@@ -2060,14 +2060,14 @@ describe('flyTo', () => {
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({terrain});
+        const terrain = createTerrain();
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        camera._finalizeElevation = () => terrainCallbacks.finalize++;
+        vi.spyOn(camera.transform, 'recalculateZoomAndCenter').mockImplementation(() => { terrainCallbacks.finalize++; });
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
@@ -2108,7 +2108,7 @@ describe('flyTo', () => {
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 
-        camera._finalizeElevation();
+        camera.releaseElevation();
         expect(camera.elevationFreeze).toBeFalsy();
     });
 
