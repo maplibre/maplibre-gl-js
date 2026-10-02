@@ -700,7 +700,7 @@ export class HandlerManager {
 
         if (!this._terrainGesture.inFlight) {
             this._terrainGesture.inFlight = true;
-            this._camera.holdElevation(tr);
+            this._camera.holdElevation(tr, 'gesture');
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }

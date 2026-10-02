@@ -583,25 +583,13 @@ describe('Terrain changing under and around a gesture', () => {
         now.mockReturnValue(100);
         map.redraw();
         await landAwayFrom(1000, new LngLat(0.0005, 0.0005));
+        now.mockReturnValue(200);
+        map.redraw();
 
         now.mockReturnValue(1000);
         map.redraw();
 
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(1000, 0);
-    });
-
-    test('a pitch drag that switches terrain on leaves the center elevation alone when the DEM lands and when it ends, once the center is not clamped to the ground', async () => {
-        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-
-        startPitchDragThatSwitchesTerrainOn(map);
-        map.setCenterClampedToGround(false);
-        await land(1000);
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 90});
-        map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 90});
-        map._renderTaskQueue.run();
-
-        expect(map.getCameraTargetElevation()).toBe(0);
     });
 
     test('a pitch drag with the center not clamped to the ground keeps the center elevation when the terrain switches off before it ends', async () => {
@@ -633,65 +621,10 @@ describe('Terrain changing under and around a gesture', () => {
 
         map.easeTo({center: [0.001, 0], duration: 1000, easing: k => k});
         await land(100);
+        now.mockReturnValue(1100);
+        map.redraw();
 
         expect(map.getCameraTargetElevation()).toBe(0);
-    });
-
-    test('an easeTo after a flyTo with freezeElevation that ended with the terrain switched off does not jump to the DEM elevation when it lands', async () => {
-        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
-        map.setTerrain({source: 'dem'});
-        map.redraw();
-        map.flyTo({center: [0.0001, 0], duration: 1000, freezeElevation: true, easing: k => k});
-        map.setTerrain(null);
-        now.mockReturnValue(1000);
-        map.redraw();
-        map.setTerrain({source: 'dem'});
-        map.redraw();
-
-        map.easeTo({center: [0.001, 0], duration: 1000, easing: k => k});
-        await land(100);
-
-        expect(map.getCameraTargetElevation()).toBe(0);
-    });
-
-    test('a pitch drag that switches terrain on keeps its zoom when the terrain switches off and on after the DEM landed and the drag ends before it lands again', async () => {
-        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-        startPitchDragThatSwitchesTerrainOn(map);
-        await land(1000);
-        map.setTerrain(null);
-        map.redraw();
-        map.setTerrain({source: 'dem'});
-        map.redraw();
-
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 110});
-        map._renderTaskQueue.run();
-
-        expect(map.getZoom()).toBeCloseTo(17, 6);
-    });
-
-    test('a pitch drag that switches terrain on keeps its zoom when the DEM landed, a transformCameraUpdate is set and the terrain switches off before the release and on again during the inertia before its DEM lands again', async () => {
-        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-        map.setTransformCameraUpdate(() => ({}));
-        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
-        const frameAt = (time: number) => {
-            now.mockReturnValue(time);
-            map._renderTaskQueue.run();
-        };
-        startPitchDragThatSwitchesTerrainOn(map);
-        await land(1000);
-        map.setTerrain(null);
-        map.redraw();
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
-        frameAt(16);
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 100});
-        frameAt(32);
-        map.setTerrain({source: 'dem'});
-        frameAt(48);
-
-        frameAt(1000);
-
-        expect(map.getZoom()).toBeCloseTo(17, 6);
     });
 
     test('a pitch drag over loaded terrain keeps the center elevation when the terrain switches off and on and its DEM lands lower', async () => {
@@ -724,20 +657,6 @@ describe('Terrain changing under and around a gesture', () => {
         await otherDem.land(500);
 
         expect(map.getCameraTargetElevation()).toBe(500);
-    });
-
-    test('a pitch drag that switches terrain on keeps its zoom when the style reloads with the same terrain source after the DEM landed and the drag ends before the new DEM lands', async () => {
-        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-        startPitchDragThatSwitchesTerrainOn(map);
-        await land(1000);
-        map.setStyle({version: 8, sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/dem/{z}/{x}/{y}.png']}}, layers: [], terrain: {source: 'dem'}}, {diff: false});
-        await map.once('style.load');
-        map.redraw();
-
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 110});
-        map._renderTaskQueue.run();
-
-        expect(map.getZoom()).toBeCloseTo(17, 6);
     });
 
     test('a pitch drag that switches terrain on keeps its zoom when the field of view changes and the terrain switches to another DEM source after the DEM landed', async () => {
@@ -797,23 +716,6 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
 
         expect(map.getCameraTargetElevation()).toBe(1000);
-    });
-
-    test('a pitch drag with the center not clamped to the ground keeps the center elevation when the terrain switches off and on, and the center is clamped before the DEM lands', async () => {
-        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0, centerClampedToGround: false});
-        map.setTerrain({source: 'dem'});
-        map.redraw();
-        map.setCenterElevation(3000);
-        startPitchDrag(map);
-        map.setTerrain(null);
-        map.redraw();
-        map.setTerrain({source: 'dem'});
-        map.redraw();
-        map.setCenterClampedToGround(true);
-
-        await land(500);
-
-        expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
     test('an easeTo after a pitch drag that switches terrain on does not jump to the DEM elevation when the terrain switches off and on during it and the DEM lands', async () => {

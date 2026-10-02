@@ -302,15 +302,71 @@ export type CameraInitOptions = {
     stopHandlers?: () => void;
 };
 
-/** A gesture's or an animation's hold on the center elevation, see {@link Camera.holdElevation}. */
-type ElevationHold = {
-    /** Whether the hold started where no DEM data under a center clamped to the ground had loaded. */
-    startedWithoutDem: boolean;
-    /** Whether the hold waits for DEM data under the center: from such a start, and again after a switch to a DEM source without it. */
+/** Who holds the center elevation: a gesture, or an animation with `freezeElevation`. */
+type ElevationHolder = 'gesture' | 'animation';
+
+/**
+ * A hold on the center elevation, see {@link Camera.holdElevation}: one that started where no DEM data under a center
+ * clamped to the ground had loaded waits for it and takes it when it lands. It holds no transform: a gesture's takes
+ * on the terrain change, on the requested camera state its frames read; an animation's on its next frame, on the
+ * transform it edits, which a projection change does not replace.
+ */
+class ElevationHold {
+    /** Whether the hold waits for DEM data under the center: from its start, or since a terrain change left none there. */
     awaitsDem: boolean;
-    /** The transform the gesture or animation edits; an animation keeps its own after a projection change replaces the requested camera state. */
-    tr: ITransform;
-};
+    private _terrainChanged = false;
+
+    /**
+     * @param holder - who holds the elevation
+     * @param startedWithoutDem - whether the hold started without DEM data under the center; only such a hold waits
+     */
+    constructor(readonly holder: ElevationHolder, readonly startedWithoutDem: boolean) {
+        this.awaitsDem = startedWithoutDem;
+    }
+
+    /** Whether the hold carries an elevation it took from DEM data. */
+    get tookDem(): boolean {
+        return this.startedWithoutDem && !this.awaitsDem;
+    }
+
+    /** Asks the next {@link take} to check for DEM data under the center, after the terrain changed. */
+    noteTerrainChange(): void {
+        if (this.startedWithoutDem) this._terrainChanged = true;
+    }
+
+    /**
+     * While the hold waits, takes the elevation the terrain draws under the center once the tile there has its own
+     * DEM data, or a coarser tile's sooner where it lifts a camera that would be inside the terrain. After a terrain
+     * change that leaves no DEM data under the center, puts the center back at the 0 the terrain gives there and
+     * waits again.
+     * @param tr - the transform the gesture or animation edits
+     * @param terrain - the terrain under it
+     * @returns whether it changed the elevation
+     */
+    take(tr: ITransform, terrain: Terrain): boolean {
+        let changed = false;
+        if (this._terrainChanged) {
+            this._terrainChanged = false;
+            if (!terrain.hasElevationForLngLat(tr.center, tr)) {
+                tr.setElevation(0);
+                this.awaitsDem = true;
+                changed = true;
+            }
+        }
+        if (!this.awaitsDem) return changed;
+        const elevation = terrain.getDrawnElevationForLngLat(tr.center, true);
+        if (elevation !== undefined) {
+            tr.setElevation(elevation);
+            this.awaitsDem = false;
+            return true;
+        }
+        const drawnElevation = terrain.getDrawnElevationForLngLat(tr.center);
+        if (drawnElevation === undefined || drawnElevation <= tr.elevation) return changed;
+        if (tr.getCameraAltitude() >= terrain.getElevationForLngLatZoom(tr.getCameraLngLat(), tr.zoom)) return changed;
+        tr.setElevation(drawnElevation);
+        return true;
+    }
+}
 
 export class Camera extends Evented<MapEventType> {
     transform: ITransform;
@@ -445,18 +501,12 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Hands the camera the map's terrain, or null when the map has none, and brings the center elevation up to date
-     * with it, see {@link Camera.applyTerrainChange}. A hold that started without DEM data starts waiting again when
-     * the terrain switches to a DEM source without data under the center, at the 0 that source gives there.
+     * with it, see {@link Camera.applyTerrainChange}. A hold that started without DEM data waits again when the
+     * terrain changes to one without data under the center, see {@link ElevationHold.take}.
      */
     setTerrain(terrain: Terrain): void {
-        const switchesDemSource = terrain && terrain.tileManager.tileManager !== this.terrain?.tileManager.tileManager;
         this.terrain = terrain;
-        const hold = this._elevationHold;
-        if (hold?.startedWithoutDem && switchesDemSource && this.getCenterClampedToGround() && !terrain.hasElevationForLngLat(hold.tr.center, hold.tr)) {
-            hold.tr.setElevation(0);
-            (this._requestedCameraState ?? this.transform).setElevation(0);
-            hold.awaitsDem = true;
-        }
+        if (terrain) this._elevationHold?.noteTerrainChange();
         this.applyTerrainChange();
     }
 
@@ -912,7 +962,7 @@ export class Camera extends Evented<MapEventType> {
         this._moving = true;
         if (this.terrain && elevation) {
             this._prepareElevation(elevation.center, elevation.tr);
-            if (elevation.freeze) this.holdElevation(elevation.tr);
+            if (elevation.freeze) this.holdElevation(elevation.tr, 'animation');
         }
         if (!noMoveStart && !currently.moving) {
             this.fire(new MapMovementEvent('movestart', eventData));
@@ -976,13 +1026,14 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Holds the center elevation for a gesture or an animation with `freezeElevation`: the frames leave it alone and
      * the end puts the center back onto the terrain. A hold that starts without DEM data under a center clamped to
-     * the ground waits for it, see {@link Camera._takeLandedElevation}.
-     * @param tr - the transform the gesture or animation edits
+     * the ground waits for it, see {@link ElevationHold.take}.
+     * @param tr - the transform the gesture or animation edits, read for the center the hold starts at
+     * @param holder - who holds it
      */
-    holdElevation(tr: ITransform): void {
+    holdElevation(tr: ITransform, holder: ElevationHolder): void {
         this.elevationFreeze = true;
         const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && !this.terrain.hasElevationForLngLat(tr.center, tr);
-        this._elevationHold = {startedWithoutDem, awaitsDem: startedWithoutDem, tr};
+        this._elevationHold = new ElevationHold(holder, startedWithoutDem);
     }
 
     /**
@@ -990,7 +1041,7 @@ export class Camera extends Evented<MapEventType> {
      * Ends a hold on the center elevation, and any wait for DEM data with it, see {@link Camera.holdElevation}.
      */
     releaseElevation(): boolean {
-        const tookDem = !!this._elevationHold?.startedWithoutDem && !this._elevationHold.awaitsDem;
+        const tookDem = this._elevationHold?.tookDem ?? false;
         this.elevationFreeze = false;
         this._elevationHold = null;
         return tookDem;
@@ -1018,42 +1069,26 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * While a hold waits for DEM data, takes the elevation the terrain draws under the center once the tile there has
-     * its own DEM data, or a coarser tile's sooner where it lifts a camera that would be inside the terrain.
-     * @param tr - the transform the hold edits
-     * @returns whether it took an elevation
+     * Lets a hold on the center elevation take DEM data that landed, see {@link ElevationHold.take}.
+     * @param tr - the transform the hold's gesture or animation edits
+     * @returns whether it changed the elevation
      */
     _takeLandedElevation(tr: ITransform): boolean {
-        if (!this._elevationHold?.awaitsDem || !this.terrain || !this.getCenterClampedToGround()) {
-            return false;
-        }
-        const elevation = this.terrain.getDrawnElevationForLngLat(tr.center, true);
-        if (elevation !== undefined) {
-            tr.setElevation(elevation);
-            this._elevationHold.awaitsDem = false;
-            return true;
-        }
-        const drawnElevation = this.terrain.getDrawnElevationForLngLat(tr.center);
-        if (drawnElevation === undefined || drawnElevation <= tr.elevation) {
-            return false;
-        }
-        if (tr.getCameraAltitude() >= this.terrain.getElevationForLngLatZoom(tr.getCameraLngLat(), tr.zoom)) {
-            return false;
-        }
-        tr.setElevation(drawnElevation);
-        return true;
+        if (!this._elevationHold || !this.terrain || !this.getCenterClampedToGround()) return false;
+        return this._elevationHold.take(tr, this.terrain);
     }
 
     /**
      * @internal
      * Applies a change of the terrain under the center (terrain set or removed, a DEM tile landed): at rest the
      * camera moves with the center's elevation, as on every rendered frame; a hold keeps the camera where the user
-     * put it unless it waits for DEM data, see {@link Camera._takeLandedElevation}.
+     * put it unless it waits for DEM data. A gesture's hold takes here, on the requested camera state its frames
+     * read; an animation's takes on its next frame, on the transform it edits, see {@link ElevationHold.take}.
      */
     applyTerrainChange(): void {
         if (this.elevationFreeze) {
             const tr = this._requestedCameraState;
-            if (tr && this._takeLandedElevation(tr)) this.applyUpdatedTransform(tr);
+            if (this._elevationHold?.holder === 'gesture' && tr && this._takeLandedElevation(tr)) this.applyUpdatedTransform(tr);
             return;
         }
         const tr = this.transform;
@@ -1109,8 +1144,8 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Called after the camera is done being manipulated; a hold waiting for DEM data takes it first,
-     * see {@link Camera._takeLandedElevation}.
+     * Called after the camera is done being manipulated; a hold on the center elevation takes DEM data that landed
+     * first, see {@link ElevationHold.take}.
      * @param tr - the requested camera end state
      * If the camera is inside terrain, it gets elevated.
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
