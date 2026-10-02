@@ -74,6 +74,20 @@ plugins:
   - social:
       cards_layout_options:
         background_color: '#295DAA'
+        color: '#FFFFFF'
+  - llmstxt:
+      base_url: https://maplibre.org/maplibre-gl-js/docs/
+      full_output: llms-full.txt
+      sections:
+        Guides:
+          - index.md
+          - guides/*.md
+          - plugins.md
+          - style-spec.md
+        API:
+          - API/*.md
+        Examples:
+          - examples/*.md
 validation:
   omitted_files: warn
   absolute_links: warn
