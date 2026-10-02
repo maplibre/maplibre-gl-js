@@ -940,9 +940,9 @@ describe('Terrain changing under and around a gesture', () => {
     });
 
     test('a DEM minimum below sea level does not keep the map rendering when the center is not clamped to the ground', async () => {
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
         const map = await createMapOverTerrain(60);
         map.setCenterClampedToGround(false);
-        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
         vi.spyOn(map.terrain, 'getMinTileElevationForLngLatZoom').mockReturnValue(-455.5);
         const frameLength = 16;
         const settleFrames = 110;
