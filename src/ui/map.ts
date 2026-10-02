@@ -45,7 +45,7 @@ import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch.ts';
-import type {DragRotateHandler} from './handler/shim/drag_rotate.ts';
+import type {DragRotateHandler, DragRotateOptions} from './handler/shim/drag_rotate.ts';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures.ts';
 import type {KeyboardHandler} from './handler/keyboard.ts';
@@ -186,10 +186,10 @@ export type MapOptions = {
      */
     boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
-     * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
+     * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}). An `Object` value is passed as options to {@link DragRotateHandler.enable}.
      * @defaultValue true
      */
-    dragRotate?: boolean;
+    dragRotate?: boolean | DragRotateOptions;
     /**
      * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler.enable}.
      * @defaultValue true
