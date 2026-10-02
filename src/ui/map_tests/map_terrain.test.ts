@@ -465,6 +465,17 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCenterElevation()).toBe(1500);
     });
 
+    test('jumpTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.jumpTo({center: [1, 1]});
+
+        expect(map.getCenterElevation()).toBe(1500);
+    });
+
     test('a DEM minimum below sea level does not keep the map rendering when the center is not clamped to the ground', async () => {
         const map = await createMapOverTerrain(60);
         map.setCenterClampedToGround(false);
