@@ -8,7 +8,7 @@ import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {LngLatBounds, MaxBoundsLike} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
@@ -112,7 +112,7 @@ export class GlobeTransform implements ITransform {
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
     }
-    setMaxBounds(bounds?: LngLatBounds): void {
+    setMaxBounds(bounds?: MaxBoundsLike): void {
         this._helper.setMaxBounds(bounds);
     }
     setConstrainOverride(constrain?: TransformConstrainFunction | null): void {

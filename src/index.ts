@@ -12,7 +12,7 @@ import {type Offset, Popup, PopupEvent, type PopupEventType, type PopupOptions} 
 import {type Alignment, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
 import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style.ts';
 import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
-import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
+import {LngLatBounds, type LngLatBoundsLike, type MaxBoundsLike} from './geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
 import {Evented, ErrorEvent, Event, type ErrorEventType, type EventedParentData, type EventTypeMap, type Listener} from './util/evented.ts';
@@ -393,6 +393,7 @@ export {
     type LngLatLike,
     type PointLike,
     type LngLatBoundsLike,
+    type MaxBoundsLike,
     type Source,
     type MapLayerTouchEvent,
     type MapLayerMouseEvent,

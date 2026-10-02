@@ -22,6 +22,17 @@ import type {LngLatLike} from './lng_lat.ts';
 export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number, number, number, number];
 
 /**
+ * Bounds accepted by {@link Map.setMaxBounds}. Setting both values of one axis to `undefined`
+ * leaves that axis unconstrained while constraining the other axis.
+ *
+ * @group Geography and Geometry
+ */
+export type MaxBoundsLike =
+    | LngLatBoundsLike
+    | [[number | undefined, number | undefined], [number | undefined, number | undefined]]
+    | [number | undefined, number | undefined, number | undefined, number | undefined];
+
+/**
  * A `LngLatBounds` object represents a geographical bounding box,
  * defined by its southwest and northeast points in longitude and latitude.
  *
