@@ -309,7 +309,7 @@ type ElevationHolder = 'gesture' | 'animation';
  * A hold on the center elevation, see {@link Camera.holdElevation}: one that started where no DEM data under a center
  * clamped to the ground had loaded waits for it and takes it when it lands. It holds no transform: a gesture's takes
  * on the terrain change, on the requested camera state its frames read; an animation's on its next frame, on the
- * transform it edits, which a projection change does not replace.
+ * transform it edits, which a projection change does not replace, or at its end when nothing ran in between.
  */
 class ElevationHold {
     /** Whether the hold waits for DEM data under the center: from its start, or since a terrain change left none there. */
@@ -1215,10 +1215,11 @@ export class Camera extends Evented<MapEventType> {
     }
 
     /**
-     * @param freezeElevation - whether the animation held the center elevation; its end then puts the center back
-     * onto the terrain, see {@link Camera.putCenterBackOnTerrain}
+     * @param freezeElevation - whether the animation held the center elevation; its end then takes DEM data that
+     * landed since its last frame and puts the center back onto the terrain, see {@link Camera.putCenterBackOnTerrain}
      */
     _afterEase(eventData?: Record<string, unknown>, easeId?: string, freezeElevation: boolean = false): void {
+        this._takeLandedElevation(this.transform);
         const tookDem = this.releaseElevation();
         if (this.terrain && freezeElevation && this.getCenterClampedToGround()) {
             this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);

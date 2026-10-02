@@ -607,6 +607,21 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
+    test('an easeTo with freezeElevation stopped after the DEM lands and before its next frame ends at its zoom', async () => {
+        const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 30});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.easeTo({center: [0.001, 0], duration: 1000, freezeElevation: true, easing: k => k});
+        now.mockReturnValue(100);
+        map.redraw();
+        await land(1000);
+
+        map.stop();
+
+        expect(map.getZoom()).toBeCloseTo(17, 6);
+    });
+
     test('an easeTo after an easeTo with freezeElevation that ended with the terrain switched off does not jump to the DEM elevation when it lands', async () => {
         const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
