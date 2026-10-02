@@ -11,54 +11,100 @@ const emptyShader: PreparedShader = {
     staticUniforms: [],
 };
 
+type StubOptions = {
+    attachedShaders?: number;
+    contextLost?: boolean;
+    fragCompileStatus?: boolean;
+    vertexCompileStatus?: boolean;
+    fragInfoLog?: string | null;
+    vertexInfoLog?: string | null;
+    programInfoLog?: string | null;
+};
+
 /**
  * A WebGL stub that fails the link the way Chromium does while a context loss
- * is still propagating: every status check comes back false, `isContextLost()`
- * has not flipped yet, and the info log is empty or null.
+ * is still propagating: every query returns 0 or false, the info logs come
+ * back empty or null, and `isContextLost()` has not flipped yet. When the GPU
+ * is alive, compile statuses and logs report whatever a driver would.
  */
-function createContext(fragCompileStatus: boolean, fragInfoLog: string | null, programInfoLog: string | null = null): Context {
+function createContext(options: StubOptions = {}): Context {
+    const {
+        attachedShaders = 2,
+        contextLost = false,
+        fragCompileStatus = true,
+        vertexCompileStatus = true,
+        fragInfoLog = '',
+        vertexInfoLog = '',
+        programInfoLog = '',
+    } = options;
     const COMPILE_STATUS = 35713;
     const LINK_STATUS = 35714;
+    const ATTACHED_SHADERS = 35717;
     const gl = {
         COMPILE_STATUS,
         LINK_STATUS,
+        ATTACHED_SHADERS,
         createProgram: () => ({}),
         createShader: () => ({}),
         shaderSource: () => {},
         compileShader: () => {},
         attachShader: () => {},
         linkProgram: () => {},
-        getProgramParameter: (_program: unknown, pname: number) => pname === LINK_STATUS ? false : true,
-        getShaderParameter: (_shader: unknown, pname: number) => pname === COMPILE_STATUS ? fragCompileStatus : true,
-        getShaderInfoLog: () => fragInfoLog,
+        getProgramParameter: (_program: unknown, pname: number) => {
+            if (pname === LINK_STATUS) return false;
+            if (pname === ATTACHED_SHADERS) return attachedShaders;
+            return true;
+        },
+        getShaderParameter: (shader: unknown, pname: number) => pname === COMPILE_STATUS ? (shader === 'vertex' ? vertexCompileStatus : fragCompileStatus) : true,
+        getShaderInfoLog: (shader: unknown) => shader === 'vertex' ? vertexInfoLog : fragInfoLog,
         getProgramInfoLog: () => programInfoLog,
-        isContextLost: () => false,
+        isContextLost: () => contextLost,
     } as unknown as WebGL2RenderingContext;
-    return {gl} as unknown as Context;
+    const context = {gl} as unknown as Context;
+    // The constructor compiles the fragment shader first; tag the stub shaders
+    // so getShaderInfoLog can answer for each one.
+    let created = 0;
+    gl.createShader = () => {
+        created++;
+        return created === 1 ? 'fragment' : 'vertex';
+    };
+    return context;
 }
 
 describe('Program constructor context-loss handling', () => {
-    test('a failed compile with an empty info log marks the program as failed to create instead of throwing', () => {
-        const context = createContext(false, '');
+    test('a dead GPU process (zero attached shaders, statuses false, empty logs) is tolerated before isContextLost() flips', () => {
+        const context = createContext({attachedShaders: 0, fragCompileStatus: false, vertexCompileStatus: false, fragInfoLog: '', vertexInfoLog: '', programInfoLog: ''});
         const program = new Program(context, emptyShader, null, null, false, false, emptyShader, null);
         expect(program.failedToCreate).toBe(true);
     });
 
-    test('a failed compile with a null info log (context already flagged by the driver) is also tolerated', () => {
-        const context = createContext(false, null);
+    test('an already flagged lost context is tolerated', () => {
+        const context = createContext({contextLost: true, attachedShaders: 2});
         const program = new Program(context, emptyShader, null, null, false, false, emptyShader, null);
         expect(program.failedToCreate).toBe(true);
     });
 
-    test('a failed link of successfully compiled shaders with an empty info log is tolerated', () => {
-        const context = createContext(true, 'unused', '');
-        const program = new Program(context, emptyShader, null, null, false, false, emptyShader, null);
-        expect(program.failedToCreate).toBe(true);
-    });
-
-    test('a real GLSL error (non-empty info log) still throws', () => {
-        const context = createContext(false, 'ERROR: 0:1: invalid token');
+    test('a real fragment shader error on a live GPU throws with its log', () => {
+        const context = createContext({fragCompileStatus: false, fragInfoLog: 'ERROR: 0:1: invalid token'});
         expect(() => new Program(context, emptyShader, null, null, false, false, emptyShader, null))
             .toThrow('Could not compile fragment shader: ERROR: 0:1: invalid token');
+    });
+
+    test('a real vertex shader error on a live GPU throws with its log', () => {
+        const context = createContext({vertexCompileStatus: false, vertexInfoLog: 'ERROR: 0:1: invalid token'});
+        expect(() => new Program(context, emptyShader, null, null, false, false, emptyShader, null))
+            .toThrow('Could not compile vertex shader: ERROR: 0:1: invalid token');
+    });
+
+    test('a real link failure of compiled shaders on a live GPU throws with its log', () => {
+        const context = createContext({programInfoLog: 'linked shaders do not consume all vertex inputs'});
+        expect(() => new Program(context, emptyShader, null, null, false, false, emptyShader, null))
+            .toThrow('Program failed to link: linked shaders do not consume all vertex inputs');
+    });
+
+    test('a live GPU link failure with an empty info log still throws instead of reading as a context loss', () => {
+        const context = createContext({programInfoLog: ''});
+        expect(() => new Program(context, emptyShader, null, null, false, false, emptyShader, null))
+            .toThrow('Program failed to link');
     });
 });
