@@ -1023,7 +1023,7 @@ export class Camera extends Evented<MapEventType> {
         if (!this._elevationHold?.awaitsDem || !this.terrain || !this.getCenterClampedToGround()) {
             return false;
         }
-        const elevation = this.terrain.getLoadedElevationForLngLat(tr.center);
+        const elevation = this.terrain.getDrawnElevationForLngLat(tr.center, true);
         if (elevation !== undefined) {
             tr.setElevation(elevation);
             this._elevationHold.awaitsDem = false;
