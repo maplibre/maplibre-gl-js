@@ -6,6 +6,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `GeoJSONSource` still sending its waiting updates to the worker after the source is removed ([#8585](https://github.com/maplibre/maplibre-gl-js/pull/8585)) (by [@clementperon](https://github.com/clementperon))
+- Fix `GeoJSONSource` memory growing until the page crashes when `setData` is called faster than the worker handles it ([#8585](https://github.com/maplibre/maplibre-gl-js/pull/8585)) (by [@clementperon](https://github.com/clementperon))
 - Fix the map rendering at the display rate instead of going idle over a DEM with a minimum below sea level when `centerClampedToGround` is false ([#8605](https://github.com/maplibre/maplibre-gl-js/issues/8605)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix the terrain elevation reading 0 outside the drawn tiles while the camera is below the terrain, and make that read about 40 times cheaper ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix a hole around the poles of the globe in background, fill and line layers from zoom 3 ([#8638](https://github.com/maplibre/maplibre-gl-js/pull/8638)) (by [@birkskyum](https://github.com/birkskyum))
