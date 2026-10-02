@@ -147,7 +147,7 @@ function updateFadingChildren(
     now: number, 
     sourceMaxZoom: number,
     rasterFadeDuration: number): boolean {
-    if (childIDs[0].overscaledZ >= sourceMaxZoom) return false;
+    if (childIDs[0].overscaledZ > sourceMaxZoom) return false;
     let foundFader = false;
 
     // find loaded child tiles to fade with the ideal tile
