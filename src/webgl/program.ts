@@ -143,13 +143,33 @@ export class Program<Us extends UniformBindings> {
                 this.failedToCreate = true;
                 return;
             }
+            // Chromium flips `isContextLost()` asynchronously, so a context that dies
+            // during compilation can reach this branch with every status check false
+            // and an empty info log. A real GLSL error always carries a non-empty log,
+            // so treat an empty one as a probable context loss and skip the program
+            // instead of throwing past the loss/restore handling (#8607).
             if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-                throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
+                const infoLog = gl.getShaderInfoLog(fragmentShader);
+                if (!infoLog) {
+                    this.failedToCreate = true;
+                    return;
+                }
+                throw new Error(`Could not compile fragment shader: ${infoLog}`);
             }
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-                throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
+                const infoLog = gl.getShaderInfoLog(vertexShader);
+                if (!infoLog) {
+                    this.failedToCreate = true;
+                    return;
+                }
+                throw new Error(`Could not compile vertex shader: ${infoLog}`);
             }
-            throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
+            const infoLog = gl.getProgramInfoLog(this.program);
+            if (!infoLog) {
+                this.failedToCreate = true;
+                return;
+            }
+            throw new Error(`Program failed to link: ${infoLog}`);
         }
 
         applyUBOBindings(gl, this.program);
