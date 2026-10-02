@@ -556,6 +556,40 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(1000);
     });
 
+    test('a drag that starts before the DEM lands keeps its zoom when it ends over a tile whose DEM has not landed', async () => {
+        const {map, landAwayFrom} = await createMapWithWaitingDem({zoom: 17, pitch: 0, center: [0.0005, -0.0001]});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        const whereTheDragEnds = new LngLat(0.0005, 0.0003);
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 60});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 64});
+        map._renderTaskQueue.run();
+        await landAwayFrom(50, whereTheDragEnds);
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 125});
+        map._renderTaskQueue.run();
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 125});
+        map._renderTaskQueue.run();
+
+        expect(map.getZoom()).toBeCloseTo(17, 6);
+    });
+
+    test('an easeTo with freezeElevation that takes the DEM keeps the camera out of the terrain when it ends over a tile whose DEM has not landed', async () => {
+        const {map, landAwayFrom} = await createMapWithWaitingDem({zoom: 17, pitch: 30, center: [0.0005, -0.0012]});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.easeTo({center: [0.0005, 0.0005], duration: 1000, freezeElevation: true, easing: k => k});
+        now.mockReturnValue(100);
+        map.redraw();
+        await landAwayFrom(1000, new LngLat(0.0005, 0.0005));
+
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(1000, 0);
+    });
+
     test('a pitch drag that switches terrain on leaves the center elevation alone when the DEM lands and when it ends, once the center is not clamped to the ground', async () => {
         const {map, land} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
 

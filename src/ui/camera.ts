@@ -914,9 +914,9 @@ export class Camera extends Evented<MapEventType> {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            this.releaseElevation();
+            const tookDem = this.releaseElevation();
             if (this.terrain && options.freezeElevation && this.getCenterClampedToGround()) {
-                this.transform.recalculateZoomAndCenter(this.terrain);
+                this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
             }
             this._afterEase(eventData, interruptingEaseId);
         }, options);
@@ -1004,9 +1004,33 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Ends a hold on the center elevation, and any wait for DEM data with it, see {@link Camera.holdElevation}.
      */
-    releaseElevation(): void {
+    releaseElevation(): boolean {
+        const tookDem = !!this._elevationHold?.startedWithoutDem && !this._elevationHold.awaitsDem;
         this.elevationFreeze = false;
         this._elevationHold = null;
+        return tookDem;
+    }
+
+    /**
+     * @internal
+     * Puts the center back onto the terrain at the end of a hold: re-solves the zoom and center with the camera in
+     * place. After a hold that took DEM data, where the tile under the center has none of its own yet, it puts the
+     * center at the elevation the terrain draws there and keeps the zoom, as a frame at rest does, instead of
+     * re-solving the taken elevation against terrain drawn flat; where that leaves the camera inside the terrain,
+     * the camera check lowers the pitch and the zoom as on every camera update.
+     * @param tr - the transform the end writes
+     * @param terrain - the terrain the gesture or animation ends over
+     * @param tookDem - whether the hold carried an elevation it took from DEM data, see {@link Camera.releaseElevation}
+     */
+    putCenterBackOnTerrain(tr: ITransform, terrain: Terrain, tookDem: boolean): void {
+        if (tookDem && terrain.getDrawnElevationForLngLat(tr.center, true) === undefined) {
+            tr.setElevation(terrain.getElevationForLngLat(tr.center, tr));
+            const cameraOptions = this._elevateCameraIfInsideTerrain(tr);
+            if (cameraOptions.zoom !== undefined) tr.setZoom(cameraOptions.zoom);
+            if (cameraOptions.pitch !== undefined) tr.setPitch(cameraOptions.pitch);
+        } else {
+            tr.recalculateZoomAndCenter(terrain);
+        }
     }
 
     /**
@@ -1386,9 +1410,9 @@ export class Camera extends Evented<MapEventType> {
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
-            this.releaseElevation();
+            const tookDem = this.releaseElevation();
             if (this.terrain && options.freezeElevation && this.getCenterClampedToGround()) {
-                this.transform.recalculateZoomAndCenter(this.terrain);
+                this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
             }
             this._afterEase(eventData);
         }, options);

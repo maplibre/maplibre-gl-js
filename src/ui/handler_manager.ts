@@ -775,12 +775,12 @@ export class HandlerManager {
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainGesture.inFlight) {
-            this._camera.releaseElevation();
+            const tookDem = this._camera.releaseElevation();
             this._terrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
             this._camera.applyTransformChange(tr => {
                 if (!this._map.getCenterClampedToGround()) return;
                 if (this._map.terrain) {
-                    tr.recalculateZoomAndCenter(this._map.terrain);
+                    this._camera.putCenterBackOnTerrain(tr, this._map.terrain, tookDem);
                 } else {
                     tr.setElevation(0);
                 }
