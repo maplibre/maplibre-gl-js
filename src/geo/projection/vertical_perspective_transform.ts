@@ -5,7 +5,7 @@ import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRa
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {LngLatBounds, type MaxBoundsLike} from '../lng_lat_bounds.ts';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
@@ -125,7 +125,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
     }
-    setMaxBounds(bounds?: LngLatBounds): void {
+    setMaxBounds(bounds?: MaxBoundsLike): void {
         this._helper.setMaxBounds(bounds);
     }
     setConstrainOverride(constrain?: TransformConstrainFunction | null): void {

@@ -1,5 +1,5 @@
 import type {LngLat, LngLatLike} from './lng_lat.ts';
-import type {LngLatBounds} from './lng_lat_bounds.ts';
+import type {LngLatBounds, MaxBoundsLike} from './lng_lat_bounds.ts';
 import type {MercatorCoordinate} from './mercator_coordinate.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
@@ -225,7 +225,7 @@ interface ITransformMutators {
      * Sets or clears the map's geographical constraints.
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
-    setMaxBounds(bounds?: LngLatBounds | null): void;
+    setMaxBounds(bounds?: MaxBoundsLike | null): void;
 
     /** Sets or clears the custom callback overriding the transform's default constrain,
      * whose responsibility is to respect the longitude and latitude bounds by constraining the viewport's lnglat and zoom.

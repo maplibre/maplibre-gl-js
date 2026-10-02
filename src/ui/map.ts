@@ -15,7 +15,6 @@ import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
 import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {AttributionControl, type AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control.ts';
 import {LogoControl} from './control/logo_control.ts';
@@ -38,7 +37,7 @@ import type {Source} from '../source/source.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
-import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
+import type {LngLatBounds, LngLatBoundsLike, MaxBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
@@ -147,7 +146,7 @@ export type MapOptions = {
     /**
      * If set, the map will be constrained to the given bounds.
      */
-    maxBounds?: LngLatBoundsLike;
+    maxBounds?: MaxBoundsLike;
     /**
      * If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler.enable}.
      * @defaultValue true
@@ -1735,7 +1734,7 @@ export class Map extends Evented<MapEventType> {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
-     * @param bounds - The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
+     * @param bounds - The maximum bounds to set. Set both longitude or both latitude values to `undefined` to leave that axis unconstrained. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
      * ```ts
@@ -1745,9 +1744,13 @@ export class Map extends Evented<MapEventType> {
      * ];
      * map.setMaxBounds(bounds);
      * ```
+     * Leave longitude unconstrained while limiting latitude:
+     * ```ts
+     * map.setMaxBounds([[undefined, -50], [undefined, 65]]);
+     * ```
      */
-    setMaxBounds(bounds?: LngLatBoundsLike | null): this {
-        this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
+    setMaxBounds(bounds?: MaxBoundsLike | null): this {
+        this._camera.applyTransformChange(tr => tr.setMaxBounds(bounds));
         return this._update();
     }
 

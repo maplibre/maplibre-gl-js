@@ -6,7 +6,7 @@ import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {LngLatBounds, type MaxBoundsLike} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {TransformHelper} from '../transform_helper.ts';
@@ -135,7 +135,7 @@ export class MercatorTransform implements ITransform {
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
     }
-    setMaxBounds(bounds?: LngLatBounds): void {
+    setMaxBounds(bounds?: MaxBoundsLike): void {
         this._helper.setMaxBounds(bounds);
     }
     setConstrainOverride(constrain?: TransformConstrainFunction | null): void {

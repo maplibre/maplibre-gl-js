@@ -1,5 +1,5 @@
 import {LngLat, type LngLatLike} from './lng_lat.ts';
-import {LngLatBounds} from './lng_lat_bounds.ts';
+import {LngLatBounds, type MaxBoundsLike} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
@@ -493,25 +493,72 @@ export class TransformHelper implements ITransformGetters {
      * @returns max bounds
      */
     getMaxBounds(): LngLatBounds | null {
-        if (this._latRange?.length !== 2 ||
-            this._lngRange?.length !== 2) return null;
+        if (!this._lngRange &&
+            this._latRange[0] === -MAX_VALID_LATITUDE &&
+            this._latRange[1] === MAX_VALID_LATITUDE) return null;
 
-        return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
+        return new LngLatBounds([
+            this._lngRange?.[0] ?? -Infinity,
+            this._latRange[0],
+            this._lngRange?.[1] ?? Infinity,
+            this._latRange[1]
+        ]);
     }
 
     /**
-     * Sets or clears the map's geographical constraints.
-     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     * Sets or clears the map's geographical constraints. Both endpoints of an axis may be
+     * `undefined` to leave that axis unconstrained.
+     * @param bounds - The new geographic boundaries of the map.
      */
-    setMaxBounds(bounds?: LngLatBounds | null): void {
-        if (bounds) {
-            this._lngRange = [bounds.getWest(), bounds.getEast()];
-            this._latRange = [bounds.getSouth(), bounds.getNorth()];
-            this.constrainInternal();
-        } else {
+    setMaxBounds(bounds?: MaxBoundsLike | null): void {
+        if (!bounds) {
             this._lngRange = null;
             this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
+            return;
         }
+
+        let partialBounds:
+            | [number | undefined, number | undefined, number | undefined, number | undefined]
+            | null = null;
+
+        if (!(bounds instanceof LngLatBounds)) {
+            if (bounds.length === 4 && bounds.some(value => value === undefined)) {
+                partialBounds = bounds;
+            } else if (bounds.length === 2) {
+                const southwest = bounds[0];
+                const northeast = bounds[1];
+                if (Array.isArray(southwest) && Array.isArray(northeast) &&
+                    (southwest.includes(undefined) || northeast.includes(undefined))) {
+                    partialBounds = [southwest[0], southwest[1], northeast[0], northeast[1]];
+                }
+            }
+        }
+
+        if (!partialBounds) {
+            const convertedBounds = LngLatBounds.convert(bounds);
+            this._lngRange = [convertedBounds.getWest(), convertedBounds.getEast()];
+            this._latRange = [convertedBounds.getSouth(), convertedBounds.getNorth()];
+            this.constrainInternal();
+            return;
+        }
+
+        const [west, south, east, north] = partialBounds;
+        if ((west === undefined) !== (east === undefined)) {
+            throw new Error('Both west and east maxBounds values must be defined or undefined together');
+        }
+        if ((south === undefined) !== (north === undefined)) {
+            throw new Error('Both south and north maxBounds values must be defined or undefined together');
+        }
+        if (west === undefined && south === undefined) {
+            this.setMaxBounds();
+            return;
+        }
+
+        this._lngRange = west === undefined ? null : [west, east];
+        this._latRange = south === undefined
+            ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE]
+            : [south, north];
+        this.constrainInternal();
     }
 
     /**

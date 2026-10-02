@@ -90,6 +90,55 @@ describe('setMaxBounds', () => {
         ).toEqual(toFixed(map.getBounds().toArray()));
     });
 
+    test('can leave longitude unconstrained', () => {
+        const map = createMap({zoom: 10, center: [0, 0], renderWorldCopies: true});
+
+        map.setMaxBounds([[undefined, -50], [undefined, 65]]);
+        map.setCenter([180, 80]);
+
+        expect(map.getCenter().lng).toBe(180);
+        expect(map.getCenter().lat).toBeLessThan(65);
+        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
+    });
+
+    test('can leave latitude unconstrained', () => {
+        const map = createMap({zoom: 10, center: [0, 0]});
+
+        map.setMaxBounds([[-30, undefined], [30, undefined]]);
+        map.setCenter([80, 80]);
+
+        expect(map.getCenter().lng).toBeLessThan(30);
+        expect(map.getCenter().lat).toBe(80);
+    });
+
+    test('accepts flat partial bounds', () => {
+        const map = createMap({zoom: 10});
+
+        map.setMaxBounds([undefined, -50, undefined, 65]);
+
+        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
+    });
+
+    test('requires both endpoints of an unconstrained axis to be undefined', () => {
+        const map = createMap({zoom: 10});
+
+        expect(() => map.setMaxBounds([[undefined, -50], [30, 65]])).toThrow(
+            'Both west and east maxBounds values must be defined or undefined together'
+        );
+        expect(() => map.setMaxBounds([[-30, undefined], [30, 65]])).toThrow(
+            'Both south and north maxBounds values must be defined or undefined together'
+        );
+    });
+
+    test('clears max bounds when both axes are unconstrained', () => {
+        const map = createMap({zoom: 10});
+
+        map.setMaxBounds([[-30, -50], [30, 65]]);
+        map.setMaxBounds([[undefined, undefined], [undefined, undefined]]);
+
+        expect(map.getMaxBounds()).toBeNull();
+    });
+
     test('when no argument is passed, map bounds constraints are removed', () => {
         const map = createMap({zoom: 0});
         map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
