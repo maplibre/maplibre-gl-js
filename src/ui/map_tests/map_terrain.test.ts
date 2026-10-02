@@ -465,6 +465,17 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCenterElevation()).toBe(1500);
     });
 
+    test('jumpTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.jumpTo({center: [1, 1]});
+
+        expect(map.getCenterElevation()).toBe(1500);
+    });
+
     test('easeTo around a point, as a double-click zoom does, eases the center elevation to the terrain under the center it ends on', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);

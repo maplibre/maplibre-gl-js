@@ -701,7 +701,7 @@ export class Camera extends Evented<MapEventType> {
         let rollChanged = false;
 
         const oldZoom = tr.zoom;
-        if (this.terrain) {
+        if (this.terrain && this.getCenterClampedToGround()) {
             tr.setElevation(this.terrain.getElevationForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr));
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
