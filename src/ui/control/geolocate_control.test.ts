@@ -749,10 +749,10 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
-    test('keeps a zoom above fitBoundsOptions.maxZoom on a location update when trackZoom is false', async () => {
+    test('keeps a zoom above fitBoundsOptions.maxZoom on a location update when zoomToUserAccuracy is false', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
-            trackZoom: false,
+            zoomToUserAccuracy: false,
             fitBoundsOptions: {
                 duration: 0,
                 maxZoom: 15

@@ -43,7 +43,7 @@ export type GeolocateControlOptions = {
      * Has no effect when `trackUserLocation` is `false`.
      * @defaultValue true
      */
-    trackZoom?: boolean;
+    zoomToUserAccuracy?: boolean;
 };
 
 const defaultOptions: GeolocateControlOptions = {
@@ -58,7 +58,7 @@ const defaultOptions: GeolocateControlOptions = {
     trackUserLocation: false,
     showAccuracyCircle: true,
     showUserLocation: true,
-    trackZoom: true
+    zoomToUserAccuracy: true
 };
 
 let numberOfWatches = 0;
@@ -547,7 +547,7 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         const bearing = this._map.getBearing();
         const eventData = {geolocateSource: true};
 
-        if (!this.options.trackZoom) {
+        if (!this.options.zoomToUserAccuracy) {
             const options = extend({}, this.options.fitBoundsOptions, {center, bearing, zoom: this._map.getZoom()});
             if (options.linear) {
                 this._map.easeTo(options, eventData);
