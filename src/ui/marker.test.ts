@@ -1440,6 +1440,46 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Skips the terrain check for a marker whose opacityWhenCovered equals its opacity', async () => {
+        const map = createMap();
+        await map.once('load');
+        const isLocationOccluded = vi.fn((_lngLat, terrain) => !!terrain);
+        map._camera.transform.isLocationOccluded = isLocationOccluded;
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = createTerrain();
+        map.fire('terrain');
+        await sleep(100);
+
+        expect(isLocationOccluded.mock.calls.filter(([, terrain]) => terrain)).toHaveLength(0);
+        expect(marker.getElement().style.opacity).toBe('0.7');
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-covered');
+        map.remove();
+    });
+
+    test('Removes an open popup when going behind 3d terrain although opacityWhenCovered equals opacity', async () => {
+        const map = createMap();
+        await map.once('load');
+        const marker = new Marker({opacityWhenCovered: '1'})
+            .setLngLat([0, 0])
+            .addTo(map)
+            .setPopup(new Popup());
+
+        await sleep(100);
+        marker.togglePopup();
+
+        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrain();
+        map.fire('terrain');
+        await sleep(100);
+
+        expect(marker._popup?.isOpen()).toBeFalsy();
+        expect(marker.getElement().style.opacity).toBe('1');
+        map.remove();
+    });
+
     test('Applies options.opacityWhenCovered when marker is covered by globe with terrain disabled or enabled', async () => {
         const map = createMap({width: 1024, renderWorldCopies: true});
         await map.once('load');

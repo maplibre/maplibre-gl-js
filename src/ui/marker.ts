@@ -691,6 +691,12 @@ export class Marker extends Evented<MarkerEventType> {
             }
             return;
         }
+        // with equal opacities and no popup to close, the terrain check could not change anything
+        if (this._opacity === this._opacityWhenCovered && !this._popup?.isOpen()) {
+            this._element.style.opacity = this._opacity;
+            this._element.classList.remove('maplibregl-marker-covered');
+            return;
+        }
         this._updateCovered();
     }
 
