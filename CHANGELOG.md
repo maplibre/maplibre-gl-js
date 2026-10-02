@@ -7,6 +7,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a hole around the poles of the globe in background, fill and line layers from zoom 3 ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `GeoJSONSource#updateData` leaving stale clusters on untouched tiles after clustering was turned on with `setClusterOptions` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource#setClusterOptions` clustering twice when called while new data is waiting to be sent ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
 - Fix `GeoJSONSource` data set with `setData` being overwritten by the result of an earlier URL load or `updateData` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
