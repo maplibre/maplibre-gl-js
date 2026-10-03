@@ -35,7 +35,8 @@ export type PointLike = Point | [number, number];
 
 /**
  * How many times a camera update outside a held gesture raises a camera it found inside the terrain, each time by as far
- * as the terrain still reaches above it; the new pitch and zoom move the near clipping plane.
+ * as the terrain still reaches above it; the new pitch and zoom move the near clipping plane, so the remainder shrinks
+ * with each pass, and three leave it within a few meters of a floor 20 km above the center in the tests.
  */
 const MAX_CAMERA_RAISES = 3;
 
@@ -333,7 +334,7 @@ class ElevationHold {
      * elevation to get there, so later frames can take the camera back down as the terrain allows; null while it has
      * not raised it. A held elevation other than the one it left was set anew, by a take, and carries no lift.
      */
-    lift: {elevation: number; height: number} | null = null;
+    lift: {liftedElevation: number; liftHeight: number} | null = null;
     private _terrainChanged = false;
 
     /**
@@ -1089,7 +1090,6 @@ export class Camera extends Evented<MapEventType> {
             if (corrected !== tr) tr.apply(corrected, false);
         } else {
             tr.recalculateZoomAndCenter(terrain);
-            tr.setElevation(terrain.getElevationForLngLat(tr.center, tr));
         }
     }
 
@@ -1145,9 +1145,7 @@ export class Camera extends Evented<MapEventType> {
      * Keeps the camera above the terrain for a camera update. While a gesture holds the center elevation over mercator
      * terrain, below a pitch of 90 degrees with the center clamped to the ground, the held elevation is raised on the
      * given transform just far enough that the camera and its near clipping plane clear the terrain, and lowered again
-     * as the terrain allows, so the gesture keeps its pitch and zoom and continues from the lifted camera; the renderer
-     * drops whatever is nearer than that plane, so terrain reaching above it would show as a hole into the ground.
-     * Otherwise see {@link Camera._raiseCameraAboveTerrain}.
+     * as the terrain allows, so the gesture keeps its pitch and zoom. Otherwise see {@link Camera._raiseCameraAboveTerrain}.
      * @param tr - the transform the camera update edits
      * @returns the transform to render: `tr`, or its corrected copy
      */
@@ -1156,12 +1154,12 @@ export class Camera extends Evented<MapEventType> {
         if (!this.terrain || hold?.holder !== 'gesture' || tr.pitch >= 90 || !this.getCenterClampedToGround() || tr.getClippingPlane()) {
             return this._raiseCameraAboveTerrain(tr);
         }
-        const lift = hold.lift?.elevation === tr.elevation ? hold.lift.height : 0;
+        const lift = hold.lift?.liftedElevation === tr.elevation ? hold.lift.liftHeight : 0;
         const height = Math.max(0, this._terrainHeightAboveCamera(tr) + lift);
         if (height !== lift) {
             tr.setElevation(tr.elevation - lift + height);
         }
-        hold.lift = height > 0 ? {elevation: tr.elevation, height} : null;
+        hold.lift = height > 0 ? {liftedElevation: tr.elevation, liftHeight: height} : null;
         return tr;
     }
 
@@ -1197,9 +1195,10 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * How far the terrain reaches above the camera, or the drawn terrain above one of nine points spread over its
-     * near clipping plane, in meters, whichever is more; zero or less while all are clear. The points are a 3 by 3 grid
-     * weighted bilinearly over the plane's four corners, the frustum's first four points in order around the plane. The
-     * plane is checked on mercator only, where the frustum is in mercator coordinates.
+     * near clipping plane, in meters, whichever is more; zero or less while all are clear. The renderer drops whatever
+     * is nearer than that plane, so terrain reaching above it would show as a hole into the ground. The points are a
+     * 3 by 3 grid weighted bilinearly over the plane's four corners, the frustum's first four points in order around
+     * the plane. The plane is checked on mercator only, where the frustum is in mercator coordinates.
      * @param tr - the transform whose camera is checked
      */
     _terrainHeightAboveCamera(tr: ITransform): number {
