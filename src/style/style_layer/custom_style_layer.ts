@@ -163,6 +163,7 @@ export type CustomRenderMethodInput = {
     getProjectionData: (params: CustomLayerProjectionDataParams) => RendererProjectionData;
 
     /**
+     * @experimental
      * Draws the elevation of the terrain as the map draws it into a texture, so that the layer can place many
      * objects on the ground on the GPU. Only set in {@link CustomLayerInterface.prerender}, while terrain is enabled.
      * Call it again after the camera moves, terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
@@ -177,6 +178,7 @@ export type CustomRenderMethodInput = {
 export type CustomRenderMethod = (gl: WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 
 /**
+ * @experimental
  * Input for {@link CustomLayerInterface.renderToTerrainTile}.
  */
 export type CustomTerrainRenderInput = {
@@ -297,6 +299,7 @@ export interface CustomLayerInterface {
      */
     prerender?: CustomRenderMethod;
     /**
+     * @experimental
      * Optional method called instead of `render` while terrain is enabled, to draw the layer into a terrain tile that
      * MapLibre drapes over the terrain with the fill, line and raster layers around the layer in the style.
      * Clip space `(-1, -1)` is the tile's south-west corner and `(1, 1)` its north-east corner. Draw over what the
@@ -305,6 +308,7 @@ export interface CustomLayerInterface {
      */
     renderToTerrainTile?: (gl: WebGL2RenderingContext, options: CustomTerrainRenderInput) => void;
     /**
+     * @experimental
      * Optional number that the layer changes when what it draws in {@link CustomLayerInterface.renderToTerrainTile}
      * changes, before calling {@link Map.triggerRepaint}, so that MapLibre draws the terrain tiles again.
      */
