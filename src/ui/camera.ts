@@ -863,19 +863,17 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
-        if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter, tr);
-        }
+        if (this.terrain || options.elevation !== undefined) this._prepareElevation(easeHandler.elevationCenter, tr, options.elevation);
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if ((this.terrain || options.elevation !== undefined) && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            if ((this.terrain || options.elevation !== undefined) && !options.freezeElevation) this._finalizeElevation();
             else this.elevationFreeze = false;
             this._afterEase(eventData, interruptingEaseId);
         }, options);

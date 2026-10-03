@@ -1264,24 +1264,25 @@ describe('easeTo', () => {
         expect(camera.getZoom()).toBe(2.7);
     });
 
-    test('respects elevation', () => {
+    test('respects elevation', async () => {
         const {camera, queue} = createCamera({});
-        camera.easeTo({elevation: 100, animate: true, duration: 10});
 
         const stub = vi.spyOn(timeControl, 'now');
         stub.mockReturnValue(0);
 
-        setTimeout(() => {
-            stub.mockReturnValue(1);
-            queue.run();
+        const moveEnded = camera.once('moveend');
 
-            setTimeout(() => {
-                stub.mockReturnValue(10);
-                queue.run();
-            }, 0);
-        }, 0);
+        camera.easeTo({elevation: 100, animate: true, duration: 10});
 
-        expect(camera.getCenterElevation()).toBe(100);
+        stub.mockReturnValue(1);
+        queue.run();
+        stub.mockReturnValue(10);
+        queue.run();
+
+        await moveEnded;
+
+        const nowElevation = camera.getCenterElevation();
+        expect(nowElevation).toBe(100);
 
     });
 });
