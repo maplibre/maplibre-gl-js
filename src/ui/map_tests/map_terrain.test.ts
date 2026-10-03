@@ -1053,6 +1053,9 @@ describe('Terrain changing under and around a gesture', () => {
     type TerrainHeight = (lng: number, lat: number) => number;
     const frameMs = 1000 / 60;
     const metersPerDegree = 2 * Math.PI * earthRadius / 360;
+    const wheelNotch = 25 * simulate.magicWheelZoomDelta;
+    const framesOfTheWheelEasing = 13;
+    const framesUntilTheZoomEnds = 15;
     function cameraMove(from: [number, number, number], to: [number, number, number]): number {
         return Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
     }
@@ -1291,6 +1294,156 @@ describe('Terrain changing under and around a gesture', () => {
         }
 
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(40000, 1);
+    });
+
+    function ridges(list: Array<{y: number; height: number; width: number}>): TerrainHeight {
+        return (_lng, lat) => {
+            const y = lat * metersPerDegree;
+            let elevation = 0;
+            for (const ridge of list) {
+                const d = (y - ridge.y) / ridge.width;
+                if (Math.abs(d) < 1) elevation += ridge.height * (1 - d * d);
+            }
+            return elevation;
+        };
+    }
+
+    test('a wheel zoom over terrain that rose under the held center moves the center onto that terrain, and its end leaves the camera and the zoom where they were', async () => {
+        const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 70, maxZoom: 18}, 0);
+
+        simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
+        frame();
+        setTerrainHeight(map, () => 1000, 1000, 1000);
+        for (let notch = 0; notch < 12; notch++) {
+            simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
+            for (let i = 0; i < 4; i++) frame();
+        }
+        for (let i = 0; i < framesOfTheWheelEasing; i++) frame();
+        expect(map.isMoving()).toBe(true);
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        const zoom = map.getZoom();
+        const camera = cameraPosition(map);
+
+        for (let i = 0; i < framesUntilTheZoomEnds; i++) frame();
+
+        expect(map.isMoving()).toBe(false);
+        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getZoom()).toBe(zoom);
+        expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
+    });
+
+    test('a wheel zoom-out over a crest between the camera and the center moves the camera as it would over flat ground at the center\'s elevation', async () => {
+        const crest = ridges([{y: -157.7, height: 878.4, width: 318.2}]);
+        const zoomOut = async (height: TerrainHeight, max: number) => {
+            const {map, frame} = await createMapOverShapedTerrain({zoom: 16.2, pitch: 60, maxZoom: 18}, height, 0, max);
+            const moves: number[] = [];
+            for (let notch = 0; notch < 4; notch++) {
+                simulate.wheel(map.getCanvas(), {deltaY: wheelNotch, clientX: 111, clientY: 124});
+                for (let i = 0; i < 4; i++) {
+                    const before = cameraPosition(map);
+                    frame();
+                    moves.push(cameraMove(before, cameraPosition(map)));
+                }
+            }
+            vi.useRealTimers();
+            return moves;
+        };
+        const overTheCrest = await zoomOut(crest, 880);
+        const centerElevation = crest(0, 0);
+
+        const overFlatGround = await zoomOut(() => centerElevation, centerElevation);
+
+        expect(Math.max(...overTheCrest.map((move, i) => Math.abs(move - overFlatGround[i])))).toBeLessThan(1e-5);
+    });
+
+    test('a wheel zoom whose screen center slips over a crest never speeds up more than 2.3 times from one frame to the next', async () => {
+        const terrain = ridges([{y: -423.8, height: 652.7, width: 363.3}, {y: 8.26, height: 876.5, width: 301.4}, {y: -852.2, height: 382.6, width: 300.4}]);
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 14.6, pitch: 70, bearing: 30, maxPitch: 85, maxZoom: 18}, terrain, 0, 2020);
+        const moves: number[] = [];
+
+        for (let notch = 0; notch < 13; notch++) {
+            simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 23, clientY: 79});
+            for (let i = 0; i < 4; i++) {
+                const before = cameraPosition(map);
+                frame();
+                moves.push(cameraMove(before, cameraPosition(map)));
+            }
+        }
+        const speedUps = moves.slice(1).map((move, i) => moves[i] > 1 ? move / moves[i] : 0);
+
+        expect(Math.max(...speedUps)).toBeLessThan(2.3);
+    });
+
+    test('a wheel zoom around a point over terrain that falls away under the center follows it down, and its end leaves the camera where it was', async () => {
+        const fallingSouthward: TerrainHeight = (_lng, lat) => 1000 + 0.2 * lat * metersPerDegree;
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 60, maxZoom: 18}, fallingSouthward, 0, 2000);
+
+        for (let notch = 0; notch < 6; notch++) {
+            simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 170});
+            for (let i = 0; i < 4; i++) frame();
+        }
+        for (let i = 0; i < framesOfTheWheelEasing; i++) frame();
+        expect(map.isMoving()).toBe(true);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(fallingSouthward(map.getCenter().lng, map.getCenter().lat), 1);
+        const camera = cameraPosition(map);
+
+        for (let i = 0; i < framesUntilTheZoomEnds; i++) frame();
+
+        expect(map.isMoving()).toBe(false);
+        expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.001);
+    });
+
+    test('a wheel zoom-in toward terrain nearer than maxZoom allows never moves the camera back', async () => {
+        const blockSouthEdge = -0.06, blockNorthEdge = -0.04;
+        const block: TerrainHeight = (_lng, lat) => lat > blockSouthEdge && lat < blockNorthEdge ? 500 : 0;
+        const {map, frame} = await createMapOverShapedTerrain({center: [0.1758, -0.03], zoom: 12, pitch: 80, maxPitch: 85, maxZoom: 12.5}, block, 0, 500);
+        const southwardMoves: number[] = [];
+
+        simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 100});
+        for (let i = 0; i < framesOfTheWheelEasing + framesUntilTheZoomEnds; i++) {
+            const before = cameraPosition(map);
+            frame();
+            southwardMoves.push(before[1] - cameraPosition(map)[1]);
+        }
+
+        expect(map.isMoving()).toBe(false);
+        expect(Math.max(...southwardMoves)).toBeLessThanOrEqual(0);
+    });
+
+    test('a wheel zoom over a rise in the terrain under the center that is not drawn yet leaves the held center elevation alone', async () => {
+        const slopeRisingNorth = (rise: number): TerrainHeight => (_lng, lat) => 1000 + rise + 50000 * lat;
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 14, pitch: 60, maxZoom: 18}, slopeRisingNorth(0), 0, 2000);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
+        simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 100});
+        frame();
+
+        setTerrainHeight(map, slopeRisingNorth(500), 0, 2000);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
+        for (let i = 0; i < 8; i++) frame();
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
+    test('a wheel zoom with the center not clamped to the ground leaves the center elevation where it was', async () => {
+        const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 70, maxZoom: 18, centerClampedToGround: false}, 1000);
+
+        for (let notch = 0; notch < 4; notch++) {
+            simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
+            for (let i = 0; i < 4; i++) frame();
+        }
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+    });
+
+    test('a jumpTo on a globe from a zoom it draws as a globe to one it draws as mercator keeps the pitch of a camera above the terrain', async () => {
+        const {map} = await createMapOverFlatTerrain({zoom: 11, pitch: 0, maxPitch: 85}, 600);
+        map.setProjection({type: 'globe'});
+        map.redraw();
+
+        map.jumpTo({zoom: 14.6, pitch: 80});
+
+        expect(map.getPitch()).toBe(80);
+        expect(map.getZoom()).toBeCloseTo(14.6, 6);
     });
 
 });

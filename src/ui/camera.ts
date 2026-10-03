@@ -1228,6 +1228,31 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
+     * Moves the center a zoom gesture holds onto the terrain the camera looks at and draws, with the camera where it
+     * is, so a zoom toward rising terrain slows down before it instead of running into it. Farther terrain is followed
+     * only by less than the frame zooms in, so the zoom keeps going in and speeds up gradually; a center ray that slips
+     * over a crest onto terrain far behind it, and terrain so near that the zoom passes maxZoom, which would move the
+     * camera back, are left to the gesture's end, as is everything with the center not clamped to the ground. On a
+     * globe drawn as a globe the re-solve does nothing.
+     * @param tr - the requested camera state
+     * @param zoomDelta - how far the frame zooms in
+     */
+    moveCenterOntoTerrain(tr: ITransform, zoomDelta: number): void {
+        if (!this.terrain || !this.getCenterClampedToGround()) {
+            return;
+        }
+        const {center, elevation, zoom} = tr;
+        tr.recalculateZoomAndCenter(this.terrain);
+        const keepsZoomingIn = tr.zoom > zoom - zoomDelta && tr.zoom < tr.maxZoom;
+        if (!keepsZoomingIn || Math.abs(this.terrain.getElevationForLngLat(tr.center, tr) - tr.elevation) >= 1) {
+            tr.setZoom(zoom);
+            tr.setCenter(center);
+            tr.setElevation(elevation);
+        }
+    }
+
+    /**
+     * @internal
      * Called after the camera is done being manipulated. The transform first takes the projection transition the map
      * draws at its zoom, since a copy of a globe's transform keeps the one it was copied under and would measure that
      * projection; a hold on the center elevation takes DEM data that landed, see {@link ElevationHold.take}; then the
