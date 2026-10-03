@@ -863,19 +863,19 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
-        if (this.terrain) {
-            this._prepareElevation(easeHandler.elevationCenter, tr);
-        }
+        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== tr.elevation;
+
+        if (this.terrain || hasCustomElevationChange) this._prepareElevation(easeHandler.elevationCenter, tr, options.elevation);
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, !hasCustomElevationChange);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._finalizeElevation();
             else this.elevationFreeze = false;
             this._afterEase(eventData, interruptingEaseId);
         }, options);
@@ -909,11 +909,12 @@ export class Camera extends Evented<MapEventType> {
      * samples the terrain under the map center the animation ends on.
      * @param center - the map center when the animation ends
      * @param tr - the transform the animation edits
+     * @param elevationTarget - elevation when the animation ends
      */
-    _prepareElevation(center: LngLat, tr: ITransform): void {
+    _prepareElevation(center: LngLat, tr: ITransform, elevationTarget?: number): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, tr);
+        this._elevationTarget = elevationTarget ?? this.terrain.getElevationForLngLat(center, tr);
         this.elevationFreeze = true;
     }
 
@@ -924,22 +925,27 @@ export class Camera extends Evented<MapEventType> {
      * that is not clamped to the ground keeps its elevation.
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
+     * @param useTerrainElevation - whether the animation will use the terrain elevation
      */
-    _updateElevation(k: number, tr: ITransform): void {
+    _updateElevation(k: number, tr: ITransform, useTerrainElevation: boolean = true): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
             this._prepareElevation(tr.center, tr);
         }
 
-        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
-        // target terrain updated during flight, slowly move camera to new height
-        if (k < 1 && elevation !== this._elevationTarget) {
-            const pitch1 = this._elevationTarget - this._elevationStart;
-            const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
-            this._elevationStart += k * (pitch1 - pitch2);
-            this._elevationTarget = elevation;
+        if (this.terrain && useTerrainElevation) {
+            tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
+            const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
+
+            // target terrain updated during flight, slowly move camera to new height
+            if (k < 1 && elevation !== this._elevationTarget) {
+                const pitch1 = this._elevationTarget - this._elevationStart;
+                const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
+                this._elevationStart += k * (pitch1 - pitch2);
+                this._elevationTarget = elevation;
+            }
         }
-        if (this.getCenterClampedToGround()) {
+
+        if (this.getCenterClampedToGround() || !useTerrainElevation) {
             tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
         }
     }
@@ -1228,10 +1234,12 @@ export class Camera extends Evented<MapEventType> {
         // S: Total length of the flight path, measured in ρ-screenfulls.
         let S = (zoomOutFactor(true) - r0) / rho;
 
+        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== tr.elevation;
+
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
         if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
             // Perform a more or less instantaneous transition if the path is too short.
-            if (Math.abs(w0 - w1) < 0.000001) return this.easeTo(options, eventData);
+            if (Math.abs(w0 - w1) < 0.000001 && !hasCustomElevationChange ) return this.easeTo(options, eventData);
 
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
@@ -1258,7 +1266,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter, tr);
+        if (this.terrain || hasCustomElevationChange) this._prepareElevation(flyToHandler.targetCenter, tr, options.elevation);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1283,11 +1291,11 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, !hasCustomElevationChange);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
-            if (this.terrain && options.freezeElevation) this._finalizeElevation();
+            if ((this.terrain || hasCustomElevationChange) && options.freezeElevation) this._finalizeElevation();
             else this.elevationFreeze = false;
             this._afterEase(eventData);
         }, options);
