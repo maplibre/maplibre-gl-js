@@ -864,6 +864,15 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
+    test('a drag around the pointer that switches terrain on takes the DEM elevation when it lands while the pointer rests', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0, dragRotate: {around: 'pointer'}});
+
+        startPitchDragThatSwitchesTerrainOn(map);
+        await landAllDemTiles(dem, 1000);
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
+    });
+
     test('a DEM tile landing while a pan drag is in flight leaves the camera where the drag put it, and the release re-solves the zoom onto the new terrain without moving it', async () => {
         const map = await createMapOverTerrain(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
