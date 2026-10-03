@@ -1,0 +1,117 @@
+# Display a globe with an atmosphere
+
+Display a globe with an atmosphere.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    zoom: 0,
+    center: [137.9150899566626, 36.25956997955441],
+    style: {
+        'version': 8,
+        'projection': {
+            'type': 'globe'
+        },
+        'sources': {
+            'satellite': {
+                'tiles': ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
+                'type': 'raster'
+            },
+        },
+        'layers': [
+            {
+                'id': 'Satellite',
+                'type': 'raster',
+                'source': 'satellite',
+            },
+        ],
+        'sky': {
+            'atmosphere-blend': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                0, 1,
+                5, 1,
+                7, 0
+            ]
+        },
+        'light': {
+            'anchor': 'map',
+            'position': [1.5, 90, 80]
+        }
+    }
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a globe with an atmosphere</title>
+    <meta property="og:description" content="Display a globe with an atmosphere." />
+    <meta property="og:category" content="Globe" />
+    <meta property="og:order" content="2" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<style>
+    #map {
+        background: #000;
+    }
+</style>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 0,
+        center: [137.9150899566626, 36.25956997955441],
+        style: {
+            'version': 8,
+            'projection': {
+                'type': 'globe'
+            },
+            'sources': {
+                'satellite': {
+                    'tiles': ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
+                    'type': 'raster'
+                },
+            },
+            'layers': [
+                {
+                    'id': 'Satellite',
+                    'type': 'raster',
+                    'source': 'satellite',
+                },
+            ],
+            'sky': {
+                'atmosphere-blend': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    0, 1,
+                    5, 1,
+                    7, 0
+                ]
+            },
+            'light': {
+                'anchor': 'map',
+                'position': [1.5, 90, 80]
+            }
+        }
+    });
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,81 @@
+# Fit a map to a bounding box
+
+Fit the map to a specific area, regardless of the pixel size of the map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    center: [-74.5, 40],
+    zoom: 9
+});
+
+document.getElementById('fit').addEventListener('click', () => {
+    map.fitBounds([
+        [32.958984, -5.353521],
+        [43.50585, 5.615985]
+    ]);
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Fit a map to a bounding box</title>
+    <meta property="og:description" content="Fit the map to a specific area, regardless of the pixel size of the map." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #fit {
+        display: block;
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translate(-50%);
+        width: 50%;
+        height: 40px;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: center;
+        color: #fff;
+        background: #ee8a65;
+    }
+</style>
+<div id="map"></div>
+<br />
+<button id="fit">Fit to Kenya</button>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        center: [-74.5, 40],
+        zoom: 9
+    });
+
+    document.getElementById('fit').addEventListener('click', () => {
+        map.fitBounds([
+            [32.958984, -5.353521],
+            [43.50585, 5.615985]
+        ]);
+    });
+</script>
+</body>
+</html>
+```

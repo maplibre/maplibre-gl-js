@@ -1,0 +1,52 @@
+# Cooperative gestures
+
+Enable cooperative gestures. See how it behaves in fullscreen mode.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [-74.5, 40],
+    cooperativeGestures: true,
+    zoom: 4
+});
+map.addControl(new maplibregl.FullscreenControl());
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Cooperative gestures</title>
+    <meta property="og:description" content="Enable cooperative gestures. See how it behaves in fullscreen mode." />
+    <meta property="og:category" content="Controls & Gestures" />
+    <meta property="og:created" content="2023-11-22" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-74.5, 40],
+        cooperativeGestures: true,
+        zoom: 4
+    });
+    map.addControl(new maplibregl.FullscreenControl());
+</script>
+</body>
+</html>
+```

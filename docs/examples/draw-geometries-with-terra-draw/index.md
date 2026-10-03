@@ -1,0 +1,100 @@
+# Draw geometries with terra-draw
+
+Use maplibre-gl-terradraw to draw a geometry in various forms such as point, line or polygon on your map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+    center: [-91.874, 42.76], // starting position
+    zoom: 12 // starting zoom
+});
+
+// By default, all terra-draw drawing modes are enabled.
+// you can disable some of modes in the constructor options if you want.
+const draw = new MaplibreTerradrawControl.MaplibreTerradrawControl({
+    modes: [
+        // 'render', comment this to always show drawing tool
+        'point',
+        'linestring',
+        'polygon',
+        'rectangle',
+        'circle',
+        'freehand',
+        'angled-rectangle',
+        'sensor',
+        'sector',
+        'select',
+        'delete-selection',
+        'delete',
+        'download'
+    ],
+    open: true,
+});
+map.addControl(draw, 'top-left');
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Draw geometries with terra-draw</title>
+    <meta property="og:description" content="Use maplibre-gl-terradraw to draw a geometry in various forms such as point, line or polygon on your map." />
+    <meta property="og:category" content="Plugins & Integrations" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@1.0.1/dist/maplibre-gl-terradraw.umd.js"></script>
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@1.0.1/dist/maplibre-gl-terradraw.css"
+/>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+        center: [-91.874, 42.76], // starting position
+        zoom: 12 // starting zoom
+    });
+
+    // By default, all terra-draw drawing modes are enabled.
+    // you can disable some of modes in the constructor options if you want.
+    const draw = new MaplibreTerradrawControl.MaplibreTerradrawControl({
+        modes: [
+            // 'render', comment this to always show drawing tool
+            'point',
+            'linestring',
+            'polygon',
+            'rectangle',
+            'circle',
+            'freehand',
+            'angled-rectangle',
+            'sensor',
+            'sector',
+            'select',
+            'delete-selection',
+            'delete',
+            'download'
+        ],
+        open: true,
+    });
+    map.addControl(draw, 'top-left');
+</script>
+</body>
+</html>
+```

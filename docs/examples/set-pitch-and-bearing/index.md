@@ -1,0 +1,54 @@
+# Set pitch and bearing
+
+Initialize a map with pitch and bearing camera options.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    // camera options properties
+    center: [-73.5804, 45.53483],
+    pitch: 60, // pitch in degrees
+    bearing: -60, // bearing in degrees
+    zoom: 4
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Set pitch and bearing</title>
+    <meta property="og:description" content="Initialize a map with pitch and bearing camera options." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:order" content="3" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        // camera options properties
+        center: [-73.5804, 45.53483],
+        pitch: 60, // pitch in degrees
+        bearing: -60, // bearing in degrees
+        zoom: 4
+    });
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,88 @@
+# Add a raster tile source
+
+Add a third-party raster source to the map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: {
+        'version': 8,
+        'sources': {
+            'raster-tiles': {
+                'type': 'raster',
+                'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                'tileSize': 256,
+                'minzoom': 0,
+                'maxzoom': 19,
+                'attribution': "© OpenStreetMap contributors",
+            }
+        },
+        'layers': [
+            {
+                'id': 'simple-tiles',
+                'type': 'raster',
+                'source': 'raster-tiles',
+            }
+        ],
+        'id': 'blank'
+    },
+    center: [0, 0], // starting position
+    zoom: 0 // starting zoom
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a raster tile source</title>
+    <meta property="og:description" content="Add a third-party raster source to the map." />
+    <meta property="og:category" content="Raster & Imagery" />
+    <meta property="og:order" content="1" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: {
+            'version': 8,
+            'sources': {
+                'raster-tiles': {
+                    'type': 'raster',
+                    'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    'tileSize': 256,
+                    'minzoom': 0,
+                    'maxzoom': 19,
+                    'attribution': "© OpenStreetMap contributors",
+                }
+            },
+            'layers': [
+                {
+                    'id': 'simple-tiles',
+                    'type': 'raster',
+                    'source': 'raster-tiles',
+                }
+            ],
+            'id': 'blank'
+        },
+        center: [0, 0], // starting position
+        zoom: 0 // starting zoom
+    });
+</script>
+</body>
+</html>
+```

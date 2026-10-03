@@ -1,0 +1,52 @@
+# View a fullscreen map
+
+Toggle between current view and fullscreen mode. Does not work on iPhones because a pseudo-fullscreen is used, and the code is embedded in an iframe, which prevents the map from scaling.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://tiles.openfreemap.org/styles/bright', //stylesheet location
+    center: [11.255, 43.77], // starting position
+    zoom: 13 // starting zoom
+});
+
+map.addControl(new maplibregl.FullscreenControl());
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>View a fullscreen map</title>
+    <meta property="og:description" content="Toggle between current view and fullscreen mode. Does not work on iPhones because a pseudo-fullscreen is used, and the code is embedded in an iframe, which prevents the map from scaling." />
+    <meta property="og:category" content="Controls & Gestures" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://tiles.openfreemap.org/styles/bright', //stylesheet location
+        center: [11.255, 43.77], // starting position
+        zoom: 13 // starting zoom
+    });
+
+    map.addControl(new maplibregl.FullscreenControl());
+</script>
+</body>
+</html>
+```

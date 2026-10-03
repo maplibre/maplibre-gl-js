@@ -4,12 +4,6 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/plugins/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/style-spec/</loc>
-      </url>
-      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/</loc>
       </url>
       <url>
@@ -1070,5 +1064,11 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/plugins/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/style-spec/</loc>
       </url>
 </urlset>

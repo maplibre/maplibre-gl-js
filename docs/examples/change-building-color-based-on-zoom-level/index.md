@@ -1,0 +1,119 @@
+# Change building color based on zoom level
+
+Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    center: [-90.73414, 14.55524],
+    zoom: 13
+});
+
+map.on('load', () => {
+    map.setPaintProperty('building-top', 'fill-color', [
+        'interpolate',
+        ['exponential', 0.5],
+        ['zoom'],
+        15,
+        '#e2714b',
+        22,
+        '#eee695'
+    ]);
+
+    map.setPaintProperty('building-top', 'fill-opacity', [
+        'interpolate',
+        ['exponential', 0.5],
+        ['zoom'],
+        15,
+        0,
+        22,
+        1
+    ]);
+});
+
+document.getElementById('zoom').addEventListener('click', () => {
+    map.zoomTo(19, {duration: 9000});
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Change building color based on zoom level</title>
+    <meta property="og:description" content="Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next." />
+    <meta property="og:category" content="Expressions" />
+    <meta property="og:order" content="2" />
+    <meta property="og:created" content="2023-06-27" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #zoom {
+        display: block;
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translate(-50%);
+        width: 50%;
+        height: 40px;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: center;
+        color: #fff;
+        background: #ee8a65;
+    }
+</style>
+<div id="map"></div>
+<button id="zoom">Zoom to buildings</button>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        center: [-90.73414, 14.55524],
+        zoom: 13
+    });
+
+    map.on('load', () => {
+        map.setPaintProperty('building-top', 'fill-color', [
+            'interpolate',
+            ['exponential', 0.5],
+            ['zoom'],
+            15,
+            '#e2714b',
+            22,
+            '#eee695'
+        ]);
+
+        map.setPaintProperty('building-top', 'fill-opacity', [
+            'interpolate',
+            ['exponential', 0.5],
+            ['zoom'],
+            15,
+            0,
+            22,
+            1
+        ]);
+    });
+
+    document.getElementById('zoom').addEventListener('click', () => {
+        map.zoomTo(19, {duration: 9000});
+    });
+</script>
+</body>
+</html>
+```

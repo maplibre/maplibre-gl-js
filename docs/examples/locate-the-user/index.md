@@ -1,0 +1,68 @@
+# Locate the user
+
+Geolocate the user and then track their current location on the map using the GeolocateControl.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    center: [-96, 37.8], // starting position
+    zoom: 3 // starting zoom
+});
+
+// Add geolocate control to the map.
+map.addControl(
+    new maplibregl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        trackUserLocation: true
+    })
+);
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Locate the user</title>
+    <meta property="og:description" content="Geolocate the user and then track their current location on the map using the GeolocateControl." />
+    <meta property="og:category" content="Controls & Gestures" />
+    <meta property="og:order" content="2" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        center: [-96, 37.8], // starting position
+        zoom: 3 // starting zoom
+    });
+
+    // Add geolocate control to the map.
+    map.addControl(
+        new maplibregl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            trackUserLocation: true
+        })
+    );
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,122 @@
+# Add a pattern to a polygon
+
+Use fill-pattern to draw a polygon from a repeating image pattern.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    zoom: 1
+});
+
+map.on('load', async () => {
+    // Add GeoJSON data
+    map.addSource('source', {
+        'type': 'geojson',
+        'data': {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
+                    [
+                        [-30, -25],
+                        [-30, 35],
+                        [30, 35],
+                        [30, -25],
+                        [-30, -25]
+                    ]
+                ]
+            }
+        }
+    });
+
+    // Load an image to use as the pattern
+    const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/60px-Cat_silhouette.svg.png');
+    // Declare the image
+    map.addImage('pattern', image.data);
+
+    // Use it
+    map.addLayer({
+        'id': 'pattern-layer',
+        'type': 'fill',
+        'source': 'source',
+        'paint': {
+            'fill-pattern': 'pattern'
+        }
+    });
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a pattern to a polygon</title>
+    <meta property="og:description" content="Use fill-pattern to draw a polygon from a repeating image pattern." />
+    <meta property="og:category" content="Layer Styling" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        zoom: 1
+    });
+
+    map.on('load', async () => {
+        // Add GeoJSON data
+        map.addSource('source', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': [
+                        [
+                            [-30, -25],
+                            [-30, 35],
+                            [30, 35],
+                            [30, -25],
+                            [-30, -25]
+                        ]
+                    ]
+                }
+            }
+        });
+
+        // Load an image to use as the pattern
+        const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/60px-Cat_silhouette.svg.png');
+        // Declare the image
+        map.addImage('pattern', image.data);
+
+        // Use it
+        map.addLayer({
+            'id': 'pattern-layer',
+            'type': 'fill',
+            'source': 'source',
+            'paint': {
+                'fill-pattern': 'pattern'
+            }
+        });
+    });
+</script>
+</body>
+</html>
+```

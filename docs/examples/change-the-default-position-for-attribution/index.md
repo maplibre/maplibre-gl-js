@@ -1,0 +1,52 @@
+# Change the default position for attribution
+
+Place attribution in the top-left position when initializing a map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [-77.04, 38.907],
+    zoom: 2,
+    attributionControl: false
+});
+map.addControl(new maplibregl.AttributionControl(), 'top-left');
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Change the default position for attribution</title>
+    <meta property="og:description" content="Place attribution in the top-left position when initializing a map." />
+    <meta property="og:category" content="Getting Started" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-77.04, 38.907],
+        zoom: 2,
+        attributionControl: false
+    });
+    map.addControl(new maplibregl.AttributionControl(), 'top-left');
+</script>
+</body>
+</html>
+```

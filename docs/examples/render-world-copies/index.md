@@ -1,0 +1,96 @@
+# Render world copies
+
+Toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/style.json', // stylesheet location
+    center: [179, 0], // starting position [lng, lat]
+    zoom: 0.01 // starting zoom
+});
+
+const renderOptions = document.getElementById('menu');
+const inputs = renderOptions.getElementsByTagName('input');
+
+function switchRenderOption(option) {
+    const status = option.target.id;
+    map.setRenderWorldCopies(status === 'true');
+    map.panTo(map.getCenter());
+}
+
+for (let i = 0; i < inputs.length; i++) {
+    inputs[i].onclick = switchRenderOption;
+}
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Render world copies</title>
+    <meta property="og:description" content="Toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:created" content="2023-06-27" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #menu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #fff;
+        padding: 10px;
+        font-family: 'Open Sans', sans-serif;
+    }
+</style>
+
+<div id="map"></div>
+<div id="menu">
+    <div>Set <code>renderWorldCopies</code> to:</div>
+    <div>
+        <input type="radio" id="true" name="rtoggle" value="true" checked />
+        <label for="true">true</label>
+    </div>
+    <div>
+        <input type="radio" id="false" name="rtoggle" value="false" />
+        <label for="false">false</label>
+    </div>
+</div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://demotiles.maplibre.org/style.json', // stylesheet location
+        center: [179, 0], // starting position [lng, lat]
+        zoom: 0.01 // starting zoom
+    });
+
+    const renderOptions = document.getElementById('menu');
+    const inputs = renderOptions.getElementsByTagName('input');
+
+    function switchRenderOption(option) {
+        const status = option.target.id;
+        map.setRenderWorldCopies(status === 'true');
+        map.panTo(map.getCenter());
+    }
+
+    for (let i = 0; i < inputs.length; i++) {
+        inputs[i].onclick = switchRenderOption;
+    }
+</script>
+</body>
+</html>
+```

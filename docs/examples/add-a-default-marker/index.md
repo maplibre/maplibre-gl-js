@@ -1,0 +1,57 @@
+# Add a default marker
+
+Add a default marker to the map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [12.550343, 55.665957],
+    zoom: 6
+});
+
+const marker = new maplibregl.Marker()
+    .setLngLat([12.550343, 55.665957])
+    .addTo(map);
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a default marker</title>
+    <meta property="og:description" content="Add a default marker to the map." />
+    <meta property="og:category" content="Markers" />
+    <meta property="og:order" content="1" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [12.550343, 55.665957],
+        zoom: 6
+    });
+
+    const marker = new maplibregl.Marker()
+        .setLngLat([12.550343, 55.665957])
+        .addTo(map);
+</script>
+</body>
+</html>
+```

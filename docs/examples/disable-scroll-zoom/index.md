@@ -1,0 +1,53 @@
+# Disable scroll zoom
+
+Prevent scroll from zooming a map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/style.json', // style URL
+    center: [-122.65, 45.52], // starting position
+    zoom: 3 // starting zoom
+});
+
+// disable map zoom when using scroll
+map.scrollZoom.disable();
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Disable scroll zoom</title>
+    <meta property="og:description" content="Prevent scroll from zooming a map." />
+    <meta property="og:category" content="Controls & Gestures" />
+    <meta property="og:created" content="2023-06-27" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://demotiles.maplibre.org/style.json', // style URL
+        center: [-122.65, 45.52], // starting position
+        zoom: 3 // starting zoom
+    });
+
+    // disable map zoom when using scroll
+    map.scrollZoom.disable();
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,85 @@
+# Display and style rich text labels
+
+Use the format expression to display country labels in both English and in the local language.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+    center: [17.49, 40.01], // starting position [lng, lat]
+    zoom: 4 // starting zoom
+});
+
+map.on('load', () => {
+    map.setLayoutProperty('label_country', 'text-field', [
+        'format',
+        ['get', 'name_en'],
+        {'font-scale': 1.2},
+        '\n',
+        {},
+        ['get', 'name'],
+        {
+            'font-scale': 0.8,
+            'text-font': [
+                'literal',
+                ['Noto Sans Regular']
+            ]
+        }
+    ]);
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display and style rich text labels</title>
+    <meta property="og:description" content="Use the format expression to display country labels in both English and in the local language." />
+    <meta property="og:category" content="Labels & Fonts" />
+    <meta property="og:order" content="1" />
+    <meta property="og:created" content="2023-06-27" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<!-- The lang attribute is read from the map container if present, otherwise from the HTML document -->
+<div id="map" lang="zh-HK"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+        center: [17.49, 40.01], // starting position [lng, lat]
+        zoom: 4 // starting zoom
+    });
+
+    map.on('load', () => {
+        map.setLayoutProperty('label_country', 'text-field', [
+            'format',
+            ['get', 'name_en'],
+            {'font-scale': 1.2},
+            '\n',
+            {},
+            ['get', 'name'],
+            {
+                'font-scale': 0.8,
+                'text-font': [
+                    'literal',
+                    ['Noto Sans Regular']
+                ]
+            }
+        ]);
+    });
+</script>
+</body>
+</html>
+```

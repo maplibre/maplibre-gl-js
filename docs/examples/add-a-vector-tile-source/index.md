@@ -1,0 +1,122 @@
+# Add a vector tile source
+
+Add a vector source to a map.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    zoom: 13,
+    center: [-122.447303, 37.753574]
+});
+
+map.on('load', () => {
+    map.addSource('contours', {
+        type: 'vector',
+        url:
+            'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+    });
+    map.addLayer({
+        'id': 'contour-lines',
+        'type': 'line',
+        'source': 'contours',
+        'source-layer': 'contour',
+        'layout': {
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        'paint': {
+            'line-color': '#ff69b4',
+            'line-width': 1
+        }
+    });
+
+    map.addLayer({
+        'id': 'contour-labels',
+        'type': 'symbol',
+        'source': 'contours',
+        'source-layer': 'contour',
+        "layout": {
+          "text-field": "{height}",
+          "symbol-placement": "line",
+          "text-font": ["Noto Sans Regular"],
+        },
+        'paint': {
+            'text-color': '#ff69b4',
+        }
+    });
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a vector tile source</title>
+    <meta property="og:description" content="Add a vector source to a map." />
+    <meta property="og:category" content="Vector & GeoJSON" />
+    <meta property="og:order" content="1" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        zoom: 13,
+        center: [-122.447303, 37.753574]
+    });
+
+    map.on('load', () => {
+        map.addSource('contours', {
+            type: 'vector',
+            url:
+                'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+        });
+        map.addLayer({
+            'id': 'contour-lines',
+            'type': 'line',
+            'source': 'contours',
+            'source-layer': 'contour',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': '#ff69b4',
+                'line-width': 1
+            }
+        });
+
+        map.addLayer({
+            'id': 'contour-labels',
+            'type': 'symbol',
+            'source': 'contours',
+            'source-layer': 'contour',
+            "layout": {
+              "text-field": "{height}",
+              "symbol-placement": "line",
+              "text-font": ["Noto Sans Regular"],
+            },
+            'paint': {
+                'text-color': '#ff69b4',
+            }
+        });
+    });
+</script>
+</body>
+</html>
+```

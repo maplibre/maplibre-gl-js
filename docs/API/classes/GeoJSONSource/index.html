@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.63">
+      <meta name="generator" content="zensical-0.0.67">
     
     
       
@@ -34,12 +34,12 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.10763589.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.4ae390e2.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.812a03bb.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.96d1a7e4.min.css">
       
       
 
@@ -66,7 +66,19 @@
 
     
     
-  </head>
+  <meta property="og:type" content="website" />
+<meta property="og:title" content="GeoJSONSource - MapLibre GL JS" />
+<meta property="og:description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." />
+<meta property="og:image" content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/classes/GeoJSONSource.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeoJSONSource/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="GeoJSONSource - MapLibre GL JS" />
+<meta property="twitter:description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." />
+<meta property="twitter:image" content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/classes/GeoJSONSource.png" />
+</head>
   
   
     
@@ -1110,17 +1122,6 @@
   
     <nav class="md-nav" aria-label="Methods">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_updateworkerdata" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        _updateWorkerData()
-      </span>
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#aborttile" class="md-nav__link">
@@ -9273,14 +9274,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--new" title="Recently added">
-    </span>
-  
-
-  
 
       </a>
     </li>
@@ -11193,17 +11186,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_updateworkerdata" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        _updateWorkerData()
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#aborttile" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -11569,12 +11551,13 @@
               <article class="md-content__inner md-typeset">
                 
                   
+
   
   
 
 
 <h1 id="geojsonsource">GeoJSONSource</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L146">source/geojson_source.ts:146</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L165">source/geojson_source.ts:165</a></p>
 <p>A source containing GeoJSON.
 (See the <a href="https://maplibre.org/maplibre-style-spec/#sources-geojson">Style Specification</a> for detailed documentation of options.)</p>
 <p>GeoJSON is tiled internally for rendering. Features exposed from rendered tiles and related events come from vector-tile data, so GeoJSON foreign members that cannot be represented by the vector-tile format are not preserved there. Keep that data separately, or map it to supported feature properties, if you need it after tiling.</p>
@@ -11630,22 +11613,11 @@
 <li><a href="../../interfaces/Source/"><code>Source</code></a></li>
 </ul>
 <h2 id="methods">Methods</h2>
-<h3 id="_updateworkerdata">_updateWorkerData()</h3>
-<blockquote>
-<p><strong>_updateWorkerData</strong>(): <code>Promise</code>&lt;<code>void</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L432">source/geojson_source.ts:432</a></p>
-<p>Responsible for invoking WorkerSource's geojson.loadData target, which
-handles loading the geojson data and preparing to serve it up as tiles,
-using geojson-vt or supercluster as appropriate.</p>
-<h4 id="returns">Returns</h4>
-<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
-<hr />
 <h3 id="aborttile">abortTile()</h3>
 <blockquote>
 <p><strong>abortTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L663">source/geojson_source.ts:663</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L671">source/geojson_source.ts:671</a></p>
 <p>Allows to abort a tile loading.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -11664,7 +11636,7 @@ using geojson-vt or supercluster as appropriate.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns</h4>
+<h4 id="returns">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="implementation-of">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#aborttile"><code>abortTile</code></a></p>
@@ -11674,7 +11646,7 @@ using geojson-vt or supercluster as appropriate.</p>
 <blockquote>
 <p><strong>fire</strong>(<code>event</code>: <a href="../ErrorEvent/"><code>ErrorEvent</code></a> | <a href="../MapSourceDataEvent/"><code>MapSourceDataEvent</code></a>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L156">util/evented.ts:156</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L156">util/evented.ts:156</a></p>
 <p>Calls every listener registered for the event's type.</p>
 <h5 id="parameters_1">Parameters</h5>
 <table>
@@ -11691,7 +11663,7 @@ using geojson-vt or supercluster as appropriate.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_2">Returns</h5>
+<h5 id="returns_1">Returns</h5>
 <p><code>this</code></p>
 <h5 id="implementation-of_1">Implementation of</h5>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#fire"><code>fire</code></a></p>
@@ -11701,7 +11673,7 @@ using geojson-vt or supercluster as appropriate.</p>
 <blockquote>
 <p><strong>fire</strong>(<code>type</code>: keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>, <code>properties?</code>: <code>object</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L162">util/evented.ts:162</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L162">util/evented.ts:162</a></p>
 <p>Compatibility with the (type: string, properties: Object) signature from previous versions.
 See https://github.com/mapbox/mapbox-gl-js/issues/6522,
     https://github.com/mapbox/mapbox-gl-draw/issues/766</p>
@@ -11724,7 +11696,7 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 </tr>
 </tbody>
 </table>
-<h5 id="returns_3">Returns</h5>
+<h5 id="returns_2">Returns</h5>
 <p><code>this</code></p>
 <h5 id="implementation-of_2">Implementation of</h5>
 <p><code>Source.fire</code></p>
@@ -11735,10 +11707,10 @@ See https://github.com/mapbox/mapbox-gl-js/issues/6522,
 <blockquote>
 <p><strong>getBounds</strong>(): <code>Promise</code>&lt;<a href="../LngLatBounds/"><code>LngLatBounds</code></a>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L328">source/geojson_source.ts:328</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L352">source/geojson_source.ts:352</a></p>
 <p>Allows getting the source's boundaries.
 If there's a problem with the source's data, it will return an empty <a href="../LngLatBounds/">LngLatBounds</a>.</p>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><code>Promise</code>&lt;<a href="../LngLatBounds/"><code>LngLatBounds</code></a>&gt;</p>
 <p>a promise which resolves to the source's boundaries</p>
 <hr />
@@ -11746,7 +11718,7 @@ If there's a problem with the source's data, it will return an empty <a href="..
 <blockquote>
 <p><strong>getClusterChildren</strong>(<code>clusterId</code>: <code>number</code>): <code>Promise</code>&lt;<code>Feature</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;[]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L388">source/geojson_source.ts:388</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L429">source/geojson_source.ts:429</a></p>
 <p>For clustered sources, fetches the children of the given cluster on the next zoom level (as an array of GeoJSON features).</p>
 <h4 id="parameters_3">Parameters</h4>
 <table>
@@ -11765,7 +11737,7 @@ If there's a problem with the source's data, it will return an empty <a href="..
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><code>Promise</code>&lt;<code>Feature</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;[]&gt;</p>
 <p>a promise that is resolved when the features are retrieved</p>
 <hr />
@@ -11773,7 +11745,7 @@ If there's a problem with the source's data, it will return an empty <a href="..
 <blockquote>
 <p><strong>getClusterExpansionZoom</strong>(<code>clusterId</code>: <code>number</code>): <code>Promise</code>&lt;<code>number</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L378">source/geojson_source.ts:378</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L419">source/geojson_source.ts:419</a></p>
 <p>For clustered sources, fetches the zoom at which the given cluster expands.</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -11792,7 +11764,7 @@ If there's a problem with the source's data, it will return an empty <a href="..
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns</h4>
+<h4 id="returns_5">Returns</h4>
 <p><code>Promise</code>&lt;<code>number</code>&gt;</p>
 <p>a promise that is resolved with the zoom number</p>
 <hr />
@@ -11800,7 +11772,7 @@ If there's a problem with the source's data, it will return an empty <a href="..
 <blockquote>
 <p><strong>getClusterLeaves</strong>(<code>clusterId</code>: <code>number</code>, <code>limit</code>: <code>number</code>, <code>offset</code>: <code>number</code>): <code>Promise</code>&lt;<code>Feature</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;[]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L417">source/geojson_source.ts:417</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L458">source/geojson_source.ts:458</a></p>
 <p>For clustered sources, fetches the original points that belong to the cluster (as an array of GeoJSON features).</p>
 <h4 id="parameters_5">Parameters</h4>
 <table>
@@ -11829,7 +11801,7 @@ If there's a problem with the source's data, it will return an empty <a href="..
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns</h4>
+<h4 id="returns_6">Returns</h4>
 <p><code>Promise</code>&lt;<code>Feature</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;[]&gt;</p>
 <p>a promise that is resolved when the features are retrieved</p>
 <h4 id="example">Example</h4>
@@ -11853,10 +11825,10 @@ If there's a problem with the source's data, it will return an empty <a href="..
 <blockquote>
 <p><strong>getClusterOptions</strong>(): <a href="../../type-aliases/GetClusterOptions/"><code>GetClusterOptions</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L363">source/geojson_source.ts:363</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L404">source/geojson_source.ts:404</a></p>
 <p>Gets the cluster options currently configured on the source.
 The returned values mirror the options accepted by <code>setClusterOptions</code>.</p>
-<h4 id="returns_8">Returns</h4>
+<h4 id="returns_7">Returns</h4>
 <p><a href="../../type-aliases/GetClusterOptions/"><code>GetClusterOptions</code></a></p>
 <p>the source's current cluster options</p>
 <h4 id="example_1">Example</h4>
@@ -11867,9 +11839,10 @@ The returned values mirror the options accepted by <code>setClusterOptions</code
 <blockquote>
 <p><strong>getData</strong>(): <code>Promise</code>&lt;<code>GeoJSON</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L310">source/geojson_source.ts:310</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L334">source/geojson_source.ts:334</a></p>
 <p>Allows to get the source's actual GeoJSON data.</p>
-<h4 id="returns_9">Returns</h4>
+<p>Data set as a URL is returned once it has loaded.</p>
+<h4 id="returns_8">Returns</h4>
 <p><code>Promise</code>&lt;<code>GeoJSON</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;&gt;</p>
 <p>a promise which resolves to the source's actual GeoJSON data</p>
 <hr />
@@ -11877,9 +11850,9 @@ The returned values mirror the options accepted by <code>setClusterOptions</code
 <blockquote>
 <p><strong>hasTransition</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L693">source/geojson_source.ts:693</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L706">source/geojson_source.ts:706</a></p>
 <p>True if the source has transition, false otherwise.</p>
-<h4 id="returns_10">Returns</h4>
+<h4 id="returns_9">Returns</h4>
 <p><code>boolean</code></p>
 <h4 id="implementation-of_3">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#hastransition"><code>hasTransition</code></a></p>
@@ -11888,7 +11861,7 @@ The returned values mirror the options accepted by <code>setClusterOptions</code
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L206">util/evented.ts:206</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L206">util/evented.ts:206</a></p>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
 <h4 id="parameters_6">Parameters</h4>
 <table>
@@ -11907,7 +11880,7 @@ The returned values mirror the options accepted by <code>setClusterOptions</code
 </tr>
 </tbody>
 </table>
-<h4 id="returns_11">Returns</h4>
+<h4 id="returns_10">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
 <h4 id="inherited-from_2">Inherited from</h4>
@@ -11917,9 +11890,9 @@ The returned values mirror the options accepted by <code>setClusterOptions</code
 <blockquote>
 <p><strong>loaded</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L624">source/geojson_source.ts:624</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L632">source/geojson_source.ts:632</a></p>
 <p>True if the source is loaded, false otherwise.</p>
-<h4 id="returns_12">Returns</h4>
+<h4 id="returns_11">Returns</h4>
 <p><code>boolean</code></p>
 <h4 id="implementation-of_4">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#loaded"><code>loaded</code></a></p>
@@ -11928,7 +11901,7 @@ The returned values mirror the options accepted by <code>setClusterOptions</code
 <blockquote>
 <p><strong>loadTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L628">source/geojson_source.ts:628</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L636">source/geojson_source.ts:636</a></p>
 <p>This method does the heavy lifting of loading a tile.
 In most cases it will defer the work to the relevant worker source.</p>
 <h4 id="parameters_7">Parameters</h4>
@@ -11948,7 +11921,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_13">Returns</h4>
+<h4 id="returns_12">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="implementation-of_5">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#loadtile"><code>loadTile</code></a></p>
@@ -11957,7 +11930,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>off</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L117">util/evented.ts:117</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L117">util/evented.ts:117</a></p>
 <p>Removes a previously registered event listener.</p>
 <h4 id="type-parameters">Type Parameters</h4>
 <table>
@@ -11994,7 +11967,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_14">Returns</h4>
+<h4 id="returns_13">Returns</h4>
 <p><code>this</code></p>
 <h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#off"><code>off</code></a></p>
@@ -12003,7 +11976,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>on</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L100">util/evented.ts:100</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L100">util/evented.ts:100</a></p>
 <p>Adds a listener to a specified event type.</p>
 <h4 id="type-parameters_1">Type Parameters</h4>
 <table>
@@ -12040,7 +12013,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_15">Returns</h4>
+<h4 id="returns_14">Returns</h4>
 <p><a href="../../interfaces/Subscription/"><code>Subscription</code></a></p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#on"><code>on</code></a></p>
@@ -12049,7 +12022,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L270">source/geojson_source.ts:270</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L287">source/geojson_source.ts:287</a></p>
 <p>This method is called when the source is added to the map.</p>
 <h4 id="parameters_10">Parameters</h4>
 <table>
@@ -12068,7 +12041,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_16">Returns</h4>
+<h4 id="returns_15">Returns</h4>
 <p><code>void</code></p>
 <h4 id="implementation-of_6">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#onadd"><code>onAdd</code></a></p>
@@ -12078,7 +12051,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>&gt;(<code>type</code>: <code>T</code>): <code>Promise</code>&lt;<a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L132">util/evented.ts:132</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L132">util/evented.ts:132</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_2">Type Parameters</h5>
@@ -12111,7 +12084,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_17">Returns</h5>
+<h5 id="returns_16">Returns</h5>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]&gt;</p>
 <p>a promise that resolves with the event</p>
 <h5 id="inherited-from_5">Inherited from</h5>
@@ -12120,7 +12093,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>once</strong>&lt;<code>T</code> <em>extends</em> keyof <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>&gt;(<code>type</code>: <code>T</code>, <code>listener</code>: (<code>event</code>: <a href="../../type-aliases/SourceEventType/"><code>SourceEventType</code></a>[<code>T</code>]) =&gt; <code>void</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L142">util/evented.ts:142</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L142">util/evented.ts:142</a></p>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
 <h5 id="type-parameters_3">Type Parameters</h5>
@@ -12158,7 +12131,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_18">Returns</h5>
+<h5 id="returns_17">Returns</h5>
 <p><code>this</code></p>
 <p><code>this</code> when a listener is provided</p>
 <h5 id="inherited-from_6">Inherited from</h5>
@@ -12168,9 +12141,10 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>onRemove</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L676">source/geojson_source.ts:676</a></p>
-<p>This method is called when the source is removed from the map.</p>
-<h4 id="returns_19">Returns</h4>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L688">source/geojson_source.ts:688</a></p>
+<p>Drops the worker updates waiting to be sent, which would otherwise rebuild the worker's state for a source
+that is gone. The update being sent ends in a <code>dataabort</code> event.</p>
+<h4 id="returns_18">Returns</h4>
 <p><code>void</code></p>
 <h4 id="implementation-of_7">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#onremove"><code>onRemove</code></a></p>
@@ -12179,8 +12153,8 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>serialize</strong>(): <code>GeoJSONSourceSpecification</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L681">source/geojson_source.ts:681</a></p>
-<h4 id="returns_20">Returns</h4>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L694">source/geojson_source.ts:694</a></p>
+<h4 id="returns_19">Returns</h4>
 <p><code>GeoJSONSourceSpecification</code></p>
 <p>A plain (stringifiable) JS object representing the current state of the source.
 Creating a source using the returned object as the <code>options</code> should result in a Source that is
@@ -12192,7 +12166,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>setClusterOptions</strong>(<code>options</code>: <a href="../../type-aliases/SetClusterOptions/"><code>SetClusterOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L341">source/geojson_source.ts:341</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L365">source/geojson_source.ts:365</a></p>
 <p>To disable/enable clustering on the source options</p>
 <h4 id="parameters_13">Parameters</h4>
 <table>
@@ -12211,7 +12185,7 @@ equivalent to this one.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_21">Returns</h4>
+<h4 id="returns_20">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="example_2">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">getSource</span><span class="p">(</span><span class="s1">'some id'</span><span class="p">).</span><span class="nx">setClusterOptions</span><span class="p">({</span><span class="nx">cluster</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">});</span>
@@ -12222,7 +12196,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>setData</strong>(<code>data</code>: <code>string</code> | <code>GeoJSON</code>&lt;<code>Geometry</code>, {[<code>name</code>: <code>string</code>]: <code>any</code>; }&gt;): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L280">source/geojson_source.ts:280</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L297">source/geojson_source.ts:297</a></p>
 <p>Sets the GeoJSON data and re-renders the map.</p>
 <h4 id="parameters_14">Parameters</h4>
 <table>
@@ -12241,14 +12215,14 @@ equivalent to this one.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_22">Returns</h4>
+<h4 id="returns_21">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent?</code>: <a href="../Evented/"><code>Evented</code></a>&lt;<a href="../../type-aliases/EventTypeMap/"><code>EventTypeMap</code></a>&gt;, <code>data?</code>: <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a> | (() =&gt; <a href="../../type-aliases/EventedParentData/"><code>EventedParentData</code></a>)): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/util/evented.ts#L217">util/evented.ts:217</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L217">util/evented.ts:217</a></p>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
 <h4 id="parameters_15">Parameters</h4>
 <table>
@@ -12269,7 +12243,7 @@ equivalent to this one.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_23">Returns</h4>
+<h4 id="returns_22">Returns</h4>
 <p><code>this</code></p>
 <h4 id="inherited-from_7">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
@@ -12278,7 +12252,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>unloadTile</strong>(<code>tile</code>: <a href="../../interfaces/Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L671">source/geojson_source.ts:671</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L679">source/geojson_source.ts:679</a></p>
 <p>Allows to unload a tile.</p>
 <h4 id="parameters_16">Parameters</h4>
 <table>
@@ -12297,7 +12271,7 @@ equivalent to this one.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_24">Returns</h4>
+<h4 id="returns_23">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="implementation-of_9">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#unloadtile"><code>unloadTile</code></a></p>
@@ -12306,7 +12280,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><strong>updateData</strong>(<code>diff</code>: <a href="../../type-aliases/GeoJSONSourceDiff/"><code>GeoJSONSourceDiff</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L300">source/geojson_source.ts:300</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L317">source/geojson_source.ts:317</a></p>
 <p>Updates the source's GeoJSON, and re-renders the map.</p>
 <p>For sources with lots of features, this method can be used to make updates more quickly.</p>
 <p>This approach requires unique IDs for every feature in the source. The IDs can either be specified on the feature,
@@ -12330,14 +12304,14 @@ or by using the promoteId option to specify which property should be used as the
 </tr>
 </tbody>
 </table>
-<h4 id="returns_25">Returns</h4>
+<h4 id="returns_24">Returns</h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h2 id="properties">Properties</h2>
 <h3 id="attribution">attribution</h3>
 <blockquote>
 <p><strong>attribution</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L152">source/geojson_source.ts:152</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L171">source/geojson_source.ts:171</a></p>
 <p>The attribution for the source.</p>
 <h4 id="implementation-of_10">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#attribution"><code>attribution</code></a></p>
@@ -12346,7 +12320,7 @@ or by using the promoteId option to specify which property should be used as the
 <blockquote>
 <p><strong>id</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L148">source/geojson_source.ts:148</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L167">source/geojson_source.ts:167</a></p>
 <p>The id for the source. Must not be used by any existing source.</p>
 <h4 id="implementation-of_11">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#id"><code>id</code></a></p>
@@ -12355,7 +12329,7 @@ or by using the promoteId option to specify which property should be used as the
 <blockquote>
 <p><strong>isTileClipped</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L155">source/geojson_source.ts:155</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L174">source/geojson_source.ts:174</a></p>
 <p><code>false</code> if tiles can be drawn outside their boundaries, <code>true</code> if they cannot.</p>
 <h4 id="implementation-of_12">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#istileclipped"><code>isTileClipped</code></a></p>
@@ -12364,7 +12338,7 @@ or by using the promoteId option to specify which property should be used as the
 <blockquote>
 <p><strong>maxzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L150">source/geojson_source.ts:150</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L169">source/geojson_source.ts:169</a></p>
 <p>The maximum zoom level for the source.</p>
 <h4 id="implementation-of_13">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#maxzoom"><code>maxzoom</code></a></p>
@@ -12373,7 +12347,7 @@ or by using the promoteId option to specify which property should be used as the
 <blockquote>
 <p><strong>minzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L149">source/geojson_source.ts:149</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L168">source/geojson_source.ts:168</a></p>
 <p>The minimum zoom level for the source.</p>
 <h4 id="implementation-of_14">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#minzoom"><code>minzoom</code></a></p>
@@ -12382,7 +12356,7 @@ or by using the promoteId option to specify which property should be used as the
 <blockquote>
 <p><strong>reparseOverscaled</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L156">source/geojson_source.ts:156</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L175">source/geojson_source.ts:175</a></p>
 <p><code>true</code> if tiles should be sent back to the worker for each overzoomed zoom level, <code>false</code> if not.</p>
 <h4 id="implementation-of_15">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#reparseoverscaled"><code>reparseOverscaled</code></a></p>
@@ -12391,7 +12365,7 @@ or by using the promoteId option to specify which property should be used as the
 <blockquote>
 <p><strong>tileSize</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/acb7b722f6a752ac1a2ba98cf83006c83dc4fafa/src/source/geojson_source.ts#L151">source/geojson_source.ts:151</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L170">source/geojson_source.ts:170</a></p>
 <p>The tile size for the source.</p>
 <h4 id="implementation-of_16">Implementation of</h4>
 <p><a href="../../interfaces/Source/"><code>Source</code></a>.<a href="../../interfaces/Source/#tilesize"><code>tileSize</code></a></p>
@@ -12517,7 +12491,7 @@ or by using the promoteId option to specify which property should be used as the
 </footer>
       
     </div>
-    <div class="md-dialog" data-md-component="dialog">
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
@@ -12529,10 +12503,10 @@ or by using the promoteId option to specify which property should be used as the
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.67a597eb.min.js"></script>
       
     
   </body>

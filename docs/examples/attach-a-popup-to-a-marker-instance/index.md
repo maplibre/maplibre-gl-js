@@ -1,0 +1,95 @@
+# Attach a popup to a marker instance
+
+Attach a popup to a marker and display it on click.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const monument = [-77.0353, 38.8895];
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: monument,
+    zoom: 5
+});
+
+// create the popup
+const popup = new maplibregl.Popup({offset: 25}).setText(
+    'Construction on the Washington Monument began in 1848.'
+);
+
+// create DOM element for the marker
+const el = document.createElement('div');
+el.id = 'marker';
+
+// create the marker
+new maplibregl.Marker({element: el})
+    .setLngLat(monument)
+    .setPopup(popup) // sets a popup on this marker
+    .addTo(map);
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Attach a popup to a marker instance</title>
+    <meta property="og:description" content="Attach a popup to a marker and display it on click." />
+    <meta property="og:category" content="Popups" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #marker {
+        background-image: url('https://maplibre.org/maplibre-gl-js/docs/assets/washington-monument.jpg');
+        background-size: cover;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .maplibregl-popup {
+        max-width: 200px;
+    }
+</style>
+
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const monument = [-77.0353, 38.8895];
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: monument,
+        zoom: 5
+    });
+
+    // create the popup
+    const popup = new maplibregl.Popup({offset: 25}).setText(
+        'Construction on the Washington Monument began in 1848.'
+    );
+
+    // create DOM element for the marker
+    const el = document.createElement('div');
+    el.id = 'marker';
+
+    // create the marker
+    new maplibregl.Marker({element: el})
+        .setLngLat(monument)
+        .setPopup(popup) // sets a popup on this marker
+        .addTo(map);
+</script>
+</body>
+</html>
+```

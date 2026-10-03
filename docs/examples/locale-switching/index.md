@@ -1,0 +1,74 @@
+# Locale switching
+
+Show how localization can be applied manually to UI elements. Hover over a control to see the translated tooltip.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+/* cSpell:disable */
+const spanishLocale = {
+    'AttributionControl.ToggleAttribution': 'Alternar atribución',
+    'AttributionControl.MapFeedback': 'Comentarios del mapa',
+    'FullscreenControl.Enter': 'Entrar en pantalla completa',
+    'FullscreenControl.Exit': 'Salir de pantalla completa',
+};
+/* cSpell:enable */
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [-74.5, 40],
+    zoom: 4,
+    locale: spanishLocale,
+});
+
+const fullscreenControl = new maplibregl.FullscreenControl();
+map.addControl(fullscreenControl, 'top-left');
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Locale switching</title>
+    <meta property="og:description" content="Show how localization can be applied manually to UI elements. Hover over a control to see the translated tooltip." />
+    <meta property="og:category" content="Internationalization" />
+    <meta property="og:created" content="2025-10-11" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    /* cSpell:disable */
+    const spanishLocale = {
+        'AttributionControl.ToggleAttribution': 'Alternar atribución',
+        'AttributionControl.MapFeedback': 'Comentarios del mapa',
+        'FullscreenControl.Enter': 'Entrar en pantalla completa',
+        'FullscreenControl.Exit': 'Salir de pantalla completa',
+    };
+    /* cSpell:enable */
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-74.5, 40],
+        zoom: 4,
+        locale: spanishLocale,
+    });
+
+    const fullscreenControl = new maplibregl.FullscreenControl();
+    map.addControl(fullscreenControl, 'top-left');
+</script>
+</body>
+</html>
+```

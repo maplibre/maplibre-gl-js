@@ -1,0 +1,203 @@
+# Display a hybrid satellite map with terrain elevation
+
+Display a hybrid satellite map with terrain elevation.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    zoom: 12,
+    center: [11.39085, 47.27574],
+    pitch: 70,
+    maxPitch: 95
+});
+
+map.setStyle('https://tiles.openfreemap.org/styles/bright', {
+        transformStyle: (previousStyle, nextStyle) => {
+            nextStyle.projection = {type: 'globe'};
+            nextStyle.sources = {
+                ...nextStyle.sources,
+                satelliteSource: {
+                    type: 'raster',
+                    tiles: [
+                        'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'
+                    ],
+                    tileSize: 256
+                },
+                terrainSource: {
+                    type: 'raster-dem',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
+                },
+                hillshadeSource: {
+                    type: 'raster-dem',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
+                }
+            }
+            nextStyle.terrain = {
+                source: 'terrainSource',
+                exaggeration: 1
+            }
+
+            nextStyle.sky = {
+                'atmosphere-blend': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    0, 1,
+                    2, 0
+                ],
+            }
+
+            nextStyle.layers.push({
+                id: 'hills',
+                type: 'hillshade',
+                source: 'hillshadeSource',
+                layout: { visibility: 'visible' },
+                paint: { 'hillshade-shadow-color': '#473B24' }
+            })
+
+            const firstRoadLayer = nextStyle.layers.find(layer => layer['source-layer'] === 'transportation');
+            nextStyle.layers.splice(nextStyle.layers.indexOf(firstRoadLayer), 0, {
+                id: 'satellite',
+                type: 'raster',
+                source: 'satelliteSource',
+                layout: { visibility: 'visible' },
+                paint: { 'raster-opacity': 1 }
+            });
+
+            return nextStyle;
+        }
+    })
+
+map.addControl(
+    new maplibregl.NavigationControl({
+        visualizePitch: true,
+        showZoom: true,
+        showCompass: true
+    })
+);
+
+
+map.addControl(
+    new maplibregl.GlobeControl()
+);
+
+map.addControl(
+    new maplibregl.TerrainControl({
+        source: 'terrainSource',
+        exaggeration: 1
+    })
+);
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a hybrid satellite map with terrain elevation</title>
+    <meta property="og:description" content="Display a hybrid satellite map with terrain elevation." />
+    <meta property="og:category" content="Terrain & Hillshade" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 12,
+        center: [11.39085, 47.27574],
+        pitch: 70,
+        maxPitch: 95
+    });
+
+    map.setStyle('https://tiles.openfreemap.org/styles/bright', {
+            transformStyle: (previousStyle, nextStyle) => {
+                nextStyle.projection = {type: 'globe'};
+                nextStyle.sources = {
+                    ...nextStyle.sources,
+                    satelliteSource: {
+                        type: 'raster',
+                        tiles: [
+                            'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'
+                        ],
+                        tileSize: 256
+                    },
+                    terrainSource: {
+                        type: 'raster-dem',
+                        url: 'https://tiles.mapterhorn.com/tilejson.json'
+                    },
+                    hillshadeSource: {
+                        type: 'raster-dem',
+                        url: 'https://tiles.mapterhorn.com/tilejson.json'
+                    }
+                }
+                nextStyle.terrain = {
+                    source: 'terrainSource',
+                    exaggeration: 1
+                }
+
+                nextStyle.sky = {
+                    'atmosphere-blend': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        0, 1,
+                        2, 0
+                    ],
+                }
+
+                nextStyle.layers.push({
+                    id: 'hills',
+                    type: 'hillshade',
+                    source: 'hillshadeSource',
+                    layout: { visibility: 'visible' },
+                    paint: { 'hillshade-shadow-color': '#473B24' }
+                })
+
+                const firstRoadLayer = nextStyle.layers.find(layer => layer['source-layer'] === 'transportation');
+                nextStyle.layers.splice(nextStyle.layers.indexOf(firstRoadLayer), 0, {
+                    id: 'satellite',
+                    type: 'raster',
+                    source: 'satelliteSource',
+                    layout: { visibility: 'visible' },
+                    paint: { 'raster-opacity': 1 }
+                });
+
+                return nextStyle;
+            }
+        })
+
+    map.addControl(
+        new maplibregl.NavigationControl({
+            visualizePitch: true,
+            showZoom: true,
+            showCompass: true
+        })
+    );
+
+
+    map.addControl(
+        new maplibregl.GlobeControl()
+    );
+
+    map.addControl(
+        new maplibregl.TerrainControl({
+            source: 'terrainSource',
+            exaggeration: 1
+        })
+    );
+</script>
+</body>
+</html>
+```

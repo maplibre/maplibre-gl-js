@@ -1,0 +1,92 @@
+# Check if WebGL is supported
+
+Check for WebGL browser support.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+let map;
+try {
+    map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-74.5, 40],
+        zoom: 2
+    });
+} catch (error) {
+    if (error instanceof maplibregl.GPUInitializationError) {
+        // You can also display the error message in the UI
+        // This does not have to be an alert..
+        alert(error.message);
+    } else {
+        throw error;
+    }
+}
+// Recreating the context after it was lost and restored can also fail;
+// that failure arrives through the error event since the map already exists.
+map?.on('error', (e) => {
+    if (e.error instanceof maplibregl.GPUInitializationError) {
+        alert(e.error.message);
+        return;
+    }
+    // Don't forget to log the error to the console
+    // We won't log it for you if you handle it
+    console.error(e.error);
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Check if WebGL is supported</title>
+    <meta property="og:description" content="Check for WebGL browser support." />
+    <meta property="og:category" content="Getting Started" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    let map;
+    try {
+        map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [-74.5, 40],
+            zoom: 2
+        });
+    } catch (error) {
+        if (error instanceof maplibregl.GPUInitializationError) {
+            // You can also display the error message in the UI
+            // This does not have to be an alert..
+            alert(error.message);
+        } else {
+            throw error;
+        }
+    }
+    // Recreating the context after it was lost and restored can also fail;
+    // that failure arrives through the error event since the map already exists.
+    map?.on('error', (e) => {
+        if (e.error instanceof maplibregl.GPUInitializationError) {
+            alert(e.error.message);
+            return;
+        }
+        // Don't forget to log the error to the console
+        // We won't log it for you if you handle it
+        console.error(e.error);
+    });
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,86 @@
+# Add a WMS source
+
+Add an external Web Map Service raster layer to the map using addSource's tiles option.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+        version: 8,
+        sources: {
+            'wms-test-source': {
+                type: 'raster',
+                // use the tiles option to specify a WMS tile source URL
+                // https://maplibre.org/maplibre-style-spec/sources/
+                tiles: [
+                    'https://ows.terrestris.de/osm/service?service=WMS&request=GetMap&version=1.1.1&layers=TOPO-WMS%2COSM-Overlay-WMS&styles=&format=image%2Fpng&transparent=true&info_format=text%2Fhtml&tiled=false&srs=EPSG:3857&bbox={bbox-epsg-3857}&width=256&height=256'
+                ],
+                tileSize: 256
+            }
+        },
+        layers: [{
+            id: 'wms-test-layer',
+            type: 'raster',
+            source: 'wms-test-source',
+            paint: {}
+        }]
+    },
+    zoom: 8,
+    center: [-74.5447, 40.6892]
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a WMS source</title>
+    <meta property="og:description" content="Add an external Web Map Service raster layer to the map using addSource's tiles option." />
+    <meta property="og:category" content="Raster & Imagery" />
+    <meta property="og:order" content="2" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            sources: {
+                'wms-test-source': {
+                    type: 'raster',
+                    // use the tiles option to specify a WMS tile source URL
+                    // https://maplibre.org/maplibre-style-spec/sources/
+                    tiles: [
+                        'https://ows.terrestris.de/osm/service?service=WMS&request=GetMap&version=1.1.1&layers=TOPO-WMS%2COSM-Overlay-WMS&styles=&format=image%2Fpng&transparent=true&info_format=text%2Fhtml&tiled=false&srs=EPSG:3857&bbox={bbox-epsg-3857}&width=256&height=256'
+                    ],
+                    tileSize: 256
+                }
+            },
+            layers: [{
+                id: 'wms-test-layer',
+                type: 'raster',
+                source: 'wms-test-source',
+                paint: {}
+            }]
+        },
+        zoom: 8,
+        center: [-74.5447, 40.6892]
+    });
+</script>
+</body>
+</html>
+```

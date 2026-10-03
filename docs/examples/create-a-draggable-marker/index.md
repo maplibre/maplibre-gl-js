@@ -1,0 +1,181 @@
+# Create a draggable Marker
+
+Drag a marker with the pointer or the keyboard, and make a custom marker element keyboard accessible.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const coordinates = document.getElementById('coordinates');
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [0, 0],
+    zoom: 2
+});
+
+// A default marker with draggable: true is keyboard accessible out of
+// the box. Tab focuses it, the arrow keys move it 1 screen pixel per
+// press (10 with Shift), and the usual dragstart/drag/dragend events
+// fire.
+const marker = new maplibregl.Marker({draggable: true})
+    .setLngLat([0, 0])
+    .addTo(map);
+
+function showCoordinates(m) {
+    const lngLat = m.getLngLat();
+    coordinates.style.display = 'block';
+    coordinates.innerHTML =
+        `Longitude: ${lngLat.lng}<br />Latitude: ${lngLat.lat}`;
+}
+
+marker.on('dragend', () => showCoordinates(marker));
+
+// A marker created with a custom element owns its accessibility
+// completely. The map adds no tabindex, label, or keyboard behavior,
+// so the application supplies them.
+const el = document.createElement('div');
+el.className = 'custom-marker';
+el.tabIndex = 0;
+el.setAttribute('role', 'button');
+el.setAttribute('aria-label', 'Map marker, use arrow keys to move');
+
+const customMarker = new maplibregl.Marker({element: el, draggable: true})
+    .setLngLat([20, 0])
+    .addTo(map);
+
+customMarker.on('dragend', () => showCoordinates(customMarker));
+
+el.addEventListener('keydown', (e) => {
+    const deltas = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1]
+    };
+    const delta = deltas[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    // The marker element lives inside the canvas container, so without
+    // this the map's KeyboardHandler sees the same keydown and pans the
+    // camera on every press.
+    e.stopPropagation();
+    const pos = map.project(customMarker.getLngLat());
+    customMarker.setLngLat(
+        map.unproject([pos.x + delta[0], pos.y + delta[1]]));
+    showCoordinates(customMarker);
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Create a draggable Marker</title>
+    <meta property="og:description" content="Drag a marker with the pointer or the keyboard, and make a custom marker element keyboard accessible." />
+    <meta property="og:category" content="Markers" />
+    <meta property="og:order" content="3" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    .coordinates {
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        position: absolute;
+        bottom: 40px;
+        left: 10px;
+        padding: 5px 10px;
+        margin: 0;
+        font-size: 11px;
+        line-height: 18px;
+        border-radius: 3px;
+        display: none;
+    }
+
+    .custom-marker {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        background: #e55e5e;
+        cursor: move;
+    }
+</style>
+
+<div id="map"></div>
+<pre id="coordinates" class="coordinates"></pre>
+
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const coordinates = document.getElementById('coordinates');
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 2
+    });
+
+    // A default marker with draggable: true is keyboard accessible out of
+    // the box. Tab focuses it, the arrow keys move it 1 screen pixel per
+    // press (10 with Shift), and the usual dragstart/drag/dragend events
+    // fire.
+    const marker = new maplibregl.Marker({draggable: true})
+        .setLngLat([0, 0])
+        .addTo(map);
+
+    function showCoordinates(m) {
+        const lngLat = m.getLngLat();
+        coordinates.style.display = 'block';
+        coordinates.innerHTML =
+            `Longitude: ${lngLat.lng}<br />Latitude: ${lngLat.lat}`;
+    }
+
+    marker.on('dragend', () => showCoordinates(marker));
+
+    // A marker created with a custom element owns its accessibility
+    // completely. The map adds no tabindex, label, or keyboard behavior,
+    // so the application supplies them.
+    const el = document.createElement('div');
+    el.className = 'custom-marker';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'Map marker, use arrow keys to move');
+
+    const customMarker = new maplibregl.Marker({element: el, draggable: true})
+        .setLngLat([20, 0])
+        .addTo(map);
+
+    customMarker.on('dragend', () => showCoordinates(customMarker));
+
+    el.addEventListener('keydown', (e) => {
+        const deltas = {
+            ArrowLeft: [-1, 0],
+            ArrowRight: [1, 0],
+            ArrowUp: [0, -1],
+            ArrowDown: [0, 1]
+        };
+        const delta = deltas[e.key];
+        if (!delta) return;
+        e.preventDefault();
+        // The marker element lives inside the canvas container, so without
+        // this the map's KeyboardHandler sees the same keydown and pans the
+        // camera on every press.
+        e.stopPropagation();
+        const pos = map.project(customMarker.getLngLat());
+        customMarker.setLngLat(
+            map.unproject([pos.x + delta[0], pos.y + delta[1]]));
+        showCoordinates(customMarker);
+    });
+</script>
+</body>
+</html>
+```

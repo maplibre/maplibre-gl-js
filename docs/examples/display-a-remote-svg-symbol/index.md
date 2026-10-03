@@ -1,0 +1,133 @@
+# Display a remote SVG symbol
+
+Uses a missing style image resolver to load a remote image and use it.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/style.json', // style URL
+    center: [0, 0], // starting position [lng, lat]
+    zoom: 1, // starting zoom
+    maplibreLogo: true
+});
+
+map.setMissingStyleImageResolver(async (id) => {
+    const response = await fetch(id);
+    const svgText = await response.text();
+    const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+    const image = new Image();
+    const promise = new Promise((resolve) => {
+        image.onload = resolve;
+    });
+    image.src = svg;
+    await promise; // Wait for the image to load
+    map.addImage(id, image);
+});
+
+map.on('load', () => {
+    map.addSource('point', {
+        'type': 'geojson',
+        'data': {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [0, 0]
+                    },
+                },
+
+            ]
+        }
+    });
+    map.addLayer({
+        'id': 'svg-symbol',
+        'type': 'symbol',
+        'source': 'point',
+        'layout': {
+            'icon-image': 'https://maplibre.org/maplibre-gl-js/docs/assets/logo.svg',
+            'icon-overlap': 'always',
+            'text-overlap': 'always'
+        }
+    });
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a remote SVG symbol</title>
+    <meta property="og:description" content="Uses a missing style image resolver to load a remote image and use it." />
+    <meta property="og:category" content="Icons & Symbols" />
+    <meta property="og:created" content="2025-07-10" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://demotiles.maplibre.org/style.json', // style URL
+        center: [0, 0], // starting position [lng, lat]
+        zoom: 1, // starting zoom
+        maplibreLogo: true
+    });
+
+    map.setMissingStyleImageResolver(async (id) => {
+        const response = await fetch(id);
+        const svgText = await response.text();
+        const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+        const image = new Image();
+        const promise = new Promise((resolve) => {
+            image.onload = resolve;
+        });
+        image.src = svg;
+        await promise; // Wait for the image to load
+        map.addImage(id, image);
+    });
+
+    map.on('load', () => {
+        map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [0, 0]
+                        },
+                    },
+
+                ]
+            }
+        });
+        map.addLayer({
+            'id': 'svg-symbol',
+            'type': 'symbol',
+            'source': 'point',
+            'layout': {
+                'icon-image': 'https://maplibre.org/maplibre-gl-js/docs/assets/logo.svg',
+                'icon-overlap': 'always',
+                'text-overlap': 'always'
+            }
+        });
+    });
+</script>
+</body>
+</html>
+```

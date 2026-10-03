@@ -1,0 +1,128 @@
+# Animate symbol to follow the mouse
+
+Animate symbol to follow the mouse.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        projection: {type: 'globe'},
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 2
+    });
+
+    map.on('mousemove', (e) => {
+        const lngLat = e.lngLat.wrap();
+        const pointSource = map.getSource('point');
+
+        if (pointSource && lngLat.lng && lngLat.lat) {
+            pointSource.setData({
+                'type': 'Point',
+                'coordinates': [lngLat.lng, lngLat.lat]
+            });
+        }
+    });
+    map.addControl(new maplibregl.GlobeControl());
+
+    map.on('load', () => {
+
+        map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Point',
+                'coordinates': [0, 0]
+            }
+        });
+
+        map.addLayer({
+            'id': 'point',
+            'source': 'point',
+            'type': 'circle',
+            'paint': {
+                'circle-radius': 10,
+                'circle-color': '#007cbf'
+            }
+        });
+    });
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Animate symbol to follow the mouse</title>
+    <meta property="og:description" content="Animate symbol to follow the mouse." />
+    <meta property="og:category" content="Events & Queries" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            projection: {type: 'globe'},
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [0, 0],
+            zoom: 2
+        });
+
+        map.on('mousemove', (e) => {
+            const lngLat = e.lngLat.wrap();
+            const pointSource = map.getSource('point');
+
+            if (pointSource && lngLat.lng && lngLat.lat) {
+                pointSource.setData({
+                    'type': 'Point',
+                    'coordinates': [lngLat.lng, lngLat.lat]
+                });
+            }
+        });
+        map.addControl(new maplibregl.GlobeControl());
+
+        map.on('load', () => {
+
+            map.addSource('point', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Point',
+                    'coordinates': [0, 0]
+                }
+            });
+
+            map.addLayer({
+                'id': 'point',
+                'source': 'point',
+                'type': 'circle',
+                'paint': {
+                    'circle-radius': 10,
+                    'circle-color': '#007cbf'
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
+```

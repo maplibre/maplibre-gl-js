@@ -1,0 +1,267 @@
+# Introduction
+
+MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The map’s appearance is controlled by a style document whose structure and properties are defined by the [MapLibre Style Spec](<https://maplibre.org/maplibre-style-spec>). It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and other platforms called [MapLibre Native](<https://github.com/maplibre/maplibre-native>).
+
+## Quickstart
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.css" />
+<div id="map" style="height: 400px"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://demotiles.maplibre.org/globe.json', // style URL
+        center: [0, 0], // starting position [lng, lat]
+        zoom: 2 // starting zoom
+    });
+</script>
+```
+
+## Reading this documentation
+
+This documentation is divided into several sections:
+
+- [**Main**](<https://maplibre.org/maplibre-gl-js/docs/API/index.md>) - The Main section holds the following classes
+
+  - [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>) object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
+  - [`Global Functions`](<https://maplibre.org/maplibre-gl-js/docs/API/functions/addProtocol/index.md>) let you set global properties and options that you might want to access while initializing your map or accessing information about its status.
+- [**Markers and Controls**](<https://maplibre.org/maplibre-gl-js/docs/API/#markers-and-controls>) - This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
+- [**Geography and geometry**](<https://maplibre.org/maplibre-gl-js/docs/API/#geography-and-geometry>) - This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
+- [**User interaction handlers**](<https://maplibre.org/maplibre-gl-js/docs/API/#handlers>) - The items in this section relate to the ways in which the map responds to user input.
+- [**Sources**](<https://maplibre.org/maplibre-gl-js/docs/API/#sources>) - This section describes the source types MapLibre GL JS can handle besides the ones described in the [MapLibre Style Specification](<https://maplibre.org/maplibre-style-spec/>).
+- [**Event Related**](<https://maplibre.org/maplibre-gl-js/docs/API/#event-related>) - This section describes the different types of events that MapLibre GL JS can raise.
+
+Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
+
+In the examples, we use vector tiles from our [Demo tiles repository](<https://github.com/maplibre/demotiles>) and from [MapTiler](<https://maptiler.com>). Get your own API key if you want to use MapTiler data in your project.
+
+## npm
+
+Install the MapLibre GL JS package via [npm](<https://www.npmjs.com/package/maplibre-gl>).
+
+```bash
+npm install maplibre-gl
+```
+
+You can then import the MapLibre GL JS module in your project.
+
+```html
+<div id="map"></div>
+```
+
+```javascript
+import {Map} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const map = new Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/globe.json', // style URL
+    center: [0, 0], // starting position [lng, lat]
+    zoom: 1 // starting zoom
+});
+```
+
+See the [ESM](<#esm>) section below for setting up the worker URL with your bundler.
+
+## ESM
+
+MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
+
+For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup, Turbopack), see [`test/integration/bundler/`](<https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler>).
+
+Upgrading from v5? See the [v5 to v6 migration guide](<https://maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/index.md>).
+
+### Installation
+
+Pick your setup:
+
+Use Vite's `?worker&url` query to get a bundled, self-contained worker URL:
+
+```ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+
+setWorkerUrl(workerUrl);
+
+const map = new Map({/* … */});
+```
+
+Use `?worker&url` rather than plain `?url`: the dist worker imports its sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim in production builds without that sibling — the worker then fails on its first import and no vector tiles load. `?worker&url` routes the file through Vite's worker pipeline, emitting a self-contained chunk. Dev mode works with either.
+
+If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
+
+vite.config.ts
+
+```ts
+export default defineConfig({
+    ssr: {noExternal: ['maplibre-gl']}
+});
+```
+
+```ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
+
+const map = new Map({/* … */});
+```
+
+rspack and rsbuild use the same pattern.
+
+Next.js is an exception, including in its `next build --webpack` mode. See the Turbopack tab.
+
+build.js
+
+```js
+import * as esbuild from 'esbuild';
+import {copyFileSync} from 'fs';
+
+await esbuild.build({
+    entryPoints: ['src/main.ts'],
+    bundle: true,
+    outdir: 'dist',
+    format: 'esm'
+});
+
+copyFileSync(
+    'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs',
+    'dist/maplibre-gl-worker.mjs'
+);
+```
+
+src/main.ts
+
+```ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+
+const map = new Map({/* … */});
+```
+
+rollup.config.js
+
+```ts
+import copy from 'rollup-plugin-copy';
+
+export default {
+    plugins: [
+        copy({
+            targets: [
+                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
+            ]
+        }),
+        /* ... */
+    ]
+};
+```
+
+src/main.ts
+
+```ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+
+const map = new Map({/* … */});
+```
+
+Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
+
+Turbopack turns `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
+
+scripts/copy-maplibre-worker.mjs
+
+```js
+import {copyFileSync, mkdirSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import path from 'node:path';
+
+const dist = path.join(path.dirname(createRequire(import.meta.url).resolve('maplibre-gl/package.json')), 'dist');
+const dest = path.join(process.cwd(), 'public', 'maplibre');
+
+mkdirSync(dest, {recursive: true});
+for (const file of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
+    copyFileSync(path.join(dist, file), path.join(dest, file));
+}
+```
+
+package.json
+
+```json
+{
+    "scripts": {
+        "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
+        "predev": "node ./scripts/copy-maplibre-worker.mjs"
+    }
+}
+```
+
+app/map.tsx
+
+```ts
+'use client';
+
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
+
+const map = new Map({/* … */});
+```
+
+The script copies both files, not just the worker. This is because the worker imports `maplibre-gl-shared.mjs` by relative path, so both have to land in the same directory.
+
+The copy happens at build time, from `node_modules`, so it always matches the installed version. npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary. `postinstall` alone won't do it since package managers skip lifecycle scripts when an install has no work to do, and `--ignore-scripts` skips them entirely.
+
+Next.js needs this in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`, since the asset handling above is Next's rather than Turbopack's alone.
+
+Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](<https://unpkg.com>) for instructions on selecting specific versions and semver ranges.
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.css" />
+<div id="map" style="height: 400px"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 1
+    });
+</script>
+```
+
+The worker is auto-detected from the imported module's URL and laundered through a same-origin Blob URL, so cross-origin CDN loading works out of the box.
+
+Under a strict CSP that disallows `blob:` in `worker-src`, set the worker URL explicitly to a same-origin location:
+
+```js
+maplibregl.setWorkerUrl('/path/to/maplibre-gl-worker.mjs');
+```
+
+See the [Display a map](<https://maplibre.org/maplibre-gl-js/docs/examples/display-a-map/index.md>) example for a runnable version.
+
+## CSP Directives
+
+As a mitigation for Cross-Site Scripting and other types of web security vulnerabilities, you may use a [Content Security Policy (CSP)](<https://developer.mozilla.org/en-US/docs/Web/Security/CSP>) to specify security policies for your website. If you do, MapLibre GL JS requires the following CSP directives:
+
+```text
+worker-src 'self' ;
+img-src data: blob: 'self' ;
+```
+
+## MapLibre CSS
+
+The CSS referenced in the Quickstart is used to style DOM elements created by MapLibre code. Without the CSS, elements like Popups and Markers won't work.
+
+Including it with a `<link>` in the head of the document via the UNPKG CDN is the simplest and easiest way to provide the CSS, but it is also bundled in the MapLibre module, meaning that if you have a bundler that can handle CSS, you can import the CSS from `maplibre-gl/dist/maplibre-gl.css`.
+
+Note too that if the CSS isn't available by the first render, as soon as the CSS is provided, the DOM elements that depend on this CSS should recover.

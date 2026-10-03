@@ -1,0 +1,61 @@
+# Restrict map panning to an area
+
+Prevent a map from being panned to a different place by setting maxBounds.
+
+```js
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+// Set bounds to New York, New York
+const bounds = [
+    [-74.04728500751165, 40.68392799015035], // Southwest coordinates
+    [-73.91058699000139, 40.87764500765852] // Northeast coordinates
+];
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    center: [-73.9978, 40.7209],
+    zoom: 13,
+    maxBounds: bounds // Sets bounds as max
+});
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Restrict map panning to an area</title>
+    <meta property="og:description" content="Prevent a map from being panned to a different place by setting maxBounds." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:created" content="2025-06-25" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+
+    // Set bounds to New York, New York
+    const bounds = [
+        [-74.04728500751165, 40.68392799015035], // Southwest coordinates
+        [-73.91058699000139, 40.87764500765852] // Northeast coordinates
+    ];
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        center: [-73.9978, 40.7209],
+        zoom: 13,
+        maxBounds: bounds // Sets bounds as max
+    });
+</script>
+</body>
+</html>
+```
