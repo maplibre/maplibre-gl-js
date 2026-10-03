@@ -5,12 +5,14 @@ import {beforeMapTest} from '../../util/test/util.ts';
 import {Map} from '../map.ts';
 
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import type {MapOptions} from '../map.ts';
 
-function createMap(clickTolerance?, dragPan?) {
+function createMap(clickTolerance?, dragPan?, options: Partial<MapOptions> = {}) {
     return new Map({
         container: DOM.create('div', '', window.document.body),
         clickTolerance: clickTolerance || 0,
         dragPan: dragPan || true,
+        ...options,
     });
 }
 
@@ -271,6 +273,54 @@ describe('drag_pan', () => {
         expect(dragstart).toHaveBeenCalledTimes(0);
         expect(drag).toHaveBeenCalledTimes(0);
         expect(dragend).toHaveBeenCalledTimes(0);
+
+        map.remove();
+    });
+
+    test('DragPanHandler begins a drag with the ctrl key down when dragRotate is disabled', () => {
+        const map = createMap(undefined, undefined, {dragRotate: false, cooperativeGestures: true});
+        expect(map.dragRotate.isEnabled()).toBeFalsy();
+
+        const dragstart = vi.fn();
+        const drag      = vi.fn();
+        const dragend   = vi.fn();
+
+        map.on('dragstart', dragstart);
+        map.on('drag',      drag);
+        map.on('dragend',   dragend);
+
+        simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
+
+        simulate.mousemove(map.getCanvas(), {buttons, ctrlKey: true, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(1);
+        expect(drag).toHaveBeenCalledTimes(1);
+        expect(dragend).toHaveBeenCalledTimes(0);
+
+        simulate.mouseup(map.getCanvas(), {ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(1);
+        expect(drag).toHaveBeenCalledTimes(1);
+        expect(dragend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
+    test('DragPanHandler leaves the contextmenu of a ctrl + left click to the map when dragRotate is disabled', () => {
+        const map = createMap(undefined, undefined, {dragRotate: false});
+        const contextmenu = vi.fn();
+        map.on('contextmenu', contextmenu);
+
+        simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true});
+        simulate.contextmenu(map.getCanvas(), {ctrlKey: true});
+        simulate.mouseup(map.getCanvas(), {ctrlKey: true});
+        map._renderTaskQueue.run();
+
+        expect(contextmenu).toHaveBeenCalledTimes(1);
 
         map.remove();
     });
