@@ -665,9 +665,11 @@ describe('loadData', () => {
         await expect(worker.loadData({} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
-    test('loadData should process cluster change with no data and build relevant map and reduce methods', async () => {
+    test('loadData should process cluster change after the diff sent with it and build relevant map and reduce methods', async () => {
+        const updateDataSpy = vi.fn();
         const updateSpy = vi.fn();
         const mockGeoJSONIndex = {
+            updateData: updateDataSpy,
             updateClusterOptions: updateSpy
         } as any as GeoJSONVT;
         const worker = new GeoJSONWorkerSource(actor, layerIndex, [], () => mockGeoJSONIndex);
@@ -676,6 +678,7 @@ describe('loadData', () => {
         await expect(worker.loadData({
             type: 'geojson',
             source: 'source1',
+            dataDiff: {removeAll: true},
             updateCluster: true,
             geojsonVtOptions: {
                 cluster: true,
@@ -687,6 +690,7 @@ describe('loadData', () => {
             }
         })).resolves.toBeDefined();
         expect(updateSpy).toHaveBeenCalled();
+        expect(updateDataSpy.mock.invocationCallOrder[0]).toBeLessThan(updateSpy.mock.invocationCallOrder[0]);
         expect(updateSpy.mock.calls[0][1].map).toBeInstanceOf(Function);
         expect(updateSpy.mock.calls[0][1].reduce).toBeInstanceOf(Function);
     });
