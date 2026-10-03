@@ -12,6 +12,7 @@ import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
 import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
+import {TerrainCoverage, type TerrainCoverageIndex} from './terrain_coverage.ts';
 
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
@@ -34,42 +35,6 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
-};
-
-export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
-
-const MAX_BISECTIONS = 40;
-const HIT_EPSILON_M = 1e-6;
-/**
- * @internal
- * The last fraction of the camera-to-location distance within which a terrain hit does not count for
- * {@link ITransform.isLocationOccluded}, so the terrain the location sits on never hides it.
- */
-export const TERRAIN_OCCLUSION_MARGIN = 0.01;
-/** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
-const BRACKET_PADDING_M = 10;
-/** Tile coordinates run from 0 up to but not including `EXTENT`; a point on the far edge is clamped back into the tile. */
-const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
-
-/**
- * Offset, in DEM pixels, from a tile coordinate scaled by `dim` to the pixel index `DEMData.sampleBilinear` expects.
- * DEM pixel `i` describes the cell centred at tile coordinate `(i + 0.5) / dim`, the same placement hillshade and
- * color-relief use, so a sample between two cell centres interpolates the pixels on either side of it.
- */
-const DEM_CELL_CENTER_OFFSET = -0.5;
-
-export type TerrainSample = {
-    covered: boolean;
-    /** Whether the elevation comes from loaded DEM data rather than the flat surface rendered while it loads. */
-    demLoaded: boolean;
-    elevation: number;
-};
-
-export type TerrainCoverageIndex = {
-    zooms: number[];
-    samplerPerTile: Map<string, TerrainElevationSampler | null>;
-    minElevation: number;
-    maxElevation: number;
 };
 
 /**
@@ -168,7 +133,7 @@ export class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = new Map();
-        this.coverage = new TerrainCoverage(this);
+        this.coverage = new TerrainCoverage(this.tileManager, this.exaggeration);
     }
 
     destroy(): void {
@@ -300,32 +265,6 @@ export class Terrain {
      */
     getCoverageIndex(): TerrainCoverageIndex | null {
         return this.coverage.getIndex();
-    }
-
-    /**
-     * Get a function that samples the raw DEM elevation of a tile, without exaggeration.
-     * The sampler places DEM pixels at cell centres, matching `get_elevation` in the vertex shader prelude.
-     * @param tileID - the tile id
-     * @returns the sampler, or null when the tile's DEM data is not loaded
-     */
-    createElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
-        const sourceTile = this.tileManager.getSourceTile(tileID, true);
-        const dem = sourceTile?.dem;
-        if (!sourceTile || !dem) return null;
-
-        const matrix = this._getDEMTileMatrix(tileID, sourceTile);
-        // Store the vector-tile to DEM-pixel transform once for the hot sampling loop.
-        const demPixelScaleX = matrix[0] * dem.dim;
-        const demPixelScaleY = matrix[5] * dem.dim;
-        const demPixelOffsetX = matrix[12] * dem.dim + DEM_CELL_CENTER_OFFSET;
-        const demPixelOffsetY = matrix[13] * dem.dim + DEM_CELL_CENTER_OFFSET;
-        return (x: number, y: number, extent: number): number => {
-            const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
-            return dem.sampleBilinear(
-                x * extentScale * demPixelScaleX + demPixelOffsetX,
-                y * extentScale * demPixelScaleY + demPixelOffsetY
-            );
-        };
     }
 
     /**
@@ -546,130 +485,3 @@ export class Terrain {
     }
 }
 
-const NOT_COVERED: TerrainSample = {covered: false, demLoaded: false, elevation: 0};
-
-/**
- * The drawn terrain tiles' DEM data as sampled on the CPU: an index of their elevation samplers, built on first use
- * and kept until {@link reset} (the renderable tile set changed, or the terrain source), in two views: every drawn
- * tile's DEM data, a loaded parent's where the tile's own has not loaded, or only the tiles' own.
- */
-export class TerrainCoverage {
-    private _samplerCache = new Map<string, TerrainElevationSampler>();
-    /** undefined means not built yet; null that no terrain tile is renderable. */
-    private _index: TerrainCoverageIndex | null | undefined;
-    private _ownDemIndex: TerrainCoverageIndex | null | undefined;
-
-    constructor(private readonly terrain: Terrain) {}
-
-    /** Drops the samplers and both indexes. Missing DEM data is never cached, so a later sample can retry. */
-    reset(): void {
-        this._samplerCache.clear();
-        this._index = undefined;
-        this._ownDemIndex = undefined;
-    }
-
-    /**
-     * @param ownDemOnly - whether a tile whose own DEM data has not loaded has none, though a loaded parent's is drawn
-     * in its place
-     * @returns the index, or null when no terrain tile is renderable
-     */
-    getIndex(ownDemOnly: boolean = false): TerrainCoverageIndex | null {
-        if (ownDemOnly) {
-            if (this._ownDemIndex === undefined) this._ownDemIndex = this._build(true);
-            return this._ownDemIndex;
-        }
-        if (this._index === undefined) this._index = this._build(false);
-        return this._index;
-    }
-
-    /**
-     * The elevation the drawn tiles' DEM data gives at a location, in respect of exaggeration, or undefined where no
-     * drawn tile has that data.
-     */
-    sample(lnglat: LngLat, ownDemOnly: boolean = false): number | undefined {
-        const index = this.getIndex(ownDemOnly);
-        if (!index) return undefined;
-        const mercator = MercatorCoordinate.fromLngLat(lnglat);
-        const sample = sampleAt(index, this.terrain.exaggeration, mercator.x, mercator.y);
-        return sample.demLoaded ? sample.elevation : undefined;
-    }
-
-    /** The cached sampler of a tile's raw DEM elevation, or null when its DEM data is not loaded. */
-    getSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
-        const key = tileID.key;
-        const cachedSampler = this._samplerCache.get(key);
-        if (cachedSampler) return cachedSampler;
-        const sampler = this.terrain.createElevationSampler(tileID);
-        if (sampler) this._samplerCache.set(key, sampler);
-        return sampler;
-    }
-
-    private _build(ownDemOnly: boolean): TerrainCoverageIndex | null {
-        const {tileManager} = this.terrain;
-        const zooms: number[] = [];
-        const samplerPerTile = new Map<string, TerrainElevationSampler | null>();
-        let minElevation = 0;
-        let maxElevation = 0;
-
-        for (const tile of tileManager.getRenderableTiles()) {
-            if (!tile) continue;
-            const {canonical, wrap} = tile.tileID;
-            if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
-            const sampler = ownDemOnly && !tileManager.getSourceTile(tile.tileID)?.dem ? null : this.getSampler(tile.tileID);
-            samplerPerTile.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
-            const {minElevation: tileMin, maxElevation: tileMax} = this.terrain.getMinMaxElevation(tile.tileID);
-            minElevation = Math.min(minElevation, tileMin ?? 0);
-            maxElevation = Math.max(maxElevation, tileMax ?? 0);
-        }
-
-        if (samplerPerTile.size === 0) return null;
-        zooms.sort((a, b) => b - a);
-        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
-    }
-}
-
-/**
- * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
- * A covered tile whose DEM has not loaded yet is flat at zero, which is what the terrain mesh renders.
- */
-export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number): TerrainSample {
-    if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
-    const wrap = Math.floor(mercatorX);
-    const wrappedX = mercatorX - wrap;
-
-    for (const z of index.zooms) {
-        const scale = 1 << z;
-        const scaledX = wrappedX * scale;
-        const scaledY = mercatorY * scale;
-        const tileX = Math.floor(scaledX);
-        const tileY = Math.floor(scaledY);
-        const key = `${wrap}/${z}/${tileX}/${tileY}`;
-        if (!index.samplerPerTile.has(key)) continue;
-        const sampler = index.samplerPerTile.get(key);
-        if (!sampler) return {covered: true, demLoaded: false, elevation: 0};
-        const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
-        const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
-        return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
-    }
-    return NOT_COVERED;
-}
-
-/**
- * Whether a height in meters is at or below the sampled terrain surface.
- * The epsilon absorbs rounding when a bracket endpoint lands exactly on the surface.
- */
-export function isBelowTerrainSample(sample: TerrainSample, height: number): boolean {
-    return sample.covered && height <= sample.elevation + HIT_EPSILON_M;
-}
-
-/**
- * Narrows the bracket `[lo, hi]` around the surface crossing until it is shorter than `tolerance` in ray parameter units.
- */
-export function bisect<Ray>(ray: Ray, isBelowTerrain: (ray: Ray, t: number) => boolean, lo: number, hi: number, tolerance: number): {lo: number; hi: number} {
-    for (let j = 0; j < MAX_BISECTIONS && hi - lo > tolerance; j++) {
-        const mid = (lo + hi) / 2;
-        if (isBelowTerrain(ray, mid)) hi = mid;
-        else lo = mid;
-    }
-    return {lo, hi};
-}
