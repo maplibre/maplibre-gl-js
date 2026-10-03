@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Apply and interpolate elevation changes when elevation option passed into `easeTo` and `flyTo` ([#8644](https://github.com/maplibre/maplibre-gl-js/pull/8644)) (by [@bogger12](https://github.com/bogger12))
 - _...Add new stuff here..._
 
 ## 6.14.0
