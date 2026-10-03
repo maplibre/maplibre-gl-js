@@ -1133,19 +1133,21 @@ describe('Terrain changing under and around a gesture', () => {
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, -1);
     });
 
-    test('a pitch drag after a lifted one starts from the center elevation that one ended with', async () => {
-        const map = await createMapUnderATerrainFloorAt20000Meters({});
+    test('a pitch drag lifted out of the terrain keeps the elevation the DEM lands under the center once that puts the camera clear', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 11, pitch: 45, maxPitch: 85});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 20000, 20000, 20000));
+        map.redraw();
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
         map._renderTaskQueue.run();
-        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 100});
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+
+        await landAllDemTiles(dem, 25000);
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 90});
         map._renderTaskQueue.run();
 
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 100});
-        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 110});
-        map._renderTaskQueue.run();
-
-        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(map.getCameraTargetElevation()).toBe(25000);
     });
 
     test('a pitch drag that brings a narrow ridge under the middle of the near clipping plane lifts the plane over the ridge', async () => {
