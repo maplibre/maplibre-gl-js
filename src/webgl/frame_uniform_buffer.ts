@@ -19,7 +19,8 @@ const offsets = layout.offsets;
 
 /**
  * @internal
- * The buffer behind the `FrameUBO` block in the shader preludes, written once per frame by `Painter.render`.
+ * The buffer behind the `FrameUBO` block in the shader preludes. `Painter.render` fills it at the start of a frame,
+ * and the terrain pass rewrites `u_world_size` around the renders into its textures.
  */
 export function createFrameUniformBuffer(context: Context): UniformBuffer {
     return new UniformBuffer(context, UBO_BINDINGS.FrameUBO, layout);
