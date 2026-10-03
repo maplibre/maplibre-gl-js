@@ -25,6 +25,7 @@
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
 - Cross-fade raster tiles when zooming out from a source's `maxzoom`, where the tiles switched instantly ([#8517](https://github.com/maplibre/maplibre-gl-js/pull/8517)) (by [@cherenkov](https://github.com/cherenkov))
+- Apply and interpolate elevation changes when elevation option passed into `easeTo` and `flyTo` ([#8644](https://github.com/maplibre/maplibre-gl-js/pull/8644)) (by [@bogger12](https://github.com/bogger12))
 - _...Add new stuff here..._
 
 ## 6.11.2
