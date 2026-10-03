@@ -870,7 +870,7 @@ export class Camera extends Evented<MapEventType> {
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, hasCustomElevationChange);
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, !hasCustomElevationChange);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -925,14 +925,14 @@ export class Camera extends Evented<MapEventType> {
      * that is not clamped to the ground keeps its elevation.
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
-     * @param usesCustomElevation - whether the animation uses a custom elevation target
+     * @param useTerrainElevation - whether the animation will use the terrain elevation
      */
-    _updateElevation(k: number, tr: ITransform, usesCustomElevation: boolean): void {
+    _updateElevation(k: number, tr: ITransform, useTerrainElevation: boolean = true): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
             this._prepareElevation(tr.center, tr);
         }
 
-        if (this.terrain && !usesCustomElevation) {
+        if (this.terrain && useTerrainElevation) {
             tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
             const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
 
@@ -945,7 +945,7 @@ export class Camera extends Evented<MapEventType> {
             }
         }
 
-        if (this.getCenterClampedToGround() || usesCustomElevation) {
+        if (this.getCenterClampedToGround() || !useTerrainElevation) {
             tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
         }
     }
@@ -1291,7 +1291,7 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, hasCustomElevationChange);
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, !hasCustomElevationChange);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
