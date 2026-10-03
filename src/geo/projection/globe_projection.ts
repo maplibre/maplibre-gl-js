@@ -33,25 +33,7 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     public get transitionState(): number {
-        const currentProjectionSpecValue = this.properties.get('type');
-        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
-            return 0;
-        }
-        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'vertical-perspective') {
-            return 1;
-        }
-        if (currentProjectionSpecValue instanceof ProjectionDefinition) {
-            if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) {
-                return currentProjectionSpecValue.from === 'mercator' ? 0 : 1;
-            }
-            if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
-                return 1 - currentProjectionSpecValue.transition;
-            }
-            if (currentProjectionSpecValue.from === 'mercator' && currentProjectionSpecValue.to === 'vertical-perspective') {
-                return currentProjectionSpecValue.transition;
-            }
-        };
-        return 1;
+        return transitionStateOf(this.properties.get('type'));
     }
 
     get useGlobeRendering(): boolean {
