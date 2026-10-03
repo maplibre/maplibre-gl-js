@@ -896,7 +896,7 @@ export class Camera extends Evented<MapEventType> {
         this._zooming ||= easeHandler.isZooming;
         this._easeId = options.easeId;
 
-        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== this.getCenterElevation();
+        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== tr.elevation;
 
         this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation, targetOverride: options.elevation});
 
@@ -1440,7 +1440,7 @@ export class Camera extends Evented<MapEventType> {
         // S: Total length of the flight path, measured in ρ-screenfulls.
         let S = (zoomOutFactor(true) - r0) / rho;
 
-        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== this.getCenterElevation();
+        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== tr.elevation;
 
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
         if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
