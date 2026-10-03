@@ -558,6 +558,39 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCenterElevation()).toBe(1500);
     });
 
+    test('jumpTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        map.setCenterElevation(1500);
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(1000);
+
+        map.jumpTo({center: [1, 1]});
+
+        expect(map.getCenterElevation()).toBe(1500);
+    });
+
+    test('a DEM minimum below sea level does not keep the map rendering when the center is not clamped to the ground', async () => {
+        const map = await createMapOverTerrain(60);
+        map.setCenterClampedToGround(false);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getMinTileElevationForLngLatZoom').mockReturnValue(-455.5);
+        const frameLength = 16;
+        const settleFrames = 110;
+        const watchedFrames = 20;
+        for (let frame = 0; frame < settleFrames; frame++) {
+            now.mockReturnValue(frame * frameLength);
+            map.redraw();
+        }
+        const repaint = vi.spyOn(map, 'triggerRepaint');
+
+        for (let frame = settleFrames; frame < settleFrames + watchedFrames; frame++) {
+            now.mockReturnValue(frame * frameLength);
+            map.redraw();
+        }
+
+        expect(repaint).not.toHaveBeenCalled();
+    });
+
     test('easeTo around a point, as a double-click zoom does, eases the center elevation to the terrain under the center it ends on', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
