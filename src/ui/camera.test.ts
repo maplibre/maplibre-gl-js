@@ -4,7 +4,7 @@ import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
-import {setMatchMedia} from '../util/test/util.ts';
+import {setMatchMedia, sleep} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
@@ -1263,6 +1263,27 @@ describe('easeTo', () => {
         camera.easeTo({zoom: 2.7, duration: 0});
         expect(camera.getZoom()).toBe(2.7);
     });
+
+    test('respects elevation', () => {
+        const {camera, queue} = createCamera({});
+        camera.easeTo({elevation: 100, animate: true, duration: 10});
+
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        setTimeout(() => {
+            stub.mockReturnValue(1);
+            queue.run();
+
+            setTimeout(() => {
+                stub.mockReturnValue(10);
+                queue.run();
+            }, 0);
+        }, 0);
+
+        expect(camera.getCenterElevation()).toBe(100);
+
+    });
 });
 
 describe('flyTo', () => {
@@ -2122,6 +2143,28 @@ describe('flyTo', () => {
         const {camera} = createCamera({zoomSnap: 0});
         camera.flyTo({zoom: 2.7, animate: false});
         expect(camera.getZoom()).toBe(2.7);
+    });
+
+    test('respects elevation', async () => {
+        const {camera, queue} = createCamera({});
+
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        const moveEnded = camera.once('moveend');
+
+        camera.flyTo({elevation: 100, animate: true, duration: 10});
+
+        stub.mockReturnValue(1);
+        queue.run();
+        stub.mockReturnValue(10);
+        queue.run();
+
+        await moveEnded;
+
+        const nowElevation = camera.getCenterElevation();
+        expect(nowElevation).toBe(100);
+
     });
 });
 
