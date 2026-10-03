@@ -61,6 +61,17 @@ describe('transform', () => {
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
     });
 
+    test('setMinElevationForCurrentTile below sea level moves the far plane', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setZoom(11.46);
+        transform.setPitch(60);
+
+        transform.setMinElevationForCurrentTile(-455.5);
+
+        expect(transform.farZ).toBe(1870.705545073004);
+    });
+
     test('does not throw on bad center', () => {
         expect(() => {
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
