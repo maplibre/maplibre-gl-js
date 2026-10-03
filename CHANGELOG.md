@@ -23,6 +23,7 @@
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
 - Cross-fade raster tiles when zooming out from a source's `maxzoom`, where the tiles switched instantly ([#8517](https://github.com/maplibre/maplibre-gl-js/pull/8517)) (by [@cherenkov](https://github.com/cherenkov))
+- Mark a program as failed to create instead of throwing when the WebGL context is lost or a failed link reports zero attached shaders, where a dead GPU process made every query answer dead before `webglcontextlost` arrived ([#8607](https://github.com/maplibre/maplibre-gl-js/issues/8607)) (by [@rubenmarcus](https://github.com/rubenmarcus))
 - _...Add new stuff here..._
 
 ## 6.11.2
