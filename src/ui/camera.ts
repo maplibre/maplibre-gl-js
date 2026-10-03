@@ -863,17 +863,19 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
-        if (this.terrain || options.elevation !== undefined) this._prepareElevation(easeHandler.elevationCenter, tr, options.elevation);
+        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== this.getCenterElevation();
+
+        if (this.terrain || hasCustomElevationChange) this._prepareElevation(easeHandler.elevationCenter, tr, options.elevation);
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if ((this.terrain || options.elevation !== undefined) && !options.freezeElevation) this._updateElevation(k, tr);
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, hasCustomElevationChange);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if ((this.terrain || options.elevation !== undefined) && !options.freezeElevation) this._finalizeElevation();
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._finalizeElevation();
             else this.elevationFreeze = false;
             this._afterEase(eventData, interruptingEaseId);
         }, options);
@@ -923,13 +925,14 @@ export class Camera extends Evented<MapEventType> {
      * that is not clamped to the ground keeps its elevation.
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
+     * @param usesCustomElevation - whether the animation uses a custom elevation target
      */
-    _updateElevation(k: number, tr: ITransform): void {
+    _updateElevation(k: number, tr: ITransform, usesCustomElevation: boolean): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
             this._prepareElevation(tr.center, tr);
         }
 
-        if (this.terrain) {
+        if (this.terrain && !usesCustomElevation) {
             tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
             const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
 
@@ -942,7 +945,7 @@ export class Camera extends Evented<MapEventType> {
             }
         }
 
-        if (this.getCenterClampedToGround() || !this.terrain) {
+        if (this.getCenterClampedToGround() || usesCustomElevation) {
             tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
         }
     }
@@ -1231,12 +1234,12 @@ export class Camera extends Evented<MapEventType> {
         // S: Total length of the flight path, measured in ρ-screenfulls.
         let S = (zoomOutFactor(true) - r0) / rho;
 
-        const hasElevationChange = options.elevation !== undefined && options.elevation !== this.getCenterElevation();
+        const hasCustomElevationChange = options.elevation !== undefined && options.elevation !== this.getCenterElevation();
 
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
         if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
             // Perform a more or less instantaneous transition if the path is too short.
-            if (Math.abs(w0 - w1) < 0.000001 && !hasElevationChange ) return this.easeTo(options, eventData);
+            if (Math.abs(w0 - w1) < 0.000001 && !hasCustomElevationChange ) return this.easeTo(options, eventData);
 
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
@@ -1263,7 +1266,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (this.terrain || options.elevation !== undefined) this._prepareElevation(flyToHandler.targetCenter, tr, options.elevation);
+        if (this.terrain || hasCustomElevationChange) this._prepareElevation(flyToHandler.targetCenter, tr, options.elevation);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1288,11 +1291,11 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if ((this.terrain || options.elevation !== undefined) && !options.freezeElevation) this._updateElevation(k, tr);
+            if ((this.terrain || hasCustomElevationChange) && !options.freezeElevation) this._updateElevation(k, tr, hasCustomElevationChange);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
-            if ((this.terrain || options.elevation !== undefined) && options.freezeElevation) this._finalizeElevation();
+            if ((this.terrain || hasCustomElevationChange) && options.freezeElevation) this._finalizeElevation();
             else this.elevationFreeze = false;
             this._afterEase(eventData);
         }, options);
