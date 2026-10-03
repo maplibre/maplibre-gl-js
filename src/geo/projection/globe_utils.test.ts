@@ -2,6 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
 import {GlobeTransform} from './globe_transform.ts';
+import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 describe('globe utils', () => {
     const digitsPrecision = 10;
@@ -47,6 +48,10 @@ describe('globe utils', () => {
     test('getZoomAdjustment', () => {
         expect(getZoomAdjustment(0, 60)).toBeCloseTo(-1, digitsPrecision);
         expect(getZoomAdjustment(60, 0)).toBeCloseTo(1, digitsPrecision);
+    });
+
+    test('getZoomAdjustment keeps the globe size past the mercator range', () => {
+        expect(getZoomAdjustment(MAX_VALID_LATITUDE, 90)).toBe(0);
     });
 
     test('getGlobeCenterInViewSpace', () => {
