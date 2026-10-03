@@ -111,6 +111,7 @@ describe('TaggedString', () => {
                     'a': {id: 0x61, metrics, rect},
                     'b': {id: 0x62, metrics, rect},
                     'c': {id: 0x63, metrics, rect},
+                    ' ': {id: 0x20, metrics: {...metrics, advance: 7}, rect},
                     '\u9EB5': {id: 0x9EB5, metrics, rect},
                     '\u{30EDE}': {id: 0x30EDE, metrics, rect},
                 } as unknown as Record<string, StyleGlyph>
@@ -130,6 +131,15 @@ describe('TaggedString', () => {
         test('keeps ideographic characters together', () => {
             const tagged = new TaggedString('𰻞𰻞麵', [textSection], Array(3).fill(0));
             expect(tagged.determineLineBreaks(0, 300, glyphs, {}, 30)).toEqual([3]);
+        });
+
+        /**
+         * With -14 spacing, letters advance 22 - 14 = 8 and the space 7 - 14 = -7: the text is 9 wide,
+         * narrower than its letters, so it fits on one line yet still breaks.
+         */
+        test('evaluates line breaks when negative spacing makes spaces advance backwards', () => {
+            const tagged = new TaggedString('a b', [textSection], Array(3).fill(0));
+            expect(tagged.determineLineBreaks(-14, 300, glyphs, {}, 30)).toEqual([2, 3]);
         });
     });
 });
