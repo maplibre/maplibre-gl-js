@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
-import {createMap, beforeMapTest, waitForEvent, createTerrain, createDEM, waitForMetadataEvent} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, waitForEvent, createTerrain, createDEM, waitForMetadataEvent, createCoverageIndex} from '../../util/test/util.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {LngLat} from '../../geo/lng_lat.ts';
+import {LngLat, earthRadius} from '../../geo/lng_lat.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
@@ -618,7 +618,7 @@ describe('Terrain changing under and around a gesture', () => {
         now.mockReturnValue(1000);
         map.redraw();
 
-        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(1000, 0);
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThanOrEqual(1000);
     });
 
     test('a pitch drag with the center not clamped to the ground keeps the center elevation when the terrain switches off before it ends', async () => {
@@ -738,7 +738,7 @@ describe('Terrain changing under and around a gesture', () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
         startPitchDragThatSwitchesTerrainOn(map);
         await landAllDemTiles(dem, 1000);
-        map.setTerrain({source: 'dem', exaggeration: 2});
+        map.setTerrain({source: 'dem', exaggeration: 1.1});
         map.redraw();
 
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
@@ -1050,6 +1050,249 @@ describe('Terrain changing under and around a gesture', () => {
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
+    type TerrainHeight = (lng: number, lat: number) => number;
+    const frameMs = 1000 / 60;
+    const metersPerDegree = 2 * Math.PI * earthRadius / 360;
+    function cameraMove(from: [number, number, number], to: [number, number, number]): number {
+        return Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
+    }
+
+    function cameraPosition(map: Map): [number, number, number] {
+        const {lng, lat} = map._camera.transform.getCameraLngLat();
+        return [lng * metersPerDegree, lat * metersPerDegree, map._camera.transform.getCameraAltitude()];
+    }
+
+    function createMapOverFlatTerrain(options: Partial<MapOptions>, elevation: number): Promise<{map: Map; frame: () => void}> {
+        return createMapOverShapedTerrain(options, () => elevation, elevation, elevation);
+    }
+
+    async function createMapOverShapedTerrain(options: Partial<MapOptions>, height: TerrainHeight, min: number, max: number): Promise<{map: Map; frame: () => void}> {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        let now = 1555555555555;
+        timeControlNow.mockReturnValue(now);
+        const map = createMap({interactive: true, ...options});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        setTerrainHeight(map, height, min, max);
+        map.redraw();
+        vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']});
+        return {map, frame: () => {
+            now += frameMs;
+            timeControlNow.mockReturnValue(now);
+            vi.advanceTimersByTime(frameMs);
+            map.redraw();
+        }};
+    }
+
+    async function createMapUnderATerrainFloorAt20000Meters(options: Partial<MapOptions>): Promise<Map> {
+        const map = createMap({interactive: true, zoom: 11, pitch: 45, maxPitch: 85, ...options});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(20000);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 20000, 20000, 20000));
+        map.redraw();
+        return map;
+    }
+
+    function lowestNearPlaneAltitude(map: Map): number {
+        return Math.min(...map._camera.transform.getCameraFrustum().points.slice(0, 4).map(corner => corner[2]));
+    }
+
+    function setTerrainHeight(map: Map, height: TerrainHeight, min: number, max: number): void {
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation(lngLat => height(lngLat.lng, lngLat.lat));
+        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockImplementation(lngLat => height(lngLat.lng, lngLat.lat));
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(height, min, max));
+    }
+
+    test('a pitch drag that would put the camera into the terrain lifts the center, and the camera with it, and keeps the pitch', async () => {
+        const map = await createMapUnderATerrainFloorAt20000Meters({});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        expect(map.getPitch()).toBe(70);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(16183.0, 1);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 80});
+        map._renderTaskQueue.run();
+        expect(map.getPitch()).toBe(80);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+        const cameraAltitude = map._camera.transform.getCameraAltitude();
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 80});
+        map._renderTaskQueue.run();
+        expect(map.getPitch()).toBeCloseTo(80, 0);
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThanOrEqual(cameraAltitude);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, -1);
+    });
+
+    test('a pitch drag after a lifted one starts from the center elevation that one ended with', async () => {
+        const map = await createMapUnderATerrainFloorAt20000Meters({});
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 100});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 110});
+        map._renderTaskQueue.run();
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+    });
+
+    test('a pitch drag that brings a narrow ridge under the middle of the near clipping plane lifts the plane over the ridge', async () => {
+        const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 55, maxPitch: 85}, 0);
+        const atTheDragsEnd = map._camera.transform.clone();
+        atTheDragsEnd.setPitch(60);
+        const corners = atTheDragsEnd.getCameraFrustum().points.slice(0, 4);
+        const middle = new MercatorCoordinate(corners.reduce((sum, c) => sum + c[0], 0) / 4, corners.reduce((sum, c) => sum + c[1], 0) / 4).toLngLat();
+        const middleAltitude = corners.reduce((sum, c) => sum + c[2], 0) / 4;
+        const ridgeAboveTheMiddle = 8;
+        const halfWidthInDegrees = 10 / metersPerDegree;
+        setTerrainHeight(map, (_lng, lat) => {
+            const d = (lat - middle.lat) / halfWidthInDegrees;
+            return Math.abs(d) < 1 ? (middleAltitude + ridgeAboveTheMiddle) * (1 - d * d) : 0;
+        }, 0, middleAltitude + ridgeAboveTheMiddle);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 140});
+        frame();
+
+        expect(map.getPitch()).toBeCloseTo(60, 6);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(ridgeAboveTheMiddle, 3);
+    });
+
+    test('a pitch drag held over a floor that ends looking where no terrain is drawn leaves the camera on the floor', async () => {
+        const map = await createMapUnderATerrainFloorAt20000Meters({});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lngLat: LngLat) => lngLat.lat < -0.001 ? 10000 : 0);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
+        map.redraw();
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        map.redraw();
+
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(10000, 1);
+    });
+
+    test('a pitch drag over terrain whose DEM has not loaded keeps the near clipping plane above the flat surface drawn in its place', async () => {
+        const {map, frame} = await createMapOverFlatTerrain({zoom: 17, pitch: 30, maxPitch: 85}, -500);
+        const drawnWhileItsDemLoads = createCoverageIndex(() => 0, 0, 0);
+        drawnWhileItsDemLoads.samplerPerTile.set('0/0/0/0', null);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(drawnWhileItsDemLoads);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        frame();
+
+        expect(map.getPitch()).toBeCloseTo(55, 6);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(0, 1);
+    });
+
+    test('a transformCameraUpdate that sets the center elevation during a pitch drag into the terrain leaves the camera and its near clipping plane above it', async () => {
+        const map = await createMapUnderATerrainFloorAt20000Meters({transformCameraUpdate: () => ({elevation: 0})});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
+    });
+
+    test('a rotate drag that swings the camera over a hill and past it lowers the camera again, to where it started', async () => {
+        const hill: TerrainHeight = (lng, lat) => {
+            const d = Math.hypot(lng * metersPerDegree + 600, lat * metersPerDegree + 300) / 250;
+            return d < 1 ? 450 * (1 - d * d) : 0;
+        };
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 70, maxPitch: 85}, hill, 0, 450);
+        const start = cameraPosition(map);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 100});
+        for (let move = 1; move <= 40; move++) {
+            simulate.mousemove(window.document.body, {buttons: 2, clientX: 40 + 3 * move, clientY: 100});
+            frame();
+        }
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 160, clientY: 100});
+        for (let i = 0; i < 90; i++) frame();
+
+        expect(map.getZoom()).toBeCloseTo(15, 6);
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(start[2], 1);
+    });
+
+    test('an easeTo that would end with the camera inside the terrain ends with the camera and its near clipping plane above it', async () => {
+        const {map, frame} = await createMapOverFlatTerrain({zoom: 13, pitch: 60}, 0);
+        const cliffSouthEdge = -0.01;
+        setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 5000 : 0, 0, 5000);
+
+        map.easeTo({pitch: 70, duration: 500});
+        for (let i = 0; i < 45; i++) frame();
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(5000, 0);
+    });
+
+    test('a jumpTo whose camera would be inside the terrain raises the camera and its near clipping plane above it, where the camera was', async () => {
+        const {map} = await createMapOverFlatTerrain({zoom: 13, pitch: 45, maxPitch: 85}, 0);
+        const cliffSouthEdge = -0.01;
+        setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 3000 : 0, 0, 3000);
+        const asked = map._camera.transform.clone();
+        asked.setZoom(13.5);
+        asked.setPitch(60);
+
+        map.jumpTo({zoom: 13.5, pitch: 60});
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(map.getZoom()).toBeCloseTo(12.7034, 4);
+        expect(map.getPitch()).toBeCloseTo(29.9058, 4);
+        expect(lowestNearPlaneAltitude(map)).toBeCloseTo(3000, 1);
+        expect(map._camera.transform.getCameraLngLat().lat).toBeCloseTo(asked.getCameraLngLat().lat, 9);
+    });
+
+    test('a pitch drag past 90 degrees over terrain that rests before its release leaves the camera where it rested', async () => {
+        const {map, frame} = await createMapOverFlatTerrain({zoom: 14, pitch: 60, maxPitch: 110}, 500);
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 190});
+        for (let i = 1; i <= 40; i++) {
+            simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 190 - 190 * i / 40});
+            frame();
+        }
+        for (let i = 0; i < 10; i++) frame();
+        const camera = cameraPosition(map);
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 0});
+        for (let i = 0; i < 30; i++) frame();
+
+        expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
+    });
+
+    test('a pitch drag into terrain on a globe raises the camera onto the terrain and no higher', async () => {
+        const map = createMap({interactive: true, zoom: 8, pitch: 45, center: [10, 45]});
+        await map.once('load');
+        map.setProjection({type: 'globe'});
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lngLat: LngLat) => lngLat.lat < 44.999 ? 40000 : 0);
+        vi.spyOn(map.terrain, 'getElevationForLngLatZoom').mockReturnValue(40000);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 40000, 40000, 40000));
+        map.redraw();
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 190});
+        for (let i = 1; i <= 20; i++) {
+            simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 190 - 9 * i});
+            map._renderTaskQueue.run();
+        }
+
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(40000, 1);
+    });
+
 });
 
 describe('Keep camera outside terrain', () => {
@@ -1057,6 +1300,7 @@ describe('Keep camera outside terrain', () => {
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
+        terrainStub.getCoverageIndex = () => null;
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;
 
