@@ -1280,10 +1280,37 @@ describe('easeTo', () => {
 
         await moveEnded;
 
-        const nowElevation = camera.getCenterElevation();
-        expect(nowElevation).toBe(100);
+        expect(camera.getCenterElevation()).toBe(100);
 
     });
+
+    test('respects elevation when terrain exists', async () => {
+        const terrain = {
+            getMinTileElevationForLngLatZoom: () => 50,
+            getElevationForLngLatZoom: () => 50,
+            getElevationForLngLat: () => 50
+        } as any as Terrain;
+
+        const {camera, queue} = createCamera({terrain});
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        const moveEnded = camera.once('moveend');
+
+        stubNow.mockReturnValue(0);
+
+        camera.easeTo({elevation: 100, animate: true, duration: 10});
+
+        stubNow.mockReturnValue(1);
+        queue.run();
+
+        stubNow.mockReturnValue(10);
+        queue.run();
+
+        await moveEnded;
+
+        expect(camera.getCenterElevation()).toBe(100);
+    });
+
 });
 
 describe('flyTo', () => {
@@ -2176,6 +2203,34 @@ describe('flyTo', () => {
         expect(nowElevation).toBe(100);
 
     });
+
+    test('respects elevation when terrain exists', async () => {
+        const terrain = {
+            getMinTileElevationForLngLatZoom: () => 50,
+            getElevationForLngLatZoom: () => 50,
+            getElevationForLngLat: () => 50
+        } as any as Terrain;
+
+        const {camera, queue} = createCamera({terrain});
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        const moveEnded = camera.once('moveend');
+
+        stubNow.mockReturnValue(0);
+
+        camera.flyTo({elevation: 100, animate: true, duration: 10});
+
+        stubNow.mockReturnValue(1);
+        queue.run();
+
+        stubNow.mockReturnValue(10);
+        queue.run();
+
+        await moveEnded;
+
+        expect(camera.getCenterElevation()).toBe(100);
+    });
+
 });
 
 describe('isEasing', () => {
