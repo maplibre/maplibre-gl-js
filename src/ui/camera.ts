@@ -917,10 +917,10 @@ export class Camera extends Evented<MapEventType> {
      */
     _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {},
-        elevation?: {tr: ITransform; center: LngLat; freeze: boolean}): void {
+        elevation?: {tr: ITransform; center: LngLat; freeze: boolean; targetOverride?: number }): void {
         this._moving = true;
         if (this.terrain && elevation) {
-            this._prepareElevation(elevation.center, elevation.tr);
+            this._prepareElevation(elevation.center, elevation.tr, elevation.targetOverride);
             if (elevation.freeze) this.holdElevation(elevation.tr, 'animation');
         }
         if (!noMoveStart && !currently.moving) {
@@ -946,11 +946,12 @@ export class Camera extends Evented<MapEventType> {
      * samples the terrain under the map center the animation ends on.
      * @param center - the map center when the animation ends
      * @param tr - the transform the animation edits
+     * @param elevationTarget - elevation when the animation ends
      */
-    _prepareElevation(center: LngLat, tr: ITransform): void {
+    _prepareElevation(center: LngLat, tr: ITransform, elevationTarget?: number): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, tr);
+        this._elevationTarget = elevationTarget ?? this.terrain.getElevationForLngLat(center, tr);
         this.elevationFreeze = true;
     }
 
@@ -967,16 +968,21 @@ export class Camera extends Evented<MapEventType> {
             this._prepareElevation(tr.center, tr);
         }
 
-        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
-        // target terrain updated during flight, slowly move camera to new height
-        if (k < 1 && elevation !== this._elevationTarget) {
-            const pitch1 = this._elevationTarget - this._elevationStart;
-            const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
-            this._elevationStart += k * (pitch1 - pitch2);
-            this._elevationTarget = elevation;
+        let elevation = this.getCenterElevation();
+        if (this.terrain) {
+            tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
+            elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
+
+            // target terrain updated during flight, slowly move camera to new height
+            if (k < 1 && elevation !== this._elevationTarget) {
+                const pitch1 = this._elevationTarget - this._elevationStart;
+                const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
+                this._elevationStart += k * (pitch1 - pitch2);
+                this._elevationTarget = elevation;
+            }
         }
-        if (this.getCenterClampedToGround()) {
+
+        if (this.getCenterClampedToGround() || !this.terrain) {
             tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
         }
     }
@@ -1431,10 +1437,12 @@ export class Camera extends Evented<MapEventType> {
         // S: Total length of the flight path, measured in ρ-screenfulls.
         let S = (zoomOutFactor(true) - r0) / rho;
 
+        const elevationChange = options.elevation - this.getCenterElevation();
+
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
         if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
             // Perform a more or less instantaneous transition if the path is too short.
-            if (Math.abs(w0 - w1) < 0.000001) return this.easeTo(options, eventData);
+            if (Math.abs(w0 - w1) < 0.000001 && (elevationChange === 0) ) return this.easeTo(options, eventData);
 
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
@@ -1460,7 +1468,7 @@ export class Camera extends Evented<MapEventType> {
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
 
-        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
+        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation, targetOverride: options.elevation});
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1485,7 +1493,7 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if ((this.terrain || options.elevation !== undefined) && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
