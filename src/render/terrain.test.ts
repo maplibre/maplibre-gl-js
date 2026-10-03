@@ -6,14 +6,13 @@ import {RGBAImage} from '../util/image.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Tile} from '../tile/tile.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
+import {createDEM, createDEMTerrain} from '../util/test/util.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -374,41 +373,17 @@ describe('Terrain', () => {
         expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(zoom);
     });
 
-    test('getElevationForLngLat reads the loaded DEM at the tile zoom while the camera is below the terrain', () => {
-        const painter = {context: new Context(gl), width: 800, height: 600, getTileTexture: () => null} as any as Painter;
-        const center = new LngLat(11.4, 47.3);
+    test('getElevationForLngLat reads the DEM tiles of the tile zoom where no drawn tile covers the point', () => {
         const demElevation = 3000;
         const dem = createDEM(() => demElevation);
-        const loadedTiles = new Map<string, Tile>();
-        const demMaxzoom = 14;
-        for (let z = 0; z <= demMaxzoom; z++) {
-            const tilesAtZoom = 1 << z;
-            const centerTileX = Math.floor(MercatorCoordinate.fromLngLat(center).x * tilesAtZoom);
-            const centerTileY = Math.floor(MercatorCoordinate.fromLngLat(center).y * tilesAtZoom);
-            for (let y = centerTileY - 8; y <= centerTileY + 8; y++) {
-                for (let x = centerTileX - 8; x <= centerTileX + 8; x++) {
-                    if (x < 0 || y < 0 || x >= tilesAtZoom || y >= tilesAtZoom) continue;
-                    const tileID = new OverscaledTileID(z, 0, z, x, y);
-                    loadedTiles.set(tileID.key, {tileID, dem} as any as Tile);
-                }
-            }
-        }
-        const tileManager = {
-            _source: {minzoom: 0, maxzoom: demMaxzoom, tileSize: 512},
-            _cache: {max: 10},
-            _outOfViewCache: {getByKey: () => undefined},
-            update: () => {},
-            map: {painter},
-            getTileByID: (key: string) => loadedTiles.get(key),
-        } as any as TileManager;
-        const terrain = new Terrain(painter, tileManager, {source: 'dem'});
+        const terrain = createDEMTerrain([], dem);
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(800, 600);
-        transform.setCenter(center);
         transform.setZoom(14.6);
-        terrain.tileManager.update(transform, terrain);
+        transform.setCenter(new LngLat(11.4, 47.3));
+        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === transform.tileZoom ? {tileID, dem} as Tile : undefined;
 
-        expect(terrain.getElevationForLngLat(center, transform)).toBe(demElevation);
+        expect(terrain.getElevationForLngLat(transform.center, transform)).toBe(demElevation);
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
