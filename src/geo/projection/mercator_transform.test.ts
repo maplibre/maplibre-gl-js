@@ -387,12 +387,11 @@ describe('transform', () => {
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(400);
         expect(transform.center.lng).toBeCloseTo(10, 10);
-        expect(transform.center.lat).toBeCloseTo(49.998201325627264, 10);
+        expect(transform.center.lat).toBeCloseTo(49.99820083233257, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
-        // Latitude precision is lower as a compromise to a stable recalculateZoomAndCenter at extreme latitudes
-        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 5);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(14.184585871638795, 10);
+        expect(transform.zoom).toBeCloseTo(14.184585886440683, 10);
     });
 
     test('recalculateZoomAndCenter solves at the rendered terrain surface, not the tile-zoom DEM sample', () => {
@@ -440,10 +439,9 @@ describe('transform', () => {
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(-200);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
-        // Latitude precision is lower as a compromise to a stable recalculateZoomAndCenter at extreme latitudes
-        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 5);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(13.68939960698451, 10);
+        expect(transform.zoom).toBeCloseTo(13.689399565250616, 10);
     });
 
     test('recalculateZoomAndCenter looks past terrain nearer than maxZoom allows once the center ray has passed over it', () => {
@@ -514,6 +512,64 @@ describe('transform', () => {
         expect(transform.screenPointToLocation(transform.centerPoint).lat).toBeCloseTo(-0.152407, 6);
     });
 
+    test('recalculateZoomAndCenter puts the center on sloped terrain with the camera where it was', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(11);
+        transform.setPitch(85);
+        transform.setCenter(new LngLat(0.7, 60));
+        const cameraBefore = transform.getCameraLngLat();
+        const altitudeBefore = transform.getCameraAltitude();
+        const demTile = new OverscaledTileID(8, 0, 8, 128, 74);
+        const risingNorthward = createDEM((_x, y) => (64 - y) * 30, 64);
+        const terrain = createDEMTerrain([demTile], risingNorthward);
+        terrain.tileManager.getSourceTile = () => ({tileID: demTile, dem: risingNorthward} as Tile);
+
+        transform.recalculateZoomAndCenter(terrain);
+
+        expect(transform.elevation).toBeCloseTo(997.526, 2);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(cameraBefore.lat, 8);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(cameraBefore.lng, 8);
+        expect(transform.getCameraAltitude()).toBeCloseTo(altitudeBefore, 6);
+    });
+
+    test('recalculateZoomAndCenter keeps the camera where it is when the center moves to another latitude', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(10, 60));
+        transform.setZoom(11);
+        transform.setPitch(85);
+        const cameraBefore = transform.getCameraLngLat();
+        const altitudeBefore = transform.getCameraAltitude();
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
+
+        transform.recalculateZoomAndCenter(terrain);
+
+        expect(transform.elevation).toBe(1000);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(cameraBefore.lat, 8);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(cameraBefore.lng, 8);
+        expect(transform.getCameraAltitude()).toBeCloseTo(altitudeBefore, 6);
+    });
+
+    test('recalculateZoomAndCenter keeps the camera where it is at an extreme latitude', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(-150, 80));
+        transform.setZoom(10);
+        transform.setPitch(70);
+        transform.setBearing(135);
+        const cameraBefore = transform.getCameraLngLat();
+        const altitudeBefore = transform.getCameraAltitude();
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 2500));
+
+        transform.recalculateZoomAndCenter(terrain);
+
+        expect(transform.elevation).toBe(2500);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(cameraBefore.lat, 8);
+        expect(transform.getCameraLngLat().lng).toBeCloseTo(cameraBefore.lng, 8);
+        expect(transform.getCameraAltitude()).toBeCloseTo(altitudeBefore, 6);
+    });
+
     test('recalculateZoomAndCenter leaves the center where it is while the terrain under it is above the camera', () => {
         const transform = createMercatorTransform(new LngLat(0, 0), 15, 60);
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 5000));
@@ -561,12 +617,11 @@ describe('transform', () => {
         transform.recalculateZoomAndCenter();
         expect(transform.elevation).toBeCloseTo(0, 10);
         expect(transform.center.lng).toBeCloseTo(10, 10);
-        expect(transform.center.lat).toBeCloseTo(50.00179860708241, 10);
+        expect(transform.center.lat).toBeCloseTo(50.00179923503546, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
-        // Latitude precision is lower as a compromise to a stable recalculateZoomAndCenter at extreme latitudes
-        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 5);
+        expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
         expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(13.836362970131438, 10);
+        expect(transform.zoom).toBeCloseTo(13.836362951286565, 10);
     });
 
     test('screenPointToMercatorCoordinate with terrain that covers nothing should fall back to 2D', () => {

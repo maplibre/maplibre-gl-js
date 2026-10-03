@@ -35,6 +35,14 @@ type RaySegment = {
 const TARGET_WORLD_STEP_PX = 4;
 const MAX_SAMPLES = 512;
 const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
+/**
+ * How many times {@link MercatorTransform.recalculateZoomAndCenter} picks the terrain under the center and moves the
+ * center onto it, and how far above or below the terrain a center may stay. Each pass keeps the camera where it is,
+ * so the center's latitude changes the mercator scale the next pass sees and the terrain pick moves with it; the
+ * remainder shrinks by the scale difference each pass, from meters to under a millimeter on the second.
+ */
+const CENTER_ON_TERRAIN_PASSES = 3;
+const CENTER_ON_TERRAIN_TOLERANCE_M = 0.0001;
 
 /**
  * @internal
@@ -338,11 +346,14 @@ export class MercatorTransform implements ITransform {
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        // find position the camera is looking on
-        const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
-        if (this.pitch < 90 && elevation >= this.getCameraAltitude()) return;
-        this._helper.recalculateZoomAndCenter(elevation);
+        for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
+            // find position the camera is looking on
+            const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(this.centerPoint, terrain);
+            const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
+            if (this.pitch < 90 && elevation >= this.getCameraAltitude()) return;
+            this._helper.recalculateZoomAndCenter(elevation);
+            if (!terrain || Math.abs(terrain.getElevationForLngLat(this.center, this) - this.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
+        }
     }
 
     /**

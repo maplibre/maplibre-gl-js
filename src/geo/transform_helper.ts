@@ -630,8 +630,11 @@ export class TransformHelper implements ITransformGetters {
 
     /**
      * Moves the center along the view to the given elevation with the camera where it is, and sets the zoom to match.
-     * The matrices are recomputed even where `setZoom` leaves the zoom as it was, as at a zoom bound, since the center
-     * and its elevation have moved.
+     * The center's distance from the camera is in meters at its new latitude, where the mercator scale differs from
+     * the old center's and is unknown until the center is, so the scale is iterated from the old center's, as
+     * {@link calculateCenterFromCameraLngLatAlt} does: two or three passes converge, and where they would not, zoomed
+     * far out at a high latitude, the last stable center is kept. The matrices are recomputed even where `setZoom`
+     * leaves the zoom as it was, as at a zoom bound, since the center and its elevation have moved.
      * @param elevation - the elevation in meters for the center
      */
     recalculateZoomAndCenter(elevation: number): void {
@@ -658,10 +661,21 @@ export class TransformHelper implements ITransformGetters {
 
         // Determine corresponding center
         const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(camPixelZ / originalPixelsPerMeter, elevation, cameraPitch);
-        const distanceToCenterPixels = distanceToCenter * originalPixelsPerMeter;
-        const centerPixelX = camPixelX + x * distanceToCenterPixels;
-        const centerPixelY = camPixelY + y * distanceToCenterPixels;
-        const center = new MercatorCoordinate(centerPixelX * mercUnitsPerPixel, centerPixelY * mercUnitsPerPixel, 0).toLngLat();
+        const centerAt = (pixelsPerMeter: number): LngLat => {
+            const distanceToCenterPixels = distanceToCenter * pixelsPerMeter;
+            return new MercatorCoordinate((camPixelX + x * distanceToCenterPixels) * mercUnitsPerPixel, (camPixelY + y * distanceToCenterPixels) * mercUnitsPerPixel, 0).toLngLat();
+        };
+        let pixelsPerMeter = originalPixelsPerMeter;
+        let center = centerAt(pixelsPerMeter);
+        let step = Infinity;
+        for (let pass = 0; pass < 10; pass++) {
+            const centerPixelsPerMeter = mercatorZfromAltitude(1, center.lat) * this.worldSize;
+            const nextStep = Math.abs(centerPixelsPerMeter - pixelsPerMeter);
+            if (nextStep <= 1e-12 * pixelsPerMeter || nextStep >= step) break;
+            step = nextStep;
+            pixelsPerMeter = centerPixelsPerMeter;
+            center = centerAt(pixelsPerMeter);
+        }
 
         const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenter / mercUnitsPerMeter / this.tileSize);
