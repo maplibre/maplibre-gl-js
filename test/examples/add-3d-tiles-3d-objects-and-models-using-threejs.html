@@ -160,7 +160,7 @@
             map.addLayer(layer, 'rivers');
 
             // Add 3D Tiles to the scene
-            await layer.load3dTiles({
+            const tilesAsset = await layer.load3dTiles({
                 tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
                 offset: { east: 0, up: -234, south: 0 },
                 maxDepth: 5
