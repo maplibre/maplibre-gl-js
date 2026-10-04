@@ -441,7 +441,8 @@ export type MapOptions = {
      * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
      *   to bearing change regardless of cursor position.
      *
-     * `true` is the `'circular'` and `false` the `'linear'` {@link DragRotateOptions.movement}, which takes precedence when it is passed.
+     * @deprecated Use {@link MapOptions.dragRotate} instead, with `{around: 'center', movement: 'circular'}` for `true`
+     * and `{around: 'center', movement: 'linear'}` for `false`. Its `movement` takes precedence over this option when both are passed.
      */
     aroundCenter?: boolean;
 };

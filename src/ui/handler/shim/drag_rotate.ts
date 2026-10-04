@@ -33,7 +33,7 @@ export type DragRotateOptions = {
      */
     around?: 'center' | 'pointer';
     /**
-     * How the pointer turns the map. If `'circular'` is passed, the map follows the pointer around the center like a wheel,
+     * How a drag around the center turns the map. If `'circular'` is passed, the map follows the pointer around the center like a wheel,
      * so the same drag turns it one way above the center and the other way below. If `'linear'` is passed, the bearing follows
      * the horizontal movement of the pointer, the same way anywhere on the map. A drag around the pointer is always linear.
      * @defaultValue 'circular', or 'linear' if {@link MapOptions.aroundCenter} is `false`
@@ -81,7 +81,7 @@ export class DragRotateHandler {
      * ```ts
      * map.dragRotate.enable();
      * map.dragRotate.enable({around: 'pointer'});
-     * map.dragRotate.enable({movement: 'linear'});
+     * map.dragRotate.enable({around: 'center', movement: 'linear'});
      * ```
      */
     enable(options?: DragRotateOptions | boolean): void {
