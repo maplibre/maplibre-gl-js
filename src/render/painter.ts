@@ -263,7 +263,7 @@ export class Painter {
             context: this.context,
             programCache: this.programCache,
             currentPass: 'offscreen',
-            getMeshFromTileID: (tileID, hasBorder, allowPoles, usage) => style.projection.getMeshFromTileID(this.context, tileID, hasBorder, allowPoles, usage)
+            projection: style.projection
         });
 
         this.lineAtlas = style.lineAtlas;
