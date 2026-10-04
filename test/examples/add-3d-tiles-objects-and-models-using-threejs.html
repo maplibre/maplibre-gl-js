@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Add 3D Tiles and 3D objects using ThreeJS</title>
+    <title>Add 3D Tiles, objects and models using ThreeJS</title>
     <meta property="og:description" content="Use maplibre-gl-three to add 3D Tiles and Three.JS objects to a map." />
     <meta property="og:category" content="3D Models & Buildings" />
     <meta property="og:created" content="2026-03-03" />
@@ -47,6 +47,7 @@
     <script type="module">
         import * as maplibregl from 'maplibre-gl';
         import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
         import { ThreeDManager } from 'maplibre-gl-three';
 
 
@@ -54,7 +55,7 @@
         const style = {
             "version": 8,
             "terrain": {
-                "source": "height-mock"
+                "source": "mapterhorn",
             },
             "projection": {
                 "type": "globe"
@@ -109,14 +110,9 @@
                 }
             ],
             "sources": {
-                "height-mock": {
-                    "type": "raster-dem",
-                    "tiles": [
-                        "todo"
-                    ],
-                    "tileSize": 256,
-                    "maxzoom": 8,
-                    "encoding": "mapbox"
+                "mapterhorn": {
+                   "type": "raster-dem",
+                    "url": "https://tiles.mapterhorn.com/tilejson.json"
                 },
                 "osm-tiles": {
                     "type": "raster",
@@ -131,134 +127,14 @@
                 "osm-vectors": {
                     "type": "geojson",
                     "data": {
-                        "type": "FeatureCollection",
-                        "features": [
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "type": "river"
-                                },
-                                "geometry": {
-                                    "type": "LineString",
-                                    "coordinates": [
-                                        [
-                                            -75.587048,
-                                            40.035393
-                                        ],
-                                        [
-                                            -75.590677,
-                                            40.036812
-                                        ],
-                                        [
-                                            -75.595126,
-                                            40.037389
-                                        ],
-                                        [
-                                            -75.600501,
-                                            40.035389
-                                        ],
-                                        [
-                                            -75.603808,
-                                            40.034465
-                                        ]
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "type": "road"
-                                },
-                                "geometry": {
-                                    "type": "LineString",
-                                    "coordinates": [
-                                        [
-                                            -75.605282,
-                                            40.041043
-                                        ],
-                                        [
-                                            -75.601071,
-                                            40.040964
-                                        ],
-                                        [
-                                            -75.597454,
-                                            40.04072
-                                        ],
-                                        [
-                                            -75.595296,
-                                            40.040899
-                                        ],
-                                        [
-                                            -75.592183,
-                                            40.041221
-                                        ]
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "type": "road"
-                                },
-                                "geometry": {
-                                    "type": "LineString",
-                                    "coordinates": [
-                                        [
-                                            -75.592032,
-                                            40.032431
-                                        ],
-                                        [
-                                            -75.593718,
-                                            40.036774
-                                        ],
-                                        [
-                                            -75.594677,
-                                            40.038622
-                                        ],
-                                        [
-                                            -75.596183,
-                                            40.040017
-                                        ],
-                                        [
-                                            -75.596631,
-                                            40.040788
-                                        ]
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "Feature",
-                                "properties": {
-                                    "type": "road"
-                                },
-                                "geometry": {
-                                    "type": "LineString",
-                                    "coordinates": [
-                                        [
-                                            -75.596631,
-                                            40.040788
-                                        ],
-                                        [
-                                            -75.596344,
-                                            40.040007
-                                        ],
-                                        [
-                                            -75.595194,
-                                            40.038884
-                                        ],
-                                        [
-                                            -75.593856,
-                                            40.036754
-                                        ],
-                                        [
-                                            -75.592126,
-                                            40.032307
-                                        ]
-                                    ]
-                                }
-                            }
-                        ]
-                    }
+                    "type": "FeatureCollection",
+                    "name": "data",
+                    "features": [
+                        { "type": "Feature", "properties": { "type": "river" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59358962696858, 40.03772819453738 ], [ -75.593878571259893, 40.037677943356279 ], [ -75.594384223769737, 40.037696787549187 ], [ -75.595087740305161, 40.037558596801155 ], [ -75.595125428690991, 40.037367014173206 ], [ -75.600501, 40.035389 ], [ -75.603808, 40.034465 ] ] } },
+                        { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.605282, 40.041043 ], [ -75.601071, 40.040964 ], [ -75.597454, 40.04072 ], [ -75.595296, 40.040899 ], [ -75.592183, 40.041221 ] ] } },
+                        { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59365715199317, 40.03684094712105 ], [ -75.594373231323885, 40.03837988954232 ], [ -75.595993831914456, 40.039780641215543 ], [ -75.596227813976469, 40.040122977386801 ], [ -75.596471218134923, 40.040628629896645 ], [ -75.596631, 40.040788 ] ] } },
+                        { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.596631, 40.040788 ], [ -75.596643956569906, 40.040630200246071 ], [ -75.596549735605336, 40.040375803641737 ], [ -75.596344, 40.040007 ], [ -75.596094334276657, 40.039717827239159 ], [ -75.594618205831765, 40.038455266313967 ], [ -75.593795342741203, 40.036796977337588 ] ] } }
+                    ]}
                 }
             }
         }
@@ -300,7 +176,7 @@
 
             // Add a group of 4 spheres, with offsets in meter from a geographical center 
             const placement = new THREE.Group();
-            placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.595, 40.040], height: 140 }));
+            placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.594, 40.040], height: 110 }));
             const geometry = new THREE.SphereGeometry(10, 32, 16);
             const northSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xff0000 }));
             const southSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
@@ -310,7 +186,11 @@
             southSphere.position.set(0, 0, 30);
             eastSphere.position.set(30, 0, 0);
             westSphere.position.set(-30, 0, 0);
-            placement.add(northSphere, southSphere, eastSphere, westSphere);
+
+            const model = await new GLTFLoader().loadAsync(
+                'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf'
+            );
+            placement.add(northSphere, southSphere, eastSphere, westSphere, model.scene);
             layer.getScene().add(placement);
 
             map.on('remove', () => threeDManager.destroy());

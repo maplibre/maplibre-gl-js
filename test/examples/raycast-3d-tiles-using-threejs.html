@@ -38,14 +38,15 @@
             "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
             "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
+            "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
             "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
-            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/type-wrappers/proj4-wrapper.js",
-            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/type-wrappers/geotiff-wrapper.js",
-            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@1.0.2/dist/maplibre-gl-three.js"
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/maplibre-gl-three.js"
         }
     }
 </script>
-<div id="status">Loading 3D Tiles...</div>
+<div id="status">...</div>
 <div id="map"></div>
 
 <script type="module">
@@ -58,130 +59,91 @@
         : `${window.location.origin}/docs/assets/height-mock/110_above_sea.png`;
 
     const style = {
-        version: 8,
-        terrain: {
-            source: 'height-mock'
+        "version": 8,
+        "terrain": {
+            "source": "mapterhorn",
         },
-        layers: [
+        "projection": {
+            "type": "globe"
+        },
+        "layers": [
             {
-                id: 'background-map',
-                type: 'raster',
-                source: 'osm-tiles'
+                "id": "background-map",
+                "type": "raster",
+                "source": "osm-tiles"
             },
             {
-                id: 'rivers',
-                type: 'line',
-                source: 'osm-vectors',
-                filter: ['==', 'type', 'river'],
-                paint: {
-                    'line-color': 'rgba(69, 69, 255, 1)',
-                    'line-width': 3
+                "id": "rivers",
+                "type": "line",
+                "source": "osm-vectors",
+                "filter": [
+                    "==",
+                    "type",
+                    "river"
+                ],
+                "paint": {
+                    "line-color": "rgba(69, 69, 255, 1)",
+                    "line-width": 3
                 }
             },
             {
-                id: 'roads-outline',
-                type: 'line',
-                source: 'osm-vectors',
-                filter: ['==', 'type', 'road'],
-                paint: {
-                    'line-color': 'rgba(10, 10, 10, 1)',
-                    'line-width': 6
+                "id": "roads-outline",
+                "type": "line",
+                "source": "osm-vectors",
+                "filter": [
+                    "==",
+                    "type",
+                    "road"
+                ],
+                "paint": {
+                    "line-color": "rgba(10, 10, 10, 1)",
+                    "line-width": 6
                 }
             },
             {
-                id: 'roads-fill',
-                type: 'line',
-                source: 'osm-vectors',
-                filter: ['==', 'type', 'road'],
-                paint: {
-                    'line-color': 'rgba(255, 255, 255, 1)',
-                    'line-width': 4
+                "id": "roads-fill",
+                "type": "line",
+                "source": "osm-vectors",
+                "filter": [
+                    "==",
+                    "type",
+                    "road"
+                ],
+                "paint": {
+                    "line-color": "rgba(255, 255, 255, 1)",
+                    "line-width": 4
                 }
             }
         ],
-        sources: {
-            'height-mock': {
-                type: 'raster-dem',
-                tiles: [terrainTileUrl],
-                tileSize: 256,
-                maxzoom: 8,
-                encoding: 'mapbox'
+        "sources": {
+            "mapterhorn": {
+                "type": "raster-dem",
+                "url": "https://tiles.mapterhorn.com/tilejson.json"
             },
-            'osm-tiles': {
-                type: 'raster',
-                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                tileSize: 256,
-                minzoom: 0,
-                maxzoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
+            "osm-tiles": {
+                "type": "raster",
+                "tiles": [
+                    "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                ],
+                "tileSize": 256,
+                "minzoom": 0,
+                "maxzoom": 19,
+                "attribution": "&copy; OpenStreetMap contributors"
             },
-            'osm-vectors': {
-                type: 'geojson',
-                data: {
-                    type: 'FeatureCollection',
-                    features: [
-                        {
-                            type: 'Feature',
-                            properties: {type: 'river'},
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: [
-                                    [-75.587048, 40.035393],
-                                    [-75.590677, 40.036812],
-                                    [-75.595126, 40.037389],
-                                    [-75.600501, 40.035389],
-                                    [-75.603808, 40.034465]
-                                ]
-                            }
-                        },
-                        {
-                            type: 'Feature',
-                            properties: {type: 'road'},
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: [
-                                    [-75.605282, 40.041043],
-                                    [-75.601071, 40.040964],
-                                    [-75.597454, 40.04072],
-                                    [-75.595296, 40.040899],
-                                    [-75.592183, 40.041221]
-                                ]
-                            }
-                        },
-                        {
-                            type: 'Feature',
-                            properties: {type: 'road'},
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: [
-                                    [-75.592032, 40.032431],
-                                    [-75.593718, 40.036774],
-                                    [-75.594677, 40.038622],
-                                    [-75.596183, 40.040017],
-                                    [-75.596631, 40.040788]
-                                ]
-                            }
-                        },
-                        {
-                            type: 'Feature',
-                            properties: {type: 'road'},
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: [
-                                    [-75.596631, 40.040788],
-                                    [-75.596344, 40.040007],
-                                    [-75.595194, 40.038884],
-                                    [-75.593856, 40.036754],
-                                    [-75.592126, 40.032307]
-                                ]
-                            }
-                        }
-                    ]
-                }
+            "osm-vectors": {
+                "type": "geojson",
+                "data": {
+                "type": "FeatureCollection",
+                "name": "data",
+                "features": [
+                    { "type": "Feature", "properties": { "type": "river" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59358962696858, 40.03772819453738 ], [ -75.593878571259893, 40.037677943356279 ], [ -75.594384223769737, 40.037696787549187 ], [ -75.595087740305161, 40.037558596801155 ], [ -75.595125428690991, 40.037367014173206 ], [ -75.600501, 40.035389 ], [ -75.603808, 40.034465 ] ] } },
+                    { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.605282, 40.041043 ], [ -75.601071, 40.040964 ], [ -75.597454, 40.04072 ], [ -75.595296, 40.040899 ], [ -75.592183, 40.041221 ] ] } },
+                    { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59365715199317, 40.03684094712105 ], [ -75.594373231323885, 40.03837988954232 ], [ -75.595993831914456, 40.039780641215543 ], [ -75.596227813976469, 40.040122977386801 ], [ -75.596471218134923, 40.040628629896645 ], [ -75.596631, 40.040788 ] ] } },
+                    { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.596631, 40.040788 ], [ -75.596643956569906, 40.040630200246071 ], [ -75.596549735605336, 40.040375803641737 ], [ -75.596344, 40.040007 ], [ -75.596094334276657, 40.039717827239159 ], [ -75.594618205831765, 40.038455266313967 ], [ -75.593795342741203, 40.036796977337588 ] ] } }
+                ]}
             }
         }
-    };
-
+    }
     const map = new maplibregl.Map({
         terrainSkirtLength: 'none',
         container: 'map',
