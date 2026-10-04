@@ -12,7 +12,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeTransform} from '../geo/projection/globe_transform.ts';
 import {VerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createDEM} from '../util/test/util.ts';
+import {createDEM, createDEMTerrain} from '../util/test/util.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -341,7 +341,7 @@ describe('Terrain', () => {
         expect(terrain.getElevationForLngLat(new LngLat(90, -40), transform)).toBeCloseTo(100, 6);
     });
 
-    test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
+    test('getElevationForLngLat reads at the tile zoom outside the drawn tiles', () => {
         const zoom = 10;
         const painter = {
             context: new Context(gl),
@@ -371,6 +371,19 @@ describe('Terrain', () => {
 
         expect(spy).toHaveBeenCalled();
         expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(zoom);
+    });
+
+    test('getElevationForLngLat reads the DEM tiles of the tile zoom where no drawn tile covers the point', () => {
+        const demElevation = 3000;
+        const dem = createDEM(() => demElevation);
+        const terrain = createDEMTerrain([], dem);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(800, 600);
+        transform.setZoom(14.6);
+        transform.setCenter(new LngLat(11.4, 47.3));
+        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === transform.tileZoom ? {tileID, dem} as Tile : undefined;
+
+        expect(terrain.getElevationForLngLat(transform.center, transform)).toBe(demElevation);
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
