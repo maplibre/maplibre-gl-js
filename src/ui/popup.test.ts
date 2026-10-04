@@ -1147,4 +1147,29 @@ describe('popup', () => {
 
         map.remove();
     });
+
+    test('Popup with a height offset is drawn above its ground position', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const ground = new Popup().setLngLat([0, 0]).setText('ground').addTo(map);
+        const raised = new Popup({heightOffset: 5000}).setLngLat([0, 0]).setText('raised').addTo(map);
+
+        expect(raised.getHeightOffset()).toBe(5000);
+        expect(raised.getHeightAnchor()).toBe('ground');
+        expect(raised._pos.y).toBeLessThan(ground._pos.y);
+
+        map.remove();
+    });
+
+    test('setHeightOffset moves an existing popup', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const popup = new Popup().setLngLat([0, 0]).setText('x').addTo(map);
+        const atGround = popup._pos.y;
+
+        popup.setHeightOffset(5000);
+
+        expect(popup._pos.y).toBeLessThan(atGround);
+        expect(popup.getHeightOffset()).toBe(5000);
+
+        map.remove();
+    });
 });

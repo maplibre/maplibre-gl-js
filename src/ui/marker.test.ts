@@ -1171,6 +1171,84 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker with a height offset is drawn above its ground position', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const ground = new Marker().setLngLat([0, 0]).addTo(map);
+        const raised = new Marker({heightOffset: 5000}).setLngLat([0, 0]).addTo(map);
+
+        expect(raised.getHeightOffset()).toBe(5000);
+        expect(raised.getHeightAnchor()).toBe('ground');
+        expect(raised._pos.y).toBeLessThan(ground._pos.y);
+
+        map.remove();
+    });
+
+    test('a raised marker is tested for terrain cover at its raised point', async () => {
+        const map = createMap();
+        await map.once('load');
+        map.terrain = createTerrain();   // 1000 m everywhere
+        const elevations: number[] = [];
+        map._camera.transform.isLocationOccluded = (_lngLat, _terrain, elevation) => { elevations.push(elevation); return false; };
+        new Marker({heightOffset: 50}).setLngLat([0, 0]).addTo(map);
+        await sleep(50);
+
+        expect(elevations).toContain(1050);
+
+        map.remove();
+    });
+
+    test('Marker height offset is measured from the terrain by default, and from the datum when absolute', () => {
+        const map = createMap();
+        map.terrain = createTerrain();   // 1000 m everywhere
+        const onGround = new Marker({heightOffset: 500}).setLngLat([0, 0]).addTo(map);
+        const absolute = new Marker({heightOffset: 500, heightAnchor: 'absolute'}).setLngLat([0, 0]).addTo(map);
+
+        expect(onGround._elevation()).toBe(1500);
+        expect(absolute._elevation()).toBe(500);
+
+        map.remove();
+    });
+
+    test('a bound popup is raised to the marker height', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const ground = new Marker().setLngLat([0, 0]).setPopup(new Popup().setText('ground')).addTo(map);
+        const raised = new Marker({heightOffset: 5000}).setLngLat([0, 0]).setPopup(new Popup().setText('raised')).addTo(map);
+
+        ground.togglePopup();
+        raised.togglePopup();
+
+        expect(raised.getPopup().getHeightOffset()).toBe(5000);
+        expect(raised.getPopup()._pos.y).toBeLessThan(ground.getPopup()._pos.y);
+
+        map.remove();
+    });
+
+    test('setHeightOffset raises a popup that is already bound', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const marker = new Marker().setLngLat([0, 0]).setPopup(new Popup().setText('x')).addTo(map);
+        marker.togglePopup();
+        const atGround = marker.getPopup()._pos.y;
+
+        marker.setHeightOffset(5000);
+
+        expect(marker.getPopup()._pos.y).toBeLessThan(atGround);
+
+        map.remove();
+    });
+
+    test('setHeightOffset moves an existing marker', () => {
+        const map = createMap({pitch: 60, zoom: 12});
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+        const atGround = marker._pos.y;
+
+        marker.setHeightOffset(5000);
+
+        expect(marker._pos.y).toBeLessThan(atGround);
+        expect(marker.getHeightOffset()).toBe(5000);
+
+        map.remove();
+    });
+
     test('Marker runs the last terrain check a 100 ms window held back once the window closes', async () => {
         const map = createMap();
         await map.once('load');

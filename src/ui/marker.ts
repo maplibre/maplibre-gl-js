@@ -20,6 +20,24 @@ import type {Terrain} from '../render/terrain.ts';
 export type Alignment = 'map' | 'viewport' | 'auto';
 
 /**
+ * The datum a marker's height offset is measured from.
+ */
+export type HeightAnchor = 'ground' | 'absolute';
+
+/**
+ * @internal
+ * The elevation, in meters above the zero elevation datum, at which a marker or popup with the given height
+ * offset is drawn, or `undefined` when it sits on the ground and the ordinary ground projection applies.
+ * `absolute` ignores the terrain below the location, `ground` adds the offset to it.
+ */
+export function heightOffsetElevation(map: Map, lngLat: LngLat, heightOffset: number, heightAnchor: HeightAnchor): number | undefined {
+    if (heightAnchor === 'absolute') return heightOffset;
+    if (!heightOffset) return undefined;
+    const terrain = map.terrain;
+    return heightOffset + (terrain ? terrain.getElevationForLngLat(lngLat, map._camera.transform) : 0);
+}
+
+/**
  * Screen-pixel deltas applied when a focused draggable marker is moved with the arrow keys.
  */
 const ARROW_KEY_DELTAS: Partial<Record<KeyboardEvent['key'], [number, number]>> = {
@@ -177,6 +195,18 @@ export type MarkerOptions = {
       * @defaultValue false
       */
     subpixelPositioning?: boolean;
+    /**
+     * Raises the marker above the ground, in meters. Mirrors the `symbol-height-offset`
+     * layout property of symbol layers.
+     * @defaultValue 0
+     */
+    heightOffset?: number;
+    /**
+     * The datum `heightOffset` is measured from: the terrain surface below the marker
+     * (`ground`) or the zero elevation datum (`absolute`). Mirrors `symbol-height-anchor`.
+     * @defaultValue 'ground'
+     */
+    heightAnchor?: HeightAnchor;
 };
 
 /**
@@ -309,6 +339,8 @@ export class Marker extends Evented<MarkerEventType> {
     _opacity: string;
     _opacityWhenCovered: string;
     _subpixelPositioning: boolean;
+    _heightOffset: number;
+    _heightAnchor: HeightAnchor;
     _roleManaged: boolean;
     _tabIndexManaged: boolean;
     _keyboardDragActive: boolean;
@@ -325,6 +357,8 @@ export class Marker extends Evented<MarkerEventType> {
         this._draggable = options?.draggable || false;
         this._clickTolerance = options?.clickTolerance || 0;
         this._subpixelPositioning = options?.subpixelPositioning || false;
+        this._heightOffset = options?.heightOffset || 0;
+        this._heightAnchor = options?.heightAnchor || 'ground';
         this._isDragging = false;
         this._roleManaged = false;
         this._tabIndexManaged = false;
@@ -491,8 +525,18 @@ export class Marker extends Evented<MarkerEventType> {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
         this._update();
-        if (this._popup) this._popup.setLngLat(this._lngLat);
+        this._syncPopup();
         return this;
+    }
+
+    /**
+     * Keeps the bound popup on the marker's anchor, height included, so a popup on a roof does not
+     * fall back to the street below.
+     */
+    _syncPopup(): void {
+        if (!this._popup) return;
+        this._popup.setHeightOffset(this._heightOffset, this._heightAnchor);
+        if (this._lngLat) this._popup.setLngLat(this._lngLat);
     }
 
     /**
@@ -540,6 +584,7 @@ export class Marker extends Evented<MarkerEventType> {
                 } as Offset : this._offset;
             }
             this._popup = popup;
+            this._syncPopup();
 
             this._element.addEventListener('keypress', this._onKeyPress);
         }
@@ -705,6 +750,14 @@ export class Marker extends Evented<MarkerEventType> {
 
     /**
      * @internal
+     * The elevation the marker is drawn at, or `undefined` when it sits on the ground.
+     */
+    _elevation(): number | undefined {
+        return heightOffsetElevation(this._map, this._lngLat, this._heightOffset, this._heightAnchor);
+    }
+
+    /**
+     * @internal
      * Applies `opacityWhenCovered` and the covered class while the terrain covers the marker, closing its popup;
      * `_updateCovered` runs it at most once per 100 ms. Nothing to do once the marker, the terrain or the viewport's
      * view of the marker is gone.
@@ -731,7 +784,7 @@ export class Marker extends Evented<MarkerEventType> {
      */
     _isCovered(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
-        const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
+        const elevation = this._elevation() ?? terrain.getElevationForLngLat(this._lngLat, transform);
         const metersToCenter = Math.max(0, -this._offset.y) / transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
         return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
@@ -748,7 +801,10 @@ export class Marker extends Evented<MarkerEventType> {
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
-        this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
+        const elevation = this._elevation();
+        this._flatPos = this._pos = elevation === undefined ?
+            this._map.project(this._lngLat)._add(this._offset) :
+            this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, elevation)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
             this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
@@ -778,6 +834,43 @@ export class Marker extends Evented<MarkerEventType> {
 
         this._updateOpacity();
     };
+
+    /**
+     * Sets how far above the ground the marker is drawn, in meters.
+     * @param heightOffset - the height in meters
+     * @param heightAnchor - the datum the height is measured from, `ground` (the default) or `absolute`
+     * @returns `this`
+     * @example
+     * ```ts
+     * // a marker floating 50 m above the terrain
+     * marker.setHeightOffset(50);
+     * // a marker at a fixed altitude, ignoring the terrain below it
+     * marker.setHeightOffset(2000, 'absolute');
+     * ```
+     */
+    setHeightOffset(heightOffset: number, heightAnchor?: HeightAnchor): this {
+        this._heightOffset = heightOffset;
+        if (heightAnchor) this._heightAnchor = heightAnchor;
+        this._update();
+        this._syncPopup();
+        return this;
+    }
+
+    /**
+     * Get how far above the ground the marker is drawn, in meters.
+     * @returns The marker's height offset.
+     */
+    getHeightOffset(): number {
+        return this._heightOffset;
+    }
+
+    /**
+     * Get the datum the marker's height offset is measured from.
+     * @returns `ground` or `absolute`.
+     */
+    getHeightAnchor(): HeightAnchor {
+        return this._heightAnchor;
+    }
 
     /**
      * Get the marker's offset.

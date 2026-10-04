@@ -414,6 +414,10 @@ export class GlobeTransform implements ITransform {
         this.currentTransform.setLocationAtPoint(lnglat, point, elevation);
     }
 
+    locationToScreenPointAtElevation(lnglat: LngLat, elevation: number): Point {
+        return this.currentTransform.locationToScreenPointAtElevation(lnglat, elevation);
+    }
+
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return this.currentTransform.locationToScreenPoint(lnglat, terrain);
     }
