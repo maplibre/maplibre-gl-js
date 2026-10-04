@@ -481,7 +481,7 @@ export class Painter {
         } else if (isBackgroundStyleLayer(layer)) {
             draw.background(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCustomStyleLayer(layer)) {
-            draw.custom(painter, tileManager, layer, frameRenderContext);
+            draw.custom(painter, tileManager, layer, coords, frameRenderContext);
         }
     }
 
