@@ -13,9 +13,10 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
 
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {Terrain} from '../../render/terrain.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -618,7 +619,9 @@ export class MercatorTransform implements ITransform {
         let maxX = worldSize;
         let scaleY = 0;
         let scaleX = 0;
-        const {x: screenWidth, y: screenHeight} = this.size;
+        const {top = 0, bottom = 0, left = 0, right = 0} = this.padding;
+        const screenWidth = this.width - left - right;
+        const screenHeight = this.height - top - bottom;
 
         if (this._helper._latRange) {
             const latRange = this._helper._latRange;

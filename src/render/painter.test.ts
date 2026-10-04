@@ -4,7 +4,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-import {StubMap} from '../util/test/util.ts';
+import {StubMap, createFrameRenderData} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
@@ -14,16 +14,7 @@ describe('render', () => {
     let map: any;
     let style: Style;
     let transform: MercatorTransform;
-    const renderOptions = {
-        fadeDuration: 0,
-        moving: false,
-        rotating: false,
-        showOverdrawInspector: false,
-        showPadding: false,
-        showTileBoundaries: false,
-        zooming: false,
-        anisotropicFilterPitch: 20,
-    };
+    const renderOptions = createFrameRenderData();
 
     beforeEach(() => {
         const gl = createNullGL();
@@ -39,7 +30,7 @@ describe('render', () => {
     test('must not fail with incompletely loaded style', () => {
         painter.render(style, transform, renderOptions);
 
-        expect(painter.renderContext.currentPass).toBe('translucent');
+        expect(painter.frameRenderContext.currentPass).toBe('translucent');
     });
 
     test('calls terrainDepth', () => {
@@ -71,25 +62,26 @@ describe('render', () => {
         expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
-    test('builds render context from the transform, globe projection and terrain', () => {
+    test('builds frame render context from the transform, terrain and frame data', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
         vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         vi.spyOn(painter.drawFunctions, 'atmosphere').mockImplementation(() => {});
 
-        painter.render(style, transform, renderOptions);
+        const data = {...renderOptions, projectionTransition: 1, isRenderingGlobe: true};
 
-        expect(painter.renderContext.transform).toBe(transform);
-        expect(painter.renderContext.terrain).toBe(terrain);
-        expect(painter.renderContext.projectionTransition).toBe(1);
-        expect(painter.renderContext.isRenderingGlobe).toBe(true);
+        painter.render(style, transform, data);
+
+        expect(painter.frameRenderContext.transform).toBe(transform);
+        expect(painter.frameRenderContext.terrain).toBe(terrain);
+        expect(painter.frameRenderContext.data).toBe(data);
     });
 
-    test('uses render context for depth and blending when drawing a custom layer', () => {
+    test('uses frame render context for depth and blending when drawing a custom layer', () => {
         painter.render(style, transform, renderOptions);
-        const renderContext = painter.renderContext;
-        renderContext.depthRangeFor3D = [0.1, 0.8];
+        const frameRenderContext = painter.frameRenderContext;
+        frameRenderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
             expect(painter.context.blend.get()).toBe(true);
@@ -97,7 +89,7 @@ describe('render', () => {
         });
         const layer = new CustomStyleLayer({id: 'custom', type: 'custom', renderingMode: '3d', render}, {});
 
-        painter.renderLayer(painter, null, layer, [], renderContext);
+        painter.renderLayer(painter, null, layer, [], frameRenderContext);
 
         expect(render).toHaveBeenCalledTimes(1);
     });

@@ -384,6 +384,17 @@ describe('AttributionControl', () => {
         expect(attributionControl._innerContainer.querySelector('[onerror]')).toBeNull();
     });
 
+    test('an unclosed disallowed tag in one attribution does not erase the other attributions', async () => {
+        const attributionControl = new AttributionControl({
+            customAttribution: ['<font>&copy; A', '&copy; OpenStreetMap contributors']
+        });
+        map.addControl(attributionControl);
+        await map.once('load');
+
+        const innerContainer = map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner');
+        expect(innerContainer?.innerHTML).toBe('© OpenStreetMap contributors');
+    });
+
     test('only recreates attributions if sanitized attribution content changes', async () => {
         const attributionControl = new AttributionControl({
             customAttribution: 'MapLibre<script>alert("xss")</script>'

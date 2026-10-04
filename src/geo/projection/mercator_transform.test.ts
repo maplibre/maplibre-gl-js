@@ -61,6 +61,17 @@ describe('transform', () => {
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
     });
 
+    test('setMinElevationForCurrentTile below sea level moves the far plane', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setZoom(11.46);
+        transform.setPitch(60);
+
+        transform.setMinElevationForCurrentTile(-455.5);
+
+        expect(transform.farZ).toBe(1870.705545073004);
+    });
+
     test('does not throw on bad center', () => {
         expect(() => {
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
@@ -181,6 +192,35 @@ describe('transform', () => {
         transform.setZoom(10);
         transform.setCenter(new LngLat(-50, -30));
         expect(transform.center).toEqual(new LngLat(-4.828338623046875, -4.828969771321582));
+    });
+
+    test('constrains center to padded viewport', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+        transform.setZoom(7);
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+        transform.setPadding({top: 0, right: 500, bottom: 500, left: 0});
+
+        transform.setCenter(new LngLat(50, -50));
+
+        const southeast = transform.locationToScreenPoint(new LngLat(5, -5));
+        expect(southeast.x).toBeCloseTo(500, 6);
+        expect(southeast.y).toBeCloseTo(500, 6);
+    });
+
+    test('re-constrains center when padding changes', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+        transform.setZoom(7);
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
+        transform.setPadding({top: 0, right: 500, bottom: 500, left: 0});
+        transform.setCenter(new LngLat(50, -50));
+
+        transform.setPadding({top: 0, right: 0, bottom: 0, left: 0});
+
+        const southeast = transform.locationToScreenPoint(new LngLat(5, -5));
+        expect(southeast.x).toBeCloseTo(1000, 6);
+        expect(southeast.y).toBeCloseTo(1000, 6);
     });
 
     test('lngRange & latRange constrain zoom and center after cloning', () => {

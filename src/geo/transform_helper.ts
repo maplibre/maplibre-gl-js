@@ -227,7 +227,9 @@ export class TransformHelper implements ITransformGetters {
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number): void {
+        if (ele === this._minElevationForCurrentTile) return;
         this._minElevationForCurrentTile = ele;
+        this._calcMatrices();
     }
 
     get tileSize(): number { return this._tileSize; }
@@ -422,6 +424,7 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = false;
         // Update edge-insets in-place
         this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
+        this.constrainInternal();
         this._calcMatrices();
     }
 
