@@ -1149,6 +1149,8 @@ describe('Terrain changing under and around a gesture', () => {
     const wheelNotch = 25 * simulate.magicWheelZoomDelta;
     const framesOfTheWheelEasing = 13;
     const framesUntilTheZoomEnds = 15;
+    const framesPerWheelNotch = 4;
+    const movesPerDrag = 40;
     function cameraMove(from: [number, number, number], to: [number, number, number]): number {
         return Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
     }
@@ -1156,6 +1158,44 @@ describe('Terrain changing under and around a gesture', () => {
     function cameraPosition(map: Map): [number, number, number] {
         const {lng, lat} = map._camera.transform.getCameraLngLat();
         return [lng * metersPerDegree, lat * metersPerDegree, map._camera.transform.getCameraAltitude()];
+    }
+
+    function renderFrames(frame: () => void, count: number): void {
+        for (let i = 0; i < count; i++) frame();
+    }
+
+    /** Presses the right button at `from` and drags it to `to` in {@link movesPerDrag} moves, a frame after each; the button stays down. */
+    function dragWithTheRightButton(map: Map, frame: () => void, from: [number, number], to: [number, number]): void {
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: from[0], clientY: from[1]});
+        for (let move = 1; move <= movesPerDrag; move++) {
+            simulate.mousemove(window.document.body, {buttons: 2, clientX: from[0] + (to[0] - from[0]) * move / movesPerDrag, clientY: from[1] + (to[1] - from[1]) * move / movesPerDrag});
+            frame();
+        }
+    }
+
+    /** Scrolls the wheel by `deltaY` at `point` `notches` times, {@link framesPerWheelNotch} frames after each, and returns how far the camera moved in each frame. */
+    function wheelNotches(map: Map, frame: () => void, deltaY: number, point: [number, number], notches: number): number[] {
+        const moves: number[] = [];
+        for (let notch = 0; notch < notches; notch++) {
+            simulate.wheel(map.getCanvas(), {deltaY, clientX: point[0], clientY: point[1]});
+            for (let i = 0; i < framesPerWheelNotch; i++) {
+                const before = cameraPosition(map);
+                frame();
+                moves.push(cameraMove(before, cameraPosition(map)));
+            }
+        }
+        return moves;
+    }
+
+    /** Renders `count` frames and returns how far south the camera moved in each; negative is north. */
+    function southwardCameraMovesOverFrames(map: Map, frame: () => void, count: number): number[] {
+        const moves: number[] = [];
+        for (let i = 0; i < count; i++) {
+            const before = cameraPosition(map);
+            frame();
+            moves.push(before[1] - cameraPosition(map)[1]);
+        }
+        return moves;
     }
 
     function createMapOverFlatTerrain(options: Partial<MapOptions>, elevation: number): Promise<{map: Map; frame: () => void}> {
@@ -1314,13 +1354,9 @@ describe('Terrain changing under and around a gesture', () => {
         const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 70, maxPitch: 85}, hill, 0, 450);
         const start = cameraPosition(map);
 
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 100});
-        for (let move = 1; move <= 40; move++) {
-            simulate.mousemove(window.document.body, {buttons: 2, clientX: 40 + 3 * move, clientY: 100});
-            frame();
-        }
+        dragWithTheRightButton(map, frame, [40, 100], [160, 100]);
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 160, clientY: 100});
-        for (let i = 0; i < 90; i++) frame();
+        renderFrames(frame, 90);
 
         expect(map.getZoom()).toBeCloseTo(15, 6);
         expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(start[2], 1);
@@ -1332,7 +1368,7 @@ describe('Terrain changing under and around a gesture', () => {
         setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 5000 : 0, 0, 5000);
 
         map.easeTo({pitch: 70, duration: 500});
-        for (let i = 0; i < 45; i++) frame();
+        renderFrames(frame, 45);
 
         expect(map.getCameraTargetElevation()).toBe(0);
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(5000, 0);
@@ -1357,30 +1393,28 @@ describe('Terrain changing under and around a gesture', () => {
 
     test('a pitch drag past 90 degrees over terrain that rests before its release leaves the camera where it rested', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 14, pitch: 60, maxPitch: 110}, 500);
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 190});
-        for (let i = 1; i <= 40; i++) {
-            simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 190 - 190 * i / 40});
-            frame();
-        }
-        for (let i = 0; i < 10; i++) frame();
+        dragWithTheRightButton(map, frame, [100, 190], [100, 0]);
+        renderFrames(frame, 10);
         const camera = cameraPosition(map);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 0});
-        for (let i = 0; i < 30; i++) frame();
+        renderFrames(frame, 30);
 
         expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
     });
 
     function ridges(list: Array<{y: number; height: number; width: number}>): TerrainHeight {
-        return (_lng, lat) => {
-            const y = lat * metersPerDegree;
-            let elevation = 0;
-            for (const ridge of list) {
-                const d = (y - ridge.y) / ridge.width;
-                if (Math.abs(d) < 1) elevation += ridge.height * (1 - d * d);
-            }
-            return elevation;
-        };
+        return (_lng, lat) => list.reduce((elevation, ridge) => {
+            const d = (lat * metersPerDegree - ridge.y) / ridge.width;
+            return Math.abs(d) < 1 ? elevation + ridge.height * (1 - d * d) : elevation;
+        }, 0);
+    }
+
+    async function cameraMovesZoomingOutOver(height: TerrainHeight, max: number): Promise<number[]> {
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 16.2, pitch: 60, maxZoom: 18}, height, 0, max);
+        const moves = wheelNotches(map, frame, wheelNotch, [111, 124], 4);
+        vi.useRealTimers();
+        return moves;
     }
 
     test('a wheel zoom over terrain that rose under the held center moves the center onto that terrain, and its end leaves the camera and the zoom where they were', async () => {
@@ -1389,17 +1423,14 @@ describe('Terrain changing under and around a gesture', () => {
         simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
         frame();
         setTerrainHeight(map, () => 1000, 1000, 1000);
-        for (let notch = 0; notch < 12; notch++) {
-            simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
-            for (let i = 0; i < 4; i++) frame();
-        }
-        for (let i = 0; i < framesOfTheWheelEasing; i++) frame();
+        wheelNotches(map, frame, -4 * wheelNotch, [100, 100], 12);
+        renderFrames(frame, framesOfTheWheelEasing);
         expect(map.isMoving()).toBe(true);
         expect(map.getCameraTargetElevation()).toBe(1000);
         const zoom = map.getZoom();
         const camera = cameraPosition(map);
 
-        for (let i = 0; i < framesUntilTheZoomEnds; i++) frame();
+        renderFrames(frame, framesUntilTheZoomEnds);
 
         expect(map.isMoving()).toBe(false);
         expect(map.getCameraTargetElevation()).toBe(1000);
@@ -1409,24 +1440,10 @@ describe('Terrain changing under and around a gesture', () => {
 
     test('a wheel zoom-out over a crest between the camera and the center moves the camera as it would over flat ground at the center\'s elevation', async () => {
         const crest = ridges([{y: -157.7, height: 878.4, width: 318.2}]);
-        const zoomOut = async (height: TerrainHeight, max: number) => {
-            const {map, frame} = await createMapOverShapedTerrain({zoom: 16.2, pitch: 60, maxZoom: 18}, height, 0, max);
-            const moves: number[] = [];
-            for (let notch = 0; notch < 4; notch++) {
-                simulate.wheel(map.getCanvas(), {deltaY: wheelNotch, clientX: 111, clientY: 124});
-                for (let i = 0; i < 4; i++) {
-                    const before = cameraPosition(map);
-                    frame();
-                    moves.push(cameraMove(before, cameraPosition(map)));
-                }
-            }
-            vi.useRealTimers();
-            return moves;
-        };
-        const overTheCrest = await zoomOut(crest, 880);
+        const overTheCrest = await cameraMovesZoomingOutOver(crest, 880);
         const centerElevation = crest(0, 0);
 
-        const overFlatGround = await zoomOut(() => centerElevation, centerElevation);
+        const overFlatGround = await cameraMovesZoomingOutOver(() => centerElevation, centerElevation);
 
         expect(Math.max(...overTheCrest.map((move, i) => Math.abs(move - overFlatGround[i])))).toBeLessThan(1e-5);
     });
@@ -1434,16 +1451,8 @@ describe('Terrain changing under and around a gesture', () => {
     test('a wheel zoom whose screen center slips over a crest never speeds up more than 2.3 times from one frame to the next', async () => {
         const terrain = ridges([{y: -423.8, height: 652.7, width: 363.3}, {y: 8.26, height: 876.5, width: 301.4}, {y: -852.2, height: 382.6, width: 300.4}]);
         const {map, frame} = await createMapOverShapedTerrain({zoom: 14.6, pitch: 70, bearing: 30, maxPitch: 85, maxZoom: 18}, terrain, 0, 2020);
-        const moves: number[] = [];
 
-        for (let notch = 0; notch < 13; notch++) {
-            simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 23, clientY: 79});
-            for (let i = 0; i < 4; i++) {
-                const before = cameraPosition(map);
-                frame();
-                moves.push(cameraMove(before, cameraPosition(map)));
-            }
-        }
+        const moves = wheelNotches(map, frame, -wheelNotch, [23, 79], 13);
         const speedUps = moves.slice(1).map((move, i) => moves[i] > 1 ? move / moves[i] : 0);
 
         expect(Math.max(...speedUps)).toBeLessThan(2.3);
@@ -1453,16 +1462,13 @@ describe('Terrain changing under and around a gesture', () => {
         const fallingSouthward: TerrainHeight = (_lng, lat) => 1000 + 0.2 * lat * metersPerDegree;
         const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 60, maxZoom: 18}, fallingSouthward, 0, 2000);
 
-        for (let notch = 0; notch < 6; notch++) {
-            simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 170});
-            for (let i = 0; i < 4; i++) frame();
-        }
-        for (let i = 0; i < framesOfTheWheelEasing; i++) frame();
+        wheelNotches(map, frame, -wheelNotch, [100, 170], 6);
+        renderFrames(frame, framesOfTheWheelEasing);
         expect(map.isMoving()).toBe(true);
         expect(map.getCameraTargetElevation()).toBeCloseTo(fallingSouthward(map.getCenter().lng, map.getCenter().lat), 1);
         const camera = cameraPosition(map);
 
-        for (let i = 0; i < framesUntilTheZoomEnds; i++) frame();
+        renderFrames(frame, framesUntilTheZoomEnds);
 
         expect(map.isMoving()).toBe(false);
         expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.001);
@@ -1472,14 +1478,9 @@ describe('Terrain changing under and around a gesture', () => {
         const blockSouthEdge = -0.06, blockNorthEdge = -0.04;
         const block: TerrainHeight = (_lng, lat) => lat > blockSouthEdge && lat < blockNorthEdge ? 500 : 0;
         const {map, frame} = await createMapOverShapedTerrain({center: [0.1758, -0.03], zoom: 12, pitch: 80, maxPitch: 85, maxZoom: 12.5}, block, 0, 500);
-        const southwardMoves: number[] = [];
 
         simulate.wheel(map.getCanvas(), {deltaY: -wheelNotch, clientX: 100, clientY: 100});
-        for (let i = 0; i < framesOfTheWheelEasing + framesUntilTheZoomEnds; i++) {
-            const before = cameraPosition(map);
-            frame();
-            southwardMoves.push(before[1] - cameraPosition(map)[1]);
-        }
+        const southwardMoves = southwardCameraMovesOverFrames(map, frame, framesOfTheWheelEasing + framesUntilTheZoomEnds);
 
         expect(map.isMoving()).toBe(false);
         expect(Math.max(...southwardMoves)).toBeLessThanOrEqual(0);
@@ -1494,7 +1495,7 @@ describe('Terrain changing under and around a gesture', () => {
 
         setTerrainHeight(map, slopeRisingNorth(500), 0, 2000);
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
-        for (let i = 0; i < 8; i++) frame();
+        renderFrames(frame, 8);
 
         expect(map.getCameraTargetElevation()).toBe(1000);
     });
@@ -1502,10 +1503,7 @@ describe('Terrain changing under and around a gesture', () => {
     test('a wheel zoom with the center not clamped to the ground leaves the center elevation where it was', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 70, maxZoom: 18, centerClampedToGround: false}, 1000);
 
-        for (let notch = 0; notch < 4; notch++) {
-            simulate.wheel(map.getCanvas(), {deltaY: -4 * wheelNotch, clientX: 100, clientY: 100});
-            for (let i = 0; i < 4; i++) frame();
-        }
+        wheelNotches(map, frame, -4 * wheelNotch, [100, 100], 4);
 
         expect(map.getCameraTargetElevation()).toBe(0);
     });
