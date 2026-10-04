@@ -21,9 +21,6 @@ describe('Program', () => {
         cache = new ProgramCache(new Context(gl));
     });
 
-    // Chromium answers every query with a dead value between a GPU process crash and
-    // isContextLost() turning true (#8607), so the link fails while the context still
-    // looks live.
     function stubDeadGpuQueries() {
         vi.mocked(gl.getProgramParameter).mockImplementation((_program, pname) => {
             if (pname === gl.LINK_STATUS) return false;
@@ -32,7 +29,7 @@ describe('Program', () => {
         });
     }
 
-    test('a dead GPU process is tolerated before isContextLost() flips', () => {
+    test('a dead GPU process is tolerated while isContextLost() still reports live (Chromium link failure, #8607)', () => {
         stubDeadGpuQueries();
 
         const program = cache.getProgram(clippingMaskVariant);
