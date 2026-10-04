@@ -51,9 +51,14 @@
                       14,
                       ['get', 'render_height']
                   ],
-                  'fill-extrusion-base': ['case',
-                      ['>=', ['get', 'zoom'], 16],
-                      ['get', 'render_min_height'], 0
+                  'fill-extrusion-base': [
+                      'interpolate',
+                      ['linear'],
+                      ['zoom'],
+                      13,
+                      0,
+                      14,
+                      ['get', 'render_min_height']
                   ]
               }
           }
