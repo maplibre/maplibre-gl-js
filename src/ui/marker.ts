@@ -2,6 +2,7 @@ import {DOM} from '../util/dom.ts';
 import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
+import {getElevationForHeightOffset, type HeightAnchor} from '../util/height_offset.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
 import Point from '@mapbox/point-geometry';
@@ -22,21 +23,6 @@ export type Alignment = 'map' | 'viewport' | 'auto';
 /**
  * The datum a marker's height offset is measured from.
  */
-export type HeightAnchor = 'ground' | 'absolute';
-
-/**
- * @internal
- * The elevation, in meters above the zero elevation datum, at which a marker or popup with the given height
- * offset is drawn, or `undefined` when it sits on the ground and the ordinary ground projection applies.
- * `absolute` ignores the terrain below the location, `ground` adds the offset to it.
- */
-export function heightOffsetElevation(map: Map, lngLat: LngLat, heightOffset: number, heightAnchor: HeightAnchor): number | undefined {
-    if (heightAnchor === 'absolute') return heightOffset;
-    if (!heightOffset) return undefined;
-    const terrain = map.terrain;
-    return heightOffset + (terrain ? terrain.getElevationForLngLat(lngLat, map._camera.transform) : 0);
-}
-
 /**
  * Screen-pixel deltas applied when a focused draggable marker is moved with the arrow keys.
  */
@@ -752,8 +738,8 @@ export class Marker extends Evented<MarkerEventType> {
      * @internal
      * The elevation the marker is drawn at, or `undefined` when it sits on the ground.
      */
-    _elevation(): number | undefined {
-        return heightOffsetElevation(this._map, this._lngLat, this._heightOffset, this._heightAnchor);
+    _getElevationForHeightOffset(): number | undefined {
+        return getElevationForHeightOffset(this._map, this._lngLat, this._heightOffset, this._heightAnchor);
     }
 
     /**
@@ -784,10 +770,10 @@ export class Marker extends Evented<MarkerEventType> {
      */
     _isCovered(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
-        const elevation = this._elevation() ?? terrain.getElevationForLngLat(this._lngLat, transform);
+        const markerElevation = this._getElevationForHeightOffset() ?? terrain.getElevationForLngLat(this._lngLat, transform);
         const metersToCenter = Math.max(0, -this._offset.y) / transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
-        return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
+        return transform.isLocationOccluded(this._lngLat, terrain, markerElevation + elevationToCenter);
     }
 
     /**
@@ -801,10 +787,10 @@ export class Marker extends Evented<MarkerEventType> {
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
-        const elevation = this._elevation();
-        this._flatPos = this._pos = elevation === undefined ?
+        const markerElevation = this._getElevationForHeightOffset();
+        this._flatPos = this._pos = markerElevation === undefined ?
             this._map.project(this._lngLat)._add(this._offset) :
-            this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, elevation)._add(this._offset);
+            this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, markerElevation)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
             this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);

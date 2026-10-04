@@ -9,7 +9,7 @@ import {FullscreenControl, FullscreenEvent, type FullscreenControlEventType, typ
 import {TerrainControl} from './ui/control/terrain_control.ts';
 import {GlobeControl} from './ui/control/globe_control.ts';
 import {type Offset, Popup, PopupEvent, type PopupEventType, type PopupOptions} from './ui/popup.ts';
-import {type Alignment, type HeightAnchor, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
+import {type Alignment, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
 import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style.ts';
 import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
@@ -49,6 +49,7 @@ import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileM
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
+import type {HeightAnchor} from './util/height_offset.ts';
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
 import type {AnchoredCameraOptions, AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';

@@ -20,6 +20,7 @@ type MapOptions = {
 
 // The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
 const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
+const screenY = (item: Marker | Popup) => parseFloat(item.getElement().style.transform.match(translateRegex)[2]);
 
 function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
@@ -1183,28 +1184,30 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('a raised marker is tested for terrain cover at its raised point', async () => {
+    test('the terrain cover of a raised marker is checked at its raised elevation', async () => {
         const map = createMap();
         await map.once('load');
         map.terrain = createTerrain();   // 1000 m everywhere
-        const elevations: number[] = [];
-        map._camera.transform.isLocationOccluded = (_lngLat, _terrain, elevation) => { elevations.push(elevation); return false; };
-        new Marker({heightOffset: 50}).setLngLat([0, 0]).addTo(map);
+        map._camera.transform.isLocationOccluded = (_lngLat, _terrain, elevation) => elevation < 1050;
+        const onGround = new Marker().setLngLat([0, 0]).addTo(map);
+        const raised = new Marker({heightOffset: 50}).setLngLat([0, 0]).addTo(map);
         await sleep(50);
 
-        expect(elevations).toContain(1050);
+        expect(onGround.getElement().style.opacity).toBe('0.2');
+        expect(raised.getElement().style.opacity).toBe('1');
 
         map.remove();
     });
 
     test('Marker height offset is measured from the terrain by default, and from the datum when absolute', () => {
-        const map = createMap();
+        const map = createMap({pitch: 60, zoom: 12});
         map.terrain = createTerrain();   // 1000 m everywhere
-        const onGround = new Marker({heightOffset: 500}).setLngLat([0, 0]).addTo(map);
-        const absolute = new Marker({heightOffset: 500, heightAnchor: 'absolute'}).setLngLat([0, 0]).addTo(map);
+        const onGround = new Marker().setLngLat([0, 0]).addTo(map);
+        const fromTerrain = new Marker({heightOffset: 500}).setLngLat([0, 0]).addTo(map);
+        const fromDatum = new Marker({heightOffset: 500, heightAnchor: 'absolute'}).setLngLat([0, 0]).addTo(map);
 
-        expect(onGround._elevation()).toBe(1500);
-        expect(absolute._elevation()).toBe(500);
+        expect(screenY(fromTerrain)).toBeLessThan(screenY(onGround));
+        expect(screenY(onGround)).toBeLessThan(screenY(fromDatum));
 
         map.remove();
     });
@@ -1218,7 +1221,7 @@ describe('marker', () => {
         raised.togglePopup();
 
         expect(raised.getPopup().getHeightOffset()).toBe(5000);
-        expect(raised.getPopup()._pos.y).toBeLessThan(ground.getPopup()._pos.y);
+        expect(screenY(raised.getPopup())).toBeLessThan(screenY(ground.getPopup()));
 
         map.remove();
     });
@@ -1227,11 +1230,11 @@ describe('marker', () => {
         const map = createMap({pitch: 60, zoom: 12});
         const marker = new Marker().setLngLat([0, 0]).setPopup(new Popup().setText('x')).addTo(map);
         marker.togglePopup();
-        const atGround = marker.getPopup()._pos.y;
+        const atGround = screenY(marker.getPopup());
 
         marker.setHeightOffset(5000);
 
-        expect(marker.getPopup()._pos.y).toBeLessThan(atGround);
+        expect(screenY(marker.getPopup())).toBeLessThan(atGround);
 
         map.remove();
     });
@@ -1239,11 +1242,11 @@ describe('marker', () => {
     test('setHeightOffset moves an existing marker', () => {
         const map = createMap({pitch: 60, zoom: 12});
         const marker = new Marker().setLngLat([0, 0]).addTo(map);
-        const atGround = marker._pos.y;
+        const atGround = screenY(marker);
 
         marker.setHeightOffset(5000);
 
-        expect(marker._pos.y).toBeLessThan(atGround);
+        expect(screenY(marker)).toBeLessThan(atGround);
         expect(marker.getHeightOffset()).toBe(5000);
 
         map.remove();

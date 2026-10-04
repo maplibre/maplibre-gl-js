@@ -5,7 +5,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import Point from '@mapbox/point-geometry';
-import {heightOffsetElevation, type HeightAnchor} from './marker.ts';
+import {getElevationForHeightOffset, type HeightAnchor} from '../util/height_offset.ts';
 
 import type {MapLibreEvent, MapMouseEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
@@ -357,8 +357,8 @@ export class Popup extends Evented<PopupEventType> {
      * @internal
      * The elevation the popup is anchored at, or `undefined` when it sits on the ground.
      */
-    _elevation(): number | undefined {
-        return heightOffsetElevation(this._map, this._lngLat, this._heightOffset, this._heightAnchor);
+    _getElevationForHeightOffset(): number | undefined {
+        return getElevationForHeightOffset(this._map, this._lngLat, this._heightOffset, this._heightAnchor);
     }
 
     /**
@@ -730,12 +730,12 @@ export class Popup extends Evented<PopupEventType> {
         }
         if (this._trackPointer && !cursor) return;
 
-        const elevation = this._elevation();
+        const popupElevation = this._getElevationForHeightOffset();
         const anchorPoint = this._trackPointer && cursor ?
             cursor :
-            elevation === undefined ?
+            popupElevation === undefined ?
                 this._map.project(this._lngLat) :
-                this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, elevation);
+                this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, popupElevation);
         const pos = this._flatPos = this._pos = anchorPoint;
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points

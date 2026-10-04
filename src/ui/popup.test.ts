@@ -11,6 +11,7 @@ const containerWidth = 512;
 const containerHeight = 512;
 // The pixel translate of a popup element: `translate(-50%,-100%) translate(10px,20px)`
 const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
+const screenY = (popup: Popup) => parseFloat(popup.getElement().style.transform.match(translateRegex)[2]);
 
 function createMap(options?) {
     options ||= {};
@@ -1155,7 +1156,7 @@ describe('popup', () => {
 
         expect(raised.getHeightOffset()).toBe(5000);
         expect(raised.getHeightAnchor()).toBe('ground');
-        expect(raised._pos.y).toBeLessThan(ground._pos.y);
+        expect(screenY(raised)).toBeLessThan(screenY(ground));
 
         map.remove();
     });
@@ -1163,11 +1164,11 @@ describe('popup', () => {
     test('setHeightOffset moves an existing popup', () => {
         const map = createMap({pitch: 60, zoom: 12});
         const popup = new Popup().setLngLat([0, 0]).setText('x').addTo(map);
-        const atGround = popup._pos.y;
+        const atGround = screenY(popup);
 
         popup.setHeightOffset(5000);
 
-        expect(popup._pos.y).toBeLessThan(atGround);
+        expect(screenY(popup)).toBeLessThan(atGround);
         expect(popup.getHeightOffset()).toBe(5000);
 
         map.remove();
