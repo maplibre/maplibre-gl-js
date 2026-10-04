@@ -183,10 +183,6 @@ interface ITransformMutators {
     setCenter(center: LngLat): void;
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
-
-    /**
-     * Tells the transform how far below the datum geometry is drawn, so the far plane reaches it.
-     */
     setMinGeometryElevation(elevation: number): void;
     setPadding(padding: PaddingOptions): void;
     /**

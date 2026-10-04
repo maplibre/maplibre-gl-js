@@ -65,9 +65,9 @@ void main() {
 	    // Raise the "ceiling" of elements by the elevation of the centroid, in meters.
         float height_terrain3d_offset = get_elevation(a_centroid);
         // To avoid having buildings "hang above a slope", create a "basement"
-        // by lowering the "floor" of elements whose base is at ground level.
+        // by lowering the "floor" of ground-level elements.
         // This is in addition to the elevation of the centroid, in meters.
-        float base_terrain3d_offset = height_terrain3d_offset - (base == 0.0 ? 10.0 : 0.0);
+        float base_terrain3d_offset = height_terrain3d_offset - (base != 0.0 ? 0.0 : 10.0);
     #else
         float height_terrain3d_offset = 0.0;
         float base_terrain3d_offset = 0.0;

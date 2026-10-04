@@ -78,8 +78,7 @@ export class FillExtrusionBucket implements Bucket {
     hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     /**
-     * The lowest point this bucket draws at, in meters. Zero unless something is extruded below
-     * the datum, in which case the camera needs a far plane that reaches it.
+     * Lowest data-driven base or height in meters, 0 unless something is extruded below the datum.
      */
     minElevation: number;
     segments: SegmentVector;
@@ -173,19 +172,14 @@ export class FillExtrusionBucket implements Bucket {
         this.uploaded = true;
     }
 
-    /**
-     * Remembers how far below the datum this feature reaches, so the far plane can be made to
-     * include it. Both base and height are checked: either may be negative. Constant values are
-     * skipped: the painter reads those from the layer each frame, so a runtime change is not missed.
-     */
-    trackMinElevation(layer: FillExtrusionStyleLayer, feature: BucketFeature, canonical: CanonicalTileID): void {
-        const base = layer.paint.get('fill-extrusion-base');
-        const height = layer.paint.get('fill-extrusion-height');
-        const lowest = Math.min(
-            base.isConstant() ? 0 : base.evaluate(feature, {}, canonical),
-            height.isConstant() ? 0 : height.evaluate(feature, {}, canonical));
-        if (lowest < this.minElevation) {
-            this.minElevation = lowest;
+    trackMinElevation(feature: BucketFeature, canonical: CanonicalTileID): void {
+        // constant values are read from the layers each frame, see getMinExtrusionElevation
+        for (const layer of this.layers) {
+            const base = layer.paint.get('fill-extrusion-base');
+            const height = layer.paint.get('fill-extrusion-height');
+            this.minElevation = Math.min(this.minElevation,
+                base.isConstant() ? 0 : base.evaluate(feature, {}, canonical),
+                height.isConstant() ? 0 : height.evaluate(feature, {}, canonical));
         }
     }
 
@@ -199,7 +193,7 @@ export class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting): void {
-        this.trackMinElevation(this.layers[0], feature, canonical);
+        this.trackMinElevation(feature, canonical);
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};

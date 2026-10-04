@@ -66,4 +66,15 @@ describe('FillExtrusionBucket', () => {
         expect(bucketWithoutRounding.layoutVertexArray.length).toBeGreaterThan(0);
         expect(bucketWithRounding.layoutVertexArray.length).toBeGreaterThan(bucketWithoutRounding.layoutVertexArray.length);
     });
+
+    test('FillExtrusionBucket tracks the lowest data-driven base of every layer it holds', () => {
+        const ground = new FillExtrusionStyleLayer({id: 'ground', type: 'fill-extrusion', source: 'water', paint: {'fill-extrusion-height': 10}}, {});
+        const underground = new FillExtrusionStyleLayer({id: 'underground', type: 'fill-extrusion', source: 'water', paint: {'fill-extrusion-base': ['coalesce', ['get', 'base'], -30], 'fill-extrusion-height': ['coalesce', ['get', 'height'], -20]}}, {});
+        for (const layer of [ground, underground]) layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+        const bucket = new FillExtrusionBucket({layers: [ground, underground]} as BucketParameters<FillExtrusionStyleLayer>);
+
+        bucket.populate(getFeaturesFromLayer(sourceLayer), createPopulateOptions([]), {x: 0, y: 0, z: 14} as any);
+
+        expect(bucket.minElevation).toBe(-30);
+    });
 });

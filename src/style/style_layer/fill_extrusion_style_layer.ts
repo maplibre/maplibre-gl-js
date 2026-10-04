@@ -227,10 +227,7 @@ function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: n
 }
 
 /**
- * The lowest point any visible fill-extrusion reaches, in meters: 0, or negative when something is
- * extruded below the datum. The map hands it to the transform before each frame so the far plane
- * covers that geometry. Constants are read from the layers, so a runtime paint change is seen on
- * the next frame; data-driven values come from the buckets, which tracked them at layout.
+ * Lowest base or height of the visible fill-extrusion layers in meters, used to extend the far plane.
  */
 export function getMinExtrusionElevation(style: Style, zoom: number): number {
     let minElevation = 0;

@@ -136,12 +136,6 @@ export class TransformHelper implements ITransformGetters {
     _center: LngLat;
     _elevation: number;
     _minElevationForCurrentTile: number;
-    /**
-     * Lowest point drawn by geometry extruded below the datum, in meters.
-     * Kept separate from {@link _minElevationForCurrentTile}: that field is owned by the
-     * terrain DEM and rewritten from it every frame, while this one is owned by the
-     * fill-extrusion pass; the far-plane computation takes the minimum of both.
-     */
     _minGeometryElevation: number;
     _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
@@ -244,7 +238,6 @@ export class TransformHelper implements ITransformGetters {
     setMinGeometryElevation(ele: number): void {
         if (ele === this._minGeometryElevation) return;
         this._minGeometryElevation = ele;
-        // it feeds the far plane, so the matrices have to be rebuilt for it to take effect
         this._calcMatrices();
     }
 
