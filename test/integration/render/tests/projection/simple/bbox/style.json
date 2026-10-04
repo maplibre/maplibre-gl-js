@@ -1,0 +1,51 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Requests raster tiles by their bounds in the simple CRS. The two upper tiles cover x 0..45 and 45..90, with y 45..90. Only URLs containing those native bounds have fixtures.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "center": [
+    45,
+    45
+  ],
+  "zoom": 1,
+  "projection": {
+    "type": "simple"
+  },
+  "sources": {
+    "maplibre": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/simple-bbox/{bbox}.png"
+      ],
+      "maxzoom": 2,
+      "tileSize": 256,
+      "bounds": [
+        0,
+        45,
+        90,
+        90
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "maplibre",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}

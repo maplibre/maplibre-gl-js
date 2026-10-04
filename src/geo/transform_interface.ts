@@ -10,6 +10,7 @@ import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
+import type {TileMatrix} from './projection/tile_matrix.ts';
 
 /**
  * @internal
@@ -22,6 +23,8 @@ import type {Frustum} from '../util/primitives/frustum.ts';
  * and vice versa.
  */
 export interface WorldCoordinateHelper {
+    /** Grid for native CRS tile URLs. Omitted for Web Mercator tiles, including globe maps. */
+    readonly tileMatrix?: TileMatrix;
     /**
      * The name of the flat projection whose plane this is: `mercator`, or the `name` of a CRS registered
      * with `addProjection`.

@@ -1,5 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
+import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -189,6 +190,28 @@ describe('RasterTileSource', () => {
         expect(update).toHaveBeenCalledWith(
             expect.objectContaining({width: 1, height: 1, data: new Uint8Array(4)}),
             expect.anything());
+    });
+
+    test('requests native CRS bounds through transformRequest', async () => {
+        const url = 'http://example.com/wms?bbox=-90,0,0,90';
+        server.respondWith([204, {}, '']);
+        const source = createSource({tiles: ['http://example.com/wms?bbox={bbox}']}, async (url) => ({
+            url,
+            headers: {'X-Tile-Request': 'native'}
+        }));
+        source.map.style.projection = new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs));
+        source.map.painter = {context: {}, getTileTexture: () => ({update() {}})} as any;
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        const tile = {tileID: new OverscaledTileID(1, 0, 1, 0, 0), state: 'loading'} as Tile;
+        const loading = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await loading;
+
+        expect(server.requests[0].url).toBe(url);
+        expect(server.requests[0].requestHeaders['X-Tile-Request']).toBe('native');
+        expect(tile.state).toBe('loaded');
     });
 
     test('can asynchronously transform tile request', async () => {

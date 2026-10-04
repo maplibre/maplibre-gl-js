@@ -3,6 +3,8 @@ import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
 import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 
+import type {TileMatrix} from '../geo/projection/tile_matrix.ts';
+
 describe('CanonicalTileID', () => {
     test('constructor', () => {
         expect(() => {
@@ -48,6 +50,22 @@ describe('CanonicalTileID', () => {
 
     test('.url replaces {bbox-epsg-3857}', () => {
         expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox-epsg-3857}'], 1)).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
+    });
+
+    test('.url uses Web Mercator for {bbox} without a custom grid', () => {
+        expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox}'], 1)).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
+    });
+
+    test('.url replaces every {bbox} with native UTM33 bounds', () => {
+        const tileMatrix: TileMatrix = {origin: [-2500000, 9045984], extentAtZoom0: 5545984};
+        expect(new CanonicalTileID(13, 3645, 3414).url(['{bbox}/{bbox}'], 1, 'xyz', tileMatrix))
+            .toBe('-32335,6734029,-31658,6734706/-32335,6734029,-31658,6734706');
+    });
+
+    test('.url keeps native bounds in x/y order when TMS reverses the row', () => {
+        const tileMatrix: TileMatrix = {origin: [-90, 90], extentAtZoom0: 180};
+        expect(new CanonicalTileID(1, 0, 0).url(['{y}?bbox={bbox}&mercator={bbox-epsg-3857}'], 1, 'tms', tileMatrix))
+            .toBe('1?bbox=-90,0,0,90&mercator=-20037508.342789244,0,0,20037508.342789244');
     });
 
     test('.url replaces {ratio}', () => {

@@ -6,6 +6,7 @@ import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
 
 import type {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
+import type {TileMatrix} from '../geo/projection/tile_matrix.ts';
 
 /**
  * A canonical way to define a tile ID
@@ -33,9 +34,15 @@ export class CanonicalTileID implements ICanonicalTileID {
     }
 
     /**
-     * given a list of urls, choose a url template and return a tile URL
+     * Chooses a URL template and replaces its tile tokens.
+     * `{bbox}` uses the tile matrix's coordinates in minX,minY,maxX,maxY order,
+     * or EPSG:3857 when no tile matrix is supplied. `{bbox-epsg-3857}` always uses EPSG:3857.
+     * @example
+     * ```ts
+     * tileID.url(['https://example.com/tiles?bbox={bbox}'], 1, 'xyz', tileMatrix);
+     * ```
      */
-    url(urls: string[], pixelRatio: number, scheme?: string | null): string {
+    url(urls: string[], pixelRatio: number, scheme?: string | null, tileMatrix?: TileMatrix): string {
         const bbox = getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
@@ -46,7 +53,8 @@ export class CanonicalTileID implements ICanonicalTileID {
             .replace(/{y}/g, String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
             .replace(/{ratio}/g, pixelRatio > 1 ? '@2x' : '')
             .replace(/{quadkey}/g, quadkey)
-            .replace(/{bbox-epsg-3857}/g, bbox);
+            .replace(/{bbox-epsg-3857}/g, bbox)
+            .replace(/{bbox}/g, () => tileMatrix ? getCrsTileBBox(this.x, this.y, this.z, tileMatrix) : bbox);
     }
 
     isChildOf(parent: ICanonicalTileID): boolean {
@@ -64,6 +72,13 @@ export class CanonicalTileID implements ICanonicalTileID {
     toString(): string {
         return `${this.z}/${this.x}/${this.y}`;
     }
+}
+
+/** Returns tile bounds in the matrix's coordinate units, ordered minX,minY,maxX,maxY. */
+function getCrsTileBBox(x: number, y: number, z: number, tileMatrix: TileMatrix): string {
+    const size = tileMatrix.extentAtZoom0 / Math.pow(2, z);
+    const [originX, originY] = tileMatrix.origin;
+    return [originX + x * size, originY - (y + 1) * size, originX + (x + 1) * size, originY - y * size].join(',');
 }
 
 /**

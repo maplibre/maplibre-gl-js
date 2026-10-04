@@ -10,7 +10,7 @@ import {getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../u
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
-import { MercatorProjection } from '../geo/projection/mercator_projection.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';

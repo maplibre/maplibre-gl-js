@@ -48,9 +48,11 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
     private readonly _extent: number;
     /** A CRS is a bounded plane: no world copies, no wrapping, and no latitude clamp. */
     readonly wraps = false;
+    readonly tileMatrix: TileMatrix;
 
     constructor(definition: CrsDefinition) {
         this._definition = definition;
+        this.tileMatrix = definition.tileMatrix;
         this._originX = definition.tileMatrix.origin[0];
         this._originY = definition.tileMatrix.origin[1];
         this._extent = definition.tileMatrix.extentAtZoom0;

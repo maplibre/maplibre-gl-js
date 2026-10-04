@@ -166,6 +166,33 @@ describe('VectorTileSource', () => {
         });
     });
 
+    test('uses native CRS bounds for vector tiles and their overzoom parent', async () => {
+        const source = createSource({maxzoom: 1, tiles: ['http://example.com/tiles?bbox={bbox}']}, async (url) => ({
+            url,
+            headers: {'X-Tile-Request': 'native'}
+        }));
+        source.map.style.projection = new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs));
+        source.map._zoomLevelsToOverscale = 1;
+        let parameters: WorkerTileParameters;
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                parameters = message.data as WorkerTileParameters;
+                return Promise.resolve({});
+            }
+        });
+        await waitForMetadataEvent(source);
+
+        await source.loadTile({
+            tileID: new OverscaledTileID(2, 0, 2, 1, 0),
+            loadVectorData() {}
+        } as unknown as Tile);
+
+        expect(parameters.request.url).toBe('http://example.com/tiles?bbox=-45,45,0,90');
+        expect(parameters.request.headers['X-Tile-Request']).toBe('native');
+        expect(parameters.overzoomParameters.overzoomRequest.url).toBe('http://example.com/tiles?bbox=-90,0,0,90');
+        expect(parameters.overzoomParameters.overzoomRequest.headers['X-Tile-Request']).toBe('native');
+    });
+
     function testScheme(scheme, expectedURL) {
         test(`scheme "${scheme}"`, async () => {
             const source = createSource({
