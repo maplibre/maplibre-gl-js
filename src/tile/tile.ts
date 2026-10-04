@@ -454,6 +454,14 @@ export class Tile {
         return this.state === 'loaded' || this.state === 'reloading' || this.state === 'expired';
     }
 
+    /**
+     * Whether the tile has nothing left to load: it either holds its data or the request for it
+     * failed, so waiting on it further is pointless.
+     */
+    isSettled(): boolean {
+        return this.hasData() || this.state === 'errored';
+    }
+
     patternsLoaded(): boolean {
         return this.imageAtlas && !!Object.keys(this.imageAtlas.patternPositions).length;
     }

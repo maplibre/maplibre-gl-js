@@ -12,6 +12,31 @@ import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 
 import type {Painter} from '../render/painter.ts';
 
+describe('isSettled', () => {
+    test('is not settled while the tile is still loading', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'loading';
+
+        expect(tile.hasData()).toBe(false);
+        expect(tile.isSettled()).toBe(false);
+    });
+
+    test('is settled once the tile holds data', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'loaded';
+
+        expect(tile.isSettled()).toBe(true);
+    });
+
+    test('is settled once the request for the tile has failed', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'errored';
+
+        // Waiting on a tile whose request failed is waiting for nothing.
+        expect(tile.isSettled()).toBe(true);
+    });
+});
+
 describe('isRenderable', () => {
     test('keeps transparent incoming raster tiles renderable so their fade can advance', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);

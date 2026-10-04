@@ -1,5 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Camera, type CameraInitOptions, type CameraOptions, type PointLike} from '../ui/camera.ts';
+import {TilePreloader} from './tile_preloader.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
@@ -12,6 +13,7 @@ import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
 import Point from '@mapbox/point-geometry';
 
+import type {CameraMovement} from './camera_movement.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
 
@@ -36,7 +38,8 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
         transformConstrain: options.transformConstrain,
         requestRenderFrame: (cb) => queue.add(cb),
         cancelRenderFrame: (id) => queue.remove(id),
-        transformCameraUpdate: options.transformCameraUpdate
+        transformCameraUpdate: options.transformCameraUpdate,
+        preloader: options.preloader || new TilePreloader(null)
     });
     camera.transform.resize(512, 512, true);
 
@@ -4075,5 +4078,256 @@ describe('camera options given as undefined are treated as absent', () => {
         const camera = cameraAtStart();
         camera.flyTo({...undefinedOptions, center: [10, 20], animate: false});
         expect(state(camera)).toEqual(start);
+    });
+});
+
+describe('Camera preload', () => {
+    function createPreloader() {
+        const started: Array<{duration: number; frameCount: number | undefined}> = [];
+        const advanced: number[] = [];
+        const finished = {count: 0, cancelled: {count: 0}};
+        // The movement the camera handed over, kept so that a test can walk it and compare the camera
+        // states it produces against the ones the movement itself produces.
+        let movement: CameraMovement | undefined;
+        // A preload that never settles, since nothing loads the tiles it asks for here.
+        let running = false;
+        const preloader = new TilePreloader(null);
+        preloader.start = (path, options) => {
+            started.push({duration: path.duration, frameCount: options.frameCount});
+            movement = path;
+            running = true;
+            return new Promise(() => {});
+        };
+        preloader.advance = (k) => { advanced.push(k); };
+        preloader.finish = () => { running = false; finished.count++; };
+        preloader.cancel = () => {
+            if (!running) return;
+            running = false;
+            finished.cancelled.count++;
+        };
+        return {preloader, started, advanced, finished, getMovement: () => movement};
+    }
+
+    /**
+     * A tile manager that records the camera state each covering-tile query was given, which is the
+     * preload's own view of where the movement will be. Driving the real `TilePreloader` through it
+     * is the only way to see the path the preload actually walks, rather than one written out here.
+     */
+    function recordingTileManager() {
+        const queried: Array<{lngLat: LngLat; zoom: number; bearing: number; pitch: number; elevation: number}> = [];
+        return {
+            queried,
+            tileManager: {
+                used: true,
+                coveringTiles: (tr) => {
+                    queried.push({lngLat: tr.center, zoom: tr.zoom, bearing: tr.bearing, pitch: tr.pitch, elevation: tr.elevation});
+                    return [];
+                },
+                preloadTiles: () => [],
+                releasePreloadedTiles: () => {},
+                on: () => {},
+                off: () => {}
+            }
+        };
+    }
+
+    test('the preload asks for the camera states of any movement, not just a straight one', () => {
+        // A seeded generator, so a failure names a movement that can be reproduced rather than one
+        // that has to be caught in the act.
+        let seed = 0x9e3779b9;
+        const nextRandom = () => {
+            seed = (seed + 0x6d2b79f5) | 0;
+            let t = seed;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const between = (min: number, max: number) => min + nextRandom() * (max - min);
+
+        for (let attempt = 0; attempt < 12; attempt++) {
+            const stub = vi.spyOn(timeControl, 'now');
+            stub.mockReturnValue(0);
+            const recorder = recordingTileManager();
+            const preloader = new TilePreloader({
+                style: {tileManagers: {'test-source': recorder.tileManager}}
+            } as never);
+            const {camera, queue} = createCamera({preloader});
+
+            const target = {
+                center: [between(-170, 170), between(-70, 70)] as [number, number],
+                zoom: between(2, 12),
+                bearing: between(-180, 180),
+                pitch: between(0, 60)
+            };
+            // Half fly and half ease, over a spread of zooms, bearings and pitches on both sides of
+            // the antimeridian.
+            if (attempt % 2 === 0) {
+                camera.flyTo({...target, duration: 1000, easing: (t) => t, preload: {frameCount: 4}});
+            } else {
+                camera.easeTo({...target, duration: 1000, easing: (t) => t, preload: {frameCount: 4}});
+            }
+
+            const animated = [];
+            for (let step = 1; step <= 4; step++) {
+                stub.mockReturnValue(1000 * step / 4);
+                queue.run();
+                animated.push({lngLat: camera.getCenter(), zoom: camera.getZoom(), bearing: camera.getBearing(), pitch: camera.getPitch()});
+            }
+
+            const movement = JSON.stringify(target);
+            expect(recorder.queried, movement).toHaveLength(4);
+
+            // The destination is asked about first, being the state the camera arrives to find, and
+            // the states before it are asked about in the order the camera reaches them.
+            const reached = [animated[3], animated[0], animated[1], animated[2]];
+            for (const [index, asked] of recorder.queried.entries()) {
+                expect(asked.lngLat.lng, `${movement} at ${index}`).toBeCloseTo(reached[index].lngLat.lng, 9);
+                expect(asked.lngLat.lat, `${movement} at ${index}`).toBeCloseTo(reached[index].lngLat.lat, 9);
+                expect(asked.zoom, `${movement} at ${index}`).toBeCloseTo(reached[index].zoom, 9);
+                expect(asked.bearing, `${movement} at ${index}`).toBeCloseTo(reached[index].bearing, 9);
+                expect(asked.pitch, `${movement} at ${index}`).toBeCloseTo(reached[index].pitch, 9);
+            }
+        }
+    });
+
+    test('the preload asks for the camera states the animation actually passes through', async () => {
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+        // Ground higher under the destination than under the camera, so the flight climbs and the
+        // elevation it carries is worth getting right.
+        const terrain = createTerrain();
+        terrain.getElevationForLngLat = () => 2000;
+        const recorder = recordingTileManager();
+        const preloader = new TilePreloader({
+            style: {tileManagers: {'test-source': recorder.tileManager}}
+        } as never);
+        const {camera, queue} = createCamera({preloader, terrain, centerClampedToGround: true});
+
+        // A curved easing, so that a preload sampling in raw time rather than through the movement's
+        // easing reads states the camera never reaches.
+        const easing = (t: number) => t * t * (3 - 2 * t);
+        const steps = 4;
+
+        const promise = camera.once('moveend');
+        camera.flyTo({center: [10, 0], zoom: 8, duration: 100, easing, freezeElevation: false, preload: {frameCount: steps}});
+
+        const animated = [];
+        for (let step = 1; step <= steps; step++) {
+            stub.mockReturnValue(100 * step / steps);
+            queue.run();
+            animated.push({
+                lngLat: camera.getCenter(),
+                zoom: camera.getZoom(),
+                bearing: camera.getBearing(),
+                pitch: camera.getPitch(),
+                elevation: camera.transform.elevation
+            });
+        }
+
+        // The preload asked about the whole path, with the destination first because that is the state
+        // the camera arrives to find, and the rest in the order the camera reaches it.
+        expect(recorder.queried).toHaveLength(steps);
+
+        const reached = [animated[steps - 1], ...animated.slice(0, steps - 1)];
+        for (const [index, asked] of recorder.queried.entries()) {
+            const state = reached[index];
+            expect(asked.lngLat.lng, `at ${index}`).toBeCloseTo(state.lngLat.lng, 9);
+            expect(asked.lngLat.lat, `at ${index}`).toBeCloseTo(state.lngLat.lat, 9);
+            expect(asked.zoom, `at ${index}`).toBeCloseTo(state.zoom, 9);
+            expect(asked.bearing, `at ${index}`).toBeCloseTo(state.bearing, 9);
+            expect(asked.pitch, `at ${index}`).toBeCloseTo(state.pitch, 9);
+            // A camera's elevation decides which tiles cover it, so a preload that left it out would
+            // be asking for the tiles of a camera flying at sea level.
+            expect(asked.elevation, `at ${index}`).toBe(state.elevation);
+        }
+
+        stub.mockReturnValue(100);
+        queue.run();
+        await promise;
+    });
+
+    test('an eased movement reads ahead as it runs', async () => {
+        const spy = vi.spyOn(timeControl, 'now');
+        spy.mockReturnValue(0);
+        const fake = createPreloader();
+        const {camera, queue} = createCamera({preloader: fake.preloader});
+
+        const promise = camera.once('moveend');
+        camera.easeTo({center: [100, 0], duration: 100, easing: (t) => t, preload: true});
+        expect(fake.started).toEqual([{duration: 100, frameCount: undefined}]);
+
+        const moved = camera.once('move');
+        spy.mockReturnValue(50);
+        queue.run();
+        await moved;
+        expect(fake.advanced).toEqual([0.5]);
+
+        spy.mockReturnValue(100);
+        queue.run();
+        await promise;
+        expect(fake.advanced).toEqual([0.5, 1]);
+        expect(fake.finished.count).toBe(1);
+    });
+
+    test('a flight reads ahead along its arc', () => {
+        const fake = createPreloader();
+        const {camera} = createCamera({preloader: fake.preloader});
+
+        camera.flyTo({center: [100, 0], duration: 1000, preload: true});
+
+        // A flight paces itself from its own path length, so the duration it reports is the one it
+        // will animate with rather than the one the caller asked for.
+        expect(fake.started).toHaveLength(1);
+        expect(fake.started[0].duration).toBe(1000);
+    });
+
+    test('a flight that does not animate has no path to read ahead of', () => {
+        const fake = createPreloader();
+        const {camera} = createCamera({preloader: fake.preloader});
+
+        camera.flyTo({center: [100, 0], animate: false, preload: true});
+
+        // The flight is over before it begins, so the preload is given no duration and reads nothing.
+        // Given the duration the flight would have had, it would ask for the whole path in one go.
+        expect(fake.started).toEqual([{duration: 0, frameCount: undefined}]);
+    });
+
+    test('passes the tuning the caller gave', () => {
+        const fake = createPreloader();
+        const {camera} = createCamera({preloader: fake.preloader});
+
+        camera.easeTo({center: [100, 0], preload: {maxTileCountPerSource: 12, frameCount: 3}});
+
+        expect(fake.started).toEqual([{duration: 500, frameCount: 3}]);
+    });
+
+    test('does not preload a movement that did not ask for it', () => {
+        const fake = createPreloader();
+        const {camera} = createCamera({preloader: fake.preloader});
+
+        camera.easeTo({center: [100, 0]});
+
+        expect(fake.started).toEqual([]);
+    });
+
+    test('a second movement gives up on the first', () => {
+        const fake = createPreloader();
+        const {camera} = createCamera({preloader: fake.preloader});
+
+        camera.easeTo({center: [100, 0], preload: true});
+        camera.easeTo({center: [120, 0], preload: true});
+
+        expect(fake.finished.cancelled.count).toBe(1);
+        expect(fake.started).toHaveLength(2);
+    });
+
+    test('jumping to a place gives up on the movement in progress', () => {
+        const fake = createPreloader();
+        const {camera} = createCamera({preloader: fake.preloader});
+
+        camera.easeTo({center: [100, 0], preload: true});
+        camera.jumpTo({center: [120, 0]});
+
+        expect(fake.finished.cancelled.count).toBe(1);
     });
 });

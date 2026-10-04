@@ -2870,3 +2870,150 @@ describe('TileManager content elevation', () => {
             }
         });
 });
+
+describe('TileManager.coveringTiles', () => {
+    test('covers the same tiles the camera loads itself', () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(5);
+        transform.setCenter(new LngLat(20, 30));
+
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+
+        const covered = tileManager.coveringTiles(transform).map((tileID) => tileID.key);
+
+        tileManager.update(transform);
+        const loaded = tileManager.getIds();
+
+        expect(covered.length).toBeGreaterThan(0);
+        expect(loaded.length).toBeGreaterThan(0);
+        for (const key of loaded) {
+            expect(covered).toContain(key);
+        }
+    });
+
+    test('covers no tiles for a source that is not in use', () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+
+        expect(createTileManager({}, false).coveringTiles(transform)).toEqual([]);
+    });
+});
+
+describe('TileManager.preloadTiles', () => {
+    test('loads a tile the camera has not reached and returns it', () => {
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+        const tileID = new OverscaledTileID(10, 0, 10, 500, 500);
+
+        const spy = vi.fn();
+        tileManager.getSource().loadTile = spy;
+
+        const preloaded = tileManager.preloadTiles([tileID]);
+
+        expect(preloaded).toHaveLength(1);
+        expect(preloaded[0].tileID).toEqual(tileID);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].tileID).toEqual(tileID);
+    });
+
+    test('leaves a tile the camera already has alone', async () => {
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+        const tileID = new OverscaledTileID(3, 0, 3, 2, 2);
+
+        tileManager._addTile(tileID);
+        await waitForEvent(tileManager, 'data', e => e.tile?.tileID?.key === tileID.key);
+
+        expect(tileManager.preloadTiles([tileID])).toEqual([]);
+    });
+
+    test('asks for nothing from a source the render loop would not ask either', () => {
+        // No `onAdd`, so the source has no metadata to request against, which is the state a style is
+        // in before it has loaded.
+        const tileManager = createTileManager();
+
+        expect(tileManager.preloadTiles([new OverscaledTileID(3, 0, 3, 2, 2)])).toEqual([]);
+    });
+
+    test('keeps a preloaded tile loading across an update that does not cover it', () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(5);
+        transform.setCenter(new LngLat(20, 30));
+
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+        const faraway = new OverscaledTileID(10, 0, 10, 500, 500);
+        const tile = tileManager.preloadTiles([faraway])[0];
+
+        tileManager.update(transform);
+
+        // Without retention the update would abort the request of a tile the viewport does not cover,
+        // which is what a preload spends its whole effort on getting right.
+        expect(tile.state).toBe('loading');
+        expect(tile.aborted).toBeFalsy();
+        expect(tileManager.getTileByID(faraway.key)).toBe(tile);
+    });
+
+    test('stops retaining a preloaded tile once it has loaded', async () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(5);
+        transform.setCenter(new LngLat(20, 30));
+
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+        const faraway = new OverscaledTileID(10, 0, 10, 500, 500);
+        tileManager.preloadTiles([faraway]);
+
+        await waitForEvent(tileManager, 'data', e => e.tile?.tileID?.key === faraway.key);
+        tileManager.update(transform);
+
+        expect(tileManager.getTileByID(faraway.key)).toBeUndefined();
+    });
+
+    test('keeps a preloaded tile loading across a world wrap', () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(5);
+        transform.setCenter(new LngLat(20, 30));
+
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+        // The manager reads the camera's longitude from each update, which is how it notices that the
+        // camera has moved a whole world and the in-view tiles need renaming.
+        tileManager.update(transform);
+
+        const tile = tileManager.preloadTiles([new OverscaledTileID(10, 0, 10, 500, 500)])[0];
+
+        // Crossing the world boundary renames the in-view tiles. The preload has to keep its tile by
+        // the id it now answers to, or the update below takes it for one the viewport has left and
+        // aborts the request the preload exists to have made.
+        transform.setCenter(new LngLat(200, 30));
+        tileManager.update(transform);
+
+        expect(tile.state).toBe('loading');
+        expect(tile.aborted).toBeFalsy();
+        expect(tileManager.getTileByID(tile.tileID.key)).toBe(tile);
+    });
+
+    test('releasing the preloaded tiles stops retaining them', () => {
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(5);
+        transform.setCenter(new LngLat(20, 30));
+
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+        const faraway = new OverscaledTileID(10, 0, 10, 500, 500);
+        const tile = tileManager.preloadTiles([faraway])[0];
+
+        tileManager.releasePreloadedTiles();
+        tileManager.update(transform);
+
+        expect(tile.aborted).toBe(true);
+        expect(tileManager.getTileByID(faraway.key)).toBeUndefined();
+    });
+});

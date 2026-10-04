@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Preload tiles for a camera movement</title>
+    <meta property="og:description" content="Use the preload option on flyTo and easeTo to load the tiles a camera movement needs while it travels." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:order" content="4" />
+    <meta property="og:created" content="2026-10-04" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            padding: 10px 12px;
+            max-width: 320px;
+            font: 13px/1.5 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 0 0 2px rgb(0 0 0 / 10%);
+        }
+        .controls p { margin: 0 0 8px; }
+        .controls button { margin-right: 6px; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div class="controls">
+    <p>
+        <strong>Fly across the world.</strong> The preloading button asks for the tiles the flight
+        will pass over before it reaches them, so the map stays detailed the whole way. The other
+        button does not, and spends much of the flight waiting for them.
+    </p>
+    <button id="preload">Fly, preloading tiles</button>
+    <button id="plain">Fly without preloading</button>
+</div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        center: [-73.58, 45.53],
+        zoom: 3.5
+    });
+
+    const destination = {center: [139.69, 35.68], zoom: 11};
+
+    document.getElementById('preload').addEventListener('click', () => {
+        map.flyTo({...destination, preload: true});
+    });
+
+    document.getElementById('plain').addEventListener('click', () => {
+        map.flyTo(destination);
+    });
+</script>
+</body>
+</html>
