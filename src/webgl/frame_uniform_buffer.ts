@@ -19,7 +19,8 @@ const offsets = layout.offsets;
 
 /**
  * @internal
- * The buffer behind the `FrameUBO` block in the shader preludes, written once per frame by `Painter.render`.
+ * The buffer behind the `FrameUBO` block in the shader preludes. `Painter.render` fills it at the start of a frame,
+ * and the terrain pass rewrites `u_world_size` around the renders into its textures.
  */
 export function createFrameUniformBuffer(context: Context): UniformBuffer {
     return new UniformBuffer(context, UBO_BINDINGS.FrameUBO, layout);
@@ -41,5 +42,17 @@ export function updateFrameUniformBuffer(buffer: UniformBuffer, transform: IRead
     f32[offsets.u_pixel_extrude_scale] = 1 / transform.width;
     f32[offsets.u_pixel_extrude_scale + 1] = 1 / transform.height;
     f32[offsets.u_pitch] = transform.pitch / 360 * 2 * Math.PI;
+    buffer.upload();
+}
+
+/**
+ * @internal
+ * Sets `u_world_size` to the size of the render target about to be drawn into. It is the canvas size,
+ * except while layers are drawn into a terrain texture; the fill outline shaders compare it with `gl_FragCoord`.
+ */
+export function setFrameUniformWorldSize(buffer: UniformBuffer, width: number, height: number): void {
+    const f32 = buffer.pending;
+    f32[offsets.u_world_size] = width;
+    f32[offsets.u_world_size + 1] = height;
     buffer.upload();
 }
