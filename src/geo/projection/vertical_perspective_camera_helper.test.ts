@@ -99,3 +99,16 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
         warn.mockRestore();
     });
 });
+
+describe('VerticalPerspectiveCameraHelper.handlePanInertia', () => {
+    test('eases onto the pole', () => {
+        const tr = new GlobeTransform();
+        tr.resize(512, 512);
+        tr.setCenter(new LngLat(0, 89));
+        tr.setTransitionState(1);
+
+        const {easingCenter} = new VerticalPerspectiveCameraHelper().handlePanInertia(new Point(0, 50), tr);
+
+        expect(easingCenter.lat).toBe(90);
+    });
+});
