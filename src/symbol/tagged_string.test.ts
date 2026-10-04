@@ -133,13 +133,10 @@ describe('TaggedString', () => {
             expect(tagged.determineLineBreaks(0, 300, glyphs, {}, 30)).toEqual([3]);
         });
 
-        /**
-         * With -14 spacing, letters advance 22 - 14 = 8 and the space 7 - 14 = -7: the text is 9 wide,
-         * narrower than its letters, so it fits on one line yet still breaks.
-         */
-        test('evaluates line breaks when negative spacing makes spaces advance backwards', () => {
+        test('breaks lines even when negative spacing shrinks the text below the max width', () => {
+            const spacingNarrowerThanGlyphs = -14;
             const tagged = new TaggedString('a b', [textSection], Array(3).fill(0));
-            expect(tagged.determineLineBreaks(-14, 300, glyphs, {}, 30)).toEqual([2, 3]);
+            expect(tagged.determineLineBreaks(spacingNarrowerThanGlyphs, 300, glyphs, {}, 30)).toEqual([2, 3]);
         });
     });
 });
