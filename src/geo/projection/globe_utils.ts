@@ -14,7 +14,7 @@ export function getGlobeCircumferencePixels(transform: {worldSize: number; cente
 export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
     const vecA = angularCoordinatesToSurfaceVector(a);
     const vecB = angularCoordinatesToSurfaceVector(b);
-    const dot = vec3.dot(vecA, vecB);
+    const dot = clamp(vec3.dot(vecA, vecB), -1, 1);
     const radians = Math.acos(dot);
     const circumference = getGlobeCircumferencePixels(transform);
     return radians / (2.0 * Math.PI) * circumference;

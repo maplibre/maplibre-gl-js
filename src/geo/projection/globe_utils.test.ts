@@ -43,6 +43,13 @@ describe('globe utils', () => {
                 lat: 0
             }
         }, new LngLat(0, 0), new LngLat(45, 45))).toBeCloseTo(0.16666666666666666, digitsPrecision);
+
+        expect(globeDistanceOfLocationsPixels({
+            worldSize: 1,
+            center: {
+                lat: 0
+            }
+        }, new LngLat(-180, -58), new LngLat(180, -58))).toBe(0);
     });
 
     test('getZoomAdjustment', () => {
