@@ -227,7 +227,9 @@ export class TransformHelper implements ITransformGetters {
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number): void {
+        if (ele === this._minElevationForCurrentTile) return;
         this._minElevationForCurrentTile = ele;
+        this._calcMatrices();
     }
 
     get tileSize(): number { return this._tileSize; }

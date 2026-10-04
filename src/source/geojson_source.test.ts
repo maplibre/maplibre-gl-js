@@ -394,7 +394,7 @@ describe('GeoJSONSource.unloadTile', () => {
 });
 
 describe('GeoJSONSource.onRemove', () => {
-    test('broadcasts "removeSource" event', async () => {
+    test('broadcasts "removeSource" event and drops the updates waiting to be sent', async () => {
         const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
@@ -402,11 +402,14 @@ describe('GeoJSONSource.onRemove', () => {
                 return Promise.resolve({});
             }
         }), undefined);
+        const loading = source.load();
+        source.setData(hawkHill);
         source.onRemove();
+        await loading;
         await sleep(0);
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0].type).toBe(MessageType.removeSource);
-        expect(spy.mock.calls[0][0].data).toEqual({type: 'geojson', source: 'id'});
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledWith({type: MessageType.removeSource, data: {type: 'geojson', source: 'id'}});
+        expect(spy).not.toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({data: hawkHill})}));
     });
 });
 
@@ -569,9 +572,11 @@ describe('GeoJSONSource.update', () => {
         // Immediately modify data again, and update cluster options
         const sourceData2 = {id: 'test-2', type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
         source.setData(sourceData2);
+        const diff = {add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]} as GeoJSONSourceDiff;
+        source.updateData(diff);
         await source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(true);
         expect(spy.mock.calls[0][0].data.data).toEqual(sourceData1);
@@ -581,6 +586,8 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
         expect(spy.mock.calls[1][0].data.data).toEqual(sourceData2);
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
+        expect(spy.mock.calls[2][0].data.dataDiff).toEqual(diff);
+        expect(spy.mock.calls[2][0].data.updateCluster).toBeUndefined();
     });
 
     test('modifying cluster properties after sending a diff', async () => {
@@ -635,6 +642,42 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
         expect(spy.mock.calls[1][0].data.data).toBeUndefined();
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
+    });
+
+    test('modifying cluster properties and sending diffs alternately with pending data', async () => {
+        const spy = vi.fn();
+        const answers: Array<() => void> = [];
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(structuredClone(message));
+                return new Promise((resolve) => answers.push(() => resolve({})));
+            }
+        });
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {type: 'FeatureCollection', features: []},
+            cluster: true
+        }, mockDispatcher, undefined);
+
+        source.load();
+        await sleep(0);
+        for (let id = 0; id < 3; id++) {
+            source.updateData({add: [{type: 'Feature', id, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]});
+            source.setClusterOptions({cluster: false, clusterRadius: 10 + id});
+        }
+        answers.shift()();
+        await sleep(0);
+        const content = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        answers.shift()();
+
+        expect((await content).shouldReloadTileOptions).toBeUndefined();
+        expect(source.loaded()).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[1][0].data.dataDiff.add).toHaveLength(3);
+        expect(spy.mock.calls[1][0].data.updateCluster).toBe(true);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(false);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.radius).toBe(12 * EXTENT / source.tileSize);
+        expect(((await source.getData()) as GeoJSON.FeatureCollection).features).toHaveLength(3);
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {

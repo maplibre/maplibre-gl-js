@@ -1,15 +1,22 @@
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {drawTerrainHeightMap} from './draw_terrain.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
+import type {TerrainHeightMapTarget} from '../../render/terrain.ts';
 
-export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, frameRenderContext: FrameRenderContext): void {
+export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+    if (frameRenderContext.isRenderingToTexture) {
+        drawCustomTerrainTile(painter, layer, coords[0], frameRenderContext);
+        return;
+    }
 
     const {isRenderingGlobe} = frameRenderContext.data;
+    const {terrain} = frameRenderContext;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
@@ -42,7 +49,8 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
                 applyGlobeMatrix: params.applyGlobeMatrix,
                 applyTerrainMatrix: params.applyTerrainMatrix,
             });
-        }
+        },
+        renderTerrainHeightMap: terrain && frameRenderContext.currentPass === 'offscreen' ? (target: TerrainHeightMapTarget) => drawTerrainHeightMap(frameRenderContext, terrain, target) : undefined
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
@@ -77,4 +85,30 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         painter.setBaseState();
         context.bindFramebuffer.set(null);
     }
+}
+
+/**
+ * Draws a custom layer into the terrain tile texture that is bound, see {@link CustomLayerInterface.renderToTerrainTile},
+ * and binds that texture again for the layers after it.
+ */
+function drawCustomTerrainTile(painter: Painter, layer: CustomStyleLayer, tileID: OverscaledTileID, frameRenderContext: FrameRenderContext): void {
+    const context = painter.context;
+    const framebuffer = context.bindFramebuffer.get();
+    const viewport = context.viewport.get();
+
+    painter.setCustomLayerDefaults();
+    context.setColorMode(frameRenderContext.colorModeForRenderPass());
+    context.setDepthMode(DepthMode.disabled);
+    context.setStencilMode(StencilMode.disabled);
+
+    layer.implementation.renderToTerrainTile(context.gl, {
+        tileID: {canonical: tileID.canonical, wrap: tileID.wrap},
+        width: viewport[2],
+        height: viewport[3]
+    });
+
+    context.setDirty();
+    painter.setBaseState();
+    context.bindFramebuffer.set(framebuffer);
+    context.viewport.set(viewport);
 }

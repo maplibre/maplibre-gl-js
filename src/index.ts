@@ -50,7 +50,7 @@ import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
 import type {ControlPosition, IControl} from './ui/control/control.ts';
-import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
 import type {AnchoredCameraOptions, AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
@@ -78,6 +78,7 @@ import type {FeatureIndex} from './data/feature_index.ts';
 import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
 import type {WorkerGlobalScopeInterface} from './util/web_worker.ts';
+import type {TerrainHeightMapTarget} from './render/terrain.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -346,6 +347,7 @@ export {
     type BoxZoomHandlerOptions,
     type HandlerResult,
     type CustomRenderMethodInput,
+    type CustomTerrainRenderInput,
     type ExpiryData,
     type PositionAnchor,
     type ProjectionData,
@@ -387,6 +389,7 @@ export {
     type IControl,
     type CustomLayerInterface,
     type CustomLayerProjectionDataParams,
+    type TerrainHeightMapTarget,
     type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
     type PaddingOptions,
