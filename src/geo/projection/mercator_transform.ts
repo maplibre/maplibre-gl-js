@@ -43,6 +43,11 @@ const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
  */
 const CENTER_ON_TERRAIN_PASSES = 3;
 const CENTER_ON_TERRAIN_TOLERANCE_M = 0.0001;
+/**
+ * The clip-space depth of the near clipping plane, where the ray segment through a screen pixel starts for a terrain
+ * pick so that it holds all the view shows; see `getRaySegmentFromPixel`.
+ */
+const NEAR_PLANE_CLIP_Z = -1;
 
 /**
  * @internal
@@ -412,7 +417,7 @@ export class MercatorTransform implements ITransform {
     private _terrainPointPastMaxZoom(terrain: Terrain): LngLat | null {
         const index = terrain.getCoverageIndex();
         if (!index) return null;
-        const {near, far} = this.getRaySegmentFromPixel(this.centerPoint, -1);
+        const {near, far} = this.getRaySegmentFromPixel(this.centerPoint, NEAR_PLANE_CLIP_Z);
         const distanceAtMaxZoom = this.cameraToCenterDistance * zoomScale(this.zoom - this.maxZoom);
         const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this.nearZ) / (this.farZ - this.nearZ)));
         if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / this.worldSize, start[1] / this.worldSize), start[2])) return null;
@@ -421,7 +426,7 @@ export class MercatorTransform implements ITransform {
 
     /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
-        const {near, far} = this.getRaySegmentFromPixel(p, -1);
+        const {near, far} = this.getRaySegmentFromPixel(p, NEAR_PLANE_CLIP_Z);
         return this._raycastTerrain(near, far, terrain);
     }
 
@@ -481,8 +486,8 @@ export class MercatorTransform implements ITransform {
     /**
      * Returns the segment of the ray through the given screen pixel from its point at depth `clipZ` in clip space to the
      * far clipping plane. The default of 0 lies at about twice the near clipping plane's distance from the camera, which
-     * is all a plane intersection needs; -1 starts the segment at the near clipping plane, so it holds all the view
-     * shows, as terrain picks need.
+     * is all a plane intersection needs; `NEAR_PLANE_CLIP_Z` starts the segment at the near clipping plane, so it holds
+     * all the view shows, as terrain picks need.
      */
     private getRaySegmentFromPixel(p: Point, clipZ: number = 0): RaySegment {
         const coord0 = [p.x, p.y, clipZ, 1] as vec4;
@@ -962,7 +967,7 @@ export class MercatorTransform implements ITransform {
 
         const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
         if (hit == null) return false;
-        const segment = this.getRaySegmentFromPixel(p, -1);
+        const segment = this.getRaySegmentFromPixel(p, NEAR_PLANE_CLIP_Z);
         const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
         return raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }

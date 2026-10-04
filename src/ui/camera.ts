@@ -41,6 +41,14 @@ export type PointLike = Point | [number, number];
 const MAX_CAMERA_RAISES = 3;
 
 /**
+ * How far from the terrain a zoom-in frame's re-solve may leave the held center and still count as moving it onto the
+ * terrain. A re-solve that lands leaves the center within a millimeter; a meter or more means the terrain the center ray
+ * hits and the terrain the DEM reports under the new center disagree, over a rise the scene has not drawn yet or past a
+ * crest the ray slipped over, and the frame keeps the held center instead.
+ */
+const MAX_CENTER_OFF_TERRAIN_M = 1;
+
+/**
  * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
  * zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current
  * camera value for that property will remain unchanged.
@@ -323,11 +331,11 @@ class ElevationHold {
     /** Whether the hold waits for DEM data under the center: from its start, or since a terrain change left none there. */
     awaitsDem: boolean;
     /**
-     * The elevation {@link Camera._keepCameraAboveTerrain} left on a gesture's transform and how far it raised the held
-     * elevation to get there, so later frames can take the camera back down as the terrain allows; null while it has
-     * not raised it. A held elevation other than the one it left was set anew, by a take, and carries no lift.
+     * While {@link Camera._keepCameraAboveTerrain} has lifted the camera out of the terrain: the elevation the gesture
+     * holds and how far above it the camera was lifted, so later frames can lower it again as the terrain allows and
+     * tell the lifted elevation from one a take set anew, which carries no lift; null while nothing is lifted.
      */
-    lift: {liftedElevation: number; liftHeight: number} | null = null;
+    lift: {heldElevation: number; height: number} | null = null;
     private _terrainChanged = false;
 
     /**
@@ -1073,7 +1081,7 @@ export class Camera extends Evented<MapEventType> {
     putCenterBackOnTerrain(tr: ITransform, terrain: Terrain, tookDem: boolean): void {
         if (tookDem && terrain.getDrawnElevationForLngLat(tr.center, true) === undefined) {
             tr.setElevation(terrain.getElevationForLngLat(tr.center, tr));
-            const corrected = this._raiseCameraAboveTerrain(tr);
+            const corrected = this._raiseCameraByPitchAndZoom(tr);
             if (corrected !== tr) tr.apply(corrected, false);
         } else {
             tr.recalculateZoomAndCenter(terrain);
@@ -1130,37 +1138,38 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Keeps the camera above the terrain for a camera update. While a gesture holds the center elevation over mercator
-     * terrain, below a pitch of 90 degrees with the center clamped to the ground, the held elevation is raised on the
+     * terrain, below a pitch of 90 degrees with the center clamped to the ground, the held elevation is lifted on the
      * given transform just far enough that the camera and its near clipping plane clear the terrain, and lowered again
-     * as the terrain allows, so the gesture keeps its pitch and zoom. Otherwise see {@link Camera._raiseCameraAboveTerrain}.
+     * as the terrain allows, so the gesture keeps its pitch and zoom. Any other camera update keeps its center elevation
+     * and {@link Camera._raiseCameraByPitchAndZoom} moves the camera instead.
      * @param tr - the transform the camera update edits
      * @returns the transform to render: `tr`, or its corrected copy
      */
     _keepCameraAboveTerrain(tr: ITransform): ITransform {
         const hold = this._elevationHold;
         if (!this.terrain || hold?.holder !== 'gesture' || tr.pitch >= 90 || !this.getCenterClampedToGround() || tr.getClippingPlane()) {
-            return this._raiseCameraAboveTerrain(tr);
+            return this._raiseCameraByPitchAndZoom(tr);
         }
-        const lift = hold.lift?.liftedElevation === tr.elevation ? hold.lift.liftHeight : 0;
-        const height = Math.max(0, this._terrainHeightAboveCamera(tr) + lift);
-        if (height !== lift) {
-            tr.setElevation(tr.elevation - lift + height);
+        const lift = hold.lift && hold.lift.heldElevation + hold.lift.height === tr.elevation ? hold.lift : {heldElevation: tr.elevation, height: 0};
+        const height = Math.max(0, this._terrainHeightAboveCamera(tr) + lift.height);
+        if (height !== lift.height) {
+            tr.setElevation(lift.heldElevation + height);
         }
-        hold.lift = height > 0 ? {liftedElevation: tr.elevation, liftHeight: height} : null;
+        hold.lift = height > 0 ? {heldElevation: lift.heldElevation, height} : null;
         return tr;
     }
 
     /**
      * @internal
      * Where the camera is inside the terrain, re-solves pitch and zoom on a copy of the transform so the camera sits
-     * above it at the same ground position, still looking at the same center, and the transform the update edits keeps
-     * what it asked for; over mercator terrain high enough that its near clipping plane clears the terrain too. Without
+     * above it at the same ground position, still looking at the same center at the same elevation, and the transform
+     * the update edits keeps what it asked for; over mercator terrain high enough that its near clipping plane clears the terrain too. Without
      * terrain the camera is kept above sea level, which only needs checking where the center elevation is negative or
      * the pitch passes 90 degrees. On a globe the camera is left where it is.
      * @param tr - the transform the camera update edits
      * @returns `tr` while the camera is clear, else the corrected copy
      */
-    _raiseCameraAboveTerrain(tr: ITransform): ITransform {
+    _raiseCameraByPitchAndZoom(tr: ITransform): ITransform {
         if ((!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) || tr.getClippingPlane()) {
             return tr;
         }
@@ -1230,7 +1239,7 @@ export class Camera extends Evented<MapEventType> {
         const {center, elevation, zoom} = tr;
         tr.recalculateZoomAndCenter(this.terrain);
         const keepsZoomingIn = tr.zoom > zoom - zoomDelta && tr.zoom < tr.maxZoom;
-        if (!keepsZoomingIn || Math.abs(this.terrain.getElevationForLngLat(tr.center, tr) - tr.elevation) >= 1) {
+        if (!keepsZoomingIn || Math.abs(this.terrain.getElevationForLngLat(tr.center, tr) - tr.elevation) >= MAX_CENTER_OFF_TERRAIN_M) {
             tr.setZoom(zoom);
             tr.setCenter(center);
             tr.setElevation(elevation);
@@ -1267,7 +1276,7 @@ export class Camera extends Evented<MapEventType> {
         if (roll !== undefined) nextTransform.setRoll(roll);
         if (pitch !== undefined) nextTransform.setPitch(pitch);
         if (bearing !== undefined) nextTransform.setBearing(bearing);
-        this.transform.apply(elevation === undefined ? nextTransform : this._raiseCameraAboveTerrain(nextTransform), false);
+        this.transform.apply(elevation === undefined ? nextTransform : this._raiseCameraByPitchAndZoom(nextTransform), false);
     }
 
     /**
