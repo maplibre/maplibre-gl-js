@@ -35,6 +35,77 @@ export function getTileUnitsForMeters(distanceInMeters: number, canonical: Canon
 }
 
 /**
+ * The normals at the start and the end of a wall.
+ */
+type WallNormals = {
+    start: Point;
+    end: Point;
+};
+
+/**
+ * Cosine of the sharpest turn between two walls that is still shaded as one curved surface, 35 degrees.
+ * Rounded corners split their arc into steps of 30 degrees or less.
+ */
+const SMOOTH_WALL_MIN_DOT = Math.cos(35 * Math.PI / 180);
+
+/**
+ * How many times longer than its neighbour a wall has to be to keep its own normal where they meet.
+ */
+const LONG_WALL_RATIO = 2;
+
+/**
+ * Returns the normals of each wall of a rounded ring, indexed by the wall's end vertex, so that the
+ * lighting blends across a rounded corner. Boundary and zero-length walls get `null`.
+ * @param ring - Ring as passed to the bucket, closed or open
+ */
+export function roundedWallNormals(ring: Point[]): Array<WallNormals | null> {
+    const perps: Point[] = [null];
+    for (let p = 1; p < ring.length; p++) {
+        const edge = ring[p].sub(ring[p - 1]);
+        const isWall = !isBoundaryEdge(ring[p], ring[p - 1]) && edge.mag() > 0;
+        perps.push(isWall ? edge._perp() : null);
+    }
+
+    const last = ring.length - 1;
+    const isClosed = last > 1 && ring[0].equals(ring[last]);
+    const normals: Array<WallNormals | null> = [null];
+    for (let p = 1; p <= last; p++) {
+        const perp = perps[p];
+        if (!perp) {
+            normals.push(null);
+            continue;
+        }
+        const previous = isClosed && p === 1 ? perps[last] : perps[p - 1];
+        const next = isClosed && p === last ? perps[1] : perps[p + 1];
+        normals.push({start: smoothNormal(perp, previous), end: smoothNormal(perp, next)});
+    }
+    return normals;
+}
+
+/**
+ * Returns the normal of a wall at the vertex it shares with a neighbouring wall. At a shallow turn both
+ * walls share one normal: the much longer wall's own, which keeps a straight wall evenly lit up to the
+ * arc, or else their average weighted by length. At a sharp turn the wall keeps its own.
+ * @param perp - Perpendicular of the wall, as long as the wall
+ * @param neighbour - Perpendicular of the neighbouring wall, if there is one
+ */
+function smoothNormal(perp: Point, neighbour?: Point): Point {
+    if (!neighbour) {
+        return perp.unit();
+    }
+    const length = perp.mag();
+    const neighbourLength = neighbour.mag();
+    const isSharpTurn = perp.x * neighbour.x + perp.y * neighbour.y < SMOOTH_WALL_MIN_DOT * length * neighbourLength;
+    if (isSharpTurn || length >= LONG_WALL_RATIO * neighbourLength) {
+        return perp.unit();
+    }
+    if (neighbourLength >= LONG_WALL_RATIO * length) {
+        return neighbour.unit();
+    }
+    return perp.add(neighbour)._unit();
+}
+
+/**
  * Rounds the corners of a single ring.
  *
  * Corners that tile clipping created are left sharp: they belong to the cut rather than to the
