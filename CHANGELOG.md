@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Let the globe center reach the poles, where it stopped at 85.05° ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
 - Add `heightOffset` and `heightAnchor` to `Marker` and `Popup`, so they can be placed above the ground like symbols with `symbol-height-offset`, for example on the roof of a building ([#8228](https://github.com/maplibre/maplibre-gl-js/issues/8228)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Speed up symbol layout by skipping line breaking for labels that fit on one line ([#8617](https://github.com/maplibre/maplibre-gl-js/pull/8617)) (by [@DoFabien](https://github.com/DoFabien))
 - Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
