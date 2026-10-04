@@ -2199,9 +2199,7 @@ describe('flyTo', () => {
 
         await moveEnded;
 
-        const nowElevation = camera.getCenterElevation();
-        expect(nowElevation).toBe(100);
-
+        expect(camera.getCenterElevation()).toBe(100);
     });
 
     test('respects elevation when terrain exists', async () => {
