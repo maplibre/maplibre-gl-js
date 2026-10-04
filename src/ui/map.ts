@@ -7,6 +7,7 @@ import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
+import {getMinExtrusionElevation} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {Painter} from '../render/painter.ts';
@@ -4432,6 +4433,7 @@ export class Map extends Evented<MapEventType> {
                 this._camera.transform.setElevation(0);
             }
         }
+        this._camera.transform.setMinGeometryElevation(getMinExtrusionElevation(this.style, this._camera.transform.zoom));
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 

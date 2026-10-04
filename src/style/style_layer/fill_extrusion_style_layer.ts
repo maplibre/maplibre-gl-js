@@ -6,6 +6,7 @@ import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExt
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 
+import type {Style} from '../style.ts';
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
@@ -223,4 +224,30 @@ function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: n
         projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
     }
     return projectedQueryGeometry;
+}
+
+/**
+ * The lowest point any visible fill-extrusion reaches, in meters: 0, or negative when something is
+ * extruded below the datum. The map hands it to the transform before each frame so the far plane
+ * covers that geometry. Constants are read from the layers, so a runtime paint change is seen on
+ * the next frame; data-driven values come from the buckets, which tracked them at layout.
+ */
+export function getMinExtrusionElevation(style: Style, zoom: number): number {
+    let minElevation = 0;
+    for (const layerId of style._order) {
+        const layer = style._layers[layerId];
+        if (!isFillExtrusionStyleLayer(layer) || layer.isHidden(zoom)) continue;
+        minElevation = Math.min(minElevation,
+            layer.paint.get('fill-extrusion-base').constantOr(0),
+            layer.paint.get('fill-extrusion-height').constantOr(0));
+        const tileManager = style.tileManagers[layer.source];
+        if (!tileManager) continue;
+        for (const coord of tileManager.getVisibleCoordinates(false)) {
+            const bucket = tileManager.getTile(coord)?.getBucket(layer) as FillExtrusionBucket;
+            if (bucket && bucket.minElevation < minElevation) {
+                minElevation = bucket.minElevation;
+            }
+        }
+    }
+    return minElevation;
 }

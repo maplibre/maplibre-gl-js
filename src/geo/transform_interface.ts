@@ -95,6 +95,11 @@ export interface ITransformGetters {
     get elevation(): number;
     get minElevationForCurrentTile(): number;
 
+    /**
+     * Lowest point drawn by geometry extruded below the datum, in meters.
+     */
+    get minGeometryElevation(): number;
+
     get padding(): PaddingOptions;
     get unmodified(): boolean;
 
@@ -178,6 +183,11 @@ interface ITransformMutators {
     setCenter(center: LngLat): void;
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
+
+    /**
+     * Tells the transform how far below the datum geometry is drawn, so the far plane reaches it.
+     */
+    setMinGeometryElevation(elevation: number): void;
     setPadding(padding: PaddingOptions): void;
     /**
      * Sets the overriding values to use for near and far Z instead of what the transform would normally compute.

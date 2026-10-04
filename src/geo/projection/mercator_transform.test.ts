@@ -1074,4 +1074,16 @@ describe('MercatorTransform.isLocationOccluded', () => {
 
         expect(transform.isLocationOccluded(new LngLat(0, 0.01), terrain)).toBe(false);
     });
+    test('far plane reaches geometry extruded below the datum', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(512, 512);
+        transform.setZoom(14);
+        transform.setPitch(60);
+        const farZ = transform.farZ;
+
+        transform.setMinGeometryElevation(-200);
+
+        expect(transform.minGeometryElevation).toBe(-200);
+        expect(transform.farZ).toBeGreaterThan(farZ);
+    });
 });
