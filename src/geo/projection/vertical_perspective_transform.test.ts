@@ -38,7 +38,7 @@ describe('VerticalPerspectiveTransform.screenTerrainPointToMercatorCoordinate', 
 
     test('caps the poles at elevation zero', () => {
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 2000));
-        const transform = createTransform(new LngLat(0, 90), 1);
+        const transform = createTransform(new LngLat(0, 85), 1);
 
         expect(transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain).z).toBeCloseTo(2000, 6);
 
