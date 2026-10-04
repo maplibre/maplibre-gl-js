@@ -303,7 +303,7 @@ export class Painter {
             }
         }
 
-        if (style.projection) this.maybeDrawDepth();
+        this.maybeDrawDepth();
 
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(style, transform.zoom, data.moving);
@@ -424,7 +424,7 @@ export class Painter {
      * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
      */
     maybeDrawDepth(): void {
-        if (!this.frameRenderContext.terrain) {
+        if (!this.frameRenderContext.data.projectionShaderVariant || !this.frameRenderContext.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
