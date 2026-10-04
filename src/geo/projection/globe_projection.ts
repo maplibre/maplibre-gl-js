@@ -3,7 +3,6 @@ import {type PossiblyEvaluated, Transitionable, type Transitioning, type Transit
 import {getProperties, type ProjectionProps, type ProjectionPropsPossiblyEvaluated} from '../../style/projection_properties.g.ts';
 import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {now} from '../../util/time_control.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 
@@ -33,7 +32,25 @@ export class GlobeProjection extends Evented implements Projection {
     }
 
     public get transitionState(): number {
-        return transitionStateOf(this.properties.get('type'));
+        const currentProjectionSpecValue = this.properties.get('type');
+        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
+            return 0;
+        }
+        if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'vertical-perspective') {
+            return 1;
+        }
+        if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+            if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) {
+                return currentProjectionSpecValue.from === 'mercator' ? 0 : 1;
+            }
+            if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
+                return 1 - currentProjectionSpecValue.transition;
+            }
+            if (currentProjectionSpecValue.from === 'mercator' && currentProjectionSpecValue.to === 'vertical-perspective') {
+                return currentProjectionSpecValue.transition;
+            }
+        };
+        return 1;
     }
 
     get useGlobeRendering(): boolean {
@@ -46,10 +63,6 @@ export class GlobeProjection extends Evented implements Projection {
 
     get name(): ProjectionSpecification['type'] {
         return 'globe';
-    }
-
-    transitionStateAt(zoom: number): number {
-        return transitionStateOf(this._transitioning.possiblyEvaluate(new EvaluationParameters(zoom, {now: now()})).get('type'));
     }
 
     get useSubdivision(): boolean {
@@ -104,25 +117,4 @@ export class GlobeProjection extends Evented implements Projection {
     recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
-}
-
-function transitionStateOf(currentProjectionSpecValue: ProjectionPropsPossiblyEvaluated['type']): number {
-    if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'mercator') {
-        return 0;
-    }
-    if (typeof currentProjectionSpecValue === 'string' && currentProjectionSpecValue === 'vertical-perspective') {
-        return 1;
-    }
-    if (currentProjectionSpecValue instanceof ProjectionDefinition) {
-        if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) {
-            return currentProjectionSpecValue.from === 'mercator' ? 0 : 1;
-        }
-        if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
-            return 1 - currentProjectionSpecValue.transition;
-        }
-        if (currentProjectionSpecValue.from === 'mercator' && currentProjectionSpecValue.to === 'vertical-perspective') {
-            return currentProjectionSpecValue.transition;
-        }
-    }
-    return 1;
 }
