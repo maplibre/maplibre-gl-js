@@ -14,6 +14,11 @@ export type DragRotateHandlerOptions = {
      * @defaultValue false
      */
     rollEnabled: boolean;
+    /**
+     * The {@link DragRotateOptions.movement} to use when none is passed, `'circular'` if `true` and `'linear'` if `false`
+     * @defaultValue true
+     */
+    aroundCenter?: boolean;
 };
 
 /**
@@ -22,12 +27,18 @@ export type DragRotateHandlerOptions = {
 export type DragRotateOptions = {
     /**
      * If `'pointer'` is passed, the map turns and tilts around the point under the pointer where the drag starts,
-     * on the terrain where there is any, which keeps its place on the screen and its distance from the camera, so tilting also zooms. The bearing then
-     * follows the horizontal movement of the pointer, as with {@link MapOptions.aroundCenter} set to `false`.
+     * on the terrain where there is any, which keeps its place on the screen and its distance from the camera, so tilting also zooms.
      * A drag that starts in the sky turns around the center.
      * @defaultValue 'center'
      */
     around?: 'center' | 'pointer';
+    /**
+     * How the pointer turns the map. If `'circular'` is passed, the map follows the pointer around the center like a wheel,
+     * so the same drag turns it one way above the center and the other way below. If `'linear'` is passed, the bearing follows
+     * the horizontal movement of the pointer, the same way anywhere on the map. A drag around the pointer is always linear.
+     * @defaultValue 'circular', or 'linear' if {@link MapOptions.aroundCenter} is `false`
+     */
+    movement?: 'circular' | 'linear';
 };
 
 /**
@@ -43,8 +54,11 @@ export class DragRotateHandler {
     _mouseRoll: MouseRollHandler;
     _pitchWithRotate: boolean;
     _rollEnabled: boolean;
+    _defaultMovement: 'circular' | 'linear';
     /** @internal */
     around: 'center' | 'pointer';
+    /** @internal */
+    movement: 'circular' | 'linear';
 
     /** @internal */
     constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler, mouseRoll: MouseRollHandler) {
@@ -53,7 +67,10 @@ export class DragRotateHandler {
         this._mouseRotate = mouseRotate;
         this._mousePitch = mousePitch;
         this._mouseRoll = mouseRoll;
+        const {aroundCenter = true} = options;
+        this._defaultMovement = aroundCenter ? 'circular' : 'linear';
         this.around = 'center';
+        this.movement = this._defaultMovement;
     }
 
     /**
@@ -64,10 +81,13 @@ export class DragRotateHandler {
      * ```ts
      * map.dragRotate.enable();
      * map.dragRotate.enable({around: 'pointer'});
+     * map.dragRotate.enable({movement: 'linear'});
      * ```
      */
     enable(options?: DragRotateOptions | boolean): void {
-        this.around = typeof options === 'object' && options.around === 'pointer' ? 'pointer' : 'center';
+        const enableOptions: DragRotateOptions = typeof options === 'object' ? options : {};
+        this.around = enableOptions.around ?? 'center';
+        this.movement = enableOptions.movement ?? this._defaultMovement;
         this._mouseRotate.enable();
         if (this._pitchWithRotate) this._mousePitch.enable();
         if (this._rollEnabled) this._mouseRoll.enable();

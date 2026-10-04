@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
+- Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer where the drag starts, and `dragRotate: {movement: 'linear' | 'circular'}` to choose how the pointer turns it ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
 - Speed up symbol layout by skipping line breaking for labels that fit on one line ([#8617](https://github.com/maplibre/maplibre-gl-js/pull/8617)) (by [@DoFabien](https://github.com/DoFabien))
 - Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._

@@ -274,6 +274,30 @@ describe('drag rotate', () => {
         map.remove();
     });
 
+    test('DragRotateHandler turns the same way above the center as below it if given movement: \'linear\'', () => {
+        const map = createMap({dragRotate: {movement: 'linear'}});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 50});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 50});
+        map._renderTaskQueue.run();
+
+        expect(map.getBearing()).toBeCloseTo(8);
+
+        map.remove();
+    });
+
+    test('DragRotateHandler turns the other way above the center if given movement: \'circular\' with aroundCenter: false', () => {
+        const map = createMap({aroundCenter: false, dragRotate: {movement: 'circular'}});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 50});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 50});
+        map._renderTaskQueue.run();
+
+        expect(map.getBearing()).toBeCloseTo(-8);
+
+        map.remove();
+    });
+
     test('DragRotateHandler does not rotate or pitch when disabled', () => {
         const map = createMap();
 

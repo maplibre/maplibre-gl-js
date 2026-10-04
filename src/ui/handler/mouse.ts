@@ -56,17 +56,16 @@ export function generateMousePanHandler({enable, clickTolerance}: {
     });
 };
 
-export function generateMouseRotationHandler({enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateSpeed = 0.8}: {
+export function generateMouseRotationHandler({enable, clickTolerance, minPixelCenterThreshold = 100, rotateSpeed = 0.8}: {
     clickTolerance: number;
     enable?: boolean;
-    aroundCenter?: boolean;
     minPixelCenterThreshold?: number;
     /**
      * Degrees the bearing changes per pixel of horizontal drag.
      * @defaultValue 0.8
      */
     rotateSpeed?: number;
-}, getCenter: () => Point, getAround?: () => 'center' | 'pointer'): MouseRotateHandler {
+}, getCenter: () => Point, getAround?: () => 'center' | 'pointer', getMovement?: () => 'circular' | 'linear'): MouseRotateHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
             (e.button === LEFT_BUTTON && e.ctrlKey) ||
@@ -79,12 +78,13 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
                 return aroundDragStart({bearingDelta: (currentPoint.x - lastPoint.x) * rotateSpeed}, 'pointer', startPoint);
             }
             const center = getCenter();
-            if (aroundCenter && Math.abs(center.y - lastPoint.y) > minPixelCenterThreshold) {
+            const isCircular = (getMovement?.() ?? 'circular') === 'circular';
+            if (isCircular && Math.abs(center.y - lastPoint.y) > minPixelCenterThreshold) {
                 // Avoid rotation related to y axis since it is "saved" for pitch
                 return {bearingDelta: getAngleDelta(new Point(lastPoint.x, currentPoint.y), currentPoint, center)};
             }
             let bearingDelta = (currentPoint.x - lastPoint.x) * rotateSpeed;
-            if (aroundCenter && currentPoint.y < center.y) {
+            if (isCircular && currentPoint.y < center.y) {
                 bearingDelta = -bearingDelta;
             }
             return {bearingDelta};

@@ -325,7 +325,8 @@ export class HandlerManager {
         }
         const getCenter = () => this._camera.transform.centerPoint;
         const getAround = () => map.dragRotate.around;
-        const mouseRotate = generateMouseRotationHandler(options, getCenter, getAround);
+        const getMovement = () => map.dragRotate.movement;
+        const mouseRotate = generateMouseRotationHandler(options, getCenter, getAround, getMovement);
         const mousePitch = generateMousePitchHandler(options, getAround);
         const mouseRoll = generateMouseRollHandler(options, getCenter, getAround);
         map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch, mouseRoll);

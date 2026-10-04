@@ -1,7 +1,7 @@
 {
     "dist/maplibre-gl.mjs": {
-        "raw": 602039,
-        "gzip": 153973
+        "raw": 602226,
+        "gzip": 154033
     },
     "dist/maplibre-gl-worker.mjs": {
         "raw": 19130,
