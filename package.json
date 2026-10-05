@@ -118,7 +118,7 @@
     "semver": "^7.8.5",
     "sharp": "^0.35.5",
     "shuffle-seed": "^1.1.6",
-    "st": "^4.0.10",
+    "st": "^4.0.11",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
     "tslib": "^2.8.1",
