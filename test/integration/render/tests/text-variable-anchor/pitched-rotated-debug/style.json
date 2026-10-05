@@ -4,8 +4,13 @@
     "test": {
       "height": 256,
       "collisionDebug": true,
+      "description": "A label that loses its place keeps the box of its last anchor, so the boxes depend on the order the tiles arrived in. Leaving and coming back takes all tiles from the cache in one frame, which places the labels without that history.",
       "operations": [
-        ["wait", 100]
+        ["wait"],
+        ["jumpTo", {"center": [0, 0]}],
+        ["wait"],
+        ["jumpTo", {"center": [13.418056, 52.499167]}],
+        ["wait"]
       ]
     }
   },
