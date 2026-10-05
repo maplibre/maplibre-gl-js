@@ -4113,6 +4113,21 @@ describe('Camera preload', () => {
      * preload's own view of where the movement will be. Driving the real `TilePreloader` through it
      * is the only way to see the path the preload actually walks, rather than one written out here.
      */
+    /** A preloader that records only what it was asked to do with its run. */
+    function fakePreloader() {
+        const state = {cancelled: 0, finished: 0};
+        return {
+            get cancelled() { return state.cancelled; },
+            get finished() { return state.finished; },
+            tilePreloader: {
+                start: () => {},
+                advance: () => {},
+                cancel: () => { state.cancelled++; },
+                finish: () => { state.finished++; }
+            } as never
+        };
+    }
+
     function recordingTileManager() {
         const queried: Array<{lngLat: LngLat; zoom: number; bearing: number; pitch: number; elevation: number}> = [];
         return {
@@ -4124,7 +4139,6 @@ describe('Camera preload', () => {
                     return [];
                 },
                 preloadTiles: () => [],
-                releasePreloadedTiles: () => {},
                 on: () => {},
                 off: () => {}
             }
@@ -4144,14 +4158,16 @@ describe('Camera preload', () => {
         };
         const between = (min: number, max: number) => min + nextRandom() * (max - min);
 
-        for (let attempt = 0; attempt < 12; attempt++) {
+        // Mercator and globe alike. Sampling a path means cloning a transform and walking it, and both
+        // of those are different code on a globe, which is where a preload would read the wrong tiles.
+        for (const globe of [false, true]) for (let attempt = 0; attempt < 12; attempt++) {
             const stub = vi.spyOn(timeControl, 'now');
             stub.mockReturnValue(0);
             const recorder = recordingTileManager();
             const preloader = new TilePreloader({
                 style: {tileManagers: {'test-source': recorder.tileManager}}
             } as never);
-            const {camera, queue} = createCamera({preloader});
+            const {camera, queue} = createCamera({preloader}, globe);
 
             const target = {
                 center: [between(-170, 170), between(-70, 70)] as [number, number],
@@ -4174,7 +4190,7 @@ describe('Camera preload', () => {
                 animated.push({lngLat: camera.getCenter(), zoom: camera.getZoom(), bearing: camera.getBearing(), pitch: camera.getPitch()});
             }
 
-            const movement = JSON.stringify(target);
+            const movement = `${globe ? 'globe' : 'mercator'} ${JSON.stringify(target)}`;
             expect(recorder.queried, movement).toHaveLength(4);
 
             // The destination is asked about first, being the state the camera arrives to find, and
@@ -4188,6 +4204,79 @@ describe('Camera preload', () => {
                 expect(asked.pitch, `${movement} at ${index}`).toBeCloseTo(reached[index].pitch, 9);
             }
         }
+    });
+
+    test('a movement that arrives keeps the requests it had in flight', () => {
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+        const preloader = fakePreloader();
+        const {camera, queue} = createCamera({preloader: preloader.tilePreloader});
+
+        camera.flyTo({center: [10, 10], zoom: 6, duration: 1000, easing: (t) => t, preload: true});
+        // A movement ends any preload before it, so one cancellation here is the start of this one
+        // finding nothing to cancel.
+        const cancelledAtStart = preloader.cancelled;
+
+        stub.mockReturnValue(1000);
+        queue.run();
+
+        // These are the tiles of the ground the camera has just crossed, so cancelling them would throw
+        // away bytes already spent to save a fraction of a second.
+        expect(preloader.finished).toBe(1);
+        expect(preloader.cancelled).toBe(cancelledAtStart);
+    });
+
+    test('a gesture taking the map mid-flight gives up on those requests', () => {
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+        const preloader = fakePreloader();
+        const {camera, queue} = createCamera({preloader: preloader.tilePreloader});
+
+        camera.flyTo({center: [10, 10], zoom: 6, duration: 1000, easing: (t) => t, preload: true});
+        const cancelledAtStart = preloader.cancelled;
+        stub.mockReturnValue(400);
+        queue.run();
+
+        // What a gesture does: it stops the movement without the movement reaching its destination.
+        camera.stop(true);
+
+        // The camera has been taken somewhere else, so the requests for the old path are holding
+        // connections the tiles under the camera now need.
+        expect(preloader.cancelled).toBe(cancelledAtStart + 1);
+        expect(preloader.finished).toBe(0);
+    });
+
+    test('a movement that fits bounds preloads the path it flies', () => {
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+        const recorder = recordingTileManager();
+        const preloader = new TilePreloader({
+            style: {tileManagers: {'test-source': recorder.tileManager}}
+        } as never);
+        const {camera, queue} = createCamera({preloader});
+
+        camera.fitBounds([[-10, 50], [10, 60]], {preload: {frameCount: 4}});
+
+        // `fitBounds` works out its own centre and zoom and hands them to `flyTo`, so the option has to
+        // survive that rather than be dropped on the way.
+        expect(recorder.queried.length).toBeGreaterThan(0);
+        queue.run();
+    });
+
+    test('a movement reduced to nothing by its duration preloads nothing', () => {
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+        const recorder = recordingTileManager();
+        const preloader = new TilePreloader({
+            style: {tileManagers: {'test-source': recorder.tileManager}}
+        } as never);
+        const {camera} = createCamera({preloader});
+
+        camera.easeTo({center: [10, 10], zoom: 5, duration: 0, preload: {frameCount: 4}});
+
+        // A movement with no duration is already at its destination, and its tiles are the ones the
+        // render loop is loading rather than anything to read ahead of.
+        expect(recorder.queried).toEqual([]);
     });
 
     test('the preload asks for the camera states the animation actually passes through', async () => {

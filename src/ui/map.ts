@@ -2966,6 +2966,10 @@ export class Map extends Evented<MapEventType> {
             return this;
         }
 
+        // Terrain decides which tiles cover the camera and which of them carry elevation, so a preload
+        // reading ahead over the old one is asking for tiles the camera is not going to want.
+        this._preloader.cancel();
+
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
 
@@ -4717,6 +4721,8 @@ export class Map extends Evented<MapEventType> {
      */
     setProjection(projection: ProjectionSpecification): this {
         this._lazyInitEmptyStyle();
+        // A preload samples its path as camera states, which a projection change makes meaningless.
+        this._preloader.cancel();
         this.style.setProjection(projection);
         return this._update(true);
     }

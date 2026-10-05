@@ -13,7 +13,6 @@ import type {CameraMovement} from './camera_movement.ts';
  * preload against it sees the same path again.
  */
 function fakeTileManager(tilesPerState: number) {
-    const released = {count: 0};
     const asked: string[] = [];
     /** How many camera states the preload asked this source to cover, which is what `frameCount` buys. */
     const coverings = {count: 0};
@@ -21,9 +20,13 @@ function fakeTileManager(tilesPerState: number) {
     const loading: Array<{landed: boolean; isSettled(): boolean}> = [];
     /** X coordinates the camera already holds, so asking for them is a no-op worth no budget. */
     const warmX = new Set<number>();
+    /** Run by the fake as it answers a request, standing in for a `dataloading` listener on the app's side. */
+    let whileAnswering: (() => void) | undefined;
+
+    const abandoned = {count: 0};
 
     return {
-        released,
+        abandoned,
         asked,
         coverings,
         warmX,
@@ -34,15 +37,28 @@ function fakeTileManager(tilesPerState: number) {
             for (const tile of loading) tile.landed = true;
             for (const listener of [...listeners]) listener();
         },
+        /**
+         * Reports every tile the preload is waiting on as settled without an event, the way a source
+         * reports a request that errored or came back not-modified.
+         */
+        settleSilently: () => {
+            for (const tile of loading) tile.landed = true;
+        },
+        onAnswering: (run: () => void) => { whileAnswering = run; },
         tileManager: {
             used: true,
+            abandonPreloadedTiles: () => { abandoned.count++; },
             coveringTiles: (tr: ITransform) => {
                 coverings.count++;
                 const z = Math.floor(tr.zoom);
+                // Laid out along x before moving up a row, so that a state wide enough to fill the
+                // in-flight window still covers as many distinct tiles as the test asked for.
+                const first = Math.floor(tr.center.lng) % 32;
                 return Array.from({length: tilesPerState}, (_, i) =>
-                    new OverscaledTileID(z, 0, z, Math.floor(tr.center.lng) + i, 0));
+                    new OverscaledTileID(z, 0, z, (first + i) % 32, Math.floor(i / 32)));
             },
             preloadTiles: (tileIDs: OverscaledTileID[]) => {
+                whileAnswering?.();
                 // A tile the camera already has is skipped, the way `TileManager` skips one that is
                 // already in view, and costs the preload nothing.
                 const cold = tileIDs.filter((tileID) => !warmX.has(tileID.canonical.x));
@@ -56,7 +72,6 @@ function fakeTileManager(tilesPerState: number) {
                     return tile;
                 }) as never[];
             },
-            releasePreloadedTiles: () => { released.count++; },
             on: (type: string, listener: () => void) => {
                 if (type === 'data') listeners.push(listener);
             },
@@ -115,14 +130,26 @@ function widePath(tr: ITransform, k: number) {
 }
 
 describe('TilePreloader', () => {
-    test('asks for nothing for a movement that does not animate', async () => {
+    test('asks for nothing for a movement that does not animate', () => {
         const fake = fakeTileManager(4);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
-        const result = await preloader.start(movement(stillPath, createTransform(), 0), {});
+        preloader.start(movement(stillPath, createTransform(), 0), {});
 
-        expect(result).toEqual({tileCount: 0, requested: 0, completed: true});
         expect(fake.asked).toEqual([]);
+        expect(fake.listening()).toBe(0);
+    });
+
+    test('asks for nothing for a movement that never ends', () => {
+        const fake = fakeTileManager(4);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        // A flight paced from a speed of zero has no end, so its progress never leaves zero and there is
+        // no point on its path the preload can read towards.
+        preloader.start(movement(stillPath, createTransform(), Infinity), {});
+
+        expect(fake.asked).toEqual([]);
+        expect(fake.listening()).toBe(0);
     });
 
     test('asks for the destination before the ground the camera passes over', () => {
@@ -138,12 +165,10 @@ describe('TilePreloader', () => {
         expect(fake.asked).toEqual(['o55', 'l55']);
     });
 
-    test('asks only for the state ahead of the camera, and reads further as it moves', async () => {
+    test('asks only for the state ahead of the camera, and reads further as it moves', () => {
         const fake = fakeTileManager(1);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
-        // A preload does not settle on its own while the tiles it asked for are still loading, so the
-        // promise is deliberately left alone here.
         preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
         expect(fake.asked).toHaveLength(2);
 
@@ -169,66 +194,65 @@ describe('TilePreloader', () => {
         expect(fake.coverings.count).toBe(2);
     });
 
-    test('counts a tile once however many camera states cover it', async () => {
+    test('counts a tile once however many camera states cover it', () => {
         const fake = fakeTileManager(2);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
-        const pending = preloader.start(movement(stillPath, createTransform(), 2000), {frameCount: 4});
+        preloader.start(movement(stillPath, createTransform(), 2000), {frameCount: 4});
         preloader.advance(1);
         preloader.finish();
 
         // Four camera states over one place is one set of tiles.
-        expect((await pending).tileCount).toBe(2);
         expect(fake.asked).toHaveLength(2);
     });
 
-    test('stops asking at the source budget', async () => {
+    test('stops asking at the source budget', () => {
         const fake = fakeTileManager(6);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
-        const pending = preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4, maxTileCountPerSource: 3});
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4, maxTileCountPerSource: 3});
         preloader.advance(1);
         preloader.finish();
 
-        const result = await pending;
         expect(fake.asked).toHaveLength(3);
-        expect(result.requested).toBe(3);
-        // The state the budget ran out in is counted whole, and the states past it are left alone.
-        expect(result.tileCount).toBe(6);
+        // The budget ran out inside the first state, so the states past it are not read at all.
+        expect(fake.coverings.count).toBe(1);
     });
 
-    test('cancelling releases the tiles and reports the preload cut short', async () => {
-        const fake = fakeTileManager(4);
-        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
-
-        const pending = preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
-        preloader.cancel();
-
-        await expect(pending).resolves.toEqual({tileCount: 7, requested: 7, completed: false});
-        expect(fake.released.count).toBe(1);
-    });
-
-    test('a newer movement cancels the one before it', async () => {
-        const fake = fakeTileManager(4);
-        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
-
-        const first = preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
-        const second = preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
-        preloader.finish();
-
-        await expect(first).resolves.toEqual({tileCount: 7, requested: 7, completed: false});
-        expect((await second).completed).toBe(false);
-        expect(fake.released.count).toBe(2);
-    });
-
-    test('finishing after the camera arrives releases what the preload held', () => {
+    test('cancelling releases the tiles the preload held', () => {
         const fake = fakeTileManager(4);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
         preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        preloader.cancel();
+
+        expect(fake.listening()).toBe(0);
+    });
+
+    test('a newer movement cancels the one before it', () => {
+        const fake = fakeTileManager(4);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        expect(fake.listening()).toBe(1);
+
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
         preloader.finish();
 
-        expect(fake.released.count).toBe(1);
+        // The movement that replaced it let the first one's source go, and then its own.
+        expect(fake.listening()).toBe(0);
+    });
+
+    test('finishing after the camera arrives lets the source go', () => {
+        const fake = fakeTileManager(4);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        expect(fake.listening()).toBe(1);
+
+        preloader.finish();
+
+        expect(fake.listening()).toBe(0);
     });
 
     test('with nothing in progress, cancelling and finishing do nothing', () => {
@@ -239,33 +263,53 @@ describe('TilePreloader', () => {
         preloader.advance(0.5);
         preloader.finish();
 
-        expect(fake.released.count).toBe(0);
         expect(fake.asked).toEqual([]);
     });
 
-    test('reports completion once every tile it asked for has landed', async () => {
+    test('landing tiles is not the movement finishing', () => {
         const fake = fakeTileManager(2);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
-        const pending = preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
         expect(fake.listening()).toBe(1);
 
         fake.landLoadedTiles();
 
-        // Landing tiles is not the movement finishing, so the preload is still listening and reads the
-        // rest of the path as it goes.
+        // So the preload is still listening and reads the rest of the path as it goes.
         expect(fake.listening()).toBe(1);
 
         preloader.finish();
 
-        // The destination covers two tiles and the state the camera is in covers two more.
-        await expect(pending).resolves.toEqual({tileCount: 4, requested: 4, completed: true});
         // Nothing is outstanding, so the preload let the source go.
         expect(fake.listening()).toBe(0);
-        expect(fake.released.count).toBe(1);
     });
 
-    test('a tile landing makes room for the next state the camera is heading into', async () => {
+    test('interrupting a movement gives up on the requests the preload had in flight', () => {
+        const fake = fakeTileManager(4);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        expect(fake.abandoned.count).toBe(0);
+
+        preloader.cancel();
+
+        // The camera has been redirected, and these requests are holding connections the tiles it is
+        // heading for now need.
+        expect(fake.abandoned.count).toBe(1);
+    });
+
+    test('arriving at the end of a movement lets its requests finish', () => {
+        const fake = fakeTileManager(4);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        preloader.finish();
+
+        // These are the tiles the camera just crossed. Cancelling them throws away bytes already spent.
+        expect(fake.abandoned.count).toBe(0);
+    });
+
+    test('a tile landing makes room for the next state the camera is heading into', () => {
         const fake = fakeTileManager(4);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
@@ -275,8 +319,8 @@ describe('TilePreloader', () => {
         expect(fake.asked).toHaveLength(8);
 
         // Halfway along, the rest of the path is worth reading, but the preload is a guest in the
-        // render loop's connection pool: it reads one more state and then stops, leaving a dozen
-        // requests in flight and none of them landed.
+        // render loop's connection pool: it reads until the window is full and then stops, leaving a
+        // dozen requests in flight and none of them landed.
         preloader.advance(0.5);
         expect(fake.asked).toHaveLength(12);
 
@@ -287,14 +331,79 @@ describe('TilePreloader', () => {
         expect(fake.asked.length).toBeGreaterThan(12);
     });
 
-    test('does not spend the budget on tiles the camera already has', async () => {
+    test('holds a camera state wider than the window to what fits in it', () => {
+        const fake = fakeTileManager(60);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        preloader.start(movement(stillPath, createTransform(), 2000), {frameCount: 2});
+
+        // One camera state covers a whole viewport's worth of tiles. Taking all of them would carry the
+        // preload past its limit and put it in front of the tiles under the camera in the queue, which is
+        // the thing the limit is there to prevent.
+        expect(fake.asked).toHaveLength(12);
+
+        // The rest of the state is still to ask for, so it goes out as the window drains rather than
+        // being dropped with the state it belongs to.
+        fake.landLoadedTiles();
+        expect(fake.asked).toHaveLength(24);
+    });
+
+    test('a tile that settles without an event still frees its place in the window', () => {
+        const fake = fakeTileManager(4);
+        const preloader = new TilePreloader(fakeMap([fake.tileManager]));
+
+        preloader.start(movement(widePath, createTransform(), 2000), {frameCount: 16});
+        preloader.advance(0.5);
+        expect(fake.asked).toHaveLength(12);
+
+        // A request that errored, or that the source answered not-modified, settles the tile without
+        // the source reporting a load. Nothing announces it, so the preload has to notice for itself.
+        fake.settleSilently();
+        preloader.advance(0.5);
+
+        expect(fake.asked.length).toBeGreaterThan(12);
+    });
+
+    test('every source is asked before any of them is asked a second time', () => {
+        const wide = fakeTileManager(60);
+        const narrow = fakeTileManager(3);
+        const preloader = new TilePreloader(fakeMap([wide.tileManager, narrow.tileManager]));
+
+        preloader.start(movement(stillPath, createTransform(), 2000), {frameCount: 2});
+
+        // Taken in turn, the wide source would spend the whole window before the narrow one had been
+        // asked anything, and the camera would arrive at ground the second source never asked for.
+        expect(wide.asked).toHaveLength(9);
+        expect(narrow.asked).toHaveLength(3);
+    });
+
+    test('stops asking when the camera leaves while a request is being made', () => {
+        const wide = fakeTileManager(6);
+        const narrow = fakeTileManager(3);
+        const preloader = new TilePreloader(fakeMap([wide.tileManager, narrow.tileManager]));
+
+        // Standing in for an application handler on `sourcedataloading` that moves the camera, which is
+        // what the preload asking for a tile reaching the app makes possible.
+        wide.onAnswering(() => preloader.cancel());
+        preloader.start(movement(stillPath, createTransform(), 2000), {frameCount: 2});
+
+        // The request already handed to the wide source goes through, but nothing may go on asking
+        // after it: the run has ended, so a second source's tiles would be asked for by a preload that
+        // no longer exists.
+        expect(wide.asked.length).toBeGreaterThan(0);
+        expect(narrow.asked).toEqual([]);
+        expect(wide.listening()).toBe(0);
+        expect(narrow.listening()).toBe(0);
+    });
+
+    test('does not spend the budget on tiles the camera already has', () => {
         const fake = fakeTileManager(3);
         // Flying back over ground the map has already loaded: the western tile of the first camera
         // state needs nothing, and the states after it still have something to fetch.
         fake.warmX.add(21);
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
-        const pending = preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4, maxTileCountPerSource: 3});
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4, maxTileCountPerSource: 3});
         preloader.advance(1);
         preloader.finish();
 
@@ -302,7 +411,7 @@ describe('TilePreloader', () => {
         // the camera lacks, and the warm one costs it nothing — which leaves one for the next state,
         // whose eastern tile is new. A budget spent on the warm tile instead would leave none, and
         // the preload would stop having read anything past the first state.
-        expect((await pending).requested).toBe(3);
+        expect(fake.asked).toHaveLength(3);
     });
 
     test('falls back to the defaults when the caller asks for something that is not a number', () => {
@@ -310,7 +419,7 @@ describe('TilePreloader', () => {
         const preloader = new TilePreloader(fakeMap([fake.tileManager]));
 
         // A typo in a style or a config should cost the caller their defaults, not the whole preload.
-        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: NaN, maxTileCountPerSource: NaN});
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: NaN, maxTileCountPerSource: Infinity});
         preloader.advance(1);
         preloader.finish();
 
@@ -318,13 +427,23 @@ describe('TilePreloader', () => {
         expect(fake.coverings.count).toBe(8);
     });
 
-    test('preloads nothing for a style with no sources in use', async () => {
-        const preloader = new TilePreloader(fakeMap([]));
+    test('preloads nothing for a style with no sources in use', () => {
+        const coverings = {count: 0};
+        const unused = {
+            used: false,
+            coveringTiles: () => { coverings.count++; return []; },
+            preloadTiles: () => { throw new Error('a source the style is not using must not be asked for tiles'); },
+            abandonPreloadedTiles: () => {},
+            on: () => {},
+            off: () => {}
+        };
+        const preloader = new TilePreloader(fakeMap([unused]));
 
-        const result = await preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        preloader.start(movement(movingPath, createTransform(), 2000), {frameCount: 4});
+        preloader.advance(1);
         preloader.finish();
 
-        expect(result).toEqual({tileCount: 0, requested: 0, completed: true});
+        expect(coverings.count).toBe(0);
     });
 
     test('reads the path through the movement easing, so a sample sits where the camera will be', () => {

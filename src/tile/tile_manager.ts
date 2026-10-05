@@ -9,7 +9,7 @@ import {now} from '../util/time_control.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {SourceFeatureState} from '../source/source_state.ts';
 import {config} from '../util/config.ts';
-import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles.ts';
+import {coveringTiles as computeCoveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {EXTENT_BOUNDS} from '../data/extent_bounds.ts';
 import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
@@ -79,10 +79,12 @@ export class TileManager extends Evented<SourceEventType> {
     _prevLng: number;
     _outOfViewCache: TileCache;
     /**
-     * The tiles {@link TileManager.preloadTiles} loaded ahead of the camera reaching them, keyed by
-     * tile id. Held only while they are still loading, and retained across updates until then.
+     * The tiles {@link TileManager.preloadTiles} is still loading, which the render loop knows nothing
+     * about: they are in neither the in-view set nor the out-of-view cache until they hold data. Held
+     * only so that a tile landing knows to cache itself, and drained by whichever of its load and error
+     * paths finishes first.
      */
-    _preloadedTiles: Record<string, Tile>;
+    _preloadedTiles: Set<Tile>;
     _timers: Record<string, ReturnType<typeof setTimeout>>;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
@@ -122,7 +124,7 @@ export class TileManager extends Evented<SourceEventType> {
 
         this._inViewTiles = new InViewTiles();
         this._outOfViewCache = new TileCache(0, (tile) => this._unloadTile(tile));
-        this._preloadedTiles = {};
+        this._preloadedTiles = new Set();
         this._timers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
@@ -200,7 +202,7 @@ export class TileManager extends Evented<SourceEventType> {
             this._tileLoaded(tile, id, state, hadData, result);
         } catch (err) {
             tile.state = 'errored';
-            delete this._preloadedTiles[id];
+            this._preloadedTiles.delete(tile);
 
             if (err.status !== 404) {
                 this._source.fire(new ErrorEvent(ensureError(err), {tile}));
@@ -310,9 +312,11 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     _tileLoaded(tile: Tile, id: string, previousState: TileState, hadData: boolean, result: LoadTileResult): void {
-        // A preloaded tile has data now, so the out-of-view cache can hold it from here on and the
-        // render loop no longer has a reason to keep it in view.
-        delete this._preloadedTiles[id];
+        // A preloaded tile has data now, so the out-of-view cache holds it from here on and the render
+        // loop never has to know it existed.
+        if (this._preloadedTiles.has(tile) && tile.hasData() && this._outOfViewCache.max > 0) {
+            this._cachePreloadedTile(tile);
+        }
 
         // If the tile was already showing do not restart its fade-in animation
         if (!hadData) {
@@ -358,7 +362,7 @@ export class TileManager extends Evented<SourceEventType> {
      * Retain the uppermost loaded children of each provided target tile, within a variable covering zoom range.
      *
      * On pitched maps, different parts of the screen show different zoom levels simultaneously.
-     * Ideal tiles are generated using coveringTiles() above, which returns the ideal tile set for
+     * Ideal tiles are generated using coveringTiles() in update(), which returns the ideal tile set for
      * the current pitched plane, which can carry tiles of varying zooms (overscaledZ).
      * See: https://maplibre.org/maplibre-gl-js/docs/examples/level-of-detail-control/
      *
@@ -513,17 +517,19 @@ export class TileManager extends Evented<SourceEventType> {
      * buckets at layout time. Only data-driven layers scan the loaded tiles, so styles without
      * them pay nothing beyond the layer loop. The value is a high-water mark: a maximum seen once is kept even
      * after its tile unloads, otherwise dropping the tile would also drop the reason to keep it,
-     * and the tile could not come back while its content is still visible. The mark resets with
-     * the tiles in `clearTiles`.
+     * and the tile could not come back while its content is still visible. The mark resets with the
+     * tiles in `clearTiles`.
+     *
+     * @param zoom - the zoom to read `visibility` at, which is the zoom of the camera state the tiles are being worked out for
      */
-    _updateMaxContentElevation(): number {
+    _updateMaxContentElevation(zoom: number): number {
         let maxElevation = this._maxContentElevationSeen;
         const layers = this.map?.style?._layers;
         if (!layers) return maxElevation;
         const tiles = this._inViewTiles.getAllTiles();
         for (const layerId in layers) {
             const layer = layers[layerId];
-            if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(this.transform.zoom)) continue;
+            if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(zoom)) continue;
             const symbolLayer = layer as SymbolStyleLayer;
             if (!symbolLayer.layout) continue;
             const heightOffset = symbolLayer.layout.get('symbol-height-offset');
@@ -552,6 +558,11 @@ export class TileManager extends Evented<SourceEventType> {
         this.terrain = terrain;
 
         this.updateCacheSize(transform);
+        // The out-of-view cache holds nothing until it is sized from a camera, and a preloaded tile that
+        // lands before then has nowhere to go. Now it does.
+        for (const tile of this._preloadedTiles) {
+            if (tile.hasData()) this._cachePreloadedTile(tile);
+        }
         this.handleWrapJump(this.transform.center.lng);
 
         const idealTileIDs = this.coveringTiles(transform, terrain);
@@ -608,7 +619,7 @@ export class TileManager extends Evented<SourceEventType> {
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         }
 
-        const idealTileIDs = coveringTiles(transform, {
+        const idealTileIDs = computeCoveringTiles(transform, {
             tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
             minzoom: this._source.minzoom,
             maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
@@ -618,7 +629,7 @@ export class TileManager extends Evented<SourceEventType> {
             reparseOverscaled: this._source.reparseOverscaled,
             terrain,
             calculateTileZoom: this._source.calculateTileZoom,
-            maxContentElevation: this._updateMaxContentElevation(),
+            maxContentElevation: this._updateMaxContentElevation(transform.zoom),
         });
 
         if (!this._source.hasTile) return idealTileIDs; // a source without bounds covers the whole world
@@ -629,18 +640,24 @@ export class TileManager extends Evented<SourceEventType> {
      * Loads the given tiles before the camera reaches them, so that it finds them already parsed and
      * uploaded in the tile cache instead of asking for them as it arrives.
      *
-     * The tiles enter the in-view set, which is what gives them the ordinary tile lifecycle: they
-     * are uploaded and placed in the atlas like any other tile, and the camera reaching one takes it
-     * out of the out-of-view cache rather than requesting it again. They leave the in-view set as
-     * soon as they hold data, since from then on the out-of-view cache keeps them just as well and
-     * costs the render loop nothing.
+     * A preloaded tile is in neither the in-view set nor the out-of-view cache while it loads, so none
+     * of the work the render loop does over the tiles it is drawing is spent on a tile the camera has
+     * not reached: none of it walks them to decide whether the source has settled, enters their
+     * symbols into the cross-tile index, fades them, or counts them against a cache. It joins the
+     * out-of-view cache as soon as it holds data, which is where the render loop looks for a tile it
+     * wants and does not have, so the camera arriving at one takes it from there rather than
+     * requesting it again.
      *
-     * Until then they are retained even though no viewport covers them, because the render loop
-     * aborts the request of any tile it does not retain, which would leave a preload no better off
-     * than not having made it.
+     * Nothing has to be given up afterwards. A request still in flight when the movement ends, or is
+     * interrupted, runs to completion and caches itself, so the tiles a preload asked for are kept
+     * rather than thrown away mid-download.
      *
-     * @param tileIDs - the tiles to load, nearest the camera first; ones already in view are left alone
-     * @returns the tiles this put in view, which is fewer than `tileIDs` where the camera already had some
+     * A tile taken on is announced with `dataloading` like any other, so a caller watching
+     * {@link MapEventType.sourcedataloading} sees a preload's requests among the render loop's without
+     * there being any separate event to learn about.
+     *
+     * @param tileIDs - the tiles to load, nearest the camera first; ones the camera already has are left alone
+     * @returns the tiles taken on, which are the ones still to arrive
      */
     preloadTiles(tileIDs: OverscaledTileID[]): Tile[] {
         // A source with no metadata to request against, or one the map has paused, is one the render
@@ -650,21 +667,50 @@ export class TileManager extends Evented<SourceEventType> {
         const preloaded: Tile[] = [];
         for (const tileID of tileIDs) {
             if (this._inViewTiles.getTileById(tileID.key)) continue;
-            const tile = this._addTile(tileID);
-            if (tile.hasData()) continue; // a tile taken back out of the cache needs no retaining
-            this._preloadedTiles[tileID.key] = tile;
-            preloaded.push(tile);
+            // Already cached under this id, or under the same tile wrapped for another copy of the
+            // world. The render loop would find it there rather than request it again.
+            if (this._outOfViewCache.getByKey(tileID.key) || this._outOfViewCache.get(tileID)) continue;
+            preloaded.push(this._startPreloadingTile(tileID));
         }
         return preloaded;
     }
 
     /**
-     * Stops retaining the tiles {@link TileManager.preloadTiles} loaded, so that the next update
-     * moves them out of the in-view set like any other tile the viewport has left. The camera
-     * reaching one before then still finds it in the out-of-view cache.
+     * Gives up on the tiles a preload is still loading, for a movement the camera has been redirected
+     * away from. The requests stop, and the connections they were holding go to the tiles the camera is
+     * heading for now.
+     *
+     * A movement that arrives does not do this. The tiles it asked for are the ground it just crossed,
+     * and cancelling them throws away bytes already spent to save the new viewport a fraction of a second.
      */
-    releasePreloadedTiles(): void {
-        this._preloadedTiles = {};
+    abandonPreloadedTiles(): void {
+        for (const tile of this._preloadedTiles) {
+            tile.aborted = true;
+            this._abortTile(tile);
+        }
+        this._preloadedTiles.clear();
+    }
+
+    /**
+     * Creates a tile and starts it loading, for a caller that wants the data without the render loop
+     * knowing the tile exists.
+     */
+    private _startPreloadingTile(tileID: OverscaledTileID): Tile {
+        const tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
+        this._preloadedTiles.add(tile);
+        this._loadTile(tile, tileID.key, tile.state, false);
+        this._source.fire(new MapSourceDataEvent('dataloading', {tile, coord: tileID}));
+        return tile;
+    }
+
+    /**
+     * Moves a landed preloaded tile into the out-of-view cache, where the render loop looks for a tile
+     * it wants and does not have, and stops holding it.
+     */
+    private _cachePreloadedTile(tile: Tile): void {
+        this._preloadedTiles.delete(tile);
+        this._outOfViewCache.add(tile.tileID, tile, tile.getExpiryTimeout());
+        this._setTileReloadTimer(tile.tileID.key, tile);
     }
 
     /**
@@ -750,14 +796,6 @@ export class TileManager extends Evented<SourceEventType> {
 
         // retain the tile even if it's not loaded because it's an ideal tile.
         const retainTileMap: Record<string, OverscaledTileID> = idealTileIDs.reduce((acc, t) => { acc[t.key] = t; return acc;}, {});
-
-        // A preload put these in before the camera got there, so they are in view while they load
-        // whether or not a viewport covers them. The key is read from the tile because a world wrap
-        // in the meantime renames it, and the cleanup below looks tiles up by their current id.
-        for (const key in this._preloadedTiles) {
-            const {tileID} = this._preloadedTiles[key];
-            retainTileMap[tileID.key] = tileID;
-        }
 
         const tileIdsWithoutData = this._retainLoadedChildren(retainTileMap, idealTilesWithoutData);
 
@@ -950,7 +988,7 @@ export class TileManager extends Evented<SourceEventType> {
         this._shouldReloadOnResume = false;
         this._paused = false;
         this.resetMaxContentElevation();
-        this._preloadedTiles = {};
+        this._preloadedTiles.clear();
 
         for (const id of this._inViewTiles.getAllIds()) {
             this._removeTile(id);

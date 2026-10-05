@@ -45,23 +45,19 @@ export function createFlyToArc(w0: number, w1: number, u1: number, rho: number):
         return Math.log(Math.sqrt(b * b + 1) - b);
     }
 
-    function sinh(n) { return (Math.exp(n) - Math.exp(-n)) / 2; }
-    function cosh(n) { return (Math.exp(n) + Math.exp(-n)) / 2; }
-    function tanh(n) { return sinh(n) / cosh(n); }
-
     // r₀: Zoom-out factor during ascent.
     const r0 = zoomOutFactor(false);
 
     // w(s): Returns the visible span on the ground, measured in pixels with respect to the
     // initial scale. Uses the current vertical field of view setting.
     let w: (_: number) => number = function (s) {
-        return (cosh(r0) / cosh(r0 + rho * s));
+        return (Math.cosh(r0) / Math.cosh(r0 + rho * s));
     };
 
     // u(s): Returns the distance along the flight path as projected onto the ground plane,
     // measured in pixels from the world image origin at the initial scale.
     let u: (_: number) => number = function (s) {
-        return w0 * ((cosh(r0) * tanh(r0 + rho * s) - sinh(r0)) / rho2) / u1;
+        return w0 * ((Math.cosh(r0) * Math.tanh(r0 + rho * s) - Math.sinh(r0)) / rho2) / u1;
     };
 
     // S: Total length of the flight path, measured in ρ-screenfulls.

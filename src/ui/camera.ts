@@ -275,6 +275,12 @@ export type AnimationOptions = {
      * may ask each source for.
      *
      * @defaultValue false
+     *
+     * @example
+     * ```ts
+     * // Fly across the world without spending it at reduced detail or on a blank map.
+     * map.flyTo({center: [139.69, 35.68], zoom: 11, preload: true});
+     * ```
      */
     preload?: boolean | PreloadTilesOptions;
 };
@@ -456,6 +462,13 @@ export class Camera extends Evented<MapEventType> {
 
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
+    /**
+     * Whether the movement in flight reached the end of its path, as opposed to being cut short. Only
+     * the render loop's own callback knows this, and what the preload should do afterwards differs: a
+     * movement that arrived keeps the requests it had in flight, because those are the tiles of the
+     * ground it just crossed, while a movement the camera was redirected away from gives them up.
+     */
+    _easeArrived: boolean = false;
     _easeFrameId: TaskID;
 
     /**
@@ -1038,6 +1051,8 @@ export class Camera extends Evented<MapEventType> {
             return (k) => {
                 const {scale, centerFactor} = arc.at(k);
                 setEulerAngles(tr, k);
+                // Read from the transform again each frame rather than hoisted: padding animates, and it
+                // is what moves `centerPoint`.
                 flyHandler.easeFunc(k, scale, centerFactor, tr.centerPoint.add(offsetAsPoint));
             };
         };
@@ -1378,9 +1393,17 @@ export class Camera extends Evented<MapEventType> {
      * landed since its last frame and puts the center back onto the terrain, see {@link Camera.putCenterBackOnTerrain}
      */
     _afterEase(eventData?: Record<string, unknown>, easeId?: string, freezeElevation: boolean = false): void {
-        // The camera has arrived, so the tiles the preload was reading ahead for are the ones the
-        // viewport itself covers now.
-        this._preloader.finish();
+        if (this._easeArrived) {
+            // The movement reached the end of its path. The tiles the preload was reading ahead for are
+            // the ground the camera has just crossed, so the ones still loading are left to finish and
+            // cache themselves rather than cancelled for ground nobody is going back to.
+            this._preloader.finish();
+        } else {
+            // The camera was redirected: a new movement, or a gesture taking hold of the map. Those tiles
+            // belong to a path the camera has left, and the requests they are holding are connections
+            // the tiles it is heading for now need.
+            this._preloader.cancel();
+        }
 
         this._takeLandedElevation(this.transform);
         const tookDem = this.releaseElevation();
@@ -1435,8 +1458,8 @@ export class Camera extends Evented<MapEventType> {
         // Where applicable, local variable documentation begins with the associated variable or
         // function in van Wijk (2003).
 
-        this.stop();
         this._preloader.cancel();
+        this.stop();
 
         options = extend({
             offset: [0, 0],
@@ -1583,9 +1606,11 @@ export class Camera extends Evented<MapEventType> {
             easing?: (_: number) => number;
         }): void {
         if (options.animate === false || options.duration === 0) {
+            this._easeArrived = true;
             frame(1);
             finish();
         } else {
+            this._easeArrived = false;
             this._easeStart = now();
             this._easeOptions = options;
             this._onEaseFrame = frame;
@@ -1603,6 +1628,7 @@ export class Camera extends Evented<MapEventType> {
         if (t < 1 && this._easeFrameId) {
             this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
         } else {
+            this._easeArrived = t >= 1;
             this.stop();
         }
     };

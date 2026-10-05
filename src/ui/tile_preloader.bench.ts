@@ -68,7 +68,7 @@ function createSource(settled: boolean) {
         used: true,
         coveringTiles: (tr: ITransform) => coveringTiles(tr, {tileSize: 512, minzoom: 0, maxzoom: 14}),
         preloadTiles: (tileIDs: OverscaledTileID[]) => tileIDs.map(() => tile),
-        releasePreloadedTiles: () => {},
+        abandonPreloadedTiles: () => {},
         on: () => {},
         off: () => {}
     };

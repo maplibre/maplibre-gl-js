@@ -39,6 +39,7 @@
     </p>
     <button id="preload">Fly, preloading tiles</button>
     <button id="plain">Fly without preloading</button>
+    <p id="count">Tiles requested: 0</p>
 </div>
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
@@ -51,6 +52,14 @@
     });
 
     const destination = {center: [139.69, 35.68], zoom: 11};
+    const count = document.getElementById('count');
+    let requested = 0;
+
+    // A preload announces its requests with the same `dataloading` event the render loop uses, so
+    // there is nothing extra to subscribe to in order to watch one work.
+    map.on('sourcedataloading', () => {
+        count.textContent = `Tiles requested: ${++requested}`;
+    });
 
     document.getElementById('preload').addEventListener('click', () => {
         map.flyTo({...destination, preload: true});

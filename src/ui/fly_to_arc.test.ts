@@ -5,9 +5,11 @@ describe('createFlyToArc', () => {
     test('starts where the animation starts', () => {
         const arc = createFlyToArc(512, 256, 1024, 1.42);
 
-        // The animation's zoom scale is 1 at the start, and it has covered no ground.
+        // The animation's zoom scale is 1 at the start, and it has covered no ground. Neither is worked
+        // out by a subtraction that cancels, so neither is bit-exact zero however it is written; what
+        // matters is that the camera begins where it was.
         expect(arc.at(0).scale).toBe(1);
-        expect(arc.at(0).centerFactor).toBe(0);
+        expect(arc.at(0).centerFactor).toBeCloseTo(0, 10);
     });
 
     test('travels the whole of the path and no more', () => {
