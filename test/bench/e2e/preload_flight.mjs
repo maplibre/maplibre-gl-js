@@ -6,7 +6,8 @@
 // network cost goes, and the thing a preload exists to reduce.
 //
 // Run it against a build of the dev bundle:  npm run build-dev && node test/bench/e2e/preload_flight.mjs
-// Knobs: TILE_DELAY_MS per tile, DURATION the flight, SCENARIO waste|recovery|interrupt.
+// Knobs: TILE_DELAY_MS per tile, DURATION the flight, PITCH of the destination camera,
+//        PROJECTION mercator|globe, SCENARIO waste|recovery|interrupt.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -94,10 +95,14 @@ import * as maplibregl from '/dist/maplibre-gl-dev.mjs';
 window.maplibregl = maplibregl;
 
 const D = Number(window.__duration ?? 3000);
+const PITCH = Number(window.__pitch ?? 0);
 window.FLIGHTS = {
     intercontinental: {origin: [-73.58, 45.53], destination: {center: [139.69, 35.68], zoom: 11}, duration: D},
     intraContinent:  {origin: [-73.58, 45.53], destination: {center: [-47.92, -15.78], zoom: 11}, duration: D},
-    deepZoomIn:      {origin: [-73.58, 45.53], destination: {center: [2.35, 48.85], zoom: 14}, duration: D}
+    deepZoomIn:      {origin: [-73.58, 45.53], destination: {center: [2.35, 48.85], zoom: 14}, duration: D},
+    // A pitched destination, which is where a globe is actually worth looking at: the covering-tile
+    // traversal and the flight arc both diverge from the flat case as the camera tilts.
+    pitchedClimb:    {origin: [-73.58, 45.53], destination: {center: [2.35, 48.85], zoom: 13, pitch: 55}, duration: D}
 };
 
 window.once = (target, type, ms) => new Promise((resolve, reject) => {
@@ -114,7 +119,17 @@ window.probe = async () => {
     window.onerror = (m) => console.log('ONERROR', m);
     map.on('error', (e) => console.log('MAP ERROR:', e.error && e.error.message));
     await once(map, 'idle', 40000);
+
+    // A globe is a different transform, a different covering-tile traversal and a different flight arc,
+    // so the preload's sampling has to be measured against one rather than assumed to carry over.
+    const projection = window.__projection ?? 'mercator';
+    if (projection !== 'mercator') {
+        map.setProjection({type: projection});
+        await once(map, 'idle', 40000);
+    }
+
     return {
+        projection: map.getProjection() ? map.getProjection().type : 'mercator',
         styleLoaded: map.isStyleLoaded(),
         sourceLoaded: map.loaded(),
         tileManagers: Object.keys(map.style.tileManagers),
@@ -293,7 +308,10 @@ try {
     page.on('pageerror', (e) => console.log('[pageerror]', e.message));
     page.on('requestfailed', (r) => console.log('[reqfail]', r.url(), r.failure()?.errorText));
     await page.goto(`http://localhost:${PORT}/`, {waitUntil: 'domcontentloaded'});
-    await page.evaluate((d) => { window.__duration = d; }, Number(process.env.DURATION ?? 3000));
+    await page.evaluate((o) => {
+        window.__duration = o.duration;
+        window.__projection = o.projection;
+    }, {duration: Number(process.env.DURATION ?? 3000), projection: process.env.PROJECTION ?? 'mercator'});
     await page.waitForFunction('window.probe !== undefined', {timeout: 30000});
 
     const probe = await page.evaluate(() => window.probe());
