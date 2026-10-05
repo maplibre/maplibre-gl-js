@@ -33,6 +33,7 @@ describe('drawCustom', () => {
         const mockPainter = new Painter(null);
         mockPainter.context = {
             gl: {},
+            setCustomLayerDefaults: () => {},
             setColorMode: () => {},
             setStencilMode: () => {},
             setDepthMode: () => {},
