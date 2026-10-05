@@ -94,7 +94,7 @@
     "eslint-plugin-tsdoc": "0.5.3",
     "expect": "^30.5.2",
     "glob": "^13.0.6",
-    "globals": "^17.12.0",
+    "globals": "^17.13.0",
     "is-builtin-module": "^5.0.0",
     "jsdom": "^30.1.1",
     "minimist": "^1.2.8",
