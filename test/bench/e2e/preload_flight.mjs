@@ -171,6 +171,41 @@ window.fly = async (name, preload) => {
         }
     }
     const mean = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
+
+    // The share of the frame that is actually drawn, as opposed to the share of tiles that arrived. A
+    // tile's ground bounds project to a quadrilateral whose area is its weight in the frame, so a missing
+    // tile at the horizon counts for almost nothing and one at the bottom of a pitched frame counts for a
+    // great deal. That is the distinction both the tile count and the mean screen y miss, and it is the
+    // one that decides what the arrival looks like.
+    const area = {ready: 0, total: 0};
+    for (const tm of Object.values(map.style.tileManagers)) {
+        for (const tileID of tm.coveringTiles(transform)) {
+            const inView = tm.getTileByID(tileID.key);
+            const ready = (inView && (inView.state === 'loaded' || inView.state === 'errored')) ||
+                tm._outOfViewCache.getByKey(tileID.key) !== null;
+            const ul = tileID.canonical;
+            const latOf = (y) => {
+                const nn = Math.PI - 2 * Math.PI * y / (2 ** ul.z);
+                return 180 / Math.PI * Math.atan(0.5 * (Math.exp(nn) - Math.exp(-nn)));
+            };
+            const west = ul.x / (2 ** ul.z) * 360 - 180;
+            const east = (ul.x + 1) / (2 ** ul.z) * 360 - 180;
+            const south = latOf(ul.y + 1);
+            const north = latOf(ul.y);
+            const corners = [[west, south], [east, south], [east, north], [west, north]]
+                .map(([lng, lat]) => map.project(new maplibregl.LngLat(lng, lat)));
+            // Shoelace over the projected quadrilateral, which stays a plain polygon however it is skewed.
+            let twice = 0;
+            for (let i = 0; i < 4; i++) {
+                const p1 = corners[i], p2 = corners[(i + 1) % 4];
+                twice += p1.x * p2.y - p2.x * p1.y;
+            }
+            const tileArea = Math.abs(twice) / 2;
+            area.total += tileArea;
+            if (ready) area.ready += tileArea;
+        }
+    }
+    const frameDrawn = area.total ? area.ready / area.total : null;
     const coverage = {};
     let loaded = 0, total = 0, missing = 0;
     for (const [id, tm] of Object.entries(map.style.tileManagers)) {
@@ -185,7 +220,8 @@ window.fly = async (name, preload) => {
         name, preload, elapsedMs: Math.round(performance.now() - started), loaded, total, missing, coverage,
         foreground: {
             readyMeanY: mean(foreground.readyY), readyN: foreground.readyY.length,
-            missingMeanY: mean(foreground.missingY), missingN: foreground.missingY.length
+            missingMeanY: mean(foreground.missingY), missingN: foreground.missingY.length,
+            frameDrawnPct: frameDrawn === null ? null : Math.round(frameDrawn * 100)
         }
     };
 };
@@ -396,7 +432,7 @@ try {
                 : (f.missingMeanY === null || f.readyMeanY === null) ? 'all present'
                     : f.missingMeanY < f.readyMeanY ? 'shortfall at horizon (good)'
                         : 'SHORTFALL NEAR VIEWER (bad)';
-            console.log(`${name.padEnd(17)} preload=${String(preload).padEnd(5)} loadedAtArrival ${String(r.loaded).padStart(3)}/${String(r.total).padEnd(3)} (${String(pct).padStart(3)}%)  screenY[ready=${f.readyMeanY} missing=${f.missingMeanY}]  ${verdict}  requested=${stats.started}`);
+            console.log(`${name.padEnd(17)} preload=${String(preload).padEnd(5)} loadedAtArrival ${String(r.loaded).padStart(3)}/${String(r.total).padEnd(3)} (${String(pct).padStart(3)}%)  frameDrawn=${f.frameDrawnPct}%  screenY[ready=${f.readyMeanY} missing=${f.missingMeanY}]  requested=${stats.started}`);
             await new Promise((r2) => setTimeout(r2, 50));
         }
     }
