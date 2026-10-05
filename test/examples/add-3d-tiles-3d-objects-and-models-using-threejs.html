@@ -36,9 +36,9 @@
             "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
             "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
             "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
-            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/type-wrappers/proj4-wrapper.js",
-            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/type-wrappers/geotiff-wrapper.js",
-            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/maplibre-gl-three.js"
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"
         }
     }
 </script>
@@ -155,6 +155,7 @@
         map.on('load', async () => {
             const threeDManager = new ThreeDManager();
             await threeDManager.init();
+            map.on('remove', () => threeDManager.destroy());
             const layer = threeDManager.createLayer();
             // Add the Three.JS scene below the rivers Style Spec layer 
             map.addLayer(layer, 'rivers');
@@ -162,8 +163,7 @@
             // Add 3D Tiles to the scene
             const tilesAsset = await layer.load3dTiles({
                 tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
-                offset: { east: 0, up: -234, south: 0 },
-                maxDepth: 5
+                offset: { east: 0, up: -234, south: 0 }
             });
 
             // Add a pink sphere
@@ -172,7 +172,7 @@
                 new THREE.MeshStandardMaterial({ color: 0xff00ff })
             );
             sphere.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.598, 40.040], height: 130 }));
-            layer.getScene().add(sphere);
+            layer.three.getScene().add(sphere);
 
             // Add a group of 4 spheres, with offsets in meter from a geographical center 
             const placement = new THREE.Group();
@@ -186,15 +186,14 @@
             southSphere.position.set(0, 0, 30);
             eastSphere.position.set(30, 0, 0);
             westSphere.position.set(-30, 0, 0);
+            placement.add(northSphere, southSphere, eastSphere, westSphere);
+            layer.three.getScene().add(placement);
 
             // Add a 3d model to the group.
             const model = await new GLTFLoader().loadAsync(
                 'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf'
             );
-            placement.add(northSphere, southSphere, eastSphere, westSphere, model.scene);
-            layer.getScene().add(placement);
-
-            map.on('remove', () => threeDManager.destroy());
+            placement.add(model.scene);
         });
     </script>
 </body>

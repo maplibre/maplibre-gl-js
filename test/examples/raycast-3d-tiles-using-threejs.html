@@ -40,9 +40,9 @@
             "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
             "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
             "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
-            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/type-wrappers/proj4-wrapper.js",
-            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/type-wrappers/geotiff-wrapper.js",
-            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@2.0.0/dist/maplibre-gl-three.js"
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"
         }
     }
 </script>
@@ -164,16 +164,15 @@
         const layer = threeDManager.createLayer({id: 'agi-hq-3d'});
         const tilesAsset = await layer.load3dTiles({
             tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
-            offset: {east: 0, up: -234, south: 0},
-            maxDepth: 5
+            offset: {east: 0, up: -234, south: 0}
         });
         map.addLayer(layer, 'rivers');
 
-        const scene = layer.getScene();
+        const scene = layer.three.getScene();
         const raycaster = new THREE.Raycaster();
         const pointer = new THREE.Vector2();
-        const camera = layer.getCamera();
-        const renderer = layer.getRenderer();
+        const camera = layer.three.getCamera();
+        const renderer = layer.three.getRenderer();
         const statusElement = document.getElementById('status');
 
         if (!renderer || !statusElement) return;
@@ -208,10 +207,10 @@
             if (!destination) {
                 throw new Error("could not obtain the 3D Tiles reference")
             }
-            // The ray starts 10 meters above the reference point, heading straight down.
+            // The ray starts 100 meters above the reference point, heading straight down.
             const origin = { 
                 point: destination.point,
-                height: destination.height + 10
+                height: destination.height + 100
             };
             // Convert to the ECEF coordinate system.
             const ecef_origin = threeDManager.lngLatAltToEcef(origin);
