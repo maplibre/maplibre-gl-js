@@ -149,6 +149,28 @@ window.fly = async (name, preload) => {
     await moved;
     // What the camera is looking at, and how much of it has arrived. Read straight from the in-view set,
     // so this is the screen the user gets rather than a tile set recomputed after the fact.
+    // A covering tile that is neither in view nor cached has to be fetched from scratch, which is a
+    // blank. One that is already cached is in the out-of-view cache and goes into view on the next
+    // update, which is not a blank even though it is not in view yet. Conflating the two would make the
+    // preload look worse than it is, so they are counted apart, and by where they sit on screen: at
+    // pitch the tiles at the bottom are nearer the viewer and cover more of it.
+    // The map's own transform is not public API; the camera's is, and a bench harness may look.
+    const transform = map._camera.transform;
+    const foreground = {readyY: [], missingY: []};
+    for (const tm of Object.values(map.style.tileManagers)) {
+        for (const tileID of tm.coveringTiles(transform)) {
+            const inView = tm.getTileByID(tileID.key);
+            const ready = (inView && (inView.state === 'loaded' || inView.state === 'errored')) ||
+                tm._outOfViewCache.getByKey(tileID.key) !== null;
+            const ul = tileID.canonical;
+            const lng = (ul.x + 0.5) / (2 ** ul.z) * 360 - 180;
+            const n2 = Math.PI - 2 * Math.PI * (ul.y + 0.5) / (2 ** ul.z);
+            const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n2) - Math.exp(-n2)));
+            const y = map.project(new maplibregl.LngLat(lng, lat)).y;
+            (ready ? foreground.readyY : foreground.missingY).push(y);
+        }
+    }
+    const mean = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
     const coverage = {};
     let loaded = 0, total = 0, missing = 0;
     for (const [id, tm] of Object.entries(map.style.tileManagers)) {
@@ -159,7 +181,13 @@ window.fly = async (name, preload) => {
         coverage[id] = ready + '/' + ids.length;
         loaded += ready; total += ids.length; missing += blank;
     }
-    return {name, preload, elapsedMs: Math.round(performance.now() - started), loaded, total, missing, coverage};
+    return {
+        name, preload, elapsedMs: Math.round(performance.now() - started), loaded, total, missing, coverage,
+        foreground: {
+            readyMeanY: mean(foreground.readyY), readyN: foreground.readyY.length,
+            missingMeanY: mean(foreground.missingY), missingN: foreground.missingY.length
+        }
+    };
 };
 
 // What is still being fetched, and for where, while the camera is in the air. A tile the camera has
@@ -359,7 +387,16 @@ try {
         for (const preload of [false, true]) {
             const r = await page.evaluate((n, p) => window.fly(n, p), name, preload);
             const pct = r.total ? (r.loaded / r.total * 100).toFixed(0) : 'n/a';
-            console.log(`${name.padEnd(17)} preload=${String(preload).padEnd(5)} loadedAtArrival ${String(r.loaded).padStart(3)}/${String(r.total).padEnd(3)} (${String(pct).padStart(3)}%)  blank=${r.missing}  ${JSON.stringify(r.coverage)}  peakInFlight=${stats.peak}  requested=${stats.started}`);
+            // Screen y grows downward, so a smaller y is nearer the horizon and further from the viewer.
+            // What decides how a partly-loaded arrival *looks* is which tiles are missing: at the horizon
+            // it is a thin strip, in the middle of the frame it is the map you were looking at. The
+            // percentage alone cannot tell the two apart, so this is the number to watch.
+            const f = r.foreground;
+            const verdict = !preload ? ''
+                : (f.missingMeanY === null || f.readyMeanY === null) ? 'all present'
+                    : f.missingMeanY < f.readyMeanY ? 'shortfall at horizon (good)'
+                        : 'SHORTFALL NEAR VIEWER (bad)';
+            console.log(`${name.padEnd(17)} preload=${String(preload).padEnd(5)} loadedAtArrival ${String(r.loaded).padStart(3)}/${String(r.total).padEnd(3)} (${String(pct).padStart(3)}%)  screenY[ready=${f.readyMeanY} missing=${f.missingMeanY}]  ${verdict}  requested=${stats.started}`);
             await new Promise((r2) => setTimeout(r2, 50));
         }
     }
