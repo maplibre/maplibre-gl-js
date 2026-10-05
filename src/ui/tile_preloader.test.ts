@@ -3,7 +3,6 @@ import {TilePreloader} from './tile_preloader.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {CameraMovement} from './camera_movement.ts';
