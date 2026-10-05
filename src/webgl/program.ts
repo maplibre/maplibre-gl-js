@@ -139,10 +139,8 @@ export class Program<Us extends UniformBindings> {
         gl.linkProgram(this.program);
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-            // Chromium returns 0 for every query between a GPU process crash
-            // and isContextLost() turning true (#8607). Two shaders were
-            // attached above, so zero attached shaders means the queries
-            // themselves are dead, not that the shaders failed.
+            // A dead GPU process answers every query with 0 until isContextLost() turns true, so a
+            // failed link with zero attached shaders means the driver died, not the shaders (#8607).
             if (gl.isContextLost() || gl.getProgramParameter(this.program, gl.ATTACHED_SHADERS) === 0) {
                 this.failedToCreate = true;
                 return;
