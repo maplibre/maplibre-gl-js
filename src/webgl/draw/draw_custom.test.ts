@@ -7,7 +7,6 @@ import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
-import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
 import {expectToBeCloseToArray, createFrameRenderData} from '../../util/test/util.ts';
 
 import type {CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
@@ -32,11 +31,9 @@ describe('drawCustom', () => {
         transform.setMinPitch(10);
         transform.setMaxPitch(10);
         const mockPainter = new Painter(null);
-        mockPainter.style = {
-            projection: new MercatorProjection(),
-        } as any;
         mockPainter.context = {
             gl: {},
+            setCustomLayerDefaults: () => {},
             setColorMode: () => {},
             setStencilMode: () => {},
             setDepthMode: () => {},
@@ -45,7 +42,7 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
         mockPainter.frameRenderContext = frameRenderContext;
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);

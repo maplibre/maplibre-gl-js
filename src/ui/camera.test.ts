@@ -2723,6 +2723,12 @@ describe('jumpTo globe projection', () => {
             expect(camera.getZoom()).toBe(0.6154999996223638);
         });
 
+        test('jumps onto the pole while zooming out', () => {
+            camera.jumpTo({zoom: 8});
+            camera.jumpTo({center: [0, 90], zoom: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
+        });
+
         test('changing center with zoom specified should not adjusts zoom', () => {
             camera.jumpTo({center: [0, 40], zoom: 3});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
@@ -2886,6 +2892,12 @@ describe('easeTo globe projection', () => {
             camera.easeTo({center: [0, 40], zoom: 3, duration: 0});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(3);
+        });
+
+        test('eases onto the pole while zooming out', () => {
+            camera.jumpTo({center: [0, 60.2], zoom: 8});
+            camera.easeTo({center: [0, 90], zoom: 0, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
         });
     });
 
@@ -3225,6 +3237,12 @@ describe('flyTo globe projection', () => {
             expect(camera.getCenter().lng).toBeCloseTo(0, 9);
             expect(camera.getCenter().lat).toBeCloseTo(40, 9);
             expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('flies onto the pole while zooming out', () => {
+            camera.jumpTo({zoom: 8});
+            camera.flyTo({center: [0, 90], zoom: 0, animate: false});
+            expect(camera.getCenter().lat).toBeCloseTo(90, 9);
         });
 
         test('changing center with zoom specified should not adjusts zoom', () => {

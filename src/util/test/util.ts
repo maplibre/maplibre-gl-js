@@ -413,6 +413,7 @@ export function createFrameRenderData(): FrameRenderData {
         moving: false,
         fadeDuration: 0,
         symbolFadeChange: 1,
+        variableOffsets: {},
         anisotropicFilterPitch: 20,
         projectionTransition: 0,
         isRenderingGlobe: false,

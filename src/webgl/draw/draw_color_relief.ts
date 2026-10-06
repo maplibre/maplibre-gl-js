@@ -54,7 +54,6 @@ function renderColorRelief(
     useBorder: boolean,
     frameRenderContext: FrameRenderContext
 ) {
-    const projection = painter.style.projection;
     const context = painter.context;
     const gl = context.gl;
     const program = frameRenderContext.useProgram('colorRelief');
@@ -97,7 +96,7 @@ function renderColorRelief(
         }
         tile.demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
+        const mesh = frameRenderContext.getMeshFromTileID(coord.canonical, useBorder, true, 'raster');
 
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 

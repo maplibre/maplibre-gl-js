@@ -834,7 +834,7 @@ describe('GeoJSONSource.update', () => {
                 if (message.type === MessageType.loadData) {
                     spy();
                 }
-                return new Promise((resolve) => setTimeout(() => resolve({}), 0));
+                return new Promise((resolve) => setTimeout(() => resolve(message.type === MessageType.loadData ? {} : null), 0));
             }
         });
 

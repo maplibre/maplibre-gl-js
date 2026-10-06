@@ -290,7 +290,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         tile.etag = data?.etag;
 
-        tile.loadVectorData(data, this.map.painter);
+        tile.loadVectorData(data, this.map.style);
 
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;

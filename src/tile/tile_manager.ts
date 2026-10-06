@@ -225,7 +225,7 @@ export class TileManager extends Evented<SourceEventType> {
             this._source.prepare();
         }
 
-        this._state.coalesceChanges(this._inViewTiles, this.map ? this.map.painter : null);
+        this._state.coalesceChanges(this._inViewTiles, this.style);
         for (const tile of this._inViewTiles.getAllTiles()) {
             tile.upload(context);
             tile.prepare(this.map.style.imageManager);
@@ -323,7 +323,7 @@ export class TileManager extends Evented<SourceEventType> {
         // Reset feature state revision so initializeTileState re-applies
         // feature state to the tile's new bucket data after a reload.
         tile.featureStateRevision = -1;
-        this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+        this._state.initializeTileState(tile, this.style);
 
         if (!tile.aborted) {
             this._source.fire(new MapSourceDataEvent('data', {tile, coord: tile.tileID}));
@@ -743,7 +743,7 @@ export class TileManager extends Evented<SourceEventType> {
 
             // set the tileID because the cached tile could have had a different wrap value
             tile.tileID = tileID;
-            this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+            this._state.initializeTileState(tile, this.style);
         }
 
         const cached = tile;
