@@ -37,6 +37,17 @@ describe('workerFactory', () => {
         expect(WorkerSpy.mock.calls[0]).toEqual(['/path/to/worker.cjs']);
     });
 
+    test('creates a classic worker when a .cjs WORKER_URL has a query string', async () => {
+        const WorkerSpy = vi.fn();
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = '/path/to/worker.cjs?v=6.10.0';
+
+        await workerFactory();
+
+        expect(WorkerSpy).toHaveBeenCalledTimes(1);
+        expect(WorkerSpy.mock.calls[0]).toEqual(['/path/to/worker.cjs?v=6.10.0']);
+    });
+
     test('creates a module worker when WORKER_URL ends with .mjs', async () => {
         const WorkerSpy = vi.fn();
         (globalThis as any).Worker = WorkerSpy;

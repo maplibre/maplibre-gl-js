@@ -4,7 +4,7 @@ import {useEffect, useRef} from 'react';
 import {Map, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
+setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 export default function MapView() {
     const container = useRef<HTMLDivElement>(null);

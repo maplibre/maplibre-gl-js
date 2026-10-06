@@ -6,7 +6,9 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a stale cached worker crashing the map after an upgrade: the worker is self-contained again instead of importing `maplibre-gl-shared.mjs`, and its default URL carries the version as a `v` query parameter. `maplibre-gl-shared.mjs` and `maplibre-gl-shared-dev.mjs` are now empty files, kept so that existing copy steps don't fail; they are deprecated and will be removed in the next major version ([#8621](https://github.com/maplibre/maplibre-gl-js/issues/8621)) (by [@HarelM](https://github.com/HarelM))
 - Fix `globeDistanceOfLocationsPixels` returning `NaN` when two copies of the same point have a dot product slightly above 1 ([#8624](https://github.com/maplibre/maplibre-gl-js/pull/8624))(by [@Dimononon](https://github.com/Dimononon))
+- Keep the camera above the terrain, where a scroll zoom into a mountain could take it under the surface and the zoom's end throw it kilometers up ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ## 6.12.0
