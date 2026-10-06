@@ -49,6 +49,22 @@ const MAX_CAMERA_RAISES = 3;
 const MAX_CENTER_OFF_TERRAIN_M = 1;
 
 /**
+ * How long, in milliseconds, the end of a gesture or animation that held the center elevation eases the camera back
+ * where putting the center onto the terrain the center ray meets needs a zoom past maxZoom, see
+ * {@link Camera.putCenterBackOnTerrain}; moving the camera there in one frame shows as a jump.
+ */
+const CAMERA_SETTLE_DURATION_MS = 300;
+
+/** How far, in meters, a re-solve clamped to maxZoom may move the camera and still count as keeping it where it is. */
+const KEPT_CAMERA_TOLERANCE_M = 0.01;
+
+/**
+ * How far below maxZoom a re-solved zoom may land and still count as clamped there: after the first pass clamps the
+ * zoom and moves the camera back, the later passes pick the center again from there and land a little below maxZoom.
+ */
+const CLAMPED_ZOOM_TOLERANCE = 0.001;
+
+/**
  * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
  * zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current
  * camera value for that property will remain unchanged.
@@ -425,6 +441,12 @@ export class Camera extends Evented<MapEventType> {
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
     _easeFrameId: TaskID;
+    /**
+     * @internal
+     * True while an ease that ran its whole duration ends, as opposed to one stopped early by a gesture or another
+     * camera call; only such an end eases the camera back, see {@link Camera._easeCameraBack}.
+     */
+    _easeFinished = false;
 
     /**
      * @internal
@@ -1072,20 +1094,48 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Puts the center back onto the terrain at the end of a hold, re-solving zoom and center with the camera in place.
+     * Where the terrain the center ray meets is nearer than maxZoom allows, that re-solve moves the camera back; an end
+     * that can ease leaves the transform as it is and returns the end state instead, see {@link Camera._easeCameraBack}.
      * After a hold that took DEM data, a center over a tile without its own DEM data yet keeps the zoom and takes the
      * drawn elevation instead, with the camera check keeping the camera out of the terrain.
      * @param tr - the transform the end writes
      * @param terrain - the terrain the gesture or animation ends over
      * @param tookDem - whether the hold carried an elevation it took from DEM data, see {@link Camera.releaseElevation}
+     * @param canEase - whether the end can ease the camera to its end state
+     * @returns the center and zoom to ease the camera to, or null where the transform took the end state
      */
-    putCenterBackOnTerrain(tr: ITransform, terrain: Terrain, tookDem: boolean): void {
+    putCenterBackOnTerrain(tr: ITransform, terrain: Terrain, tookDem: boolean, canEase: boolean = false): {center: LngLat; zoom: number} | null {
         if (tookDem && terrain.getDrawnElevationForLngLat(tr.center, true) === undefined) {
             tr.setElevation(terrain.getElevationForLngLat(tr.center, tr));
             const corrected = this._raiseCameraByPitchAndZoom(tr);
             if (corrected !== tr) tr.apply(corrected, false);
-        } else {
-            tr.recalculateZoomAndCenter(terrain);
+            return null;
         }
+        if (canEase) {
+            const solved = tr.clone();
+            solved.recalculateZoomAndCenter(terrain);
+            const keepsCamera = solved.getCameraLngLat().distanceTo(tr.getCameraLngLat()) < KEPT_CAMERA_TOLERANCE_M &&
+                Math.abs(solved.getCameraAltitude() - tr.getCameraAltitude()) < KEPT_CAMERA_TOLERANCE_M;
+            if (solved.zoom > solved.maxZoom - CLAMPED_ZOOM_TOLERANCE && !keepsCamera) {
+                return {center: solved.center, zoom: solved.zoom};
+            }
+        }
+        tr.recalculateZoomAndCenter(terrain);
+        return null;
+    }
+
+    /**
+     * @internal
+     * Eases the camera to the end state a hold's end could not reach with the camera in place, see
+     * {@link Camera.putCenterBackOnTerrain}, over {@link CAMERA_SETTLE_DURATION_MS}. It continues the movement the
+     * gesture or animation started: no new `movestart`, and its end fires the movement's end events. It starts from the
+     * drawn transform rather than the requested state, which can lack DEM data the end took after the last frame.
+     * @param endState - the center and zoom to ease to, and the bearing where the end also snaps to north
+     * @param eventData - additional properties for the movement events
+     */
+    _easeCameraBack(endState: {center: LngLat; zoom: number; bearing?: number}, eventData?: any): void {
+        delete this._requestedCameraState;
+        this.easeTo({...endState, duration: CAMERA_SETTLE_DURATION_MS, noMoveStart: true}, eventData);
     }
 
     /**
@@ -1319,7 +1369,11 @@ export class Camera extends Evented<MapEventType> {
         this._takeLandedElevation(this.transform);
         const tookDem = this.releaseElevation();
         if (this.terrain && freezeElevation && this.getCenterClampedToGround()) {
-            this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
+            const endState = this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem, this._easeFinished);
+            if (endState) {
+                this._easeCameraBack(endState, eventData);
+                return;
+            }
         }
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events
@@ -1582,7 +1636,9 @@ export class Camera extends Evented<MapEventType> {
         if (t < 1 && this._easeFrameId) {
             this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
         } else {
+            this._easeFinished = t >= 1;
             this.stop();
+            this._easeFinished = false;
         }
     };
 
