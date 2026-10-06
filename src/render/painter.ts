@@ -104,7 +104,6 @@ export class Painter {
     tileBorderIndexBuffer: IndexBuffer;
     lineAtlas: LineAtlas;
     patternAtlas: PatternAtlas;
-    frameRenderContext: FrameRenderContext;
     programCache: ProgramCache;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
@@ -209,21 +208,21 @@ export class Painter {
      * Fills the depth buffer with the geometry of all supplied tiles.
      * Does not change the color buffer or the stencil buffer.
      */
-    _renderTilesDepthBuffer(): void {
+    _renderTilesDepthBuffer(frameRenderContext: FrameRenderContext): void {
         const context = this.context;
         const gl = context.gl;
-        const transform = this.frameRenderContext.transform;
+        const transform = frameRenderContext.transform;
 
-        const program = this.frameRenderContext.useProgram('depth');
-        const depthMode = this.frameRenderContext.getDepthModeFor3D();
+        const program = frameRenderContext.useProgram('depth');
+        const depthMode = frameRenderContext.getDepthModeFor3D();
         const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = this.frameRenderContext.getTerrainDataForTile(tileID);
-            const mesh = this.frameRenderContext.getMeshFromTileID(tileID.canonical, true, true, 'raster');
+            const terrainData = frameRenderContext.getTerrainDataForTile(tileID);
+            const mesh = frameRenderContext.getMeshFromTileID(tileID.canonical, true, true, 'raster');
 
-            const projectionData = this.frameRenderContext.getProjectionDataForTile(tileID);
+            const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
 
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
@@ -233,7 +232,7 @@ export class Painter {
     }
 
     render(style: Style, transform: IReadonlyTransform, data: FrameRenderData): void {
-        const frameRenderContext = this.frameRenderContext = new FrameRenderContext({
+        const frameRenderContext = new FrameRenderContext({
             transform,
             terrain: style.map.terrain ?? null,
             data,
@@ -278,7 +277,7 @@ export class Painter {
             }
         }
 
-        this.maybeDrawDepth();
+        this.maybeDrawDepth(frameRenderContext);
 
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(style, transform.zoom, data.moving);
@@ -311,7 +310,7 @@ export class Painter {
         frameRenderContext.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (data.sky) this.drawFunctions.sky(this, data.sky, data.pixelRatio);
+        if (data.sky) this.drawFunctions.sky(this.skyMesh, frameRenderContext);
 
         frameRenderContext.setDepthRangeFor3D(style._order.length);
 
@@ -349,7 +348,7 @@ export class Painter {
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
                 if (data.isRenderingGlobe && !frameRenderContext.terrain) {
-                    this._renderTilesDepthBuffer();
+                    this._renderTilesDepthBuffer(frameRenderContext);
                 }
             }
 
@@ -364,7 +363,7 @@ export class Painter {
 
         // Render atmosphere, only for Globe projection
         if (data.isRenderingGlobe) {
-            this.drawFunctions.atmosphere(this, data.sky, data.light);
+            this.drawFunctions.atmosphere(this.skyMesh, frameRenderContext);
         }
 
         if (data.showTileBoundaries) {
@@ -398,17 +397,17 @@ export class Painter {
     /**
      * Updates the depth framebuffer after explicit invalidation, camera movement, or tile reloading.
      */
-    maybeDrawDepth(): void {
-        if (!this.frameRenderContext.data.projectionShaderVariant || !this.frameRenderContext.terrain) {
+    maybeDrawDepth(frameRenderContext: FrameRenderContext): void {
+        if (!frameRenderContext.data.projectionShaderVariant || !frameRenderContext.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
-        const currMatrix = this.frameRenderContext.transform.modelViewProjectionMatrix;
+        const currMatrix = frameRenderContext.transform.modelViewProjectionMatrix;
 
         // Update depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.depthDirty;
         doUpdate ||= !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.frameRenderContext.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+        doUpdate ||= frameRenderContext.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -417,7 +416,7 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = now();
         this.terrainFacilitator.depthDirty = false;
-        this.drawFunctions.terrainDepth(this, this.frameRenderContext.terrain, this.frameRenderContext);
+        this.drawFunctions.terrainDepth(this, frameRenderContext.terrain, frameRenderContext);
     }
 
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
@@ -428,7 +427,7 @@ export class Painter {
         if (isSymbolStyleLayer(layer)) {
             draw.symbol(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCircleStyleLayer(layer)) {
-            draw.circle(painter, tileManager, layer, coords, frameRenderContext);
+            draw.circle(tileManager, layer, coords, frameRenderContext);
         } else if (isHeatmapStyleLayer(layer)) {
             draw.heatmap(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isLineStyleLayer(layer)) {
@@ -436,13 +435,13 @@ export class Painter {
         } else if (isFillStyleLayer(layer)) {
             draw.fill(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            draw.fillExtrusion(painter, tileManager, layer, coords, frameRenderContext);
+            draw.fillExtrusion(tileManager, layer, coords, frameRenderContext);
         } else if (isHillshadeStyleLayer(layer)) {
             draw.hillshade(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isColorReliefStyleLayer(layer)) {
             draw.colorRelief(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isRasterStyleLayer(layer)) {
-            draw.raster(painter, tileManager, layer, coords, frameRenderContext);
+            draw.raster(tileManager, layer, coords, frameRenderContext);
         } else if (isBackgroundStyleLayer(layer)) {
             draw.background(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCustomStyleLayer(layer)) {

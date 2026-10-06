@@ -19,7 +19,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     if (opacity === 0) return;
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const transform = frameRenderContext.transform;
     const tileSize = transform.tileSize;
@@ -38,7 +38,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
-        painter.patternAtlas.bind(painter.context);
+        painter.patternAtlas.bind(context);
     }
 
     const crossfade = layer.getCrossfadeParameters();
@@ -47,7 +47,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
 
         const uniformValues = image ?
-            backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
+            backgroundPatternUniformValues(opacity, painter.patternAtlas, transform, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
         const terrainData = frameRenderContext.getTerrainDataForTile(tileID);
 

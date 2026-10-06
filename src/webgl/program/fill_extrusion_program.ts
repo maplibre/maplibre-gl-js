@@ -9,7 +9,7 @@ import {mat3, vec3} from 'gl-matrix';
 import {extend, sphericalToCartesian} from '../../util/util.ts';
 
 import type {Context} from '../../webgl/context.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
@@ -73,7 +73,7 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 });
 
 const fillExtrusionUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
@@ -82,10 +82,10 @@ const fillExtrusionUniformValues = (
     const lightPos = sphericalToCartesian(light.position);
     const lightMat = mat3.create();
     if (light.anchor === 'viewport') {
-        mat3.fromRotation(lightMat, painter.frameRenderContext.transform.bearingInRadians);
+        mat3.fromRotation(lightMat, transform.bearingInRadians);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = painter.frameRenderContext.transform.transformLightDirection(lightPos);
+    const transformedLightPos = transform.transformLightDirection(lightPos);
 
     const lightColor = light.color;
 
@@ -101,7 +101,7 @@ const fillExtrusionUniformValues = (
 };
 
 const fillExtrusionPatternUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
@@ -110,8 +110,8 @@ const fillExtrusionPatternUniformValues = (
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(painter, light, shouldUseVerticalGradient, opacity, translate),
-        patternUniformValues(crossfade, painter, tile),
+    return extend(fillExtrusionUniformValues(transform, light, shouldUseVerticalGradient, opacity, translate),
+        patternUniformValues(crossfade, transform, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
         });

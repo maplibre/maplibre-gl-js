@@ -17,7 +17,7 @@ import type {Painter} from '../../render/painter.ts';
  * @param frameRenderContext - shared state for the current render
  */
 function drawDepth(painter: Painter, terrain: Terrain, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const tr = frameRenderContext.transform;
     const colorMode = ColorMode.unblended;
@@ -40,7 +40,7 @@ function drawDepth(painter: Painter, terrain: Terrain, frameRenderContext: Frame
 
 function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRenderContext: FrameRenderContext): void {
     const {isRenderingGlobe} = frameRenderContext.data;
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const tr = frameRenderContext.transform;
     const colorMode = frameRenderContext.colorModeForRenderPass();
