@@ -47,7 +47,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
 
         const uniformValues = image ?
-            backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
+            backgroundPatternUniformValues(opacity, painter.patternAtlas, transform, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
         const terrainData = frameRenderContext.getTerrainDataForTile(tileID);
 

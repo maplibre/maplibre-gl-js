@@ -78,7 +78,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
-        const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
+        const uniformValues = circleUniformValues(transform, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 

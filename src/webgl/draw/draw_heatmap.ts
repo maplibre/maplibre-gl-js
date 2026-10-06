@@ -44,7 +44,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
         if (frameRenderContext.currentPass === 'offscreen') {
             prepareHeatmapFlat(painter, tileManager, layer, tileIDs, frameRenderContext);
         } else if (frameRenderContext.currentPass === 'translucent') {
-            renderHeatmapFlat(painter, layer);
+            renderHeatmapFlat(painter, layer, frameRenderContext);
         }
 
     }
@@ -94,11 +94,11 @@ function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: H
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
+function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer, frameRenderContext: FrameRenderContext) {
     const context = painter.context;
     const gl = context.gl;
 
-    context.setColorMode(painter.frameRenderContext.colorModeForRenderPass());
+    context.setColorMode(frameRenderContext.colorModeForRenderPass());
 
     // Here we bind two different textures from which we'll sample in drawing
     // heatmaps: the kernel texture, prepared in the offscreen pass, and a
@@ -112,11 +112,11 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
     const colorRampTexture = getColorRampTexture(context, layer);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    painter.frameRenderContext.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, painter.frameRenderContext.colorModeForRenderPass(), CullFaceMode.disabled,
+    frameRenderContext.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, frameRenderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-        painter.viewportSegments, layer.paint, painter.frameRenderContext.transform.zoom);
+        painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
 }
 
 function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyleLayer, coord: OverscaledTileID, frameRenderContext: FrameRenderContext) {

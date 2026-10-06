@@ -27,9 +27,9 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
 
     if (layerOpacity < 1) {
         if (frameRenderContext.currentPass !== 'translucent') return;
-        const results = prepareDrawLayerOpacity(painter, layer, coords);
+        const results = prepareDrawLayerOpacity(painter, layer, coords, frameRenderContext);
         drawFillAndOutline(painter, tileManager, layer, coords, frameRenderContext);
-        drawLayerOpacity(painter, layerOpacity, results, layer);
+        drawLayerOpacity(painter, layerOpacity, results, layer, frameRenderContext);
         return;
     }
 
@@ -158,12 +158,12 @@ function drawFillTiles(
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
+            uniformValues = image ? fillPatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, translateForUniforms, isSdfPattern) :
+                fillOutlinePatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) :
                 fillOutlineUniformValues(translateForUniforms);
         }
 

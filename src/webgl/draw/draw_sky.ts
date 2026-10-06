@@ -8,21 +8,22 @@ import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
 import {sphericalToCartesian} from '../../util/util.ts';
 
-import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {Painter} from '../../render/painter.ts';
 
-export function drawSky(painter: Painter, sky: Readonly<SkyPropsPossiblyEvaluated>, pixelRatio: number): void {
+export function drawSky(painter: Painter, frameRenderContext: FrameRenderContext): void {
     const context = painter.context;
     const gl = context.gl;
+    const {sky, pixelRatio} = frameRenderContext.data;
 
-    const skyUniforms = skyUniformValues(sky, painter.frameRenderContext.transform, pixelRatio);
+    const skyUniforms = skyUniformValues(sky, frameRenderContext.transform, pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.frameRenderContext.colorModeForRenderPass();
-    const program = painter.frameRenderContext.useProgram('sky');
+    const colorMode = frameRenderContext.colorModeForRenderPass();
+    const program = frameRenderContext.useProgram('sky');
 
     const mesh = painter.skyMesh;
 
@@ -50,14 +51,15 @@ function getSunPos(light: Readonly<LightPropsPossiblyEvaluated>, transform: IRea
     return lightPos;
 }
 
-export function drawAtmosphere(painter: Painter, sky: Readonly<SkyPropsPossiblyEvaluated>, light: Readonly<LightPropsPossiblyEvaluated>): void {
+export function drawAtmosphere(painter: Painter, frameRenderContext: FrameRenderContext): void {
     const context = painter.context;
     const gl = context.gl;
-    const program = painter.frameRenderContext.useProgram('atmosphere');
+    const {sky, light} = frameRenderContext.data;
+    const program = frameRenderContext.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
-    const transform = painter.frameRenderContext.transform;
+    const transform = frameRenderContext.transform;
 
-    const sunPos = getSunPos(light, painter.frameRenderContext.transform);
+    const sunPos = getSunPos(light, transform);
 
     const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);

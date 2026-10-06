@@ -25,7 +25,7 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
 
     if (frameRenderContext.currentPass === 'offscreen') {
         // Prepare tiles
-        prepareHillshade(painter, tileManager, tileIDs, layer, depthMode, StencilMode.disabled, colorMode);
+        prepareHillshade(painter, tileManager, tileIDs, layer, depthMode, StencilMode.disabled, colorMode, frameRenderContext);
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else if (frameRenderContext.currentPass === 'translucent') {
         // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
@@ -77,7 +77,7 @@ function renderHillshade(
         const projectionData = frameRenderContext.getProjectionDataForTile(coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            hillshadeUniformValues(frameRenderContext.transform, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 
@@ -90,7 +90,8 @@ function prepareHillshade(
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,
     stencilMode: Readonly<StencilMode>,
-    colorMode: Readonly<ColorMode>) {
+    colorMode: Readonly<ColorMode>,
+    frameRenderContext: FrameRenderContext) {
 
     const context = painter.context;
     const gl = context.gl;
@@ -141,7 +142,7 @@ function prepareHillshade(
         context.bindFramebuffer.set(fbo.framebuffer);
         context.viewport.set([0, 0, hillshadeTextureSize, hillshadeTextureSize]);
 
-        painter.frameRenderContext.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
+        frameRenderContext.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             hillshadeUniformPrepareValues(tile.tileID, dem),
             null, null, layer.id, painter.rasterBoundsBuffer,

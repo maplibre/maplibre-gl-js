@@ -4,6 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {layerOpacityUniformValues} from '../program/layer_opacity_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
@@ -19,7 +20,7 @@ export type PrepareDrawLayerOpacityResult = {
  * render the whole layer to a scratch FBO, then composite with `layerOpacity`.
  * Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
  */
-export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[]): PrepareDrawLayerOpacityResult {
+export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): PrepareDrawLayerOpacityResult {
     const context = painter.context;
     const compositeTarget = context.bindFramebuffer.get();
     const compositeViewport = context.viewport.get();
@@ -30,8 +31,8 @@ export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer 
     context.viewport.set([0, 0, width, height]);
     context.clear({color: Color.transparent, depth: 1, stencil: 0});
 
-    painter.frameRenderContext.invalidateTileClippingMasks();
-    painter.frameRenderContext.renderTileClippingMasks(layer, coords);
+    frameRenderContext.invalidateTileClippingMasks();
+    frameRenderContext.renderTileClippingMasks(layer, coords);
 
     return {
         compositeTarget,
@@ -72,7 +73,7 @@ function bindLayerOpacity(painter: Painter, width: number, height: number): void
     painter.context.bindFramebuffer.set(fbo.framebuffer);
 }
 
-export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawLayerOpacityResult: PrepareDrawLayerOpacityResult, layer: LineStyleLayer | FillStyleLayer): void {
+export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawLayerOpacityResult: PrepareDrawLayerOpacityResult, layer: LineStyleLayer | FillStyleLayer, frameRenderContext: FrameRenderContext): void {
     const context = painter.context;
     const gl = context.gl;
 
@@ -82,11 +83,11 @@ export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawL
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, painter.layerOpacityFbo.colorAttachment.get());
 
-    painter.frameRenderContext.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, painter.frameRenderContext.colorModeForRenderPass(), CullFaceMode.disabled,
+    frameRenderContext.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, frameRenderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         layerOpacityUniformValues(opacity, 0), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-        painter.viewportSegments, layer.paint, painter.frameRenderContext.transform.zoom);
+        painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
 
-    painter.frameRenderContext.invalidateTileClippingMasks();
+    frameRenderContext.invalidateTileClippingMasks();
 }
