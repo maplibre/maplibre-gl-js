@@ -25,7 +25,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
 
-    if (painter.isPatternMissing(image)) return;
+    if (painter.patternAtlas.isPatternMissing(image)) return;
 
     const pass = (!image && color.a === 1 && opacity === 1 && frameRenderContext.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
     if (frameRenderContext.currentPass !== pass) return;

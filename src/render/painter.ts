@@ -5,7 +5,6 @@ import {SegmentVector} from '../data/segment.ts';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g.ts';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
 import posAttributes from '../data/pos_attributes.ts';
-import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {Context} from '../webgl/context.ts';
 import {ProgramCache} from '../webgl/program_cache.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';
@@ -17,7 +16,7 @@ import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webg
 import {Mesh} from './mesh.ts';
 import {FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
-import {destroyProjectionUniformBuffers, releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
+import {releaseProjectionUniformBuffers} from '../webgl/projection_uniform_buffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -36,17 +35,12 @@ import type {TileManager} from '../tile/tile_manager.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
-import type {CrossFaded} from '../style/properties.ts';
 import type {LineAtlas} from './line_atlas.ts';
-import type {ImageManager} from './image_manager.ts';
 import type {PatternAtlas} from './pattern_atlas.ts';
-import type {GlyphManager} from './glyph_manager.ts';
 import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
 import type {IndexBuffer} from '../webgl/index_buffer.ts';
-import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import type {ProgramConfiguration} from '../data/program_configuration.ts';
 
 /**
  * Holds the texture used to render a 2D tile so it can be draped over 3D
@@ -92,7 +86,6 @@ export class Painter {
      * Resized in place to match the target dimensions.
      */
     layerOpacityFbo: Framebuffer | null;
-    emptyProgramConfiguration: ProgramConfiguration;
     width: number;
     height: number;
     tileExtentBuffer: VertexBuffer;
@@ -105,20 +98,14 @@ export class Painter {
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
     rasterBoundsSegments: SegmentVector;
-    rasterBoundsBufferPosOnly: VertexBuffer;
-    rasterBoundsSegmentsPosOnly: SegmentVector;
     viewportBuffer: VertexBuffer;
     viewportSegments: SegmentVector;
     quadTriangleIndexBuffer: IndexBuffer;
     tileBorderIndexBuffer: IndexBuffer;
     lineAtlas: LineAtlas;
-    imageManager: ImageManager;
     patternAtlas: PatternAtlas;
-    glyphManager: GlyphManager;
     frameRenderContext: FrameRenderContext;
-    id: string;
     programCache: ProgramCache;
-    crossTileSymbolIndex: CrossTileSymbolIndex;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
@@ -137,8 +124,6 @@ export class Painter {
         this.terrainFacilitator = {depthDirty: true, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
-
-        this.crossTileSymbolIndex = new CrossTileSymbolIndex();
     }
 
     /*
@@ -179,14 +164,6 @@ export class Painter {
         rasterBoundsArray.emplaceBack(EXTENT, EXTENT, EXTENT, EXTENT);
         this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, rasterBoundsAttributes.members);
         this.rasterBoundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
-
-        const rasterBoundsArrayPosOnly = new PosArray();
-        rasterBoundsArrayPosOnly.emplaceBack(0, 0);
-        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, 0);
-        rasterBoundsArrayPosOnly.emplaceBack(0, EXTENT);
-        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, EXTENT);
-        this.rasterBoundsBufferPosOnly = context.createVertexBuffer(rasterBoundsArrayPosOnly, posAttributes.members);
-        this.rasterBoundsSegmentsPosOnly = SegmentVector.simpleSegment(0, 0, 4, 5);
 
         const viewportArray = new PosArray();
         viewportArray.emplaceBack(0, 0);
@@ -267,13 +244,11 @@ export class Painter {
         });
 
         this.lineAtlas = style.lineAtlas;
-        this.imageManager = style.imageManager;
         this.patternAtlas = style.patternAtlas;
-        this.glyphManager = style.glyphManager;
 
         updateFrameUniformBuffer(this.context.frameUniformBuffer, transform, data);
 
-        this.imageManager.beginFrame();
+        style.imageManager.beginFrame();
         releaseProjectionUniformBuffers(this.context);
 
         const layerIds = style._order;
@@ -448,7 +423,6 @@ export class Painter {
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
         if (layer.isHidden(frameRenderContext.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
-        this.id = layer.id;
 
         const draw = this.drawFunctions;
         if (isSymbolStyleLayer(layer)) {
@@ -580,27 +554,6 @@ export class Painter {
         this._rttSharedFbo = null;
     }
 
-    /**
-     * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
-     *
-     * @returns true if a needed image is missing and rendering needs to be skipped.
-     */
-    isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean {
-        if (!image) return false;
-        if (!image.from || !image.to) return true;
-        const imagePosA = this.patternAtlas.getPattern(image.from.toString());
-        const imagePosB = this.patternAtlas.getPattern(image.to.toString());
-        return !imagePosA || !imagePosB;
-    }
-
-    /*
-     * Reset some GL state to default values to avoid hard-to-debug bugs
-     * in custom layers.
-     */
-    setCustomLayerDefaults(): void {
-        this.context.setCustomLayerDefaults();
-    }
-
     /*
      * Set GL state shared by all layers.
      */
@@ -642,7 +595,6 @@ export class Painter {
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
         if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
-        if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
         if (this.viewportBuffer) this.viewportBuffer.destroy();
         if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
         if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
@@ -655,9 +607,7 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
 
-        destroyProjectionUniformBuffers(this.context);
-        this.context.terrainUniformBuffer.destroy();
-        this.context.frameUniformBuffer.destroy();
+        this.context.destroy();
 
         this.programCache.destroy();
 

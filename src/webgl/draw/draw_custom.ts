@@ -57,7 +57,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     if (frameRenderContext.currentPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
-            painter.setCustomLayerDefaults();
+            context.setCustomLayerDefaults();
             context.setColorMode(frameRenderContext.colorModeForRenderPass());
 
             prerender.call(implementation, context.gl, customLayerArgs);
@@ -67,7 +67,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         }
     } else if (frameRenderContext.currentPass === 'translucent') {
 
-        painter.setCustomLayerDefaults();
+        context.setCustomLayerDefaults();
 
         context.setColorMode(frameRenderContext.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
@@ -95,7 +95,7 @@ function drawCustomTerrainTile(painter: Painter, layer: CustomStyleLayer, tileID
     const framebuffer = context.bindFramebuffer.get();
     const viewport = context.viewport.get();
 
-    painter.setCustomLayerDefaults();
+    context.setCustomLayerDefaults();
     context.setColorMode(frameRenderContext.colorModeForRenderPass());
     context.setDepthMode(DepthMode.disabled);
     context.setStencilMode(StencilMode.disabled);
