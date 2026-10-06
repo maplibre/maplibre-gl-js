@@ -1,15 +1,29 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- fix: keep the camera above the terrain ([#8547](https://github.com/maplibre/maplibre-gl-js/pull/8547)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- fix: revert shared mjs file ([#8672](https://github.com/maplibre/maplibre-gl-js/pull/8672)) (by [@HarelM](https://github.com/HarelM))
+- Make the 3D Tiles example use maplibre-gl-three, add raycast example ([#8567](https://github.com/maplibre/maplibre-gl-js/pull/8567)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- GM2.14 Move the painter's leftover helpers to their owners ([#8678](https://github.com/maplibre/maplibre-gl-js/pull/8678)) (by [@birkskyum](https://github.com/birkskyum))
+- GM2.13 Remove the style reference from the painter ([#8668](https://github.com/maplibre/maplibre-gl-js/pull/8668)) (by [@birkskyum](https://github.com/birkskyum))
+- test: stabilize flaky `text-variable-anchor/pitched-rotated-debug` render test ([#8669](https://github.com/maplibre/maplibre-gl-js/pull/8669)) (by [@birkskyum](https://github.com/birkskyum))
+- docs: fix black buildings in the center point example ([#8655](https://github.com/maplibre/maplibre-gl-js/pull/8655)) (by [@birkskyum](https://github.com/birkskyum))
+- docs: fix `fill-extrusion-base` in the 3D buildings examples ([#8648](https://github.com/maplibre/maplibre-gl-js/pull/8648)) (by [@birkskyum](https://github.com/birkskyum))
+- docs: fix rounded corners example ([#8649](https://github.com/maplibre/maplibre-gl-js/pull/8649)) (by [@birkskyum](https://github.com/birkskyum))
+## 6.13.0
+### ✨ Features and improvements
 - Let the globe center reach the poles, where it stopped at 85.05° ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
 - Speed up symbol layout by skipping line breaking for labels that fit on one line ([#8617](https://github.com/maplibre/maplibre-gl-js/pull/8617)) (by [@DoFabien](https://github.com/DoFabien))
 - Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix a stale cached worker crashing the map after an upgrade: the worker is self-contained again instead of importing `maplibre-gl-shared.mjs`, and its default URL carries the version as a `v` query parameter. `maplibre-gl-shared.mjs` and `maplibre-gl-shared-dev.mjs` are now empty files, kept so that existing copy steps don't fail; they are deprecated and will be removed in the next major version ([#8621](https://github.com/maplibre/maplibre-gl-js/issues/8621)) (by [@HarelM](https://github.com/HarelM))
 - Fix `globeDistanceOfLocationsPixels` returning `NaN` when two copies of the same point have a dot product slightly above 1 ([#8624](https://github.com/maplibre/maplibre-gl-js/pull/8624))(by [@Dimononon](https://github.com/Dimononon))
 - Keep the camera above the terrain, where a scroll zoom into a mountain could take it under the surface and the zoom's end throw it kilometers up ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- _...Add new stuff here..._
 
 ## 6.12.0
 
