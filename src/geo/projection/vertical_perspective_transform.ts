@@ -125,8 +125,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
