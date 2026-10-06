@@ -3,7 +3,7 @@
 Change an existing feature on your map in real-time by updating its data.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -73,7 +73,7 @@ map.on('load', () => {
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -85,7 +85,7 @@ map.on('load', () => {
 
 <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

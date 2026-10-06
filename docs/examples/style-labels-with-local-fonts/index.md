@@ -3,7 +3,7 @@
 Apply local fonts to your style’s text labels. This option is suitable if you don’t need every user to see exactly the same font, or if you want to avoid relying on a third-party content delivery network (CDN). For maximum compatibility, the text-font property should include fonts commonly found on multiple platforms.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -82,7 +82,7 @@ const map = new maplibregl.Map({
     <meta property="og:created" content="2025-10-31" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css'>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css'>
 
     <style>
         body { margin: 0; padding: 0; }
@@ -92,7 +92,7 @@ const map = new maplibregl.Map({
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

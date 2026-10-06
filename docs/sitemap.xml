@@ -379,6 +379,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomRenderMethodInput/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomTerrainRenderInput/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/DashEntry/</loc>
       </url>
       <url>
@@ -607,6 +610,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSwapOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TerrainHeightMapTarget/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TileMesh/</loc>
       </url>
       <url>
@@ -637,19 +643,10 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-terrain-from-quantized-mesh-tiles/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-using-threejs/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-to-globe-using-threejs/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/</loc>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-with-babylonjs/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-with-shadow-using-threejs/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-canvas-source/</loc>
@@ -721,13 +718,13 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-custom-layers-that-follow-the-terrain/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-multiple-geometries-from-one-geojson-source/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-a-line/</loc>
@@ -962,6 +959,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/pmtiles-source-and-protocol/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/raycast-3d-tiles-using-threejs/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/</loc>

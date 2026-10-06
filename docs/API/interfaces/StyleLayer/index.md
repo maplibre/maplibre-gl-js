@@ -1,6 +1,6 @@
 # StyleLayer
 
-Defined in: [style/style\_layer.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer.ts#L84>)
+Defined in: [style/style\_layer.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer.ts#L84>)
 
 A base class for style layers
 
@@ -16,7 +16,7 @@ A base class for style layers
 
 > **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -38,7 +38,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: `"error"`, `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -63,7 +63,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **getLayoutAffectingGlobalStateRefs**(): `Set`\<`string`\>
 
-Defined in: [style/style\_layer.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer.ts#L190>)
+Defined in: [style/style\_layer.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer.ts#L190>)
 
 Get list of global state references that are used within layout or filter properties. This is used to determine if layer source need to be reloaded when global state property changes.
 
@@ -77,7 +77,7 @@ Get list of global state references that are used within layout or filter proper
 
 > **getPaintAffectingGlobalStateRefs**(): `Map`\<`string`, `PaintPropertyEntry`\[\]\>
 
-Defined in: [style/style\_layer.ts:219](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer.ts#L219>)
+Defined in: [style/style\_layer.ts:219](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer.ts#L219>)
 
 Get list of global state references that are used within paint properties. This is used to determine if layer needs to be repainted when global state property changes.
 
@@ -91,7 +91,7 @@ Get list of global state references that are used within paint properties. This 
 
 > **getVisibilityAffectingGlobalStateRefs**(): `Set`\<`string`\>
 
-Defined in: [style/style\_layer.ts:241](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer.ts#L241>)
+Defined in: [style/style\_layer.ts:241](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer.ts#L241>)
 
 Get list of global state references that are used within visibility expression. This is used to determine if layer visibility needs to be updated when global state property changes.
 
@@ -105,7 +105,7 @@ Get list of global state references that are used within visibility expression. 
 
 > **listens**(`type`: `"error"`): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -131,7 +131,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **off**\<`T` *extends* `"error"`\>(`type`: `T`, `listener`: (`event`: [`ErrorEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ErrorEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -162,7 +162,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* `"error"`\>(`type`: `T`, `listener`: (`event`: [`ErrorEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ErrorEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -195,7 +195,7 @@ Adds a listener to a specified event type.
 
 > **once**\<`T` *extends* `"error"`\>(`type`: `T`): `Promise`\<[`ErrorEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ErrorEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -227,7 +227,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* `"error"`\>(`type`: `T`, `listener`: (`event`: [`ErrorEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ErrorEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -262,7 +262,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **retainPriorGlobalState**(`refs`: `string`\[\], `priorGlobalState`: `Record`\<`string`, `any`\>): `void`
 
-Defined in: [style/style\_layer.ts:332](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer.ts#L332>)
+Defined in: [style/style\_layer.ts:332](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer.ts#L332>)
 
 The re-read itself goes through `setPaintProperty`, which also rebuilds colour ramps and relayouts.
 
@@ -283,7 +283,7 @@ The re-read itself goes through `setPaintProperty`, which also rebuilds colour r
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 

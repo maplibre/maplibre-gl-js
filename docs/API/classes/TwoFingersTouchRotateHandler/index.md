@@ -1,6 +1,6 @@
 # TwoFingersTouchRotateHandler
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:228](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L228>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:228](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L228>)
 
 The `TwoFingersTouchHandler`s allows the user to rotate the map two fingers
 
@@ -14,7 +14,7 @@ The `TwoFingersTouchHandler`s allows the user to rotate the map two fingers
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L109>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L109>)
 
 Disables the "drag to pitch" interaction.
 
@@ -38,7 +38,7 @@ map.touchPitch.disable();
 
 > **enable**(`options?`: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)): `void`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L96>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L96>)
 
 Enables the "drag to pitch" interaction.
 
@@ -68,7 +68,7 @@ map.touchPitch.enable();
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L128>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L128>)
 
 Returns a Boolean indicating whether the "drag to pitch" interaction is active, i.e. currently being used.
 
@@ -88,7 +88,7 @@ Returns a Boolean indicating whether the "drag to pitch" interaction is active, 
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:119](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L119>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:119](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L119>)
 
 Returns a Boolean indicating whether the "drag to pitch" interaction is enabled.
 

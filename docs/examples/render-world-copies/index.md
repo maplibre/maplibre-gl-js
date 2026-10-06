@@ -3,7 +3,7 @@
 Toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map', // container id
@@ -36,7 +36,7 @@ for (let i = 0; i < inputs.length; i++) {
     <meta property="og:created" content="2023-06-27" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -69,7 +69,7 @@ for (let i = 0; i < inputs.length; i++) {
 </div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id

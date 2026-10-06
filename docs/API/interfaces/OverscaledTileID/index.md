@@ -1,6 +1,6 @@
 # OverscaledTileID
 
-Defined in: [tile/tile\_id.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/tile/tile_id.ts#L88>)
+Defined in: [tile/tile\_id.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/tile/tile_id.ts#L88>)
 
 An overscaled tile identifier
 
@@ -10,7 +10,7 @@ An overscaled tile identifier
 
 > **normalizeCoordinates**(`x`: `number`, `y`: `number`, `extent?`: `number`): `object`
 
-Defined in: [tile/tile\_id.ts:244](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/tile/tile_id.ts#L244>)
+Defined in: [tile/tile\_id.ts:244](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/tile/tile_id.ts#L244>)
 
 Maps tile-local coordinates that may fall outside the `[0, extent)` range to the correct neighbor tile and the corresponding in-tile position.
 
@@ -50,7 +50,7 @@ the resolved tile ID and in-tile coordinates, or `null` if the target is beyond 
 
 > **scaledTo**(`targetZ`: `number`): `OverscaledTileID`
 
-Defined in: [tile/tile\_id.ts:125](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/tile/tile_id.ts#L125>)
+Defined in: [tile/tile\_id.ts:125](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/tile/tile_id.ts#L125>)
 
 Returns a new `OverscaledTileID` representing the tile at the target zoom level. When targetZ is greater than the current canonical z, the canonical coordinates are unchanged. When targetZ is less than the current canonical z, the canonical coordinates are updated.
 
@@ -76,6 +76,6 @@ if targetZ is greater than this.overscaledZ
 
 > **terrainRttPosMatrix32f**: [`Mat4f32`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Mat4f32/index.md>) = `null`
 
-Defined in: [tile/tile\_id.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/tile/tile_id.ts#L99>)
+Defined in: [tile/tile\_id.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/tile/tile_id.ts#L99>)
 
 This matrix is used during terrain's render-to-texture stage only. If the render-to-texture stage is active, this matrix will be present and should be used, otherwise this matrix will be null. The matrix should be float32 in order to avoid slow WebGL calls in Chrome.

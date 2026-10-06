@@ -1,6 +1,6 @@
 # Source
 
-Defined in: [source/source.ts:31](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L31>)
+Defined in: [source/source.ts:31](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L31>)
 
 The `Source` interface must be implemented by each source type, including "core" types (`vector`, `raster`, `video`, etc.) and all custom, third-party types.
 
@@ -12,7 +12,7 @@ The `Source` interface must be implemented by each source type, including "core"
 
 > `optional` **abortTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/source.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L105>)
+Defined in: [source/source.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L105>)
 
 Allows to abort a tile loading.
 
@@ -32,7 +32,7 @@ Allows to abort a tile loading.
 
 > **fire**(`event`: [`Event`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Event/index.md>)): `unknown`
 
-Defined in: [source/source.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L79>)
+Defined in: [source/source.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L79>)
 
 An ability to fire an event to all the listeners, see [Evented](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)
 
@@ -52,7 +52,7 @@ An ability to fire an event to all the listeners, see [Evented](<https://maplibr
 
 > `optional` **hasTile**(`tileID`: [`OverscaledTileID`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/OverscaledTileID/index.md>)): `boolean`
 
-Defined in: [source/source.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L100>)
+Defined in: [source/source.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L100>)
 
 True is the tile is part of the source, false otherwise.
 
@@ -72,7 +72,7 @@ True is the tile is part of the source, false otherwise.
 
 > **hasTransition**(): `boolean`
 
-Defined in: [source/source.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L70>)
+Defined in: [source/source.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L70>)
 
 True if the source has transition, false otherwise.
 
@@ -86,7 +86,7 @@ True if the source has transition, false otherwise.
 
 > **loaded**(): `boolean`
 
-Defined in: [source/source.ts:74](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L74>)
+Defined in: [source/source.ts:74](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L74>)
 
 True if the source is loaded, false otherwise.
 
@@ -100,7 +100,7 @@ True if the source is loaded, false otherwise.
 
 > **loadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void` | `LoadTileResult`\>
 
-Defined in: [source/source.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L95>)
+Defined in: [source/source.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L95>)
 
 This method does the heavy lifting of loading a tile. In most cases it will defer the work to the relevant worker source.
 
@@ -120,7 +120,7 @@ This method does the heavy lifting of loading a tile. In most cases it will defe
 
 > `optional` **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `void`
 
-Defined in: [source/source.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L84>)
+Defined in: [source/source.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L84>)
 
 This method is called when the source is added to the map.
 
@@ -140,7 +140,7 @@ This method is called when the source is added to the map.
 
 > `optional` **onRemove**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `void`
 
-Defined in: [source/source.ts:89](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L89>)
+Defined in: [source/source.ts:89](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L89>)
 
 This method is called when the source is removed from the map.
 
@@ -160,7 +160,7 @@ This method is called when the source is removed from the map.
 
 > `optional` **prepare**(): `void`
 
-Defined in: [source/source.ts:120](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L120>)
+Defined in: [source/source.ts:120](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L120>)
 
 Allows to execute a prepare step before the source is used.
 
@@ -174,7 +174,7 @@ Allows to execute a prepare step before the source is used.
 
 > **serialize**(): `any`
 
-Defined in: [source/source.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L116>)
+Defined in: [source/source.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L116>)
 
 #### Returns
 
@@ -188,7 +188,7 @@ A plain (stringifiable) JS object representing the current state of the source. 
 
 > `optional` **unloadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/source.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L110>)
+Defined in: [source/source.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L110>)
 
 Allows to unload a tile.
 
@@ -208,7 +208,7 @@ Allows to unload a tile.
 
 > `optional` **attribution?**: `string`
 
-Defined in: [source/source.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L52>)
+Defined in: [source/source.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L52>)
 
 The attribution for the source.
 
@@ -218,7 +218,7 @@ The attribution for the source.
 
 > `optional` **calculateTileZoom?**: [`CalculateTileZoomFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CalculateTileZoomFunction/index.md>)
 
-Defined in: [source/source.ts:124](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L124>)
+Defined in: [source/source.ts:124](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L124>)
 
 Optional function to redefine how tiles are loaded at high pitch angles.
 
@@ -228,7 +228,7 @@ Optional function to redefine how tiles are loaded at high pitch angles.
 
 > **id**: `string`
 
-Defined in: [source/source.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L36>)
+Defined in: [source/source.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L36>)
 
 The id for the source. Must not be used by any existing source.
 
@@ -238,7 +238,7 @@ The id for the source. Must not be used by any existing source.
 
 > `optional` **isTileClipped?**: `boolean`
 
-Defined in: [source/source.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L60>)
+Defined in: [source/source.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L60>)
 
 `false` if tiles can be drawn outside their boundaries, `true` if they cannot.
 
@@ -248,7 +248,7 @@ Defined in: [source/source.ts:60](<https://github.com/maplibre/maplibre-gl-js/bl
 
 > **maxzoom**: `number`
 
-Defined in: [source/source.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L44>)
+Defined in: [source/source.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L44>)
 
 The maximum zoom level for the source.
 
@@ -258,7 +258,7 @@ The maximum zoom level for the source.
 
 > **minzoom**: `number`
 
-Defined in: [source/source.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L40>)
+Defined in: [source/source.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L40>)
 
 The minimum zoom level for the source.
 
@@ -268,7 +268,7 @@ The minimum zoom level for the source.
 
 > `optional` **reparseOverscaled?**: `boolean`
 
-Defined in: [source/source.ts:65](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L65>)
+Defined in: [source/source.ts:65](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L65>)
 
 `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
 
@@ -278,7 +278,7 @@ Defined in: [source/source.ts:65](<https://github.com/maplibre/maplibre-gl-js/bl
 
 > `optional` **roundZoom?**: `boolean`
 
-Defined in: [source/source.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L56>)
+Defined in: [source/source.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L56>)
 
 `true` if zoom levels are rounded to the nearest integer in the source data, `false` if they are floor-ed to the nearest integer.
 
@@ -288,6 +288,6 @@ Defined in: [source/source.ts:56](<https://github.com/maplibre/maplibre-gl-js/bl
 
 > **tileSize**: `number`
 
-Defined in: [source/source.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/source.ts#L48>)
+Defined in: [source/source.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/source.ts#L48>)
 
 The tile size for the source.

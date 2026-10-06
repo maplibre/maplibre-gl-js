@@ -3,7 +3,7 @@
 Measure map performance using built-in events.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const createdAt = performance.now();
 
@@ -45,7 +45,7 @@ map.on("render", () => {
 <meta property="og:category" content="Events & Queries" />
 <meta property="og:created" content="2026-03-29" />
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-<link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+<link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
 <style>
     body { margin: 0; padding: 0; }
@@ -74,7 +74,7 @@ map.on("render", () => {
 </div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const createdAt = performance.now();
 

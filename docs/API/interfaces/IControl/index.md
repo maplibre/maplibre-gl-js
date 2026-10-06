@@ -1,6 +1,6 @@
 # IControl
 
-Defined in: [ui/control/control.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/control.ts#L37>)
+Defined in: [ui/control/control.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/control.ts#L37>)
 
 Interface for interactive controls added to the map. This is a specification for implementers to model: it is not an exported method or class.
 
@@ -31,7 +31,7 @@ class HelloWorldControl: IControl {
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/control.ts:49](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/control.ts#L49>)
+Defined in: [ui/control/control.ts:49](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/control.ts#L49>)
 
 Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
 
@@ -53,7 +53,7 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `void`
 
-Defined in: [ui/control/control.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/control.ts#L57>)
+Defined in: [ui/control/control.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/control.ts#L57>)
 
 Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
 
@@ -73,7 +73,7 @@ Unregister a control on the map and give it a chance to detach event listeners a
 
 > `readonly` `optional` **getDefaultPosition?**: () =\> [`ControlPosition`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ControlPosition/index.md>)
 
-Defined in: [ui/control/control.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/control.ts#L66>)
+Defined in: [ui/control/control.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/control.ts#L66>)
 
 Optionally provide a default position for this control. If this method is implemented and [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) is called without the `position` parameter, the value returned by getDefaultPosition will be used as the control's position.
 

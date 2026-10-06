@@ -3,7 +3,7 @@
 Use fill-extrusion-rounded-corner-distance to round the corners of extruded polygons.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     style: 'https://tiles.openfreemap.org/styles/bright',
@@ -25,7 +25,8 @@ map.on('load', () => {
         type: 'fill-extrusion',
         source: buildingSource,
         'source-layer': 'building',
-        filter: ['==', ['get', 'render_min_height'], 0],
+        minzoom: 14,
+        filter: ['!=', ['get', 'hide_3d'], true],
         layout: {
             'fill-extrusion-rounded-corner-distance': 2
         },
@@ -35,6 +36,7 @@ map.on('load', () => {
                 0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
             ],
             'fill-extrusion-height': ['get', 'render_height'],
+            'fill-extrusion-base': ['get', 'render_min_height'],
             'fill-extrusion-opacity': 0.8
         }
     }, labelLayerId);
@@ -48,6 +50,7 @@ map.on('load', () => {
         const val = parseFloat(e.target.value);
         e.target.closest('tr').querySelector('span').textContent = val;
         map.setPaintProperty('building-extrusion', 'fill-extrusion-height', ['*', val, ['get', 'render_height']]);
+        map.setPaintProperty('building-extrusion', 'fill-extrusion-base', ['*', val, ['get', 'render_min_height']]);
     });
     document.getElementById('extrusion-opacity').addEventListener('input', (e) => {
         const val = parseFloat(e.target.value);
@@ -67,7 +70,7 @@ map.on('load', () => {
     <meta property="og:created" content="2026-07-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -115,7 +118,7 @@ map.on('load', () => {
     </table>
 </div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         style: 'https://tiles.openfreemap.org/styles/bright',
@@ -137,7 +140,8 @@ map.on('load', () => {
             type: 'fill-extrusion',
             source: buildingSource,
             'source-layer': 'building',
-            filter: ['==', ['get', 'render_min_height'], 0],
+            minzoom: 14,
+            filter: ['!=', ['get', 'hide_3d'], true],
             layout: {
                 'fill-extrusion-rounded-corner-distance': 2
             },
@@ -147,6 +151,7 @@ map.on('load', () => {
                     0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
                 ],
                 'fill-extrusion-height': ['get', 'render_height'],
+                'fill-extrusion-base': ['get', 'render_min_height'],
                 'fill-extrusion-opacity': 0.8
             }
         }, labelLayerId);
@@ -160,6 +165,7 @@ map.on('load', () => {
             const val = parseFloat(e.target.value);
             e.target.closest('tr').querySelector('span').textContent = val;
             map.setPaintProperty('building-extrusion', 'fill-extrusion-height', ['*', val, ['get', 'render_height']]);
+            map.setPaintProperty('building-extrusion', 'fill-extrusion-base', ['*', val, ['get', 'render_min_height']]);
         });
         document.getElementById('extrusion-opacity').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);

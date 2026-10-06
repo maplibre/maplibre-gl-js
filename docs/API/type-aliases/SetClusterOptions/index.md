@@ -2,7 +2,7 @@
 
 > **SetClusterOptions** = `object`
 
-Defined in: [source/geojson\_source.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L57>)
+Defined in: [source/geojson\_source.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source.ts#L57>)
 
 The cluster options to set
 
@@ -12,7 +12,7 @@ The cluster options to set
 
 > `optional` **cluster?**: `boolean`
 
-Defined in: [source/geojson\_source.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L61>)
+Defined in: [source/geojson\_source.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source.ts#L61>)
 
 Whether or not to cluster
 
@@ -22,7 +22,7 @@ Whether or not to cluster
 
 > `optional` **clusterMaxZoom?**: `number`
 
-Defined in: [source/geojson\_source.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L66>)
+Defined in: [source/geojson\_source.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source.ts#L66>)
 
 The cluster's max zoom. Non-integer values are rounded to the closest integer due to supercluster integer value requirements.
 
@@ -32,6 +32,6 @@ The cluster's max zoom. Non-integer values are rounded to the closest integer du
 
 > `optional` **clusterRadius?**: `number`
 
-Defined in: [source/geojson\_source.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source.ts#L70>)
+Defined in: [source/geojson\_source.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source.ts#L70>)
 
 The cluster's radius

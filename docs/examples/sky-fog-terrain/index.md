@@ -3,7 +3,7 @@
 Allows changing the sky, fog and horizon color and blends.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 function setSkyFromUi() {
     if (!document.getElementById('sky-enabled').checked) {
@@ -111,7 +111,7 @@ map.on('load', () => {
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -140,7 +140,7 @@ map.on('load', () => {
     <tr><td><label for="fog-ground-blend-slider">fog-ground-blend</label></td><td><input type="range" id="fog-ground-blend-slider" min="0" max="1" step="0.01" value="0.1" /></td></tr>
 </table>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     function setSkyFromUi() {
         if (!document.getElementById('sky-enabled').checked) {

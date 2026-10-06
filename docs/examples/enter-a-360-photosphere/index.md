@@ -82,7 +82,7 @@ exitButton.addEventListener('click', () => {
     <meta property="og:created" content="2026-07-14" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
     <link rel='icon' href='data:,' />
     <style>
         body { margin: 0; padding: 0; }
@@ -126,7 +126,7 @@ exitButton.addEventListener('click', () => {
     <script type="importmap">
         {
             "imports": {
-                "maplibre-gl": "https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs",
+                "maplibre-gl": "https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs",
                 "maplibre-gl-photosphere": "https://unpkg.com/maplibre-gl-photosphere@0.1.0/src/index.js"
             }
         }

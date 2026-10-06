@@ -1,6 +1,6 @@
 # Marker
 
-Defined in: [ui/marker.ts:288](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L288>)
+Defined in: [ui/marker.ts:288](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L288>)
 
 Creates a marker component
 
@@ -61,7 +61,7 @@ let marker = new Marker({
 
 > **new Marker**(`options?`: [`MarkerOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerOptions/index.md>)): `Marker`
 
-Defined in: [ui/marker.ts:319](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L319>)
+Defined in: [ui/marker.ts:319](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L319>)
 
 #### Parameters
 
@@ -83,7 +83,7 @@ Defined in: [ui/marker.ts:319](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **\_onKeyDown**(`e`: `KeyboardEvent`): `void`
 
-Defined in: [ui/marker.ts:586](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L586>)
+Defined in: [ui/marker.ts:586](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L586>)
 
 Move a focused draggable default marker with the arrow keys (1 screen pixel per keydown; 10 with Shift). Mirrors the pointer drag gesture: the position updates before `dragstart` fires on the first movement, every movement fires `drag`, and releasing the arrow key (or losing focus) fires `dragend`. Holding a key down produces repeated `drag` events within a single gesture.
 
@@ -103,7 +103,7 @@ Move a focused draggable default marker with the arrow keys (1 screen pixel per 
 
 > **\_updateAccessibilityRole**(): `void`
 
-Defined in: [ui/marker.ts:989](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L989>)
+Defined in: [ui/marker.ts:989](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L989>)
 
 Keep the default marker role aligned with interactivity. Default markers need a role because `aria-label` is set in [Marker.addTo](<#addto>). Non-interactive markers use `role=img`; interactive ones (draggable or with a popup) use `role=button`. Click listeners are application-owned and do not automatically change the role. Custom marker elements are left alone so applications own their a11y tree. Explicit roles set by the application are preserved.
 
@@ -117,7 +117,7 @@ Keep the default marker role aligned with interactivity. Default markers need a 
 
 > **\_updateTabIndex**(): `void`
 
-Defined in: [ui/marker.ts:965](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L965>)
+Defined in: [ui/marker.ts:965](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L965>)
 
 Keep the marker element focusable while it has built-in keyboard behavior. A popup makes any marker element interactive; dragging only manages focusability for the default marker so custom elements stay application-owned (\#7790). A tabindex supplied by the application is never added, changed, or removed here.
 
@@ -131,7 +131,7 @@ Keep the marker element focusable while it has built-in keyboard behavior. A pop
 
 > **addClassName**(`className`: `string`): `void`
 
-Defined in: [ui/marker.ts:811](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L811>)
+Defined in: [ui/marker.ts:811](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L811>)
 
 Adds a CSS class to the marker element.
 
@@ -158,7 +158,7 @@ marker.addClassName('some-class')
 
 > **addTo**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `this`
 
-Defined in: [ui/marker.ts:391](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L391>)
+Defined in: [ui/marker.ts:391](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L391>)
 
 Attaches the `Marker` to a `Map` object.
 
@@ -188,7 +188,7 @@ let marker = new Marker()
 
 > **fire**(`event`: [`MarkerDragEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MarkerDragEvent/index.md>) | [`MarkerClickEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MarkerClickEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -210,7 +210,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -235,7 +235,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **getElement**(): `HTMLElement`
 
-Defined in: [ui/marker.ts:502](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L502>)
+Defined in: [ui/marker.ts:502](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L502>)
 
 Returns the `Marker`'s HTML element.
 
@@ -251,7 +251,7 @@ element
 
 > **getLngLat**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [ui/marker.ts:473](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L473>)
+Defined in: [ui/marker.ts:473](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L473>)
 
 Get the marker's geographical location.
 
@@ -282,7 +282,7 @@ console.log('Longitude: ' + lngLat.lng + ', Latitude: ' + lngLat.lat )
 
 > **getOffset**(): `Point`
 
-Defined in: [ui/marker.ts:786](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L786>)
+Defined in: [ui/marker.ts:786](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L786>)
 
 Get the marker's offset.
 
@@ -298,7 +298,7 @@ The marker's screen coordinates in pixels.
 
 > **getPitchAlignment**(): [`Alignment`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Alignment/index.md>)
 
-Defined in: [ui/marker.ts:1054](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1054>)
+Defined in: [ui/marker.ts:1054](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1054>)
 
 Returns the current `pitchAlignment` property of the marker.
 
@@ -314,7 +314,7 @@ The current pitch alignment of the marker in degrees.
 
 > **getPopup**(): [`Popup`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>)
 
-Defined in: [ui/marker.ts:651](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L651>)
+Defined in: [ui/marker.ts:651](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L651>)
 
 Returns the [Popup](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>) instance that is bound to the Marker.
 
@@ -341,7 +341,7 @@ console.log(marker.getPopup()); // return the popup instance
 
 > **getRotation**(): `number`
 
-Defined in: [ui/marker.ts:1018](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1018>)
+Defined in: [ui/marker.ts:1018](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1018>)
 
 Returns the current rotation angle of the marker (in degrees).
 
@@ -357,7 +357,7 @@ The current rotation angle of the marker.
 
 > **getRotationAlignment**(): [`Alignment`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Alignment/index.md>)
 
-Defined in: [ui/marker.ts:1036](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1036>)
+Defined in: [ui/marker.ts:1036](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1036>)
 
 Returns the current `rotationAlignment` property of the marker.
 
@@ -373,7 +373,7 @@ The current rotational alignment of the marker.
 
 > **isDraggable**(): `boolean`
 
-Defined in: [ui/marker.ts:954](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L954>)
+Defined in: [ui/marker.ts:954](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L954>)
 
 Returns true if the marker can be dragged
 
@@ -389,7 +389,7 @@ True if the marker is draggable.
 
 > **listens**(`type`: keyof [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -415,7 +415,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **off**\<`T` *extends* keyof [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -446,7 +446,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -479,7 +479,7 @@ Adds a listener to a specified event type.
 
 > **once**\<`T` *extends* keyof [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\>(`type`: `T`): `Promise`\<[`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -511,7 +511,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* keyof [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`MarkerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -546,7 +546,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **remove**(): `this`
 
-Defined in: [ui/marker.ts:428](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L428>)
+Defined in: [ui/marker.ts:428](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L428>)
 
 Removes the marker from a map
 
@@ -567,7 +567,7 @@ marker.remove();
 
 > **removeClassName**(`className`: `string`): `void`
 
-Defined in: [ui/marker.ts:826](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L826>)
+Defined in: [ui/marker.ts:826](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L826>)
 
 Removes a CSS class from the marker element.
 
@@ -594,7 +594,7 @@ marker.removeClassName('some-class')
 
 > **setDraggable**(`shouldBeDraggable?`: `boolean`): `this`
 
-Defined in: [ui/marker.ts:916](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L916>)
+Defined in: [ui/marker.ts:916](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L916>)
 
 Sets the `draggable` property and functionality of the marker. A draggable default marker is also keyboard focusable and movable with the arrow keys (see [MarkerOptions.draggable](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerOptions/#draggable>)); custom marker elements keep their focusability and keyboard behavior application-owned.
 
@@ -614,7 +614,7 @@ Sets the `draggable` property and functionality of the marker. A draggable defau
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -639,7 +639,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setLngLat**(`lnglat`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `this`
 
-Defined in: [ui/marker.ts:490](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L490>)
+Defined in: [ui/marker.ts:490](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L490>)
 
 Set the marker's geographical position and move it.
 
@@ -674,7 +674,7 @@ new Marker()
 
 > **setOffset**(`offset`: [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>)): `this`
 
-Defined in: [ui/marker.ts:794](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L794>)
+Defined in: [ui/marker.ts:794](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L794>)
 
 Sets the offset of the marker
 
@@ -694,7 +694,7 @@ Sets the offset of the marker
 
 > **setOpacity**(`opacity?`: `string` | `number`, `opacityWhenCovered?`: `string` | `number`): `this`
 
-Defined in: [ui/marker.ts:1064](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1064>)
+Defined in: [ui/marker.ts:1064](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1064>)
 
 Sets the `opacity` and `opacityWhenCovered` properties of the marker. When called without arguments, resets opacity and opacityWhenCovered to defaults
 
@@ -715,7 +715,7 @@ Sets the `opacity` and `opacityWhenCovered` properties of the marker. When calle
 
 > **setPitchAlignment**(`alignment?`: [`Alignment`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Alignment/index.md>)): `this`
 
-Defined in: [ui/marker.ts:1044](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1044>)
+Defined in: [ui/marker.ts:1044](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1044>)
 
 Sets the `pitchAlignment` property of the marker.
 
@@ -735,7 +735,7 @@ Sets the `pitchAlignment` property of the marker.
 
 > **setPopup**(`popup?`: [`Popup`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>)): `this`
 
-Defined in: [ui/marker.ts:519](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L519>)
+Defined in: [ui/marker.ts:519](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L519>)
 
 Binds a [Popup](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>) to the Marker.
 
@@ -768,7 +768,7 @@ let marker = new Marker()
 
 > **setRotation**(`rotation?`: `number`): `this`
 
-Defined in: [ui/marker.ts:1008](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1008>)
+Defined in: [ui/marker.ts:1008](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1008>)
 
 Sets the `rotation` property of the marker.
 
@@ -788,7 +788,7 @@ Sets the `rotation` property of the marker.
 
 > **setRotationAlignment**(`alignment?`: [`Alignment`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Alignment/index.md>)): `this`
 
-Defined in: [ui/marker.ts:1026](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L1026>)
+Defined in: [ui/marker.ts:1026](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L1026>)
 
 Sets the `rotationAlignment` property of the marker.
 
@@ -808,7 +808,7 @@ Sets the `rotationAlignment` property of the marker.
 
 > **setSubpixelPositioning**(`value`: `boolean`): `this`
 
-Defined in: [ui/marker.ts:563](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L563>)
+Defined in: [ui/marker.ts:563](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L563>)
 
 Set the option to allow subpixel positioning of the marker by passing a boolean
 
@@ -835,7 +835,7 @@ marker.setSubpixelPositioning(true);
 
 > **toggleClassName**(`className`: `string`): `boolean`
 
-Defined in: [ui/marker.ts:843](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L843>)
+Defined in: [ui/marker.ts:843](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L843>)
 
 Add or remove the given CSS class on the marker element, depending on whether the element currently has that class.
 
@@ -864,7 +864,7 @@ marker.toggleClassName('toggleClass')
 
 > **togglePopup**(): `this`
 
-Defined in: [ui/marker.ts:667](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/marker.ts#L667>)
+Defined in: [ui/marker.ts:667](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/marker.ts#L667>)
 
 Opens or closes the [Popup](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>) instance that is bound to the Marker, depending on the current state of the [Popup](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>).
 

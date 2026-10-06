@@ -1,6 +1,6 @@
 # MessageType
 
-Defined in: [util/actor\_messages.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L95>)
+Defined in: [util/actor\_messages.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L95>)
 
 All the possible message types that can be sent to and from the worker
 
@@ -10,7 +10,7 @@ All the possible message types that can be sent to and from the worker
 
 > **abortTile**: `"AT"`
 
-Defined in: [util/actor\_messages.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L116>)
+Defined in: [util/actor\_messages.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L116>)
 
 ---
 
@@ -18,7 +18,7 @@ Defined in: [util/actor\_messages.ts:116](<https://github.com/maplibre/maplibre-
 
 > **getClusterChildren**: `"GCC"`
 
-Defined in: [util/actor\_messages.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L98>)
+Defined in: [util/actor\_messages.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L98>)
 
 ---
 
@@ -26,7 +26,7 @@ Defined in: [util/actor\_messages.ts:98](<https://github.com/maplibre/maplibre-g
 
 > **getClusterExpansionZoom**: `"GCEZ"`
 
-Defined in: [util/actor\_messages.ts:97](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L97>)
+Defined in: [util/actor\_messages.ts:97](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L97>)
 
 ---
 
@@ -34,7 +34,7 @@ Defined in: [util/actor\_messages.ts:97](<https://github.com/maplibre/maplibre-g
 
 > **getClusterLeaves**: `"GCL"`
 
-Defined in: [util/actor\_messages.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L99>)
+Defined in: [util/actor\_messages.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L99>)
 
 ---
 
@@ -42,7 +42,7 @@ Defined in: [util/actor\_messages.ts:99](<https://github.com/maplibre/maplibre-g
 
 > **getDashes**: `"GDA"`
 
-Defined in: [util/actor\_messages.ts:104](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L104>)
+Defined in: [util/actor\_messages.ts:104](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L104>)
 
 ---
 
@@ -50,7 +50,7 @@ Defined in: [util/actor\_messages.ts:104](<https://github.com/maplibre/maplibre-
 
 > **getGlyphs**: `"GG"`
 
-Defined in: [util/actor\_messages.ts:103](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L103>)
+Defined in: [util/actor\_messages.ts:103](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L103>)
 
 ---
 
@@ -58,7 +58,7 @@ Defined in: [util/actor\_messages.ts:103](<https://github.com/maplibre/maplibre-
 
 > **getImages**: `"GI"`
 
-Defined in: [util/actor\_messages.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L105>)
+Defined in: [util/actor\_messages.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L105>)
 
 ---
 
@@ -66,7 +66,7 @@ Defined in: [util/actor\_messages.ts:105](<https://github.com/maplibre/maplibre-
 
 > **getResource**: `"GR"`
 
-Defined in: [util/actor\_messages.ts:118](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L118>)
+Defined in: [util/actor\_messages.ts:118](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L118>)
 
 ---
 
@@ -74,7 +74,7 @@ Defined in: [util/actor\_messages.ts:118](<https://github.com/maplibre/maplibre-
 
 > **importScript**: `"IS"`
 
-Defined in: [util/actor\_messages.ts:114](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L114>)
+Defined in: [util/actor\_messages.ts:114](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L114>)
 
 ---
 
@@ -82,7 +82,7 @@ Defined in: [util/actor\_messages.ts:114](<https://github.com/maplibre/maplibre-
 
 > **loadData**: `"LD"`
 
-Defined in: [util/actor\_messages.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L100>)
+Defined in: [util/actor\_messages.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L100>)
 
 ---
 
@@ -90,7 +90,7 @@ Defined in: [util/actor\_messages.ts:100](<https://github.com/maplibre/maplibre-
 
 > **loadDEMTile**: `"LDT"`
 
-Defined in: [util/actor\_messages.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L96>)
+Defined in: [util/actor\_messages.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L96>)
 
 ---
 
@@ -98,7 +98,7 @@ Defined in: [util/actor\_messages.ts:96](<https://github.com/maplibre/maplibre-g
 
 > **loadTile**: `"LT"`
 
-Defined in: [util/actor\_messages.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L101>)
+Defined in: [util/actor\_messages.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L101>)
 
 ---
 
@@ -106,7 +106,7 @@ Defined in: [util/actor\_messages.ts:101](<https://github.com/maplibre/maplibre-
 
 > **reloadTile**: `"RT"`
 
-Defined in: [util/actor\_messages.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L102>)
+Defined in: [util/actor\_messages.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L102>)
 
 ---
 
@@ -114,7 +114,7 @@ Defined in: [util/actor\_messages.ts:102](<https://github.com/maplibre/maplibre-
 
 > **removeDEMTile**: `"RDT"`
 
-Defined in: [util/actor\_messages.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L117>)
+Defined in: [util/actor\_messages.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L117>)
 
 ---
 
@@ -122,7 +122,7 @@ Defined in: [util/actor\_messages.ts:117](<https://github.com/maplibre/maplibre-
 
 > **removeMap**: `"RM"`
 
-Defined in: [util/actor\_messages.ts:113](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L113>)
+Defined in: [util/actor\_messages.ts:113](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L113>)
 
 ---
 
@@ -130,7 +130,7 @@ Defined in: [util/actor\_messages.ts:113](<https://github.com/maplibre/maplibre-
 
 > **removeSource**: `"RS"`
 
-Defined in: [util/actor\_messages.ts:112](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L112>)
+Defined in: [util/actor\_messages.ts:112](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L112>)
 
 ---
 
@@ -138,7 +138,7 @@ Defined in: [util/actor\_messages.ts:112](<https://github.com/maplibre/maplibre-
 
 > **removeTile**: `"RMT"`
 
-Defined in: [util/actor\_messages.ts:115](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L115>)
+Defined in: [util/actor\_messages.ts:115](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L115>)
 
 ---
 
@@ -146,7 +146,7 @@ Defined in: [util/actor\_messages.ts:115](<https://github.com/maplibre/maplibre-
 
 > **setImages**: `"SI"`
 
-Defined in: [util/actor\_messages.ts:106](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L106>)
+Defined in: [util/actor\_messages.ts:106](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L106>)
 
 ---
 
@@ -154,7 +154,7 @@ Defined in: [util/actor\_messages.ts:106](<https://github.com/maplibre/maplibre-
 
 > **setLayers**: `"SL"`
 
-Defined in: [util/actor\_messages.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L108>)
+Defined in: [util/actor\_messages.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L108>)
 
 ---
 
@@ -162,7 +162,7 @@ Defined in: [util/actor\_messages.ts:108](<https://github.com/maplibre/maplibre-
 
 > **setReferrer**: `"SR"`
 
-Defined in: [util/actor\_messages.ts:111](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L111>)
+Defined in: [util/actor\_messages.ts:111](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L111>)
 
 ---
 
@@ -170,7 +170,7 @@ Defined in: [util/actor\_messages.ts:111](<https://github.com/maplibre/maplibre-
 
 > **syncRTLPluginState**: `"SRPS"`
 
-Defined in: [util/actor\_messages.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L110>)
+Defined in: [util/actor\_messages.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L110>)
 
 ---
 
@@ -178,7 +178,7 @@ Defined in: [util/actor\_messages.ts:110](<https://github.com/maplibre/maplibre-
 
 > **updateGlobalState**: `"UGS"`
 
-Defined in: [util/actor\_messages.ts:107](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L107>)
+Defined in: [util/actor\_messages.ts:107](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L107>)
 
 ---
 
@@ -186,4 +186,4 @@ Defined in: [util/actor\_messages.ts:107](<https://github.com/maplibre/maplibre-
 
 > **updateLayers**: `"UL"`
 
-Defined in: [util/actor\_messages.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/actor_messages.ts#L109>)
+Defined in: [util/actor\_messages.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/actor_messages.ts#L109>)

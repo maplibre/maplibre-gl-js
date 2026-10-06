@@ -1,6 +1,6 @@
 # TwoFingersTouchZoomHandler
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:154](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L154>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:154](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L154>)
 
 The `TwoFingersTouchHandler`s allows the user to zoom the map two fingers
 
@@ -14,7 +14,7 @@ The `TwoFingersTouchHandler`s allows the user to zoom the map two fingers
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L109>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L109>)
 
 Disables the "drag to pitch" interaction.
 
@@ -38,7 +38,7 @@ map.touchPitch.disable();
 
 > **enable**(`options?`: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)): `void`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L96>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L96>)
 
 Enables the "drag to pitch" interaction.
 
@@ -68,7 +68,7 @@ map.touchPitch.enable();
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L128>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L128>)
 
 Returns a Boolean indicating whether the "drag to pitch" interaction is active, i.e. currently being used.
 
@@ -88,7 +88,7 @@ Returns a Boolean indicating whether the "drag to pitch" interaction is active, 
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:119](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L119>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:119](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L119>)
 
 Returns a Boolean indicating whether the "drag to pitch" interaction is enabled.
 
@@ -108,7 +108,7 @@ Returns a Boolean indicating whether the "drag to pitch" interaction is enabled.
 
 > **setZoomRate**(`zoomRate?`: `number`): `void`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:176](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L176>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:176](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L176>)
 
 Sets the zoom rate of touch gestures.
 
@@ -136,7 +136,7 @@ map.touchZoomRotate.setZoomRate(0.5);
 
 > **setZoomThreshold**(`zoomThreshold?`: `number`): `void`
 
-Defined in: [ui/handler/two\_fingers\_touch.ts:189](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/two_fingers_touch.ts#L189>)
+Defined in: [ui/handler/two\_fingers\_touch.ts:189](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/two_fingers_touch.ts#L189>)
 
 Sets the threshold before a pinch gesture starts zooming.
 

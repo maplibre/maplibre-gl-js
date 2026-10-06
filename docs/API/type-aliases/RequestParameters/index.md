@@ -2,7 +2,7 @@
 
 > **RequestParameters** = `object`
 
-Defined in: [util/ajax.ts:32](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L32>)
+Defined in: [util/ajax.ts:32](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L32>)
 
 A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
 
@@ -27,7 +27,7 @@ transformRequest: function(url, resourceType) {
 
 > `optional` **body?**: `string`
 
-Defined in: [util/ajax.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L48>)
+Defined in: [util/ajax.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L48>)
 
 Request body.
 
@@ -37,7 +37,7 @@ Request body.
 
 > `optional` **cache?**: `RequestCache`
 
-Defined in: [util/ajax.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L64>)
+Defined in: [util/ajax.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L64>)
 
 Parameters supported only by browser fetch API. Property of the Request interface contains the cache mode of the request. It controls how the request will interact with the browser's HTTP cache. (https://developer.mozilla.org/en-US/docs/Web/API/Request/cache)
 
@@ -47,7 +47,7 @@ Parameters supported only by browser fetch API. Property of the Request interfac
 
 > `optional` **collectResourceTiming?**: `boolean`
 
-Defined in: [util/ajax.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L60>)
+Defined in: [util/ajax.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L60>)
 
 If `true`, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
 
@@ -57,7 +57,7 @@ If `true`, Resource Timing API information will be collected for these transform
 
 > `optional` **credentials?**: `"same-origin"` | `"include"`
 
-Defined in: [util/ajax.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L56>)
+Defined in: [util/ajax.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L56>)
 
 `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
 
@@ -67,7 +67,7 @@ Defined in: [util/ajax.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/7
 
 > `optional` **headers?**: `any`
 
-Defined in: [util/ajax.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L40>)
+Defined in: [util/ajax.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L40>)
 
 The headers to be sent with the request.
 
@@ -77,7 +77,7 @@ The headers to be sent with the request.
 
 > `optional` **method?**: `"GET"` | `"POST"` | `"PUT"`
 
-Defined in: [util/ajax.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L44>)
+Defined in: [util/ajax.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L44>)
 
 Request method `'GET' | 'POST' | 'PUT'`.
 
@@ -87,7 +87,7 @@ Request method `'GET' | 'POST' | 'PUT'`.
 
 > `optional` **referrerPolicy?**: `ReferrerPolicy`
 
-Defined in: [util/ajax.ts:68](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L68>)
+Defined in: [util/ajax.ts:68](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L68>)
 
 The referrer policy to use for the request. Controls how much referrer information is sent. (https://developer.mozilla.org/en-US/docs/Web/API/Request/referrerPolicy)
 
@@ -97,7 +97,7 @@ The referrer policy to use for the request. Controls how much referrer informati
 
 > `optional` **type?**: `"string"` | `"json"` | `"arrayBuffer"` | `"image"`
 
-Defined in: [util/ajax.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L52>)
+Defined in: [util/ajax.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L52>)
 
 Response body type to be returned.
 
@@ -107,6 +107,6 @@ Response body type to be returned.
 
 > **url**: `string`
 
-Defined in: [util/ajax.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L36>)
+Defined in: [util/ajax.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L36>)
 
 The URL to be requested.

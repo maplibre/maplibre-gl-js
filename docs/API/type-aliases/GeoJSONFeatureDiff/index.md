@@ -2,7 +2,7 @@
 
 > **GeoJSONFeatureDiff** = `object`
 
-Defined in: [source/geojson\_source\_diff.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source_diff.ts#L33>)
+Defined in: [source/geojson\_source\_diff.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source_diff.ts#L33>)
 
 A geojson feature diff object - processed in the following order: new geometry, remove properties, add/update properties. Provides an efficient way to update GeoJSON features in a map source without replacing the entire feature.
 
@@ -12,7 +12,7 @@ A geojson feature diff object - processed in the following order: new geometry, 
 
 > `optional` **addOrUpdateProperties?**: `object`\[\]
 
-Defined in: [source/geojson\_source\_diff.ts:53](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source_diff.ts#L53>)
+Defined in: [source/geojson\_source\_diff.ts:53](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source_diff.ts#L53>)
 
 The properties to add or update along side their values
 
@@ -30,7 +30,7 @@ The properties to add or update along side their values
 
 > **id**: [`GeoJSONFeatureId`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeoJSONFeatureId/index.md>)
 
-Defined in: [source/geojson\_source\_diff.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source_diff.ts#L37>)
+Defined in: [source/geojson\_source\_diff.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source_diff.ts#L37>)
 
 The feature ID
 
@@ -40,7 +40,7 @@ The feature ID
 
 > `optional` **newGeometry?**: `GeoJSON.Geometry`
 
-Defined in: [source/geojson\_source\_diff.ts:41](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source_diff.ts#L41>)
+Defined in: [source/geojson\_source\_diff.ts:41](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source_diff.ts#L41>)
 
 If it's a new geometry, place it here
 
@@ -50,7 +50,7 @@ If it's a new geometry, place it here
 
 > `optional` **removeAllProperties?**: `boolean`
 
-Defined in: [source/geojson\_source\_diff.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source_diff.ts#L45>)
+Defined in: [source/geojson\_source\_diff.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source_diff.ts#L45>)
 
 Setting to `true` will remove all preperties
 
@@ -60,6 +60,6 @@ Setting to `true` will remove all preperties
 
 > `optional` **removeProperties?**: `string`\[\]
 
-Defined in: [source/geojson\_source\_diff.ts:49](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/geojson_source_diff.ts#L49>)
+Defined in: [source/geojson\_source\_diff.ts:49](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/geojson_source_diff.ts#L49>)
 
 The properties keys to remove

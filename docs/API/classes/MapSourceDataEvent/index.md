@@ -1,6 +1,6 @@
 # MapSourceDataEvent
 
-Defined in: [ui/events.ts:556](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L556>)
+Defined in: [ui/events.ts:556](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L556>)
 
 A `MapSourceDataEvent` is emitted with the source-related `data`, `dataloading`, `dataabort`, `sourcedata`, `sourcedataloading` and `sourcedataabort` events. Its `dataType` is always `'source'`.
 
@@ -33,7 +33,7 @@ map.on('sourcedata', (e) => {
 
 > **coord**: [`OverscaledTileID`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/OverscaledTileID/index.md>)
 
-Defined in: [ui/events.ts:578](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L578>)
+Defined in: [ui/events.ts:578](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L578>)
 
 The tile ID of the tile being loaded or changed, if the event is related to loading of a tile.
 
@@ -43,7 +43,7 @@ The tile ID of the tile being loaded or changed, if the event is related to load
 
 > **isSourceLoaded**: `boolean`
 
-Defined in: [ui/events.ts:562](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L562>)
+Defined in: [ui/events.ts:562](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L562>)
 
 True if the event has a `dataType` of `source` and the source has no outstanding network requests.
 
@@ -53,7 +53,7 @@ True if the event has a `dataType` of `source` and the source has no outstanding
 
 > `optional` **resourceTiming?**: `PerformanceResourceTiming`\[\]
 
-Defined in: [ui/events.ts:582](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L582>)
+Defined in: [ui/events.ts:582](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L582>)
 
 Resource timing data, if `collectResourceTiming` is enabled for the source.
 
@@ -63,7 +63,7 @@ Resource timing data, if `collectResourceTiming` is enabled for the source.
 
 > **source**: [`SourceSpecification`](<https://maplibre.org/maplibre-style-spec/sources/>)
 
-Defined in: [ui/events.ts:566](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L566>)
+Defined in: [ui/events.ts:566](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L566>)
 
 The [style spec representation of the source](<https://maplibre.org/maplibre-style-spec/#sources>) if the event has a `dataType` of `source`.
 
@@ -73,7 +73,7 @@ The [style spec representation of the source](<https://maplibre.org/maplibre-sty
 
 > **target**: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)
 
-Defined in: [ui/events.ts:485](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L485>)
+Defined in: [ui/events.ts:485](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L485>)
 
 The object that fired the event. Set when the event is fired, and narrowed to a more specific type (e.g. `Map`, `Marker`) by the event subclasses.
 
@@ -87,6 +87,6 @@ The object that fired the event. Set when the event is fired, and narrowed to a 
 
 > **tile**: `any`
 
-Defined in: [ui/events.ts:574](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L574>)
+Defined in: [ui/events.ts:574](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L574>)
 
 The tile being loaded or changed, if the event has a `dataType` of `source` and the event is related to loading of a tile.

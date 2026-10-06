@@ -3,7 +3,7 @@
 Synchronize MapLibre GL JS maps with the sync-move plugin.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map1 = new maplibregl.Map({
     container: 'map1',
@@ -40,7 +40,7 @@ syncMaps(map1, map2, map3);
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <script src="https://unpkg.com/@mapbox/mapbox-gl-sync-move@0.3.1"></script>
 
@@ -62,7 +62,7 @@ syncMaps(map1, map2, map3);
     <div id="map3"></div>
     </div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map1 = new maplibregl.Map({
         container: 'map1',

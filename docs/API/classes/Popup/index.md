@@ -1,6 +1,6 @@
 # Popup
 
-Defined in: [ui/popup.ts:208](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L208>)
+Defined in: [ui/popup.ts:208](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L208>)
 
 A popup component.
 
@@ -71,7 +71,7 @@ let popup = new Popup({offset: popupOffsets, className: 'my-class'})
 
 > **new Popup**(`options?`: [`PopupOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupOptions/index.md>)): `Popup`
 
-Defined in: [ui/popup.ts:223](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L223>)
+Defined in: [ui/popup.ts:223](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L223>)
 
 #### Parameters
 
@@ -93,7 +93,7 @@ Defined in: [ui/popup.ts:223](<https://github.com/maplibre/maplibre-gl-js/blob/7
 
 > **\_updateOpacity**(): `void`
 
-Defined in: [ui/popup.ts:282](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L282>)
+Defined in: [ui/popup.ts:282](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L282>)
 
 Add opacity to popup if in globe projection and location is behind view
 
@@ -107,7 +107,7 @@ Add opacity to popup if in globe projection and location is behind view
 
 > **addClassName**(`className`: `string`): `this`
 
-Defined in: [ui/popup.ts:546](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L546>)
+Defined in: [ui/popup.ts:546](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L546>)
 
 Adds a CSS class to the popup container element.
 
@@ -134,7 +134,7 @@ popup.addClassName('some-class')
 
 > **addTo**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `this`
 
-Defined in: [ui/popup.ts:244](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L244>)
+Defined in: [ui/popup.ts:244](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L244>)
 
 Adds the popup to a map.
 
@@ -172,7 +172,7 @@ new Popup()
 
 > **fire**(`event`: [`PopupEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/PopupEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -194,7 +194,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -219,7 +219,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **getElement**(): `HTMLElement`
 
-Defined in: [ui/popup.ts:421](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L421>)
+Defined in: [ui/popup.ts:421](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L421>)
 
 Returns the `Popup`'s HTML element.
 
@@ -248,7 +248,7 @@ popupElem.style.fontSize = "25px";
 
 > **getLngLat**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [ui/popup.ts:347](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L347>)
+Defined in: [ui/popup.ts:347](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L347>)
 
 Returns the geographical location of the popup's anchor.
 
@@ -266,7 +266,7 @@ The geographical location of the popup's anchor.
 
 > **getMaxWidth**(): `string`
 
-Defined in: [ui/popup.ts:484](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L484>)
+Defined in: [ui/popup.ts:484](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L484>)
 
 Returns the popup's maximum width.
 
@@ -282,7 +282,7 @@ The maximum width of the popup.
 
 > **isOpen**(): `boolean`
 
-Defined in: [ui/popup.ts:296](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L296>)
+Defined in: [ui/popup.ts:296](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L296>)
 
 #### Returns
 
@@ -296,7 +296,7 @@ Defined in: [ui/popup.ts:296](<https://github.com/maplibre/maplibre-gl-js/blob/7
 
 > **listens**(`type`: keyof [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -322,7 +322,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **off**\<`T` *extends* keyof [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -353,7 +353,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -386,7 +386,7 @@ Adds a listener to a specified event type.
 
 > **once**\<`T` *extends* keyof [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\>(`type`: `T`): `Promise`\<[`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -418,7 +418,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* keyof [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`PopupEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -453,7 +453,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **remove**(): `this`
 
-Defined in: [ui/popup.ts:309](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L309>)
+Defined in: [ui/popup.ts:309](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L309>)
 
 Removes the popup from the map it has been added to.
 
@@ -474,7 +474,7 @@ popup.remove();
 
 > **removeClassName**(`className`: `string`): `this`
 
-Defined in: [ui/popup.ts:564](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L564>)
+Defined in: [ui/popup.ts:564](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L564>)
 
 Removes a CSS class from the popup container element.
 
@@ -501,7 +501,7 @@ popup.removeClassName('some-class')
 
 > **setDOMContent**(`htmlNode`: `Node`): `this`
 
-Defined in: [ui/popup.ts:515](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L515>)
+Defined in: [ui/popup.ts:515](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L515>)
 
 Sets the popup's content to the element provided as a DOM node.
 
@@ -534,7 +534,7 @@ let popup = new Popup()
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -559,7 +559,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setHTML**(`html`: `string`): `this`
 
-Defined in: [ui/popup.ts:465](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L465>)
+Defined in: [ui/popup.ts:465](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L465>)
 
 Sets the popup's content to the HTML provided as a string.
 
@@ -597,7 +597,7 @@ let popup = new Popup()
 
 > **setLngLat**(`lnglat`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `this`
 
-Defined in: [ui/popup.ts:356](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L356>)
+Defined in: [ui/popup.ts:356](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L356>)
 
 Sets the geographical location of the popup's anchor, and moves the popup to it. Replaces trackPointer() behavior.
 
@@ -617,7 +617,7 @@ Sets the geographical location of the popup's anchor, and moves the popup to it.
 
 > **setMaxWidth**(`maxWidth`: `string`): `this`
 
-Defined in: [ui/popup.ts:494](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L494>)
+Defined in: [ui/popup.ts:494](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L494>)
 
 Sets the popup's maximum width. This is setting the CSS property `max-width`. Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width
 
@@ -637,7 +637,7 @@ Sets the popup's maximum width. This is setting the CSS property `max-width`. Av
 
 > **setOffset**(`offset?`: [`Offset`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Offset/index.md>)): `this`
 
-Defined in: [ui/popup.ts:576](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L576>)
+Defined in: [ui/popup.ts:576](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L576>)
 
 Sets the popup's offset.
 
@@ -657,7 +657,7 @@ Sets the popup's offset.
 
 > **setPadding**(`padding?`: [`PaddingOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PaddingOptions/index.md>)): `void`
 
-Defined in: [ui/popup.ts:625](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L625>)
+Defined in: [ui/popup.ts:625](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L625>)
 
 Sets the popup's padding constraints for positioning.
 
@@ -683,7 +683,7 @@ popup.setPadding({ top: 10, right: 20, bottom: 30, left: 40 });
 
 > **setSubpixelPositioning**(`value`: `boolean`): `void`
 
-Defined in: [ui/popup.ts:612](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L612>)
+Defined in: [ui/popup.ts:612](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L612>)
 
 Set the option to allow subpixel positioning of the popup by passing a boolean
 
@@ -710,7 +710,7 @@ popup.setSubpixelPositioning(true);
 
 > **setText**(`text`: `string`): `this`
 
-Defined in: [ui/popup.ts:441](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L441>)
+Defined in: [ui/popup.ts:441](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L441>)
 
 Sets the popup's content to a string of text.
 
@@ -741,7 +741,7 @@ let popup = new Popup()
 
 > **toggleClassName**(`className`: `string`): `boolean`
 
-Defined in: [ui/popup.ts:595](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L595>)
+Defined in: [ui/popup.ts:595](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L595>)
 
 Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.
 
@@ -770,7 +770,7 @@ popup.toggleClassName('toggleClass')
 
 > **trackPointer**(): `this`
 
-Defined in: [ui/popup.ts:388](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L388>)
+Defined in: [ui/popup.ts:388](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L388>)
 
 Tracks the popup anchor to the cursor position on screens with a pointer device (it will be hidden on touchscreens). Replaces the `setLngLat` behavior. For most use cases, set `closeOnClick` and `closeButton` to `false`.
 

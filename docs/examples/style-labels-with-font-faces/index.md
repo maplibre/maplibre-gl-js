@@ -3,7 +3,7 @@
 Point your style at the font files used to draw its text labels. The font-faces property names a font file per text-font name, optionally narrowed to a unicode-range, so a style can cover scripts its glyphs server does not. Anything the browser can render text with may be used, and it is understood by Android and iOS as well. Here Georgian and Armenian labels come from font files while the Latin ones still come from the glyphs URL.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -112,7 +112,7 @@ const map = new maplibregl.Map({
     <!-- cspell:ignore თბილისი ბათუმი Երևան Գյումրի -->
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css'>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css'>
 
     <style>
         body { margin: 0; padding: 0; }
@@ -122,7 +122,7 @@ const map = new maplibregl.Map({
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

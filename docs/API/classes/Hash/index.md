@@ -1,6 +1,6 @@
 # Hash
 
-Defined in: [ui/hash.ts:12](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/hash.ts#L12>)
+Defined in: [ui/hash.ts:12](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/hash.ts#L12>)
 
 Adds the map's position to its page's location hash. Passed as an option to the map object.
 
@@ -10,7 +10,7 @@ Adds the map's position to its page's location hash. Passed as an option to the 
 
 > **addTo**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `this`
 
-Defined in: [ui/hash.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/hash.ts#L25>)
+Defined in: [ui/hash.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/hash.ts#L25>)
 
 Map element to listen for coordinate changes
 
@@ -30,7 +30,7 @@ Map element to listen for coordinate changes
 
 > **remove**(): `this`
 
-Defined in: [ui/hash.ts:35](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/hash.ts#L35>)
+Defined in: [ui/hash.ts:35](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/hash.ts#L35>)
 
 Removes hash
 
@@ -44,7 +44,7 @@ Removes hash
 
 > **\_updateHash**: () =\> `Timeout`
 
-Defined in: [ui/hash.ts:136](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/hash.ts#L136>)
+Defined in: [ui/hash.ts:136](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/hash.ts#L136>)
 
 Mobile Safari doesn't allow updating the hash more than 100 times per 30 seconds.
 

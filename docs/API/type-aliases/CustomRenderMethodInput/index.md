@@ -2,7 +2,7 @@
 
 > **CustomRenderMethodInput** = `object`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L56>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L57>)
 
 Input arguments exposed by custom render function.
 
@@ -12,7 +12,7 @@ Input arguments exposed by custom render function.
 
 > **defaultProjectionData**: [`CustomLayerProjectionData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomLayerProjectionData/index.md>)
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:153](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L153>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:154](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L154>)
 
 Uniforms that should be passed to the vertex shader, if MapLibre's projection code is used. For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
 
@@ -32,7 +32,7 @@ Under globe projection, when these uniforms are used, the `elevation` parameter 
 
 > **farZ**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:62](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L62>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:63](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L63>)
 
 This value represents the distance from the camera to the far clipping plane. It is used in the calculation of the projection matrix to determine which objects are visible. farZ should be larger than nearZ.
 
@@ -42,7 +42,7 @@ This value represents the distance from the camera to the far clipping plane. It
 
 > **fov**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:72](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L72>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:73](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L73>)
 
 Vertical field of view in radians.
 
@@ -52,7 +52,7 @@ Vertical field of view in radians.
 
 > **getProjectionData**: (`params`: [`CustomLayerProjectionDataParams`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomLayerProjectionDataParams/index.md>)) =\> [`RendererProjectionData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RendererProjectionData/index.md>)
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L162>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:163](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L163>)
 
 Generates a [ProjectionData](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ProjectionData/index.md>) instance to be used while rendering a given tile. In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.
 
@@ -76,7 +76,7 @@ Generates a [ProjectionData](<https://maplibre.org/maplibre-gl-js/docs/API/type-
 
 > **modelViewProjectionMatrix**: `mat4`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:78](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L78>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L79>)
 
 Model view projection matrix. Represents the matrix converting from world space to clip space. https://learnopengl.com/Getting-started/Coordinate-Systems \*
 
@@ -86,7 +86,7 @@ Model view projection matrix. Represents the matrix converting from world space 
 
 > **nearZ**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:68](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L68>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:69](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L69>)
 
 This value represents the distance from the camera to the near clipping plane. It is used in the calculation of the projection matrix to determine which objects are visible. nearZ should be smaller than farZ.
 
@@ -96,9 +96,31 @@ This value represents the distance from the camera to the near clipping plane. I
 
 > **projectionMatrix**: `mat4`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L84>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:85](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L85>)
 
 Projection matrix. Represents the matrix converting from view space to clip space. https://learnopengl.com/Getting-started/Coordinate-Systems
+
+---
+
+### renderTerrainHeightMap?
+
+> `optional` **renderTerrainHeightMap?**: (`target`: [`TerrainHeightMapTarget`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TerrainHeightMapTarget/index.md>)) =\> `void`
+
+Defined in: [style/style\_layer/custom\_style\_layer.ts:171](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L171>)
+
+**`Experimental`**
+
+Draws the elevation of the terrain as the map draws it into a texture, so that the layer can place many objects on the ground on the GPU. Only set in [CustomLayerInterface.prerender](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/#prerender>), while terrain is enabled. Call it again after the camera moves, terrain tiles load or the terrain changes, and set up your WebGL state afterwards.
+
+#### Parameters
+
+| Parameter | Type |
+| --- | --- |
+| `target` | [`TerrainHeightMapTarget`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TerrainHeightMapTarget/index.md>) |
+
+#### Returns
+
+`void`
 
 ---
 
@@ -106,7 +128,7 @@ Projection matrix. Represents the matrix converting from view space to clip spac
 
 > **shaderData**: `object`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_layer/custom_style_layer.ts#L88>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:89](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L89>)
 
 Data required for picking and compiling a custom shader for the current projection.
 

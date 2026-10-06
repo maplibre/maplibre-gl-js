@@ -3,7 +3,7 @@
 Toggle deck.gl layer using maplibre.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
   const url = 'https://maps.clockworkmicro.com/streets/v1/style?x-api-key=';
   const apiKey = 'Dr4eW3s233rRkk8I_public';
@@ -157,7 +157,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-
     <meta property="og:created" content="2024-01-19" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css" />
 
     <script src="https://unpkg.com/deck.gl@8.9.33/dist.min.js"></script>
     <style>
@@ -197,7 +197,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-
     <div id="map"></div>
     <button id="toggle-button">Hide</button>
     <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
       const url = 'https://maps.clockworkmicro.com/streets/v1/style?x-api-key=';
       const apiKey = 'Dr4eW3s233rRkk8I_public';

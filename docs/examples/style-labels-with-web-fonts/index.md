@@ -3,7 +3,7 @@
 Apply Web fonts to your style’s text labels. Unlike signed distance field (SDF) glyph sets, Web fonts are available from a variety of providers, or your can make your own using popular tools. This option is suitable for fonts that are only available through a third-party content delivery network (CDN) for technical or legal reasons, as well as fonts that are incompatible with SDF, such as variable fonts. For compatibility with Android and iOS applications, specify equivalent fonts in the style’s font-faces property.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 document.fonts.load("24px 'Rampart One'");
 const map = new maplibregl.Map({
@@ -84,7 +84,7 @@ const map = new maplibregl.Map({
     <meta property="og:created" content="2025-10-31" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css'>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css'>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,7 +97,7 @@ const map = new maplibregl.Map({
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     document.fonts.load("24px 'Rampart One'");
     const map = new maplibregl.Map({

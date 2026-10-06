@@ -1,6 +1,6 @@
 # MercatorCoordinate
 
-Defined in: [geo/mercator\_coordinate.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/mercator_coordinate.ts#L81>)
+Defined in: [geo/mercator\_coordinate.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/mercator_coordinate.ts#L81>)
 
 A `MercatorCoordinate` object represents a projected three dimensional position.
 
@@ -35,7 +35,7 @@ let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
 
 > **new MercatorCoordinate**(`x`: `number`, `y`: `number`, `z?`: `number`): `MercatorCoordinate`
 
-Defined in: [geo/mercator\_coordinate.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/mercator_coordinate.ts#L91>)
+Defined in: [geo/mercator\_coordinate.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/mercator_coordinate.ts#L91>)
 
 #### Parameters
 
@@ -55,7 +55,7 @@ Defined in: [geo/mercator\_coordinate.ts:91](<https://github.com/maplibre/maplib
 
 > **meterInMercatorCoordinateUnits**(): `number`
 
-Defined in: [geo/mercator\_coordinate.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/mercator_coordinate.ts#L156>)
+Defined in: [geo/mercator\_coordinate.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/mercator_coordinate.ts#L156>)
 
 Returns the distance of 1 meter in `MercatorCoordinate` units at this latitude.
 
@@ -77,7 +77,7 @@ Distance of 1 meter in `MercatorCoordinate` units.
 
 > **toAltitude**(): `number`
 
-Defined in: [geo/mercator\_coordinate.ts:144](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/mercator_coordinate.ts#L144>)
+Defined in: [geo/mercator\_coordinate.ts:144](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/mercator_coordinate.ts#L144>)
 
 Returns the altitude in meters of the coordinate.
 
@@ -104,7 +104,7 @@ coord.toAltitude(); // 6914.281956295339
 
 > **toLngLat**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [geo/mercator\_coordinate.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/mercator_coordinate.ts#L128>)
+Defined in: [geo/mercator\_coordinate.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/mercator_coordinate.ts#L128>)
 
 Returns the `LngLat` for the coordinate.
 
@@ -131,7 +131,7 @@ let lngLat = coord.toLngLat(); // LngLat(0, 0)
 
 > `static` **fromLngLat**(`lngLatLike`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>), `altitude?`: `number`): `MercatorCoordinate`
 
-Defined in: [geo/mercator\_coordinate.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/mercator_coordinate.ts#L109>)
+Defined in: [geo/mercator\_coordinate.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/mercator_coordinate.ts#L109>)
 
 Project a `LngLat` to a `MercatorCoordinate`.
 

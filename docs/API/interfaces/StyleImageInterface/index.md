@@ -1,6 +1,6 @@
 # StyleImageInterface
 
-Defined in: [style/style\_image.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_image.ts#L191>)
+Defined in: [style/style\_image.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_image.ts#L191>)
 
 Interface for dynamically generated style images. This is a specification for implementers to model: it is not an exported method or class.
 
@@ -59,7 +59,7 @@ let flashingSquare = {
 
 > **data**: `Uint8Array`\<`ArrayBufferLike`\> | `Uint8ClampedArray`\<`ArrayBufferLike`\> | [`StyleImageWebGLData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageWebGLData/index.md>)
 
-Defined in: [style/style\_image.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_image.ts#L200>)
+Defined in: [style/style\_image.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_image.ts#L200>)
 
 The image's pixels, in the same format as `ImageData`, or a [StyleImageWebGLData](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageWebGLData/index.md>) callback that renders them with WebGL. A WebGL image renders straight into its slot of the shared icon atlas. Nothing new is possible that pixels could not express, but an image that changes often, such as an animated icon, gets much cheaper: no CPU pixel work and no upload.
 
@@ -69,7 +69,7 @@ The image's pixels, in the same format as `ImageData`, or a [StyleImageWebGLData
 
 > `optional` **onAdd?**: (`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>), `id`: `string`) =\> `void`
 
-Defined in: [style/style\_image.ts:225](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_image.ts#L225>)
+Defined in: [style/style\_image.ts:225](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_image.ts#L225>)
 
 Optional method called when the layer has been added to the Map with [Map.addImage](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addimage>).
 
@@ -90,7 +90,7 @@ Optional method called when the layer has been added to the Map with [Map.addIma
 
 > `optional` **onRemove?**: () =\> `void`
 
-Defined in: [style/style\_image.ts:234](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_image.ts#L234>)
+Defined in: [style/style\_image.ts:234](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_image.ts#L234>)
 
 Optional method called when the icon is removed from the map with [Map.removeImage](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removeimage>). This gives the image a chance to clean up resources and event listeners.
 
@@ -106,7 +106,7 @@ This also fires when the WebGL context is lost, after which the same image is ad
 
 > `optional` **render?**: () =\> `boolean`
 
-Defined in: [style/style\_image.ts:219](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/style/style_image.ts#L219>)
+Defined in: [style/style\_image.ts:219](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_image.ts#L219>)
 
 This method is called once before every frame where the icon will be used. The method can optionally update the image's `data` member with a new image.
 

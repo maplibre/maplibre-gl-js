@@ -3,7 +3,7 @@
 Create a Heatmap layer on a globe with terrain elevation.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -220,7 +220,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <style>
         body {
@@ -239,7 +239,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-
 <body>
     <div id="map"></div>
     <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
         const map = new maplibregl.Map({
             container: 'map',

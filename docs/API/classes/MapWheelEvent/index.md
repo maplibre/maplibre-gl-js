@@ -1,6 +1,6 @@
 # MapWheelEvent
 
-Defined in: [ui/events.ts:755](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L755>)
+Defined in: [ui/events.ts:755](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L755>)
 
 `MapWheelEvent` is the event type for the `wheel` map event.
 
@@ -16,7 +16,7 @@ Defined in: [ui/events.ts:755](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **get** **defaultPrevented**(): `boolean`
 
-Defined in: [ui/events.ts:783](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L783>)
+Defined in: [ui/events.ts:783](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L783>)
 
 `true` if `preventDefault` has been called.
 
@@ -30,7 +30,7 @@ Defined in: [ui/events.ts:783](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **new MapWheelEvent**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>), `originalEvent`: `WheelEvent`): `MapWheelEvent`
 
-Defined in: [ui/events.ts:790](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L790>)
+Defined in: [ui/events.ts:790](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L790>)
 
 #### Parameters
 
@@ -53,7 +53,7 @@ Defined in: [ui/events.ts:790](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **preventDefault**(): `void`
 
-Defined in: [ui/events.ts:776](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L776>)
+Defined in: [ui/events.ts:776](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L776>)
 
 Prevents subsequent default processing of the event by the map.
 
@@ -69,7 +69,7 @@ Calling this method will prevent the behavior of [ScrollZoomHandler](<https://ma
 
 > **originalEvent**: `WheelEvent`
 
-Defined in: [ui/events.ts:769](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L769>)
+Defined in: [ui/events.ts:769](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L769>)
 
 The DOM event which caused the map event.
 
@@ -83,7 +83,7 @@ The DOM event which caused the map event.
 
 > **target**: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)
 
-Defined in: [ui/events.ts:764](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L764>)
+Defined in: [ui/events.ts:764](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L764>)
 
 The `Map` object that fired the event.
 
@@ -97,7 +97,7 @@ The `Map` object that fired the event.
 
 > **type**: `"wheel"`
 
-Defined in: [ui/events.ts:759](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/events.ts#L759>)
+Defined in: [ui/events.ts:759](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/events.ts#L759>)
 
 The event type.
 

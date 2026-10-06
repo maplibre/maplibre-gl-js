@@ -1,6 +1,6 @@
 # DoubleClickZoomHandler
 
-Defined in: [ui/handler/shim/dblclick\_zoom.ts:10](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/dblclick_zoom.ts#L10>)
+Defined in: [ui/handler/shim/dblclick\_zoom.ts:10](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/dblclick_zoom.ts#L10>)
 
 The `DoubleClickZoomHandler` allows the user to zoom the map at a point by double clicking or double tapping.
 
@@ -10,7 +10,7 @@ The `DoubleClickZoomHandler` allows the user to zoom the map at a point by doubl
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/shim/dblclick\_zoom.ts:42](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/dblclick_zoom.ts#L42>)
+Defined in: [ui/handler/shim/dblclick\_zoom.ts:42](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/dblclick_zoom.ts#L42>)
 
 Disables the "double click to zoom" interaction.
 
@@ -30,7 +30,7 @@ map.doubleClickZoom.disable();
 
 > **enable**(): `void`
 
-Defined in: [ui/handler/shim/dblclick\_zoom.ts:29](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/dblclick_zoom.ts#L29>)
+Defined in: [ui/handler/shim/dblclick\_zoom.ts:29](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/dblclick_zoom.ts#L29>)
 
 Enables the "double click to zoom" interaction.
 
@@ -50,7 +50,7 @@ map.doubleClickZoom.enable();
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/shim/dblclick\_zoom.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/dblclick_zoom.ts#L61>)
+Defined in: [ui/handler/shim/dblclick\_zoom.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/dblclick_zoom.ts#L61>)
 
 Returns a Boolean indicating whether the "double click to zoom" interaction is active, i.e. currently being used.
 
@@ -66,7 +66,7 @@ Returns a Boolean indicating whether the "double click to zoom" interaction is a
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/shim/dblclick\_zoom.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/dblclick_zoom.ts#L52>)
+Defined in: [ui/handler/shim/dblclick\_zoom.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/dblclick_zoom.ts#L52>)
 
 Returns a Boolean indicating whether the "double click to zoom" interaction is enabled.
 

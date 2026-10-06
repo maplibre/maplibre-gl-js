@@ -1,6 +1,6 @@
 # AttributionControl
 
-Defined in: [ui/control/attribution\_control.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/attribution_control.ts#L40>)
+Defined in: [ui/control/attribution\_control.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/attribution_control.ts#L40>)
 
 An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
 
@@ -27,7 +27,7 @@ let map = new Map({attributionControl: false})
 
 > **new AttributionControl**(`options?`: [`AttributionControlOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AttributionControlOptions/index.md>)): `AttributionControl`
 
-Defined in: [ui/control/attribution\_control.ts:55](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/attribution_control.ts#L55>)
+Defined in: [ui/control/attribution\_control.ts:55](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/attribution_control.ts#L55>)
 
 #### Parameters
 
@@ -45,7 +45,7 @@ Defined in: [ui/control/attribution\_control.ts:55](<https://github.com/maplibre
 
 > **getDefaultPosition**(): [`ControlPosition`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ControlPosition/index.md>)
 
-Defined in: [ui/control/attribution\_control.ts:59](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/attribution_control.ts#L59>)
+Defined in: [ui/control/attribution\_control.ts:59](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/attribution_control.ts#L59>)
 
 Optionally provide a default position for this control. If this method is implemented and [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) is called without the `position` parameter, the value returned by getDefaultPosition will be used as the control's position.
 
@@ -65,7 +65,7 @@ a control position, one of the values valid in addControl.
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/attribution\_control.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/attribution_control.ts#L64>)
+Defined in: [ui/control/attribution\_control.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/attribution_control.ts#L64>)
 
 Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
 
@@ -91,7 +91,7 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/attribution\_control.ts:86](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/attribution_control.ts#L86>)
+Defined in: [ui/control/attribution\_control.ts:86](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/attribution_control.ts#L86>)
 
 Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
 

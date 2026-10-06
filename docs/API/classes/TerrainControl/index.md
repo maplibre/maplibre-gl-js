@@ -1,6 +1,6 @@
 # TerrainControl
 
-Defined in: [ui/control/terrain\_control.ts:24](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/terrain_control.ts#L24>)
+Defined in: [ui/control/terrain\_control.ts:24](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/terrain_control.ts#L24>)
 
 A `TerrainControl` control contains a button for turning the terrain on and off.
 
@@ -30,7 +30,7 @@ let map = new Map({TerrainControl: false})
 
 > **new TerrainControl**(`options`: `TerrainSpecification`): `TerrainControl`
 
-Defined in: [ui/control/terrain\_control.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/terrain_control.ts#L33>)
+Defined in: [ui/control/terrain\_control.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/terrain_control.ts#L33>)
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Defined in: [ui/control/terrain\_control.ts:33](<https://github.com/maplibre/map
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/terrain\_control.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/terrain_control.ts#L38>)
+Defined in: [ui/control/terrain\_control.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/terrain_control.ts#L38>)
 
 Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
 
@@ -74,7 +74,7 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/terrain\_control.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/terrain_control.ts#L52>)
+Defined in: [ui/control/terrain\_control.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/terrain_control.ts#L52>)
 
 Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
 

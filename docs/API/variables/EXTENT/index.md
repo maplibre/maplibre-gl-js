@@ -2,7 +2,7 @@
 
 > `const` **EXTENT**: `8192` = `8192`
 
-Defined in: [data/extent.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/data/extent.ts#L13>)
+Defined in: [data/extent.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/data/extent.ts#L13>)
 
 The maximum value of a coordinate in the internal tile coordinate system. Coordinates of all source features normalized to this extent upon load.
 

@@ -1,6 +1,6 @@
 # AJAXError
 
-Defined in: [util/ajax.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L91>)
+Defined in: [util/ajax.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L91>)
 
 An error thrown when a HTTP request results in an error response.
 
@@ -14,7 +14,7 @@ An error thrown when a HTTP request results in an error response.
 
 > **new AJAXError**(`status`: `number`, `statusText`: `string`, `url`: `string`, `body`: `Blob`): `AJAXError`
 
-Defined in: [util/ajax.ts:118](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L118>)
+Defined in: [util/ajax.ts:118](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L118>)
 
 #### Parameters
 
@@ -39,7 +39,7 @@ Defined in: [util/ajax.ts:118](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **body**: `Blob`
 
-Defined in: [util/ajax.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L110>)
+Defined in: [util/ajax.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L110>)
 
 The response's body.
 
@@ -49,7 +49,7 @@ The response's body.
 
 > **status**: `number`
 
-Defined in: [util/ajax.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L95>)
+Defined in: [util/ajax.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L95>)
 
 The response's HTTP status code.
 
@@ -59,7 +59,7 @@ The response's HTTP status code.
 
 > **statusText**: `string`
 
-Defined in: [util/ajax.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L100>)
+Defined in: [util/ajax.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L100>)
 
 The response's HTTP status text.
 
@@ -69,6 +69,6 @@ The response's HTTP status text.
 
 > **url**: `string`
 
-Defined in: [util/ajax.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L105>)
+Defined in: [util/ajax.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L105>)
 
 The request's URL.

@@ -3,7 +3,7 @@
 Modify how Level of Detail behaves at high pitch angles.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 function setLodParamsFromUi() {
     map.setSourceTileLodParams(document.getElementById('max-zoom-levels-slider').value, document.getElementById('tile-count-ratio-slider').value);
@@ -54,7 +54,7 @@ map.on('load', () => {
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -78,7 +78,7 @@ map.on('load', () => {
     <tr><td><label for="tile-count-ratio-slider">Tile Count Max/Min Ratio</label></td><td><input type="range" id="tile-count-ratio-slider" min="1" max="10" step="0.1" value="3.0" /></td><td><span id="tile-count-ratio-value">3.0</span></td></tr>
 </table>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
     function setLodParamsFromUi() {
         map.setSourceTileLodParams(document.getElementById('max-zoom-levels-slider').value, document.getElementById('tile-count-ratio-slider').value);

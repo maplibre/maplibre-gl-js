@@ -2,7 +2,7 @@
 
 > **CameraOptions** = [`CenterZoomBearing`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CenterZoomBearing/index.md>) &amp; `object`
 
-Defined in: [ui/camera.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/camera.ts#L57>)
+Defined in: [ui/camera.ts:73](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/camera.ts#L73>)
 
 Options common to [Map.jumpTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#jumpto>), [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#easeto>), and [Map.flyTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#flyto>), controlling the desired location, zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current camera value for that property will remain unchanged.
 

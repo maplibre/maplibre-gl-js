@@ -1,6 +1,6 @@
 # TwoFingersTouchZoomRotateHandler
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L13>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L13>)
 
 The `TwoFingersTouchZoomRotateHandler` allows the user to zoom and rotate the map by pinching on a touchscreen.
 
@@ -12,7 +12,7 @@ They can zoom with one finger by double tapping and dragging. On the second tap,
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L58>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L58>)
 
 Disables the "pinch to rotate and zoom" interaction.
 
@@ -32,7 +32,7 @@ map.touchZoomRotate.disable();
 
 > **disableRotation**(): `void`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:121](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L121>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:121](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L121>)
 
 Disables the "pinch to rotate" interaction, leaving the "pinch to zoom" interaction enabled.
 
@@ -52,7 +52,7 @@ map.touchZoomRotate.disableRotation();
 
 > **enable**(`options?`: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)): `void`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:43](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L43>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:43](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L43>)
 
 Enables the "pinch to rotate and zoom" interaction.
 
@@ -79,7 +79,7 @@ map.touchZoomRotate.enable({ around: 'center' });
 
 > **enableRotation**(): `void`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:135](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L135>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:135](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L135>)
 
 Enables the "pinch to rotate" interaction.
 
@@ -100,7 +100,7 @@ map.touchZoomRotate.enableRotation();
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L81>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L81>)
 
 Returns true if the handler is enabled and has detected the start of a zoom/rotate gesture.
 
@@ -116,7 +116,7 @@ Returns true if the handler is enabled and has detected the start of a zoom/rota
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L70>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L70>)
 
 Returns a Boolean indicating whether the "pinch to rotate and zoom" interaction is enabled.
 
@@ -132,7 +132,7 @@ Returns a Boolean indicating whether the "pinch to rotate and zoom" interaction 
 
 > **setZoomRate**(`zoomRate?`: `number`): `void`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:94](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L94>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:94](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L94>)
 
 Sets the zoom rate of touch gestures.
 
@@ -160,7 +160,7 @@ map.touchZoomRotate.setZoomRate(0.5);
 
 > **setZoomThreshold**(`zoomThreshold?`: `number`): `void`
 
-Defined in: [ui/handler/shim/two\_fingers\_touch.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/handler/shim/two_fingers_touch.ts#L108>)
+Defined in: [ui/handler/shim/two\_fingers\_touch.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/two_fingers_touch.ts#L108>)
 
 Sets the threshold before a pinch gesture starts zooming.
 

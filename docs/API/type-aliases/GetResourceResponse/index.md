@@ -2,7 +2,7 @@
 
 > **GetResourceResponse**\<`T`\> = [`ExpiryData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ExpiryData/index.md>) &amp; `object`
 
-Defined in: [util/ajax.ts:74](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/ajax.ts#L74>)
+Defined in: [util/ajax.ts:74](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/ajax.ts#L74>)
 
 The response object returned from a successful AJAx request
 

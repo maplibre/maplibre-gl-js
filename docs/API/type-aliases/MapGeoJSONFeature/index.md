@@ -2,7 +2,7 @@
 
 > **MapGeoJSONFeature** = [`GeoJSONFeature`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/GeoJSONFeature/index.md>) &amp; `object`
 
-Defined in: [util/vectortile\_to\_geojson.ts:22](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/vectortile_to_geojson.ts#L22>)
+Defined in: [util/vectortile\_to\_geojson.ts:22](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/vectortile_to_geojson.ts#L22>)
 
 An extended geojson feature used by the events to return data to the listener
 

@@ -3,7 +3,7 @@
 Drive an eye-height, level first-person camera over 3D buildings with the keyboard or on-screen buttons
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const EYE_HEIGHT = 1.6;
 const WALK_SPEED = 4;
@@ -87,7 +87,7 @@ requestAnimationFrame(loop);
 <meta property="og:created" content="2026-07-25" />
 <meta charset='utf-8'>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+<link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 <style>
     body { margin: 0; padding: 0; }
     html, body, #map { height: 100%; }
@@ -125,7 +125,7 @@ requestAnimationFrame(loop);
 </div>
 
 <script type="module">
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const EYE_HEIGHT = 1.6;
 const WALK_SPEED = 4;

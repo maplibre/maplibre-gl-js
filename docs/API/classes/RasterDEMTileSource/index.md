@@ -1,6 +1,6 @@
 # RasterDEMTileSource
 
-Defined in: [source/raster\_dem\_tile\_source.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_dem_tile_source.ts#L37>)
+Defined in: [source/raster\_dem\_tile\_source.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_dem_tile_source.ts#L37>)
 
 A source containing raster DEM tiles (See the [Style Specification](<https://maplibre.org/maplibre-style-spec/>) for detailed documentation of options.) This source can be used to show hillshading and 3D terrain
 
@@ -32,7 +32,7 @@ map.addSource('raster-dem-source', {
 
 > **abortTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/raster\_tile\_source.ts:254](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L254>)
+Defined in: [source/raster\_tile\_source.ts:254](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L254>)
 
 Allows to abort a tile loading.
 
@@ -62,7 +62,7 @@ Allows to abort a tile loading.
 
 > **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -88,7 +88,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -117,7 +117,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **hasTile**(`tileID`: [`OverscaledTileID`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/OverscaledTileID/index.md>)): `boolean`
 
-Defined in: [source/raster\_tile\_source.ts:201](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L201>)
+Defined in: [source/raster\_tile\_source.ts:201](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L201>)
 
 True is the tile is part of the source, false otherwise.
 
@@ -145,7 +145,7 @@ True is the tile is part of the source, false otherwise.
 
 > **hasTransition**(): `boolean`
 
-Defined in: [source/raster\_tile\_source.ts:267](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L267>)
+Defined in: [source/raster\_tile\_source.ts:267](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L267>)
 
 True if the source has transition, false otherwise.
 
@@ -167,7 +167,7 @@ True if the source has transition, false otherwise.
 
 > **listens**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -193,7 +193,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **loaded**(): `boolean`
 
-Defined in: [source/raster\_tile\_source.ts:122](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L122>)
+Defined in: [source/raster\_tile\_source.ts:122](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L122>)
 
 True if the source is loaded, false otherwise.
 
@@ -215,7 +215,7 @@ True if the source is loaded, false otherwise.
 
 > **off**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -246,7 +246,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -277,7 +277,7 @@ Adds a listener to a specified event type.
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `void`
 
-Defined in: [source/raster\_tile\_source.ts:126](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L126>)
+Defined in: [source/raster\_tile\_source.ts:126](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L126>)
 
 This method is called when the source is added to the map.
 
@@ -307,7 +307,7 @@ This method is called when the source is added to the map.
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`): `Promise`\<[`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -339,7 +339,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -374,7 +374,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **onRemove**(): `void`
 
-Defined in: [source/raster\_tile\_source.ts:131](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L131>)
+Defined in: [source/raster\_tile\_source.ts:131](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L131>)
 
 This method is called when the source is removed from the map.
 
@@ -396,7 +396,7 @@ This method is called when the source is removed from the map.
 
 > **serialize**(): `RasterSourceSpecification` | `RasterDEMSourceSpecification`
 
-Defined in: [source/raster\_tile\_source.ts:177](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L177>)
+Defined in: [source/raster\_tile\_source.ts:177](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L177>)
 
 #### Returns
 
@@ -418,7 +418,7 @@ A plain (stringifiable) JS object representing the current state of the source. 
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -443,7 +443,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setPremultiplyAlpha**(`premultiplyAlpha`: `boolean`): `this`
 
-Defined in: [source/raster\_tile\_source.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L191>)
+Defined in: [source/raster\_tile\_source.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L191>)
 
 Sets whether alpha premultiplication is applied to raster tile images. Set to `false` to preserve exact RGBA byte values when alpha carries data instead of opacity.
 
@@ -473,7 +473,7 @@ map.getSource<RasterTileSource>('raster-source').setPremultiplyAlpha(false);
 
 > **setTiles**(`tiles`: `string`\[\]): `this`
 
-Defined in: [source/raster\_tile\_source.ts:154](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L154>)
+Defined in: [source/raster\_tile\_source.ts:154](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L154>)
 
 Sets the source `tiles` property and re-renders the map.
 
@@ -497,7 +497,7 @@ Sets the source `tiles` property and re-renders the map.
 
 > **setUrl**(`url`: `string`): `this`
 
-Defined in: [source/raster\_tile\_source.ts:168](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L168>)
+Defined in: [source/raster\_tile\_source.ts:168](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L168>)
 
 Sets the source `url` property and re-renders the map.
 
@@ -521,7 +521,7 @@ Sets the source `url` property and re-renders the map.
 
 > **id**: `string`
 
-Defined in: [source/raster\_tile\_source.ts:55](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L55>)
+Defined in: [source/raster\_tile\_source.ts:55](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L55>)
 
 The id for the source. Must not be used by any existing source.
 
@@ -539,7 +539,7 @@ The id for the source. Must not be used by any existing source.
 
 > **maxzoom**: `number`
 
-Defined in: [source/raster\_tile\_source.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L57>)
+Defined in: [source/raster\_tile\_source.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L57>)
 
 The maximum zoom level for the source.
 
@@ -557,7 +557,7 @@ The maximum zoom level for the source.
 
 > **minzoom**: `number`
 
-Defined in: [source/raster\_tile\_source.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L56>)
+Defined in: [source/raster\_tile\_source.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L56>)
 
 The minimum zoom level for the source.
 
@@ -575,7 +575,7 @@ The minimum zoom level for the source.
 
 > **roundZoom**: `boolean`
 
-Defined in: [source/raster\_tile\_source.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L64>)
+Defined in: [source/raster\_tile\_source.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L64>)
 
 `true` if zoom levels are rounded to the nearest integer in the source data, `false` if they are floor-ed to the nearest integer.
 
@@ -593,7 +593,7 @@ Defined in: [source/raster\_tile\_source.ts:64](<https://github.com/maplibre/map
 
 > **tileSize**: `number`
 
-Defined in: [source/raster\_tile\_source.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/source/raster_tile_source.ts#L60>)
+Defined in: [source/raster\_tile\_source.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/source/raster_tile_source.ts#L60>)
 
 The tile size for the source.
 

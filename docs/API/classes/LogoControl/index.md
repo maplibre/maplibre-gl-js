@@ -1,6 +1,6 @@
 # LogoControl
 
-Defined in: [ui/control/logo\_control.ts:27](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/logo_control.ts#L27>)
+Defined in: [ui/control/logo\_control.ts:27](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/logo_control.ts#L27>)
 
 A `LogoControl` is a control that adds the watermark.
 
@@ -20,7 +20,7 @@ map.addControl(new LogoControl({compact: false}));
 
 > **new LogoControl**(`options?`: [`LogoControlOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LogoControlOptions/index.md>)): `LogoControl`
 
-Defined in: [ui/control/logo\_control.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/logo_control.ts#L36>)
+Defined in: [ui/control/logo\_control.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/logo_control.ts#L36>)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [ui/control/logo\_control.ts:36](<https://github.com/maplibre/maplib
 
 > **getDefaultPosition**(): [`ControlPosition`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ControlPosition/index.md>)
 
-Defined in: [ui/control/logo\_control.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/logo_control.ts#L40>)
+Defined in: [ui/control/logo\_control.ts:40](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/logo_control.ts#L40>)
 
 Optionally provide a default position for this control. If this method is implemented and [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) is called without the `position` parameter, the value returned by getDefaultPosition will be used as the control's position.
 
@@ -58,7 +58,7 @@ a control position, one of the values valid in addControl.
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/logo\_control.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/logo_control.ts#L45>)
+Defined in: [ui/control/logo\_control.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/logo_control.ts#L45>)
 
 Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
 
@@ -84,7 +84,7 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/logo\_control.ts:65](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/control/logo_control.ts#L65>)
+Defined in: [ui/control/logo\_control.ts:65](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/control/logo_control.ts#L65>)
 
 Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
 

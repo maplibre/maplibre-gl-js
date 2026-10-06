@@ -3,7 +3,7 @@
 Set the center point above ground level.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     style: {
@@ -26,7 +26,7 @@ const map = new maplibregl.Map({
                 'fill-extrusion-color': [
                     'interpolate',
                     ['linear'],
-                    ['get', 'render_height'], 0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
+                    ['coalesce', ['get', 'render_height'], 0], 0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
                 ],
                 'fill-extrusion-height': [
                     'interpolate',
@@ -35,11 +35,16 @@ const map = new maplibregl.Map({
                     13,
                     0,
                     14,
-                    ['get', 'render_height']
+                    ['coalesce', ['get', 'render_height'], 0]
                 ],
-                'fill-extrusion-base': ['case',
-                    ['>=', ['get', 'zoom'], 16],
-                    ['get', 'render_min_height'], 0
+                'fill-extrusion-base': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    13,
+                    0,
+                    14,
+                    ['coalesce', ['get', 'render_min_height'], 0]
                 ]
             }
         }
@@ -68,7 +73,7 @@ const map = new maplibregl.Map({
   <meta property="og:created" content="2025-06-25" />
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.css' />
+  <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
 
   <style>
       body { margin: 0; padding: 0; }
@@ -78,7 +83,7 @@ const map = new maplibregl.Map({
 <body>
 <div id="map"></div>
 <script type="module">
-  import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.12.0/dist/maplibre-gl.mjs';
+  import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs';
 
   const map = new maplibregl.Map({
       style: {
@@ -101,7 +106,7 @@ const map = new maplibregl.Map({
                   'fill-extrusion-color': [
                       'interpolate',
                       ['linear'],
-                      ['get', 'render_height'], 0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
+                      ['coalesce', ['get', 'render_height'], 0], 0, 'lightgray', 200, 'royalblue', 400, 'lightblue'
                   ],
                   'fill-extrusion-height': [
                       'interpolate',
@@ -110,11 +115,16 @@ const map = new maplibregl.Map({
                       13,
                       0,
                       14,
-                      ['get', 'render_height']
+                      ['coalesce', ['get', 'render_height'], 0]
                   ],
-                  'fill-extrusion-base': ['case',
-                      ['>=', ['get', 'zoom'], 16],
-                      ['get', 'render_min_height'], 0
+                  'fill-extrusion-base': [
+                      'interpolate',
+                      ['linear'],
+                      ['zoom'],
+                      13,
+                      0,
+                      14,
+                      ['coalesce', ['get', 'render_min_height'], 0]
                   ]
               }
           }

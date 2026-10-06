@@ -2,7 +2,7 @@
 
 > **FitBoundsOptions** = [`FlyToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FlyToOptions/index.md>) &amp; `object`
 
-Defined in: [ui/camera.ts:202](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/camera.ts#L202>)
+Defined in: [ui/camera.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/camera.ts#L218>)
 
 Options for [Map.fitBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#fitbounds>) method
 

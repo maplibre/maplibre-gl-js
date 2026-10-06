@@ -1,6 +1,6 @@
 # LngLatBounds
 
-Defined in: [geo/lng\_lat\_bounds.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L44>)
+Defined in: [geo/lng\_lat\_bounds.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L44>)
 
 A `LngLatBounds` object represents a geographical bounding box, defined by its southwest and northeast points in longitude and latitude.
 
@@ -26,7 +26,7 @@ let llb = new LngLatBounds(sw, ne);
 
 > **new LngLatBounds**(`sw?`: \[`number`, `number`, `number`, `number`\] | [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>) | \[[`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>), [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)\], `ne?`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `LngLatBounds`
 
-Defined in: [geo/lng\_lat\_bounds.ts:68](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L68>)
+Defined in: [geo/lng\_lat\_bounds.ts:68](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L68>)
 
 #### Parameters
 
@@ -65,7 +65,7 @@ let llb = new LngLatBounds([sw, ne]);
 
 > **adjustAntiMeridian**(): `LngLatBounds`
 
-Defined in: [geo/lng\_lat\_bounds.ts:402](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L402>)
+Defined in: [geo/lng\_lat\_bounds.ts:402](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L402>)
 
 Adjusts the given bounds to handle the case where the bounds cross the 180th meridian (antimeridian).
 
@@ -89,7 +89,7 @@ let adjustedBounds = bounds.adjustAntiMeridian();
 
 > **contains**(`lnglat`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `boolean`
 
-Defined in: [geo/lng\_lat\_bounds.ts:280](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L280>)
+Defined in: [geo/lng\_lat\_bounds.ts:280](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L280>)
 
 Check if the point is within the bounding box.
 
@@ -124,7 +124,7 @@ console.log(llb.contains(ll)); // = true
 
 > **extend**(`obj`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>) | [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>)): `this`
 
-Defined in: [geo/lng\_lat\_bounds.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L108>)
+Defined in: [geo/lng\_lat\_bounds.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L108>)
 
 Extend the bounds to include a given LngLatLike or LngLatBoundsLike.
 
@@ -144,7 +144,7 @@ Extend the bounds to include a given LngLatLike or LngLatBoundsLike.
 
 > **getCenter**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [geo/lng\_lat\_bounds.ts:164](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L164>)
+Defined in: [geo/lng\_lat\_bounds.ts:164](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L164>)
 
 Returns the geographical coordinate equidistant from the bounding box's corners.
 
@@ -167,7 +167,7 @@ llb.getCenter(); // = LngLat {lng: -73.96365, lat: 40.78315}
 
 > **getEast**(): `number`
 
-Defined in: [geo/lng\_lat\_bounds.ts:215](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L215>)
+Defined in: [geo/lng\_lat\_bounds.ts:215](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L215>)
 
 Returns the east edge of the bounding box.
 
@@ -183,7 +183,7 @@ The east edge of the bounding box.
 
 > **getNorth**(): `number`
 
-Defined in: [geo/lng\_lat\_bounds.ts:222](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L222>)
+Defined in: [geo/lng\_lat\_bounds.ts:222](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L222>)
 
 Returns the north edge of the bounding box.
 
@@ -199,7 +199,7 @@ The north edge of the bounding box.
 
 > **getNorthEast**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [geo/lng\_lat\_bounds.ts:180](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L180>)
+Defined in: [geo/lng\_lat\_bounds.ts:180](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L180>)
 
 Returns the northeast corner of the bounding box.
 
@@ -215,7 +215,7 @@ The northeast corner of the bounding box.
 
 > **getNorthWest**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [geo/lng\_lat\_bounds.ts:187](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L187>)
+Defined in: [geo/lng\_lat\_bounds.ts:187](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L187>)
 
 Returns the northwest corner of the bounding box.
 
@@ -231,7 +231,7 @@ The northwest corner of the bounding box.
 
 > **getSouth**(): `number`
 
-Defined in: [geo/lng\_lat\_bounds.ts:208](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L208>)
+Defined in: [geo/lng\_lat\_bounds.ts:208](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L208>)
 
 Returns the south edge of the bounding box.
 
@@ -247,7 +247,7 @@ The south edge of the bounding box.
 
 > **getSouthEast**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [geo/lng\_lat\_bounds.ts:194](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L194>)
+Defined in: [geo/lng\_lat\_bounds.ts:194](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L194>)
 
 Returns the southeast corner of the bounding box.
 
@@ -263,7 +263,7 @@ The southeast corner of the bounding box.
 
 > **getSouthWest**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [geo/lng\_lat\_bounds.ts:173](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L173>)
+Defined in: [geo/lng\_lat\_bounds.ts:173](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L173>)
 
 Returns the southwest corner of the bounding box.
 
@@ -279,7 +279,7 @@ The southwest corner of the bounding box.
 
 > **getWest**(): `number`
 
-Defined in: [geo/lng\_lat\_bounds.ts:201](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L201>)
+Defined in: [geo/lng\_lat\_bounds.ts:201](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L201>)
 
 Returns the west edge of the bounding box.
 
@@ -295,7 +295,7 @@ The west edge of the bounding box.
 
 > **intersects**(`other`: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>)): `boolean`
 
-Defined in: [geo/lng\_lat\_bounds.ts:301](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L301>)
+Defined in: [geo/lng\_lat\_bounds.ts:301](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L301>)
 
 Checks if this bounding box intersects with another bounding box.
 
@@ -319,7 +319,7 @@ This method properly handles cases where either or both bounding boxes cross the
 
 > **isEmpty**(): `boolean`
 
-Defined in: [geo/lng\_lat\_bounds.ts:259](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L259>)
+Defined in: [geo/lng\_lat\_bounds.ts:259](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L259>)
 
 Check if the bounding box is an empty/`null`-type box.
 
@@ -335,7 +335,7 @@ True if bounds have been defined, otherwise false.
 
 > **setNorthEast**(`ne`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `this`
 
-Defined in: [geo/lng\_lat\_bounds.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L88>)
+Defined in: [geo/lng\_lat\_bounds.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L88>)
 
 Set the northeast corner of the bounding box
 
@@ -355,7 +355,7 @@ Set the northeast corner of the bounding box
 
 > **setSouthWest**(`sw`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `this`
 
-Defined in: [geo/lng\_lat\_bounds.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L98>)
+Defined in: [geo/lng\_lat\_bounds.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L98>)
 
 Set the southwest corner of the bounding box
 
@@ -375,7 +375,7 @@ Set the southwest corner of the bounding box
 
 > **toArray**(): \[\[`number`, `number`\], \[`number`, `number`\]\]
 
-Defined in: [geo/lng\_lat\_bounds.ts:235](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L235>)
+Defined in: [geo/lng\_lat\_bounds.ts:235](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L235>)
 
 Returns the bounding box represented as an array.
 
@@ -398,7 +398,7 @@ llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
 
 > **toString**(): `string`
 
-Defined in: [geo/lng\_lat\_bounds.ts:250](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L250>)
+Defined in: [geo/lng\_lat\_bounds.ts:250](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L250>)
 
 Return the bounding box represented as a string.
 
@@ -421,7 +421,7 @@ llb.toString(); // = "LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 4
 
 > `static` **convert**(`input`: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>)): `LngLatBounds`
 
-Defined in: [geo/lng\_lat\_bounds.ts:364](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L364>)
+Defined in: [geo/lng\_lat\_bounds.ts:364](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L364>)
 
 Converts an array to a `LngLatBounds` object.
 
@@ -454,7 +454,7 @@ let llb = LngLatBounds.convert(arr); // = LngLatBounds {_sw: LngLat {lng: -73.98
 
 > `static` **fromLngLat**(`center`: [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>), `radius?`: `number`): `LngLatBounds`
 
-Defined in: [geo/lng\_lat\_bounds.ts:382](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat_bounds.ts#L382>)
+Defined in: [geo/lng\_lat\_bounds.ts:382](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat_bounds.ts#L382>)
 
 Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
 

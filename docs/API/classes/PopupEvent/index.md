@@ -1,6 +1,6 @@
 # PopupEvent
 
-Defined in: [ui/popup.ts:124](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L124>)
+Defined in: [ui/popup.ts:124](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L124>)
 
 The event class for popup events (`open` and `close`).
 
@@ -14,7 +14,7 @@ The event class for popup events (`open` and `close`).
 
 > **target**: [`Popup`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>)
 
-Defined in: [ui/popup.ts:129](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/ui/popup.ts#L129>)
+Defined in: [ui/popup.ts:129](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/popup.ts#L129>)
 
 The `Popup` object that fired the event.
 

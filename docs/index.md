@@ -5,10 +5,10 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 ## Quickstart
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.13.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -89,8 +89,6 @@ setWorkerUrl(workerUrl);
 const map = new Map({/* … */});
 ```
 
-Use `?worker&url` rather than plain `?url`: the dist worker imports its sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim in production builds without that sibling — the worker then fails on its first import and no vector tiles load. `?worker&url` routes the file through Vite's worker pipeline, emitting a self-contained chunk. Dev mode works with either.
-
 If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
 vite.config.ts
@@ -112,7 +110,7 @@ const map = new Map({/* … */});
 
 rspack and rsbuild use the same pattern.
 
-Next.js is an exception, including in its `next build --webpack` mode. See the Turbopack tab.
+Next.js uses the same pattern too, including in its `next build --webpack` mode. See the Turbopack tab.
 
 build.js
 
@@ -136,13 +134,15 @@ copyFileSync(
 src/main.ts
 
 ```ts
-import {Map, setWorkerUrl} from 'maplibre-gl';
+import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
 const map = new Map({/* … */});
 ```
+
+The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
 
 rollup.config.js
 
@@ -164,44 +164,17 @@ export default {
 src/main.ts
 
 ```ts
-import {Map, setWorkerUrl} from 'maplibre-gl';
+import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
 const map = new Map({/* … */});
 ```
 
+The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
+
 Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
-
-Turbopack turns `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
-
-scripts/copy-maplibre-worker.mjs
-
-```js
-import {copyFileSync, mkdirSync} from 'node:fs';
-import {createRequire} from 'node:module';
-import path from 'node:path';
-
-const dist = path.join(path.dirname(createRequire(import.meta.url).resolve('maplibre-gl/package.json')), 'dist');
-const dest = path.join(process.cwd(), 'public', 'maplibre');
-
-mkdirSync(dest, {recursive: true});
-for (const file of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
-    copyFileSync(path.join(dist, file), path.join(dest, file));
-}
-```
-
-package.json
-
-```json
-{
-    "scripts": {
-        "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
-        "predev": "node ./scripts/copy-maplibre-worker.mjs"
-    }
-}
-```
 
 app/map.tsx
 
@@ -211,24 +184,22 @@ app/map.tsx
 import {Map, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
+setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 const map = new Map({/* … */});
 ```
 
-The script copies both files, not just the worker. This is because the worker imports `maplibre-gl-shared.mjs` by relative path, so both have to land in the same directory.
+Next.js emits the worker as a hashed asset in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`.
 
-The copy happens at build time, from `node_modules`, so it always matches the installed version. npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary. `postinstall` alone won't do it since package managers skip lifecycle scripts when an install has no work to do, and `--ignore-scripts` skips them entirely.
-
-Next.js needs this in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`, since the asset handling above is Next's rather than Turbopack's alone.
+This needs Next.js 15 or later. In Next.js 14, `next build` fails to minify the worker, so copy `maplibre-gl-worker.mjs` to `public/` and pass that path to `setWorkerUrl` instead.
 
 Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](<https://unpkg.com>) for instructions on selecting specific versions and semver ranges.
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.13.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.12.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.13.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

@@ -1,6 +1,6 @@
 # LngLat
 
-Defined in: [geo/lng\_lat.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L51>)
+Defined in: [geo/lng\_lat.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L51>)
 
 A `LngLat` object represents a given longitude and latitude coordinate, measured in degrees. These coordinates are based on the [WGS84 (EPSG:4326) standard](<https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84>).
 
@@ -25,7 +25,7 @@ ll.lng; // = -123.9749
 
 > **new LngLat**(`lng`: `number`, `lat`: `number`): `LngLat`
 
-Defined in: [geo/lng\_lat.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L66>)
+Defined in: [geo/lng\_lat.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L66>)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [geo/lng\_lat.ts:66](<https://github.com/maplibre/maplibre-gl-js/blo
 
 > **distanceTo**(`lngLat`: `LngLat`): `number`
 
-Defined in: [geo/lng\_lat.ts:133](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L133>)
+Defined in: [geo/lng\_lat.ts:133](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L133>)
 
 Returns the approximate distance between a pair of coordinates in meters Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky and Telescope, vol. 68, no. 2, 1984, p. 159)
 
@@ -74,7 +74,7 @@ new_york.distanceTo(los_angeles); // = 3935751.690893987, "true distance" using 
 
 > **toArray**(): \[`number`, `number`\]
 
-Defined in: [geo/lng\_lat.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L102>)
+Defined in: [geo/lng\_lat.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L102>)
 
 Returns the coordinates represented as an array of two numbers.
 
@@ -97,7 +97,7 @@ ll.toArray(); // = [-73.9749, 40.7736]
 
 > **toString**(): `string`
 
-Defined in: [geo/lng\_lat.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L116>)
+Defined in: [geo/lng\_lat.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L116>)
 
 Returns the coordinates represent as a string.
 
@@ -120,7 +120,7 @@ ll.toString(); // = "LngLat(-73.9749, 40.7736)"
 
 > **wrap**(): `LngLat`
 
-Defined in: [geo/lng\_lat.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L88>)
+Defined in: [geo/lng\_lat.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L88>)
 
 Returns a new `LngLat` object whose longitude is wrapped to the range (-180, 180).
 
@@ -144,7 +144,7 @@ wrapped.lng; // = -73.9749
 
 > `static` **convert**(`input`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `LngLat`
 
-Defined in: [geo/lng\_lat.ts:157](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L157>)
+Defined in: [geo/lng\_lat.ts:157](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L157>)
 
 Converts an array of two numbers or an object with `lng` and `lat` or `lon` and `lat` properties to a `LngLat` object.
 
@@ -176,7 +176,7 @@ ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
 
 > **lat**: `number`
 
-Defined in: [geo/lng\_lat.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L60>)
+Defined in: [geo/lng\_lat.ts:60](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L60>)
 
 Latitude, measured in degrees.
 
@@ -186,6 +186,6 @@ Latitude, measured in degrees.
 
 > **lng**: `number`
 
-Defined in: [geo/lng\_lat.ts:55](<https://github.com/maplibre/maplibre-gl-js/blob/7976a989280508d763265f95f523e945d04d87b0/src/geo/lng_lat.ts#L55>)
+Defined in: [geo/lng\_lat.ts:55](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/geo/lng_lat.ts#L55>)
 
 Longitude, measured in degrees.
