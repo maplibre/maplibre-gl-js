@@ -137,13 +137,15 @@ Pick your setup:
     ```
 
     ```ts title="src/main.ts"
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
+
+    The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
 
 === "Rollup"
 
@@ -163,13 +165,15 @@ Pick your setup:
     ```
 
     ```ts title="src/main.ts"
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
+
+    The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
 
 === "Turbopack"
 
