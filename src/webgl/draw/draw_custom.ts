@@ -15,11 +15,10 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         return;
     }
 
-    const {isRenderingGlobe} = frameRenderContext.data;
+    const {isRenderingGlobe, projectionShaderVariant} = frameRenderContext.data;
     const {terrain} = frameRenderContext;
     const context = painter.context;
     const implementation = layer.implementation;
-    const projection = painter.style.projection;
     const transform = frameRenderContext.transform;
 
     const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
@@ -31,9 +30,9 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         modelViewProjectionMatrix: transform.modelViewProjectionMatrix,
         projectionMatrix: transform.projectionMatrix,
         shaderData: {
-            variantName: projection.shaderVariantName,
-            vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projection.shaderPreludeCode.vertexSource}`,
-            define: projection.shaderDefine,
+            variantName: projectionShaderVariant.name,
+            vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projectionShaderVariant.prelude.vertexSource}`,
+            define: projectionShaderVariant.define,
         },
         defaultProjectionData: projectionData,
         getProjectionData: (params: CustomLayerProjectionDataParams) => {

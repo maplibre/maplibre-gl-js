@@ -54,7 +54,6 @@ function renderHillshade(
     useBorder: boolean,
     frameRenderContext: FrameRenderContext
 ) {
-    const projection = painter.style.projection;
     const context = painter.context;
     const gl = context.gl;
 
@@ -68,7 +67,7 @@ function renderHillshade(
         if (!fbo) {
             continue;
         }
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
+        const mesh = frameRenderContext.getMeshFromTileID(coord.canonical, useBorder, true, 'raster');
 
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 

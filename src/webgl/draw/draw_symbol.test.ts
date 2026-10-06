@@ -10,7 +10,6 @@ import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {Program} from '../program.ts';
 import {drawSymbols} from './draw_symbol.ts';
 import * as symbolProjection from '../../symbol/projection.ts';
-import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
 import {createFrameRenderData} from '../../util/test/util.ts';
 
@@ -19,7 +18,6 @@ import type {ZoomHistory} from '../../style/zoom_history.ts';
 import type {Map} from '../../ui/map.ts';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Style} from '../../style/style.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 vi.mock(import('../../render/painter'));
@@ -58,10 +56,10 @@ function createMockTransform() {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null);
-        const frameRenderContext = new FrameRenderContext({transform: null, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'opaque', getStencilMesh: null});
+        const frameRenderContext = new FrameRenderContext({transform: null, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'opaque', projection: null});
         vi.spyOn(frameRenderContext, 'colorModeForRenderPass');
 
-        drawSymbols(mockPainter, null, null, null, null, frameRenderContext);
+        drawSymbols(mockPainter, null, null, null, frameRenderContext);
 
         expect(frameRenderContext.colorModeForRenderPass).not.toHaveBeenCalled();
     });
@@ -74,11 +72,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
-        painterMock.style = {
-            map: {},
-            projection: new MercatorProjection()
-        } as any as Style;
+        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -120,7 +114,7 @@ describe('drawSymbol', () => {
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         tileManagerMock.getTile = (_a) => tile;
 
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.frameRenderContext);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], painterMock.frameRenderContext);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
     });
@@ -134,7 +128,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
+        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -179,13 +173,9 @@ describe('drawSymbol', () => {
         const tileManagerMock = new TileManager(null, null, null);
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
-        painterMock.style = {
-            map: {},
-            projection: new MercatorProjection()
-        } as any as Style;
 
         const spy = vi.spyOn(symbolProjection, 'updateLineLabels');
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.frameRenderContext);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], painterMock.frameRenderContext);
 
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
@@ -199,10 +189,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
-        painterMock.style = {
-            projection: new MercatorProjection()
-        } as any as Style;
+        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -244,7 +231,7 @@ describe('drawSymbol', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, painterMock.frameRenderContext);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], painterMock.frameRenderContext);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });

@@ -94,8 +94,6 @@ function drawTiles(
     const gl = context.gl;
     const program = frameRenderContext.useProgram('raster');
 
-    const projection = painter.style.projection;
-
     const colorMode = frameRenderContext.colorModeForRenderPass();
     const align = !frameRenderContext.data.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
@@ -139,7 +137,7 @@ function drawTiles(
         const projectionData = frameRenderContext.getProjectionDataForTile(coord, {aligned: align});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 
-        const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
+        const mesh = sourceMesh ?? frameRenderContext.getMeshFromTileID(coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,

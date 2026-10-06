@@ -58,9 +58,7 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
-    [_ in CrossTileID]: VariableOffset;
-}, frameRenderContext: FrameRenderContext): void {
+export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.currentPass !== 'translucent') return;
 
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
@@ -76,7 +74,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('text-pitch-alignment'),
             layer.paint.get('text-translate'),
             layer.paint.get('text-translate-anchor'),
-            variableOffsets
+            frameRenderContext.data.variableOffsets
         );
     }
 
