@@ -115,7 +115,7 @@ Pick your setup:
 
     rspack and rsbuild use the same pattern.
 
-    Next.js is an exception, including in its `next build --webpack` mode. See the Turbopack tab.
+    Next.js uses the same pattern too, including in its `next build --webpack` mode. See the Turbopack tab.
 
 === "esbuild"
 
@@ -175,45 +175,18 @@ Pick your setup:
 
     Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
 
-    Serve the worker from `public/` and point `setWorkerUrl` at it:
-
-    ```js title="scripts/copy-maplibre-worker.mjs"
-    import {copyFileSync, mkdirSync} from 'node:fs';
-    import {createRequire} from 'node:module';
-    import path from 'node:path';
-
-    const dist = path.join(path.dirname(createRequire(import.meta.url).resolve('maplibre-gl/package.json')), 'dist');
-    const dest = path.join(process.cwd(), 'public', 'maplibre');
-
-    mkdirSync(dest, {recursive: true});
-    copyFileSync(path.join(dist, 'maplibre-gl-worker.mjs'), path.join(dest, 'maplibre-gl-worker.mjs'));
-    ```
-
-    ```json title="package.json"
-    {
-        "scripts": {
-            "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
-            "predev": "node ./scripts/copy-maplibre-worker.mjs"
-        }
-    }
-    ```
-
     ```ts title="app/map.tsx"
     'use client';
 
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
+    setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
 
-    The copy happens at build time, from `node_modules`, so it always matches the installed version.
-    npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary.
-    `postinstall` alone won't do it since package managers skip lifecycle scripts when an install has no work to do, and `--ignore-scripts` skips them entirely.
-
-    Next.js needs this in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`, since the asset handling above is Next's rather than Turbopack's alone.
+    Next.js emits the worker as a hashed asset in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`.
 
 === "CDN / No bundler"
 
