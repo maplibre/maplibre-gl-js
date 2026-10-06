@@ -1523,7 +1523,7 @@ export class Map extends Evented<MapEventType> {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](https://maplibre-gl-three.readthedocs.io/latest/getting-started/#coordinate-system-conversions-adding-threejs-objects)
+     * This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](https://maplibre-gl-three.readthedocs.io/latest/getting-started/#programmatically-calculating-terrain-height)
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
