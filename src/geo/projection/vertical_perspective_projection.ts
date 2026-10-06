@@ -37,6 +37,10 @@ export class VerticalPerspectiveProjection implements Projection {
         return 1;
     }
 
+    transitionStateAt(): number {
+        return 1;
+    }
+
     get useSubdivision(): boolean {
         return true;
     }
