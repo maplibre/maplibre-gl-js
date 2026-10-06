@@ -7,9 +7,9 @@ Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. E
 | `vite-rollup-esbuild/` | Vite 7 (Rollup/esbuild) | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
 | `vite-rolldown/` | Vite 8+ (Rolldown) | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
 | `webpack/` | webpack | `setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString())` |
-| `rollup/` | Rollup | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle via `rollup-plugin-copy`) |
-| `esbuild/` | esbuild | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle in `build.js`) |
-| `turbopack/` | Turbopack (via Next.js) | `setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')` (worker copied into `public/` by a `prebuild` hook) |
+| `rollup/` | Rollup | `` setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString()) `` (worker copied next to the bundle via `rollup-plugin-copy`) |
+| `esbuild/` | esbuild | `` setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString()) `` (worker copied next to the bundle in `build.js`) |
+| `turbopack/` | Turbopack (via Next.js) | `setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString())` |
 
 All six use the same library imports: `import {Map} from 'maplibre-gl'`, `import 'maplibre-gl/dist/maplibre-gl.css'`. The differences are in how each bundler resolves the worker URL.
 

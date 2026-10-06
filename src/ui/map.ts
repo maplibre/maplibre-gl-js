@@ -1641,6 +1641,7 @@ export class Map extends Evented<MapEventType> {
             this._resizeCanvas(width, height, this._clampedPixelRatio);
             this.painter.resize(width, height, this._clampedPixelRatio);
         }
+        this.style?.resize();
 
         this._resizeTransform(constrainTransform);
     }
@@ -4447,6 +4448,7 @@ export class Map extends Evented<MapEventType> {
             moving: this.isMoving(),
             fadeDuration,
             symbolFadeChange: this.style.placement.symbolFadeChange(now()),
+            variableOffsets: this.style.placement.variableOffsets,
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
             projectionTransition,

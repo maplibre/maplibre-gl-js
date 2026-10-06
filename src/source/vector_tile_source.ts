@@ -302,7 +302,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             tile.setExpiryData(data);
         }
         tile.etag = data?.etag;
-        tile.loadVectorData(data, this.map.painter);
+        tile.loadVectorData(data, this.map.style);
     }
 
     private _reloadIfRequestedWhileLoading(tile: Tile) {

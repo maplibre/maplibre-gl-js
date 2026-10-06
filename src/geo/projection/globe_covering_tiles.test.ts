@@ -152,3 +152,14 @@ describe('elevated content tile retention', () => {
         expect(withElevated, 'a tile well beyond the surface horizon is retained').toContain('4/8/3');
     });
 });
+
+describe('poles', () => {
+    test('covers the tiles around the south pole', () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(0, -90));
+        transform.setZoom(1.6);
+
+        expect(coveringTiles(transform, {tileSize: 32})).toHaveLength(56);
+    });
+});
