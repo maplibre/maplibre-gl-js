@@ -1139,6 +1139,18 @@ describe('map events', () => {
     });
 
     describe('projectiontransition event', () => {
+        test('gives up on a preload reading ahead of a movement in the old projection', async () => {
+            const map = createMap();
+
+            await map.once('load');
+
+            const cancel = vi.spyOn(map._preloader, 'cancel');
+            map.setProjection({type: 'globe'});
+
+            // A preload samples its path as camera states, which a projection change makes meaningless.
+            expect(cancel).toHaveBeenCalled();
+        });
+
         test('projectiontransition events is fired when setProjection is called', async () => {
             const map = createMap();
 

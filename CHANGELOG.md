@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Let the globe center reach the poles, where it stopped at 85.05° ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
 - Speed up symbol layout by skipping line breaking for labels that fit on one line ([#8617](https://github.com/maplibre/maplibre-gl-js/pull/8617)) (by [@DoFabien](https://github.com/DoFabien))
+- Add a `preload` option to animated camera methods such as `flyTo` and `easeTo`, which loads the tiles the movement needs as it travels instead of leaving them blank ([#8670](https://github.com/maplibre/maplibre-gl-js/pull/8670)) (by [@AbelVM](https://github.com/AbelVM))
 - Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 

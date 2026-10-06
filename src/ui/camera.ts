@@ -9,7 +9,9 @@ import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
+import {createFlyToArc, type FlyToArc} from './fly_to_arc.ts';
 
+import type {CameraMovement} from './camera_movement.ts';
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
@@ -17,7 +19,9 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {EaseToHandlerOptions, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {PreloadTilesOptions} from './tile_preloader.ts';
+import type {TilePreloader} from './tile_preloader.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -258,6 +262,27 @@ export type AnimationOptions = {
      * the distance from the camera to the center-coordinate-altitude.
      */
     freezeElevation?: boolean;
+    /**
+     * Loads the tiles the animation is about to need, so that it finds them as it reaches them
+     * instead of showing empty or low-detail map while it waits for them.
+     *
+     * The movement starts at once and the tiles arrive while it travels, so a movement over a slow
+     * network can reach its destination before they do. A movement keeps asking for the tiles
+     * further along its path as it goes, which is what lets a long movement cover its path without
+     * requesting all of it at once. Any movement that interrupts it gives up on its tiles.
+     *
+     * Takes a {@link PreloadTilesOptions} to tune how far ahead the movement reads and how much it
+     * may ask each source for.
+     *
+     * @defaultValue false
+     *
+     * @example
+     * ```ts
+     * // Fly across the world without spending it at reduced detail or on a blank map.
+     * map.flyTo({center: [139.69, 35.68], zoom: 11, preload: true});
+     * ```
+     */
+    preload?: boolean | PreloadTilesOptions;
 };
 
 /**
@@ -300,6 +325,12 @@ export type CameraInitOptions = {
      * with a way to stop them rather than holding a reference to the `HandlerManager`.
      */
     stopHandlers?: () => void;
+    /**
+     * @internal
+     * The tile preload a movement runs ahead of itself when it is given the `preload` option. Injected
+     * so that the `Camera` can preload without holding a reference to the `Map` that owns it.
+     */
+    preloader: TilePreloader;
 };
 
 /** Who holds the center elevation: a gesture, or an animation with `freezeElevation`. */
@@ -368,6 +399,29 @@ class ElevationHold {
     }
 }
 
+/**
+ * Which of a movement's opening announcements continue an interrupted movement rather than beginning
+ * a new one.
+ */
+type CurrentMovement = {
+    moving?: boolean;
+    zooming?: boolean;
+    rotating?: boolean;
+    pitching?: boolean;
+    rolling?: boolean;
+};
+
+/**
+ * The tiles a movement carrying a `preload` option should ask for, or `undefined` when it should ask
+ * for none.
+ *
+ * @param preload - the movement's `preload` option, where `true` means the defaults
+ */
+function preloadOptionsOf(preload: boolean | PreloadTilesOptions | undefined): PreloadTilesOptions | undefined {
+    if (!preload) return undefined;
+    return preload === true ? {} : preload;
+}
+
 export class Camera extends Evented<MapEventType> {
     transform: ITransform;
     /**
@@ -383,6 +437,12 @@ export class Camera extends Evented<MapEventType> {
      * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
      */
     _stopHandlers: () => void;
+
+    /**
+     * @internal
+     * Loads the tiles a movement will need, ahead of the movement reaching them.
+     */
+    _preloader: TilePreloader;
 
     _moving: boolean;
     _zooming: boolean;
@@ -402,6 +462,13 @@ export class Camera extends Evented<MapEventType> {
 
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
+    /**
+     * Whether the movement in flight reached the end of its path, as opposed to being cut short. Only
+     * the render loop's own callback knows this, and what the preload should do afterwards differs: a
+     * movement that arrived keeps the requests it had in flight, because those are the tiles of the
+     * ground it just crossed, while a movement the camera was redirected away from gives them up.
+     */
+    _easeArrived: boolean = false;
     _easeFrameId: TaskID;
 
     /**
@@ -492,6 +559,7 @@ export class Camera extends Evented<MapEventType> {
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
         this._stopHandlers = options.stopHandlers ?? (() => {});
+        this._preloader = options.preloader;
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
@@ -764,6 +832,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
+        this._preloader.cancel();
         this.stop();
 
         if (options.zoom !== undefined && this._zoomSnap) {
@@ -876,6 +945,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     easeTo(options: EaseToOptions, eventData?: any): this {
+        this._preloader.cancel();
         this._stop(false, options.easeId);
 
         options = extend({
@@ -917,7 +987,7 @@ export class Camera extends Evented<MapEventType> {
             rolling: this._rolling
         };
 
-        const easeHandler = this.cameraHelper.handleEaseTo(tr, {
+        const easeHandlerOptions: EaseToHandlerOptions = {
             bearing,
             pitch,
             roll,
@@ -927,8 +997,9 @@ export class Camera extends Evented<MapEventType> {
             offsetAsPoint,
             offset: options.offset,
             zoom: options.zoom,
-            center: options.center,
-        });
+            center: options.center
+        };
+        const easeHandler = this.cameraHelper.handleEaseTo(tr, easeHandlerOptions);
 
         this._rotating ||= (startBearing !== bearing);
         this._pitching ||= (pitch !== startPitch);
@@ -936,20 +1007,101 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
         this._zooming ||= easeHandler.isZooming;
         this._easeId = options.easeId;
-        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
 
-        this._ease((k) => {
-            easeHandler.easeFunc(k);
-
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
-            this.applyUpdatedTransform(tr);
-            this._fireMoveEvents(eventData);
-
-        }, (interruptingEaseId?: string) => {
-            this._afterEase(eventData, interruptingEaseId, options.freezeElevation);
-        }, options);
+        this._runMovement({
+            transform: tr,
+            duration: options.duration,
+            easing: options.easing,
+            freezeElevation: options.freezeElevation,
+            elevationCenter: easeHandler.elevationCenter,
+            at: this._easePath(easeHandlerOptions),
+            applyElevation: this._applyMovementElevation.bind(this)
+        }, eventData, options, {noMoveStart: options.noMoveStart, currently, namesInterruption: true});
 
         return this;
+    }
+
+    /**
+     * @internal
+     * Builds the walk a tile preload takes along an eased movement: the handler the animation itself
+     * runs, built on a transform of the preload's own, so that the camera states it samples are the
+     * ones the animation passes through.
+     *
+     * @param easeHandlerOptions - the options the animation built for its own handler
+     */
+    private _easePath(easeHandlerOptions: EaseToHandlerOptions): CameraMovement['at'] {
+        return (tr) => {
+            const easeHandler = this.cameraHelper.handleEaseTo(tr, easeHandlerOptions);
+            return (k) => easeHandler.easeFunc(k);
+        };
+    }
+
+    /**
+     * @internal
+     * Builds the walk a tile preload takes along a flight: the handler the animation itself runs, built
+     * on a transform of the preload's own, taking the same per-frame step the animation takes.
+     *
+     * @param flyHandlerOptions - the options the animation built for its own handler
+     * @param flyFrame - the frame step the animation applies, see {@link Camera.flyTo}
+     */
+    private _flyPath(flyHandlerOptions: FlyToHandlerOptions, arc: FlyToArc, setEulerAngles: (_: ITransform, __: number) => void): CameraMovement['at'] {
+        return (tr) => {
+            const flyHandler = this.cameraHelper.handleFlyTo(tr, flyHandlerOptions);
+            const offsetAsPoint = flyHandlerOptions.offsetAsPoint;
+            return (k) => {
+                const {scale, centerFactor} = arc.at(k);
+                setEulerAngles(tr, k);
+                // Read from the transform again each frame rather than hoisted: padding animates, and it
+                // is what moves `centerPoint`.
+                flyHandler.easeFunc(k, scale, centerFactor, tr.centerPoint.add(offsetAsPoint));
+            };
+        };
+    }
+
+    /**
+     * Runs a camera movement, and hands the same movement to the tile preload so the tiles it will
+     * need are on their way before it arrives.
+     *
+     * Everything a movement needs in order to be preloaded is decided here and nowhere else, so a
+     * movement cannot be animated without the preload being told about it, and the preload cannot be
+     * pointed at a path the animation is not taking.
+     *
+     * @param movement - the path to animate, and to read ahead of
+     * @param eventData - what to attach to the movement's events
+     * @param options - the movement's animation options, including `preload`
+     * @param start - how the movement begins: whether it announces itself, which announcements
+     *   continue an interrupted movement rather than beginning a new one, and whether its `moveend`
+     *   names the movement that interrupted it
+     */
+    private _runMovement(movement: CameraMovement, eventData: any, options: AnimationOptions,
+        start: {noMoveStart: boolean; currently: CurrentMovement; namesInterruption: boolean}): void {
+        const {transform: tr} = movement;
+        // Bound to the transform once: a camera handler remembers where its transform started, so
+        // building a fresh one per frame would restart the movement's zoom from every frame's zoom.
+        const step = movement.at(tr);
+
+        this._prepareEase(eventData, start.noMoveStart, start.currently, {
+            tr,
+            center: movement.elevationCenter,
+            freeze: movement.freezeElevation
+        });
+
+        // The movement's elevation endpoints have to exist before the preload can read the path, so
+        // this is the first moment a preload could be told about this movement at all.
+        const preload = preloadOptionsOf(options.preload);
+        if (preload) this._preloader.start(movement, preload, this.terrain);
+
+        this._ease((k) => {
+            if (preload) this._preloader.advance(k);
+
+            step(k);
+
+            if (this.terrain && !movement.freezeElevation) this._updateElevation(k, tr);
+            this.applyUpdatedTransform(tr);
+            this._fireMoveEvents(eventData);
+        }, (interruptingEaseId?: string) => {
+            this._afterEase(eventData, start.namesInterruption ? interruptingEaseId : undefined, movement.freezeElevation);
+        }, {...options, duration: movement.duration, easing: movement.easing});
     }
 
     /**
@@ -1008,15 +1160,37 @@ export class Camera extends Evented<MapEventType> {
             this._prepareElevation(tr.center, tr);
         }
 
-        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
         // target terrain updated during flight, slowly move camera to new height
-        if (k < 1 && elevation !== this._elevationTarget) {
-            const pitch1 = this._elevationTarget - this._elevationStart;
-            const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
-            this._elevationStart += k * (pitch1 - pitch2);
-            this._elevationTarget = elevation;
+        if (k < 1) {
+            const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
+            if (elevation !== this._elevationTarget) {
+                const pitch1 = this._elevationTarget - this._elevationStart;
+                const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
+                this._elevationStart += k * (pitch1 - pitch2);
+                this._elevationTarget = elevation;
+            }
         }
+
+        this._applyMovementElevation(tr, k);
+    }
+
+    /**
+     * @internal
+     * Puts `tr` at the center elevation, and the lowest tile elevation under the movement's target,
+     * that the movement has reached at progress `k`.
+     *
+     * A camera's elevation decides which tiles cover it, so the animation and the preload that reads
+     * ahead of it both run this. The one part of {@link Camera._updateElevation} they do not share is
+     * the refinement above, which moves the movement's own elevation from one frame to the next and so
+     * has no meaning outside the animation.
+     *
+     * @param tr - the camera state to apply the elevation to; the preload passes a transform of its own
+     * @param k - the movement's progress, 0 to 1
+     */
+    _applyMovementElevation(tr: ITransform, k: number): void {
+        if (!this.terrain || !this._elevationCenter) return;
+
+        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
         if (this.getCenterClampedToGround()) {
             tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
         }
@@ -1219,6 +1393,18 @@ export class Camera extends Evented<MapEventType> {
      * landed since its last frame and puts the center back onto the terrain, see {@link Camera.putCenterBackOnTerrain}
      */
     _afterEase(eventData?: Record<string, unknown>, easeId?: string, freezeElevation: boolean = false): void {
+        if (this._easeArrived) {
+            // The movement reached the end of its path. The tiles the preload was reading ahead for are
+            // the ground the camera has just crossed, so the ones still loading are left to finish and
+            // cache themselves rather than cancelled for ground nobody is going back to.
+            this._preloader.finish();
+        } else {
+            // The camera was redirected: a new movement, or a gesture taking hold of the map. Those tiles
+            // belong to a path the camera has left, and the requests they are holding are connections
+            // the tiles it is heading for now need.
+            this._preloader.cancel();
+        }
+
         this._takeLandedElevation(this.transform);
         const tookDem = this.releaseElevation();
         if (this.terrain && freezeElevation && this.getCenterClampedToGround()) {
@@ -1272,6 +1458,7 @@ export class Camera extends Evented<MapEventType> {
         // Where applicable, local variable documentation begins with the associated variable or
         // function in van Wijk (2003).
 
+        this._preloader.cancel();
         this.stop();
 
         options = extend({
@@ -1297,10 +1484,9 @@ export class Camera extends Evented<MapEventType> {
         const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
 
         const offsetAsPoint = Point.convert(options.offset);
-        let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-        const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
+        const locationAtOffset = tr.screenPointToLocation(tr.centerPoint.add(offsetAsPoint));
 
-        const flyToHandler = this.cameraHelper.handleFlyTo(tr, {
+        const flyHandlerOptions: FlyToHandlerOptions = {
             bearing,
             pitch,
             roll,
@@ -1309,10 +1495,9 @@ export class Camera extends Evented<MapEventType> {
             offsetAsPoint,
             center: options.center,
             minZoom: options.minZoom,
-            zoom: options.zoom,
-        });
-
-        let rho = options.curve;
+            zoom: options.zoom
+        };
+        const flyToHandler = this.cameraHelper.handleFlyTo(tr, flyHandlerOptions);
 
         // w₀: Initial visible span, measured in pixels at the initial scale.
         const w0 = Math.max(tr.width, tr.height);
@@ -1327,65 +1512,42 @@ export class Camera extends Evented<MapEventType> {
         const wMax = w0 / flyToHandler.scaleOfMinZoom;
         // Only reduce rho (limit zoom-out). If the natural arc stays within the minZoom
         // boundary, preserve the default rho rather than forcing the arc deeper.
-        rho = Math.min(rho, Math.sqrt(wMax / u1 * 2));
+        const rho = Math.min(options.curve, Math.sqrt(wMax / u1 * 2));
 
-        // ρ²
-        const rho2 = rho * rho;
-
-        /**
-         * rᵢ: Returns the zoom-out factor at one end of the animation.
-         *
-         * @param descent - `true` for the descent, `false` for the ascent
-         */
-        function zoomOutFactor(descent: boolean) {
-            const b = (w1 * w1 - w0 * w0 + (descent ? -1 : 1) * rho2 * rho2 * u1 * u1) / (2 * (descent ? w1 : w0) * rho2 * u1);
-            return Math.log(Math.sqrt(b * b + 1) - b);
-        }
-
-        function sinh(n) { return (Math.exp(n) - Math.exp(-n)) / 2; }
-        function cosh(n) { return (Math.exp(n) + Math.exp(-n)) / 2; }
-        function tanh(n) { return sinh(n) / cosh(n); }
-
-        // r₀: Zoom-out factor during ascent.
-        const r0 = zoomOutFactor(false);
-
-        // w(s): Returns the visible span on the ground, measured in pixels with respect to the
-        // initial scale. Uses the current vertical field of view setting.
-        let w: (_: number) => number = function (s) {
-            return (cosh(r0) / cosh(r0 + rho * s));
-        };
-
-        // u(s): Returns the distance along the flight path as projected onto the ground plane,
-        // measured in pixels from the world image origin at the initial scale.
-        let u: (_: number) => number = function (s) {
-            return w0 * ((cosh(r0) * tanh(r0 + rho * s) - sinh(r0)) / rho2) / u1;
-        };
-
-        // S: Total length of the flight path, measured in ρ-screenfulls.
-        let S = (zoomOutFactor(true) - r0) / rho;
-
-        // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
-        if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
-            // Perform a more or less instantaneous transition if the path is too short.
-            if (Math.abs(w0 - w1) < 0.000001) return this.easeTo(options, eventData);
-
-            const k = w1 < w0 ? -1 : 1;
-            S = Math.abs(Math.log(w1 / w0)) / rho;
-
-            u = () => 0;
-            w = (s) => Math.exp(k * rho * s);
-        }
+        const arc = createFlyToArc(w0, w1, u1, rho);
+        // Perform a more or less instantaneous transition if the path is too short.
+        if (!arc) return this.easeTo(options, eventData);
 
         if (options.duration !== undefined) {
             options.duration = +options.duration;
         } else {
             const V = options.screenSpeed !== undefined ? +options.screenSpeed / rho : +options.speed;
-            options.duration = 1000 * S / V;
+            options.duration = 1000 * arc.S / V;
         }
 
         if (options.maxDuration && options.duration > options.maxDuration) {
             options.duration = 0;
         }
+
+        /**
+         * The rotation and the padding at some point along the animation. Padding moves
+         * `Transform.centerPoint` continuously, so the animation reads its offset point from it again
+         * on every frame.
+         */
+        const setEulerAngles = (target: ITransform, k: number): void => {
+            if (this._rotating) {
+                target.setBearing(interpolates.number(startBearing, bearing, k));
+            }
+            if (this._pitching) {
+                target.setPitch(interpolates.number(startPitch, pitch, k));
+            }
+            if (this._rolling) {
+                target.setRoll(interpolates.number(startRoll, roll, k));
+            }
+            if (this._padding) {
+                target.interpolatePadding(startPadding, padding, k);
+            }
+        };
 
         this._zooming = true;
         this._rotating = (startBearing !== bearing);
@@ -1393,37 +1555,16 @@ export class Camera extends Evented<MapEventType> {
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
 
-        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
-
-        this._ease((k) => {
-            // s: The distance traveled along the flight path, measured in ρ-screenfulls.
-            const s = k * S;
-            const scale = 1 / w(s);
-            const centerFactor = u(s);
-            if (this._rotating) {
-                tr.setBearing(interpolates.number(startBearing, bearing, k));
-            }
-            if (this._pitching) {
-                tr.setPitch(interpolates.number(startPitch, pitch, k));
-            }
-            if (this._rolling) {
-                tr.setRoll(interpolates.number(startRoll, roll, k));
-            }
-            if (this._padding) {
-                tr.interpolatePadding(startPadding, padding, k);
-                // When padding is being applied, Transform.centerPoint is changing continuously,
-                // thus we need to recalculate offsetPoint every frame
-                pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-            }
-
-            flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
-
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
-            this.applyUpdatedTransform(tr);
-            this._fireMoveEvents(eventData);
-        }, () => {
-            this._afterEase(eventData, undefined, options.freezeElevation);
-        }, options);
+        this._runMovement({
+            transform: tr,
+            // A flight that does not animate is already at its destination, so there is no path to read.
+            duration: options.animate === false ? 0 : options.duration,
+            easing: options.easing,
+            freezeElevation: options.freezeElevation,
+            elevationCenter: flyToHandler.targetCenter,
+            at: this._flyPath(flyHandlerOptions, arc, setEulerAngles),
+            applyElevation: this._applyMovementElevation.bind(this)
+        }, eventData, options, {noMoveStart: false, currently: {}, namesInterruption: false});
 
         return this;
     }
@@ -1465,9 +1606,11 @@ export class Camera extends Evented<MapEventType> {
             easing?: (_: number) => number;
         }): void {
         if (options.animate === false || options.duration === 0) {
+            this._easeArrived = true;
             frame(1);
             finish();
         } else {
+            this._easeArrived = false;
             this._easeStart = now();
             this._easeOptions = options;
             this._onEaseFrame = frame;
@@ -1485,6 +1628,7 @@ export class Camera extends Evented<MapEventType> {
         if (t < 1 && this._easeFrameId) {
             this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
         } else {
+            this._easeArrived = t >= 1;
             this.stop();
         }
     };

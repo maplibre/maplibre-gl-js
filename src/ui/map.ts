@@ -14,6 +14,7 @@ import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
 import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
+import {TilePreloader} from './tile_preloader.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -594,6 +595,11 @@ export class Map extends Evented<MapEventType> {
     style: Style;
     painter: Painter;
     _camera: Camera;
+    /**
+     * @internal
+     * Loads the tiles an animated camera movement will need, ahead of it reaching them.
+     */
+    _preloader: TilePreloader;
     _handlers: HandlerManager;
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -759,6 +765,8 @@ export class Map extends Evented<MapEventType> {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
+        this._preloader = new TilePreloader(this);
+
         this._camera = new Camera({
             minZoom: resolvedOptions.minZoom,
             maxZoom: resolvedOptions.maxZoom,
@@ -774,6 +782,7 @@ export class Map extends Evented<MapEventType> {
             cancelRenderFrame: (id) => this._cancelRenderFrame(id),
             transformCameraUpdate: resolvedOptions.transformCameraUpdate,
             stopHandlers: () => this._handlers?.stop(false),
+            preloader: this._preloader,
         });
         this._camera.setEventedParent(this);
 
@@ -2722,6 +2731,8 @@ export class Map extends Evented<MapEventType> {
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
         this._diffStyleRequest?.abort();
         this._diffStyleRequest = null;
+        // The tiles a preload is holding belong to the sources the style is about to replace.
+        this._preloader.cancel();
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
         if (options.transformStyle && this.style && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
@@ -2954,6 +2965,10 @@ export class Map extends Evented<MapEventType> {
         if (options && validateAndEmit(this, validateStyle.terrain, {value: options}, styleOptions)) {
             return this;
         }
+
+        // Terrain decides which tiles cover the camera and which of them carry elevation, so a preload
+        // reading ahead over the old one is asking for tiles the camera is not going to want.
+        this._preloader.cancel();
 
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
@@ -4526,6 +4541,8 @@ export class Map extends Evented<MapEventType> {
     remove(): void {
         if (this._hash) this._hash.remove();
 
+        this._preloader.cancel();
+
         for (const control of this._controls) control.onRemove(this);
         this._controls = [];
 
@@ -4704,6 +4721,8 @@ export class Map extends Evented<MapEventType> {
      */
     setProjection(projection: ProjectionSpecification): this {
         this._lazyInitEmptyStyle();
+        // A preload samples its path as camera states, which a projection change makes meaningless.
+        this._preloader.cancel();
         this.style.setProjection(projection);
         return this._update(true);
     }

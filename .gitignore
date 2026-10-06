@@ -38,3 +38,6 @@ npm-debug.log
 *.iml
 /.vs/
 .*.swp
+
+# Scratch benchmark for the tile preload; its output goes in a PR, not the repo.
+test/bench/e2e/_*.ts

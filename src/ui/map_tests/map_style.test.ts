@@ -198,6 +198,17 @@ describe('setStyle', () => {
         expect(fixedNum(map.getCenter().lat)).toBe(36.5978911823);
     });
 
+    test('replacing the style gives up on a preload reading ahead of a movement', async () => {
+        const map = createMap();
+        const cancel = vi.spyOn(map._preloader, 'cancel');
+
+        map.setStyle(createStyle());
+        await map.once('style.load');
+
+        // The tiles a preload is holding belong to the sources the style is about to replace.
+        expect(cancel).toHaveBeenCalled();
+    });
+
     test('style transform does not override map transform modified via options', async () => {
         const map = createMap({deleteStyle: true, zoom: 10, center: [-77.0186, 38.8888]});
         map.setStyle(createStyle());

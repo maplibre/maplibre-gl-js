@@ -84,6 +84,27 @@ describe('setTerrain', () => {
         expect(map.getTerrain()).toBeNull();
     });
 
+    test('gives up on a preload reading ahead of a movement over the old terrain', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        const cancel = vi.spyOn(map._preloader, 'cancel');
+
+        map.setTerrain({source: 'dem'});
+
+        // Terrain decides which tiles cover the camera and which of them carry elevation, so a preload
+        // that read its path over the old one is asking for tiles the camera is not going to want.
+        expect(cancel).toHaveBeenCalled();
+    });
+
+    test('gives up on a preload reading ahead of a movement when the map is removed', async () => {
+        await map.once('style.load');
+        const cancel = vi.spyOn(map._preloader, 'cancel');
+
+        map.remove();
+
+        expect(cancel).toHaveBeenCalled();
+    });
+
     test('applies terrain the spec accepts', async () => {
         await map.once('style.load');
         map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});

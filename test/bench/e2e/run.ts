@@ -7,7 +7,25 @@ import type {Page} from 'puppeteer';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const PORT = 2900;
-const METRICS = ['bundleImport', 'styleLoad', 'firstTile', 'mapLoad', 'mapIdle'];
+const METRICS = ['bundleImport', 'styleLoad', 'firstTile', 'mapLoad', 'mapIdle',
+    'flightNoPreload', 'flightPreload', 'blankNoPreload', 'blankPreload'];
+
+/**
+ * A network style, because the local fixtures cover six scattered tiles and a flight would land
+ * where nothing loads. These two metrics are therefore the only ones here that touch the network,
+ * and they are skipped rather than failed when it is unavailable.
+ */
+const FLIGHT_STYLE = 'https://tiles.openfreemap.org/styles/bright';
+const FLIGHT_ORIGIN = {center: [-73.9857, 40.7484] as [number, number], zoom: 4};
+
+/**
+ * Two destinations rather than one flown to twice: a flight warms the tiles at where it lands, so
+ * measuring the second flight to the same place would credit it with the first one's downloads.
+ */
+const FLIGHT_DESTINATIONS: Record<'flightNoPreload' | 'flightPreload', {center: [number, number]; zoom: number}> = {
+    flightNoPreload: {center: [139.6917, 35.6895], zoom: 11},
+    flightPreload: {center: [12.4964, 41.9028], zoom: 11}
+};
 
 type Artifact = {
     url: string;
@@ -49,8 +67,14 @@ function createServer(): Promise<http.Server> {
     return new Promise((resolve) => server.listen(PORT, () => resolve(server)));
 }
 
-function measureInPage(page: Page, bundleUrl: string): Promise<{version: string; metrics: Record<string, number>}> {
-    return page.evaluate(async (bundleUrl) => {
+const flightConfig = {
+    style: FLIGHT_STYLE,
+    origin: FLIGHT_ORIGIN,
+    destinations: FLIGHT_DESTINATIONS
+};
+
+function measureInPage(page: Page, bundleUrl: string, preloadFirst: boolean): Promise<{version: string; metrics: Record<string, number>}> {
+    return page.evaluate(async (bundleUrl, flight, preloadFirst) => {
         performance.mark('bundle-import-start');
         const maplibregl: typeof MapLibreGL = await import(bundleUrl);
         performance.mark('bundle-import-end');
@@ -58,6 +82,67 @@ function measureInPage(page: Page, bundleUrl: string): Promise<{version: string;
         const styleResponse = await fetch(`${location.origin}/styles/basic-v9.json`);
         const styleText = await styleResponse.text();
         const style = JSON.parse(styleText.replaceAll('local://', `${location.origin}/`));
+
+        /**
+         * Flies to a destination across the world and reports how long the map takes to settle there,
+         * once with the movement loading its tiles on the way and once without.
+         *
+         * A release that predates the option ignores `preload`, so a release supplies the "before"
+         * number and the working copy supplies "before and after". Returns nothing when the style
+         * cannot be loaded, which leaves those rows blank rather than failing the run.
+         */
+        const measureFlights = async () => {
+            const container = document.createElement('div');
+            container.style.cssText = 'position:absolute;left:-99999px;width:1280px;height:1024px';
+            document.body.appendChild(container);
+
+            const flightMap = new maplibregl.Map({container, style: flight.style, ...flight.origin});
+            try {
+                await flightMap.once('idle');
+            } catch {
+                return {}; // No network, or the style never settled. The load metrics are local.
+            }
+
+            // Whichever variant flies first gets the cold connection, so the order alternates between
+            // runs: always going second would hand the preload a warmed connection and credit it with
+            // a win it did not earn.
+            const order = preloadFirst
+                ? ['flightPreload', 'flightNoPreload']
+                : ['flightNoPreload', 'flightPreload'];
+
+            const flightMetrics: Record<string, number> = {};
+            for (const metric of order) {
+                const destination = flight.destinations[metric];
+                flightMap.jumpTo(flight.origin);
+                await flightMap.once('idle');
+
+                performance.mark('flight-start');
+                const arrived = new Promise<void>((resolve) => flightMap.once('moveend', () => {
+                    performance.mark('flight-arrived');
+                    resolve();
+                }));
+                flightMap.flyTo({...destination, preload: metric === 'flightPreload'});
+
+                // How long the destination stays unfinished once the camera is on it. This is the part
+                // a preload can remove, and it is steadier than the total: the flight itself takes the
+                // same time either way, whereas this is zero when the tiles got there first.
+                await arrived;
+                await flightMap.once('idle');
+                performance.mark('flight-end');
+
+                performance.measure(metric, 'flight-start', 'flight-end');
+                performance.measure(`blank${metric === 'flightPreload' ? 'Preload' : 'NoPreload'}`, 'flight-arrived', 'flight-end');
+                flightMetrics[metric] = performance.getEntriesByName(metric, 'measure')[0].duration;
+            }
+            for (const name of ['blankNoPreload', 'blankPreload']) {
+                const entry = performance.getEntriesByName(name, 'measure')[0];
+                if (entry) flightMetrics[name] = entry.duration;
+            }
+
+            flightMap.remove();
+            container.remove();
+            return flightMetrics;
+        };
 
         let sawFirstTile = false;
         performance.mark('map-create');
@@ -91,16 +176,18 @@ function measureInPage(page: Page, bundleUrl: string): Promise<{version: string;
         measureFrom('mapLoad', 'map-create', 'map-load');
         measureFrom('mapIdle', 'map-create', 'map-idle');
 
+        Object.assign(metrics, await measureFlights());
+
         return {version: maplibregl.getVersion(), metrics};
-    }, bundleUrl);
+    }, bundleUrl, flightConfig, preloadFirst);
 }
 
-async function measureOnce(page: Page, artifact: Artifact): Promise<{version: string; metrics: Record<string, number>}> {
+async function measureOnce(page: Page, artifact: Artifact, preloadFirst: boolean): Promise<{version: string; metrics: Record<string, number>}> {
     await page.goto(`http://localhost:${PORT}/e2e/index.html`, {waitUntil: 'load'});
     try {
         await page.addStyleTag({url: new URL('maplibre-gl.css', artifact.url).href});
         return await Promise.race([
-            measureInPage(page, artifact.url),
+            measureInPage(page, artifact.url, preloadFirst),
             new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timed out after 60s')), 60_000)),
         ]);
     } catch (error) {
@@ -146,7 +233,7 @@ async function main() {
             await page.setViewport({width: 1280, height: 1024});
 
             for (let i = -1; i < runs; i++) {
-                const result = await measureOnce(page, artifact);
+                const result = await measureOnce(page, artifact, i % 2 === 1);
                 artifact.version = result.version;
                 if (i >= 0) {
                     for (const metric of METRICS) {
