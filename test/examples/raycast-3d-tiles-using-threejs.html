@@ -67,48 +67,6 @@
                 "id": "background-map",
                 "type": "raster",
                 "source": "osm-tiles"
-            },
-            {
-                "id": "rivers",
-                "type": "line",
-                "source": "osm-vectors",
-                "filter": [
-                    "==",
-                    "type",
-                    "river"
-                ],
-                "paint": {
-                    "line-color": "rgba(69, 69, 255, 1)",
-                    "line-width": 3
-                }
-            },
-            {
-                "id": "roads-outline",
-                "type": "line",
-                "source": "osm-vectors",
-                "filter": [
-                    "==",
-                    "type",
-                    "road"
-                ],
-                "paint": {
-                    "line-color": "rgba(10, 10, 10, 1)",
-                    "line-width": 6
-                }
-            },
-            {
-                "id": "roads-fill",
-                "type": "line",
-                "source": "osm-vectors",
-                "filter": [
-                    "==",
-                    "type",
-                    "road"
-                ],
-                "paint": {
-                    "line-color": "rgba(255, 255, 255, 1)",
-                    "line-width": 4
-                }
             }
         ],
         "sources": {
@@ -126,32 +84,18 @@
                 "maxzoom": 19,
                 "attribution": "&copy; OpenStreetMap contributors"
             },
-            "osm-vectors": {
-                "type": "geojson",
-                "data": {
-                "type": "FeatureCollection",
-                "name": "data",
-                "features": [
-                    { "type": "Feature", "properties": { "type": "river" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59358962696858, 40.03772819453738 ], [ -75.593878571259893, 40.037677943356279 ], [ -75.594384223769737, 40.037696787549187 ], [ -75.595087740305161, 40.037558596801155 ], [ -75.595125428690991, 40.037367014173206 ], [ -75.600501, 40.035389 ], [ -75.603808, 40.034465 ] ] } },
-                    { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.605282, 40.041043 ], [ -75.601071, 40.040964 ], [ -75.597454, 40.04072 ], [ -75.595296, 40.040899 ], [ -75.592183, 40.041221 ] ] } },
-                    { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59365715199317, 40.03684094712105 ], [ -75.594373231323885, 40.03837988954232 ], [ -75.595993831914456, 40.039780641215543 ], [ -75.596227813976469, 40.040122977386801 ], [ -75.596471218134923, 40.040628629896645 ], [ -75.596631, 40.040788 ] ] } },
-                    { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.596631, 40.040788 ], [ -75.596643956569906, 40.040630200246071 ], [ -75.596549735605336, 40.040375803641737 ], [ -75.596344, 40.040007 ], [ -75.596094334276657, 40.039717827239159 ], [ -75.594618205831765, 40.038455266313967 ], [ -75.593795342741203, 40.036796977337588 ] ] } }
-                ]}
-            }
         }
     }
     const map = new maplibregl.Map({
-        terrainSkirtLength: 'none',
         container: 'map',
-        zoom: 16,
-        center: [-75.596, 40.038],
+        zoom: 18,
+        center: [-75.5967, 40.0387],
         pitch: 55,
         bearing: -20,
         maxPitch: 60,
         style,
         canvasContextAttributes: {antialias: true}
     });
-    map.addControl(new maplibregl.NavigationControl({visualizePitch: true}));
 
     map.on('load', async () => {
         const threeDManager = new ThreeDManager();
@@ -161,7 +105,7 @@
             tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
             offset: {east: 0, up: -234, south: 0}
         });
-        map.addLayer(layer, 'rivers');
+        map.addLayer(layer);
 
         const scene = layer.three.getScene();
         const raycaster = new THREE.Raycaster();
@@ -174,20 +118,15 @@
 
         // Prepare the raycast arrow and the impact point but do not show them yet.
         const rayArrow = new THREE.ArrowHelper(
-            new THREE.Vector3(0, 0, -1),
-            new THREE.Vector3(),
-            1,
-            0xffcc33,
-            0,
-            0
+            new THREE.Vector3(0, 0, -1), new THREE.Vector3(), 1, 0xffcc33, 0, 0
         );
+        rayArrow.visible = false;
+        scene.add(rayArrow);
         const rayImpact = new THREE.Mesh(
             new THREE.SphereGeometry(6, 16, 8),
             new THREE.MeshBasicMaterial({color: 0xff5533, transparent: true, opacity: 0.4})
         );
         rayImpact.visible = false;
-        rayArrow.visible = false;
-        scene.add(rayArrow);
         scene.add(rayImpact);
 
         const tilesRenderer = tilesAsset.getTilesRenderer();
@@ -260,23 +199,19 @@
             raycaster.ray.applyMatrix4(threeDManager.getAnchorEcefToLocalMatrix());
             const intersections = raycaster.intersectObject(tilesAsset.getObject3D(), true);
             const hit = intersections.length === 0 ? null : intersections[0];
-
             if (!hit) return null;
             // Convert LocalSpace back to ECEF.
             hit.point.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
             return hit.point;
         }
         function raycast_pointer(event) {
-            const bounds = renderer.domElement.getBoundingClientRect();
-
             // From pixels (MapLibre) to normalized device coordinates as expected by Three.js.
+            const bounds = renderer.domElement.getBoundingClientRect();
             pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
             pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
 
             raycaster.setFromCamera(pointer, camera);
-
-            // The camera ray is in LocalSpace, so we change it to ECEF space.
-            // This is a bit of a redundant calculation and we could have implemented a separate LocalSpace raycaster. But this is less code.
+            // The camera ray is in LocalSpace and our raycast function expects ECEF. Convert to ECEF.
             raycaster.ray.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
 
             const ecef_cameraOrigin = raycaster.ray.origin.clone();
@@ -295,11 +230,7 @@
         function drawArrow(origin, direction, length) {
             rayArrow.position.copy(origin);
             rayArrow.setDirection(direction);
-            rayArrow.setLength(
-                length,
-                4,
-                1
-            );
+            rayArrow.setLength(length, 4, 1);
             rayArrow.visible = true;
         }
         function drawImpact(impactPoint) {
