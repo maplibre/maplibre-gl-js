@@ -54,8 +54,8 @@ describe('Bundler examples', () => {
             execSync('npm run build', {cwd: dir, stdio: 'inherit'});
 
             // Serve the example's own build output as the site root, so that
-            // root-absolute URLs (`/maplibre/maplibre-gl-worker.mjs`) resolve
-            // the same way they would in a real deployment.
+            // root-absolute URLs resolve the same way they would in a real
+            // deployment.
             const root = outputDirs
                 .map((name) => path.join(dir, name))
                 .find((candidate) => existsSync(path.join(candidate, 'index.html'))) ?? dir;
