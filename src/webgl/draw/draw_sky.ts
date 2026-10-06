@@ -11,10 +11,10 @@ import {sphericalToCartesian} from '../../util/util.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {Mesh} from '../../render/mesh.ts';
 
-export function drawSky(painter: Painter, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+export function drawSky(mesh: Mesh, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const {sky, pixelRatio} = frameRenderContext.data;
 
@@ -24,8 +24,6 @@ export function drawSky(painter: Painter, frameRenderContext: FrameRenderContext
     const stencilMode = StencilMode.disabled;
     const colorMode = frameRenderContext.colorModeForRenderPass();
     const program = frameRenderContext.useProgram('sky');
-
-    const mesh = painter.skyMesh;
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
         CullFaceMode.disabled, skyUniforms, null, undefined, 'sky', mesh.vertexBuffer,
@@ -51,8 +49,8 @@ function getSunPos(light: Readonly<LightPropsPossiblyEvaluated>, transform: IRea
     return lightPos;
 }
 
-export function drawAtmosphere(painter: Painter, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+export function drawAtmosphere(mesh: Mesh, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const {sky, light} = frameRenderContext.data;
     const program = frameRenderContext.useProgram('atmosphere');
@@ -73,8 +71,6 @@ export function drawAtmosphere(painter: Painter, frameRenderContext: FrameRender
     }
 
     const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, transform.inverseProjectionMatrix);
-
-    const mesh = painter.skyMesh;
 
     program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }

@@ -21,7 +21,7 @@ export type PrepareDrawLayerOpacityResult = {
  * Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
  */
 export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): PrepareDrawLayerOpacityResult {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const compositeTarget = context.bindFramebuffer.get();
     const compositeViewport = context.viewport.get();
     const [, , width, height] = compositeViewport;
@@ -74,7 +74,7 @@ function bindLayerOpacity(painter: Painter, width: number, height: number): void
 }
 
 export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawLayerOpacityResult: PrepareDrawLayerOpacityResult, layer: LineStyleLayer | FillStyleLayer, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
 
     context.bindFramebuffer.set(prepareDrawLayerOpacityResult.compositeTarget);

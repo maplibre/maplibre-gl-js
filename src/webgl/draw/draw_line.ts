@@ -184,7 +184,7 @@ function drawLineTiles(
     else if (gradient) programId = 'lineGradient';
     else programId = 'line';
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const transform = frameRenderContext.transform;
 
@@ -199,7 +199,7 @@ function drawLineTiles(
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const prevProgram = painter.context.program.get();
+        const prevProgram = context.program.get();
         const program = frameRenderContext.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);

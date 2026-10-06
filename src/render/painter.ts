@@ -310,7 +310,7 @@ export class Painter {
         frameRenderContext.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (data.sky) this.drawFunctions.sky(this, frameRenderContext);
+        if (data.sky) this.drawFunctions.sky(this.skyMesh, frameRenderContext);
 
         frameRenderContext.setDepthRangeFor3D(style._order.length);
 
@@ -363,7 +363,7 @@ export class Painter {
 
         // Render atmosphere, only for Globe projection
         if (data.isRenderingGlobe) {
-            this.drawFunctions.atmosphere(this, frameRenderContext);
+            this.drawFunctions.atmosphere(this.skyMesh, frameRenderContext);
         }
 
         if (data.showTileBoundaries) {
@@ -427,7 +427,7 @@ export class Painter {
         if (isSymbolStyleLayer(layer)) {
             draw.symbol(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCircleStyleLayer(layer)) {
-            draw.circle(painter, tileManager, layer, coords, frameRenderContext);
+            draw.circle(tileManager, layer, coords, frameRenderContext);
         } else if (isHeatmapStyleLayer(layer)) {
             draw.heatmap(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isLineStyleLayer(layer)) {
@@ -435,13 +435,13 @@ export class Painter {
         } else if (isFillStyleLayer(layer)) {
             draw.fill(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            draw.fillExtrusion(painter, tileManager, layer, coords, frameRenderContext);
+            draw.fillExtrusion(tileManager, layer, coords, frameRenderContext);
         } else if (isHillshadeStyleLayer(layer)) {
             draw.hillshade(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isColorReliefStyleLayer(layer)) {
             draw.colorRelief(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isRasterStyleLayer(layer)) {
-            draw.raster(painter, tileManager, layer, coords, frameRenderContext);
+            draw.raster(tileManager, layer, coords, frameRenderContext);
         } else if (isBackgroundStyleLayer(layer)) {
             draw.background(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCustomStyleLayer(layer)) {

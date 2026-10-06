@@ -12,7 +12,6 @@ import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {StyleLayer} from '../../style/style_layer.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
-import type {Painter} from '../../render/painter.ts';
 
 type TileBatch = {
     circleArray: number[];
@@ -22,8 +21,8 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+export function drawCollisionDebug(tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const program = frameRenderContext.useProgram('collisionBox');
     const tileBatches: TileBatch[] = [];

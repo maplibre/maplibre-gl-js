@@ -17,7 +17,7 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.currentPass !== 'offscreen' && frameRenderContext.currentPass !== 'translucent') return;
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const {useSubdivision} = frameRenderContext.data;
 
     const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
@@ -33,18 +33,17 @@ export function drawHillshade(painter: Painter, tileManager: TileManager, layer:
         if (useSubdivision) {
             // Two-pass rendering
             const [stencilBorderless, stencilBorders, coords] = frameRenderContext.stencilConfigForOverlapTwoPass(tileIDs);
-            renderHillshade(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, frameRenderContext); // draw without borders
-            renderHillshade(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, frameRenderContext); // draw with borders
+            renderHillshade(tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, frameRenderContext); // draw without borders
+            renderHillshade(tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, frameRenderContext); // draw with borders
         } else {
             // Simple rendering
             const [stencil, coords] = frameRenderContext.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-            renderHillshade(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, frameRenderContext);
+            renderHillshade(tileManager, layer, coords, stencil, depthMode, colorMode, false, frameRenderContext);
         }
     }
 }
 
 function renderHillshade(
-    painter: Painter,
     tileManager: TileManager,
     layer: HillshadeStyleLayer,
     coords: OverscaledTileID[],
@@ -54,7 +53,7 @@ function renderHillshade(
     useBorder: boolean,
     frameRenderContext: FrameRenderContext
 ) {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
 
     const defines = [`#define NUM_ILLUMINATION_SOURCES ${layer.paint.get('hillshade-highlight-color').values.length}`];
@@ -93,7 +92,7 @@ function prepareHillshade(
     colorMode: Readonly<ColorMode>,
     frameRenderContext: FrameRenderContext) {
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
 
     const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;

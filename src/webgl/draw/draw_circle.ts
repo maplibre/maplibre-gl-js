@@ -8,7 +8,6 @@ import {translatePosition} from '../../util/util.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Program} from '../program.ts';
-import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
 import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
@@ -36,7 +35,7 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+export function drawCircles(tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.currentPass !== 'translucent') return;
 
     const opacity = layer.paint.get('circle-opacity');
@@ -48,7 +47,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         return;
     }
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const transform = frameRenderContext.transform;
 

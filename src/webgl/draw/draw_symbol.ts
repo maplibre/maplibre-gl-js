@@ -101,8 +101,8 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
     }
 
     if (tileManager.map.showCollisionBoxes) {
-        drawCollisionDebug(painter, tileManager, layer, coords, true, frameRenderContext);
-        drawCollisionDebug(painter, tileManager, layer, coords, false, frameRenderContext);
+        drawCollisionDebug(tileManager, layer, coords, true, frameRenderContext);
+        drawCollisionDebug(tileManager, layer, coords, false, frameRenderContext);
     }
 }
 
@@ -306,7 +306,7 @@ function drawLayerSymbols(
     colorMode: Readonly<ColorMode>,
     frameRenderContext: FrameRenderContext) {
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const transform = frameRenderContext.transform;
 
