@@ -29,7 +29,7 @@ export interface DragRollResult extends DragMovementResult {
     rollDelta: number;
 }
 
-type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, currnetPoint: Point) => T;
+type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, currentPoint: Point, startPoint: Point) => T;
 
 export interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
     dragStart: (e: E, point: Point) => void;
@@ -85,6 +85,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
     _enabled: boolean;
     _moved: boolean;
     _lastPoint: Point | null;
+    _startPoint: Point | null;
     _moveStateManager: DragMoveStateManager<E>;
 
     constructor(options: DragMoveHandlerOptions<T, E>) {
@@ -103,6 +104,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         this._active = false;
         this._moved = false;
         delete this._lastPoint;
+        delete this._startPoint;
         this._moveStateManager.endMove(e);
     }
 
@@ -122,7 +124,8 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         if (!this._moveStateManager.isValidStartEvent(e)) return;
         this._moveStateManager.startMove(e);
 
-        this._lastPoint = Array.isArray(point) ? point[0] : point;
+        this._startPoint = Array.isArray(point) ? point[0] : point;
+        this._lastPoint = this._startPoint;
 
         if (this._activateOnStart && this._lastPoint) this._active = true;
     }
@@ -146,7 +149,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         this._moved = true;
         this._lastPoint = movePoint;
 
-        return this._move(lastPoint, movePoint);
+        return this._move(lastPoint, movePoint, this._startPoint);
     }
 
     dragEnd(e: E): void {

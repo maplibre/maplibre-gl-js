@@ -45,7 +45,7 @@ import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch.ts';
-import type {DragRotateHandler} from './handler/shim/drag_rotate.ts';
+import type {DragRotateHandler, DragRotateOptions} from './handler/shim/drag_rotate.ts';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures.ts';
 import type {KeyboardHandler} from './handler/keyboard.ts';
@@ -186,10 +186,10 @@ export type MapOptions = {
      */
     boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
-     * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
+     * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}). An `Object` value is passed as options to {@link DragRotateHandler.enable}.
      * @defaultValue true
      */
-    dragRotate?: boolean;
+    dragRotate?: boolean | DragRotateOptions;
     /**
      * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler.enable}.
      * @defaultValue true
@@ -440,6 +440,9 @@ export type MapOptions = {
      *   rotates counter-clockwise (like spinning a physical globe).
      * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
      *   to bearing change regardless of cursor position.
+     *
+     * @deprecated Use {@link MapOptions.dragRotate} instead, with `{around: 'center', movement: 'circular'}` for `true`
+     * and `{around: 'center', movement: 'linear'}` for `false`. Its `movement` takes precedence over this option when both are passed.
      */
     aroundCenter?: boolean;
 };

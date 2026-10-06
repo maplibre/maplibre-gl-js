@@ -1,4 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
+import Point from '@mapbox/point-geometry';
 import {createMap, beforeMapTest, waitForEvent, createTerrain, createDEM, waitForMetadataEvent} from '../../util/test/util.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
@@ -933,6 +934,36 @@ describe('Terrain changing under and around a gesture', () => {
 
         expect(bearingAfterSecondMove - bearingAfterFirstMove).toBeCloseTo(bearingAfterFirstMove - bearingAtStart, 5);
         expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('a drag around the pointer holds the center elevation until it ends', async () => {
+        const map = await createMapOverTerrain(60);
+        map.dragRotate.enable({around: 'pointer'});
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+        const pivot = map.unproject([40, 180]);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 180});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 50, clientY: 180});
+        map.redraw();
+        const pivotDuringDrag = map.project(pivot);
+        terrainElevation.mockReturnValue(3000);
+        map.redraw();
+        const elevationDuringDrag = map.getCameraTargetElevation();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 50, clientY: 180});
+        map.redraw();
+
+        expect(pivotDuringDrag.dist(new Point(40, 180))).toBeLessThan(0.1);
+        expect(elevationDuringDrag).toBe(0);
+        expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('a drag around the pointer that switches terrain on takes the DEM elevation when it lands while the pointer rests', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0, dragRotate: {around: 'pointer'}});
+
+        startPitchDragThatSwitchesTerrainOn(map);
+        await landAllDemTiles(dem, 1000);
+
+        expect(map.getCameraTargetElevation()).toBe(1000);
     });
 
     test('a DEM tile landing while a pan drag is in flight leaves the camera where the drag put it, and the release re-solves the zoom onto the new terrain without moving it', async () => {
