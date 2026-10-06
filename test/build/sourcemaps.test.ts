@@ -5,7 +5,7 @@ import path, {dirname} from 'path';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
-const distjs = globSync('dist/**/*.{js,mjs}', {ignore: 'dist/maplibre-gl-shared.mjs'});
+const distjs = globSync('dist/**/*.{js,mjs}', {ignore: ['dist/maplibre-gl-shared.mjs', 'dist/maplibre-gl-shared-dev.mjs']});
 
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});

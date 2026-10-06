@@ -137,13 +137,15 @@ Pick your setup:
     ```
 
     ```ts title="src/main.ts"
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
+
+    The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
 
 === "Rollup"
 
@@ -163,13 +165,15 @@ Pick your setup:
     ```
 
     ```ts title="src/main.ts"
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
+
+    The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
 
 === "Turbopack"
 
@@ -187,6 +191,8 @@ Pick your setup:
     ```
 
     Next.js emits the worker as a hashed asset in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`.
+
+    This needs Next.js 15 or later. In Next.js 14, `next build` fails to minify the worker, so copy `maplibre-gl-worker.mjs` to `public/` and pass that path to `setWorkerUrl` instead.
 
 === "CDN / No bundler"
 

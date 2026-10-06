@@ -138,7 +138,7 @@
     "generate-docs": "typedoc && node build/generate-docs.ts",
     "generate-images": "node build/generate-doc-images.ts",
     "build-dist": "npm run build-css && npm run generate-unicode-data && npm run generate-shaders && npm run build-dev && npm run build-prod",
-    "build-dev": "cross-env BUILD=dev rolldown -c rolldown.config.ts",
+    "build-dev": "cross-env BUILD=dev rolldown -c rolldown.config.ts && node -e \"fs.writeFileSync('dist/maplibre-gl-shared-dev.mjs', '')\"",
     "watch-dev": "cross-env BUILD=dev rolldown -c rolldown.config.ts --watch",
     "build-prod": "cross-env BUILD=production rolldown -c rolldown.config.ts && node -e \"fs.writeFileSync('dist/maplibre-gl-shared.mjs', '')\"",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",

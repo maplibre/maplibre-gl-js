@@ -3,7 +3,7 @@
 Minimal Rollup app exercising the ESM build:
 
 - All library imports (`maplibre-gl`, `maplibre-gl/dist/maplibre-gl.css`) resolve via the package's `exports` field.
-- `rollup-plugin-copy` copies the worker file to the bundle output. `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` references it relative to the bundle at runtime.
+- `rollup-plugin-copy` copies the worker file to the bundle output. `` setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString()) `` references it relative to the bundle at runtime.
 
 ## Setup
 
