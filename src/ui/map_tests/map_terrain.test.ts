@@ -1164,25 +1164,20 @@ describe('Terrain changing under and around a gesture', () => {
         for (let i = 0; i < count; i++) frame();
     }
 
-    /** Presses the right button at `from` and drags it to `to` in {@link movesPerDrag} moves, a frame after each; the button stays down. */
-    function dragWithTheRightButton(map: Map, frame: () => void, from: [number, number], to: [number, number]): void {
-        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: from[0], clientY: from[1]});
-        for (let move = 1; move <= movesPerDrag; move++) {
-            simulate.mousemove(window.document.body, {buttons: 2, clientX: from[0] + (to[0] - from[0]) * move / movesPerDrag, clientY: from[1] + (to[1] - from[1]) * move / movesPerDrag});
-            frame();
-        }
-    }
-
     /** Scrolls the wheel by `deltaY` at `point` `notches` times, {@link framesPerWheelNotch} frames after each, and returns how far the camera moved in each frame. */
     function wheelNotches(map: Map, frame: () => void, deltaY: number, point: [number, number], notches: number): number[] {
         const moves: number[] = [];
-        for (let notch = 0; notch < notches; notch++) {
-            simulate.wheel(map.getCanvas(), {deltaY, clientX: point[0], clientY: point[1]});
-            for (let i = 0; i < framesPerWheelNotch; i++) {
-                const before = cameraPosition(map);
-                frame();
-                moves.push(cameraMove(before, cameraPosition(map)));
-            }
+        simulate.wheelNotches(map.getCanvas(), deltaY, point, notches, () => moves.push(...cameraMovesOverFrames(map, frame, framesPerWheelNotch)));
+        return moves;
+    }
+
+    /** Renders `count` frames and returns how far the camera moved in each. */
+    function cameraMovesOverFrames(map: Map, frame: () => void, count: number): number[] {
+        const moves: number[] = [];
+        for (let i = 0; i < count; i++) {
+            const before = cameraPosition(map);
+            frame();
+            moves.push(cameraMove(before, cameraPosition(map)));
         }
         return moves;
     }
@@ -1354,7 +1349,7 @@ describe('Terrain changing under and around a gesture', () => {
         const {map, frame} = await createMapOverShapedTerrain({zoom: 15, pitch: 70, maxPitch: 85}, hill, 0, 450);
         const start = cameraPosition(map);
 
-        dragWithTheRightButton(map, frame, [40, 100], [160, 100]);
+        simulate.dragInMoves(map.getCanvas(), [40, 100], [160, 100], movesPerDrag, frame, 2);
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 160, clientY: 100});
         renderFrames(frame, 90);
 
@@ -1393,7 +1388,7 @@ describe('Terrain changing under and around a gesture', () => {
 
     test('a pitch drag past 90 degrees over terrain that rests before its release leaves the camera where it rested', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 14, pitch: 60, maxPitch: 110}, 500);
-        dragWithTheRightButton(map, frame, [100, 190], [100, 0]);
+        simulate.dragInMoves(map.getCanvas(), [100, 190], [100, 0], movesPerDrag, frame, 2);
         renderFrames(frame, 10);
         const camera = cameraPosition(map);
 
