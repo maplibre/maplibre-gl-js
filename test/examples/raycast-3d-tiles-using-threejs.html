@@ -46,7 +46,7 @@
         }
     }
 </script>
-<div id="status">...</div>
+<div id="status">Click the 3D model to raycast</div>
 <div id="map"></div>
 
 <script type="module">
@@ -116,78 +116,34 @@
 
         if (!renderer || !statusElement) return;
 
-        // Prepare the raycast arrow and the impact point but do not show them yet.
+        // Prepare the raycast arrow but do not show it yet.
         const rayArrow = new THREE.ArrowHelper(
-            new THREE.Vector3(0, 0, -1), new THREE.Vector3(), 1, 0xffcc33, 0, 0
+            new THREE.Vector3(0, 0, -1), new THREE.Vector3(), 1, 0xffcc33
         );
         rayArrow.visible = false;
         scene.add(rayArrow);
-        const rayImpact = new THREE.Mesh(
-            new THREE.SphereGeometry(6, 16, 8),
-            new THREE.MeshBasicMaterial({color: 0xff5533, transparent: true, opacity: 0.4})
-        );
-        rayImpact.visible = false;
-        scene.add(rayImpact);
 
-        const tilesRenderer = tilesAsset.getTilesRenderer();
-
-        // We want to make one automatic raycast, then allow map clicks to do new raycasts.
-
-        // At first, keep raycasting on each tile load, until a ray hits something.
-        tilesAsset.getTilesRenderer().addEventListener('load-model', topDownRayCast);
-        function topDownRayCast() {
-            // The raycast destination is the reference point of the 3D Tiles, which is the center of the tiles' enclosing circle.
-            const destination = tilesAsset.getReference();
-            if (!destination) {
-                throw new Error("could not obtain the 3D Tiles reference")
+        renderer.domElement.addEventListener('click', function (event) {
+            const result = raycastFromClick(event);
+            if (result) {
+                const {ecef_cameraOrigin, ecef_impactPoint} = result;
+                renderHit(ecef_cameraOrigin, ecef_impactPoint);
             }
-            // The ray starts 100 meters above the reference point, heading straight down.
-            const origin = { 
-                point: destination.point,
-                height: destination.height + 100
-            };
-            // Convert to the ECEF coordinate system.
-            const ecef_origin = threeDManager.lngLatAltToEcef(origin);
-            const ecef_destination = threeDManager.lngLatAltToEcef(destination);
-            // Perform the actual raycast, in ECEF coordinates.
-            const ecef_impactPoint = raycast_originDestination(ecef_origin, ecef_destination);
-            if (ecef_impactPoint) {
-                // we hit something. Render it...
-                renderHit(ecef_origin, ecef_impactPoint);
-                // ...and stop trying to raycast top-down
-                tilesAsset.getTilesRenderer().removeEventListener('load-model', topDownRayCast);
-                // Now enable raycasting via mouse click:
-                renderer.domElement.addEventListener('click', function (event) {
-                    const result = raycast_pointer(event);
-                    if (result) {
-                        const {ecef_cameraOrigin, ecef_impactPoint} = result;
-                        renderHit(ecef_cameraOrigin, ecef_impactPoint);
-                    }
-                });
-            }
-        }
+        });
 
-        // Renders the hit on the Three.JS scene and updates the HTML text
         function renderHit(ecef_origin, ecef_impactPoint) {
             const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
             const ecef_rayLength = ecef_direction.length();
             ecef_direction.normalize();
         
             drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
-            drawImpact(ecef_impactPoint);
 
             // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
             const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
             updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
         }
 
-        // The actual raycasting functions are below.
-
-        function raycast_originDestination(ecef_origin, ecef_destination) {
-            const direction = ecef_destination.clone().sub(ecef_origin);
-            return raycast_originDirection(ecef_origin, direction);
-        }
-        function raycast_originDirection(ecef_origin, ecef_direction) {
+        function raycastFromOriginAndDirection(ecef_origin, ecef_direction) {
             ecef_direction = ecef_direction.clone();
             if (ecef_direction.lengthSq() === 0) {
                 statusElement.textContent = 'Cannot cast a ray with a zero direction.';
@@ -204,7 +160,7 @@
             hit.point.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
             return hit.point;
         }
-        function raycast_pointer(event) {
+        function raycastFromClick(event) {
             // From pixels (MapLibre) to normalized device coordinates as expected by Three.js.
             const bounds = renderer.domElement.getBoundingClientRect();
             pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
@@ -215,7 +171,7 @@
             raycaster.ray.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
 
             const ecef_cameraOrigin = raycaster.ray.origin.clone();
-            const ecef_impactPoint = raycast_originDirection(raycaster.ray.origin, raycaster.ray.direction);
+            const ecef_impactPoint = raycastFromOriginAndDirection(raycaster.ray.origin, raycaster.ray.direction);
             if (!ecef_impactPoint) {
                 return null;
             }
@@ -226,16 +182,11 @@
         }
         
         // Functions used by renderHit are below. 
-
         function drawArrow(origin, direction, length) {
             rayArrow.position.copy(origin);
             rayArrow.setDirection(direction);
-            rayArrow.setLength(length, 4, 1);
+            rayArrow.setLength(length, length * 0.1, length * 0.03);
             rayArrow.visible = true;
-        }
-        function drawImpact(impactPoint) {
-            rayImpact.position.copy(impactPoint);
-            rayImpact.visible = true;
         }
         function updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint) {
             const str = 
