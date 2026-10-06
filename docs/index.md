@@ -188,6 +188,8 @@ Pick your setup:
 
     Next.js emits the worker as a hashed asset in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`.
 
+    This needs Next.js 15 or later. In Next.js 14, `next build` fails to minify the worker, so copy `maplibre-gl-worker.mjs` to `public/` and pass that path to `setWorkerUrl` instead.
+
 === "CDN / No bundler"
 
     Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
