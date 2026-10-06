@@ -5,7 +5,7 @@ import path, {dirname} from 'path';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
-const distjs = globSync('dist/**/*.{js,mjs}');
+const distjs = globSync('dist/**/*.{js,mjs}', {ignore: ['dist/maplibre-gl-shared.mjs', 'dist/maplibre-gl-shared-dev.mjs']});
 
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
@@ -54,11 +54,10 @@ describe('main sourcemap', () => {
     test('should match source files', async () => {
         const mainSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module));
         const workerSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs')));
-        const sharedSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-shared.mjs')));
         const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.module));
 
-        // Worker and shared code live in their own chunks, so union sources from all sourcemaps.
-        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources, ...sharedSourcemapJSON.sources]
+        // Worker code lives in its own bundle, so union sources from both sourcemaps.
+        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources]
             .map(f => path.join(sourceMapEntryRootDir, f));
 
         // *.mjs.map files should have these files
