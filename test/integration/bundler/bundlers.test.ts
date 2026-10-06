@@ -119,9 +119,8 @@ describe('Bundler examples', () => {
                 }
 
                 // The canvas appears even when the worker is dead, so it alone
-                // proves very little. A broken worker URL, or a worker that
-                // can't reach its `maplibre-gl-shared.mjs` sibling, produces a
-                // map that mounts and then requests no vector tiles at all.
+                // proves very little. A broken worker URL produces a map that
+                // mounts and then requests no vector tiles at all.
                 for (let waited = 0; tileRequests.length === 0 && waited < TILE_WAIT_MS; waited += 500) {
                     await new Promise((r) => setTimeout(r, 500));
                 }

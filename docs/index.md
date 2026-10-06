@@ -94,13 +94,6 @@ Pick your setup:
     const map = new Map({/* … */});
     ```
 
-    Use `?worker&url` rather than plain `?url`: the dist worker imports its
-    sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim
-    in production builds without that sibling — the worker then fails on its
-    first import and no vector tiles load. `?worker&url` routes the file
-    through Vite's worker pipeline, emitting a self-contained chunk. Dev mode
-    works with either.
-
     If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
     ```ts title="vite.config.ts"
@@ -182,7 +175,7 @@ Pick your setup:
 
     Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
 
-    Turbopack turns `new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)` into a hashed asset without emitting the worker's `maplibre-gl-shared.mjs` sibling next to it. The worker then fails on its first import, and the map mounts but never requests a tile. Serve both files from `public/` instead and point `setWorkerUrl` at the worker:
+    Serve the worker from `public/` and point `setWorkerUrl` at it:
 
     ```js title="scripts/copy-maplibre-worker.mjs"
     import {copyFileSync, mkdirSync} from 'node:fs';
@@ -193,9 +186,7 @@ Pick your setup:
     const dest = path.join(process.cwd(), 'public', 'maplibre');
 
     mkdirSync(dest, {recursive: true});
-    for (const file of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
-        copyFileSync(path.join(dist, file), path.join(dest, file));
-    }
+    copyFileSync(path.join(dist, 'maplibre-gl-worker.mjs'), path.join(dest, 'maplibre-gl-worker.mjs'));
     ```
 
     ```json title="package.json"
@@ -217,9 +208,6 @@ Pick your setup:
 
     const map = new Map({/* … */});
     ```
-
-    The script copies both files, not just the worker.
-    This is because the worker imports `maplibre-gl-shared.mjs` by relative path, so both have to land in the same directory.
 
     The copy happens at build time, from `node_modules`, so it always matches the installed version.
     npm lifecycle prefixes match the exact script name, so `prebuild` and `predev` run before `build` and `dev`, but **not** before a custom script like `build:local` - add a matching `pre` hook for those if necessary.

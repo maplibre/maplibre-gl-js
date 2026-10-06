@@ -6,6 +6,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a stale cached worker crashing the map after an upgrade: the worker is self-contained again instead of importing `maplibre-gl-shared.mjs`, and its default URL carries the version as a `v` query parameter. `maplibre-gl-shared.mjs` is now an empty file, kept so that existing copy steps don't fail; it is deprecated and will be removed in the next major version ([#8621](https://github.com/maplibre/maplibre-gl-js/issues/8621)) (by [@HarelM](https://github.com/HarelM))
 - Fix `globeDistanceOfLocationsPixels` returning `NaN` when two copies of the same point have a dot product slightly above 1 ([#8624](https://github.com/maplibre/maplibre-gl-js/pull/8624))(by [@Dimononon](https://github.com/Dimononon))
 - _...Add new stuff here..._
 

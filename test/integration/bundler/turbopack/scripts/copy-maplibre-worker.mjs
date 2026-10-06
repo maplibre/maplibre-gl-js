@@ -6,6 +6,4 @@ const dist = path.join(path.dirname(createRequire(import.meta.url).resolve('mapl
 const dest = path.join(process.cwd(), 'public', 'maplibre');
 
 mkdirSync(dest, {recursive: true});
-for (const file of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
-    copyFileSync(path.join(dist, file), path.join(dest, file));
-}
+copyFileSync(path.join(dist, 'maplibre-gl-worker.mjs'), path.join(dest, 'maplibre-gl-worker.mjs'));
