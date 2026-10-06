@@ -583,7 +583,10 @@ export class HandlerManager {
         let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
         const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;
 
+        const freeGlobePan = this._camera.cameraHelper.useGlobeControls && !this._map.dragPan._fixedBearing;
+        const previousBearing = tr.bearing;
         const deltasForHelper: MapControlsDeltas = {
+            fixedBearing: this._map.dragPan._fixedBearing,
             panDelta,
             zoomDelta,
             rollDelta,
@@ -608,10 +611,16 @@ export class HandlerManager {
             panDelta,
         });
 
+        if (freeGlobePan && tr.bearing !== previousBearing && combinedEventsInProgress.drag) {
+            combinedEventsInProgress.rotate = combinedEventsInProgress.drag;
+        }
+
         this._camera.applyUpdatedTransform(tr);
 
         this._map._update();
-        if (!combinedResult.noInertia) this._inertia.record(combinedResult);
+        if (!combinedResult.noInertia) {
+            this._inertia.record(freeGlobePan ? {...combinedResult, panDelta: undefined} : combinedResult);
+        }
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
 
     }
