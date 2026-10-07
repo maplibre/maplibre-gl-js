@@ -498,10 +498,16 @@ export class TransformHelper implements ITransformGetters {
      * @returns max bounds
      */
     getMaxBounds(): LngLatBounds | null {
-        if (this._latRange?.length !== 2 ||
-            this._lngRange?.length !== 2) return null;
+        if (!this._lngRange &&
+            this._latRange[0] === -MAX_VALID_LATITUDE &&
+            this._latRange[1] === MAX_VALID_LATITUDE) return null;
 
-        return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
+        return new LngLatBounds([
+            this._lngRange?.[0] ?? -Infinity,
+            this._latRange[0],
+            this._lngRange?.[1] ?? Infinity,
+            this._latRange[1]
+        ]);
     }
 
     /**
@@ -509,14 +515,27 @@ export class TransformHelper implements ITransformGetters {
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
     setMaxBounds(bounds?: LngLatBounds | null): void {
-        if (bounds) {
-            this._lngRange = [bounds.getWest(), bounds.getEast()];
-            this._latRange = [bounds.getSouth(), bounds.getNorth()];
-            this.constrainInternal();
-        } else {
+        if (!bounds) {
             this._lngRange = null;
             this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
+            return;
         }
+
+        const west = bounds.getWest();
+        const east = bounds.getEast();
+        const south = bounds.getSouth();
+        const north = bounds.getNorth();
+
+        const longitudeUnconstrained = west === -Infinity && east === Infinity;
+        if ((!Number.isFinite(west) || !Number.isFinite(east)) && !longitudeUnconstrained) {
+            throw new Error('Longitude maxBounds values must either be finite or span from -Infinity to Infinity');
+        }
+
+        this._lngRange = longitudeUnconstrained ? null : [west, east];
+        this._latRange = south <= -MAX_VALID_LATITUDE && north >= MAX_VALID_LATITUDE
+            ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE]
+            : [south, north];
+        this.constrainInternal();
     }
 
     /**
