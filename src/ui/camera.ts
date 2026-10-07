@@ -330,8 +330,13 @@ type ElevationHolder = 'gesture' | 'animation';
  */
 class ElevationHold {
     /**
-     * The DEM data under the center: loaded when the hold started, awaited from the start or since a terrain change
-     * left none there, or taken once the tile there had its own after a wait.
+     * Where the hold stands with the DEM data under the center:
+     * - `loaded`: the tile under the center had its DEM data when the hold started, so the hold keeps its elevation.
+     * - `awaiting`: no DEM data under the center yet, from the start or since a terrain change left none there; the
+     * hold follows the terrain drawn there, see {@link take}.
+     * - `taken`: the hold waited and then took the elevation of the tile's own DEM data. Unlike `loaded`, the elevation
+     * came during the hold, so the end keeps the zoom where that data is missing again, see
+     * {@link Camera.putCenterBackOnTerrain}.
      */
     private _dem: 'loaded' | 'awaiting' | 'taken';
     /**
