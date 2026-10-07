@@ -232,6 +232,8 @@ export class Painter {
     }
 
     render(style: Style, transform: IReadonlyTransform, data: FrameRenderData): void {
+        if (this.context.gl.isContextLost()) return;
+
         const frameRenderContext = new FrameRenderContext({
             transform,
             terrain: style.map.terrain ?? null,
