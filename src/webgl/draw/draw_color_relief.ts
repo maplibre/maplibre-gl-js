@@ -54,7 +54,7 @@ function renderColorRelief(
     useBorder: boolean,
     frameRenderContext: FrameRenderContext
 ) {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const program = frameRenderContext.useProgram('colorRelief');
     const align = !frameRenderContext.data.moving;

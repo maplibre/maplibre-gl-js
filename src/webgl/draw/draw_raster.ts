@@ -14,7 +14,6 @@ import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
-import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -41,7 +40,7 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+export function drawRaster(tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.currentPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
@@ -62,21 +61,20 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, frameRenderContext, source.getMesh(painter.context, useSubdivision));
+        drawTiles(tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, frameRenderContext, source.getMesh(frameRenderContext.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = frameRenderContext.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw without borders
-        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw with borders
+        drawTiles(tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw without borders
+        drawTiles(tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = frameRenderContext.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext);
+        drawTiles(tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext);
     }
 }
 
 function drawTiles(
-    painter: Painter,
     tileManager: TileManager,
     layer: RasterStyleLayer,
     coords: OverscaledTileID[],
@@ -90,7 +88,7 @@ function drawTiles(
     sourceMesh: Mesh | null = null) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const program = frameRenderContext.useProgram('raster');
 
