@@ -730,17 +730,22 @@ export class Popup extends Evented<PopupEventType> {
         }
         if (this._trackPointer && !cursor) return;
 
-        const popupElevation = this._getElevationForHeightOffset();
-        const anchorPoint = this._trackPointer && cursor ?
-            cursor :
-            popupElevation === undefined ?
-                this._map.project(this._lngLat) :
-                this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, popupElevation);
-        const pos = this._flatPos = this._pos = anchorPoint;
-        if (this._map.terrain) {
+        const transform = this._map._camera.transform;
+        let pos: Point;
+        if (this._trackPointer && cursor) {
+            pos = cursor;
+            this._flatPos = cursor;
+        } else {
+            const popupElevation = this._getElevationForHeightOffset();
+            if (popupElevation === undefined) {
+                pos = this._map.project(this._lngLat);
+            } else {
+                pos = transform.locationToScreenPointAtElevation(this._lngLat, popupElevation);
+            }
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map._camera.transform.locationToScreenPoint(this._lngLat);
+            this._flatPos = transform.locationToScreenPoint(this._lngLat);
         }
+        this._pos = pos;
 
         let anchor = this.options.anchor;
         const offset = normalizeOffset(this.options.offset);

@@ -21,9 +21,6 @@ import type {Terrain} from '../render/terrain.ts';
 export type Alignment = 'map' | 'viewport' | 'auto';
 
 /**
- * The datum a marker's height offset is measured from.
- */
-/**
  * Screen-pixel deltas applied when a focused draggable marker is moved with the arrow keys.
  */
 const ARROW_KEY_DELTAS: Partial<Record<KeyboardEvent['key'], [number, number]>> = {
@@ -787,14 +784,15 @@ export class Marker extends Evented<MarkerEventType> {
 
         this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
+        const transform = this._map._camera.transform;
         const markerElevation = this._getElevationForHeightOffset();
-        this._flatPos = this._pos = markerElevation === undefined ?
-            this._map.project(this._lngLat)._add(this._offset) :
-            this._map._camera.transform.locationToScreenPointAtElevation(this._lngLat, markerElevation)._add(this._offset);
-        if (this._map.terrain) {
-            // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
+        if (markerElevation === undefined) {
+            this._pos = this._map.project(this._lngLat)._add(this._offset);
+        } else {
+            this._pos = transform.locationToScreenPointAtElevation(this._lngLat, markerElevation)._add(this._offset);
         }
+        // flat position is saved because smartWrap needs non-elevated points
+        this._flatPos = transform.locationToScreenPoint(this._lngLat)._add(this._offset);
 
         let rotation = '';
         if (this._rotationAlignment === 'viewport' || this._rotationAlignment === 'auto') {
