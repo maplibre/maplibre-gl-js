@@ -329,16 +329,17 @@ type ElevationHolder = 'gesture' | 'animation';
  * edits, which a projection change does not replace, or at its end when nothing ran in between.
  */
 class ElevationHold {
-    /** Whether the hold waits for DEM data under the center: from its start, or since a terrain change left none there. */
-    awaitsDem: boolean;
+    /**
+     * The DEM data under the center: loaded when the hold started, awaited from the start or since a terrain change
+     * left none there, or taken once the tile there had its own after a wait.
+     */
+    dem: 'loaded' | 'awaiting' | 'taken';
     /**
      * While {@link Camera._keepCameraAboveTerrain} has lifted the camera out of the terrain: the elevation the gesture
      * holds and how far above it the camera was lifted, so later frames can lower it again as the terrain allows and
      * tell the lifted elevation from one a take set anew, which carries no lift; null while nothing is lifted.
      */
     lift: {heldElevation: number; height: number} | null = null;
-    /** Whether the hold has waited for DEM data under the center, from its start or since a terrain change. */
-    private _waitedForDem: boolean;
     private _terrainChanged = false;
 
     /**
@@ -346,13 +347,12 @@ class ElevationHold {
      * @param startedWithoutDem - whether the hold started without DEM data under the center, and so waits for it
      */
     constructor(readonly holder: ElevationHolder, startedWithoutDem: boolean) {
-        this.awaitsDem = startedWithoutDem;
-        this._waitedForDem = startedWithoutDem;
+        this.dem = startedWithoutDem ? 'awaiting' : 'loaded';
     }
 
     /** Whether the hold waited for DEM data under the center and took the data of the tile there. */
     get tookDem(): boolean {
-        return this._waitedForDem && !this.awaitsDem;
+        return this.dem === 'taken';
     }
 
     /** Asks the next {@link take} to check for DEM data under the center, after the terrain changed. */
@@ -375,16 +375,15 @@ class ElevationHold {
             this._terrainChanged = false;
             if (!terrain.hasElevationForLngLat(tr.center, tr)) {
                 tr.setElevation(0);
-                this.awaitsDem = true;
-                this._waitedForDem = true;
+                this.dem = 'awaiting';
                 changed = true;
             }
         }
-        if (!this.awaitsDem) return changed;
+        if (this.dem !== 'awaiting') return changed;
         const elevation = terrain.getDrawnElevationForLngLat(tr.center, true);
         if (elevation !== undefined) {
             tr.setElevation(elevation);
-            this.awaitsDem = false;
+            this.dem = 'taken';
             return true;
         }
         const drawnElevation = terrain.getDrawnElevationForLngLat(tr.center);
