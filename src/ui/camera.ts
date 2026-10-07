@@ -333,7 +333,7 @@ class ElevationHold {
      * The DEM data under the center: loaded when the hold started, awaited from the start or since a terrain change
      * left none there, or taken once the tile there had its own after a wait.
      */
-    dem: 'loaded' | 'awaiting' | 'taken';
+    private _dem: 'loaded' | 'awaiting' | 'taken';
     /**
      * While {@link Camera._keepCameraAboveTerrain} has lifted the camera out of the terrain: the elevation the gesture
      * holds and how far above it the camera was lifted, so later frames can lower it again as the terrain allows and
@@ -347,12 +347,12 @@ class ElevationHold {
      * @param startedWithoutDem - whether the hold started without DEM data under the center, and so waits for it
      */
     constructor(readonly holder: ElevationHolder, startedWithoutDem: boolean) {
-        this.dem = startedWithoutDem ? 'awaiting' : 'loaded';
+        this._dem = startedWithoutDem ? 'awaiting' : 'loaded';
     }
 
     /** Whether the hold waited for DEM data under the center and took the data of the tile there. */
     get tookDem(): boolean {
-        return this.dem === 'taken';
+        return this._dem === 'taken';
     }
 
     /** Asks the next {@link take} to check for DEM data under the center, after the terrain changed. */
@@ -375,15 +375,15 @@ class ElevationHold {
             this._terrainChanged = false;
             if (!terrain.hasElevationForLngLat(tr.center, tr)) {
                 tr.setElevation(0);
-                this.dem = 'awaiting';
+                this._dem = 'awaiting';
                 changed = true;
             }
         }
-        if (this.dem !== 'awaiting') return changed;
+        if (this._dem !== 'awaiting') return changed;
         const elevation = terrain.getDrawnElevationForLngLat(tr.center, true);
         if (elevation !== undefined) {
             tr.setElevation(elevation);
-            this.dem = 'taken';
+            this._dem = 'taken';
             return true;
         }
         const drawnElevation = terrain.getDrawnElevationForLngLat(tr.center);
