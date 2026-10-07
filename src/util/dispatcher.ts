@@ -64,7 +64,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
         if (this.id === GLOBAL_DISPATCHER_ID) {
-            return this.workerPool.weakAcquire((worker, index) => this.createActor(worker, index))
+            return this.workerPool.borrowActors((worker, index) => this.createActor(worker, index))
                 .then((actors) => {
                     this.actors = actors;
                     return actors;

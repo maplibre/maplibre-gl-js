@@ -22,13 +22,13 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
         [_ in number | string]: boolean;
     };
     workersPromise: Promise<ActorTarget[]> | null;
-    private weakActorsPromise: Promise<Actor[]> | null;
+    private borrowedActorsPromise: Promise<Actor[]> | null;
 
     constructor() {
         super();
         this.active = {};
         this.workersPromise = null;
-        this.weakActorsPromise = null;
+        this.borrowedActorsPromise = null;
     }
 
     /** Claims the shared workers, creating them on the first claim. */
@@ -38,14 +38,14 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     }
 
     /**
-     * Returns pool-owned actors wrapping the shared workers, without claiming them, the way a
-     * `WeakRef` holds an object without keeping it alive. The pool removes these actors when it
+     * Lends out pool-owned actors wrapping the shared workers, without claiming them, the way a
+     * `WeakRef` uses an object without keeping it alive. The pool removes these actors when it
      * terminates the workers, and the next call runs `createActor` again to build fresh ones
      * around the replacement workers.
      */
-    weakAcquire(createActor: (worker: ActorTarget, index: number) => Actor): Promise<Actor[]> {
-        this.weakActorsPromise ||= this.ensureWorkers().then((workers) => workers.map(createActor));
-        return this.weakActorsPromise;
+    borrowActors(createActor: (worker: ActorTarget, index: number) => Actor): Promise<Actor[]> {
+        this.borrowedActorsPromise ||= this.ensureWorkers().then((workers) => workers.map(createActor));
+        return this.borrowedActorsPromise;
     }
 
     /**
@@ -68,10 +68,10 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
         delete this.active[mapId];
         if (this.numActive() === 0 && this.workersPromise) {
             const workersPromise = this.workersPromise;
-            const weakActorsPromise = this.weakActorsPromise;
+            const borrowedActorsPromise = this.borrowedActorsPromise;
             this.workersPromise = null;
-            this.weakActorsPromise = null;
-            weakActorsPromise?.then((actors) => {
+            this.borrowedActorsPromise = null;
+            borrowedActorsPromise?.then((actors) => {
                 for (const actor of actors) {
                     actor.remove();
                 }
