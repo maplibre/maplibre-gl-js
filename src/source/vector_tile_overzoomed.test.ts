@@ -57,6 +57,13 @@ describe('sliceVectorTileLayer', () => {
         expect(getBounds(sliced)).toEqual({min: -2048, max: 65536 + 2048});
     });
 
+    test('keeps the buffer of 128 for a smaller extent', () => {
+        const sliced = sliceVectorTileLayer(createPolygonLayer(1024), maxZoomTileID, targetTileID);
+
+        expect(sliced.extent).toBe(1024);
+        expect(getBounds(sliced)).toEqual({min: -128, max: 1024 + 128});
+    });
+
     test('drops features outside of the target tile', () => {
         const outsideTileID = new CanonicalTileID(16, 35300, 21600);
         const layer = createPolygonLayer(4096);

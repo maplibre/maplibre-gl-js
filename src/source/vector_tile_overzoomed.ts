@@ -62,6 +62,8 @@ export class VectorTileOverzoomed implements VectorTileLike {
 
 /**
  * This function slices a source tile layer into an overzoomed tile layer for a target tile ID.
+ * The geometry is clipped to the target tile plus a buffer of at least 128 units, which is 16 pixels on a 512 pixel tile with the default extent of 4096.
+ * The buffer grows with the extent, so that tiles with a larger extent keep this size on screen, otherwise the edges created by the clipping show up in line layers.
  * @param sourceLayer - the source tile layer to slice
  * @param maxZoomTileID - the maximum zoom tile ID
  * @param targetTileID - the target tile ID
@@ -90,10 +92,7 @@ export function sliceVectorTileLayer(sourceLayer: VectorTileLayerLike, maxZoomTi
             }
         }
         
-        // The buffer is 128 units for the default extent of 4096 (16 pixels on a 512 pixel tile).
-        // It scales with the extent, so that tiles with a larger extent keep the same buffer on screen,
-        // otherwise the edges created by the clipping show up in line layers.
-        const buffer = Math.round(128 * extent / 4096);
+        const buffer = Math.max(128, Math.round(128 * extent / 4096));
         geometry = clipGeometry(geometry, feature.type, -buffer, -buffer, extent + buffer, extent + buffer);
         if (geometry.length === 0) {
             continue;
