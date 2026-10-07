@@ -5,7 +5,7 @@ import {Dispatcher, getGlobalDispatcher, importScriptInWorkers, onGlobalWorkersC
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
-import {terminateGlobalWorkers} from './test/util.ts';
+import {sleep, terminateGlobalWorkers} from './test/util.ts';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', async () => {
@@ -73,6 +73,50 @@ describe('Dispatcher', () => {
         await dispatcher.getActors();
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
+    });
+
+    test('a removed dispatcher resolves to no actors', async () => {
+        const workerPool = {
+            acquire () {
+                return Promise.resolve([]);
+            },
+            release () {}
+        } as any as WorkerPool;
+
+        const dispatcher = new Dispatcher(workerPool, 1);
+        dispatcher.remove();
+
+        await expect(dispatcher.getActors()).resolves.toEqual([]);
+    });
+
+    test('a dispatcher removed while its actors build resolves to no actors', async () => {
+        let resolveWorkers: (workers: ActorTarget[]) => void;
+        const workerPool = {
+            acquire () {
+                return new Promise((resolve) => { resolveWorkers = resolve; });
+            },
+            release () {}
+        } as any as WorkerPool;
+
+        const dispatcher = new Dispatcher(workerPool, 1);
+        const actorsPromise = dispatcher.getActors();
+        dispatcher.remove(false);
+        resolveWorkers([await workerFactory()]);
+
+        await expect(actorsPromise).resolves.toEqual([]);
+    });
+
+    test('rejects when the pool has no workers to hand out', async () => {
+        const workerPool = {
+            acquire () {
+                return Promise.resolve([]);
+            },
+            release () {}
+        } as any as WorkerPool;
+
+        const dispatcher = new Dispatcher(workerPool, 1);
+
+        await expect(dispatcher.getActors()).rejects.toThrow('No actors found');
     });
 
     test('fires worker errors through Evented', async () => {
@@ -189,5 +233,18 @@ describe('importScriptInWorkers', () => {
         getGlobalDispatcher();
 
         expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
+    });
+
+    test('warns instead of throwing when re-importing a script fails', async () => {
+        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+        await importScriptInWorkers('plugin.js');
+        terminateGlobalWorkers();
+        broadcastSpy.mockRejectedValue(new Error('worker gone'));
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        getGlobalDispatcher();
+        await sleep(0);
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to import script plugin.js'));
     });
 });
