@@ -526,7 +526,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getZoom()).toBeCloseTo(17, 6);
     });
 
-    test('a pitch drag that switches terrain on does not take the elevation of a coarser DEM tile lower than the camera while the tile under the center loads', async () => {
+    test('a pitch drag that switches terrain on takes the elevation of a coarser DEM tile drawn under the center while the tile under the center loads', async () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
         const zoomOfACoarserDemTile = 5;
         startPitchDragThatSwitchesTerrainOn(map);
@@ -535,34 +535,22 @@ describe('Terrain changing under and around a gesture', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
         map._renderTaskQueue.run();
 
-        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(map.getCameraTargetElevation()).toBe(100);
     });
 
-    test('a pitch drag that switches terrain on does not lower the center elevation to a coarser DEM tile below it while the camera is inside the terrain', async () => {
+    test('a pitch drag that switches terrain on lowers the center elevation to a coarser DEM tile drawn below it while the tile under the center loads', async () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-        const zoomOfDemTilesNotDrawn = 16;
         const zoomOfACoarserDemTile = 5;
         startPitchDragThatSwitchesTerrainOn(map);
-        await landDemTilesAtZoom(dem, 1000, zoomOfDemTilesNotDrawn);
         await landDemTilesAtZoom(dem, -400, zoomOfACoarserDemTile);
 
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
         map._renderTaskQueue.run();
 
-        expect(map.getCameraTargetElevation()).toBe(0);
+        expect(map.getCameraTargetElevation()).toBe(-400);
     });
 
-    test('a pitch drag that switches terrain on takes the elevation of a coarser DEM tile higher than the camera when it lands while the pointer rests', async () => {
-        const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
-        const zoomOfACoarserDemTile = 5;
-        startPitchDragThatSwitchesTerrainOn(map);
-
-        await landDemTilesAtZoom(dem, 1000, zoomOfACoarserDemTile);
-
-        expect(map.getCameraTargetElevation()).toBe(1000);
-    });
-
-    test('a pitch drag that switches terrain on keeps its zoom when it ends over a coarser DEM tile higher than the camera before the tile under the center loads', async () => {
+    test('a pitch drag that switches terrain on keeps its zoom when it ends over a coarser DEM tile before the tile under the center loads', async () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
         const zoomOfACoarserDemTile = 5;
         startPitchDragThatSwitchesTerrainOn(map);
@@ -574,7 +562,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getZoom()).toBeCloseTo(17, 6);
     });
 
-    test('a pitch drag that switches terrain on takes the DEM elevation of the tile under the center when it lands after a coarser tile higher than the camera', async () => {
+    test('a pitch drag that switches terrain on takes the DEM elevation of the tile under the center when it lands after a coarser tile', async () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
         const zoomOfACoarserDemTile = 5;
         const zoomOfTheDrawnDemTiles = 15;
@@ -696,6 +684,30 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getZoom()).toBeCloseTo(17, 6);
     });
 
+    test('a drag over loaded terrain that switches off and on keeps its zoom when it ends over a tile whose DEM has not landed again', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0, center: [0.0005, -0.0001]});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        await landAllDemTiles(dem, 1000);
+        map.redraw();
+        const whereTheDragEnds = new LngLat(0.0005, 0.0003);
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 60});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 64});
+        map._renderTaskQueue.run();
+        map.setTerrain(null);
+        map.redraw();
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        await landDemTilesAwayFrom(dem, 50, whereTheDragEnds);
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 125});
+        map._renderTaskQueue.run();
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 125});
+        map._renderTaskQueue.run();
+
+        expect(map.getZoom()).toBeCloseTo(17, 6);
+    });
+
     test('an easeTo with freezeElevation that takes the DEM keeps the camera out of the terrain when it ends over a tile whose DEM has not landed', async () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 30, center: [0.0005, -0.0012]});
         map.setTerrain({source: 'dem'});
@@ -764,7 +776,25 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(0);
     });
 
-    test('a pitch drag over loaded terrain keeps the center elevation when the terrain switches off and on and its DEM lands lower', async () => {
+    test('a pitch drag over loaded terrain puts the center on the flat terrain drawn after the terrain switches off and on, until its DEM lands again', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        await landAllDemTiles(dem, 1000);
+        map.redraw();
+        startPitchDrag(map);
+        map.setTerrain(null);
+        map.redraw();
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+
+        expect(map.getCameraTargetElevation()).toBe(0);
+    });
+
+    test('a pitch drag over loaded terrain takes the DEM elevation that lands after the terrain switches off and on', async () => {
         const {map, dem} = await createMapWithWaitingDem({zoom: 17, pitch: 0});
         map.setTerrain({source: 'dem'});
         map.redraw();
@@ -780,7 +810,7 @@ describe('Terrain changing under and around a gesture', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 100});
         map._renderTaskQueue.run();
 
-        expect(map.getCameraTargetElevation()).toBe(1000);
+        expect(map.getCameraTargetElevation()).toBe(500);
     });
 
     test('a pitch drag that switches terrain on takes the DEM elevation of another DEM source the terrain switches to when it lands', async () => {
