@@ -325,3 +325,13 @@ describe('VerticalPerspectiveTransform.isLocationOccluded', () => {
         expect(transform.isLocationOccluded(new LngLat(0, 0.01), terrain)).toBe(false);
     });
 });
+
+describe('VerticalPerspectiveTransform resize', () => {
+    test('does not constrain the center when constrainTransform is false', () => {
+        const transform = new VerticalPerspectiveTransform();
+        transform.setZoom(5);
+        transform.setCenter(new LngLat(0, 89));
+        transform.resize(640, 480, false);
+        expect(transform.center.lat).toBe(89);
+    });
+});
