@@ -196,6 +196,13 @@ export function stubAjaxGetImage(createImageBitmap: typeof global.createImageBit
  * @param data - the data read from a file, for example by `fs.readFileSync(...)`
  * @returns a copy of the data in the file in `ArrayBuffer` format
  */
+export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
+    const newBuffer = new ArrayBuffer(data.buffer.byteLength);
+    const view = new Uint8Array(newBuffer);
+    data.copy(view);
+    return view.buffer;
+}
+
 /**
  * Simulates the last map being removed, which terminates the pooled workers. The global dispatcher
  * survives and builds new actors on its next use. Also releases claims earlier tests left behind.
@@ -205,14 +212,7 @@ export function terminateGlobalWorkers(): void {
     for (const mapId of Object.keys(pool.active)) {
         pool.release(mapId);
     }
-    pool.release('terminateGlobalWorkers');
-}
-
-export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
-    const newBuffer = new ArrayBuffer(data.buffer.byteLength);
-    const view = new Uint8Array(newBuffer);
-    data.copy(view);
-    return view.buffer;
+    pool.terminate();
 }
 
 /**

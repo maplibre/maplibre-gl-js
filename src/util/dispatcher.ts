@@ -36,17 +36,15 @@ export class Dispatcher extends Evented<ErrorEventType> {
         getGlobalDispatcher();
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
-        this.actors = workers.map((worker: ActorTarget, i: number) => {
-            this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
-                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
-            }, false));
-            return this.createActor(worker, i);
-        });
+        this.actors = workers.map((worker: ActorTarget, i: number) => this.createActor(worker, i));
         if (!this.actors.length) throw new Error('No actors found');
         return this.actors;
     }
 
     private createActor(worker: ActorTarget, index: number): Actor {
+        this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
+            this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
+        }, false));
         const actor = new Actor(worker, this.id);
         actor.name = `Worker ${index}`;
         for (const [type, handler] of Object.entries(this.messageHandlers)) {

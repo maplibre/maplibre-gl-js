@@ -116,11 +116,12 @@ describe('global dispatcher', () => {
 
     test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
         const globalWorkersCreated = vi.fn();
-        onGlobalWorkersCreated(globalWorkersCreated);
+        const subscription = onGlobalWorkersCreated(globalWorkersCreated);
 
         await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
 
         expect(globalWorkersCreated).toHaveBeenCalled();
+        subscription.unsubscribe();
     });
 
     test('keeps the workers while another map still holds them', async () => {
@@ -166,7 +167,10 @@ describe('global dispatcher', () => {
 });
 
 describe('importScriptInWorkers', () => {
-    afterEach(terminateGlobalWorkers);
+    afterEach(() => {
+        terminateGlobalWorkers();
+        vi.restoreAllMocks();
+    });
 
     test('imports a script once when the call itself creates the global dispatcher', async () => {
         const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);

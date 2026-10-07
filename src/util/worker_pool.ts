@@ -41,7 +41,8 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
      * Lends out pool-owned actors wrapping the shared workers, without claiming them, the way a
      * `WeakRef` uses an object without keeping it alive. The pool removes these actors when it
      * terminates the workers, and the next call runs `createActor` again to build fresh ones
-     * around the replacement workers.
+     * around the replacement workers. Every borrower shares the one set built by the first
+     * call's `createActor`.
      */
     borrowActors(createActor: (worker: ActorTarget, index: number) => Actor): Promise<Actor[]> {
         this.borrowedActorsPromise ||= this.ensureWorkers().then((workers) => workers.map(createActor));
@@ -66,22 +67,31 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
 
     release(mapId: number | string): void {
         delete this.active[mapId];
-        if (this.numActive() === 0 && this.workersPromise) {
-            const workersPromise = this.workersPromise;
-            const borrowedActorsPromise = this.borrowedActorsPromise;
-            this.workersPromise = null;
-            this.borrowedActorsPromise = null;
-            borrowedActorsPromise?.then((actors) => {
-                for (const actor of actors) {
-                    actor.remove();
-                }
-            });
-            workersPromise.then(workers => {
-                for (const w of workers) {
-                    w.terminate();
-                }
-            });
+        if (this.numActive() === 0) {
+            this.terminate();
         }
+    }
+
+    /**
+     * Terminates the workers and removes the borrowed actors, regardless of any claims. The next
+     * acquire or borrow builds fresh workers.
+     */
+    terminate(): void {
+        if (!this.workersPromise) return;
+        const workersPromise = this.workersPromise;
+        const borrowedActorsPromise = this.borrowedActorsPromise;
+        this.workersPromise = null;
+        this.borrowedActorsPromise = null;
+        borrowedActorsPromise?.then((actors) => {
+            for (const actor of actors) {
+                actor.remove();
+            }
+        });
+        workersPromise.then(workers => {
+            for (const w of workers) {
+                w.terminate();
+            }
+        });
     }
 
     isPreloaded(): boolean {
