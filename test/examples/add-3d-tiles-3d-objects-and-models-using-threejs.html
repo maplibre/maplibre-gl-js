@@ -154,17 +154,17 @@
             await threeDManager.init();
             map.on('remove', () => threeDManager.destroy());
             
-            // Add the Three.js scene below the "rivers" Style Spec layer
+            // Add the Three.js scene below the "rivers" Style Spec layer.
             const layer = threeDManager.createLayer();
             map.addLayer(layer, 'rivers');
 
-            // Add 3D Tiles to the scene
+            // Add 3D Tiles to the scene.
             const tilesAsset = await layer.load3dTiles({
                 tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
                 offset: { east: 0, up: -234, south: 0 }
             });
 
-            // Add a pink sphere
+            // Add a pink sphere.
             const sphere = new THREE.Mesh(
                 new THREE.SphereGeometry(10, 32, 16),
                 new THREE.MeshStandardMaterial({ color: 0xff00ff })
@@ -172,7 +172,7 @@
             sphere.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.598, 40.040], height: 130 }));
             layer.three.getScene().add(sphere);
 
-            // Add a group of 4 spheres, with offsets in meter from a geographical center 
+            // Add a group of 4 spheres, with offsets in meter from a geographical center.
             const placement = new THREE.Group();
             placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.594, 40.040], height: 110 }));
             const geometry = new THREE.SphereGeometry(10, 32, 16);
