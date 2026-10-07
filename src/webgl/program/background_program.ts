@@ -7,7 +7,8 @@ import {
 } from '../uniform_binding.ts';
 import {extend} from '../../util/util.ts';
 
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {PatternAtlas} from '../../render/pattern_atlas.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
@@ -69,7 +70,8 @@ const backgroundUniformValues = (opacity: number, color: Color): UniformValues<B
 
 const backgroundPatternUniformValues = (
     opacity: number,
-    painter: Painter,
+    patternAtlas: PatternAtlas,
+    transform: IReadonlyTransform,
     image: CrossFaded<ResolvedImage>,
     tile: {
         tileID: OverscaledTileID;
@@ -77,7 +79,7 @@ const backgroundPatternUniformValues = (
     },
     crossfade: CrossfadeParameters
 ): UniformValues<BackgroundPatternUniformsType> => extend(
-    bgPatternUniformValues(image, crossfade, painter, tile),
+    bgPatternUniformValues(image, crossfade, patternAtlas, transform, tile),
     {
         'u_opacity': opacity
     }

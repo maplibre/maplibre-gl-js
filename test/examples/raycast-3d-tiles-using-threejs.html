@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Raycast 3D Tiles using ThreeJS</title>
+    <title>Raycast 3D Tiles using Three.js</title>
     <meta property="og:description" content="Use maplibre-gl-three to raycast against 3D Tiles and display the impact location." />
     <meta property="og:category" content="3D Models & Buildings" />
     <meta property="og:created" content="2026-10-05" />
@@ -131,18 +131,6 @@
             }
         });
 
-        function renderHit(ecef_origin, ecef_impactPoint) {
-            const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
-            const ecef_rayLength = ecef_direction.length();
-            ecef_direction.normalize();
-        
-            drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
-
-            // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
-            const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
-            updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
-        }
-
         function raycastFromOriginAndDirection(ecef_origin, ecef_direction) {
             ecef_direction = ecef_direction.clone();
             if (ecef_direction.lengthSq() === 0) {
@@ -181,7 +169,20 @@
             }
         }
         
-        // Functions used by renderHit are below. 
+        // For More raycasting functions (e.g. lngLatAlt to lngLatAlt), see
+        // https://github.com/safwat-halaby/maplibre-gl-three/blob/master/www/examples/other/raycast/script.js
+        
+        function renderHit(ecef_origin, ecef_impactPoint) {
+            const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
+            const ecef_rayLength = ecef_direction.length();
+            ecef_direction.normalize();
+        
+            drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
+
+            // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
+            const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
+            updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
+        }
         function drawArrow(origin, direction, length) {
             rayArrow.position.copy(origin);
             rayArrow.setDirection(direction);
