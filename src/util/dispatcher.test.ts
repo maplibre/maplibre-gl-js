@@ -75,21 +75,7 @@ describe('Dispatcher', () => {
         expect(actorsRemoved).toHaveLength(4);
     });
 
-    test('a removed dispatcher resolves to no actors', async () => {
-        const workerPool = {
-            acquire () {
-                return Promise.resolve([]);
-            },
-            release () {}
-        } as any as WorkerPool;
-
-        const dispatcher = new Dispatcher(workerPool, 1);
-        dispatcher.remove();
-
-        await expect(dispatcher.getActors()).resolves.toEqual([]);
-    });
-
-    test('a dispatcher removed while its actors build resolves to no actors', async () => {
+    test('a removed dispatcher resolves to no actors, before and during an actor build', async () => {
         let resolveWorkers: (workers: ActorTarget[]) => void;
         const workerPool = {
             acquire () {
@@ -104,6 +90,7 @@ describe('Dispatcher', () => {
         resolveWorkers([await workerFactory()]);
 
         await expect(actorsPromise).resolves.toEqual([]);
+        await expect(dispatcher.getActors()).resolves.toEqual([]);
     });
 
     test('rejects when the pool has no workers to hand out', async () => {

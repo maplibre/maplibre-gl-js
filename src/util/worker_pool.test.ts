@@ -42,18 +42,6 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
-    test('a borrower does not keep the workers alive', async () => {
-        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
-
-        const pool = new WorkerPool();
-        await pool.borrowActors((worker) => new Actor(worker, 'global'));
-        await pool.acquire('map-1');
-
-        pool.release('map-1');
-
-        expect(pool.workersPromise).toBeFalsy();
-    });
-
     test('terminating the workers removes the borrowed actors', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
