@@ -22,6 +22,17 @@ import type {LngLatLike} from './lng_lat.ts';
 export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number, number, number, number];
 
 /**
+ * Bounds accepted by {@link Map.setMaxBounds}. Setting both values of one axis to `undefined`
+ * leaves that axis unconstrained while constraining the other axis.
+ *
+ * @group Geography and Geometry
+ */
+export type MaxBoundsLike =
+    | LngLatBoundsLike
+    | [[number | undefined, number | undefined], [number | undefined, number | undefined]]
+    | [number | undefined, number | undefined, number | undefined, number | undefined];
+
+/**
  * A `LngLatBounds` object represents a geographical bounding box,
  * defined by its southwest and northeast points in longitude and latitude.
  *
@@ -361,9 +372,44 @@ export class LngLatBounds {
      * let llb = LngLatBounds.convert(arr); // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
      * ```
      */
-    static convert(input: LngLatBoundsLike | null): LngLatBounds {
+    static convert(input: MaxBoundsLike | null): LngLatBounds {
         if (input instanceof LngLatBounds) return input;
         if (!input) return input as null;
+
+        if (Array.isArray(input)) {
+            let partialBounds:
+                | [number | undefined, number | undefined, number | undefined, number | undefined]
+                | null = null;
+
+            if (input.length === 4 && input.some(value => value === undefined)) {
+                partialBounds = input;
+            } else if (input.length === 2) {
+                const southwest = input[0];
+                const northeast = input[1];
+                if (Array.isArray(southwest) && Array.isArray(northeast) &&
+                    (southwest.includes(undefined) || northeast.includes(undefined))) {
+                    partialBounds = [southwest[0], southwest[1], northeast[0], northeast[1]];
+                }
+            }
+
+            if (partialBounds) {
+                const [west, south, east, north] = partialBounds;
+                if ((west === undefined) !== (east === undefined)) {
+                    throw new Error('Both west and east maxBounds values must be defined or undefined together');
+                }
+                if ((south === undefined) !== (north === undefined)) {
+                    throw new Error('Both south and north maxBounds values must be defined or undefined together');
+                }
+
+                return new LngLatBounds([
+                    west ?? -Infinity,
+                    south ?? -90,
+                    east ?? Infinity,
+                    north ?? 90
+                ]);
+            }
+        }
+
         return new LngLatBounds(input);
     }
 
