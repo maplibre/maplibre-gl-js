@@ -19,14 +19,13 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     if (opacity === 0) return;
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
-    const projection = painter.style.projection;
     const transform = frameRenderContext.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
 
-    if (painter.isPatternMissing(image)) return;
+    if (painter.patternAtlas.isPatternMissing(image)) return;
 
     const pass = (!image && color.a === 1 && opacity === 1 && frameRenderContext.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
     if (frameRenderContext.currentPass !== pass) return;
@@ -39,7 +38,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
-        painter.patternAtlas.bind(painter.context);
+        painter.patternAtlas.bind(context);
     }
 
     const crossfade = layer.getCrossfadeParameters();
@@ -48,7 +47,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
 
         const uniformValues = image ?
-            backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
+            backgroundPatternUniformValues(opacity, painter.patternAtlas, transform, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
         const terrainData = frameRenderContext.getTerrainDataForTile(tileID);
 
@@ -61,7 +60,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         // and also enable stencil clipping. Make sure to render a proper tile clipping mask into stencil
         // first though, as that doesn't seem to happen for background layers as of writing this.
 
-        const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
+        const mesh = frameRenderContext.getMeshFromTileID(tileID.canonical, false, true, 'raster');
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id,
             mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

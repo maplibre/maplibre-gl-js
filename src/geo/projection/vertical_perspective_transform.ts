@@ -849,7 +849,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        const elevation = terrain ? terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom) : 0;
+        const elevation = terrain ? terrain.getElevationForLngLat(lnglat, this) : 0;
         return this.locationToScreenPointAtElevation(lnglat, elevation);
     }
 

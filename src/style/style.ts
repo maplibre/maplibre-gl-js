@@ -831,6 +831,13 @@ export class Style extends Evented<MapEventType> {
         });
     }
 
+    /** Tells the layers that the canvas was resized. */
+    resize(): void {
+        for (const layerId of this._order) {
+            this._layers[layerId].resize();
+        }
+    }
+
     _resetUpdates(): void {
         this._changed = false;
 

@@ -15,7 +15,7 @@ import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
 import type {DEMData} from '../../data/dem_data.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -61,7 +61,7 @@ const hillshadePrepareUniforms = (context: Context, locations: UniformLocations)
 });
 
 const hillshadeUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
     tile: Tile,
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
@@ -91,12 +91,12 @@ const hillshadeUniformValues = (
     for (let i = 0; i < illumination.directionRadians.length; i++) {
         // modify azimuthal angle by map rotation if light is anchored at the viewport
         if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
-            illumination.directionRadians[i] += painter.frameRenderContext.transform.bearingInRadians;
+            illumination.directionRadians[i] += transform.bearingInRadians;
         }
     }
     return {
         'u_image': 0,
-        'u_latrange': getTileLatRange(painter, tile.tileID),
+        'u_latrange': getTileLatRange(tile.tileID),
         'u_exaggeration': layer.paint.get('hillshade-exaggeration'),
         'u_altitudes': illumination.altitudeRadians,
         'u_azimuths': illumination.directionRadians,
@@ -124,7 +124,7 @@ const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): 
     };
 };
 
-function getTileLatRange(painter: Painter, tileID: OverscaledTileID) {
+function getTileLatRange(tileID: OverscaledTileID) {
     // for scaling the magnitude of a points slope by its latitude
     const tilesAtZoom = Math.pow(2, tileID.canonical.z);
     const y = tileID.canonical.y;

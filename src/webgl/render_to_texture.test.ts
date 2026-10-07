@@ -115,7 +115,6 @@ describe('render to texture', () => {
             transitionState: 0,
         }
     } as any as Style;
-    painter.style = style;
     map.style = style;
     style.map = map;
 
@@ -138,7 +137,7 @@ describe('render to texture', () => {
     });
 
     function createFrameRenderContext(): FrameRenderContext {
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', getStencilMesh: null});
+        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
         vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
         return frameRenderContext;
     }
@@ -159,7 +158,7 @@ describe('render to texture', () => {
         const frameRenderContext = createFrameRenderContext();
         for (const layerId of style._order) {
             const layer = style._layers[layerId];
-            rtt.renderLayer(layer, frameRenderContext);
+            rtt.renderLayer(layer, style, frameRenderContext);
         }
 
         expect(renderLayerSpy).toHaveBeenCalledWith(
@@ -203,8 +202,8 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
         const frameRenderContext = createFrameRenderContext();
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
-        expect(rtt.renderLayer(fillLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
+        expect(rtt.renderLayer(fillLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, style, frameRenderContext)).toBeFalsy();
         expect(draw).toHaveBeenCalledTimes(1);
     });
 
@@ -213,13 +212,13 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
         const frameRenderContext = createFrameRenderContext();
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(fillLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(rasterLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(hillshadeLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(fillLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(rasterLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(hillshadeLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, style, frameRenderContext)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, style, frameRenderContext)).toBeFalsy();
         expect(draw).toHaveBeenCalledTimes(2);
     });
 
@@ -228,12 +227,12 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
         const frameRenderContext = createFrameRenderContext();
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
-        expect(rtt.renderLayer(hillshadeLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer, frameRenderContext)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, frameRenderContext)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, style, frameRenderContext)).toBeFalsy();
+        expect(rtt.renderLayer(hillshadeLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, style, frameRenderContext)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer, style, frameRenderContext)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer, style, frameRenderContext)).toBeFalsy();
         expect(draw).toHaveBeenCalledTimes(3);
     });
 
@@ -260,8 +259,8 @@ describe('render to texture', () => {
         acquireSpy.mockClear();
 
         const frameRenderContext = createFrameRenderContext();
-        rtt.renderLayer(fillLayer, frameRenderContext);
-        rtt.renderLayer(symbolLayer, frameRenderContext);
+        rtt.renderLayer(fillLayer, style, frameRenderContext);
+        rtt.renderLayer(symbolLayer, style, frameRenderContext);
 
         expect(acquireSpy).toHaveBeenCalledWith(rtt.rttSize);
         expect(tile.getRTT(0)).toBeTruthy();
@@ -273,8 +272,8 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext();
-        rtt.renderLayer(fillLayer, frameRenderContext);
-        rtt.renderLayer(symbolLayer, frameRenderContext);
+        rtt.renderLayer(fillLayer, style, frameRenderContext);
+        rtt.renderLayer(symbolLayer, style, frameRenderContext);
 
         expect(tile.getRTT(0).texture.generateMipmap).toHaveBeenCalledTimes(1);
     });
@@ -284,8 +283,8 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext();
-        rtt.renderLayer(fillLayer, frameRenderContext);
-        rtt.renderLayer(symbolLayer, frameRenderContext);
+        rtt.renderLayer(fillLayer, style, frameRenderContext);
+        rtt.renderLayer(symbolLayer, style, frameRenderContext);
 
         expect(tile.getRTT(0).texture.bind).toHaveBeenCalledWith(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
     });
@@ -301,8 +300,8 @@ describe('render to texture', () => {
         acquireSpy.mockClear();
 
         const frameRenderContext = createFrameRenderContext();
-        rtt.renderLayer(fillLayer, frameRenderContext);
-        rtt.renderLayer(symbolLayer, frameRenderContext);
+        rtt.renderLayer(fillLayer, style, frameRenderContext);
+        rtt.renderLayer(symbolLayer, style, frameRenderContext);
 
         expect(acquireSpy).not.toHaveBeenCalled();
         expect(tile.getRTT(0)).toBe(cached);
@@ -314,8 +313,8 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0, false);
 
         const frameRenderContext = createFrameRenderContext();
-        rtt.renderLayer(fillLayer, frameRenderContext);
-        rtt.renderLayer(symbolLayer, frameRenderContext);
+        rtt.renderLayer(fillLayer, style, frameRenderContext);
+        rtt.renderLayer(symbolLayer, style, frameRenderContext);
 
         expect(new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds()).difference(tile.rttFingerprint['maine'])).toBe('none');
     });
@@ -413,8 +412,8 @@ describe('render to texture', () => {
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
         acquireSpy.mockClear();
         const frameRenderContext = createFrameRenderContext();
-        rtt.renderLayer(fillLayer, frameRenderContext);
-        rtt.renderLayer(symbolLayer, frameRenderContext);
+        rtt.renderLayer(fillLayer, style, frameRenderContext);
+        rtt.renderLayer(symbolLayer, style, frameRenderContext);
 
         expect(acquireSpy).toHaveBeenCalledTimes(2);
         expect(tile.getRTT(0)).toBeTruthy();

@@ -236,24 +236,28 @@ describe('frame render data', () => {
         const map = createMap();
         await map.once('idle');
         map.setProjection({type: 'vertical-perspective'});
+        const render = vi.spyOn(map.painter, 'render');
 
         map.redraw();
 
-        expect(map.painter.frameRenderContext.data.projectionTransition).toBe(1);
-        expect(map.painter.frameRenderContext.data.isRenderingGlobe).toBe(true);
-        expect(map.painter.frameRenderContext.data.projectionShaderVariant.name).toBe('globe');
+        const data = render.mock.lastCall[2];
+        expect(data.projectionTransition).toBe(1);
+        expect(data.isRenderingGlobe).toBe(true);
+        expect(data.projectionShaderVariant.name).toBe('globe');
         map.remove();
     });
 
     test('passes the pixel ratio and the evaluated light and sky to the painter', async () => {
         const map = createMap({pixelRatio: 2, style: {version: 8, sources: {}, layers: [], light: {intensity: 0.2}, sky: {'fog-color': 'red'}}});
         await map.once('idle');
+        const render = vi.spyOn(map.painter, 'render');
 
         map.redraw();
 
-        expect(map.painter.frameRenderContext.data.pixelRatio).toBe(2);
-        expect(map.painter.frameRenderContext.data.light.intensity).toBe(0.2);
-        expect(map.painter.frameRenderContext.data.sky['fog-color']).toEqual(Color.red);
+        const data = render.mock.lastCall[2];
+        expect(data.pixelRatio).toBe(2);
+        expect(data.light.intensity).toBe(0.2);
+        expect(data.sky['fog-color']).toEqual(Color.red);
         map.remove();
     });
 });

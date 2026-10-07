@@ -393,10 +393,10 @@ export class Terrain {
 
     /**
      * create a regular mesh which will be used by all terrain-tiles
+     * @param globeEnabled - whether the globe is rendering, which adds the pole geometry of the edge tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(tileId: OverscaledTileID): Mesh {
-        const globeEnabled = this.painter.style.projection?.transitionState > 0;
+    getTerrainMesh(tileId: OverscaledTileID, globeEnabled: boolean): Mesh {
         const northPole = globeEnabled && tileId.canonical.y === 0;
         const southPole = globeEnabled && tileId.canonical.y === (1 << tileId.canonical.z) - 1;
         const key = `m_${northPole ? 'n' : ''}_${southPole ? 's' : ''}`;

@@ -1523,7 +1523,7 @@ export class Map extends Evented<MapEventType> {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
+     * This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](https://maplibre-gl-three.readthedocs.io/latest/getting-started/#programmatically-calculating-terrain-height)
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
@@ -1641,6 +1641,7 @@ export class Map extends Evented<MapEventType> {
             this._resizeCanvas(width, height, this._clampedPixelRatio);
             this.painter.resize(width, height, this._clampedPixelRatio);
         }
+        this.style?.resize();
 
         this._resizeTransform(constrainTransform);
     }
@@ -4447,6 +4448,7 @@ export class Map extends Evented<MapEventType> {
             moving: this.isMoving(),
             fadeDuration,
             symbolFadeChange: this.style.placement.symbolFadeChange(now()),
+            variableOffsets: this.style.placement.variableOffsets,
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
             projectionTransition,
@@ -4561,7 +4563,7 @@ export class Map extends Evented<MapEventType> {
      * ```ts
      * map.triggerRepaint();
      * ```
-     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+     * @see [Add 3D Tiles, 3D objects and models using Three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/)
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
     triggerRepaint(): void {
