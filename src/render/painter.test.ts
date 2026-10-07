@@ -1,5 +1,6 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
+import {FrameRenderContext} from './frame_render_context.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
@@ -28,9 +29,7 @@ describe('render', () => {
     });
 
     test('must not fail with incompletely loaded style', () => {
-        painter.render(style, transform, renderOptions);
-
-        expect(painter.frameRenderContext.currentPass).toBe('translucent');
+        expect(() => painter.render(style, transform, renderOptions)).not.toThrow();
     });
 
     test('calls terrainDepth', () => {
@@ -66,21 +65,21 @@ describe('render', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
-        vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+        const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         vi.spyOn(painter.drawFunctions, 'atmosphere').mockImplementation(() => {});
 
         const data = {...renderOptions, projectionTransition: 1, isRenderingGlobe: true};
 
         painter.render(style, transform, data);
 
-        expect(painter.frameRenderContext.transform).toBe(transform);
-        expect(painter.frameRenderContext.terrain).toBe(terrain);
-        expect(painter.frameRenderContext.data).toBe(data);
+        const frameRenderContext = terrainDepth.mock.calls[0][2];
+        expect(frameRenderContext.transform).toBe(transform);
+        expect(frameRenderContext.terrain).toBe(terrain);
+        expect(frameRenderContext.data).toBe(data);
     });
 
     test('uses frame render context for depth and blending when drawing a custom layer', () => {
-        painter.render(style, transform, renderOptions);
-        const frameRenderContext = painter.frameRenderContext;
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: renderOptions, context: painter.context, programCache: painter.programCache, currentPass: 'translucent', projection: style.projection});
         frameRenderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);

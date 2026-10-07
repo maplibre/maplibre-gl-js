@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Raycast 3D Tiles using Three.js</title>
+    <meta property="og:description" content="Use maplibre-gl-three to raycast against 3D Tiles and display the impact location." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-10-05" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #status {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            max-width: 100%;
+            box-sizing: border-box;
+            padding: 4px;
+            background-color: black;
+            color: white;
+            font-family: monospace;
+            white-space: pre-wrap;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.22.0/dist/proj4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/geotiff@3.0.5/dist-browser/geotiff.js"></script>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
+            "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
+            "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"
+        }
+    }
+</script>
+<div id="status">Click the 3D model to raycast</div>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from 'maplibre-gl';
+    import * as THREE from 'three';
+    import { ThreeDManager } from 'maplibre-gl-three';
+
+    const style = {
+        "version": 8,
+        "terrain": {
+            "source": "mapterhorn"
+        },
+        "projection": {
+            "type": "globe"
+        },
+        "layers": [
+            {
+                "id": "background-map",
+                "type": "raster",
+                "source": "osm-tiles"
+            }
+        ],
+        "sources": {
+            "mapterhorn": {
+                "type": "raster-dem",
+                "url": "https://tiles.mapterhorn.com/tilejson.json"
+            },
+            "osm-tiles": {
+                "type": "raster",
+                "tiles": [
+                    "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                ],
+                "tileSize": 256,
+                "minzoom": 0,
+                "maxzoom": 19,
+                "attribution": "&copy; OpenStreetMap contributors"
+            },
+        }
+    }
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 18,
+        center: [-75.5967, 40.0387],
+        pitch: 55,
+        bearing: -20,
+        maxPitch: 60,
+        style,
+        canvasContextAttributes: {antialias: true}
+    });
+
+    map.on('load', async () => {
+        const threeDManager = new ThreeDManager();
+        await threeDManager.init();
+        const layer = threeDManager.createLayer({id: 'agi-hq-3d'});
+        const tilesAsset = await layer.load3dTiles({
+            tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
+            offset: {east: 0, up: -234, south: 0}
+        });
+        map.addLayer(layer);
+
+        const scene = layer.three.getScene();
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        const camera = layer.three.getCamera();
+        const renderer = layer.three.getRenderer();
+        const statusElement = document.getElementById('status');
+
+        if (!renderer || !statusElement) return;
+
+        // Prepare the raycast arrow but do not show it yet.
+        const rayArrow = new THREE.ArrowHelper(
+            new THREE.Vector3(0, 0, -1), new THREE.Vector3(), 1, 0xffcc33
+        );
+        rayArrow.visible = false;
+        scene.add(rayArrow);
+
+        renderer.domElement.addEventListener('click', function (event) {
+            const result = raycastFromClick(event);
+            if (result) {
+                const {ecef_cameraOrigin, ecef_impactPoint} = result;
+                renderHit(ecef_cameraOrigin, ecef_impactPoint);
+            }
+        });
+
+        function renderHit(ecef_origin, ecef_impactPoint) {
+            const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
+            const ecef_rayLength = ecef_direction.length();
+            ecef_direction.normalize();
+        
+            drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
+
+            // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
+            const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
+            updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
+        }
+
+        function raycastFromOriginAndDirection(ecef_origin, ecef_direction) {
+            ecef_direction = ecef_direction.clone();
+            if (ecef_direction.lengthSq() === 0) {
+                statusElement.textContent = 'Cannot cast a ray with a zero direction.';
+                return;
+            }
+            ecef_direction.normalize();
+            raycaster.set(ecef_origin, ecef_direction);
+            // The raycaster works internally in LocalSpace; this converts ECEF to LocalSpace.
+            raycaster.ray.applyMatrix4(threeDManager.getAnchorEcefToLocalMatrix());
+            const intersections = raycaster.intersectObject(tilesAsset.getObject3D(), true);
+            const hit = intersections.length === 0 ? null : intersections[0];
+            if (!hit) return null;
+            // Convert LocalSpace back to ECEF.
+            hit.point.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
+            return hit.point;
+        }
+        function raycastFromClick(event) {
+            // From pixels (MapLibre) to normalized device coordinates as expected by Three.js.
+            const bounds = renderer.domElement.getBoundingClientRect();
+            pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+            pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+
+            raycaster.setFromCamera(pointer, camera);
+            // The camera ray is in LocalSpace and our raycast function expects ECEF. Convert to ECEF.
+            raycaster.ray.applyMatrix4(threeDManager.getAnchorLocalToEcefMatrix());
+
+            const ecef_cameraOrigin = raycaster.ray.origin.clone();
+            const ecef_impactPoint = raycastFromOriginAndDirection(raycaster.ray.origin, raycaster.ray.direction);
+            if (!ecef_impactPoint) {
+                return null;
+            }
+            return {
+                ecef_cameraOrigin,
+                ecef_impactPoint
+            }
+        }
+        
+        // Functions used by renderHit are below. 
+        function drawArrow(origin, direction, length) {
+            rayArrow.position.copy(origin);
+            rayArrow.setDirection(direction);
+            rayArrow.setLength(length, length * 0.1, length * 0.03);
+            rayArrow.visible = true;
+        }
+        function updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint) {
+            const str = 
+            `Raycasting impact Point (WGS84)\n\n` +
+            `lngLatAlt EPSG:4326/EPSG:9707: (lon: ${lngLatAlt_impactPoint.point[0].toFixed(6)}°, lat: ${lngLatAlt_impactPoint.point[1].toFixed(6)}°, alt: ${lngLatAlt_impactPoint.height.toFixed(1)}m orthometric)\n` + 
+            `ECEF EPSG:4978:                (${ecef_impactPoint.x.toFixed(1)}m, ${ecef_impactPoint.y.toFixed(1)}m, ${ecef_impactPoint.z.toFixed(1)}m)`;
+            console.log(str);
+            statusElement.textContent = str;
+        }
+    });
+</script>
+</body>
+</html>

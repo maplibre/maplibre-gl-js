@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Add 3D Tiles, 3D objects and models using Three.js</title>
+    <meta property="og:description" content="Use maplibre-gl-three to add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js and 3d-tiles-renderer together." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-10-05" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.22.0/dist/proj4.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/geotiff@3.0.5/dist-browser/geotiff.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+            "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
+            "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
+            "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
+            "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
+            "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
+            "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"
+        }
+    }
+</script>
+    <div id="map"></div>
+
+    <script type="module">
+        import * as maplibregl from 'maplibre-gl';
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+        import { ThreeDManager } from 'maplibre-gl-three';
+
+        const style = {
+            "version": 8,
+            "terrain": {
+                "source": "mapterhorn"
+            },
+            "projection": {
+                "type": "globe"
+            },
+            "layers": [
+                {
+                    "id": "background-map",
+                    "type": "raster",
+                    "source": "osm-tiles"
+                },
+                {
+                    "id": "rivers",
+                    "type": "line",
+                    "source": "osm-vectors",
+                    "filter": [
+                        "==",
+                        "type",
+                        "river"
+                    ],
+                    "paint": {
+                        "line-color": "rgba(69, 69, 255, 1)",
+                        "line-width": 3
+                    }
+                },
+                {
+                    "id": "roads-outline",
+                    "type": "line",
+                    "source": "osm-vectors",
+                    "filter": [
+                        "==",
+                        "type",
+                        "road"
+                    ],
+                    "paint": {
+                        "line-color": "rgba(10, 10, 10, 1)",
+                        "line-width": 6
+                    }
+                },
+                {
+                    "id": "roads-fill",
+                    "type": "line",
+                    "source": "osm-vectors",
+                    "filter": [
+                        "==",
+                        "type",
+                        "road"
+                    ],
+                    "paint": {
+                        "line-color": "rgba(255, 255, 255, 1)",
+                        "line-width": 4
+                    }
+                }
+            ],
+            "sources": {
+                "mapterhorn": {
+                   "type": "raster-dem",
+                    "url": "https://tiles.mapterhorn.com/tilejson.json"
+                },
+                "osm-tiles": {
+                    "type": "raster",
+                    "tiles": [
+                        "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    ],
+                    "tileSize": 256,
+                    "minzoom": 0,
+                    "maxzoom": 19,
+                    "attribution": "&copy; OpenStreetMap contributors"
+                },
+                "osm-vectors": {
+                    "type": "geojson",
+                    "data": {
+                    "type": "FeatureCollection",
+                    "name": "data",
+                    "features": [
+                        { "type": "Feature", "properties": { "type": "river" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59358962696858, 40.03772819453738 ], [ -75.593878571259893, 40.037677943356279 ], [ -75.594384223769737, 40.037696787549187 ], [ -75.595087740305161, 40.037558596801155 ], [ -75.595125428690991, 40.037367014173206 ], [ -75.600501, 40.035389 ], [ -75.603808, 40.034465 ] ] } },
+                        { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.605282, 40.041043 ], [ -75.601071, 40.040964 ], [ -75.597454, 40.04072 ], [ -75.595296, 40.040899 ], [ -75.592183, 40.041221 ] ] } },
+                        { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.59365715199317, 40.03684094712105 ], [ -75.594373231323885, 40.03837988954232 ], [ -75.595993831914456, 40.039780641215543 ], [ -75.596227813976469, 40.040122977386801 ], [ -75.596471218134923, 40.040628629896645 ], [ -75.596631, 40.040788 ] ] } },
+                        { "type": "Feature", "properties": { "type": "road" }, "geometry": { "type": "LineString", "coordinates": [ [ -75.596631, 40.040788 ], [ -75.596643956569906, 40.040630200246071 ], [ -75.596549735605336, 40.040375803641737 ], [ -75.596344, 40.040007 ], [ -75.596094334276657, 40.039717827239159 ], [ -75.594618205831765, 40.038455266313967 ], [ -75.593795342741203, 40.036796977337588 ] ] } }
+                    ]}
+                }
+            }
+        }
+        const map = new maplibregl.Map({
+            terrainSkirtLength: 'none',
+            container: 'map',
+            zoom: 16,
+            center: [-75.596, 40.038],
+            pitch: 55,
+            bearing: -20,
+            maxPitch: 60,
+            style,
+            canvasContextAttributes: { antialias: true }
+        });
+        map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }));
+
+        map.on('load', async () => {
+            const threeDManager = new ThreeDManager();
+            await threeDManager.init();
+            map.on('remove', () => threeDManager.destroy());
+            
+            // Add the Three.js scene below the "rivers" Style Spec layer
+            const layer = threeDManager.createLayer();
+            map.addLayer(layer, 'rivers');
+
+            // Add 3D Tiles to the scene
+            const tilesAsset = await layer.load3dTiles({
+                tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
+                offset: { east: 0, up: -234, south: 0 }
+            });
+
+            // Add a pink sphere
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(10, 32, 16),
+                new THREE.MeshStandardMaterial({ color: 0xff00ff })
+            );
+            sphere.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.598, 40.040], height: 130 }));
+            layer.three.getScene().add(sphere);
+
+            // Add a group of 4 spheres, with offsets in meter from a geographical center 
+            const placement = new THREE.Group();
+            placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.594, 40.040], height: 110 }));
+            const geometry = new THREE.SphereGeometry(10, 32, 16);
+            const northSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+            const southSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
+            const eastSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x0000ff }));
+            const westSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xffff00 }));
+            northSphere.position.set(0, 0, -30);
+            southSphere.position.set(0, 0, 30);
+            eastSphere.position.set(30, 0, 0);
+            westSphere.position.set(-30, 0, 0);
+            placement.add(northSphere, southSphere, eastSphere, westSphere);
+            layer.three.getScene().add(placement);
+
+            // Add a 3d model to the group.
+            const model = await new GLTFLoader().loadAsync(
+                'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf'
+            );
+            placement.add(model.scene);
+        });
+    </script>
+</body>
+
+</html>
