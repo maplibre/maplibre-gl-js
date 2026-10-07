@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Terminate the pooled web workers when the last map is removed, so a new map is not handed workers the browser already killed. Call `prewarm()` to keep them alive between maps, and re-send any state your plugin broadcasts into the workers from `onGlobalWorkersCreated`. ([#8706](https://github.com/maplibre/maplibre-gl-js/pull/8706)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Fix `map.resize(eventData, false)` constraining the camera with the `vertical-perspective` projection ([#8695](https://github.com/maplibre/maplibre-gl-js/pull/8695)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix an uncaught error when `setStyle` is called while the WebGL context is lost, since 6.12.0 ([#8693](https://github.com/maplibre/maplibre-gl-js/pull/8693)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix the view sliding hundreds of meters off the center when terrain is switched on during a gesture ([#8688](https://github.com/maplibre/maplibre-gl-js/pull/8688)) (by [@johncarmack1984](https://github.com/johncarmack1984))

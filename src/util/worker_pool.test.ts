@@ -1,4 +1,5 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
+import {Actor} from './actor.ts';
 import {WorkerPool} from './worker_pool.ts';
 
 describe('WorkerPool', () => {
@@ -39,5 +40,31 @@ describe('WorkerPool', () => {
         await Promise.resolve();
         expect(workersTerminated).toBe(4);
         expect(pool.workersPromise).toBeFalsy();
+    });
+
+    test('a weak acquirer does not keep the workers alive', async () => {
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
+
+        const pool = new WorkerPool();
+        await pool.weakAcquire((worker) => new Actor(worker, 'global'));
+        await pool.acquire('map-1');
+
+        pool.release('map-1');
+
+        expect(pool.workersPromise).toBeFalsy();
+    });
+
+    test('terminating the workers removes the weakly acquired actors', async () => {
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
+
+        const pool = new WorkerPool();
+        const actors = await pool.weakAcquire((worker) => new Actor(worker, 'global'));
+        await pool.acquire('map-1');
+        const removeSpy = vi.spyOn(actors[0], 'remove');
+
+        pool.release('map-1');
+        await Promise.resolve();
+
+        expect(removeSpy).toHaveBeenCalled();
     });
 });
