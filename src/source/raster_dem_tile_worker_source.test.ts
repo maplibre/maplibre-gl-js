@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source.ts';
 import {DEMData} from '../data/dem_data.ts';
-import {type WorkerDEMTileParameters} from './worker_source.ts';
+
+import type {WorkerDEMTileParameters} from './worker_source.ts';
 
 describe('loadTile', () => {
     test('loads DEM tile', async () => {

@@ -1,13 +1,14 @@
-import type {Projection, TileMeshUsage} from './projection.ts';
-import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {type PreparedShader, shaders} from '../../shaders/shaders.ts';
-import type {Context} from '../../webgl/context.ts';
 import {Mesh} from '../../render/mesh.ts';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import posAttributes from '../../data/pos_attributes.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+
+import type {Context} from '../../webgl/context.ts';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import type {Projection, TileMeshUsage} from './projection.ts';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';

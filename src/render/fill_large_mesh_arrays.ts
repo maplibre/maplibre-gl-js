@@ -1,6 +1,7 @@
-import {type LineIndexArray, type TriangleIndexArray} from '../data/array_types.g.ts';
 import {type Segment, SegmentVector} from '../data/segment.ts';
-import {type StructArray} from '../util/struct_array.ts';
+
+import type {LineIndexArray, TriangleIndexArray} from '../data/array_types.g.ts';
+import type {StructArray} from '../util/struct_array.ts';
 
 /**
  * This function will take any "mesh" and fill in into vertex buffers, breaking it up into multiple drawcalls as needed

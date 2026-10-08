@@ -1,6 +1,7 @@
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {beforeMapTest, createMap} from '../../util/test/util.ts';
-import {type Map} from '../map.ts';
+
+import type {Map} from '../map.ts';
 
 let map: Map;
 

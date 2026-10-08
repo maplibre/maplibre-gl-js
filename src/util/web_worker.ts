@@ -1,4 +1,6 @@
+import packageJSON from '../../package.json' with {type: 'json'};
 import {type AddProtocolAction, config} from './config.ts';
+
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 import type {GetResourceResponse, RequestParameters} from './ajax.ts';
@@ -23,13 +25,23 @@ function isCrossOrigin(url: string): boolean {
     }
 }
 
+/**
+ * The URL of the worker bundle next to this module, carrying the package version as a `v` query
+ * parameter so that a browser does not serve a worker cached from an older release.
+ */
 function defaultWorkerUrl(): string {
     const moduleUrl = import.meta.url;
     if (!/^https?:/.test(moduleUrl)) return '';
     const workerName = moduleUrl.endsWith('-dev.mjs')
         ? 'maplibre-gl-worker-dev.mjs'
         : 'maplibre-gl-worker.mjs';
-    return new URL(`./${workerName}`, moduleUrl).href;
+    const url = new URL(`./${workerName}`, moduleUrl);
+    url.searchParams.set('v', packageJSON.version);
+    return url.href;
+}
+
+function isClassicWorkerUrl(url: string): boolean {
+    return url.split(/[?#]/)[0].endsWith('.cjs');
 }
 
 function createWorker(url: string, asModule: boolean): Worker {
@@ -60,7 +72,7 @@ function importAsBlobUrl(url: string): string {
 
 export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
-    const asModule = url?.endsWith('.cjs') ? false : true;
+    const asModule = !isClassicWorkerUrl(url);
 
     if (!isCrossOrigin(url)) {
         return createWorker(url, asModule);

@@ -1,7 +1,6 @@
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
-
 import {browser} from '../util/browser.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 

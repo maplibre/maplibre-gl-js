@@ -1,4 +1,5 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
+
 import type {Handler} from '../handler_manager.ts';
 import type {Map} from '../map.ts';
 import type {TransformProvider} from './transform-provider.ts';

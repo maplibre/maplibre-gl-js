@@ -1,0 +1,81 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 512,
+      "pixelRatio": 1,
+      "operations": [
+        [
+          "wait"
+        ],
+        [
+          "setCenterClampedToGround",
+          false
+        ],
+        [
+          "setCenterElevation",
+          1500
+        ],
+        [
+          "idle"
+        ]
+      ],
+      "description": "Terrain and hillshade share a single 3000 m DEM sample at cell centre (31.5/64, 31.5/64). Fixed camera elevation isolates the alignment of the peak and its shading."
+    }
+  },
+  "center": [
+    0.17303466796875,
+    -0.17303440494082045
+  ],
+  "zoom": 12.5,
+  "pitch": 60,
+  "bearing": 30,
+  "projection": {
+    "type": "mercator"
+  },
+  "sources": {
+    "dem": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-dem-cell-centre-peak/{z}-{x}-{y}.png"
+      ],
+      "encoding": "terrarium",
+      "tileSize": 64,
+      "minzoom": 10,
+      "maxzoom": 10,
+      "bounds": [
+        0,
+        -0.35156029399227234,
+        0.3515625,
+        0
+      ]
+    }
+  },
+  "terrain": {
+    "source": "dem",
+    "exaggeration": 1
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "dem",
+      "paint": {
+        "hillshade-exaggeration": 1,
+        "hillshade-illumination-anchor": "map",
+        "hillshade-illumination-direction": 315,
+        "hillshade-shadow-color": "#242424",
+        "hillshade-highlight-color": "#ffffff",
+        "hillshade-accent-color": "#777777"
+      }
+    }
+  ]
+}

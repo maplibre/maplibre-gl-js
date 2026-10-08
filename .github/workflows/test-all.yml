@@ -122,9 +122,9 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v4
         with:
           node-version-file: '.nvmrc'
-      - name: install CJK fonts for local ideographs render tests
+      - name: install fonts for the render tests that draw text locally
         if: runner.os == 'Linux'
-        run: sudo apt install fonts-noto-cjk
+        run: sudo apt install fonts-noto-cjk fonts-noto-core
       - name: Disable AppArmor
         if: runner.os == 'Linux'
         run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
@@ -226,7 +226,7 @@ jobs:
           COVERAGE_FORMAT: "lcov"
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ${{ github.workspace }}/coverage-merged/coverage-final.json
           verbose: true

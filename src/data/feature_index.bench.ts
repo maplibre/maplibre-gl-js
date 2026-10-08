@@ -1,4 +1,4 @@
-import {bench} from 'vitest';
+import {test} from 'vitest';
 import {FeatureIndex} from './feature_index.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 
@@ -16,6 +16,8 @@ featureIndex.vtLayers = {
 
 const layerIdsToTest = new Set(Array.from({length: layerCount}, (_, i) => `non-existing-layer-${i}`));
 
-bench('FeatureIndex.loadMatchingFeature', () => {
-    featureIndex.loadMatchingFeature({}, 0, 0, 0, filter, layerIdsToTest, [], {}, {});
+test('FeatureIndex.loadMatchingFeature', async ({bench}) => {
+    await bench('FeatureIndex.loadMatchingFeature', () => {
+        featureIndex.loadMatchingFeature({}, 0, 0, 0, filter, layerIdsToTest, [], {}, {});
+    }).run();
 });

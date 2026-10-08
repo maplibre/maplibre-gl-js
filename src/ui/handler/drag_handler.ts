@@ -1,7 +1,8 @@
 import {DOM} from '../../util/dom.ts';
+
+import type {DragMoveStateManager} from './drag_move_state_manager.ts';
+import type {Handler} from '../handler_manager.ts';
 import type Point from '@mapbox/point-geometry';
-import {type DragMoveStateManager} from './drag_move_state_manager.ts';
-import {type Handler} from '../handler_manager.ts';
 
 type DragMovementResult = {
     bearingDelta?: number;

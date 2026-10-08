@@ -1,6 +1,7 @@
+import {premultiplyAlpha} from '../util/image.ts';
+
 import type {Context} from './context.ts';
 import type {RGBAImage, AlphaImage} from '../util/image.ts';
-import {premultiplyAlpha} from '../util/image.ts';
 
 export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
 export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['LINEAR_MIPMAP_LINEAR'] | WebGLRenderingContextBase['NEAREST'];

@@ -1,10 +1,9 @@
 import {Event, type ErrorEvent} from '../util/evented.ts';
-
 import {DOM} from '../util/dom.ts';
 import Point from '@mapbox/point-geometry';
 import {extend} from '../util/util.ts';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {Map} from './map.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';

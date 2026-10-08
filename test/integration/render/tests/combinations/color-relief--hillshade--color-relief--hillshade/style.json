@@ -1,0 +1,146 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256,
+      "allowed": 0.01,
+      "description": "Two color-relief layers, each under a hillshade, with no vector layer between them. The companion to the vector-fill sandwich: it isolates whether a fill layer between the pairs is what changes the result."
+    }
+  },
+  "center": [
+    0,
+    45
+  ],
+  "zoom": 1,
+  "sources": {
+    "dem-ocean-color-relief": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/gebco/{z}-{x}-{y}.terrain.webp"
+      ],
+      "tileSize": 512,
+      "maxzoom": 8,
+      "encoding": "mapbox"
+    },
+    "dem-ocean-hillshade": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/gebco/{z}-{x}-{y}.terrain.webp"
+      ],
+      "tileSize": 512,
+      "maxzoom": 8,
+      "encoding": "mapbox"
+    },
+    "dem-terrain-color-relief": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/jaxa/{z}-{x}-{y}.terrain.webp"
+      ],
+      "tileSize": 512,
+      "maxzoom": 12,
+      "encoding": "mapbox"
+    },
+    "dem-terrain-hillshade": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/jaxa/{z}-{x}-{y}.terrain.webp"
+      ],
+      "tileSize": 512,
+      "maxzoom": 12,
+      "encoding": "mapbox"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#0d1a0a"
+      }
+    },
+    {
+      "id": "bathymetry-color-relief",
+      "type": "color-relief",
+      "source": "dem-ocean-color-relief",
+      "paint": {
+        "color-relief-opacity": 1,
+        "color-relief-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "elevation"
+          ],
+          -9500,
+          "#020d18",
+          -4000,
+          "#041828",
+          -500,
+          "#082438",
+          -1,
+          "#0d3050",
+          0,
+          "rgba(0,0,0,0)"
+        ]
+      }
+    },
+    {
+      "id": "bathymetry-hillshade",
+      "type": "hillshade",
+      "source": "dem-ocean-hillshade",
+      "paint": {
+        "hillshade-method": "igor",
+        "hillshade-illumination-anchor": "map",
+        "hillshade-exaggeration": 0.4,
+        "hillshade-shadow-color": "#000000",
+        "hillshade-highlight-color": "#1a3a5c",
+        "hillshade-accent-color": "#000000"
+      }
+    },
+    {
+      "id": "terrain-color-relief",
+      "type": "color-relief",
+      "source": "dem-terrain-color-relief",
+      "paint": {
+        "color-relief-opacity": 1,
+        "color-relief-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "elevation"
+          ],
+          0,
+          "rgba(0,0,0,0)",
+          0.1,
+          "#006600",
+          500,
+          "#00FF00",
+          1000,
+          "#FFFF00",
+          2000,
+          "#FF8800",
+          3000,
+          "#FF0000",
+          5000,
+          "#FFFFFF"
+        ]
+      }
+    },
+    {
+      "id": "terrain-hillshade",
+      "type": "hillshade",
+      "source": "dem-terrain-hillshade",
+      "paint": {
+        "hillshade-method": "standard",
+        "hillshade-exaggeration": 0.6,
+        "hillshade-shadow-color": "#000000",
+        "hillshade-highlight-color": "#ffffff",
+        "hillshade-accent-color": "#000000"
+      }
+    }
+  ]
+}

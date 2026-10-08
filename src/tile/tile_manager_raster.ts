@@ -1,8 +1,9 @@
 import {now} from '../util/time_control.ts';
 import {getEdgeTiles} from '../util/util.ts';
 import {FadingDirections, FadingRoles, type Tile} from './tile.ts';
-import {type OverscaledTileID} from './tile_id.ts';
-import {type InViewTiles} from './tile_manager_in_view_tiles.ts';
+
+import type {OverscaledTileID} from './tile_id.ts';
+import type {InViewTiles} from './tile_manager_in_view_tiles.ts';
 
 export function isRasterType(type: string): boolean {
     return type === 'raster' || type === 'image' || type === 'video';
@@ -146,7 +147,7 @@ function updateFadingChildren(
     now: number, 
     sourceMaxZoom: number,
     rasterFadeDuration: number): boolean {
-    if (childIDs[0].overscaledZ >= sourceMaxZoom) return false;
+    if (childIDs[0].overscaledZ > sourceMaxZoom) return false;
     let foundFader = false;
 
     // find loaded child tiles to fade with the ideal tile

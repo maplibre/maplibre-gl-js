@@ -1,0 +1,66 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 360,
+      "height": 440
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 2,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "labels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": { "name": "شارع الملك فهد بن عبد العزيز في مدينة الرياض" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 26 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "المكتب الرئيسي Main Office شارع النيل" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 9 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "شارع الملك 123 فهد" },
+            "geometry": { "type": "Point", "coordinates": [ 0, -9 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "شارع (الملك 123) فهد" },
+            "geometry": { "type": "Point", "coordinates": [ 0, -26 ] }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "white" }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "labels",
+      "layout": {
+        "text-allow-overlap": true,
+        "text-max-width": 9,
+        "text-line-height": 1.3,
+        "text-size": 16,
+        "text-field": ["get", "name"],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": { "text-color": "black" }
+    }
+  ]
+}

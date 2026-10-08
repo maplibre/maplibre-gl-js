@@ -4,8 +4,9 @@ import {Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {waitForEvent} from '../util/test/util.ts';
+
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -36,7 +37,7 @@ class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new MercatorTransform();
+        this.transform = createMercatorTransform();
         this.style = {};
         this.painter = {
             context: {
@@ -107,6 +108,23 @@ describe('CanvasSource', () => {
             createSource({canvas: canvasEl, eventedParent});
             expect(errorSpy).not.toHaveBeenCalled();
         });
+    });
+
+    test('load catches invalid coordinates from setCoordinates and fires error via _finishLoading', async () => {
+        const source = createSource({
+            coordinates: [[0, 0], [1, 0], [1, 91], [0, 1]],
+            eventedParent: map,
+        });
+        const errorHandler = vi.fn();
+        map.on('error', errorHandler);
+
+        source.map = map;
+        await expect(source.load()).resolves.toBeUndefined();
+
+        expect(errorHandler).toHaveBeenCalledTimes(1);
+        expect(errorHandler.mock.calls[0][0].error).toBeInstanceOf(Error);
+        expect(errorHandler.mock.calls[0][0].error.message).toMatch(/latitude/i);
+        expect(source.loaded()).toBe(true);
     });
 
     test('can be initialized with HTML element', async () => {

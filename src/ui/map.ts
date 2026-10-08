@@ -13,7 +13,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
-import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -389,6 +389,7 @@ export type MapOptions = {
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
+     * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
      * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
@@ -641,6 +642,7 @@ export class Map extends Evented<MapEventType> {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
+    _clampedPixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     _missingStyleImageResolver: MissingStyleImageResolver | null = null;
     /** @internal */
@@ -818,7 +820,7 @@ export class Map extends Evented<MapEventType> {
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.depthDirty = true;
+            this.painter.markTerrainDepthDirty();
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
@@ -1334,7 +1336,8 @@ export class Map extends Evented<MapEventType> {
      * in the viewport. LngLatBounds represent a box that is always axis-aligned with bearing 0.
      * Bounds will be taken in `[sw, ne]` order. Southwest point will always be to the left of the northeast point.
      * @param options - Options object
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     * plus `padding` when `absolutePadding` is set.
      * If map is unable to fit, method will warn and return undefined.
      * @example
      * ```ts
@@ -1344,7 +1347,7 @@ export class Map extends Evented<MapEventType> {
      * });
      * ```
      */
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined { return this._camera.cameraForBounds(bounds, options); }
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined { return this._camera.cameraForBounds(bounds, options); }
     /**
      * Pans and zooms the map to contain its visible area within the specified geographical bounds.
      * This function will also reset the map's bearing to 0 if bearing is nonzero.
@@ -1415,6 +1418,25 @@ export class Map extends Evented<MapEventType> {
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this { this._camera.jumpTo(options, eventData); return this; }
+    /**
+     * Calculates constrained camera options that place a geographic anchor at a screen point
+     * without changing the map, using the same logic as MapLibre's interaction handlers.
+     *
+     * @param options - Anchor and optional zoom.
+     * @returns Camera options that can be passed to {@link Map.jumpTo}.
+     * @example
+     * ```ts
+     * const cameraOptions = map.calculateAnchoredCameraOptions({
+     *   anchorLocation: map.unproject(pointerDownPosition),
+     *   anchorScreenPoint: currentPointerPosition,
+     *   zoom: map.getZoom() + 1,
+     * });
+     * map.jumpTo(cameraOptions);
+     * ```
+     */
+    calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions {
+        return this._camera.calculateAnchoredCameraOptions(options);
+    }
     /**
      * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
      * @param cameraLngLat - The lng, lat of the camera to look from
@@ -1501,7 +1523,7 @@ export class Map extends Evented<MapEventType> {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
+     * This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](https://maplibre-gl-three.readthedocs.io/latest/getting-started/#programmatically-calculating-terrain-height)
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
@@ -1523,6 +1545,7 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
+     * Under `globe` and `vertical-perspective` the calculation follows the sphere while the map renders as a globe, keeping the point looked at on the sea-level sphere; `altitudeTo` only becomes the center elevation.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
@@ -1544,7 +1567,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform);
         }
-        return this._camera.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        return this._camera.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1552,8 +1575,10 @@ export class Map extends Evented<MapEventType> {
      * `container` element.
      *
      * Checks if the map container size changed and updates the map if it has changed.
-     * This method must be called after the map's `container` is resized programmatically
-     * or when the map is shown after being initially hidden with CSS.
+     * With the default `trackResize: true`, container size changes are picked up automatically,
+     * including a container that becomes visible after being hidden with CSS. Call this method
+     * explicitly when `trackResize` is `false`, or when the map's size changes in a way the
+     * container's `ResizeObserver` cannot observe.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, and `resize`.
      *
@@ -1561,10 +1586,10 @@ export class Map extends Evented<MapEventType> {
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
      * @example
-     * Resize the map when the map container is shown after being initially hidden with CSS.
+     * Resize a map with `trackResize` disabled when its container is shown after being hidden with CSS.
      * ```ts
      * let mapDiv = document.getElementById('map');
-     * if (mapDiv.style.visibility === true) map.resize();
+     * if (mapDiv.style.visibility === 'visible') map.resize();
      * ```
      */
     resize(eventData?: any, constrainTransform = true): this {
@@ -1603,19 +1628,20 @@ export class Map extends Evented<MapEventType> {
     _resizeInternal(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
-        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-        this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
+        this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+        this._resizeCanvas(width, height, this._clampedPixelRatio);
+        this.painter.resize(width, height, this._clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
         if (this.painter.overLimit()) {
             const gl = this.painter.context.gl;
             // store updated _maxCanvasSize value
             this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-            this._resizeCanvas(width, height, clampedPixelRatio);
-            this.painter.resize(width, height, clampedPixelRatio);
+            this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+            this._resizeCanvas(width, height, this._clampedPixelRatio);
+            this.painter.resize(width, height, this._clampedPixelRatio);
         }
+        this.style?.resize();
 
         this._resizeTransform(constrainTransform);
     }
@@ -1631,6 +1657,8 @@ export class Map extends Evented<MapEventType> {
      * @internal
      * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
+     * Warns once when the ratio is scaled down. The message carries no sizes: this runs on every
+     * resize and `warnOnce` de-duplicates by message, so sizes would warn on every drag frame.
      */
     _getClampedPixelRatio(width: number, height: number): number {
         const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
@@ -1642,7 +1670,13 @@ export class Map extends Evented<MapEventType> {
         const widthScaleFactor = canvasWidth > maxCanvasWidth ? (maxCanvasWidth / canvasWidth) : 1;
         const heightScaleFactor = canvasHeight > maxCanvasHeight ? (maxCanvasHeight / canvasHeight) : 1;
 
-        return Math.min(widthScaleFactor, heightScaleFactor) * pixelRatio;
+        const scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
+
+        if (scaleFactor < 1) {
+            warnOnce('The canvas is larger than maxCanvasSize and is rendered at a lower pixel ratio to fit. Increase maxCanvasSize, within MAX_TEXTURE_SIZE, to render at full resolution.');
+        }
+
+        return scaleFactor * pixelRatio;
     }
 
     /**
@@ -1714,7 +1748,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
-        this._camera.transform.setMaxBounds(LngLatBounds.convert(bounds));
+        this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
         return this._update();
     }
 
@@ -1744,9 +1778,7 @@ export class Map extends Evented<MapEventType> {
 
         if (minZoom >= defaultMinZoom && minZoom <= this._camera.transform.maxZoom) {
             const zoomBefore = this._camera.transform.zoom;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMinZoom(minZoom);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMinZoom(minZoom));
             this._update();
             if (zoomBefore !== this._camera.transform.zoom) {
                 this.fire(new MapMovementEvent('zoomstart'))
@@ -1799,9 +1831,7 @@ export class Map extends Evented<MapEventType> {
 
         if (maxZoom >= this._camera.transform.minZoom) {
             const zoomBefore = this._camera.transform.zoom;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMaxZoom(maxZoom);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMaxZoom(maxZoom));
             this._update();
             if (zoomBefore !== this._camera.transform.zoom) {
                 this.fire(new MapMovementEvent('zoomstart'))
@@ -1849,9 +1879,7 @@ export class Map extends Evented<MapEventType> {
 
         if (minPitch >= defaultMinPitch && minPitch <= this._camera.transform.maxPitch) {
             const pitchBefore = this._camera.transform.pitch;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMinPitch(minPitch);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMinPitch(minPitch));
             this._update();
             if (pitchBefore !== this._camera.transform.pitch) {
                 this.fire(new MapMovementEvent('pitchstart'))
@@ -1895,9 +1923,7 @@ export class Map extends Evented<MapEventType> {
 
         if (maxPitch >= this._camera.transform.minPitch) {
             const pitchBefore = this._camera.transform.pitch;
-            const tr = this._camera.getTransformForUpdate();
-            tr.setMaxPitch(maxPitch);
-            this._camera.applyUpdatedTransform(tr);
+            this._camera.applyTransformChange(tr => tr.setMaxPitch(maxPitch));
             this._update();
             if (pitchBefore !== this._camera.transform.pitch) {
                 this.fire(new MapMovementEvent('pitchstart'))
@@ -1996,7 +2022,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
-        this._camera.transform.setRenderWorldCopies(renderWorldCopies);
+        this._camera.applyTransformChange(tr => tr.setRenderWorldCopies(renderWorldCopies));
         return this._update();
     }
 
@@ -2015,13 +2041,17 @@ export class Map extends Evented<MapEventType> {
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): this {
-        this._camera.transform.setConstrainOverride(constrain);
+        this._camera.applyTransformChange(tr => tr.setConstrainOverride(constrain));
         return this._update();
     }
 
     /**
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
+     *
+     * A location behind the camera has no corresponding pixel. For such a location the
+     * returned point is outside the viewport, on the side through which the location left
+     * the screen, one viewport width or height away from the edge.
      *
      * @param lnglat - The geographical location to project.
      * @returns The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
@@ -2089,7 +2119,7 @@ export class Map extends Evented<MapEventType> {
         return this._camera.isRotating() || this._handlers?.isRotating() || false;
     }
 
-    _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener {
+    _createDelegates(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener['delegates'] {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
             const mousemove = (e) => {
@@ -2105,7 +2135,7 @@ export class Map extends Evented<MapEventType> {
             const mouseout = () => {
                 mousein = false;
             };
-            return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
+            return {mousemove, mouseout};
         } else if (type === 'mouseleave' || type === 'mouseout') {
             let mousein = false;
             const mousemove = (e) => {
@@ -2124,7 +2154,7 @@ export class Map extends Evented<MapEventType> {
                     listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
                 }
             };
-            return {layers: layerIds, listener, delegates: {mousemove, mouseout}};
+            return {mousemove, mouseout};
         } else {
             const delegate = (e) => {
                 const existingLayers = layerIds.filter((layerId) => this.getLayer(layerId));
@@ -2136,14 +2166,17 @@ export class Map extends Evented<MapEventType> {
                     delete e.features;
                 }
             };
-            return {layers: layerIds, listener, delegates: {[type]: delegate}};
+            return {[type]: delegate};
         }
     }
 
-    _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
+    _addDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
         this._delegatedListeners ||= {} as Record<keyof MapEventType, DelegatedListener[]>;
         this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
+        for (const event in delegatedListener.delegates) {
+            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
+        }
     }
 
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener): void {
@@ -2264,7 +2297,7 @@ export class Map extends Evented<MapEventType> {
      * map.on('click', 'countries', (e) => {
      *   new Popup()
      *     .setLngLat(e.lngLat)
-     *     .setHTML(`Country name: ${e.features[0].properties.name}`)
+     *     .setText(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
      * });
      * ```
@@ -2311,13 +2344,8 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
-
-        this._saveDelegatedListener(type, delegatedListener);
-
-        for (const event in delegatedListener.delegates) {
-            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
-        }
+        const delegatedListener: DelegatedListener = {layers: layerIds, listener, delegates: this._createDelegates(type, layerIds, listener)};
+        this._addDelegatedListener(type, delegatedListener);
 
         return {
             unsubscribe: () => {
@@ -2409,21 +2437,11 @@ export class Map extends Evented<MapEventType> {
 
         const layerIds = typeof layerIdsOrListener === 'string' ? [layerIdsOrListener] : layerIdsOrListener as string[];
 
-        const delegatedListener = this._createDelegatedListener(type, layerIds, listener);
-
-        for (const key in delegatedListener.delegates) {
-            const delegate: Delegate = delegatedListener.delegates[key];
-            delegatedListener.delegates[key] = (...args: Parameters<Delegate>) => {
-                this._removeDelegatedListener(type, layerIds, listener);
-                delegate(...args);
-            };
-        }
-
-        this._saveDelegatedListener(type, delegatedListener);
-
-        for (const event in delegatedListener.delegates) {
-            this.once(event as keyof MapEventType, delegatedListener.delegates[event]);
-        }
+        const delegatedListener: DelegatedListener = {layers: layerIds, listener, delegates: this._createDelegates(type, layerIds, (e) => {
+            this._removeDelegatedListener(type, layerIds, listener);
+            listener.call(this, e);
+        })};
+        this._addDelegatedListener(type, delegatedListener);
 
         return this;
     }
@@ -2948,11 +2966,8 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = null;
             this.painter.renderToTexture = null;
-            this._camera.terrain = null;
-            this._camera.transform.setMinElevationForCurrentTile(0);
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(0);
-            }
+            this.painter.destroyRTTResources();
+            this._camera.setTerrain(null);
         } else {
             // add terrain
             const tileManager = this.style.tileManagers[options.source];
@@ -2974,9 +2989,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this._camera.terrain = this.terrain;
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+            this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
@@ -2997,11 +3010,9 @@ export class Map extends Evented<MapEventType> {
             this.terrain.resetElevationCache();
             this.style.triggerSymbolPlacement();
         }
-        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
-            }
+        if (isTerrainSourceEvent && event.tile) {
+            this.painter.markTerrainDepthDirty();
+            this._camera.applyTerrainChange();
         }
 
         if (!event.tile) return;
@@ -4043,16 +4054,33 @@ export class Map extends Evented<MapEventType> {
         return this._canvas;
     }
 
+    /**
+     * @internal
+     * The viewport in whole CSS pixels, shared by the canvas, the painter and the transform.
+     */
     _containerDimensions(): number[] {
         let width = 0;
         let height = 0;
 
         if (this._container) {
-            width = this._container.clientWidth || 400;
-            height = this._container.clientHeight || 300;
+            width = Math.floor(this._container.clientWidth) || 400;
+            height = Math.floor(this._container.clientHeight) || 300;
         }
 
         return [width, height];
+    }
+
+    /**
+     * Determines if the initial resize event should be handled based on the container's dimensions.
+     *
+     * @returns `true` if the initial resize event should be handled, `false` otherwise.
+     */
+    _shouldHandleInitialResize(): boolean {
+        if (!this._container?.clientWidth || !this._container.clientHeight) {
+            return false;
+        }
+        const [width, height] = this._containerDimensions();
+        return width !== this._camera.transform.width || height !== this._camera.transform.height;
     }
 
     /**
@@ -4073,7 +4101,9 @@ export class Map extends Evented<MapEventType> {
         this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
             if (!initialResizeEventCaptured) {
                 initialResizeEventCaptured = true;
-                return;
+                if (!this._shouldHandleInitialResize()) {
+                    return;
+                }
             }
             throttledResizeCallback(entries);
         });
@@ -4104,6 +4134,9 @@ export class Map extends Evented<MapEventType> {
     }
 
     _setupContainer(): void {
+        const dimensions = this._containerDimensions();
+        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
+
         const container = this._container;
         container.classList.add('maplibregl-map');
 
@@ -4119,8 +4152,6 @@ export class Map extends Evented<MapEventType> {
         this._canvas.setAttribute('aria-label', this._getUIString('Map.Title'));
         this._canvas.setAttribute('role', 'region');
 
-        const dimensions = this._containerDimensions();
-        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
         this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
@@ -4145,14 +4176,21 @@ export class Map extends Evented<MapEventType> {
         this._container.classList.remove('maplibregl-map');
     }
 
+    /**
+     * @internal
+     * Sizes the backing store to whole device pixels and the CSS box to cover exactly that many, so
+     * the compositor never rescales the canvas. A pixel ratio can sit a fraction below a whole
+     * number, where truncating the count would cost a whole pixel per axis.
+     */
     _resizeCanvas(width: number, height: number, pixelRatio: number): void {
-        // Request the required canvas size taking the pixelratio into account.
-        this._canvas.width = Math.floor(pixelRatio * width);
-        this._canvas.height = Math.floor(pixelRatio * height);
+        const canvasWidth = Math.round(pixelRatio * width);
+        const canvasHeight = Math.round(pixelRatio * height);
 
-        // Maintain the same canvas size, potentially downscaling it for HiDPI displays
-        this._canvas.style.width = `${width}px`;
-        this._canvas.style.height = `${height}px`;
+        this._canvas.width = canvasWidth;
+        this._canvas.height = canvasHeight;
+
+        this._canvas.style.width = `${canvasWidth / pixelRatio}px`;
+        this._canvas.style.height = `${canvasHeight / pixelRatio}px`;
     }
 
     /**
@@ -4182,7 +4220,7 @@ export class Map extends Evented<MapEventType> {
             throw new GPUInitializationError(attributes, creationEvent);
         }
 
-        this.painter = new Painter(gl, this._camera.transform);
+        this.painter = new Painter(gl);
     }
 
     /**
@@ -4193,7 +4231,6 @@ export class Map extends Evented<MapEventType> {
      */
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         this._camera.migrateProjection(newTransform, newCameraHelper);
-        this.painter.transform = newTransform;
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));
@@ -4399,16 +4436,28 @@ export class Map extends Evented<MapEventType> {
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
+        const projection = this.style.projection;
+        const projectionTransition = projection?.transitionState ?? 0;
+
         // Actually draw
-        this.painter.render(this.style, {
+        this.painter.render(this.style, this._camera.transform, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
             rotating: this.isRotating(),
             zooming: this.isZooming(),
             moving: this.isMoving(),
             fadeDuration,
+            symbolFadeChange: this.style.placement.symbolFadeChange(now()),
+            variableOffsets: this.style.placement.variableOffsets,
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
+            projectionTransition,
+            isRenderingGlobe: projectionTransition > 0,
+            projectionShaderVariant: projection ? {name: projection.shaderVariantName, define: projection.shaderDefine, prelude: projection.shaderPreludeCode} : undefined,
+            useSubdivision: projection?.useSubdivision ?? false,
+            pixelRatio: this._clampedPixelRatio,
+            light: this.style.light?.getEvaluated(),
+            sky: this.style.sky?.getEvaluated(),
         });
 
         this.fire(new MapLibreEvent('render'));
@@ -4514,7 +4563,7 @@ export class Map extends Evented<MapEventType> {
      * ```ts
      * map.triggerRepaint();
      * ```
-     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+     * @see [Add 3D Tiles, 3D objects and models using Three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/)
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
     triggerRepaint(): void {

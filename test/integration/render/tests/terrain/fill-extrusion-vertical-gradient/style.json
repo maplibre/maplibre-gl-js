@@ -1,0 +1,87 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "description": "Vertical gradient on a fill-extrusion standing on high ground. The DEM here is about 1200m, so the wall shading must still come from the 400m building itself rather than from its altitude above sea level.",
+      "threshold": 0.02
+    }
+  },
+  "center": [
+    11.43402,
+    47.36645
+  ],
+  "zoom": 14,
+  "pitch": 55,
+  "bearing": 0,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "buildings": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                11.43152,
+                47.36795
+              ],
+              [
+                11.43652,
+                47.36795
+              ],
+              [
+                11.43652,
+                47.372949999999996
+              ],
+              [
+                11.43152,
+                47.372949999999996
+              ],
+              [
+                11.43152,
+                47.36795
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "building",
+      "type": "fill-extrusion",
+      "source": "buildings",
+      "paint": {
+        "fill-extrusion-color": "#dddddd",
+        "fill-extrusion-height": 400,
+        "fill-extrusion-base": 0,
+        "fill-extrusion-vertical-gradient": true,
+        "fill-extrusion-opacity": 1.0
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  }
+}

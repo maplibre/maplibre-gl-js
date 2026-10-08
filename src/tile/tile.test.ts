@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
-import {Tile} from './tile.ts';
+import {FadingDirections, FadingRoles, Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import fs from 'fs';
 import path from 'path';
@@ -9,7 +9,49 @@ import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {extend} from '../util/util.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
-import type {Painter} from '../render/painter.ts';
+
+import type {Style} from '../style/style.ts';
+
+describe('isRenderable', () => {
+    test('keeps transparent incoming raster tiles renderable so their fade can advance', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'loaded';
+        tile.setCrossFadeLogic({
+            fadingRole: FadingRoles.Base,
+            fadingDirection: FadingDirections.Incoming,
+            fadingParentID: new OverscaledTileID(0, 0, 0, 0, 0),
+            fadeEndTime: 300
+        });
+        tile.fadeOpacity = 0;
+
+        expect(tile.isRenderable(false)).toBe(true);
+    });
+
+    test('keeps transparent self-fading raster tiles renderable only after loading', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.setSelfFadeLogic(300);
+        tile.fadeOpacity = 0;
+
+        expect(tile.isRenderable(false)).toBe(false);
+        tile.state = 'loaded';
+        expect(tile.isRenderable(false)).toBe(true);
+    });
+
+    test('excludes departing raster tiles once they are transparent', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.state = 'loaded';
+        tile.setCrossFadeLogic({
+            fadingRole: FadingRoles.Base,
+            fadingDirection: FadingDirections.Departing,
+            fadingParentID: new OverscaledTileID(0, 0, 0, 0, 0),
+            fadeEndTime: 300
+        });
+
+        expect(tile.isRenderable(false)).toBe(true);
+        tile.fadeOpacity = 0;
+        expect(tile.isRenderable(false)).toBe(false);
+    });
+});
 
 describe('querySourceFeatures', () => {
     const features = [{
@@ -31,7 +73,7 @@ describe('querySourceFeatures', () => {
         geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
         tile.loadVectorData(
             createVectorData({rawTileData: fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}})}),
-            createPainter()
+            createStyle()
         );
 
         test('query all source features', () => {
@@ -94,7 +136,7 @@ describe('querySourceFeatures', () => {
 
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData()}),
-            createPainter()
+            createStyle()
         );
 
         result = [];
@@ -118,9 +160,9 @@ describe('querySourceFeatures', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
         const spy = vi.spyOn(tile, 'unloadVectorData');
-        const painter = createPainter();
+        const style = createStyle();
 
-        tile.loadVectorData(null, painter);
+        tile.loadVectorData(null, style);
 
         expect(spy).toHaveBeenCalledWith();
     });
@@ -128,9 +170,9 @@ describe('querySourceFeatures', () => {
     test('loadVectorData should not do anything if etag was unchanged', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loading';
-        const painter = createPainter();
+        const style = createStyle();
 
-        tile.loadVectorData({etagUnmodified: true}, painter);
+        tile.loadVectorData({etagUnmodified: true}, style);
 
         expect(tile.state).toBe('loaded');
     });
@@ -141,11 +183,11 @@ describe('querySourceFeatures', () => {
 
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData()}),
-            createPainter()
+            createStyle()
         );
         tile.loadVectorData(
             createVectorData(),
-            createPainter()
+            createStyle()
         );
 
         const features = [];
@@ -286,7 +328,7 @@ describe('rtl text detection', () => {
         symbolBucket.hasRTLText = true;
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData(), buckets: [symbolBucket]}),
-            createPainter({
+            createStyle({
                 getLayer() {
                     return symbolBucket.layers[0];
                 }
@@ -303,12 +345,12 @@ describe('setFeatureState', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.loadVectorData(
             createVectorData({rawTileData: createRawTileData()}),
-            createPainter()
+            createStyle()
         );
 
         const loadVTLayersSpy = vi.spyOn(tile.latestFeatureIndex, 'loadVTLayers');
         const states = {road: [{id: '1', state: {hover: true}}]};
-        const painter = createPainter({
+        const style = createStyle({
             hasLayer: () => true,
             getLayer: () => ({queryRadius: () => 0}),
         });
@@ -317,7 +359,7 @@ describe('setFeatureState', () => {
         tile.featureStateRevision = 5;
 
         // Calling with the same revision should not trigger any work
-        tile.setFeatureState(states, painter, 5);
+        tile.setFeatureState(states, style, 5);
         expect(loadVTLayersSpy).not.toHaveBeenCalled();
     });
 });
@@ -335,6 +377,6 @@ function createVectorData(options?) {
     }, options);
 }
 
-function createPainter(styleStub = {}): Painter {
-    return {style: styleStub} as unknown as Painter;
+function createStyle(styleStub = {}): Style {
+    return styleStub as Style;
 }

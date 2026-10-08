@@ -37,17 +37,11 @@
       "source": "point",
       "layout": {
         "text-field": ["format",
+            "(\u2068", {},
             ["get", "name"], { "font-scale": 1.5 },
-            " ", {},
+            "\u2069) ", {},
             ["get", "name_en"], { "font-scale": 0.5, "text-font": ["literal", [ "NotoCJK" ]] },
-            " ", {},
-            ["get", "name"], { "font-scale": 1.5 },
-            " ", {},
-            ["get", "name_en"], { "font-scale": 0.5, "text-font": ["literal", [ "NotoCJK" ]] },
-            " ", {},
-            ["get", "name"], { "font-scale": 1.5 },
-            " ", {},
-            ["get", "name_en"], { "font-scale": 0.5, "text-font": ["literal", [ "NotoCJK" ]] }
+            ["get", "name"], { "font-scale": 1.5 }
         ],
         "text-font": [
           "Open Sans Semibold",

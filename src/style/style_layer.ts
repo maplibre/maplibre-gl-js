@@ -328,6 +328,11 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
         this._transitioningPaint = this._transitionablePaint.transitioned(parameters, this._transitioningPaint);
     }
 
+    /** The re-read itself goes through `setPaintProperty`, which also rebuilds colour ramps and relayouts. */
+    retainPriorGlobalState(refs: string[], priorGlobalState: Record<string, any>): void {
+        this._transitionablePaint?.retainPriorGlobalState(refs, priorGlobalState, this._transitioningPaint);
+    }
+
     hasTransition(): boolean {
         return this._transitioningPaint.hasTransition();
     }

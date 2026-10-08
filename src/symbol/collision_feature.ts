@@ -1,8 +1,9 @@
-import type {CollisionBoxArray} from '../data/array_types.g.ts';
 import Point from '@mapbox/point-geometry';
-import type {Anchor} from './anchor.ts';
-import {type SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
 import {applyTextFit} from './shaping.ts';
+
+import type {SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
+import type {Anchor} from './anchor.ts';
+import type {CollisionBoxArray} from '../data/array_types.g.ts';
 
 /**
  * A CollisionFeature represents the area of the tile covered by a single label.

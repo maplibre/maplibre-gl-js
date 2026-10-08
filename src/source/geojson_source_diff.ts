@@ -200,8 +200,7 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
 /**
  * Merge two GeoJSONSourceDiffs, considering the order of operations as specified above (remove, add, update).
  *
- * For `add` features that use promoteId, the feature id will be set to the promoteId value temporarily so that
- * the merge can be completed, then reverted to the original promoteId state after the merge.
+ * `add` features of a promoteId source carry their id in a property, so `promoteId` is needed to key them.
  */
 export function mergeSourceDiffs(
     prevDiff: GeoJSONSourceDiff | undefined,
@@ -211,15 +210,9 @@ export function mergeSourceDiffs(
     if (!prevDiff) return nextDiff || {};
     if (!nextDiff) return prevDiff || {};
 
-    if (promoteId) {
-        // Temporarily normalize diff.add for features using promoteId
-        promoteFeatureIds(prevDiff.add, promoteId);
-        promoteFeatureIds(nextDiff.add, promoteId);
-    }
-
     // Hash for o(1) lookups while creating a mutatable copy of the collections
-    const prev = diffToHashed(prevDiff);
-    const next = diffToHashed(nextDiff);
+    const prev = diffToHashed(prevDiff, promoteId);
+    const next = diffToHashed(nextDiff, promoteId);
 
     // Resolve merge conflicts
     resolveMergeConflicts(prev, next);
@@ -239,14 +232,7 @@ export function mergeSourceDiffs(
     }
 
     // Convert back to array-based representation
-    const mergedDiff = hashedToDiff(merged);
-
-    if (promoteId) {
-        // Revert diff.add for features using promoteId
-        demoteFeatureIds(mergedDiff.add, promoteId);
-    }
-
-    return mergedDiff;
+    return hashedToDiff(merged);
 }
 
 /**
@@ -293,11 +279,9 @@ function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): 
         delete next.removeProperties;
     }
     // Removing properties that were added or updated in previous
-    if (next.removeProperties) {
-        for (const key of next.removeProperties) {
-            const index = prev.addOrUpdateProperties.findIndex(prop => prop.key === key);
-            if (index > -1) prev.addOrUpdateProperties.splice(index, 1);
-        }
+    if (next.removeProperties && prev.addOrUpdateProperties) {
+        const removedProperties = new Set(next.removeProperties);
+        prev.addOrUpdateProperties = prev.addOrUpdateProperties.filter(prop => !removedProperties.has(prop.key));
     }
 
     // Merge the two diffs
@@ -318,30 +302,6 @@ function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): 
 }
 
 /**
- * Mutates diff.add and applies a feature id using the promoteId property
- */
-function promoteFeatureIds(add: GeoJSON.Feature[], promoteId: string) {
-    if (!add) return;
-
-    for (const feature of add) {
-        const id = getFeatureId(feature, promoteId);
-        if (id != null) feature.id = id;
-    }
-}
-
-/**
- * Mutates diff.add and removes the feature id if using the promoteId property
- */
-function demoteFeatureIds(add: GeoJSON.Feature[], promoteId: string) {
-    if (!add) return;
-
-    for (const feature of add) {
-        const id = getFeatureId(feature, promoteId);
-        if (id != null) delete feature.id;
-    }
-}
-
-/**
  * @internal
  * Internal representation of GeoJSONSourceDiff using Sets and Maps for efficient operations
  */
@@ -355,15 +315,16 @@ type GeoJSONSourceDiffHashed = {
 /**
  * @internal
  * Convert a GeoJSONSourceDiff to an idempotent hashed representation using Sets and Maps
+ * @param promoteId - If set, `add` features are keyed by that property instead of by `id`.
  */
-function diffToHashed(diff: GeoJSONSourceDiff | undefined): GeoJSONSourceDiffHashed {
+function diffToHashed(diff: GeoJSONSourceDiff | undefined, promoteId?: string): GeoJSONSourceDiffHashed {
     if (!diff) return {};
 
     const hashed: GeoJSONSourceDiffHashed = {};
 
     hashed.removeAll = diff.removeAll;
     hashed.remove = new Set(diff.remove || []);
-    hashed.add    = new Map(diff.add?.map(feature => [feature.id, feature]));
+    hashed.add    = new Map(diff.add?.map(feature => [getFeatureId(feature, promoteId), feature]));
     hashed.update = new Map(diff.update?.map(update => [update.id, update]));
 
     return hashed;

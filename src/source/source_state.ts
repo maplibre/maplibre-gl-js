@@ -1,8 +1,9 @@
 import {extend} from '../util/util.ts';
+
 import type {Tile} from '../tile/tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
-import type {Painter} from '../render/painter.ts';
+import type {Style} from '../style/style.ts';
 
 export type FeatureStateEntry = {id: string; state: FeatureState};
 export type FeatureStates = FeatureStateEntry[];
@@ -120,15 +121,15 @@ export class SourceFeatureState {
         return reconciledState;
     }
 
-    initializeTileState(tile: Tile, painter: Painter): void {
+    initializeTileState(tile: Tile, style: Style): void {
         const layerStates: LayerFeatureStates = {};
         for (const sourceLayer in this.state) {
             layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
         }
-        tile.setFeatureState(layerStates, painter, this.revision);
+        tile.setFeatureState(layerStates, style, this.revision);
     }
 
-    coalesceChanges(inViewTiles: InViewTiles, painter: Painter): void {
+    coalesceChanges(inViewTiles: InViewTiles, style: Style): void {
         //track changes with full state objects, but only for features that got modified
         //use an intermediate object keyed by feature id to naturally deduplicate entries
         const featuresChangedMap: LayerFeatureStatesMap = {};
@@ -178,6 +179,6 @@ export class SourceFeatureState {
             featuresChanged[sourceLayer] = featureStatesMapToArray(featuresChangedMap[sourceLayer]);
         }
 
-        inViewTiles.setFeatureState(featuresChanged, painter, this.revision);
+        inViewTiles.setFeatureState(featuresChanged, style, this.revision);
     }
 }

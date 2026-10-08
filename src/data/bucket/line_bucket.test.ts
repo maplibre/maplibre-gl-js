@@ -5,6 +5,7 @@ import {LineBucket} from './line_bucket.ts';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {ZoomHistory} from '../../../src/style/zoom_history.ts';

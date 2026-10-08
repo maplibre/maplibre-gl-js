@@ -2,12 +2,13 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
-import {type Dispatcher} from '../util/dispatcher.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Tile} from '../tile/tile.ts';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
-import {type MapSourceDataEvent} from '../ui/events.ts';
 import {ImageRequest} from '../util/image_request.ts';
+
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);

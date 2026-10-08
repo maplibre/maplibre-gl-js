@@ -1,5 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {type FeatureTable, decodeTile, type Feature as MLTFeature, GEOMETRY_TYPE} from '@maplibre/mlt';
+
 import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 class MLTVectorTileFeature implements VectorTileFeatureLike {

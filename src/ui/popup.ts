@@ -256,6 +256,7 @@ export class Popup extends Evented<PopupEventType> {
         this._map.on('remove', this.remove);
         this._map.on('terrain', this._update);
         this._map.on('projectiontransition', this._update);
+        this._map.on('idle', this._update);
         this._update();
         this._focusFirstElement();
 
@@ -322,6 +323,7 @@ export class Popup extends Evented<PopupEventType> {
             this._map.off('remove', this.remove);
             this._map.off('terrain', this._update);
             this._map.off('projectiontransition', this._update);
+            this._map.off('idle', this._update);
             this._map.off('mousemove', this._update);
             this._map.off('mouseup', this._update);
             this._map.off('drag', this._update);
@@ -635,7 +637,6 @@ export class Popup extends Evented<PopupEventType> {
     }
 
     _update = (event?: MapLibreEvent | MapMouseEvent): void => {
-        
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }

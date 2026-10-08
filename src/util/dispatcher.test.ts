@@ -1,5 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Actor} from './actor.ts';
+import {Actor, type ActorTarget} from './actor.ts';
 import {Dispatcher} from './dispatcher.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
@@ -70,5 +70,29 @@ describe('Dispatcher', () => {
         await dispatcher.actorsPromise;
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
+    });
+
+    test('fires worker errors through Evented', async () => {
+        const worker = new EventTarget() as ActorTarget & EventTarget;
+        worker.postMessage = vi.fn();
+        const workerPool = {
+            acquire() {
+                return Promise.resolve([worker]);
+            },
+            release() {}
+        } as any as WorkerPool;
+        const dispatcher = new Dispatcher(workerPool, 1);
+        const listener = vi.fn();
+        dispatcher.on('error', listener);
+        await dispatcher.actorsPromise;
+
+        worker.dispatchEvent(new ErrorEvent('error'));
+
+        expect(listener).toHaveBeenCalledWith(expect.objectContaining({
+            error: new Error('Worker failed to load. Check that the worker URL is correct.')
+        }));
+        dispatcher.remove();
+        worker.dispatchEvent(new ErrorEvent('error'));
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 });

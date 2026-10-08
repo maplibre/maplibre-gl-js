@@ -4,7 +4,6 @@ import {Map} from '../map.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../../util/time_control.ts';
-
 import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(options?) {

@@ -1,5 +1,4 @@
 import {FillLayoutArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes} from './fill_attributes.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
@@ -11,6 +10,9 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {subdividePolygon} from '../../render/subdivision.ts';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
+import {warnOnce} from '../../util/util.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -28,11 +30,8 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {subdividePolygon} from '../../render/subdivision.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-import {warnOnce} from '../../util/util.ts';
 import type {GetImagesResponse} from '../../util/actor_messages.ts';
 import type {StyleImage} from '../../style/style_image.ts';
 
@@ -142,10 +141,10 @@ export class FillBucket implements Bucket {
         });
     }
 
-    addFeatures({options, canonical, imagePositions, imageMap}: BucketDependencyParameters): void {
-        this.detectSdfPatterns(imageMap);
+    addFeatures({options, canonical, patternPositions, patternMap}: BucketDependencyParameters): void {
+        this.detectSdfPatterns(patternMap);
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, patternPositions, options.subdivisionGranularity);
         }
     }
 

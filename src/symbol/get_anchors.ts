@@ -1,5 +1,4 @@
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-
 import {Anchor} from '../symbol/anchor.ts';
 import {checkMaxAngle} from './check_max_angle.ts';
 

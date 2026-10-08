@@ -1,5 +1,4 @@
 import {ImageSource} from './image_source.ts';
-
 import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';

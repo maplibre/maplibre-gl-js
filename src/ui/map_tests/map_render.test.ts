@@ -2,7 +2,10 @@ import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} fr
 import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
+
 import type {Map} from '../map.ts';
 
 let server: FakeServer;
@@ -228,6 +231,37 @@ describe('symbol fade after the placement guard', () => {
     });
 });
 
+describe('frame render data', () => {
+    test('passes the projection transition and shader variant to the painter', async () => {
+        const map = createMap();
+        await map.once('idle');
+        map.setProjection({type: 'vertical-perspective'});
+        const render = vi.spyOn(map.painter, 'render');
+
+        map.redraw();
+
+        const data = render.mock.lastCall[2];
+        expect(data.projectionTransition).toBe(1);
+        expect(data.isRenderingGlobe).toBe(true);
+        expect(data.projectionShaderVariant.name).toBe('globe');
+        map.remove();
+    });
+
+    test('passes the pixel ratio and the evaluated light and sky to the painter', async () => {
+        const map = createMap({pixelRatio: 2, style: {version: 8, sources: {}, layers: [], light: {intensity: 0.2}, sky: {'fog-color': 'red'}}});
+        await map.once('idle');
+        const render = vi.spyOn(map.painter, 'render');
+
+        map.redraw();
+
+        const data = render.mock.lastCall[2];
+        expect(data.pixelRatio).toBe(2);
+        expect(data.light.intensity).toBe(0.2);
+        expect(data.sky['fog-color']).toEqual(Color.red);
+        map.remove();
+    });
+});
+
 describe('render-to-texture follow-up frame', () => {
     test('keeps rendering, deferring idle, until the follow-up frame is no longer needed', async () => {
         const map = createMap();
@@ -245,6 +279,32 @@ describe('render-to-texture follow-up frame', () => {
         rtt.needsFollowUpFrame = false;
         map.redraw();
         expect(idle).toHaveBeenCalled();
+        map.remove();
+    });
+});
+
+describe('hidden layers', () => {
+    test('a layer hidden at the current zoom does not render tile clipping masks for its source', async () => {
+        const square: GeoJSON.Feature = {type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]}, properties: {}};
+        const map = createMap({style: {
+            version: 8,
+            sources: {shared: {type: 'geojson', data: square}, other: {type: 'geojson', data: square}},
+            layers: [
+                {id: 'shared-fill', type: 'fill', source: 'shared'},
+                {id: 'other-fill', type: 'fill', source: 'other'},
+                {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
+            ]
+        }});
+        const renderTileClippingMasks = vi.spyOn(FrameRenderContext.prototype, 'renderTileClippingMasks');
+        const hiddenLayer = expect.objectContaining({id: 'shared-fill-hidden-below-zoom-10'});
+
+        await map.once('idle');
+        expect(renderTileClippingMasks).not.toHaveBeenCalledWith(hiddenLayer, expect.anything());
+
+        map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
+        await map.once('idle');
+        expect(renderTileClippingMasks).toHaveBeenCalledWith(hiddenLayer, expect.anything());
+        renderTileClippingMasks.mockRestore();
         map.remove();
     });
 });

@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';

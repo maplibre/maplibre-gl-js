@@ -12,6 +12,8 @@ import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {GetImagesResponse} from '../util/actor_messages.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -31,23 +33,36 @@ export type PopulateParameters = {
     /**
      * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
      * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     * Glyphs are requested separately for each variant.
      * @example
      * ```json
-     * {"SomeFontName": {"a": true, " ": true, "\u05e9\u05b0\u05c1": true}}
+     * {"SomeFontName": {"default": {"a": true, "b": true}}}
      * ```
      */
-    glyphDependencies: Record<string, Record<string, boolean>>;
+    glyphDependencies: Record<string, Record<string, Record<string, boolean>>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
+/**
+ * The asynchronously loaded tile content a bucket may need to finalize its
+ * features. Every image, glyph, and dash entry referenced by the bucket's
+ * layers arrives here after the worker has fetched it; pattern maps belong to
+ * fill, fill-extrusion, and line buckets, icon maps and glyph maps to symbol
+ * buckets.
+ */
 export type BucketDependencyParameters = {
     options: PopulateParameters;
     canonical: CanonicalTileID;
-    imagePositions: Record<string, ImagePosition>;
+    glyphMap: GlyphMap;
+    glyphPositions: GlyphPositions;
+    iconMap: GetImagesResponse;
+    iconPositions: Record<string, ImagePosition>;
+    patternMap: GetImagesResponse;
+    patternPositions: Record<string, ImagePosition>;
     dashPositions: Record<string, DashEntry>;
-    imageMap: GetImagesResponse;
+    showCollisionBoxes: boolean;
 };
 
 export type IndexedFeature = {

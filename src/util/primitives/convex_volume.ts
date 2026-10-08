@@ -1,6 +1,7 @@
 import {quat, vec3, type vec4} from 'gl-matrix';
-import {type Frustum} from './frustum.ts';
 import {IntersectionResult, type IBoundingVolume} from './bounding_volume.ts';
+
+import type {Frustum} from './frustum.ts';
 
 /**
  * A general convex bounding volume, defined by a set of points.

@@ -1,5 +1,6 @@
 import {latFromMercatorY, lngFromMercatorX} from '../geo/mercator_coordinate.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+
 import type {CanonicalTileID} from './tile_id.ts';
 
 export function tileIdToLngLatBounds(

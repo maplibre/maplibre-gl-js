@@ -1,7 +1,6 @@
 'use strict';
 
 import * as fs from 'fs';
-
 import {latest, type StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
