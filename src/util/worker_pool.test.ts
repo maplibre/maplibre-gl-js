@@ -42,6 +42,20 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
+    test('a create listener that borrows shares the one actor set instead of building a second', async () => {
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
+
+        const pool = new WorkerPool();
+        const createActor = vi.fn((worker) => new Actor(worker, 'global'));
+        let innerActors: Promise<Actor[]>;
+        pool.on('create', () => { innerActors = pool.borrowActors(createActor); });
+
+        const outerActors = await pool.borrowActors(createActor);
+
+        await expect(innerActors).resolves.toEqual(outerActors);
+        expect(createActor).toHaveBeenCalledTimes(4);
+    });
+
     test('terminating the workers removes the borrowed actors', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 

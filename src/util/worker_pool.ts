@@ -43,9 +43,20 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
      * terminates the workers, and the next call runs `createActor` again to build fresh ones
      * around the replacement workers. Every borrower shares the one set built by the first
      * call's `createActor`.
+     *
+     * The promise is assigned before the workers are created, since creating them fires `create`,
+     * and a listener that broadcasts borrows these actors again while they are still being built.
      */
     borrowActors(createActor: (worker: ActorTarget, index: number) => Actor): Promise<Actor[]> {
-        this.borrowedActorsPromise ||= this.ensureWorkers().then((workers) => workers.map(createActor));
+        if (!this.borrowedActorsPromise) {
+            let resolveActors: (actors: Actor[]) => void;
+            let rejectActors: (error: Error) => void;
+            this.borrowedActorsPromise = new Promise((resolve, reject) => {
+                resolveActors = resolve;
+                rejectActors = reject;
+            });
+            this.ensureWorkers().then((workers) => resolveActors(workers.map(createActor)), rejectActors);
+        }
         return this.borrowedActorsPromise;
     }
 
